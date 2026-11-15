@@ -35,24 +35,25 @@ open Memory
 variable (k : AllocKind) (t : Ty) (c : Nat) (a : Option Nat) (n : Nat)
 
 /-- A property holds of every core op when it holds of each op that
-touches no memory, of `alloca` and of `load`. So an obligation with memory
-is met op by op: by its tie for the first, and by its own rule for `alloca`
-and for `load`. -/
+touches no memory, of `alloca`, of `load` and of `store`. So an obligation
+with memory is met op by op: by its tie for the first, and by its own rule
+for `alloca`, for `load` and for `store`. -/
 theorem Op.memCases {P : Op → Prop} (op : Op) (ht : ∀ op, op.touchesMemory = false → P op)
-    (ha : ∀ k t c a n, P (.alloca k t c a n)) (hl : ∀ o w a n, P (.load o w a n)) : P op := by
+    (ha : ∀ k t c a n, P (.alloca k t c a n)) (hl : ∀ o w a n, P (.load o w a n))
+    (hs : ∀ o w a n, P (.store o w a n)) : P op := by
   cases hm : op.touchesMemory
   · exact ht op hm
-  · cases op <;> first | exact ha .. | exact hl .. | cases hm
+  · cases op <;> first | exact ha .. | exact hl .. | exact hs .. | cases hm
 
-/-- A core op with an outcome in the set monad touches no memory: `alloca`
-and `load` have none there. -/
+/-- A core op with an outcome in the set monad touches no memory: `alloca`,
+`load` and `store` have none there. -/
 theorem Op.touchesMemory_false_of_denote {op : Op}
     {args : HVector toType (Fir.sig (d := CoreDialect) op)}
     {e : Ev (HVector toType (Fir.returnTypes (d := CoreDialect) op))}
     (h : DialectDenote.denote (m := SetM) (d := CoreDialect) op args e) :
     op.touchesMemory = false := by
   cases op with
-  | alloca | load => exact h.elim
+  | alloca | load | store => exact h.elim
   | _ => rfl
 
 /-- The result vector of `alloca`, from the pointer it allocates. -/

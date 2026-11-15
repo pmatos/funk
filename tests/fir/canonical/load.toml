@@ -1,15 +1,16 @@
 # Tests of load.fir: load reads an integer through a pointer, at the
 # natural alignment of its type in the pointer's memory or at the alignment
-# it writes (#231). No op stores yet (stage 4e-3), so every load that does
-# not fault reads fresh memory, which holds poison. A load through a poison
-# pointer, out of bounds, past a freed allocation, or misaligned is UB. An
-# access is aligned only when it is aligned at every address its block may
-# get (the human's ruling of 2026-11-14 on #388): an i32 at its natural
-# alignment, 4, from sixteen i8 aligned to 1 is UB even at offset 0, and is
-# not with align(4) on the alloca or align(1) on the load. Values that a
-# store writes, odd widths and punned loads are checked in Lean
-# (FirTest/Load.lean) until stores land. The backend lowers load in stage 5
-# of #231, so each test is interpreter-only.
+# it writes (#231). These functions store nothing, so every load that does
+# not fault reads fresh memory, which holds poison; store.fir loads what a
+# store wrote. A load through a poison pointer, out of bounds, past a freed
+# allocation, or misaligned is UB. An access is aligned only when it is
+# aligned at every address its block may get (the human's ruling of
+# 2026-11-14 on #388): an i32 at its natural alignment, 4, from sixteen i8
+# aligned to 1 is UB even at offset 0, and is not with align(4) on the
+# alloca or align(1) on the load. Punned loads of a pointer's fragments are
+# checked in Lean (FirTest/Load.lean) until pointer stores land (stage 4d-2b
+# of #231). The backend lowers load in stage 5 of #231, so each test is
+# interpreter-only.
 tests = [
   { func = "@fresh", expect = ["poison"] },
   { func = "@fresh_odd", expect = ["poison"] },

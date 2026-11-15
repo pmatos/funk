@@ -87,3 +87,48 @@ tied ops and the memory ops, gained a case for `load`, and
 `Core.memDenoteIn_mapsDenote` asks the morphism to keep loads, which
 `MonadMorphism.state_load` gives for the state layer. Every whole-core
 guarantee keeps its statement (semantics-m1-memory.md#the-cores-guarantees).
+
+## Stores
+
+`store` stores an integer through a pointer and gives no result, written
+`store nonatomic %v, %p` and `store nonatomic align(2) %b, %q`, the value
+before the pointer (ADR-2026-11-14-2316; `lean/Fir/Core/Store.lean`). Its
+memory is its pointer's.
+
+- Its attributes, their validation and its default alignment are those of
+  `load`, above: the same ordering words, `nonatomic` alone valid, and
+  `align(A)` valid as `alloca`'s is (`Core.Op.Valid`; the shared Rust
+  module `crates/funk-ir/src/dialects/core/access.rs`).
+- The value is an integer type, as for `load` (the human's ruling of
+  2026-11-14 on #382, Q2); pointer stores come with pointer elements, in
+  stage 4d-2b of #231.
+- A poison pointer is immediate UB, whatever the value, for the reason of
+  `load`'s. Otherwise the op is the aligned store of the value's encoding
+  in the memory's units and byte order (ADR-2026-11-12-2125): its bits
+  rounded up to whole units, with the bits past `W` zero (the human's
+  ruling of 2026-11-11 on #231, Q2), or as many poison units for a poison
+  value. A store of poison is not UB: a load of those units gives poison
+  again. An access out of bounds, to a freed allocation, without
+  provenance or misaligned is immediate UB, and whether a store faults
+  depends on how many units it writes, never on their values.
+- A load of what a store wrote gives the value back. A narrower load gives
+  the low units, in the byte order, and a wider one reads the units past
+  the store as they were, poison in fresh memory: a different width is not
+  a punned load, which reads a pointer's fragments as an integer or bits as
+  a pointer (Q3).
+- Its effects are "writes memory `N`" and may-UB
+  (`tests/dialects/effects.cases`). It reads no memory, its own included,
+  since whether it faults depends on the allocations and not on their units
+  (`lean/Fir/Execution/MemoryStoreLaws.lean`), and it makes no poison, since
+  it gives no result. Its poison class is `propagates`. It meets every
+  obligation with memory by its own rule (`lean/Fir/Core/StoreLaws.lean`),
+  and the obligations reject a declaration of `store` without the write
+  (`Core.Unlawful.storeNoWrite_unlawful`, in
+  `lean/Fir/Core/StoreWrites.lean`).
+- `fir-ref` runs it with the spec's own rule; `funk build` does not lower it
+  yet (stage 5 of #231).
+
+`Core.Op.memCases` gained a case for `store`, and
+`Core.memDenoteIn_mapsDenote` asks the morphism to keep stores, which
+`MonadMorphism.state_store` gives for the state layer. Every whole-core
+guarantee keeps its statement (semantics-m1-memory.md#the-cores-guarantees).

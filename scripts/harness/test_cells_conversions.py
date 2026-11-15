@@ -183,6 +183,23 @@ class Tests(unittest.TestCase):
             with self.subTest(op=bad), self.assertRaises(CellError):
                 of_op(bad)
 
+    def test_a_store_is_a_cell_for_each_width_of_its_value(self):
+        for attrs in [("nonatomic",), ("nonatomic", "align(4)"), ("release",)]:
+            for ptr in ("ptr", "ptr(1)"):
+                op = Op("store", attrs, ("i33", ptr), (), ())
+                with self.subTest(op=op):
+                    self.assertEqual(of_op(op), {Cell("pointers", "store", "", "i33")})
+        for bad in [
+            Op("store", (), ("i32", "ptr"), (), ()),
+            Op("store", ("nonatomic",), ("ptr", "i32"), (), ()),
+            Op("store", ("nonatomic",), ("f32", "ptr"), (), ()),
+            Op("store", ("nonatomic",), ("ptr", "ptr"), (), ()),
+            Op("store", ("nonatomic",), ("i32",), (), ()),
+            Op("store", ("nonatomic",), ("i32", "ptr"), ("i32",), ()),
+        ]:
+            with self.subTest(op=bad), self.assertRaises(CellError):
+                of_op(bad)
+
 
 if __name__ == "__main__":
     unittest.main()

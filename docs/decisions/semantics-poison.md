@@ -78,7 +78,7 @@ poison class through `DialectEffects`: `propagates` or `exception`
 (ADR-2026-10-29-2006). Rejected: propagation in prose only, as LLVM's reference
 states it. An op whose rules forget to propagate poison would go unnoticed.
 
-In the core dialect, 35 ops propagate and seven are exceptions. The 35 are
+In the core dialect, 36 ops propagate and seven are exceptions. The 36 are
 `const`, the float constant and `poison`, which have no operands, `add`, `sub`
 and `mul`, the four divisions, the bitwise ops and shifts, `icmp`, the width
 changes, `fcmp`, the three ops of float arithmetic, the two bit casts, the
@@ -86,8 +86,10 @@ two conversions from integers, `sitofp` and `uitofp`, the two conversions
 between formats, `fpext` and `fptrunc` (ADR-2026-11-09-1549), the pointer
 offset `ptradd` (ADR-2026-11-13-0251), the two conversions to integers,
 `fptosi` and `fptoui`, the stack allocation `alloca`, which has no operands
-(ADR-2026-11-14-0915), and `load`, which is UB on a poison pointer, as some
-pointer in its place faults (ADR-2026-11-14-2316). `select`, `freeze` and `cond_br` are
+(ADR-2026-11-14-0915), `load`, which is UB on a poison pointer, as some
+pointer in its place faults (ADR-2026-11-14-2316), and `store`, which is UB
+on a poison pointer for the same reason, stores a poison value as poison
+units and gives no result. `select`, `freeze` and `cond_br` are
 exceptions with their own rules. `br`, `ret` and `call` are exceptions that pass
 values on as they are, to block arguments, the caller or the callee.
 `unreachable` is an exception that is always UB, which the obligations below
@@ -143,7 +145,8 @@ monotonicity with memory (semantics-interpreter.md, semantics-refinement.md):
   because some pointer in its place faults on those memories.
 - `MemReturnsOnDefined`: wherever a run names the dialect's memories, a
   propagating op returns a result from some memories on some operands with no
-  poison. A load returns one from memories that hold its allocation.
+  poison. A load returns one from memories that hold its allocation, and a
+  store one to such memories.
 
 `LawfulDialectMemPoison` holds them, with `poison_isRefinedBy`, for valid
 instances, and asks for no semantics in the set monad. With
@@ -154,8 +157,8 @@ the test dialects and their sums and lifts meet them, and the four
 rejections of `Core.Unlawful` hold with memory (`Core.Unlawful.memUnlawful`).
 The core meets them op by op (`lean/Fir/Core/MemoryRuns.lean`): each op that
 touches no memory by its tie and its obligations in the set monad, and
-`alloca` and `load` by their own rules (`lean/Fir/Core/AllocaLaws.lean`,
-`LoadLaws.lean`). Since `alloca` has no rule in the set monad, the core no longer meets
+`alloca`, `load` and `store` by their own rules
+(`lean/Fir/Core/AllocaLaws.lean`, `LoadLaws.lean`, `StoreLaws.lean`). Since `alloca` has no rule in the set monad, the core no longer meets
 `LawfulDialectPoison`, and `Core.lawfulDialectPoison` went in stage 4d-2 of
 #231. Rejected: a rule for `alloca` in the set monad, which has no
 memories to allocate in.
@@ -179,7 +182,8 @@ of the progress proof with calls (`Module.calls_hasPath`,
 (`Func.runOps_allowed`, `Func.runs_isRefinedBy_of_calls` and the theorems under
 them). `Core.Op.monotone_all` holds for every core op that meets the guard:
 every core op but `call`. `Core.Op.total_all` holds for those that touch no
-memory too, every one but `call`, `alloca` and `load`; with memory every core op that
+memory too, every one but `call`, `alloca`, `load` and `store`; with
+memory every core op that
 meets the guard is total (`Core.lawfulDialectTotal`). Rejected: a stand-in rule
 for `call`, immediate UB in the set monad, so that it would meet the op-level
 obligations. It claimed a meaning that a call does not have, and as a source it

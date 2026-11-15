@@ -72,7 +72,7 @@ fn effects_of(reg: &Registry, c: &Case) -> Effects {
 fn each_core_op_has_the_effects_of_its_lean_declaration() {
     let reg = Registry::core();
     let cs = cases();
-    assert_eq!(cs.len(), 87);
+    assert_eq!(cs.len(), 89);
     for c in &cs {
         assert_eq!(effects_of(&reg, c).to_string(), c.effects, "{}", c.name);
     }
@@ -103,10 +103,11 @@ fn the_cases_pin_every_core_op_and_every_flag() {
             if op.name == "icmp" || op.name == "fcmp" {
                 flags.pop();
             }
-            // alloca's words are its kind and its type, and load's its
-            // ordering, which change no set: alloca allocates in its result's
-            // memory, and load reads its pointer's.
-            if op.name == "alloca" || op.name == "load" {
+            // alloca's words are its kind and its type, and load's and
+            // store's their ordering, which change no set: alloca allocates
+            // in its result's memory, load reads its pointer's and store
+            // writes it.
+            if ["alloca", "load", "store"].contains(&op.name.as_str()) {
                 flags.clear();
             }
             (op.name, flags)

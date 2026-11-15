@@ -310,8 +310,8 @@ example : allocMain ∈ allocModule.funcs := by simp [allocModule, Module.funcs]
 
 /-! # A run that touches no memory
 
-Every core op but `alloca` and `load` touches no memory: a core function
-that reaches neither reaches no memory, so it returns from given memories what it
+Every core op but `alloca`, `load` and `store` touches no memory: a core
+function that reaches none of them reaches no memory, so it returns from given memories what it
 returns with memory, with the memories it started from (the section on runs
 that touch no memory). -/
 

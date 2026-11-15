@@ -154,12 +154,13 @@ to the memories (`Func.memRunsFrom_replaceBody_isRefinedBy_of_opsFinite`, in
 needs no infinite path. Every core op has finitely many outcomes
 (`Core.opsFinite`): an op that touches no memory is the set of its rule in
 the tree of choices, whose choices of _w_ bits have 2 to the power _w_
-options, and `alloca` and `load` have at most one by their own rules
-(`Core.alloca_finitelyMany`, `Core.load_finitelyMany`). So
+options, and `alloca`, `load` and `store` have at most one by their own
+rules (`Core.alloca_finitelyMany`, `Core.load_finitelyMany`,
+`Core.store_finitelyMany`). So
 `Core.replaceBody_isRefinedBy_of_from` holds for every core callee,
 pointers and memory included, and `Core.replaceBody_isRefinedBy` for every
 core callee that reaches no memory, pointers included: one with no
-`alloca` and no `load` in its reach (`Core.reachesNoMemory`).
+`alloca`, `load` or `store` in its reach (`Core.reachesNoMemory`).
 Nothing asks that every core function reach no memory. The hypothesis is passed to the theorems, as
 `OpsIgnoreMemory` is, not added to a lawful class, so no dialect's
 obligations change. Refined arguments need no finiteness, since they
@@ -253,9 +254,9 @@ pointer-parameter condition, through
 `Func.memRuns_replaceBody_isRefinedBy_of_opsFinite_memRuns`: for a callee
 that reaches no memory before and after, refinement with memory is
 refinement from given memories (`Func.memRunsFrom_isRefinedBy_of_memRuns`),
-and congruence with ops of finitely many outcomes applies. `alloca` and
-`load` declare memory effects, so a core function reaches no memory only
-when neither is in its reach (`Core.reachesNoMemory`), and these two
+and congruence with ops of finitely many outcomes applies. `alloca`,
+`load` and `store` declare memory effects, so a core function reaches no
+memory only when none is in its reach (`Core.reachesNoMemory`), and these two
 theorems cover such a `@g`; for the whole core,
 `Core.replaceBody_isRefinedBy_of_from` asks nothing of it
 ([semantics-m1-memory.md](semantics-m1-memory.md#the-cores-guarantees)).

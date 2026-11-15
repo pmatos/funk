@@ -31,10 +31,10 @@ valid module holds no other instance:
   every function of a valid module by the class alone: on arguments that
   refine others, and on replacing a callee's body, whatever the new body.
 
-The core dialect does not meet the lawful class: `alloca` and `load` have
-no rule in the set monad. So the theorems below that take the class do not
-apply to it. Its guarantees are stated with memory, `alloca` and `load`
-included: progress for
+The core dialect does not meet the lawful class: `alloca`, `load` and
+`store` have no rule in the set monad. So the theorems below that take the
+class do not apply to it. Its guarantees are stated with memory, `alloca`,
+`load` and `store` included: progress for
 every function of a valid core module and refined arguments for every core
 module, in the section on core functions with memory, and congruence in
 the callee for a valid core module, in the section on congruence in a core

@@ -1,4 +1,4 @@
-//! The alignment that `alloca` and `load` write: `align(A)`, last among
+//! The alignment that `alloca`, `load` and `store` write: `align(A)`, last among
 //! their attributes and written only when the op gives an alignment
 //! (`decodeAlign` in `lean/Fir/Core/AllocaText.lean`), and its rule in
 //! validation, the data layout's rule for its own alignments

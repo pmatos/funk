@@ -71,8 +71,8 @@ impl MemLayout {
     pub const LIMIT: u32 = (1 << 24) - 1;
 
     /// Whether `a` is an alignment that validation accepts: a power of two
-    /// no larger than [`MemLayout::LIMIT`], for an entry, an `alloca` or a
-    /// `load`.
+    /// no larger than [`MemLayout::LIMIT`], for an entry, an `alloca`, a
+    /// `load` or a `store`.
     pub fn valid_align(a: u32) -> bool {
         a.is_power_of_two() && a <= Self::LIMIT
     }

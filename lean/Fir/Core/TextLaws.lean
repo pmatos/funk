@@ -4,13 +4,13 @@ import Fir.Core.Validation
 import Fir.Text.RoundTrip
 import Fir.Core.TypeTextLaws
 import Fir.Core.AllocaTextLaws
-import Fir.Core.LoadTextLaws
+import Fir.Core.StoreTextLaws
 import Fir.Core.FloatTextLaws
 import Fir.Core.FloatOpTextLaws
 
 /-!
 The core dialect's text is lawful: it meets the seven laws of a lawful
-text, for all 41 of its ops and every type. The laws are proved for every
+text, for all 43 of its ops and every type. The laws are proved for every
 op instance, valid or not: every width, `0` included, every predicate, every
 combination of flags, `true` and `false` at `i1`, every float constant at
 every format, and `ret` and `call` with any number of operands and results. A type reads back from how it is
@@ -229,6 +229,8 @@ theorem Op.decode_encode (o : Op) : Op.decode o.name o.attrs o.sig o.returnTypes
       decodeAlloca_allocaAttrs k t c a n
   | load o w a n =>
     simpa [Op.name, Op.attrs, Op.sig, Op.returnTypes, Op.decode] using decodeLoad_loadAttrs o w a n
+  | store o w a n =>
+    simpa [Op.name, Op.attrs, Op.sig, Op.returnTypes, Op.decode] using decodeStore_loadAttrs o w a n
   | fptosi e m n | fptoui e m n =>
     simp [Op.name, Op.attrs, Op.sig, Op.returnTypes, Op.decode, decodeFloatToInt, i]
   | _ =>
@@ -364,6 +366,7 @@ theorem Op.encode_decode {n : String} {as : List Attr} {ts rs : List Ty} {o : Op
   · exact decodePtrAdd_eq h -- ptradd
   · exact decodeAlloca_eq h -- alloca
   · exact decodeLoad_eq h -- load
+  · exact decodeStore_eq h -- store
   · exact decodeFloatToInt_eq (signed := true) h -- fptosi
   · exact decodeFloatToInt_eq (signed := false) h -- fptoui
   · -- srem, urem, and, or, xor, shl, lshr and ashr
@@ -436,7 +439,7 @@ theorem Op.attrs_writable (o : Op) : Attr.AllWritable o.attrs := by
     cases e <;> simp [Op.attrs, Attr.AllWritable, Attr.Writable] <;> decide
   | call => exact ⟨trivial, trivial⟩
   | alloca k t c a => exact allocaAttrs_writable k t c a
-  | load o _ a => exact loadAttrs_writable o a
+  | load o _ a | store o _ a => exact loadAttrs_writable o a
   | _ => trivial
 
 end Fir.Core
@@ -445,7 +448,7 @@ namespace Fir
 
 /-! # The laws -/
 
-/-- The core dialect's text meets the seven laws, for all 42 core ops and
+/-- The core dialect's text meets the seven laws, for all 43 core ops and
 every core type. -/
 theorem Core.lawfulDialectText : LawfulDialectText CoreDialect where
   decodeOp_encode := Core.Op.decode_encode

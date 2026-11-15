@@ -340,6 +340,7 @@ class Repository(unittest.TestCase):
                 "heap",
                 "nonatomic",
                 "seq_cst",
+                "store",
             },
             core_words(),
         )
