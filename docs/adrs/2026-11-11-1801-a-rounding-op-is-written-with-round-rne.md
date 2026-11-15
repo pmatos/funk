@@ -17,9 +17,8 @@ Tier: direction; area: text-format
   that rounds, a word that names no mode, the bare word `rne`, two
   attributes, and a mode on an op that does not round.
 - The mode words are IEEE 754's five rounding-direction attributes in
-  SMT-LIB's short names: `rne`, `rna`, `rtp`, `rtn` and `rtz`. This set is
-  an agent's proposal awaiting the human (#229); this ADR is edited in
-  place if the human rules otherwise.
+  SMT-LIB's short names: `rne`, `rna`, `rtp`, `rtn` and `rtz`. The human
+  chose this set on 2026-11-15 (#229, PR #395).
 
 ## Why
 

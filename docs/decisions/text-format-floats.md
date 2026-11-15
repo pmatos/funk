@@ -77,8 +77,8 @@ validation rejects all but `rne`: `fadd round(rtz) %a, %b` parses, the op
 carries the mode `rtz`, and `funk verify` and `fir-ref validate` reject it, as
 they reject a load's atomic ordering. The mode words are IEEE 754's five
 rounding-direction attributes in SMT-LIB's short names, `rne`, `rna`, `rtp`,
-`rtn` and `rtz` (`lean/Fir/Core/RoundingText.lean`); the set is an agent's
-proposal awaiting the human. Any other attribute does not decode, so a missing
+`rtn` and `rtz` (`lean/Fir/Core/RoundingText.lean`); the human chose this
+set on 2026-11-15, over LLVM's names and a set without `rna`. Any other attribute does not decode, so a missing
 mode, a word that names no mode (`round(up)`, `round(RNE)`), the bare word
 `rne`, two attributes, `fneg round(rne)` and `frem round(rne)` are parse errors
 (ADR-2026-11-09-1549, ADR-2026-11-11-1801). Rejected: a parse error for every
