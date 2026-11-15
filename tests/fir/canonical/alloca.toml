@@ -7,8 +7,10 @@
 # stack allocations were freed or not, has the next id. Until loads and
 # stores (stage 4e of #231) and the run's observations (#233), a test sees
 # only the pointers that a run returns; that the frame frees each stack
-# allocation is checked in Lean (FirTest/Alloca.lean). The backend lowers
-# alloca in stage 5 of #231, so each test is interpreter-only.
+# allocation is checked in Lean (FirTest/Alloca.lean). Each function
+# returns a pointer, which native code returns as an address, not as a
+# pointer of the spec, so each test is interpreter-only;
+# memory-native.toml runs alloca natively.
 tests = [
   { func = "@one", expect = ["ptr(0, 0)"] },
   { func = "@four", expect = ["ptr(0, 0)"] },

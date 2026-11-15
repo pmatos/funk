@@ -6,7 +6,8 @@
 # A pointer of one memory loaded as a pointer of the other gives poison
 # (ADR-2026-11-12-2125). With no align(A), a pointer of memory 1 stored in
 # memory 1 is aligned to the 4 units its entry gives, so a store at offset 2
-# is UB unless it writes align(2). Interpreter-only until stage 5 of #231.
+# is UB unless it writes align(2). The backend does not realise a memory of
+# 16-bit units, so each test is interpreter-only.
 tests = [
   { func = "@own_memory", args = ["-300"], expect = ["-300"] },
   { func = "@default_in_one", args = ["7"], expect = ["7"] },

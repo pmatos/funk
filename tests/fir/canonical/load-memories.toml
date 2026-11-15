@@ -2,7 +2,8 @@
 # memory's units (#231). In memory 1, of 16-bit units, an i32 takes two
 # units and is aligned to 2, so a load at an odd offset is misaligned (UB,
 # the human's ruling of 2026-11-14 on #388), and one that ends past the
-# allocation is out of bounds. Interpreter-only until stage 5 of #231.
+# allocation is out of bounds. The backend does not realise a memory of
+# 16-bit units, so each test is interpreter-only.
 tests = [
   { func = "@two_units", expect = ["poison"] },
   { func = "@at", args = ["0"], expect = ["poison"] },

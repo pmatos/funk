@@ -48,7 +48,9 @@ offset never wraps and may leave the allocation; only an access through it
 must be in bounds. A poison operand gives poison, it is never UB, and its
 effect set is empty. It has no attributes, and any other shape does not
 decode (ADR-2026-11-13-0251; `lean/Fir/Core/Pointer.lean`). The backend
-lowers it in stage 5 of #231. A native address wraps at the pointer's width
+lowers it as an addition to an address
+([x86-64-backend-lowering-memory.md](x86-64-backend-lowering-memory.md#pointer-offsets)).
+A native address wraps at the pointer's width
 where the offset does not; the two agree on every access the spec allows,
 and `ptr.expose` (#232) settles which address an offset outside the
 pointer's width exposes. Rejected: UB or poison for a result out of its
@@ -142,7 +144,9 @@ capping the natural alignment at the pointer's.
   2026-11-14 (#382). Rejected: a bound on the count, which would not keep an
   allocation within a machine, since one `i16777215` takes 2 MiB. `fir-ref`
   has no resource error of its own: it holds each allocation's units, so a
-  huge one exhausts its memory. `funk build` does not lower `alloca` yet.
+  huge one exhausts its memory. Native code moves `%rsp` by the
+  allocation, so a huge one ends the run as out of stack
+  ([x86-64-backend-lowering-memory.md](x86-64-backend-lowering-memory.md#stack-allocation)).
   The bound covers a written `A` only. The natural alignment that an op
   without `align(A)` takes is not bounded: in a memory with 1-bit units, an
   element wider than 2^23 bits has the natural alignment 2^24, as a layout

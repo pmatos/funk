@@ -21,6 +21,13 @@
 //! (`docs/decisions/x86-64-backend-abi.md#floats-in-sse-registers`).
 //! [`check`] gives its width, 32 or 64, and [`class`] says that it passes in
 //! SSE registers.
+//!
+//! A value of `ptr<N>` is a 64-bit address in one register or slot, of
+//! class INTEGER, as a C pointer is
+//! (`docs/decisions/x86-64-backend-lowering-memory.md#pointers`). [`check`]
+//! gives it [`POINTER`] bits whatever its memory; lowering reports a pointer
+//! of a memory whose layout the backend does not realise where the value is
+//! defined.
 
 use funk_ir::Type;
 use funk_ir::dialects::core::{CoreType, core_type};
@@ -34,15 +41,20 @@ pub const ONE_REGISTER: [u32; 5] = [1, 8, 16, 32, 64];
 /// The width that a pair of registers or slots holds: `i128`.
 pub const PAIR: u32 = 128;
 
+/// The bits of a pointer of every memory that the backend lowers: an
+/// address.
+pub const POINTER: u32 = 64;
+
 /// The float formats that the backend lowers, `f32` and `f64`, as
 /// `(e, m, bits)`.
 const FLOATS: [(u32, u32, u32); 2] = [(8, 23, 32), (11, 52, 64)];
 
 /// The types that the backend lowers, as the diagnostics name them.
-const NAMED: &str = "i1, i8, i16, i32, i64, i128, f32 and f64";
+const NAMED: &str = "i1, i8, i16, i32, i64, i128, f32, f64 and pointers";
 
 /// The width of `ty` if the backend lowers values of it, or why not: `N`
-/// for `iN`, and the bits of a float, 32 for `f32` and 64 for `f64`.
+/// for `iN`, the bits of a float, 32 for `f32` and 64 for `f64`, and
+/// [`POINTER`] for a pointer.
 pub fn check(ty: &Type) -> Result<u32, String> {
     lowered(ty).0
 }
@@ -53,6 +65,7 @@ pub fn lowered(ty: &Type) -> (Result<u32, String>, Class) {
     let width = match t {
         Some(CoreType::Int(w)) if ONE_REGISTER.contains(&w) || w == PAIR => Some(w),
         Some(CoreType::Float { e, m }) => FLOATS.iter().find(|f| (f.0, f.1) == (e, m)).map(|f| f.2),
+        Some(CoreType::Ptr(_)) => Some(POINTER),
         _ => None,
     };
     let width = width.ok_or_else(|| format!("the x86-64 backend lowers {NAMED}, not {ty}"));
@@ -63,7 +76,7 @@ pub fn lowered(ty: &Type) -> (Result<u32, String>, Class) {
 /// (`docs/decisions/x86-64-backend-abi.md#floats-in-sse-registers`).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Class {
-    /// One eightbyte of class INTEGER: `i1` to `i64`.
+    /// One eightbyte of class INTEGER: `i1` to `i64`, or a pointer.
     Int,
     /// Two eightbytes of class INTEGER, low half first: `i128`.
     Pair,
@@ -148,7 +161,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn only_the_six_widths_and_two_float_formats_are_lowered() {
+    fn only_the_six_widths_two_float_formats_and_pointers_are_lowered() {
         for w in ONE_REGISTER.into_iter().chain([PAIR]) {
             assert_eq!(check(&Type::word(format!("i{w}"))), Ok(w));
         }
@@ -169,13 +182,13 @@ mod tests {
             assert_eq!(
                 check(&Type::word(t)),
                 Err(format!(
-                    "the x86-64 backend lowers i1, i8, i16, i32, i64, i128, f32 and f64, not {t}"
+                    "the x86-64 backend lowers i1, i8, i16, i32, i64, i128, f32, f64 and pointers, not {t}"
                 ))
             );
         }
-        for t in ["ptr", "toy.tok"] {
-            assert!(check(&Type::word(t)).is_err(), "{t}");
-        }
+        assert!(check(&Type::word("toy.tok")).is_err());
+        assert_eq!(check(&Type::word("ptr")), Ok(POINTER));
+        assert_eq!(class(&Type::word("ptr")), Class::Int);
     }
 
     #[test]

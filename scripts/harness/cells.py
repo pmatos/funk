@@ -43,8 +43,7 @@ has neither operands nor attributes, is a cell at each width of its result
   allocates, whatever its kind, count and alignment, and `load` and
   `store` for each width of the integer they load and store, whatever
   their ordering and alignment, at the side's pointer widths: every width
-  for interpreter-only tests, and none yet for differential tests, since
-  the backend does not lower pointers until stage 5 of #231. `alloca`,
+  of the side, since the backend lowers pointers (stage 5 of #231). `alloca`,
   `load` and `store` of a pointer, of any memory, are one cell more each,
   `ptr`, on the sides that have pointer cells (`pointer_cells.py`).
 - `br`, and each successor of `cond_br`, passes nothing, or values of a
@@ -68,7 +67,7 @@ FLOAT_DIFFERENTIAL = ("f32", "f64")
 FLOAT_INTERPRETER = ("f16", "bf16", "f32", "f64", "f128")
 # The widths of `ptradd`'s integer, of `alloca`'s type, of `load`'s result
 # and of `store`'s value on each side (#231).
-POINTER_DIFFERENTIAL: tuple[int, ...] = ()
+POINTER_DIFFERENTIAL = DIFFERENTIAL
 POINTER_INTERPRETER = INTERPRETER
 
 WRAP = ("", "nuw", "nsw", "nuw nsw")

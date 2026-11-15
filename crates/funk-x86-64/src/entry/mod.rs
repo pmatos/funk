@@ -10,9 +10,10 @@
 //! each of its results, in order (ADR-2026-10-30-1232), and the table
 //! `__funk_functions`, which gives each function's name as fir writes it (`@f`,
 //! `@"a b"`), its number of parameters, its wrapper, the bytes of stack that a run
-//! of it needs with every call it makes (`stack.rs`), and whether it is recursive.
+//! of it needs with every call it makes (`stack.rs`), and whether it is unbounded:
+//! recursive, or with an `alloca` that may run more than once per call.
 //! The runtime finds a function in the table by the name on the command line,
-//! reserves that stack, or for a recursive function up to the process's stack
+//! reserves that stack, or for an unbounded function up to the process's stack
 //! limit (`ulimit -s`), and calls the wrapper on it
 //! (`docs/decisions/x86-64-backend-executable.md#the-runs-stack`).
 
@@ -62,7 +63,7 @@ pub fn generate(m: &Module, needs: &[Need]) -> Result<String, Vec<Diagnostic>> {
     let funcs: Vec<&Func> = m.funcs().collect();
     for (i, (f, need)) in funcs.iter().zip(needs).enumerate() {
         match wrapper(&mut asm, i, f, need.bytes) {
-            Ok(stack) => stacks.push((stack, u8::from(need.recursive))),
+            Ok(stack) => stacks.push((stack, u8::from(need.unbounded))),
             Err(d) => out.push(d),
         }
     }
@@ -74,9 +75,9 @@ pub fn generate(m: &Module, needs: &[Need]) -> Result<String, Vec<Diagnostic>> {
     asm.label("__funk_functions");
     asm.directive(format_args!(".quad\t{}", funcs.len()));
     let names: Vec<String> = funcs.iter().map(|f| print_symbol(&f.name)).collect();
-    for (i, ((f, name), (stack, recursive))) in funcs.iter().zip(&names).zip(&stacks).enumerate() {
+    for (i, ((f, name), (stack, unbounded))) in funcs.iter().zip(&names).zip(&stacks).enumerate() {
         asm.directive(format_args!(
-            ".quad\t.Lname{i}, {}, {}, __funk_entry_{i}, {stack}, {recursive}",
+            ".quad\t.Lname{i}, {}, {}, __funk_entry_{i}, {stack}, {unbounded}",
             name.len(),
             f.params.len()
         ));

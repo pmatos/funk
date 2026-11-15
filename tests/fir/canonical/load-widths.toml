@@ -1,0 +1,6 @@
+# Tests of load-widths.fir: loads at i7, i33 and i128 of fresh memory give
+# poison (#231). The backend does not lower i7 or i33, so each test is
+# interpreter-only; load.fir runs the widths it lowers natively.
+tests = [
+  { func = "@widths", expect = ["poison", "poison", "poison"] },
+]

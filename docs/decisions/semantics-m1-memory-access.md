@@ -80,8 +80,9 @@ pointer's.
   (`lean/Fir/Core/LoadLaws.lean`). The obligations reject a declaration of
   `load` without the read (`Core.Unlawful.loadNoRead_unlawful`, in
   `lean/Fir/Core/LoadReads.lean`).
-- `fir-ref` runs it with the spec's own rule; `funk build` does not lower it
-  yet (stage 5 of #231).
+- `fir-ref` runs it with the spec's own rule, and `funk build` lowers it as
+  a move of its bytes
+  ([x86-64-backend-lowering-memory.md](x86-64-backend-lowering-memory.md#loads-and-stores)).
 
 `Core.Op.memCases`, which splits an obligation of every core op into the
 tied ops and the memory ops, gained a case for `load`, and
@@ -124,8 +125,9 @@ memory is its pointer's.
   and the obligations reject a declaration of `store` without the write
   (`Core.Unlawful.storeNoWrite_unlawful`, in
   `lean/Fir/Core/StoreWrites.lean`).
-- `fir-ref` runs it with the spec's own rule; `funk build` does not lower it
-  yet (stage 5 of #231).
+- `fir-ref` runs it with the spec's own rule, and `funk build` lowers it as
+  a move of its bytes
+  ([x86-64-backend-lowering-memory.md](x86-64-backend-lowering-memory.md#loads-and-stores)).
 
 `Core.Op.memCases` gained a case for `store`, and
 `Core.memDenoteIn_mapsDenote` asks the morphism to keep stores, which
@@ -160,11 +162,10 @@ text and the Rust IR tell them from the integer forms by the value's type.
   is aligned as `M`'s entry aligns its pointers: `align(A)` when the entry
   writes it, else the natural alignment (text-format-layout.md#what-a-layout-means).
   In another memory `N` it is aligned to the natural alignment there, the
-  least power of two at least its units in `N` (`Ty.defaultAlign`). That
-  second part is the agents' reading and waits on a ruling of the human:
-  `align(A)` counts `M`'s units, and nothing yet says what it means in a
-  memory of other units. Rejected for now: converting `align(A)` into
-  `N`'s units, a rule nothing specifies.
+  least power of two at least its units in `N` (`Ty.defaultAlign`): the
+  human ruled this on 2026-11-15 (#397, option A). Rejected: converting
+  `M`'s `align(A)`, which counts `M`'s units, into `N`'s units, a rule
+  nothing specifies.
 - The type that `alloca` allocates names a memory, which the data layout
   must declare (text-format-layout.md#valid-layouts). A float element, value
   or result stays rejected: floats have no encoding in units.

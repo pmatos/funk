@@ -42,7 +42,14 @@
 //! (`int_to_float.rs`). A conversion between `f32` and `f64` is one SSE2
 //! instruction (`float_convert.rs`), and so is a conversion to an integer,
 //! but for an unsigned `i64` or an `i128` (`float_to_int.rs`).
+//!
+//! A pointer is a 64-bit address in one slot, of a memory whose layout
+//! entry x86-64 realises: 8-bit units and 64-bit pointers. `ptradd`, `load`
+//! and `store` work on addresses (`memory.rs`), and `alloca` moves `%rsp`
+//! below the frame at run time, which the stack need counts (`alloca.rs`,
+//! `docs/decisions/x86-64-backend-lowering-memory.md`).
 
+mod alloca;
 mod arith;
 mod bitcast;
 mod bitwise;
@@ -59,13 +66,15 @@ mod float_to_int;
 mod freeze;
 mod frem;
 mod int_to_float;
+mod memory;
 mod moves;
 mod stack;
 
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
+use funk_ir::dialects::core::{CoreType, core_type};
 use funk_ir::text::{print_op, print_symbol};
-use funk_ir::{Block, Def, Diagnostic, Func, Module, Op};
+use funk_ir::{Block, Def, Diagnostic, Func, MemLayout, Module, Op};
 
 pub use call::callee;
 pub use stack::Need;
@@ -149,6 +158,13 @@ pub struct Cx<'f> {
     stack: stack::Function,
     /// Helper families used by this function, in `HELPERS` order.
     helpers: [bool; HELPERS.len()],
+    /// The module's data layout.
+    layout: &'f [MemLayout],
+    /// The labels of the blocks on a cycle of branches, when the function
+    /// has an `alloca` (`alloca::looping`).
+    looping: HashSet<&'f str>,
+    /// The label of the block being lowered.
+    block: &'f str,
 }
 
 impl<'f> Cx<'f> {
@@ -259,7 +275,10 @@ impl<'f> Cx<'f> {
     fn define(&mut self, defs: &'f [Def]) -> Vec<String> {
         let mut out = Vec::new();
         for d in defs {
-            let (w, class) = width::lowered(&d.ty);
+            let (mut w, class) = width::lowered(&d.ty);
+            if let Some(CoreType::Ptr(n)) = core_type(&d.ty) {
+                w = memory::realised(self.layout, n).and(w);
+            }
             if let Err(why) = &w {
                 out.push(format!("%{}: {why}", d.name));
             }
@@ -301,6 +320,8 @@ fn lowering(name: &str) -> Option<Lower> {
         .or_else(|| int_to_float::lowering(name))
         .or_else(|| float_convert::lowering(name))
         .or_else(|| float_to_int::lowering(name))
+        .or_else(|| memory::lowering(name))
+        .or_else(|| alloca::lowering(name))
 }
 
 /// A module's functions, lowered.
@@ -325,7 +346,7 @@ pub fn module(m: &Module) -> Result<Lowered, Vec<Diagnostic>> {
     }
     asm.directive(format_args!(".text"));
     for (i, f) in m.funcs().enumerate() {
-        if let Some((code, facts, used)) = func(i, f, &callees, &mut out) {
+        if let Some((code, facts, used)) = func(i, f, &callees, &m.layout, &mut out) {
             asm.raw(&code);
             functions.push(facts);
             for (all, used) in helpers.iter_mut().zip(used) {
@@ -370,6 +391,7 @@ fn func<'f>(
     i: usize,
     f: &'f Func,
     callees: &'f HashMap<&'f str, usize>,
+    layout: &'f [MemLayout],
     out: &mut Vec<Diagnostic>,
 ) -> Option<(String, stack::Function, [bool; HELPERS.len()])> {
     let entry = f.body.blocks.first();
@@ -393,6 +415,9 @@ fn func<'f>(
         callees,
         stack,
         helpers: [false; HELPERS.len()],
+        layout,
+        looping: alloca::looping(f),
+        block: "",
     };
     for b in &f.body.blocks {
         cx.params.entry(b.label.as_str()).or_insert(&b.params);
@@ -401,6 +426,15 @@ fn func<'f>(
     // value that a block after it in the list defines.
     for why in cx.define(&f.params) {
         out.push(at(f, entry, None, format!("parameter {why}")));
+    }
+    // A result type names a memory too, even when no value of it is
+    // defined, as when every path ends in `unreachable`.
+    for (k, ty) in f.results.iter().enumerate() {
+        if let Some(CoreType::Ptr(n)) = core_type(ty)
+            && let Err(why) = memory::realised(layout, n)
+        {
+            out.push(at(f, entry, None, format!("result {}: {why}", k + 1)));
+        }
     }
     for b in &f.body.blocks {
         for why in cx.define(&b.params) {
@@ -448,6 +482,7 @@ fn func<'f>(
     }
     for (k, b) in f.body.blocks.iter().enumerate() {
         cx.next = f.body.blocks.get(k + 1).map(|n| n.label.as_str());
+        cx.block = b.label.as_str();
         block(i, f, &mut cx, b, out);
     }
     cx.asm.directive(format_args!(".size\t{sym}, .-{sym}"));

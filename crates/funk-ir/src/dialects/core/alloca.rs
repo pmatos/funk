@@ -28,6 +28,7 @@
 use super::align::{check_align, decode_align};
 use super::types::{CoreType, FLOAT_ALIASES, MAX_MEMORY, MAX_WIDTH, alias, core_type, ptr_type};
 use crate::effects::{Effects, MemSet};
+use crate::ir::MemLayout;
 use crate::registry::{OpContext, OpShape, OpSpec, OpTypes};
 use crate::{Attr, Int, Type};
 
@@ -115,6 +116,51 @@ fn parts(attrs: &[Attr]) -> Option<Parts<'_>> {
         kind,
         ty,
         count,
+        align,
+    })
+}
+
+/// What a valid `alloca` allocates, read from its attributes: the type of
+/// its values, an integer or a pointer type; its count, written when it is
+/// not 1; and its alignment, written when the op gives one. A backend sizes
+/// the allocation from them with its memory's layout entry.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct Allocation<'a> {
+    /// The type of the values it has room for: `Int` or `Ptr`.
+    pub element: CoreType,
+    /// The count of values, when it is not 1.
+    pub count: Option<&'a Int>,
+    /// The alignment it writes, in units, when it writes one.
+    pub align: Option<u32>,
+}
+
+/// The allocation of an `alloca` with the attributes `attrs`, or `None`
+/// unless they decode with the kind `stack`, the one M1 has, and an
+/// element and an alignment that validation accepts.
+pub fn allocation(attrs: &[Attr]) -> Option<Allocation<'_>> {
+    let p = parts(attrs).filter(|p| p.kind == "stack")?;
+    let element = match &p.ty {
+        AnyType::Int(w) => CoreType::Int(
+            w.as_str()
+                .parse::<u32>()
+                .ok()
+                .filter(|w| (1..=MAX_WIDTH).contains(w))?,
+        ),
+        AnyType::Ptr(n) => CoreType::Ptr(valid_memory(n)?),
+        AnyType::Float => return None,
+    };
+    let align = match p.align {
+        Some(a) => Some(
+            a.as_str()
+                .parse::<u32>()
+                .ok()
+                .filter(|&a| MemLayout::valid_align(a))?,
+        ),
+        None => None,
+    };
+    Some(Allocation {
+        element,
+        count: p.count,
         align,
     })
 }
@@ -254,6 +300,32 @@ mod tests {
         let op = types(attrs, &results);
         Alloca.decode(&op)?;
         Alloca.check(&cx, &op)
+    }
+
+    #[test]
+    fn a_valid_allocation_gives_its_element_count_and_alignment() {
+        let attrs = [word("stack"), word("i32"), Attr::int(4), align(8)];
+        let a = allocation(&attrs).unwrap();
+        assert_eq!(a.element, CoreType::Int(32));
+        assert_eq!(a.count.map(Int::as_str), Some("4"));
+        assert_eq!(a.align, Some(8));
+        let attrs = [word("stack"), ptr_attr(1)];
+        let p = allocation(&attrs).unwrap();
+        assert_eq!(
+            (p.element, p.count, p.align),
+            (CoreType::Ptr(1), None, None)
+        );
+        let attrs = [word("stack"), word("ptr")];
+        assert_eq!(allocation(&attrs).unwrap().element, CoreType::Ptr(0));
+        for bad in [
+            vec![word("stack"), word("f32")],
+            vec![word("stack"), word("i0")],
+            vec![word("stack")],
+            vec![word("heap"), word("i32")],
+            vec![word("stack"), word("i32"), align(3)],
+        ] {
+            assert_eq!(allocation(&bad), None, "{bad:?}");
+        }
     }
 
     #[test]

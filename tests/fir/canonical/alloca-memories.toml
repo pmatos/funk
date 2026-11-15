@@ -1,6 +1,8 @@
 # Tests of alloca-memories.fir: alloca allocates in the memory of its
 # result, so each memory counts its own allocations (#231,
-# ADR-2026-11-14-0915). Interpreter-only until stage 5 of #231.
+# ADR-2026-11-14-0915). Each test returns a pointer, and the backend does
+# not realise a memory of 16-bit or 32-bit units, so each is
+# interpreter-only.
 tests = [
   { func = "@in_one", expect = ["ptr(0, 0)"] },
   { func = "@in_each", expect = ["ptr(0, 0)"] },

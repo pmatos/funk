@@ -1,0 +1,10 @@
+# Tests of store-widths.fir: a store at every width gives the value back,
+# i7 and i33 among them, and an i20 read back as an i24 has zeros above its
+# 20 bits, the zero padding of the human's ruling of 2026-11-11 on #231.
+# The backend does not lower i7, i20, i24 or i33, so each test is
+# interpreter-only; store.fir runs the widths it lowers natively.
+tests = [
+  { func = "@widths", args = ["true", "-1", "-128", "12345", "-4294967296", "-9223372036854775808", "170141183460469231731687303715884105727"], expect = ["true", "-1", "-128", "12345", "-4294967296", "-9223372036854775808", "170141183460469231731687303715884105727"] },
+  { func = "@widths", args = ["false", "63", "poison", "-1", "1", "poison", "-1"], expect = ["false", "63", "poison", "-1", "1", "poison", "-1"] },
+  { func = "@padding_wide", args = ["-1"], expect = ["1048575"] },
+]

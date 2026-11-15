@@ -48,6 +48,7 @@ mod types;
 mod width;
 
 pub use access::ORDERINGS;
+pub use alloca::{Allocation, allocation};
 pub use arith::WRAP_FLAG_SETS;
 pub use bitwise::{BITWISE_OPS, SHIFT_OPS};
 pub use compare::{FLOAT_PREDICATES, PREDICATES};

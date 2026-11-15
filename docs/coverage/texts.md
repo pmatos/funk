@@ -252,8 +252,8 @@ The texts of #231's stage 3a give `ptr` values
 `pointer-types` passes values of `ptr`, the default memory's pointer,
 through parameters, results, block arguments and a call, mixed with
 integers and a float; a run starts with no allocation, so each pointer
-argument is poison, and every test is interpreter-only, since the backend
-does not lower pointers yet. `reject/pointer-types.toml` holds the pointer
+argument is poison, and every test is interpreter-only, since native code
+takes no poison pointer. `reject/pointer-types.toml` holds the pointer
 types that do not decode, such as `ptr(0)`, which is written `ptr`, those
 that do not validate, such as `ptr(1)`, a memory that no module has yet,
 and pointers passed where a pointer of another memory or an integer is
@@ -267,9 +267,22 @@ pointers of two memories that its data layout declares, of 16-bit and
 32-bit units, and of the default memory in one function. A run's only
 pointer is a poison argument until stack allocation lands, so each test
 checks that poison goes through `ptradd`, and is interpreter-only, since
-the backend does not lower pointers yet. `reject/pointer-offset.toml`
+native code takes no poison pointer. `reject/pointer-offset.toml`
 holds the shapes that do not decode, such as a result of another memory,
 swapped operands or an attribute, and those that do not validate.
+
+The texts of #231's memory ops use `alloca`, `load` and `store`. `alloca`
+and `alloca-memories` return the pointers that allocations give;
+`load`, `store` and `pointer-store` read fresh memory, read back what a
+store wrote, and fault out of bounds, misaligned, through poison and after
+a call frees its allocation; `load-widths` and `store-widths` do so at
+widths the backend does not lower, and the `-memories` texts in memories
+of other units. `memory-native` stores and loads back a value at each
+width the backend lowers, moves a pointer by an integer of each of them,
+stores a pointer and allocates on each pass of a loop. Each test that
+returns an integer value runs as native code too (stage 5 of #231); a test
+of poison or UB, one that returns a pointer, and one in a memory the
+backend does not realise stay interpreter-only.
 
 The texts of the float arithmetic, the remainders and the conversions,
 from #229's fourth stage on, are listed in

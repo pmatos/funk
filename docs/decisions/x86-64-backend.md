@@ -8,7 +8,9 @@ outside), [x86-64-backend-executable.md](x86-64-backend-executable.md) (the
 built executable and its stack) and
 [x86-64-backend-lowering.md](x86-64-backend-lowering.md) (how ops lower, and
 [x86-64-backend-lowering-floats.md](x86-64-backend-lowering-floats.md) for
-the floats).
+the floats and
+[x86-64-backend-lowering-memory.md](x86-64-backend-lowering-memory.md) for
+pointers and memory).
 
 ## The crate
 
@@ -144,10 +146,13 @@ C would still need one on entry. Also rejected: sized instructions everywhere,
 since `i1` has no register of its own and the rule for the bits above is still
 needed at calls.
 
-`width::check` accepts `i1`, `i8`, `i16`, `i32`, `i64`, `i128`, `f32` and
-`f64`. Every other width or float format is reported as unsupported where its
-value is defined: a parameter at its function's entry block, a result at its
-op.
+`width::check` accepts `i1`, `i8`, `i16`, `i32`, `i64`, `i128`, `f32`, `f64`
+and pointers. Every other width or float format is reported as unsupported
+where its value is defined: a parameter at its function's entry block, a
+result at its op. So is a pointer of a memory whose layout the backend does
+not realise
+([x86-64-backend-lowering-memory.md](x86-64-backend-lowering-memory.md#pointers)).
+A pointer is a 64-bit address, in one slot or register as an `i64` is.
 
 A value of `f32` or `f64` lives in one slot or SSE register. Its low 32 or 64
 bits are its bits, and the bits above are unspecified, as for an `iN`. A float
@@ -264,6 +269,10 @@ A register allocator must treat as clobbered:
   register pairs for `i128`.
 - Every caller-saved register by an `i128` division.
 - `%xmm0` to `%xmm7` as argument registers of a call.
+- `%rax` and `%rcx` by a `load`, a `store` or a `ptradd`, and `%rdx` by an
+  `i128` access.
+- `%rax` and `%rcx` by an `alloca`, which also moves `%rsp` below the frame,
+  so nothing in a frame may be addressed from `%rsp` after one.
 
 Block arguments in registers need the same sequencing, and a scratch register
 or an exchange for each cycle. x86-64-backend-lowering.md says how each op

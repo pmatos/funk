@@ -2,8 +2,9 @@
 # and 2 has their pointer types, which pass through parameters, results,
 # block arguments and calls as they are, beside the default memory's ptr
 # (ADR-2026-11-12-1821). A run starts with no allocation, so the only
-# pointer argument is poison. The backend does not lower pointers yet, so
-# each test is interpreter-only.
+# pointer argument is poison. Native code takes no poison pointer, and the
+# backend does not realise memories 1 and 2, so each test is
+# interpreter-only.
 tests = [
   { func = "@id1", args = ["poison"], expect = ["poison"] },
   { func = "@pick", args = ["true", "poison", "poison"], expect = ["poison"] },

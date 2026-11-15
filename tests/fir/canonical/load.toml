@@ -8,13 +8,15 @@
 # 2026-11-14 on #388): an i32 at its natural alignment, 4, from sixteen i8
 # aligned to 1 is UB even at offset 0, and is not with align(4) on the
 # alloca or align(1) on the load. Punned loads of a pointer's fragments are
-# checked in Lean (FirTest/Load.lean) until pointer stores land (stage 4d-2b
-# of #231). The backend lowers load in stage 5 of #231, so each test is
-# interpreter-only.
+# tested in pointer-store.fir. Each test gives poison or UB, so each stays
+# interpreter-only even though the backend lowers load (stage 5 of #231):
+# native code may give any value for poison, so a differential test would
+# pin nothing of the spec. store.fir and memory-native.fir run loads
+# natively. Loads at widths the backend does not lower are in
+# load-widths.fir.
 tests = [
   { func = "@fresh", expect = ["poison"] },
   { func = "@fresh_odd", expect = ["poison"] },
-  { func = "@widths", expect = ["poison", "poison", "poison"] },
   { func = "@at", args = ["0"], expect = ["poison"] },
   { func = "@at", args = ["7"], expect = ["poison"] },
   { func = "@at", args = ["8"], expect = "ub" },
