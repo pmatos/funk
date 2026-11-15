@@ -16,7 +16,7 @@ use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 
 use canonical::{JsonText, Printed, is_canonical};
-use funk_ir::{Module, Registry, text::parse_bytes, verify};
+use funk_ir::{Module, Registry, dialects, text::parse_bytes, verify};
 use json::Json;
 use report::{Kind, Problem, Report, Verdict};
 
@@ -362,7 +362,8 @@ fn run_commands(args: &[String], stderr: &mut impl Write) -> Result<u8, OutputEr
             return Ok(2);
         }
     };
-    let reg = Registry::core();
+    // The core and `gpu`, the second dialect in tree (ADR-2026-11-09-1545).
+    let reg = dialects::in_tree();
     let mut status = 0;
     for file in &a.files {
         let mut assembly = None;

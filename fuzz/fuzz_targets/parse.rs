@@ -11,7 +11,7 @@ use libfuzzer_sys::fuzz_target;
 
 fn registry() -> &'static Registry {
     static REGISTRY: OnceLock<Registry> = OnceLock::new();
-    REGISTRY.get_or_init(Registry::core)
+    REGISTRY.get_or_init(funk_ir::dialects::in_tree)
 }
 
 fuzz_target!(|data: &[u8]| {

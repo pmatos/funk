@@ -9,10 +9,12 @@ from check_g0 import (
     CORE_POISON,
     CORE_TEXT,
     CORE_TEXT_PARTS,
+    GPU_TEXT,
     ROOT,
     core_words,
     effects_problems,
     generic_files,
+    gpu_words,
     poison_problems,
     problems,
     tokens,
@@ -41,6 +43,11 @@ def Op.poisonClass : Op → PoisonClass
 instance : DialectEffects CoreDialect := ⟨Core.Mem, Core.Op.poisonClass, Core.Op.effects⟩
 """
 
+GPU_TEXT_SAMPLE = """
+def Query.name : Query → String
+  | .workItemId => "gpu.work_item_id"
+"""
+
 CORE_EFFECTS_SAMPLE = """
 /-- The effects of each core op. -/
 def Op.effects : Op → Effects Mem
@@ -59,6 +66,7 @@ def tree(case: unittest.TestCase, files: dict[str, str]) -> Path:
         CORE_TEXT: CORE_TEXT_SAMPLE,
         CORE_POISON: CORE_POISON_SAMPLE,
         CORE_EFFECTS: CORE_EFFECTS_SAMPLE,
+        GPU_TEXT: GPU_TEXT_SAMPLE,
     }
     for rel, text in {**samples, **files}.items():
         path = root / rel
@@ -229,10 +237,39 @@ class Rules(unittest.TestCase):
             ],
         )
 
+    def test_naming_importing_or_writing_the_gpu_dialect_fails(self):
+        # Generic code knows no dialect's ops, the second dialect's included
+        # (ADR-2026-11-03-0600, ADR-2026-11-09-1545).
+        gpu = GPU_TEXT_SAMPLE
+        generic = (
+            "import Fir.Gpu.Ops\n\ndef d : Dialect := CoreGpu\n"
+            'def w := "gpu.work_item_id"\ndef m := "a gpu.work_item_id op"\n'
+        )
+        root = tree(self, {GPU_TEXT: gpu, "lean/Fir/Execution/Run.lean": generic})
+        self.assertEqual(gpu_words(root), {"gpu.work_item_id"})
+        self.assertEqual(
+            problems(root),
+            [
+                "lean/Fir/Execution/Run.lean:1: imports the gpu dialect: Fir.Gpu.Ops",
+                "lean/Fir/Execution/Run.lean:3: names the gpu dialect: CoreGpu",
+                'lean/Fir/Execution/Run.lean:4: writes the gpu dialect\'s word "gpu.work_item_id"',
+            ],
+        )
+        moved = {GPU_TEXT: gpu, "lean/Fir/Gpu/Run.lean": generic}
+        self.assertEqual(problems(tree(self, moved)), [])
+
     def test_no_words_fails(self):
         root = tree(self, {})
         (root / CORE_TEXT).write_text("", encoding="utf-8")
         self.assertEqual(len(problems(root)), 1)
+
+    def test_no_gpu_words_fails(self):
+        root = tree(self, {})
+        (root / GPU_TEXT).unlink()
+        self.assertEqual(
+            problems(root),
+            [f"{GPU_TEXT}: no words found, so no gpu word would be checked"],
+        )
 
 
 class PoisonClasses(unittest.TestCase):
@@ -345,6 +382,20 @@ class Repository(unittest.TestCase):
             core_words(),
         )
         self.assertNotIn("align", core_words())
+
+    def test_the_gpu_words_hold_every_gpu_op_and_dimension(self):
+        self.assertEqual(
+            gpu_words(),
+            {
+                "gpu.work_item_id",
+                "gpu.work_group_id",
+                "gpu.work_group_size",
+                "gpu.num_work_groups",
+                "gpu.x",
+                "gpu.y",
+                "gpu.z",
+            },
+        )
 
     def test_the_parser_printer_validation_and_interpreter_are_checked(self):
         files = generic_files()

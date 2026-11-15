@@ -8,7 +8,8 @@
 //! one. And the code of every module but the dialects, the module generator
 //! and the unit tests writes no word of the core dialect's text, names the
 //! core dialect only to register it, and declares no `enum` with two or
-//! more variants named after core ops.
+//! more variants named after core ops. It writes no word of the second
+//! dialect in tree, `gpu`, either (ADR-2026-11-09-1545).
 
 mod g0_scan;
 
@@ -17,6 +18,7 @@ use std::path::Path;
 use funk_ir::dialects::core::{
     self, FAST_MATH_FLAGS, FLOAT_PREDICATES, ORDERINGS, PREDICATES, ROUNDING_MODES, WRAP_FLAG_SETS,
 };
+use funk_ir::dialects::gpu;
 use funk_ir::{Block, Func, LocRef, Location, Module, Op, Registry, parse, print, verify};
 use g0_scan::{Tok, code, enum_variants, tokens};
 
@@ -196,16 +198,22 @@ fn the_check_covers_the_ir_the_parser_the_printer_and_the_verifier() {
     assert!(is_core_word(&core_words(), "i32") && !is_core_word(&core_words(), "i"));
 }
 
-/// The strings of the code of `src` that are words of the core dialect,
-/// each written alone.
-fn core_words_written(words: &[String], src: &str) -> Vec<String> {
+/// The strings of the code of `src`, each written alone, that `is_word`
+/// picks.
+fn strings_written(src: &str, is_word: impl Fn(&str) -> bool) -> Vec<String> {
     code(&tokens(src))
         .into_iter()
         .filter_map(|t| match t {
-            Tok::Str(s) if is_core_word(words, &s) => Some(s),
+            Tok::Str(s) if is_word(&s) => Some(s),
             _ => None,
         })
         .collect()
+}
+
+/// The strings of the code of `src` that are words of the core dialect,
+/// each written alone.
+fn core_words_written(words: &[String], src: &str) -> Vec<String> {
+    strings_written(src, |s| is_core_word(words, s))
 }
 
 #[test]
@@ -220,6 +228,51 @@ fn the_generic_modules_write_no_word_of_the_core_dialect() {
     assert!(
         found.is_empty(),
         "per-op code outside a dialect (ADR-2026-11-03-0600): {found:#?}"
+    );
+}
+
+/// Every word of the gpu dialect's text: its ops, from its registration,
+/// and its dimensions.
+fn gpu_words() -> Vec<String> {
+    let mut words: Vec<String> = gpu::dialect()
+        .ops
+        .iter()
+        .map(|op| op.name().to_string())
+        .collect();
+    words.extend(gpu::DIMENSIONS.iter().map(|d| d.to_string()));
+    words
+}
+
+/// The strings of the code of `src` that are words of the gpu dialect.
+fn gpu_words_written(words: &[String], src: &str) -> Vec<String> {
+    strings_written(src, |s| words.iter().any(|w| w == s))
+}
+
+#[test]
+fn a_gpu_word_written_alone_is_found_and_a_message_that_holds_one_is_not() {
+    let words = gpu_words();
+    assert!(words.iter().any(|w| w == "gpu.work_item_id"), "{words:?}");
+    assert!(words.iter().any(|w| w == "gpu.x"), "{words:?}");
+    let written = |src: &str| gpu_words_written(&words, src);
+    assert_eq!(
+        written(r#"fn f(n: &str) -> bool { n == "gpu.work_item_id" || n == "gpu.x" }"#),
+        ["gpu.work_item_id", "gpu.x"]
+    );
+    assert!(written(r#"fn why() -> &'static str { "a gpu.x dimension" }"#).is_empty());
+}
+
+#[test]
+fn the_generic_modules_write_no_word_of_the_gpu_dialect() {
+    let words = gpu_words();
+    let mut found = Vec::new();
+    for (path, src) in generic_sources() {
+        for s in gpu_words_written(&words, &src) {
+            found.push(format!("{path}: \"{s}\""));
+        }
+    }
+    assert!(
+        found.is_empty(),
+        "per-op code of gpu outside a dialect (ADR-2026-11-03-0600): {found:#?}"
     );
 }
 

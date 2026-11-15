@@ -87,6 +87,7 @@ import FirTest.EquivSteps
 import FirTest.EquivFuncs
 import FirTest.Equiv
 import FirTest.EquivNsw
+import FirTest.Gpu
 
 /-!
 The Lean tests. Building this library runs their checks. This root module

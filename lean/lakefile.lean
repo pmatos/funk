@@ -73,11 +73,18 @@ input_file floatTextCases where
   path := ".." / "tests" / "dialects" / "float-text.cases"
   text := true
 
+/-- The cases of the second dialect in tree, `gpu`, that the Lean tests
+share with the Rust tests, which `FirTest.Gpu` includes. -/
+input_file gpuCases where
+  path := ".." / "tests" / "dialects" / "gpu.cases"
+  text := true
+
 /-- The Lean tests: building them runs their checks. -/
 @[default_target]
 lean_lib FirTest where
   needs := #[`@/useOnceCases, `@/effectCases, `@/effectSummaryCases, `@/dialectSetCases,
-    `@/nestedModulesCases, `@/regionKindsCases, `@/itemKindsCases, `@/floatTextCases]
+    `@/nestedModulesCases, `@/regionKindsCases, `@/itemKindsCases, `@/floatTextCases,
+    `@/gpuCases]
 
 /-- The paths of the package's `.lean` files, outside hidden directories such
 as `.lake`, sorted, one per line. `#check_axioms` in `FirCheck` reads the same

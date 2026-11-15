@@ -1,0 +1,140 @@
+Cases of the second dialect in tree, gpu (ADR-2026-11-09-1545), shared by
+the two sides' tests: `lean/FirTest/Gpu.lean` reads them in the sum of the
+core and gpu (`CoreGpu`), and `crates/funk-ir/tests/gpu.rs` with the core
+and gpu registered, as `fir-ref` and `funk` read them. A case is `accept`,
+`invalid` (it parses and prints as itself, and validation rejects it) or
+`malformed` (it does not parse). The kernels live in a device module, a
+module nested in the host whose dialect set names gpu; the host's data
+layout gives the memories that the device module's pointer types name.
+=== accept host-and-device
+layout memory(3, unit(8), pointer(32), little)
+
+func @host(%a: i32) -> i32 {
+^e:
+  ret %a @0
+}
+
+module @dev() {
+  dialects gpu
+
+  func @global_id() -> i32 {
+  ^e:
+    %i: i32 = gpu.work_item_id gpu.x @0
+    %g: i32 = gpu.work_group_id gpu.x @0
+    %s: i32 = gpu.work_group_size gpu.x @0
+    %t: i32 = mul %g, %s @0
+    %r: i32 = add %t, %i @0
+    ret %r @0
+  }
+
+  func @shared(%v: i32) -> i32 {
+  ^e:
+    %n: i32 = gpu.num_work_groups gpu.z @0
+    %p: ptr(3) = alloca stack i32 4 @0
+    %q: ptr(3) = ptradd %p, %n @0
+    store nonatomic %v, %q @0
+    %w: i32 = load nonatomic %q @0
+    ret %w @0
+  }
+
+}
+
+locs {
+  @0 = unknown
+}
+=== accept every-dimension
+dialects gpu
+
+func @k() -> i32 {
+^e:
+  %x: i32 = gpu.work_item_id gpu.x @0
+  %y: i32 = gpu.work_item_id gpu.y @0
+  %z: i32 = gpu.work_item_id gpu.z @0
+  %s: i32 = add %x, %y @0
+  %t: i32 = add %s, %z @0
+  ret %t @0
+}
+
+locs {
+  @0 = unknown
+}
+=== invalid an-i64-id
+module @dev() {
+  dialects gpu
+
+  func @k() -> i64 {
+  ^e:
+    %i: i64 = gpu.work_item_id gpu.x @0
+    ret %i @0
+  }
+
+}
+
+locs {
+  @0 = unknown
+}
+=== invalid device-module-without-gpu
+module @dev() {
+  func @k() -> i32 {
+  ^e:
+    %i: i32 = gpu.work_item_id gpu.x @0
+    ret %i @0
+  }
+
+}
+
+locs {
+  @0 = unknown
+}
+=== invalid device-memory-not-declared
+module @dev() {
+  dialects gpu
+
+  func @k(%a: i32) {
+  ^e:
+    %p: ptr(3) = alloca stack i32 @0
+    store nonatomic %a, %p @0
+    ret @0
+  }
+
+}
+
+locs {
+  @0 = unknown
+}
+=== malformed no-such-dimension
+dialects gpu
+
+func @k() -> i32 {
+^e:
+  %i: i32 = gpu.work_item_id gpu.w @0
+  ret %i @0
+}
+
+locs {
+  @0 = unknown
+}
+=== malformed an-operand
+dialects gpu
+
+func @k(%a: i32) -> i32 {
+^e:
+  %i: i32 = gpu.work_group_size gpu.x %a @0
+  ret %i @0
+}
+
+locs {
+  @0 = unknown
+}
+=== malformed no-barrier
+dialects gpu
+
+func @k() {
+^e:
+  gpu.barrier gpu.x @0
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}

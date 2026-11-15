@@ -57,7 +57,8 @@ them, are the core's, since a core pointer type names each of them. An
 extension over the core names them through `ofBase`, and its `Own` names
 are memories outside those numbers. A dialect that wants a memory of its
 own with a layout entry, such as a GPU's shared memory, raises how its name
-and its number meet when it lands; no dialect of M1 has one yet.
+and its number meet when it lands. The second dialect, `gpu`, is the first:
+its work-group memory waits for the human's answer, asked on #212.
 
 A word belongs to the dialect named before its first `.`. A bare word
 belongs to the core (`wordDialect`). Reading an op or a type sends a word of

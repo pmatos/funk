@@ -493,7 +493,13 @@ fn block(i: usize, f: &Func, cx: &mut Cx<'_>, b: &Block, out: &mut Vec<Diagnosti
     cx.asm.label(&block_label(i, &b.label));
     for (n, op) in b.ops.iter().enumerate() {
         let Some(lower) = lowering(&op.name) else {
-            let why = format!("the x86-64 backend cannot lower the op {} yet", op.name);
+            let why = match op.name.split_once('.') {
+                Some((dialect, _)) => format!(
+                    "the x86-64 backend lowers no op of the dialect {dialect}, such as {}",
+                    op.name
+                ),
+                None => format!("the x86-64 backend cannot lower the op {} yet", op.name),
+            };
             out.push(at(f, Some(b), Some(n), why));
             continue;
         };

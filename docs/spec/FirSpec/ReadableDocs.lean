@@ -232,6 +232,11 @@ import FirSpec.Sum.LiftEffectLaws
 import FirSpec.Sum.TotalLaws
 import FirSpec.Sum.MonotoneLaws
 import FirSpec.Sum.MemPoisonLaws
+import FirSpec.Gpu.Ops
+import FirSpec.Gpu.Text
+import FirSpec.Gpu.Validation
+import FirSpec.Gpu.Effects
+import FirSpec.Gpu.TextLaws
 
 /-!
 The readable documents that `FirSpec.lean` renders with `{includeReadable}`,

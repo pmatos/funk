@@ -5,9 +5,11 @@ import FirRef.Run
 import FirRef.RunArgs
 
 /-!
-`fir-ref`, the reference interpreter's executable (ADR-2026-10-29-2009). It
-reads texts with the spec's parser and the core dialect, and prints them with
-the spec's printer, `Module.print`. Its command line follows `funk`'s
+`fir-ref`, the reference interpreter's executable (ADR-2026-10-29-2009). `fmt`
+and `validate` read texts with the spec's parser and the dialects in tree,
+the core and `gpu` (`CoreGpu`, ADR-2026-11-09-1545), and `fmt` prints them
+with the spec's printer, `Module.print`; `run` reads them with the core
+dialect alone, until the runs of a `gpu` work-item land (#212, stage 2). Its command line follows `funk`'s
 (`docs/decisions/fir-ref-command-line.md#shared-by-every-command`).
 
 fir has no nesting limit (#36), so `fir-ref` must give a verdict at any depth.
@@ -35,14 +37,15 @@ def usage : String := "usage: fir-ref fmt [--check] FILE...
        fir-ref run [--fuel N] [--choices C,... | --exhaustive [--choice-bits B]
                    | --seed S] FILE @FUNC [ARG...]
 
-  fmt       Parse each FILE with the core dialect and print it in canonical
-            form, as the spec's printer writes it. fmt does not validate: a
-            module that parses has a canonical form.
+  fmt       Parse each FILE with the core and gpu dialects and print it
+            in canonical form, as the spec's printer writes it. fmt does
+            not validate: a module that parses has a canonical form.
               --check  print the name of each FILE that is not canonical
-  validate  Parse each FILE with the core dialect and run the spec's
-            validation check. Print one JSON object per FILE, on one line,
-            as funk verify --json does: the FILE, its verdict (accepted,
-            parse-error, validation-error or io-error) and its diagnostics.
+  validate  Parse each FILE with the core and gpu dialects and run the
+            spec's validation check. Print one JSON object per FILE, on one
+            line, as funk verify --json does: the FILE, its verdict
+            (accepted, parse-error, validation-error or io-error) and its
+            diagnostics.
   run       Parse FILE with the core dialect, without validating it, and
             run its function @FUNC, named as fir's text writes it, with the
             spec's interpreter. Give one ARG per parameter, spelled as a
@@ -91,7 +94,7 @@ def fmtFile (check : Bool) (file : String) : IO UInt32 := do
     IO.eprintln s!"fir-ref: cannot read {what}: {why}"
     return 2
   | .ok bytes =>
-    match parseBytes (d := CoreDialect) bytes with
+    match parseBytes (d := CoreGpu) bytes with
     | .error e =>
       IO.eprintln s!"{file}:{e.pos.line}:{e.pos.col}: parse error: {e.reason}"
       return 1

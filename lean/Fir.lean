@@ -230,3 +230,8 @@ import Fir.Sum.MonotoneLaws
 import Fir.Sum.MemPoisonLaws
 import Fir.Core.Names
 import Fir.Validation.DialectSet
+import Fir.Gpu.Ops
+import Fir.Gpu.Text
+import Fir.Gpu.Validation
+import Fir.Gpu.Effects
+import Fir.Gpu.TextLaws
