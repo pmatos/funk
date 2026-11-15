@@ -284,6 +284,8 @@ extensions written apart combine in one sum.
 
 {includeReadable "." Fir.Validation.DialectSet "A module's dialect set" FirSpec.Validation.DialectSet (level := 2)}
 
+{includeReadable "." Fir.Validation.Nest "The module of a nested table" FirSpec.Validation.Nest (level := 2)}
+
 {includeReadable "." Fir.Sum.Dialect "The sum of dialects" FirSpec.Sum.Dialect (level := 2)}
 
 {includeReadable "." Fir.Sum.TextLaws "The text of a sum" FirSpec.Sum.TextLaws (level := 2)}
@@ -308,6 +310,8 @@ extensions written apart combine in one sum.
 
 {includeReadable "." Fir.Sum.MemPoisonLaws "Poison of a sum and a lift, with memory" FirSpec.Sum.MemPoisonLaws (level := 2)}
 
+{includeReadable "." Fir.Sum.RunLaws "Runs of a sum, op by op" FirSpec.Sum.RunLaws (level := 2)}
+
 # The GPU dialect
 
 The second dialect in tree, `gpu`, is shaped like a GPU kernel language
@@ -318,8 +322,10 @@ pointer types name the memories of its host's layout (ADR-2026-11-12-1821).
 `gpu` is terminal: it has no lowering to the core and no native backend
 (ADR-2026-11-09-1544). In M1 a kernel runs one work-item at a time, with
 its ids given as inputs, and no op of `gpu` needs another work-item. This
-chapter gives its abstract syntax, text, rules and effects, and the laws of
-its text; the rules by which a work-item runs come in a later section.
+chapter gives its abstract syntax, text, rules and effects, the laws of its
+text, the rules by which a work-item runs, the guarantees of the sum of the
+core and `gpu`, for the functions of every table of a valid module, a device
+module's kernels included, and the modes that `fir-ref run` walks.
 
 {includeReadable "." Fir.Gpu.Ops "Abstract syntax" FirSpec.Gpu.Ops (level := 2)}
 
@@ -330,6 +336,12 @@ its text; the rules by which a work-item runs come in a later section.
 {includeReadable "." Fir.Gpu.Effects "Effects" FirSpec.Gpu.Effects (level := 2)}
 
 {includeReadable "." Fir.Gpu.TextLaws "The text is lawful" FirSpec.Gpu.TextLaws (level := 2)}
+
+{includeReadable "." Fir.Gpu.Semantics "Execution" FirSpec.Gpu.Semantics (level := 2)}
+
+{includeReadable "." Fir.Gpu.Runs "Runs of the core and gpu" FirSpec.Gpu.Runs (level := 2)}
+
+{includeReadable "." Fir.Gpu.Modes "Modes of the core and gpu" FirSpec.Gpu.Modes (level := 2)}
 
 # Architecture decision records
 %%%

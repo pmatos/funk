@@ -39,6 +39,28 @@ class Execution(unittest.TestCase):
         self.assertEqual(run.call_args_list[0].args[0], base + tail)
         self.assertEqual(run.call_args_list[1].args[0], base + ["--choices", ""] + tail)
 
+    def test_a_kernel_s_work_item_goes_before_the_mode(self):
+        test = Test(
+            "m.fir", "@d::@k", expect=(), work_item=(("group_size", (4, 1, 1)),)
+        )
+        runs = ProcessRuns("fir-ref", FilePath("m.fir"), test, "is not built")
+        response = tools.Ran(0, '{"kind":"return","values":[],"choices":0}\n', "")
+        with patch.object(tools, "run", return_value=response) as run:
+            self.assertIsInstance(runs.scripted((), None), Path)
+        run.assert_called_once_with(
+            [
+                "fir-ref",
+                "run",
+                "--fuel",
+                "1000000",
+                "--work-group-size",
+                "4,1,1",
+                "--",
+                "m.fir",
+                "@d::@k",
+            ]
+        )
+
     def test_sampled_passes_seed_and_decodes_its_sequence(self):
         response = tools.Ran(
             0, '{"kind":"return","values":["7"],"choices":1,"sequence":["3"]}\n', ""

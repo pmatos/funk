@@ -4,7 +4,9 @@ import FirRef.Run
 The command line of `fir-ref run`
 (`docs/decisions/fir-ref-command-line.md#fir-ref-run`):
 
-`fir-ref run [--fuel N] [--choices C,C,... | --exhaustive [--choice-bits B] | --seed S] FILE @FUNC [ARG...]`
+`fir-ref run [--fuel N] [--choices C,C,... | --exhaustive [--choice-bits B] | --seed S]
+[--work-item-id X,Y,Z] [--work-group-id X,Y,Z] [--work-group-size X,Y,Z]
+[--num-work-groups X,Y,Z] FILE @FUNC [ARG...]`
 
 Options may come anywhere before `--`, which ends them, and each takes the
 next argument as its value. An argument such as `-5` is not an option.
@@ -20,12 +22,19 @@ next argument as its value. An argument such as `-5` is not an option.
   path; 16 by default.
 * `--seed S`: sampled mode instead of scripted mode: each choice is drawn
   from a generator seeded with S, from 0 to 2^64 - 1.
+* `--work-item-id X,Y,Z`, `--work-group-id X,Y,Z`, `--work-group-size X,Y,Z`
+  and `--num-work-groups X,Y,Z`: the work-item that the run runs, the input
+  that the ops of `gpu` read (`Gpu.WorkItem`), each a number in each of the
+  dimensions `gpu.x`, `gpu.y` and `gpu.z`. By default every id is 0 and
+  every size 1. The work-item must be one of its grid (`Gpu.WorkItem.Valid`).
 
-N, B and S are ASCII decimal digits. `--choices`, `--exhaustive` and
+N, B, S, X, Y and Z are ASCII decimal digits. `--choices`, `--exhaustive` and
 `--seed` go one at a time, and `--choice-bits` needs `--exhaustive`.
 -/
 
 namespace FirRef
+
+open Fir
 
 /-- The arguments of `run`: its fuel, its mode, its file, the function and
 the function's arguments. -/
@@ -35,6 +44,7 @@ structure RunArgs where
   file : String
   func : String
   args : List String
+  workItem : Gpu.WorkItem := .single
 
 /-- The options of `run` read so far. -/
 structure RunOptions where
@@ -43,6 +53,7 @@ structure RunOptions where
   exhaustive : Bool := false
   budget : Option Nat := none
   seed : Option Nat := none
+  workItem : Gpu.WorkItem := .single
 
 /-- The number that the value `n` of the option `opt` spells: ASCII decimal
 digits. -/
@@ -54,6 +65,39 @@ def optionNat (opt what n : String) : Except String Nat :=
 /-- The choices that `--choices` spells: none for the empty text, and
 otherwise the texts between its commas. -/
 def choiceList (s : String) : List String := if s.isEmpty then [] else s.splitOn ","
+
+/-- The three numbers that the value `v` of the work-item option `opt`
+spells, one per dimension: ASCII decimal digits below 2^32, joined by
+commas. -/
+def dims (opt v : String) : Except String (Gpu.Dim → Nat) :=
+  let why := s!"{opt} takes three numbers below 2^32, as X,Y,Z, not {shown v}"
+  match (v.splitOn ",").mapM fun n => if n.all Char.isDigit then n.toNat? else none with
+  | some [x, y, z] =>
+    if x < 2 ^ 32 ∧ y < 2 ^ 32 ∧ z < 2 ^ 32 then .ok fun | .x => x | .y => y | .z => z
+    else .error why
+  | _ => .error why
+
+/-- The work-item with the numbers `v` of the option `opt` in place. -/
+@[instance_reducible] def setWorkItem (w : Gpu.WorkItem) (opt : String) (v : Gpu.Dim → Nat) : Gpu.WorkItem :=
+  match opt with
+  | "--work-item-id" => { w with itemId := v }
+  | "--work-group-id" => { w with groupId := v }
+  | "--work-group-size" => { w with groupSize := v }
+  | _ => { w with numGroups := v }
+
+/-- The options that give the work-item. -/
+def workItemOptions : List String :=
+  ["--work-item-id", "--work-group-id", "--work-group-size", "--num-work-groups"]
+
+/-- Why the work-item is not one of its grid, in the first dimension where
+it is not. -/
+def workItemProblem (w : Gpu.WorkItem) : Option String :=
+  [(Gpu.Dim.x, "x"), (.y, "y"), (.z, "z")].findSome? fun (d, n) =>
+    if w.itemId d ≥ w.groupSize d then
+      some s!"the work-item id {w.itemId d} in {n} is not below the work-group size {w.groupSize d}"
+    else if w.groupId d ≥ w.numGroups d then
+      some s!"the work-group id {w.groupId d} in {n} is not below the number of work-groups {w.numGroups d}"
+    else none
 
 /-- Reads the arguments of `run`. -/
 def runArgs (args : List String) : Except String RunArgs := go true {} [] args
@@ -68,13 +112,18 @@ where
         | none, false, none, some s => .ok (.sampled s)
         | cs, false, none, none => .ok (.scripted (choiceList (cs.getD "")))
         | none, true, b, none => .ok (.exhaustive (b.getD defaultChoiceBits))
+      if let some why := workItemProblem o.workItem then .error why
       match pos.reverse with
-      | file :: func :: rest => .ok ⟨o.fuel, mode, file, func, rest⟩
+      | file :: func :: rest => .ok ⟨o.fuel, mode, file, func, rest, o.workItem⟩
       | [_] => .error "no @FUNC given"
       | [] => .error "no FILE given; use - for standard input"
     | a :: rest =>
       if options && a == "--" then go false o pos rest
       else if options && a == "--exhaustive" then go options { o with exhaustive := true } pos rest
+      else if options && workItemOptions.contains a then
+        match rest with
+        | v :: rest' => do go options { o with workItem := setWorkItem o.workItem a (← dims a v) } pos rest'
+        | [] => .error s!"{a} takes three numbers below 2^32, as X,Y,Z"
       else if options && (a == "--fuel" || a == "--choices" || a == "--choice-bits" ||
           a == "--seed") then
         match rest with

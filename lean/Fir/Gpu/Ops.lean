@@ -23,8 +23,8 @@ one question in one dimension and gives the answer as an `i32`:
 * `%n: i32 = gpu.num_work_groups gpu.x` is the number of work-groups.
 
 This section gives the dialect's abstract syntax and signature; its text,
-its rules and its effects follow in sections of their own. Its execution
-rules come with the runs of a work-item (#212, stage 2).
+its rules, its effects and its execution rules, by which one work-item runs,
+follow in sections of their own.
 -/
 
 namespace Fir.Gpu

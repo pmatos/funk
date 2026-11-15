@@ -26,7 +26,14 @@ canonical, and JSON sidecars, which have no comments (ADR-2026-10-30-2050).
 A test is one inline table in the sidecar's `tests` list. Its keys are `func`,
 `args`, `fuel` (1,000,000 steps by default) and `expect`
 (ADR-2026-10-30-2050). The keys `results` and `choices` come from
-ADR-2026-10-30-2135.
+ADR-2026-10-30-2135. `work_item` gives the work-item that a kernel of a
+device module runs as, and `func` names such a kernel by the path of its
+modules, `@dev::@k`, as `fir-ref run` does; a test of either kind is
+interpreter-only, since `funk build` builds no nested module's functions
+(#212, stage 2; fir-ref-command-line.md#kernels-and-the-work-item). The
+coverage matrix does not count a kernel's test. This key was added without
+a ruling, as an implementation choice of #212, and the human may rule on
+it.
 
 A module with a differential test builds whole, since `funk build` is all or
 nothing. A function that the backend does not lower goes in a module whose tests

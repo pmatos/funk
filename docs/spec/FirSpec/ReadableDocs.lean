@@ -237,6 +237,11 @@ import FirSpec.Gpu.Text
 import FirSpec.Gpu.Validation
 import FirSpec.Gpu.Effects
 import FirSpec.Gpu.TextLaws
+import FirSpec.Gpu.Semantics
+import FirSpec.Gpu.Runs
+import FirSpec.Gpu.Modes
+import FirSpec.Sum.RunLaws
+import FirSpec.Validation.Nest
 
 /-!
 The readable documents that `FirSpec.lean` renders with `{includeReadable}`,

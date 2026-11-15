@@ -102,6 +102,10 @@ def count(root: Path) -> dict[str, Counter]:
         try:
             functions = firtext.read(m.path.read_text(encoding="utf-8"))
             for t in m.tests:
+                # A kernel of a nested module runs in its own table, whose
+                # ops the matrix of the core does not read (#212).
+                if "::" in t.func:
+                    continue
                 side = "differential" if t.expect is None else "interpreter"
                 if t.func not in functions:
                     raise CoverageError(f"there is no function {t.func}")

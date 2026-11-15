@@ -38,13 +38,25 @@ NOTICES = ("LICENSE.TXT", "README.md")
 LICENCE_SHA256 = "3340babe8ac7bc6ae294d93aa01c310a250d43d5b760e5c12954882d4e5c83c7"
 
 
+# The keys of a test's `work_item`, each the `fir-ref run` option that gives
+# it (docs/decisions/fir-ref-command-line.md#fir-ref-run).
+WORK_ITEM = {
+    "id": "--work-item-id",
+    "group_id": "--work-group-id",
+    "group_size": "--work-group-size",
+    "num_groups": "--num-work-groups",
+}
+
+
 @dataclass(frozen=True)
 class Test:
     """One run of a function. Each of its `args` is a value spelled as a
     constant, or `poison` (#123). `expect` is None for a differential test,
     which may declare its `results`; an interpreter-only test expects a
     tuple of values, UB or fuel exhausted, on the path that its `choices`
-    name."""
+    name. `work_item` gives the work-item that the run runs, as pairs of a
+    key of `WORK_ITEM` and its three numbers, for a kernel of a device
+    module, which `func` names as `@dev::@k` (#212)."""
 
     module: str
     func: str
@@ -53,11 +65,21 @@ class Test:
     expect: object = None
     choices: tuple[str, ...] | None = None
     results: tuple[Declared, ...] = ()
+    work_item: tuple[tuple[str, tuple[int, ...]], ...] = ()
+
+    def work_item_options(self) -> list[str]:
+        """The `fir-ref run` options that give the test's work-item."""
+        return [
+            o
+            for key, xs in self.work_item
+            for o in (WORK_ITEM[key], ",".join(map(str, xs)))
+        ]
 
     def show(self) -> str:
         fuel = [] if self.fuel == DEFAULT_FUEL else ["--fuel", str(self.fuel)]
         if self.choices is not None:
             fuel += ["--choices", ",".join(self.choices)]
+        fuel += self.work_item_options()
         text = " ".join([self.module, *fuel, self.func, *self.args])
         return text if self.expect is None else text + " (interpreter only)"
 
@@ -224,7 +246,8 @@ def parse_tests(
     data: dict, module: str, ported: bool = False
 ) -> tuple[list[Test], list[str]]:
     """The tests of a sidecar: `tests`, a list of tables with `func` and
-    optionally `args`, `fuel`, `expect`, `choices` and `results`. A ported
+    optionally `args`, `fuel`, `expect`, `choices`, `results` and
+    `work_item`. A ported
     module's sidecar also has `source`, and each of its tests `from`."""
     keys = ("tests", "source") if ported else ("tests",)
     problems = [f"unknown key {k}" for k in unknown_keys(data, keys)]
@@ -258,6 +281,11 @@ def parse_tests(
                 expect,
                 None if choices is None else tuple(choices),
                 results,
+                tuple(
+                    (k, tuple(t["work_item"][k]))
+                    for k in WORK_ITEM
+                    if k in t.get("work_item", {})
+                ),
             )
         )
     return found, problems
@@ -291,7 +319,7 @@ def source_problem(source) -> str | None:
 def test_problem(t, ported: bool = False) -> str | None:
     if not isinstance(t, dict):
         return "a test is a table"
-    allowed = ("func", "args", "fuel", "expect", "choices", "results")
+    allowed = ("func", "args", "fuel", "expect", "choices", "results", "work_item")
     keys = unknown_keys(t, allowed + (("from",) if ported else ()))
     if keys:
         return f"unknown key {keys[0]}"
@@ -321,6 +349,9 @@ def test_problem(t, ported: bool = False) -> str | None:
         )
     ):
         return f"expect is a list of values, {UB} or {FUEL_EXHAUSTED}"
+    why = work_item_problem(t)
+    if why:
+        return why
     if "choices" in t:
         if expect is None:
             return "choices go with expect: a differential test declares results"
@@ -330,6 +361,35 @@ def test_problem(t, ported: bool = False) -> str | None:
         if expect is not None:
             return "results go with a differential test, not with expect"
         return results_problem(t["results"])
+    return None
+
+
+def work_item_problem(t: dict) -> str | None:
+    """Why a test's `work_item`, or its function in a nested module, does not
+    fit, if it does not. A function of a nested module, `@dev::@k`, runs on
+    `fir-ref` alone, since `funk build` builds no nested module's functions,
+    and so does a test that gives a work-item. Each key of `work_item` holds
+    three numbers below 2^32, one per dimension."""
+    item = t.get("work_item")
+    if ("::" in t["func"] or item is not None) and t.get("expect") is None:
+        return "a kernel's test is interpreter-only: it has expect"
+    if item is None:
+        return None
+    if not isinstance(item, dict):
+        return "work_item is a table of the work-item's ids and sizes"
+    keys = unknown_keys(item, tuple(WORK_ITEM))
+    if keys:
+        return f"work_item: unknown key {keys[0]}"
+    for key, xs in item.items():
+        if not (
+            isinstance(xs, list)
+            and len(xs) == 3
+            and all(
+                isinstance(x, int) and not isinstance(x, bool) and 0 <= x < 2**32
+                for x in xs
+            )
+        ):
+            return f"work_item: {key} is three numbers below 2^32, one per dimension"
     return None
 
 

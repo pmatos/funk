@@ -125,8 +125,8 @@ def runMixed (t : String) (args : List String := []) (fuel : Nat := defaultFuel)
     match readSumArgs (f.params.map (·.2)) args with
     | .error _ => none
     | .ok vs => some <| match (f.run m (m := Mix) vs fuel).run.script constOf [] 0 with
-      | .ok (.ok r, c) => scriptedReport "@f" (.ok (.ok (coreResult r), c))
-      | .ok (.ub r, c) => scriptedReport "@f" (.ok (.ub r, c))
+      | .ok (.ok r, c) => scriptedReport (V := DVal CoreDialect) "@f" (.ok (.ok (coreResult r), c))
+      | .ok (.ub r, c) => scriptedReport (V := DVal CoreDialect) "@f" (.ok (.ub r, c))
       | .ok (.noOutcome op, _) => { err := s!"{op} has no rule", status := 2 }
       | .error _ => { err := "the run makes a choice", status := 2 }
 

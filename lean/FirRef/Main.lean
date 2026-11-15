@@ -8,8 +8,8 @@ import FirRef.RunArgs
 `fir-ref`, the reference interpreter's executable (ADR-2026-10-29-2009). `fmt`
 and `validate` read texts with the spec's parser and the dialects in tree,
 the core and `gpu` (`CoreGpu`, ADR-2026-11-09-1545), and `fmt` prints them
-with the spec's printer, `Module.print`; `run` reads them with the core
-dialect alone, until the runs of a `gpu` work-item land (#212, stage 2). Its command line follows `funk`'s
+with the spec's printer, `Module.print`; `run` reads them so too, and runs
+a function as one work-item of `gpu`. Its command line follows `funk`'s
 (`docs/decisions/fir-ref-command-line.md#shared-by-every-command`).
 
 fir has no nesting limit (#36), so `fir-ref` must give a verdict at any depth.
@@ -35,7 +35,9 @@ open Fir
 def usage : String := "usage: fir-ref fmt [--check] FILE...
        fir-ref validate FILE...
        fir-ref run [--fuel N] [--choices C,... | --exhaustive [--choice-bits B]
-                   | --seed S] FILE @FUNC [ARG...]
+                   | --seed S] [--work-item-id X,Y,Z] [--work-group-id X,Y,Z]
+                   [--work-group-size X,Y,Z] [--num-work-groups X,Y,Z]
+                   FILE @FUNC [ARG...]
 
   fmt       Parse each FILE with the core and gpu dialects and print it
             in canonical form, as the spec's printer writes it. fmt does
@@ -46,13 +48,14 @@ def usage : String := "usage: fir-ref fmt [--check] FILE...
             line, as funk verify --json does: the FILE, its verdict
             (accepted, parse-error, validation-error or io-error) and its
             diagnostics.
-  run       Parse FILE with the core dialect, without validating it, and
-            run its function @FUNC, named as fir's text writes it, with the
-            spec's interpreter. Give one ARG per parameter, spelled as a
-            constant of its type: true or false at i1, signed decimal at
-            every other width, a float literal such as 1.5 or 0x7fc00000
-            at a float type; or poison, at any integer or float type, for
-            a poison argument. freeze of poison makes a choice. Print one
+  run       Parse FILE with the core and gpu dialects, without validating
+            it, and run its function @FUNC, named as fir's text writes it,
+            or @M::@FUNC for a function of its nested module @M, at any
+            depth, with the spec's interpreter, as one work-item. Give
+            one ARG per parameter, spelled as a constant of its type: true
+            or false at i1, signed decimal at every other width, a float
+            literal such as 1.5 or 0x7fc00000 at a float type; or poison,
+            at any integer or float type, for a poison argument. freeze of poison makes a choice. Print one
             JSON object: the one outcome of the path that the choices name
             (the values returned, UB, fuel exhausted, or stuck), or with
             --exhaustive every outcome of the run, or with --seed the one
@@ -68,6 +71,15 @@ def usage : String := "usage: fir-ref fmt [--check] FILE...
               --seed S          draw each choice from a generator seeded
                                 with S, below 2^64, and print the choices
                                 drawn
+              --work-item-id X,Y,Z     the work-item's id in its work-group,
+                                       in gpu.x, gpu.y and gpu.z (default
+                                       0,0,0)
+              --work-group-id X,Y,Z    its work-group's id (default 0,0,0)
+              --work-group-size X,Y,Z  the work-items in a work-group
+                                       (default 1,1,1)
+              --num-work-groups X,Y,Z  the work-groups (default 1,1,1)
+                                each a number below 2^32; each id must be
+                                below its size
   -h, --help  Print this help.
 
 A FILE of - is standard input; -- ends the options.
@@ -130,7 +142,7 @@ def runFile (a : RunArgs) : IO UInt32 := do
     IO.eprintln s!"fir-ref: cannot read {what}: {why}"
     return 2
   | .ok bytes =>
-    let r := runBytes a.file bytes a.fuel a.func a.args a.mode
+    let r := runBytes a.file bytes a.fuel a.func a.args a.mode a.workItem
     if !r.out.isEmpty then IO.println r.out
     if !r.err.isEmpty then IO.eprintln r.err
     return r.status

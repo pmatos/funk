@@ -11,7 +11,10 @@
 # that call run out of a million steps in each mode (#47). It runs functions on
 # poison arguments, and rejects poison where it is not an argument of an
 # integer type (#123). It rejects an argument that is a long comment, on a 256
-# KiB stack (#135).
+# KiB stack (#135). It runs the kernels of a device module as one work-item,
+# named as @dev::@k, with the work-item's ids and sizes as options, through
+# modules nested 3,000 deep on a 256 KiB stack, and rejects a work-item that
+# is not one of its grid (#212).
 set -euo pipefail
 
 if [[ $# -ne 1 ]]; then
@@ -216,6 +219,43 @@ runs "$tmp/ptr.fir" 0 "${ret}[\"poison\"]$none" @p poison || status=1
 runs "$tmp/ptr.fir" 2 'fir-ref: 0 is not a value of type ptr' @p 0 || status=1
 runs $c/add.fir 2 'fir-ref: @add3 takes 3 arguments, not 2' @add3 1 2 || status=1
 runs $c/empty.fir 2 "fir-ref: $c/empty.fir has no function @f" @f || status=1
+# A kernel of a device module runs as one work-item, named by the path of
+# its modules, with the work-item's ids and sizes as its input (#212).
+k=$c/gpu-kernel.fir
+runs $k 0 "${ret}[\"0\"]$none" @dev::@global_id || status=1
+runs $k 0 "${ret}[\"11\"]$none" --work-item-id 3,0,0 --work-group-id 2,0,0 \
+    --work-group-size 4,1,1 --num-work-groups 5,1,1 @dev::@global_id || status=1
+runs $k 0 "${ret}[\"42\"]$none" --num-work-groups 1,6,7 @dev::@groups || status=1
+runs $k 0 "${ret}[\"42\"]$none" --work-item-id 0,4,0 --work-group-size 1,8,1 \
+    @dev::@scratch 21 || status=1
+runs $k 0 '{"kind":"outcomes","choices":0,"outcomes":[{"kind":"return","values":["1"]}]}' \
+    --exhaustive --work-item-id 1,0,0 --work-group-size 2,1,1 @dev::@global_id || status=1
+runs $k 0 "${ret}[\"10\"]$none" @host 5 || status=1
+runs $k 2 "fir-ref: $k has no function @dev::@nope" @dev::@nope || status=1
+runs $k 2 "fir-ref: $k has no function @dev" @dev || status=1
+runs $k 2 "fir-ref: $k has no function @global_id" @global_id || status=1
+# A work-item that is not one of its grid is a usage error.
+for bad in "--work-item-id 4,0,0 --work-group-size 4,1,1" "--num-work-groups 0,1,1" \
+    "--work-item-id 1,2" "--work-group-size 1,4294967296,1"; do
+    rc=0
+    # shellcheck disable=SC2086 # BAD is a list of words.
+    "$fir_ref" run $bad $k @dev::@global_id >"$tmp/run.out" 2>"$tmp/run.err" || rc=$?
+    if [[ $rc -ne 2 || -s "$tmp/run.out" || $(head -n 1 "$tmp/run.err") != "fir-ref: "* ]]; then
+        echo "fir-ref run $bad on a kernel exits with $rc, not 2 with a usage error" >&2
+        status=1
+    fi
+done
+# A kernel runs through modules nested 3,000 deep, with no stack per level.
+{
+    printf 'module @dev() {\n  dialects gpu\n'
+    for _ in $(seq 3000); do printf 'module @m() {\n  dialects gpu\n'; done
+    printf 'func @k() -> i32 {\n^e:\n  %%i: i32 = gpu.work_item_id gpu.x @0\n  ret %%i @0\n}\n'
+    for _ in $(seq 3001); do printf '}\n'; done
+    printf '\nlocs {\n  @0 = unknown\n}\n'
+} >"$tmp/deep-kernel.fir"
+path="@dev::$(printf '@m::%.0s' $(seq 3000))@k"
+(ulimit -c 0 && LEAN_STACK_SIZE_KB=256 runs "$tmp/deep-kernel.fir" 0 "${ret}[\"3\"]$none" \
+    --work-item-id 3,0,0 --work-group-size 4,1,1 "$path") || status=1
 rc=0
 "$fir_ref" run "$tmp/missing.fir" @f 2>/dev/null || rc=$?
 if [[ $rc -ne 2 ]]; then

@@ -13,6 +13,8 @@ Tier: direction; area: testing-and-harness
   `args`, `fuel` (1,000,000 steps by default) and `expect`. A test without
   `expect` is differential and runs on `fir-ref` and as native code; one with
   it is interpreter-only. `results` and `choices` are ADR-2026-10-30-2135's.
+  `work_item`, the work-item of a kernel named `@dev::@k`, is #212's, and
+  such a test is interpreter-only.
 - **A module with a differential test builds whole**, since `funk build` is all
   or nothing. A function the backend does not lower goes in a module whose
   tests are all interpreter-only.

@@ -2,9 +2,9 @@ import FirTest.Run
 
 /-!
 Tests of `fir-ref run` on long runs and deep calls (#47). `FirRef.runBytes`
-calls the spec's `Core.scripted`, `Core.exhaustive` and `Core.sampled`,
+calls the spec's `Gpu.scripted`, `Gpu.exhaustive` and `Gpu.sampled`,
 and the `@[csimp]` theorems before it in `FirRef.Run` make it run
-`FirRef.runScripted`, `FirRef.runExhaustive` and `FirRef.runSampled`, which
+`FirRef.runGpuScripted`, `FirRef.runGpuExhaustive` and `FirRef.runGpuSampled`, which
 walk the states of `FirRef.Machine` and take no stack per step, per level
 of calls or per choice. Below, each mode runs a loop that never ends and a
 recursion that never ends for 1,000,000 steps, and a recursion 100,000
@@ -98,18 +98,18 @@ above the bottom, and nine at the bottom, `@flip`'s four included. -/
 /-! # The theorems' axioms -/
 
 /--
-info: 'FirRef.scripted_eq_runScripted' depends on axioms: [propext, Classical.choice, Quot.sound]
+info: 'FirRef.gpuScripted_eq_runGpuScripted' depends on axioms: [propext, Classical.choice, Quot.sound]
 -/
-#guard_msgs in #print axioms FirRef.scripted_eq_runScripted
+#guard_msgs in #print axioms FirRef.gpuScripted_eq_runGpuScripted
 
 /--
-info: 'FirRef.exhaustive_eq_runExhaustive' depends on axioms: [propext, Classical.choice, Quot.sound]
+info: 'FirRef.gpuExhaustive_eq_runGpuExhaustive' depends on axioms: [propext, Classical.choice, Quot.sound]
 -/
-#guard_msgs in #print axioms FirRef.exhaustive_eq_runExhaustive
+#guard_msgs in #print axioms FirRef.gpuExhaustive_eq_runGpuExhaustive
 
 /--
-info: 'FirRef.sampled_eq_runSampled' depends on axioms: [propext, Classical.choice, Quot.sound]
+info: 'FirRef.gpuSampled_eq_runGpuSampled' depends on axioms: [propext, Classical.choice, Quot.sound]
 -/
-#guard_msgs in #print axioms FirRef.sampled_eq_runSampled
+#guard_msgs in #print axioms FirRef.gpuSampled_eq_runGpuSampled
 
 end FirTest

@@ -102,8 +102,9 @@ machine stops stands for the spec's tree of the state.
 (`lean/FirRef/RunModes.lean`) walk the machine's states in loops of tail calls,
 exhaustive mode with a work list in the order the spec visits the paths. For
 every dialect, each is proved to give what `ChoiceTree.script`, `explore` or
-`sample` gives on the tree of the run. `FirRef.Run` registers them for the core
-dialect, over `Core.scripted`, `Core.exhaustive` and `Core.sampled`, before
+`sample` gives on the tree of the run. `FirRef.Run` registers them for the
+dialects in tree, the core and `gpu`, over `Gpu.scripted`, `Gpu.exhaustive`
+and `Gpu.sampled`, the modes that `fir-ref run` calls (#212), before
 `runBytes`. `fir-ref run` reports fuel exhaustion at any budget. Its frames and
 environments are on the heap, so a deep recursion costs memory, not stack.
 

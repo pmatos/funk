@@ -59,9 +59,11 @@ proved sound once for any tree (`explore_toSet`, `script_toSet`), and lifted
 to a run of any dialect by `Func.explore_outcomes` and `Func.script_outcomes`,
 and to a run with memory by `Func.memExplore_outcomes` and
 `Func.memScript_outcomes`. `Core.exhaustive_memOutcomes` and
-`Core.scripted_memOutcomes` state the results for the core dialect, about the
-functions `fir-ref` calls, `Core.exhaustive` and `Core.scripted`, against the
-runs with memory at the module's layout. A node holds a function of the bits,
+`Core.scripted_memOutcomes` state the results for the core dialect,
+`Core.exhaustive` and `Core.scripted`, against the runs with memory at the
+module's layout, and `Gpu.exhaustive_memOutcomes` and
+`Gpu.scripted_memOutcomes` for the core and `gpu`, about the functions
+`fir-ref` calls, `Gpu.exhaustive` and `Gpu.scripted` (#212). A node holds a function of the bits,
 so exhaustive mode runs the rest of the function once for each value it tries.
 
 A new op family adds its rule to `Core.Op.denote?` or `Core.Op.exit?`, and
