@@ -30,9 +30,8 @@ human ruled on 2026-11-11 (#231, Q4) that loads and stores carry an
 alignment that defaults to the type's natural alignment, and on 2026-11-14
 (#382) that every op's attributes are separated by spaces. LLVM's ordering
 words are the set that C11, C++11 and LLVM-based code already lower to, so
-a front end maps its orderings one to one. The words are an agent's
-proposal, put to the human on #391, the PR that adds `load`; this ADR is
-edited in place if the human rules otherwise.
+a front end maps its orderings one to one. The human chose LLVM's words on
+2026-11-15, on #391, the PR that adds `load`.
 
 ## Rejected alternatives
 

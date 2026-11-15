@@ -118,7 +118,9 @@ Each op declares a set of effects, and the spec proves the declaration sound
 (ADR-2026-11-09-1541). semantics-effects.md says what holds. Effects on
 different memories commute. An external call, an indirect call to an unknown
 function and inline assembly without a narrower declaration carry every effect
-on every memory that can have escaped to them. Passes may rely on a
+on every memory that can have escaped to them. Such a block may also read and
+write the memory that a pointer operand points into; the human ruled on
+2026-11-15 (#309). Passes may rely on a
 declaration because of its proof, and each new op costs one soundness proof per
 effect it leaves out (ADR-2026-11-09-1541).
 
@@ -219,8 +221,9 @@ declared effects allow. `fir-ref` takes the answer from the test's script, as
 for external calls. The answer for a block without observable is keyed by the
 block, its operands and the contents of the memories it declares it reads, not
 by its position in the trace. A block with no narrower declaration reads every
-memory that can have escaped to it, so its key covers all of them
-(ADR-2026-11-09-1552).
+memory that can have escaped to it and the memory that a pointer operand points
+into, so its key covers all of them (ADR-2026-11-09-1552,
+ADR-2026-11-09-1541).
 
 M1 brings the spec, the parser, printer and verifier on both sides, and
 `fir-ref`. Until M4, the naive backend rejects inline assembly with a diagnostic,
