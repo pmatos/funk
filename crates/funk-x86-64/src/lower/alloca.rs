@@ -27,14 +27,14 @@
 //! past 64 bits saturates: no stack holds it, so the run reports that it
 //! cannot reserve its stack, or runs out of it.
 
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 
 use funk_ir::dialects::core::{CoreType, allocation, core_type};
 use funk_ir::ir::layout::memory;
 use funk_ir::{Func, Op};
 
 use super::memory::realised;
-use super::stack::components;
+use super::stack::{components, cyclic};
 use super::{Cx, Lower, Unlowered};
 use crate::asm::Reg;
 use crate::frame::PAGE;
@@ -61,7 +61,7 @@ pub fn looping(f: &Func) -> HashSet<&str> {
     {
         return HashSet::new();
     }
-    let index: std::collections::HashMap<&str, usize> = blocks
+    let index: HashMap<&str, usize> = blocks
         .iter()
         .enumerate()
         .rev()
@@ -79,7 +79,7 @@ pub fn looping(f: &Func) -> HashSet<&str> {
         .collect();
     let mut out = HashSet::new();
     for members in components(&edges) {
-        if members.len() > 1 || edges[members[0]].contains(&members[0]) {
+        if cyclic(&members, &edges) {
             out.extend(members.into_iter().map(|i| blocks[i].label.as_str()));
         }
     }

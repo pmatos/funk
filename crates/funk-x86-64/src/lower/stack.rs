@@ -58,7 +58,7 @@ pub(super) fn needs(functions: &[Function]) -> Vec<Need> {
         for &f in &members {
             component[f] = c + 1;
         }
-        let cycle = members.len() > 1 || edges[members[0]].contains(&members[0]);
+        let cycle = cyclic(&members, &edges);
         for &f in &members {
             let mut need = Need {
                 bytes: functions[f].helper_stack,
@@ -80,6 +80,12 @@ pub(super) fn needs(functions: &[Function]) -> Vec<Need> {
         }
     }
     out
+}
+
+/// Whether the component `members` of the graph `edges` is a cycle: more
+/// than one node, or one with an edge to itself.
+pub(super) fn cyclic(members: &[usize], edges: &[Vec<usize>]) -> bool {
+    members.len() > 1 || edges[members[0]].contains(&members[0])
 }
 
 /// The strongly connected components of a graph whose node `n` has an edge
