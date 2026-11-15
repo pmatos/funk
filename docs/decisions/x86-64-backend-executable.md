@@ -27,10 +27,12 @@ poison pointer argument is interpreter-only. A pointer result is the
 address, which says nothing of the spec's allocation and offset, so the
 harness compares no pointer result
 ([x86-64-backend-lowering-memory.md](x86-64-backend-lowering-memory.md#pointers)).
-Rejected: refusing to build a module with a pointer parameter or result,
-since a module builds whole and a function that takes a pointer may be
-called by one that the harness runs; and a run that refuses such a
-function, which hides an address that is useful when reading a run.
+This contract is the agents' choice and waits on a ruling of the human
+(#399). The alternatives they set aside: refusing to build a module with a
+pointer parameter or result, since a module builds whole and a function
+that takes a pointer may be called by one that the harness runs; and a run
+that refuses such a function, which hides an address that is useful when
+reading a run.
 
 On success it writes one line to standard output, `{"values":["V1","V2"]}`, a
 JSON list of the returned values in order, each a string with the same

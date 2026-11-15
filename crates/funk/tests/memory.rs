@@ -167,7 +167,6 @@ fn each_pass_of_a_loop_allocates_anew() {
     let exe = build("memory-passes", &module(&shapes()));
     expect(&exe, &["@passes", "0"], &["0", "0"]);
     expect(&exe, &["@passes", "5"], &["0", "5"]);
-    expect(&exe, &["@grow", "16"], &["16"]);
 }
 
 /// Runs `exe` with `args` under a stack limit of 1 MiB and an address

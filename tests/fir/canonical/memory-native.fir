@@ -46,68 +46,74 @@ func @round_i128(%v: i128) -> i128 {
   ret %r @0
 }
 
-func @by_i1(%k: i1, %v: i8) -> i8 {
+func @by_i1(%k: i1) -> i8 {
 ^entry:
-  %p: ptr = alloca stack i8 4 @0
+  %p: ptr = alloca stack i32 @0
+  %bytes: i32 = const 67305985 @0
+  store nonatomic %bytes, %p @0
   %two: i64 = const 2 @0
   %q: ptr = ptradd %p, %two @0
   %r: ptr = ptradd %q, %k @0
-  store nonatomic %v, %r @0
   %w: i8 = load nonatomic %r @0
   ret %w @0
 }
 
-func @by_i8(%k: i8, %v: i8) -> i8 {
+func @by_i8(%k: i8) -> i8 {
 ^entry:
-  %p: ptr = alloca stack i8 4 @0
+  %p: ptr = alloca stack i32 @0
+  %bytes: i32 = const 67305985 @0
+  store nonatomic %bytes, %p @0
   %two: i64 = const 2 @0
   %q: ptr = ptradd %p, %two @0
   %r: ptr = ptradd %q, %k @0
-  store nonatomic %v, %r @0
   %w: i8 = load nonatomic %r @0
   ret %w @0
 }
 
-func @by_i16(%k: i16, %v: i8) -> i8 {
+func @by_i16(%k: i16) -> i8 {
 ^entry:
-  %p: ptr = alloca stack i8 4 @0
+  %p: ptr = alloca stack i32 @0
+  %bytes: i32 = const 67305985 @0
+  store nonatomic %bytes, %p @0
   %two: i64 = const 2 @0
   %q: ptr = ptradd %p, %two @0
   %r: ptr = ptradd %q, %k @0
-  store nonatomic %v, %r @0
   %w: i8 = load nonatomic %r @0
   ret %w @0
 }
 
-func @by_i32(%k: i32, %v: i8) -> i8 {
+func @by_i32(%k: i32) -> i8 {
 ^entry:
-  %p: ptr = alloca stack i8 4 @0
+  %p: ptr = alloca stack i32 @0
+  %bytes: i32 = const 67305985 @0
+  store nonatomic %bytes, %p @0
   %two: i64 = const 2 @0
   %q: ptr = ptradd %p, %two @0
   %r: ptr = ptradd %q, %k @0
-  store nonatomic %v, %r @0
   %w: i8 = load nonatomic %r @0
   ret %w @0
 }
 
-func @by_i64(%k: i64, %v: i8) -> i8 {
+func @by_i64(%k: i64) -> i8 {
 ^entry:
-  %p: ptr = alloca stack i8 4 @0
+  %p: ptr = alloca stack i32 @0
+  %bytes: i32 = const 67305985 @0
+  store nonatomic %bytes, %p @0
   %two: i64 = const 2 @0
   %q: ptr = ptradd %p, %two @0
   %r: ptr = ptradd %q, %k @0
-  store nonatomic %v, %r @0
   %w: i8 = load nonatomic %r @0
   ret %w @0
 }
 
-func @by_i128(%k: i128, %v: i8) -> i8 {
+func @by_i128(%k: i128) -> i8 {
 ^entry:
-  %p: ptr = alloca stack i8 4 @0
+  %p: ptr = alloca stack i32 @0
+  %bytes: i32 = const 67305985 @0
+  store nonatomic %bytes, %p @0
   %two: i64 = const 2 @0
   %q: ptr = ptradd %p, %two @0
   %r: ptr = ptradd %q, %k @0
-  store nonatomic %v, %r @0
   %w: i8 = load nonatomic %r @0
   ret %w @0
 }

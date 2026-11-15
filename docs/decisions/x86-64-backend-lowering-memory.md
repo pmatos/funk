@@ -26,10 +26,12 @@ other memory, of 16-bit units or 32-bit pointers, is reported as unsupported
 where it is defined, so no op of that memory is lowered and no access to it
 is miscompiled (`lower/memory.rs`, `realised`).
 
-Rejected: realising only memory 0, which would report a memory that x86-64
-holds just as it holds memory 0; and realising a memory of wider units by
-scaling its offsets, which nothing in M1 asks for, so such a memory is
-reported.
+#231 asks for the default memory; realising every memory of bytes is the
+agents' choice and waits on a ruling of the human (#399). The alternatives
+they set aside: realising only memory 0, which would report a memory that
+x86-64 holds just as it holds memory 0; and realising a memory of wider
+units by scaling its offsets, which nothing in M1 asks for, so such a
+memory is reported.
 
 ## Pointer offsets
 
