@@ -1,0 +1,10 @@
+tests = [
+  { func = "@host", args = ["7"], expect = ["7"] },
+  { func = "@dev::@global_id", expect = ["5"], work_item = { id = [2, 0, 0], group_id = [1, 0, 0], group_size = [3, 1, 1], num_groups = [2, 1, 1] } },
+  { func = "@dev::@count", expect = ["9", "6"], work_item = { group_size = [1, 1, 6], num_groups = [1, 9, 1] } },
+  { func = "@dev::@slot", args = ["-5"], expect = ["-5"], work_item = { id = [3, 0, 0], group_size = [8, 1, 1] } },
+  { func = "@dev::@slot", args = ["123456"], expect = ["123456"], work_item = { id = [7, 0, 0], group_size = [8, 1, 1] } },
+  { func = "@dev::@slot", args = ["1"], expect = "ub", work_item = { id = [8, 0, 0], group_size = [9, 1, 1] } },
+  { func = "@dev::@where", expect = ["ptr(0, 1)"] },
+  { func = "@dev::@inner::@k", expect = ["4"], work_item = { id = [0, 0, 4], group_size = [1, 1, 5] } },
+]

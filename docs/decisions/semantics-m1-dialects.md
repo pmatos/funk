@@ -79,7 +79,7 @@ modules (#211) and memory (#231) have landed.
 
 #212 builds the dialect in four stages: its text and validation, the runs
 of one work-item, work-group memory, and the generic results restated
-(the stage plan on #212). Stage 1 holds:
+(the stage plan on #212). Stages 1 and 2 hold:
 
 - **Its ops.** The dialect is named `gpu`, and extends the core with no
   types of its own (`lean/Fir/Gpu/`, `crates/funk-ir/src/dialects/gpu.rs`).
@@ -98,12 +98,43 @@ of one work-item, work-group memory, and the generic results restated
   the memories of its host's data layout (ADR-2026-11-12-1821), so its
   `alloca`, `load`, `store` and `ptradd` on `ptr(3)` validate when the host
   declares memory 3, and are rejected on both sides when it does not.
+- **One work-item runs** (stage 2). The work-item is the run's input, as
+  its arguments are: its id, its work-group's id, the work-group's size and
+  the number of work-groups, in each dimension (`Gpu.WorkItem`). An op of
+  `gpu` gives the answer to its question, modulo 2 to the power of its
+  width; it is never poison or UB and touches no memory
+  (`lean/Fir/Gpu/Semantics.lean`). A kernel runs in its own table, the
+  module of that table (`Module.nest`): its calls name functions of the
+  device module, and its memories are its host's.
+- **Its guarantees** (stage 2). The empty effect set of `gpu` is proved
+  sound at every work-item (`Gpu.lawfulDialectEffects`), and `gpu` is
+  lawful, and lawful with memory in its totality, monotonicity and poison.
+  The sum `CoreGpu` keeps every guarantee of the whole core with memory
+  (semantics-m1-memory.md#the-cores-guarantees), at every work-item, for
+  the functions of every table of a valid module, nested at any depth: the
+  four lawful classes with memory (`Gpu.coreGpu_lawfulEffects`,
+  `coreGpu_lawfulTotal`, `coreGpu_lawfulMonotone`,
+  `coreGpu_lawfulMemPoison`), progress and no stuck path
+  (`Gpu.progress`, `Gpu.neverStuck`), refined arguments for every function
+  of every module (`Gpu.args_isRefinedBy`) and congruence in the callee
+  from given memories with no budget (`Gpu.replaceBody_isRefinedBy_of_from`).
+  Every module of a valid module's tables is valid (`Module.Valid.nest`).
+  No core statement changed. `tests/dialects/effects.cases` pins the
+  effects of each op of `gpu`, on the Lean and the Rust side.
+- **The #231 check at run time** (stage 2, the Ordering comment on #212).
+  `alloca`, `load`, `store` and `ptradd`, of integers and of pointers, run
+  unchanged in a kernel on memories that its host's layout declares, other
+  than memory 0, with units of 16 and 8 bits and pointers of 32 and 16 bits
+  (`tests/fir/canonical/gpu-memories.fir`, `FirTest.GpuRuns`). No core op,
+  theorem or `fir-ref` path needed a change: each names its memory by the
+  number of its pointer type and reads its entry from the layout.
 - **The tools.** `funk` reads the dialects in tree, the core and `gpu`
   (`funk_ir::dialects::in_tree`, which the corpus tests and the fuzz targets
-  read too), and `fir-ref fmt` and `fir-ref validate` read the sum
-  `CoreGpu`. `fir-ref run` reads the
-  core alone until stage 2, so a text that writes a word of `gpu` is a parse
-  error there. `funk build` compiles the host's functions and none of a
+  read too), and `fir-ref fmt`, `fir-ref validate` and `fir-ref run` read
+  the sum `CoreGpu`. `fir-ref run` names a kernel as `@dev::@k` and takes
+  the work-item as options (fir-ref-command-line.md#kernels-and-the-work-item);
+  the corpus's interpreter-only tests give it as `work_item`
+  (testing-and-harness-corpus.md). `funk build` compiles the host's functions and none of a
   device module's, as for any nested module (#211), and reports a `gpu` op
   in a top-level function as unsupported: the x86-64 backend lowers no op
   of a dialect other than the core, and `gpu` is terminal.

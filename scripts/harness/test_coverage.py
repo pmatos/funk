@@ -76,6 +76,18 @@ class Tests(unittest.TestCase):
             },
         )
 
+    def test_a_kernel_s_test_is_not_counted(self):
+        kernel = MODULE.replace(
+            "locs {",
+            "module @dev() {\n  dialects gpu\n\n  func @k() -> i32 {\n  ^e:\n"
+            "    %i: i32 = gpu.work_item_id gpu.x @0\n    ret %i @0\n  }\n}\n\nlocs {",
+        )
+        tests = TESTS.replace("]\n", '  { func = "@dev::@k", expect = ["0"] },\n]\n')
+        with tempfile.TemporaryDirectory() as d:
+            with_kernel = coverage.count(corpus(Path(d), kernel, tests))
+        with tempfile.TemporaryDirectory() as d:
+            self.assertEqual(with_kernel, coverage.count(corpus(Path(d))))
+
     def test_recursion_is_read_once(self):
         functions = {
             "@f": coverage.firtext.Function("@f", (), (), ()),

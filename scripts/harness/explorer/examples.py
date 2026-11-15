@@ -12,9 +12,16 @@ def _saved_runs(path: Path, group: str) -> list[dict]:
     if not path.exists():
         return []
     ported = set() if group == "llvm" else None
+    # The explorer runs the functions of a module's own table, with no
+    # work-item, so a kernel's test is not offered (#212).
+    tests = [
+        t
+        for t in corpus.read_tests(path, path.stem, [], ported)
+        if not corpus.nested(t.func) and not t.work_item
+    ]
     return [
         {"func": t.func, "args": t.args, "fuel": t.fuel, "choices": t.choices}
-        for t in corpus.read_tests(path, path.stem, [], ported)[:MOST_RUNS]
+        for t in tests[:MOST_RUNS]
     ]
 
 

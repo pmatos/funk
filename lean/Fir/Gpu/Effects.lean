@@ -10,9 +10,9 @@ no operand, so it propagates poison trivially.
 
 `gpu` has no memory of its own yet: its memories are the core's
 (`DialectMemOver`). How its work-group memory meets the data layout's
-memory numbers waits for the human's ruling (#212, stage 3). The proofs
-that these declarations are sound come with the dialect's execution rules
-(#212, stage 2).
+memory numbers waits for the human's ruling (#212, stage 3). The section
+on the dialect's execution rules proves these declarations sound, at every
+work-item (`Gpu.lawfulDialectEffects`).
 -/
 
 namespace Fir.Gpu

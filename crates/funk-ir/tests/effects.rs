@@ -1,13 +1,15 @@
-//! The effects of each core op instance (ADR-2026-11-09-1541), on the shared
-//! cases of `tests/dialects/effects.cases`, which
-//! `lean/FirTest/EffectCases.lean` reads too, so the registry's sets are
-//! `Core.Op.effects`. Each case pins the first op of the entry block of
+//! The effects of each op instance of the dialects in tree, the core and
+//! `gpu` (ADR-2026-11-09-1541), on the shared cases of
+//! `tests/dialects/effects.cases`, which `lean/FirTest/EffectCases.lean`
+//! reads too, so the registry's sets are `Core.Op.effects` and those of
+//! `gpu`. Each case pins the first op of the entry block of
 //! `@f`, which takes its operands from `@f`'s parameters. Each pinned op is
 //! control exactly when it is a terminator, as Lean's `notControl` asks.
 
 use std::collections::BTreeSet;
 
 use funk_ir::dialects::core::{self, DIVISION_OPS, FLOAT_ARITH_OPS, WRAP_FLAG_SETS};
+use funk_ir::dialects::{gpu, in_tree};
 use funk_ir::{Attr, Effects, Module, Op, OpTypes, Registry, Type, parse, verify};
 
 const CASES: &str = include_str!("../../../tests/dialects/effects.cases");
@@ -69,10 +71,10 @@ fn effects_of(reg: &Registry, c: &Case) -> Effects {
 }
 
 #[test]
-fn each_core_op_has_the_effects_of_its_lean_declaration() {
-    let reg = Registry::core();
+fn each_op_has_the_effects_of_its_lean_declaration() {
+    let reg = in_tree();
     let cs = cases();
-    assert_eq!(cs.len(), 93);
+    assert_eq!(cs.len(), 97);
     for c in &cs {
         assert_eq!(effects_of(&reg, c).to_string(), c.effects, "{}", c.name);
     }
@@ -91,10 +93,10 @@ fn words(attrs: &[Attr]) -> Vec<String> {
 /// The cases pin every core op, and every attribute that changes a set: each
 /// flag set of `add`, `sub` and `mul`, `exact` on `sdiv` and `udiv`, and
 /// `nnan` and `ninf` on each float op, with `nsz`, which keeps it pure, on
-/// two of them.
+/// two of them; and every op of `gpu`, whose dimension changes no set.
 #[test]
-fn the_cases_pin_every_core_op_and_every_flag() {
-    let reg = Registry::core();
+fn the_cases_pin_every_op_and_every_flag() {
+    let reg = in_tree();
     let pinned: BTreeSet<(String, Vec<String>)> = cases()
         .iter()
         .map(|c| {
@@ -107,7 +109,9 @@ fn the_cases_pin_every_core_op_and_every_flag() {
             // store's their ordering, which change no set: alloca allocates
             // in its result's memory, load reads its pointer's and store
             // writes it.
-            if ["alloca", "load", "store"].contains(&op.name.as_str()) {
+            if ["alloca", "load", "store"].contains(&op.name.as_str())
+                || gpu::OPS.contains(&op.name.as_str())
+            {
                 flags.clear();
             }
             (op.name, flags)
@@ -116,6 +120,9 @@ fn the_cases_pin_every_core_op_and_every_flag() {
     let mut want = BTreeSet::new();
     for op in &core::dialect().ops {
         want.insert((op.name().to_string(), vec![]));
+    }
+    for name in gpu::OPS {
+        want.insert((name.to_string(), vec![]));
     }
     for name in ["add", "sub", "mul"] {
         for flags in WRAP_FLAG_SETS {

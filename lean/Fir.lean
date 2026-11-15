@@ -235,3 +235,8 @@ import Fir.Gpu.Text
 import Fir.Gpu.Validation
 import Fir.Gpu.Effects
 import Fir.Gpu.TextLaws
+import Fir.Sum.RunLaws
+import Fir.Validation.Nest
+import Fir.Gpu.Semantics
+import Fir.Gpu.Runs
+import Fir.Gpu.Modes

@@ -6,6 +6,20 @@ the ADR is fixed or deleted (ADR-2026-11-09-1610).
 
 ## The modes run with memory
 
+`fir-ref run` reads the core and `gpu`, and calls `Gpu.scripted`,
+`Gpu.exhaustive` and `Gpu.sampled`, at a work-item, the run's input
+(#212). They walk `Gpu.modeTree` as the core's modes below walk
+`Core.modeTree`: a core op runs by `Core.memTreeDenote`, where the run names
+each memory of the sum by its core number (`Gpu.memName`), an op of `gpu`
+gives the work-item's answer and keeps the memories, and
+`Gpu.memMapsDenote` ties the two layers op by op, from `Core.memMapsDenote`
+and `Dialect.sum.mapsDenote`. `Gpu.exhaustive_memOutcomes`,
+`Gpu.scripted_memOutcomes` and `Gpu.sampled_memOutcomes`, with their
+`memStuck` siblings, prove them against the runs with memory of the sum at
+the module's layout, at every work-item. A kernel of a nested module runs in
+the module of its table (`Module.nest`), with its host's layout. Everything
+below holds of them as of the core's.
+
 `Core.scripted`, `Core.exhaustive` and `Core.sampled` walk `Core.modeTree`:
 the run in the state layer over the tree of choices, from the empty memories,
 with the memories dropped at the end of each path. A mode runs a module with

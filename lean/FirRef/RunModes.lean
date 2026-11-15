@@ -2,7 +2,7 @@ import FirRef.MachineTree
 
 /-!
 `fir-ref run` walks the spec's tree of a run in one of three modes, the spec's
-`Core.scripted`, `Core.exhaustive` and `Core.sampled`
+`Gpu.scripted`, `Gpu.exhaustive` and `Gpu.sampled`
 (`docs/decisions/fir-ref-command-line.md#fir-ref-run`). Each of them builds the
 tree with `Func.runOps`, which takes stack per step and per level of calls, and
 `ChoiceTree.sample` and `ChoiceTree.explore` add stack per choice. Here, each

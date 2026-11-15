@@ -71,23 +71,55 @@ and has no text output to choose from.
 ## `fir-ref run`
 
 The full form is `fir-ref run [--fuel N] [--choices C,C,... | --exhaustive
-[--choice-bits B] | --seed S] FILE @FUNC [ARG...]`. Options come anywhere
-before `--`, and each takes the next argument as its value. An argument such as
-`-5` is not an option.
+[--choice-bits B] | --seed S] [--work-item-id X,Y,Z] [--work-group-id X,Y,Z]
+[--work-group-size X,Y,Z] [--num-work-groups X,Y,Z] FILE @FUNC [ARG...]`.
+Options come anywhere before `--`, and each takes the next argument as its
+value. An argument such as `-5` is not an option.
 
-`fir-ref run` parses FILE with the core dialect alone, without validating
-it, and runs the function. A `return`, `ub` or `fuel-exhausted` result means something
-only for a module that `fir-ref validate` accepts: the interpreter does not
-check every rule of validation. The harness runs only modules that `fir-ref
-validate` must accept. `@FUNC` is the symbol as fir's text writes it, quoted
-exactly when it is not a word: `@add3`, `@"a b"`.
-
-Until the runs of a `gpu` work-item land (#212, stage 2), `run` reads the
-core alone: a text that writes a word of `gpu` is a parse error there, and
-`fmt` and `validate` read it.
+`fir-ref run` parses FILE with the dialects in tree, the core and `gpu`
+(`CoreGpu`), as `fmt` and `validate` do, without validating it, and runs the
+function as one work-item of `gpu` (ADR-2026-11-09-1545). A `return`, `ub`
+or `fuel-exhausted` result means something only for a module that `fir-ref
+validate` accepts: the interpreter does not check every rule of validation.
+The harness runs only modules that `fir-ref validate` must accept. `@FUNC`
+is the symbol as fir's text writes it, quoted exactly when it is not a word:
+`@add3`, `@"a b"`.
 
 Rejected: validating first. Then `fir-ref run` could never report a run as
 stuck, and the interpreter's stuck paths could not be tested end to end.
+
+### Kernels and the work-item
+
+`@FUNC` names a function of the module's own table, or, as `@M::@FUNC`, a
+function of the module `@M` nested in it, such as a kernel of a device
+module: `@dev::@k`. A path names a module nested at any depth,
+`@dev::@inner::@k`, each step a symbol as text writes it. A symbol as text
+writes it holds `::` only between quotes, so each path has one reading. The
+function runs in its own table, the module of that table (`Module.nest`):
+its calls name functions of that table, and its memories are those of the
+host's data layout, which a nested module shares. `FirRef.findFunc` finds
+it with no stack per level. A name that is not such a path, or a path to a
+module, is a function the module does not have.
+
+The work-item is the run's input, as its arguments are (`Gpu.WorkItem`).
+`--work-item-id`, `--work-group-id`, `--work-group-size` and
+`--num-work-groups` each give three numbers, one per dimension `gpu.x`,
+`gpu.y` and `gpu.z`, as ASCII decimal digits joined by commas, each below
+2^32. They are the answers of `gpu.work_item_id`, `gpu.work_group_id`,
+`gpu.work_group_size` and `gpu.num_work_groups`. By default every id is 0
+and every size 1, a grid of one work-item, so a run that gives none runs a
+host function as before. In each dimension the id must be below the size
+and the work-group's id below the count (`Gpu.WorkItem.Valid`); anything
+else is a usage error. The options go with any function, a host function
+included; they change only what the ops of `gpu` give.
+
+This spelling is an implementation choice of #212's second stage, taken
+without a ruling, and the human may rule on it. `@M::@FUNC` follows MLIR's
+nested symbol references. Rejected: one option per dimension of each
+number, which takes twelve options for one work-item; the work-item as
+extra arguments after the function's, which a tool could not tell from
+them; and naming a kernel by its symbol alone, which is ambiguous when two
+device modules hold a kernel of one name.
 
 ### Arguments and fuel
 
@@ -165,8 +197,9 @@ which a tool tells apart from an error by its `kind`. The budget is checked
 first, even when a path reaches an op without rules.
 
 Within its budget, exhaustive mode lists exactly the run's outcomes, and on a
-sequence that fits, scripted mode gives one of them (`Core.exhaustive_memOutcomes`,
-`Core.scripted_memOutcomes`, over the runs with memory at the module's layout). Exhaustive mode is within its budget exactly when no
+sequence that fits, scripted mode gives one of them (`Gpu.exhaustive_memOutcomes`,
+`Gpu.scripted_memOutcomes`, over the runs with memory of the core and `gpu` at
+the module's layout, at every work-item). Exhaustive mode is within its budget exactly when no
 path chooses more than B bits (`ChoiceTree.explore_isSome_iff`).
 
 Rejected: exhaustive mode by default. It would have changed every existing
@@ -188,8 +221,8 @@ pattern: 0, 1, all ones, the signed minimum or the signed maximum. Otherwise it
 takes ⌈w/64⌉ more draws and keeps their low `w` bits. A seed draws the same
 values on every machine; `lean/FirTest/Sample.lean` pins a few draws.
 
-`Core.sampled_fits` proves that the values drawn are a sequence that fits the
-run, so `Core.sampled_memOutcomes` follows from `Core.scripted_memOutcomes`: a
+`Gpu.sampled_fits` proves that the values drawn are a sequence that fits the
+run, so `Gpu.sampled_memOutcomes` follows from `Gpu.scripted_memOutcomes`: a
 sampled outcome is a member of the run's set, whatever the generator. That the
 printed spelling reads back is tested, not proved.
 
@@ -202,7 +235,7 @@ The exit status is 0 for `return`, `ub` and `fuel-exhausted`. It is 1 for
 `stuck`, and for a text that does not parse. It is 2, with nothing on standard
 output, for each of these:
 
-- a usage or I/O error;
+- a usage or I/O error, a work-item that is not one of its grid included;
 - a function the module does not have;
 - a wrong number of arguments;
 - an argument that is not a value of its type
