@@ -37,19 +37,20 @@ escaped to them. An inline assembly block without a narrower declaration,
 observable or not, may also read and write the allocation that a pointer
 operand points into and every allocation reachable from it through stored
 pointers: the set an external call's pointer arguments expose. If a block may
-write escaped memory, its pointer operands escape when it runs. A block without
-a narrower declaration may, so its pointer operands escape. A pointer passed to
-a block that is not observable and may not write escaped memory does not escape
-(ADR-2026-11-09-1541). The human ruled on 2026-11-15, on #309 (option A) and on
-#240 (option A, and the escape rule). Rejected: a pointer operand of any block
-escapes, which is simpler but makes observable the memory of a block whose
-declaration rules out writes to escaped memory.
-Rejected too: a block must declare a read through a pointer operand, with UB
-under default effects, so passes could delete a store that the block reads on
-real hardware. Rejected for #240: an operand covers only the allocation it
-points into, so passes could delete a store the block reads one pointer deeper;
-and only observable blocks make memory escape, though a block that may write
-escaped memory could store its operand there.
+write escaped memory, as one without a narrower declaration may, its pointer
+operands escape when it runs. A pointer passed to a block that is not
+observable and may not write escaped memory does not escape
+(ADR-2026-11-09-1541).
+
+The human ruled on 2026-11-15, on #309 (option A) and on #240 (option A, and
+the escape rule). Rejected: a pointer operand of any block escapes, which is
+simpler but makes observable the memory of a block whose declaration rules out
+writes to escaped memory. Rejected too: a block must declare a read through a
+pointer operand, with UB under default effects, so passes could delete a store
+that the block reads on real hardware. Rejected for #240: an operand covers only
+the allocation it points into, so passes could delete a store the block reads
+one pointer deeper; and only observable blocks make memory escape, though a
+block that may write escaped memory could store its operand there.
 
 An op may produce poison when, on some operands with no poison, a result may
 be poison: LLVM's `canCreatePoison`. That is not the poison class, which says

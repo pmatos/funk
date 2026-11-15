@@ -43,8 +43,8 @@ Tier: direction; area: semantics
 the obligations and the human's rulings: #208 (2026-11-09), #226, option B
 (2026-11-10), #309, option A (2026-11-15: an assembly block's pointer
 operands), and #240, option A (2026-11-15: what a pointer operand covers, and
-when it escapes). semantics-interpreter.md and semantics-refinement.md state the
-totality and monotonicity obligations, and semantics-m1-design.md says how
+when it escapes). semantics-interpreter.md and semantics-refinement.md state
+the totality and monotonicity obligations, and semantics-m1-design.md says how
 M1's ops are classified.
 
 ## Why

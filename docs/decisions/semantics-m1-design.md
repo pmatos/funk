@@ -123,9 +123,10 @@ function and inline assembly without a narrower declaration carry every effect
 on every memory that can have escaped to them. Such a block may also read and
 write the allocation that a pointer operand points into and every allocation
 reachable from it through stored pointers. If a block may write escaped memory,
-as such a block may, its pointer operands escape when it runs. The human ruled on 2026-11-15 (#309,
-#240). Passes may rely on a declaration because of its proof, and each new op
-costs one soundness proof per effect it leaves out (ADR-2026-11-09-1541).
+as such a block may, its pointer operands escape when it runs. The human ruled
+on 2026-11-15 (#309, #240). Passes may rely on a declaration because of its
+proof, and each new op costs one soundness proof per effect it leaves out
+(ADR-2026-11-09-1541).
 
 Every core op of M0 is pure, may produce poison or may-UB, as its rules already
 say. `call` carries its callee's summary (semantics-effects.md,
