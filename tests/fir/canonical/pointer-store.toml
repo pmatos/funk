@@ -14,21 +14,21 @@
 # UB too. A poison pointer to load or store through is UB; a stored poison
 # pointer loads as poison. A load through the slot of a call that returned
 # is UB. fir-ref writes a pointer as ptr(A, O). A test that returns an
-# integer, a value or poison, runs as native code too (stage 5 of #231). A
-# test that returns a pointer stays interpreter-only, since native code
-# returns an address, not a pointer of the spec, and so does a test of UB.
+# integer value runs as native code too (stage 5 of #231). A test that
+# returns a pointer stays interpreter-only, since native code returns an
+# address, not a pointer of the spec, and so does a test of poison or UB.
 tests = [
   { func = "@round_trip", args = ["67305985"] },
-  { func = "@round_trip", args = ["poison"] },
+  { func = "@round_trip", args = ["poison"], expect = ["poison"] },
   { func = "@same_pointer", args = ["3"], expect = ["ptr(0, 3)"] },
   { func = "@same_pointer", args = ["-9"], expect = ["ptr(0, -9)"] },
   { func = "@same_pointer", args = ["poison"], expect = ["poison"] },
   { func = "@chain", args = ["-2"] },
   { func = "@fresh", expect = ["poison"] },
   { func = "@from_bits", args = ["0"], expect = ["poison"] },
-  { func = "@bits_of_pointer" },
-  { func = "@byte_of_pointer", args = ["0"] },
-  { func = "@byte_of_pointer", args = ["7"] },
+  { func = "@bits_of_pointer", expect = ["poison"] },
+  { func = "@byte_of_pointer", args = ["0"], expect = ["poison"] },
+  { func = "@byte_of_pointer", args = ["7"], expect = ["poison"] },
   { func = "@overwritten", args = ["0", "0"], expect = ["poison"] },
   { func = "@overwritten", args = ["7", "0"], expect = ["poison"] },
   { func = "@integer_copy", expect = ["poison"] },

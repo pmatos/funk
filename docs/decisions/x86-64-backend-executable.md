@@ -20,9 +20,11 @@ integer, read and printed as an `i32` or `i64` is: a spelling internal to the
 harness, which converts it to and from the float literals of fir text
 (ADR-2026-11-11-1438). A pointer is its address, read and printed as an
 `i64` is (stage 5 of #231). A run starts with no allocation, so an address
-given on the command line points at nothing that the run made: it stands in
-for a poison pointer, through which any access is UB. A pointer result is
-the address, which says nothing of the spec's allocation and offset, so the
+given on the command line points at nothing that the run made. Whether the
+harness passes one in place of a poison pointer is a rule of the harness
+that waits on the human; until then it passes none, and a test with a
+poison pointer argument is interpreter-only. A pointer result is the
+address, which says nothing of the spec's allocation and offset, so the
 harness compares no pointer result
 ([x86-64-backend-lowering-memory.md](x86-64-backend-lowering-memory.md#pointers)).
 Rejected: refusing to build a module with a pointer parameter or result,

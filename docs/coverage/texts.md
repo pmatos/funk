@@ -280,8 +280,8 @@ widths the backend does not lower, and the `-memories` texts in memories
 of other units. `memory-native` stores and loads back a value at each
 width the backend lowers, moves a pointer by an integer of each of them,
 stores a pointer and allocates on each pass of a loop. Each test that
-returns an integer, a value or poison, runs as native code too (stage 5 of
-#231); a test of UB, one that returns a pointer, and one in a memory the
+returns an integer value runs as native code too (stage 5 of #231); a test
+of poison or UB, one that returns a pointer, and one in a memory the
 backend does not realise stay interpreter-only.
 
 The texts of the float arithmetic, the remainders and the conversions,

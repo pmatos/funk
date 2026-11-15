@@ -28,6 +28,7 @@
 use super::align::{check_align, decode_align};
 use super::types::{CoreType, FLOAT_ALIASES, MAX_MEMORY, MAX_WIDTH, alias, core_type, ptr_type};
 use crate::effects::{Effects, MemSet};
+use crate::ir::MemLayout;
 use crate::registry::{OpContext, OpShape, OpSpec, OpTypes};
 use crate::{Attr, Int, Type};
 
@@ -134,10 +135,10 @@ pub struct Allocation<'a> {
 }
 
 /// The allocation of an `alloca` with the attributes `attrs`, or `None`
-/// unless they decode with an element and an alignment that validation
-/// accepts.
+/// unless they decode with the kind `stack`, the one M1 has, and an
+/// element and an alignment that validation accepts.
 pub fn allocation(attrs: &[Attr]) -> Option<Allocation<'_>> {
-    let p = parts(attrs)?;
+    let p = parts(attrs).filter(|p| p.kind == "stack")?;
     let element = match &p.ty {
         AnyType::Int(w) => CoreType::Int(
             w.as_str()
@@ -149,7 +150,12 @@ pub fn allocation(attrs: &[Attr]) -> Option<Allocation<'_>> {
         AnyType::Float => return None,
     };
     let align = match p.align {
-        Some(a) => Some(a.as_str().parse::<u32>().ok()?),
+        Some(a) => Some(
+            a.as_str()
+                .parse::<u32>()
+                .ok()
+                .filter(|&a| MemLayout::valid_align(a))?,
+        ),
         None => None,
     };
     Some(Allocation {
@@ -315,6 +321,8 @@ mod tests {
             vec![word("stack"), word("f32")],
             vec![word("stack"), word("i0")],
             vec![word("stack")],
+            vec![word("heap"), word("i32")],
+            vec![word("stack"), word("i32"), align(3)],
         ] {
             assert_eq!(allocation(&bad), None, "{bad:?}");
         }

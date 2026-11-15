@@ -9,26 +9,27 @@
 # allocation. A store of poison makes its units poison. A store through a
 # poison pointer, out of bounds, past a freed allocation, or misaligned is
 # UB, aligned as for load (the human's ruling of 2026-11-14 on #388). A
-# test that returns a value or poison runs as native code too (stage 5 of
-# #231); a test of UB stays interpreter-only. Stores at widths the backend
+# test that returns a value runs as native code too (stage 5 of #231); a
+# test of poison or UB stays interpreter-only, since native code may give
+# any value for either. Stores at widths the backend
 # does not lower are in store-widths.fir.
 tests = [
   { func = "@round_trip", args = ["67305985"] },
   { func = "@round_trip", args = ["-1"] },
-  { func = "@round_trip", args = ["poison"] },
+  { func = "@round_trip", args = ["poison"], expect = ["poison"] },
   { func = "@padding", args = ["true"] },
   { func = "@padding", args = ["false"] },
   { func = "@narrower", args = ["67305985"] },
-  { func = "@wider", args = ["67305985"] },
+  { func = "@wider", args = ["67305985"], expect = ["poison"] },
   { func = "@past_end", args = ["67305985"], expect = "ub" },
   { func = "@overwrite", args = ["67305985", "9"] },
-  { func = "@stored_poison" },
+  { func = "@stored_poison", expect = ["poison"] },
   { func = "@at", args = ["0", "5"] },
   { func = "@at", args = ["7", "5"] },
   { func = "@at", args = ["8", "5"], expect = "ub" },
   { func = "@at", args = ["-1", "5"], expect = "ub" },
   { func = "@at", args = ["poison", "5"], expect = "ub" },
-  { func = "@at", args = ["3", "poison"] },
+  { func = "@at", args = ["3", "poison"], expect = ["poison"] },
   { func = "@misaligned", args = ["1"], expect = "ub" },
   { func = "@aligned", args = ["7"] },
   { func = "@promised", args = ["3", "7"] },

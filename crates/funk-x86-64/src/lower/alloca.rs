@@ -12,9 +12,9 @@
 //! frees every allocation of the call. The allocation's bytes are not
 //! cleared: they hold poison, which any bits refine.
 //!
-//! An `alloca` that runs at most once per call, in a block on no cycle of
-//! the function's branches, adds the most it can move `%rsp` to the
-//! function's stack need; one on a cycle makes the need unbounded, as a
+//! Each `alloca` adds the most it can move `%rsp` to the function's stack
+//! need, once; one in a block on a cycle of the function's branches, which
+//! may run more than once per call, also makes the need unbounded, as a
 //! recursion does (`stack.rs`,
 //! `docs/decisions/x86-64-backend-executable.md#the-figure`).
 //!
@@ -129,12 +129,10 @@ fn alloca(cx: &mut Cx<'_>, op: &Op) -> Result<(), Unlowered> {
         .and_then(i32::checked_neg)
         .ok_or_else(|| format!("alloca aligns to {align} bytes, past a 32-bit mask"))?;
     let total = bytes.saturating_add(STACK_ALIGN - 1) & !(STACK_ALIGN - 1);
-    if cx.looping.contains(cx.block) {
-        cx.stack.unbounded = true;
-    } else {
-        let most = total.saturating_add(align - STACK_ALIGN);
-        cx.stack.allocas = cx.stack.allocas.saturating_add(most);
-    }
+    // One run counts towards the figure; one on a cycle may run again.
+    let most = total.saturating_add(align - STACK_ALIGN);
+    cx.stack.allocas = cx.stack.allocas.saturating_add(most);
+    cx.stack.unbounded |= cx.looping.contains(cx.block);
     let (wrapped, probe, done) = (cx.local_label(), cx.local_label(), cx.local_label());
     let asm = &mut cx.asm;
     asm.ins("movq", format_args!("%rsp, %rax"));

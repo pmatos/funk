@@ -75,14 +75,12 @@ fn ptradd(cx: &mut Cx<'_>, op: &Op) -> Result<(), Unlowered> {
     cx.store(&q.name, Reg::Rax)
 }
 
-/// The move of `w` bits between memory and a register, and the register's
-/// name at that width: a byte for `i1` and `i8`.
-fn mover(w: u32) -> Result<(&'static str, u32), Unlowered> {
+/// The bits that one move of a `w`-bit value between memory and a
+/// register moves: a byte for `i1`.
+fn moved(w: u32) -> Result<u32, Unlowered> {
     match w {
-        1 | 8 => Ok(("b", 8)),
-        16 => Ok(("w", 16)),
-        32 => Ok(("l", 32)),
-        64 => Ok(("q", 64)),
+        1 | 8 => Ok(8),
+        16 | 32 | 64 => Ok(w),
         _ => Err(format!("an access of {w} bits is not one move").into()),
     }
 }
@@ -103,14 +101,14 @@ fn load(cx: &mut Cx<'_>, op: &Op) -> Result<(), Unlowered> {
         cx.asm.ins("movq", format_args!("8(%rcx), %rdx"));
         return cx.store_pair(&v.name, Reg::Rax, Reg::Rdx);
     }
-    match mover(w)? {
-        ("b", _) => cx.asm.ins("movzbl", format_args!("(%rcx), %eax")),
-        ("w", _) => cx.asm.ins("movzwl", format_args!("(%rcx), %eax")),
-        (s, bits) => cx.asm.ins(
-            &format!("mov{s}"),
-            format_args!("(%rcx), {}", Reg::Rax.at(bits)),
-        ),
-    }
+    let mnemonic = match moved(w)? {
+        8 => "movzbl",
+        16 => "movzwl",
+        32 => "movl",
+        _ => "movq",
+    };
+    let into = if mnemonic == "movq" { "%rax" } else { "%eax" };
+    cx.asm.ins(mnemonic, format_args!("(%rcx), {into}"));
     cx.store(&v.name, Reg::Rax)
 }
 
@@ -135,11 +133,15 @@ fn store(cx: &mut Cx<'_>, op: &Op) -> Result<(), Unlowered> {
     if w == 1 {
         width::extend(&mut cx.asm, Ext::Zero, 1, Reg::Rax);
     }
-    let (s, bits) = mover(w)?;
-    cx.asm.ins(
-        &format!("mov{s}"),
-        format_args!("{}, (%rcx)", Reg::Rax.at(bits)),
-    );
+    let bits = moved(w)?;
+    let mnemonic = match bits {
+        8 => "movb",
+        16 => "movw",
+        32 => "movl",
+        _ => "movq",
+    };
+    cx.asm
+        .ins(mnemonic, format_args!("{}, (%rcx)", Reg::Rax.at(bits)));
     Ok(())
 }
 
@@ -243,5 +245,18 @@ mod tests {
         };
         assert_eq!(ds.len(), 1, "{ds:?}");
         assert!(ds[0].message.contains("memory 0 of 16-bit units"), "{ds:?}");
+    }
+
+    #[test]
+    fn a_result_type_of_such_a_memory_is_reported_with_no_value_of_it() {
+        let text = "layout memory(1, unit(16), pointer(64), little)\n\n\
+                    func @f() -> ptr(1) {\n^entry:\n  unreachable @0\n}\n\n\
+                    locs {\n  @0 = unknown\n}\n";
+        let m = parse(text, &Registry::core()).unwrap();
+        let Err(ds) = super::super::module(&m) else {
+            panic!("a result of a memory of 16-bit units is lowered");
+        };
+        assert_eq!(ds.len(), 1, "{ds:?}");
+        assert!(ds[0].message.starts_with("result 1: the x86-64"), "{ds:?}");
     }
 }

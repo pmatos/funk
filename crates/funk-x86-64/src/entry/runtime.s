@@ -5,8 +5,8 @@
 # The runtime finds the function in the table `__funk_functions`, which the
 # entry generator writes after this file, and checks the argument count. It
 # reserves the stack that the table gives for the function, which covers
-# every call it makes, or for a recursive function up to the process's stack
-# limit (docs/decisions/x86-64-backend-executable.md#the-runs-stack), with a
+# every call it makes, or for an unbounded function, recursive or with an
+# alloca in a loop, up to the process's stack limit (docs/decisions/x86-64-backend-executable.md#the-runs-stack), with a
 # guard page below it, and calls the function's wrapper on that stack. The
 # wrapper parses each argument with `__funk_rt_arg`, calls the function, and
 # prints each result with `__funk_rt_value`, both in values.s, which follows
@@ -97,7 +97,7 @@ __funk_rt_main:
 	cmpq	16(%rbx), %r12
 	jne	.Lcount
 	movq	32(%rbx), %r12		# the stack the run needs, or the least
-	cmpq	$0, 40(%rbx)		# it gets when the function is recursive:
+	cmpq	$0, 40(%rbx)		# it gets when the function is unbounded:
 	je	.Lreserve		# then up to the process's stack limit
 	call	__funk_rt_recursive_stack
 	cmpq	%r12, %rax

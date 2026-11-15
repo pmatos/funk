@@ -427,6 +427,15 @@ fn func<'f>(
     for why in cx.define(&f.params) {
         out.push(at(f, entry, None, format!("parameter {why}")));
     }
+    // A result type names a memory too, even when no value of it is
+    // defined, as when every path ends in `unreachable`.
+    for (k, ty) in f.results.iter().enumerate() {
+        if let Some(CoreType::Ptr(n)) = core_type(ty)
+            && let Err(why) = memory::realised(layout, n)
+        {
+            out.push(at(f, entry, None, format!("result {}: {why}", k + 1)));
+        }
+    }
     for b in &f.body.blocks {
         for why in cx.define(&b.params) {
             out.push(at(f, Some(b), None, format!("block argument {why}")));

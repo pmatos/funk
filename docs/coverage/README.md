@@ -60,7 +60,7 @@ that passes no value.
 | `icmp` | `uge` | 8 | 32 | 29 | 29 | 37 | 37 |
 | `select` |  | 36 | 92 | 70 | 123 | 70 | 67 |
 | `freeze` |  | 36 | 20 | 19 | 38 | 17 | 30 |
-| `poison` |  | 16 | 22 | 22 | 24 | 21 | 21 |
+| `poison` |  | 16 | 22 | 22 | 23 | 21 | 21 |
 
 ### Float ops at a format (differential tests)
 
@@ -194,10 +194,10 @@ that passes no value.
 
 | op | `i1` | `i8` | `i16` | `i32` | `i64` | `i128` | `ptr` |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| `ptradd` | 2 | 6 | 4 | 4 | 32 | 4 |  |
-| `alloca` | 3 | 46 | 7 | 20 | 8 | 6 | 9 |
-| `load` | 4 | 40 | 8 | 23 | 10 | 6 | 6 |
-| `store` | 5 | 34 | 7 | 21 | 7 | 6 | 9 |
+| `ptradd` | 2 | 4 | 4 | 4 | 27 | 4 |  |
+| `alloca` | 2 | 34 | 6 | 14 | 6 | 5 | 4 |
+| `load` | 2 | 33 | 7 | 15 | 6 | 5 | 4 |
+| `store` | 4 | 31 | 6 | 16 | 6 | 5 | 4 |
 
 ### Passed and returned values (differential tests)
 
@@ -208,14 +208,14 @@ that passes no value.
 | `cond_br` | a successor passes nothing | 858 |  |  |  |  |  |  |  |  |
 | `cond_br` | a successor passes values |  | 58 | 140 | 132 | 160 | 132 | 153 | 9 | 7 |
 | `ret` | returns no value | 73 |  |  |  |  |  |  |  |  |
-| `ret` | returns one value |  | 2949 | 1627 | 1277 | 1707 | 1462 | 2491 | 494 | 420 |
+| `ret` | returns one value |  | 2947 | 1620 | 1276 | 1699 | 1458 | 2490 | 494 | 420 |
 | `ret` | returns several values |  | 282 | 432 | 266 | 249 | 399 | 539 | 9 | 9 |
 | `unreachable` | ends a block | 38 |  |  |  |  |  |  |  |  |
 | `call` | gives no result | 35 |  |  |  |  |  |  |  |  |
 | `call` | gives one result |  | 89 | 87 | 80 | 87 | 93 | 130 | 2 | 2 |
 | `call` | gives several results |  | 171 | 220 | 126 | 111 | 191 | 279 | 3 | 4 |
 | `func` | returns no value | 41 |  |  |  |  |  |  |  |  |
-| `func` | returns one value |  | 2949 | 1627 | 1277 | 1707 | 1462 | 2491 | 492 | 418 |
+| `func` | returns one value |  | 2947 | 1620 | 1276 | 1699 | 1458 | 2490 | 492 | 418 |
 | `func` | returns several values |  | 282 | 432 | 266 | 240 | 399 | 503 | 9 | 9 |
 
 ## Interpreter-only tests
@@ -261,7 +261,7 @@ that passes no value.
 | `icmp` | `uge` | 6 | 29 | 6 | 6 | 6 | 29 | 6 | 4 |
 | `select` |  | 15 | 70 | 18 | 17 | 33 | 70 | 17 | 15 |
 | `freeze` |  | 23 | 56 | 56 | 56 | 56 | 56 | 56 | 11 |
-| `poison` |  | 28 | 31 | 31 | 31 | 45 | 31 | 31 | 31 |
+| `poison` |  | 28 | 31 | 31 | 31 | 46 | 31 | 31 | 31 |
 
 ### Float ops at a format (interpreter-only tests)
 
@@ -420,10 +420,10 @@ that passes no value.
 
 | op | `i1` | `i7` | `i8` | `i16` | `i32` | `i33` | `i64` | `i128` | `ptr` |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `ptradd` | 1 | 1 | 32 | 2 | 2 | 1 | 15 | 1 |  |
-| `alloca` | 4 | 4 | 27 | 20 | 10 | 5 | 4 | 7 | 28 |
-| `load` | 2 | 3 | 12 | 8 | 18 | 3 | 4 | 3 | 30 |
-| `store` | 2 | 2 | 11 | 5 | 14 | 2 | 4 | 2 | 27 |
+| `ptradd` | 1 | 1 | 34 | 2 | 2 | 1 | 20 | 1 |  |
+| `alloca` | 4 | 4 | 37 | 20 | 15 | 5 | 5 | 7 | 32 |
+| `load` | 3 | 3 | 17 | 8 | 25 | 3 | 7 | 3 | 31 |
+| `store` | 2 | 2 | 12 | 5 | 18 | 2 | 4 | 2 | 31 |
 
 ### Passed and returned values (interpreter-only tests)
 
@@ -434,12 +434,12 @@ that passes no value.
 | `cond_br` | a successor passes nothing | 438 |  |  |  |  |  |  |  |  |  |  |  |  |  |
 | `cond_br` | a successor passes values |  | 13 | 138 | 16 | 14 | 14 | 136 | 13 | 11 | 5 | 5 | 7 | 5 | 5 |
 | `ret` | returns no value | 26 |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| `ret` | returns one value |  | 2569 | 1583 | 823 | 824 | 926 | 1609 | 817 | 1081 | 825 | 777 | 689 | 588 | 530 |
+| `ret` | returns one value |  | 2570 | 1583 | 828 | 824 | 933 | 1609 | 820 | 1081 | 825 | 777 | 689 | 588 | 530 |
 | `ret` | returns several values |  | 56 | 189 | 42 | 28 | 27 | 189 | 51 | 50 | 5 | 6 | 5 | 7 | 5 |
 | `unreachable` | ends a block | 16 |  |  |  |  |  |  |  |  |  |  |  |  |  |
 | `call` | gives no result | 14 |  |  |  |  |  |  |  |  |  |  |  |  |  |
 | `call` | gives one result |  | 74 | 92 | 28 | 23 | 24 | 92 | 23 | 19 | 2 | 2 | 2 | 2 | 2 |
 | `call` | gives several results |  | 41 | 92 | 17 | 11 | 11 | 92 | 25 | 27 | 2 | 3 | 2 | 3 | 2 |
 | `func` | returns no value | 23 |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| `func` | returns one value |  | 2568 | 1583 | 824 | 824 | 926 | 1609 | 817 | 1081 | 823 | 775 | 687 | 586 | 528 |
+| `func` | returns one value |  | 2569 | 1583 | 829 | 824 | 933 | 1609 | 820 | 1081 | 823 | 775 | 687 | 586 | 528 |
 | `func` | returns several values |  | 56 | 189 | 42 | 28 | 27 | 189 | 51 | 48 | 5 | 6 | 5 | 7 | 5 |
