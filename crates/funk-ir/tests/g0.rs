@@ -15,7 +15,7 @@ mod g0_scan;
 use std::path::Path;
 
 use funk_ir::dialects::core::{
-    self, FAST_MATH_FLAGS, FLOAT_PREDICATES, ORDERINGS, PREDICATES, WRAP_FLAG_SETS,
+    self, FAST_MATH_FLAGS, FLOAT_PREDICATES, ORDERINGS, PREDICATES, ROUNDING_MODES, WRAP_FLAG_SETS,
 };
 use funk_ir::{Block, Func, LocRef, Location, Module, Op, Registry, parse, print, verify};
 use g0_scan::{Tok, code, enum_variants, tokens};
@@ -37,6 +37,7 @@ fn core_words() -> Vec<String> {
     words.extend(FLOAT_PREDICATES.iter().map(|p| p.to_string()));
     words.extend(FAST_MATH_FLAGS.iter().map(|f| f.to_string()));
     words.extend(ORDERINGS.iter().map(|o| o.to_string()));
+    words.extend(ROUNDING_MODES.iter().map(|r| r.to_string()));
     words.extend(
         WRAP_FLAG_SETS
             .iter()

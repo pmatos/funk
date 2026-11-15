@@ -90,11 +90,15 @@ def roundTrip : String :=
 #guard runText roundTrip "@f" ["0.1"] == returns ["0.1"]
 #guard runText roundTrip "@f" ["1.0e-45"] == returns ["1.0e-45"]
 
--- `fpext` has no attribute and `fptrunc` needs `round(rne)`, and each takes
--- a float to a float: any other spelling does not decode.
+-- `fpext` has no attribute and `fptrunc` needs a mode, and each takes a
+-- float to a float: any other spelling does not decode.
 #guard [("fpext", "f32", "f64", " round(rne)"), ("fptrunc", "f64", "f32", ""),
-  ("fptrunc", "f64", "f32", " round(rtz)"), ("fpext", "i32", "f64", ""),
+  ("fptrunc", "f64", "f32", " round()"), ("fpext", "i32", "f64", ""),
   ("fptrunc", "f64", "i32", " round(rne)")].all
     fun (op, src, dst, attr) => (runText (convText op src dst attr) "@f" ["0"]).status == 1
+-- A mode other than `rne` decodes, and validation rejects it.
+#guard ["rna", "rtp", "rtn", "rtz"].all fun r =>
+  (FirRef.validateBytes "t.fir" (convText "fptrunc" "f64" "f32" s!" round({r})").toUTF8).1.startsWith
+    "{\"file\":\"t.fir\",\"verdict\":\"validation-error\""
 
 end FirTest

@@ -104,6 +104,8 @@ functions, blocks and ops.
 
 {includeReadable "." Fir.Core.Types "Core types" FirSpec.Core.Types (level := 2)}
 
+{includeReadable "." Fir.Core.Rounding "Rounding modes" FirSpec.Core.Rounding (level := 2)}
+
 {includeReadable "." Fir.Core.Ops "Core ops" FirSpec.Core.Ops (level := 2)}
 
 {includeReadable "." Fir.Core.Signature "Core signatures" FirSpec.Core.Signature (level := 2)}
@@ -165,6 +167,8 @@ functions, blocks and ops.
 {includeReadable "." Fir.Core.TextSamples "The core dialect's text, checked" FirSpec.Core.TextSamples (level := 2)}
 
 {includeReadable "." Fir.Core.FloatText "Float constants in text" FirSpec.Core.FloatText (level := 2)}
+
+{includeReadable "." Fir.Core.RoundingText "The rounding mode in text" FirSpec.Core.RoundingText (level := 2)}
 
 {includeReadable "." Fir.Core.FloatOpText "Float arithmetic in text" FirSpec.Core.FloatOpText (level := 2)}
 

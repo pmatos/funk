@@ -100,10 +100,10 @@ open Fir.Core in
 open Fir.Core in
 #guard Op.decode "fcmp" [.word "olt", .word "nnan"] [.float 8 23, .float 8 23] [.int 1] == none
 open Fir.Core in
-#guard Op.decode "fadd" [.word "ninf", .word "nsz", roundAttr] [.float 8 23, .float 8 23]
-  [.float 8 23] == some (.fbin .fadd { ninf := true, nsz := true } 8 23)
+#guard Op.decode "fadd" [.word "ninf", .word "nsz", roundAttr .rne] [.float 8 23, .float 8 23]
+  [.float 8 23] == some (.fbin (.fadd .rne) { ninf := true, nsz := true } 8 23)
 open Fir.Core in
-#guard Op.decode "fadd" [roundAttr, .word "nnan"] [.float 8 23, .float 8 23] [.float 8 23] == none
+#guard Op.decode "fadd" [roundAttr .rne, .word "nnan"] [.float 8 23, .float 8 23] [.float 8 23] == none
 open Fir.Core in
 #guard Op.decode "fneg" [.word "nnan"] [.float 8 23] [.float 8 23] ==
   some (.funary .fneg { nnan := true } 8 23)

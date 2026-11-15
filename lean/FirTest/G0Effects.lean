@@ -243,11 +243,11 @@ op is observable, since the core dialect has no trace yet
 -- A float op may produce poison with `nnan` or `ninf`; `nsz` and the
 -- reserved words alone keep it pure.
 #guard [({} : Core.FastMath), { nsz := true }, { contract := true, reassoc := true }].all fun fl =>
-  [Core.Op.fcmp .olt fl 8 23, .fbin .fadd fl 8 23, .funary .fneg fl 8 23, .fma fl 8 23].all
+  [Core.Op.fcmp .olt fl 8 23, .fbin (.fadd .rne) fl 8 23, .funary .fneg fl 8 23, .fma fl .rne 8 23].all
     (·.effects == {})
 #guard [({ nnan := true } : Core.FastMath), { ninf := true }, { nnan := true, nsz := true }].all
-  fun fl => [Core.Op.fcmp .olt fl 8 23, .fbin .fadd fl 8 23, .funary .fneg fl 8 23,
-    .fma fl 8 23].all (·.effects == { mayPoison := true })
+  fun fl => [Core.Op.fcmp .olt fl 8 23, .fbin (.fadd .rne) fl 8 23, .funary .fneg fl 8 23,
+    .fma fl .rne 8 23].all (·.effects == { mayPoison := true })
 #guard Core.samples.all fun o => o.effects.writes == .these [] && !o.effects.observable
 #guard ((Core.samples.filter (·.effects.reads != .these [])).map Core.Op.name).eraseDups ==
   ["load"]

@@ -258,11 +258,11 @@ end
 /-! # Fused multiply-add -/
 
 section
-variable (fl : FastMath) (e m : Nat)
+variable (fl : FastMath) (r : RoundingMode) (e m : Nat)
 
 /-- `fma` propagates poison: a poison operand gives only a poison result,
 and it is never UB. -/
-theorem fma_propagatesPoison : PropagatesPoison (d := CoreDialect) (.fma fl e m) where
+theorem fma_propagatesPoison : PropagatesPoison (d := CoreDialect) (.fma fl r e m) where
   poisonOut
     | .cons a (.cons b (.cons c .nil)), h, _, hrs => by
       have hs : fmaValues (μ := SetM) fl a b c = pure .poison := by
@@ -281,20 +281,20 @@ theorem fma_propagatesPoison : PropagatesPoison (d := CoreDialect) (.fma fl e m)
       absurd hub (oneFloat_not_ub (fmaValues_ends fl a b c) r)
 
 /-- `fma` returns a result on three defined operands. -/
-theorem fma_returnsOnDefined : ReturnsOnDefined (d := CoreDialect) (.fma fl e m) := by
+theorem fma_returnsOnDefined : ReturnsOnDefined (d := CoreDialect) (.fma fl r e m) := by
   obtain ⟨v, hv⟩ := (fmaValues_ends (e := e) (m := m) fl (.value 0) (.value 0) (.value 0)).some
   refine ⟨.cons (.value 0) (.cons (.value 0) (.cons (.value 0) .nil)), ?_, _, oneFloat_of hv⟩
   rintro (h | h | h | h) <;> cases h
 
 /-- `fma` has an outcome on every operand vector. -/
-theorem fma_total : OpTotal (d := CoreDialect) (.fma fl e m) := fun
+theorem fma_total : OpTotal (d := CoreDialect) (.fma fl r e m) := fun
   | .cons a (.cons b (.cons c .nil)) =>
     ⟨fun _ => by
       obtain ⟨_, hv⟩ := (fmaValues_ends fl a b c).some
       exact ⟨_, oneFloat_of hv⟩, fun h => nomatch h⟩
 
 /-- `fma` is monotone. -/
-theorem fma_monotone : OpMonotone (d := CoreDialect) (.fma fl e m) := by
+theorem fma_monotone : OpMonotone (d := CoreDialect) (.fma fl r e m) := by
   intro args args' h
   refine ⟨fun _ => ?_, fun h => nomatch h⟩
   match args, args', h with
@@ -325,14 +325,14 @@ theorem fma_monotone : OpMonotone (d := CoreDialect) (.fma fl e m) := by
                 exact SetM.isRefinedBy_refl (HVector.forall₂_refl Core.Ty.isRefinedBy_refl) _
 
 /-- `fma` is never UB. -/
-theorem fma_neverUB : NeverUBSetM (d := CoreDialect) (.fma fl e m) := fun
+theorem fma_neverUB : NeverUBSetM (d := CoreDialect) (.fma fl r e m) := fun
   | .cons a (.cons b (.cons c .nil)), r =>
     ⟨fun _ => oneFloat_not_ub (fmaValues_ends fl a b c) r, fun h => nomatch h⟩
 
 /-- On defined operands, `fma` gives a defined result when no flag may
 make poison. -/
 theorem fma_makesNoPoison (hm : fl.mayPoison = false) :
-    MakesNoPoisonSetM (d := CoreDialect) (.fma fl e m) :=
+    MakesNoPoisonSetM (d := CoreDialect) (.fma fl r e m) :=
   fun _ args hd rs hr => match args, hd, hr with
   | .cons a (.cons b (.cons c .nil)), hd, hr => by
     cases a with

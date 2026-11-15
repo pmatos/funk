@@ -53,6 +53,19 @@ def Op.symbolRefs : Op → List String
   | .call f _ _ => [f]
   | _ => []
 
+/-- The rounding mode of a float op of two operands: the mode of `fadd`,
+`fsub`, `fmul` and `fdiv`, and none for `frem` and `fmod`, which do not
+round. -/
+def FBin.mode : FBin → Option RoundingMode
+  | .fadd r | .fsub r | .fmul r | .fdiv r => some r
+  | .frem | .fmod => none
+
+/-- The rounding mode of a float op of one operand: the mode of `sqrt`,
+and none for `fneg` and `fabs`, which do not round. -/
+def FUnary.mode : FUnary → Option RoundingMode
+  | .sqrt r => some r
+  | .fneg | .fabs => none
+
 /--
 The core rules of an op beyond its signature.
 
@@ -73,6 +86,11 @@ The core rules of an op beyond its signature.
 * A float op carries neither `contract` nor `reassoc`. They are reserved
   words, permissions for passes that M2's optimizer decides, not meanings
   of an op (ADR-2026-11-09-1549).
+* A float op that rounds, `fadd`, `fsub`, `fmul`, `fdiv`, `sqrt`, `fma`,
+  `sitofp`, `uitofp` and `fptrunc`, rounds with the mode `rne`, round to
+  nearest even, the one M1 accepts: the other modes are hooks in the
+  format for a later milestone (ADR-2026-11-11-1801; the human's ruling
+  of 2026-11-15 on #229).
 * `alloca` allocates on the stack, the one kind M1 accepts: `global` and
   `heap` are hooks in the format, which a later milestone may accept
   (ADR-2026-11-09-1542). It allocates at least one value, aligned to a
@@ -101,8 +119,12 @@ def Op.Valid (ctx : OpContext CoreDialect) : Op → Prop
   | .zext m n | .sext m n => m < n
   | .trunc m n => n < m
   | .fpext e m e' m' => e ≤ e' ∧ m ≤ m' ∧ ¬(e = e' ∧ m = m')
-  | .fptrunc e m e' m' => ¬(e ≤ e' ∧ m ≤ m')
-  | .fcmp _ fl .. | .fbin _ fl .. | .funary _ fl .. | .fma fl .. => fl.Reserved = false
+  | .fptrunc r e m e' m' => r = .rne ∧ ¬(e ≤ e' ∧ m ≤ m')
+  | .sitofp r .. | .uitofp r .. => r = .rne
+  | .fcmp _ fl .. => fl.Reserved = false
+  | .fbin o fl .. => fl.Reserved = false ∧ ∀ r ∈ o.mode, r = .rne
+  | .funary o fl .. => fl.Reserved = false ∧ ∀ r ∈ o.mode, r = .rne
+  | .fma fl r .. => fl.Reserved = false ∧ r = .rne
   | .alloca k t c a _ => k = .stack ∧ 1 ≤ c ∧ (∀ x ∈ a, MemLayout.ValidAlign x) ∧
       t.IsInt ∧ t.Valid
   | .load o _ a _ => o = .nonatomic ∧ ∀ x ∈ a, MemLayout.ValidAlign x

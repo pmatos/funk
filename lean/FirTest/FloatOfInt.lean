@@ -73,10 +73,14 @@ def halfMore : String :=
 
 #guard runText halfMore "@f" ["-3"] == returns ["-2.5"]
 
--- Without `round(rne)`, with another mode, from a float, to an integer, or
--- with two operands, a conversion does not decode.
-#guard [("sitofp", "i32", "f32", ""), ("uitofp", "i32", "f32", " round(rtz)"),
+-- Without a mode, with a word that is not one, from a float, to an integer,
+-- or with two operands, a conversion does not decode.
+#guard [("sitofp", "i32", "f32", ""), ("uitofp", "i32", "f32", " round(RTZ)"),
   ("sitofp", "f32", "f32", " round(rne)"), ("uitofp", "i32", "i64", " round(rne)")].all
     fun (op, src, dst, attr) => (runText (itofpText op src dst attr) "@f" ["0"]).status == 1
+-- A mode other than `rne` decodes, and validation rejects it.
+#guard ["sitofp", "uitofp"].all fun op => ["rna", "rtp", "rtn", "rtz"].all fun r =>
+  (FirRef.validateBytes "t.fir" (itofpText op "i32" "f32" s!" round({r})").toUTF8).1.startsWith
+    "{\"file\":\"t.fir\",\"verdict\":\"validation-error\""
 
 end FirTest

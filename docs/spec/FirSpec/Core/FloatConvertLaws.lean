@@ -14,7 +14,7 @@ pins their fingerprint; the build fails when the Lean changes under it.
 
 #doc (Manual) "Format conversion obligations: readable blocks" =>
 
-:::moduleDocs (fingerprint := "13944966831994002610")
+:::moduleDocs (fingerprint := "498563472756415881")
 :::
 
 :::readable Fir.Core.convertFloat_ends Fir.Core.convertFloat_map (pin := Fir.Core.convertFloat) (pin := Fir.Core.Ends) (pin := Fir.MonadMorphism.KeepsChoiceUB) (fingerprint := "8878047545628183774")
@@ -32,14 +32,14 @@ each rule has as its set what it is in the set monad, and `fir-ref run`'s
 modes give the spec's outcomes on the conversions between formats.
 :::
 
-:::readable Fir.Core.convertOp (pin := Fir.Core.Op) (fingerprint := "10511047959905798229")
-*Definition: the conversion of a kind.* $`\mathrm{conv}_{e,m,e',m'}(\mathit{true})`
-is $`\mathsf{fpext}_{e,m,e',m'}`, and $`\mathrm{conv}_{e,m,e',m'}(\mathit{false})`
-is $`\mathsf{fptrunc}_{e,m,e',m'}`, so that the theorems below are stated
-once for both.
+:::readable Fir.Core.convertOp (pin := Fir.Core.Op) (fingerprint := "13643283093127852006")
+*Definition: the conversion of a kind.* $`\mathrm{conv}_{e,m,e',m'}(\mathit{none})`
+is $`\mathsf{fpext}_{e,m,e',m'}`, which has no rounding mode, and
+$`\mathrm{conv}_{e,m,e',m'}(r)` is $`\mathsf{fptrunc}_{e,m,e',m'}~r`, with
+the mode $`r`, so that the theorems below are stated once for both.
 :::
 
-:::readable Fir.Core.convertFloat_propagatesPoison Fir.Core.convertFloat_returnsOnDefined Fir.Core.convertFloat_total Fir.Core.convertFloat_monotone Fir.Core.convertFloat_neverUB Fir.Core.convertFloat_makesNoPoison (pin := Fir.PropagatesPoison) (pin := Fir.ReturnsOnDefined) (pin := Fir.OpTotal) (pin := Fir.OpMonotone) (pin := Fir.NeverUBSetM) (pin := Fir.MakesNoPoisonSetM) (pin := Fir.Core.Op.denote?) (fingerprint := "8115891059058339468")
+:::readable Fir.Core.convertFloat_propagatesPoison Fir.Core.convertFloat_returnsOnDefined Fir.Core.convertFloat_total Fir.Core.convertFloat_monotone Fir.Core.convertFloat_neverUB Fir.Core.convertFloat_makesNoPoison (pin := Fir.PropagatesPoison) (pin := Fir.ReturnsOnDefined) (pin := Fir.OpTotal) (pin := Fir.OpMonotone) (pin := Fir.NeverUBSetM) (pin := Fir.MakesNoPoisonSetM) (pin := Fir.Core.Op.denote?) (fingerprint := "4008115670975112795")
 *Theorem: $`\mathsf{fpext}` and $`\mathsf{fptrunc}` are lawful, between
 every two formats.* Under fir's execution rules, each meets every
 obligation of an op that
@@ -59,6 +59,7 @@ does, with its result in another format:
 * _No UB and no poison_: it is never UB, and on a defined operand every
   result is defined, a NaN's included.
 
-The theorems hold at every two formats, even a pair that validation
-rejects for the op: they need nothing of $`e`, $`m`, $`e'` and $`m'`.
+The theorems hold at every two formats and every rounding mode, even a
+pair or a mode that validation rejects for the op: they need nothing of
+$`e`, $`m`, $`e'`, $`m'` and the mode.
 :::

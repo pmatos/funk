@@ -6,16 +6,17 @@
 //! one value of a float type `float<e,m>`, of any format: the integer that
 //! the operand holds, read as signed by `sitofp` and as unsigned by
 //! `uitofp`, rounded to nearest even. Each rounds, so it has one attribute,
-//! `round(rne)`, the one mode M1 has, as the float arithmetic does
-//! (ADR-2026-11-11-1801). Validation has no rule for these ops beyond their
-//! signature. Each is pure: it is never UB, its result is never a NaN, and
-//! it gives poison only for a poison operand.
+//! its rounding mode `round(MODE)`, as the float arithmetic does
+//! (ADR-2026-11-11-1801). Every mode decodes, and validation accepts only
+//! `round(rne)`, the one mode M1 has (the human's ruling of 2026-11-15 on
+//! #229). Each is pure: it is never UB, its result is never a NaN, and it
+//! gives poison only for a poison operand.
 
-use super::float_arith::decode_rounding;
+use super::float_arith::{check_rounding, decode_rounding};
 use super::type_list;
 use super::types::{float_format, int_width};
 use crate::effects::Effects;
-use crate::registry::{OpShape, OpSpec, OpTypes};
+use crate::registry::{OpContext, OpShape, OpSpec, OpTypes};
 
 /// The conversions from integers to floats: `sitofp` reads its operand as
 /// signed, and `uitofp` as unsigned.
@@ -44,6 +45,11 @@ impl OpSpec for IntToFloat {
             type_list(op.operands),
             type_list(op.results)
         ))
+    }
+
+    /// The mode `rne` (`Op.Valid`).
+    fn check(&self, _cx: &OpContext<'_>, op: &OpTypes<'_>) -> Result<(), String> {
+        check_rounding(self.0, op.attrs)
     }
 
     /// Pure (`Core.Op.effects`).
@@ -114,17 +120,45 @@ mod tests {
     }
 
     #[test]
-    fn a_conversion_needs_round_rne() {
+    fn a_conversion_needs_a_rounding_mode() {
         let (i, f) = ([int_type(32)], [float_type(8, 23)]);
         for name in INT_TO_FLOAT_OPS {
             for bad in [
                 vec![],
-                vec![Attr::App("round".into(), vec![Attr::word("rtz")])],
+                vec![Attr::App("round".into(), vec![Attr::word("up")])],
                 vec![rne(), rne()],
                 vec![Attr::word("nsw")],
             ] {
                 let e = decode(name, &bad, &i, &f).unwrap_err();
-                assert!(e.starts_with(name) && e.contains("round(rne)"), "{e}");
+                assert!(e.starts_with(name) && e.contains("round("), "{e}");
+            }
+        }
+    }
+
+    #[test]
+    fn every_mode_decodes_and_validation_accepts_only_rne() {
+        let symbols = crate::SymbolTable::of(&[]);
+        let cx = OpContext {
+            symbols: &symbols,
+            func: "f",
+            results: &[],
+        };
+        let (i, f) = ([int_type(32)], [float_type(8, 23)]);
+        for name in INT_TO_FLOAT_OPS {
+            for mode in super::super::float_arith::ROUNDING_MODES {
+                let attrs = [Attr::App("round".into(), vec![Attr::word(mode)])];
+                assert_eq!(decode(name, &attrs, &i, &f), Ok(OpShape::default()));
+                let op = OpTypes {
+                    attrs: &attrs,
+                    operands: &i,
+                    results: &f,
+                };
+                let got = IntToFloat(name).check(&cx, &op);
+                if mode == "rne" {
+                    assert_eq!(got, Ok(()));
+                } else {
+                    assert!(got.unwrap_err().contains(&format!("not round({mode})")));
+                }
             }
         }
     }

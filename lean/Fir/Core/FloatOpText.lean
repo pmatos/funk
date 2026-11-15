@@ -1,12 +1,13 @@
+import Fir.Core.RoundingText
 import Fir.Core.Signature
 
 /-!
 # How the float arithmetic, the bit casts and the conversions are written
 
 Each float op of arithmetic is written with its name, and each one that
-rounds carries the attribute `round(rne)`: round to nearest, ties to even,
-the one rounding mode that M1 has (ADR-2026-11-09-1549,
-ADR-2026-11-11-1801). So
+rounds carries its rounding mode as one attribute, `round(r)`
+(ADR-2026-11-09-1549, ADR-2026-11-11-1801). Every mode decodes, and M1's
+validation accepts only `round(rne)`, round to nearest, ties to even. So
 
 * `%s: f32 = fadd round(rne) %a, %b @1`, and `fsub`, `fmul` and `fdiv`
   likewise, take two values of one float type and give one of it;
@@ -43,12 +44,14 @@ that validation rejects them with its own reason: M2 decides them
 decode, so each op has one spelling. The bit casts and the conversions
 carry no flags.
 
-`round(rne)` is written in the applied form of the grammar, as
-`float(e, m)` is. Every op has one spelling: `fadd %a, %b` with no
-attribute does not decode, and neither does `fadd round(rtz) %a, %b`,
-`frem round(rne) %a, %b` or `fneg round(rne) %a`. A rounding mode other
-than `rne` is text that does not decode, as a flag the op does not have
-is, so `funk verify` and `fir-ref` reject it. The operands and the result of an op of arithmetic
+The mode is written in the applied form of the grammar, as `float(e, m)`
+is. Every op has one spelling: `fadd %a, %b` with no attribute does not
+decode, and neither does `frem round(rne) %a, %b` or
+`fneg round(rne) %a`, as a flag the op does not have does not.
+`fadd round(rtz) %a, %b` decodes, with the mode `rtz`, and validation
+rejects it: the modes other than `rne` are hooks in the format, as the
+atomic orderings of a load are (the human's ruling of 2026-11-15 on
+#229). The operands and the result of an op of arithmetic
 have one float type, a bit cast's integer has its float's width, a
 conversion from an integer takes an integer type and gives a float type,
 a conversion between formats takes a float type and gives a float type,
@@ -65,12 +68,12 @@ namespace Fir.Core
 
 /-- The name of a float op of two operands. -/
 def FBin.name : FBin → String
-  | .fadd => "fadd" | .fsub => "fsub" | .fmul => "fmul" | .fdiv => "fdiv"
+  | .fadd _ => "fadd" | .fsub _ => "fsub" | .fmul _ => "fmul" | .fdiv _ => "fdiv"
   | .frem => "frem" | .fmod => "fmod"
 
 /-- The name of a float op of one operand. -/
 def FUnary.name : FUnary → String
-  | .fneg => "fneg" | .fabs => "fabs" | .sqrt => "sqrt"
+  | .fneg => "fneg" | .fabs => "fabs" | .sqrt _ => "sqrt"
 
 /-- The flags as attributes: a word for each flag set, in the fixed order
 `nnan`, `ninf`, `nsz`, `contract`, `reassoc`. -/
@@ -101,26 +104,18 @@ def flagFree : List Attr → Bool
   | .word v :: _ => !["nnan", "ninf", "nsz", "contract", "reassoc"].contains v
   | _ => true
 
-/-- The attribute of an op that rounds: `round(rne)`. -/
-def roundAttr : Attr := .app "round" [.word "rne"]
-
-/-- The attributes of a float op of two operands: `round(rne)` for
-`fadd`, `fsub`, `fmul` and `fdiv`, and none for `frem` and `fmod`, which
-do not round. -/
+/-- The attributes of a float op of two operands: its mode `round(r)`
+for `fadd`, `fsub`, `fmul` and `fdiv`, and none for `frem` and `fmod`,
+which do not round. -/
 def FBin.attrs : FBin → List Attr
-  | .fadd | .fsub | .fmul | .fdiv => [roundAttr]
+  | .fadd r | .fsub r | .fmul r | .fdiv r => [roundAttr r]
   | .frem | .fmod => []
 
-/-- The attributes of a float op of one operand: `round(rne)` for `sqrt`,
-and none for `fneg` and `fabs`, which do not round. -/
+/-- The attributes of a float op of one operand: its mode `round(r)` for
+`sqrt`, and none for `fneg` and `fabs`, which do not round. -/
 def FUnary.attrs : FUnary → List Attr
-  | .sqrt => [roundAttr]
+  | .sqrt r => [roundAttr r]
   | .fneg | .fabs => []
-
-/-- Whether attributes are exactly `round(rne)`. -/
-def isRoundAttrs : List Attr → Bool
-  | [.app "round" [.word "rne"]] => true
-  | _ => false
 
 /-- The format of a float op of `k` operands: `float<e,m>` when the
 operands are `k` values of it and the result is one. -/
@@ -128,36 +123,45 @@ def floatOpFormat (k : Nat) : List Ty → List Ty → Option (Nat × Nat)
   | ts, [.float e m] => if ts = List.replicate k (.float e m) then some (e, m) else none
   | _, _ => none
 
-/-- Whether attributes are those of a float op of two operands: exactly
-`round(rne)` for `fadd`, `fsub`, `fmul` and `fdiv`, and none for `frem`
-and `fmod`. -/
-def FBin.attrsOk : FBin → List Attr → Bool
-  | .fadd, as | .fsub, as | .fmul, as | .fdiv, as => isRoundAttrs as
-  | .frem, as | .fmod, as => as.isEmpty
+/-- Reads the attributes after the flags of the float op of two operands
+named `n`: `round(r)`, with any mode `r`, for `fadd`, `fsub`, `fmul` and
+`fdiv`, and none for `frem` and `fmod`. -/
+def FBin.read : String → List Attr → Option FBin
+  | "fadd", as => (decodeRound as).map .fadd
+  | "fsub", as => (decodeRound as).map .fsub
+  | "fmul", as => (decodeRound as).map .fmul
+  | "fdiv", as => (decodeRound as).map .fdiv
+  | "frem", as => if as.isEmpty then some .frem else none
+  | "fmod", as => if as.isEmpty then some .fmod else none
+  | _, _ => none
 
-/-- Reads `fadd`, `fsub`, `fmul`, `fdiv`, `frem` or `fmod`: its flags, its
-other attributes, two operands and one result of one float type. -/
-def decodeFBin (o : FBin) (as : List Attr) (ts rs : List Ty) : Option Op :=
+/-- Reads `fadd`, `fsub`, `fmul`, `fdiv`, `frem` or `fmod`, by its name
+`n`: its flags, its other attributes, two operands and one result of one
+float type. -/
+def decodeFBin (n : String) (as : List Attr) (ts rs : List Ty) : Option Op :=
   let s := splitFlags as
-  if o.attrsOk s.2 then (floatOpFormat 2 ts rs).map fun (e, m) => .fbin o s.1 e m else none
+  (FBin.read n s.2).bind fun o => (floatOpFormat 2 ts rs).map fun (e, m) => .fbin o s.1 e m
 
-/-- Whether attributes are those of a float op of one operand: exactly
-`round(rne)` for `sqrt`, and none for `fneg` and `fabs`. -/
-def FUnary.attrsOk : FUnary → List Attr → Bool
-  | .sqrt, as => isRoundAttrs as
-  | .fneg, as | .fabs, as => as.isEmpty
+/-- Reads the attributes after the flags of the float op of one operand
+named `n`: `round(r)`, with any mode `r`, for `sqrt`, and none for `fneg`
+and `fabs`. -/
+def FUnary.read : String → List Attr → Option FUnary
+  | "sqrt", as => (decodeRound as).map .sqrt
+  | "fneg", as => if as.isEmpty then some .fneg else none
+  | "fabs", as => if as.isEmpty then some .fabs else none
+  | _, _ => none
 
-/-- Reads `fneg`, `fabs` or `sqrt`: its flags, its other attributes, one
-operand and one result of one float type. -/
-def decodeFUnary (o : FUnary) (as : List Attr) (ts rs : List Ty) : Option Op :=
+/-- Reads `fneg`, `fabs` or `sqrt`, by its name `n`: its flags, its other
+attributes, one operand and one result of one float type. -/
+def decodeFUnary (n : String) (as : List Attr) (ts rs : List Ty) : Option Op :=
   let s := splitFlags as
-  if o.attrsOk s.2 then (floatOpFormat 1 ts rs).map fun (e, m) => .funary o s.1 e m else none
+  (FUnary.read n s.2).bind fun o => (floatOpFormat 1 ts rs).map fun (e, m) => .funary o s.1 e m
 
-/-- Reads `fma`: its flags, `round(rne)`, three operands and one result of
-one float type. -/
+/-- Reads `fma`: its flags, its mode `round(r)`, three operands and one
+result of one float type. -/
 def decodeFma (as : List Attr) (ts rs : List Ty) : Option Op :=
   let s := splitFlags as
-  if isRoundAttrs s.2 then (floatOpFormat 3 ts rs).map fun (e, m) => .fma s.1 e m else none
+  (decodeRound s.2).bind fun r => (floatOpFormat 3 ts rs).map fun (e, m) => .fma s.1 r e m
 
 /-- Reads `bitcast`: no attributes, and one operand and one result, a
 float type and an integer type of its width, in either order. -/
@@ -166,11 +170,11 @@ def decodeBitcast (as : List Attr) : List Ty → List Ty → Option Op
   | [.int w], [.float e m] => if as.isEmpty ∧ w = floatWidth e m then some (.ofBits e m) else none
   | _, _ => none
 
-/-- Reads `sitofp`, with `signed`, or `uitofp`: `round(rne)`, one operand
-of an integer type and one result of a float type. -/
+/-- Reads `sitofp`, with `signed`, or `uitofp`: its mode `round(r)`, one
+operand of an integer type and one result of a float type. -/
 def decodeIntToFloat (signed : Bool) (as : List Attr) : List Ty → List Ty → Option Op
   | [.int n], [.float e m] =>
-    if isRoundAttrs as then some (if signed then .sitofp n e m else .uitofp n e m) else none
+    (decodeRound as).map fun r => if signed then .sitofp r n e m else .uitofp r n e m
   | _, _ => none
 
 /-- Reads `fpext`: no attributes, one operand and one result of a float
@@ -179,10 +183,10 @@ def decodeFpext (as : List Attr) : List Ty → List Ty → Option Op
   | [.float e m], [.float e' m'] => if as.isEmpty then some (.fpext e m e' m') else none
   | _, _ => none
 
-/-- Reads `fptrunc`: `round(rne)`, one operand and one result of a float
-type each, of any two formats. -/
+/-- Reads `fptrunc`: its mode `round(r)`, one operand and one result of a
+float type each, of any two formats. -/
 def decodeFptrunc (as : List Attr) : List Ty → List Ty → Option Op
-  | [.float e m], [.float e' m'] => if isRoundAttrs as then some (.fptrunc e m e' m') else none
+  | [.float e m], [.float e' m'] => (decodeRound as).map (.fptrunc · e m e' m')
   | _, _ => none
 
 /-- Reads `fptosi`, with `signed`, or `fptoui`: no attributes, one operand
@@ -238,28 +242,33 @@ theorem splitFlags_attrs (fl : FastMath) {as : List Attr} (h : flagFree as = tru
   cases a <;> cases b <;> cases c <;> cases d <;> cases e <;>
     simp_all [splitFlags, FastMath.attrs, takeWord]
 
-/-- Attributes that read as `round(rne)` are exactly `round(rne)`. -/
-theorem eq_of_isRoundAttrs {as : List Attr} (h : isRoundAttrs as = true) : as = [roundAttr] := by
-  unfold isRoundAttrs at h
-  split at h
-  · rfl
-  · cases h
+/-- A float op of two operands read from a name and attributes has that
+name and those attributes. -/
+theorem FBin.read_eq {n : String} {as : List Attr} {o : FBin} (h : FBin.read n as = some o) :
+    o.name = n ∧ o.attrs = as := by
+  unfold FBin.read at h
+  split at h <;> (try split at h) <;> simp_all [Option.map_eq_some_iff] <;>
+    first
+    | (obtain ⟨r, hr, rfl⟩ := h; exact ⟨rfl, (eq_of_decodeRound hr).symm⟩)
+    | (subst_vars; exact ⟨rfl, rfl⟩)
 
-/-- Attributes that read as those of a float op of two operands are its
-own. -/
-theorem FBin.attrs_of_attrsOk {o : FBin} {as : List Attr} (h : o.attrsOk as = true) :
-    o.attrs = as := by
-  cases o with
-  | fadd | fsub | fmul | fdiv => exact (eq_of_isRoundAttrs h).symm
-  | frem | fmod => exact (List.isEmpty_iff.mp h).symm
+/-- Each float op of two operands reads back from its name and attributes. -/
+theorem FBin.read_name_attrs (o : FBin) : FBin.read o.name o.attrs = some o := by
+  cases o <;> simp [FBin.read, FBin.name, FBin.attrs, decodeRound_roundAttr]
 
-/-- Attributes that read as those of a float op of one operand are its
-own. -/
-theorem FUnary.attrs_of_attrsOk {o : FUnary} {as : List Attr} (h : o.attrsOk as = true) :
-    o.attrs = as := by
-  cases o with
-  | sqrt => exact (eq_of_isRoundAttrs h).symm
-  | fneg | fabs => exact (List.isEmpty_iff.mp h).symm
+/-- A float op of one operand read from a name and attributes has that
+name and those attributes. -/
+theorem FUnary.read_eq {n : String} {as : List Attr} {o : FUnary} (h : FUnary.read n as = some o) :
+    o.name = n ∧ o.attrs = as := by
+  unfold FUnary.read at h
+  split at h <;> (try split at h) <;> simp_all [Option.map_eq_some_iff] <;>
+    first
+    | (obtain ⟨r, hr, rfl⟩ := h; exact ⟨rfl, (eq_of_decodeRound hr).symm⟩)
+    | (subst_vars; exact ⟨rfl, rfl⟩)
+
+/-- Each float op of one operand reads back from its name and attributes. -/
+theorem FUnary.read_name_attrs (o : FUnary) : FUnary.read o.name o.attrs = some o := by
+  cases o <;> simp [FUnary.read, FUnary.name, FUnary.attrs, decodeRound_roundAttr]
 
 /-- A float op's format is found only at its `k` operands and one result
 of that format. -/
@@ -279,20 +288,25 @@ theorem floatOpFormat_replicate (k e m : Nat) :
     floatOpFormat k (List.replicate k (.float e m)) [.float e m] = some (e, m) := by
   simp [floatOpFormat]
 
--- `round(rne)` is the one rounding attribute, and each op has its own
--- number of operands.
-#guard isRoundAttrs [roundAttr] && !isRoundAttrs [.app "round" [.word "rtz"]] &&
-  !isRoundAttrs [] && !isRoundAttrs [roundAttr, roundAttr] && !isRoundAttrs [.word "rne"]
+-- An op that rounds reads any mode, and one that does not reads none;
+-- each op has its own number of operands.
+#guard FBin.read "fadd" [roundAttr .rne] == some (.fadd .rne) &&
+  FBin.read "fsub" [roundAttr .rtz] == some (.fsub .rtz) && FBin.read "fdiv" [] == none &&
+  FBin.read "frem" [] == some .frem && FBin.read "frem" [roundAttr .rne] == none
+#guard FUnary.read "sqrt" [roundAttr .rtp] == some (.sqrt .rtp) &&
+  FUnary.read "fneg" [] == some .fneg && FUnary.read "fabs" [roundAttr .rtz] == none
+#guard decodeFma [.word "nnan", roundAttr .rna] [.float 8 7, .float 8 7, .float 8 7] [.float 8 7] ==
+  some (.fma { nnan := true } .rna 8 7) && decodeFma [] [.float 8 7, .float 8 7, .float 8 7] [.float 8 7] == none
 #guard floatOpFormat 2 [.float 8 23, .float 8 23] [.float 8 23] == some (8, 23)
 #guard floatOpFormat 2 [.float 8 23, .float 11 52] [.float 8 23] == none
 #guard floatOpFormat 1 [.float 8 23, .float 8 23] [.float 8 23] == none
 #guard floatOpFormat 1 [.int 32] [.int 32] == none
 -- The flags read in their order, each at most once, and stop at the first
 -- attribute that is not the next of them.
-#guard (splitFlags [.word "nnan", .word "nsz", roundAttr]).1 == { nnan := true, nsz := true } &&
-  isRoundAttrs (splitFlags [.word "nnan", .word "nsz", roundAttr]).2
-#guard (splitFlags [.word "nsz", .word "nnan", roundAttr]).1 == { nsz := true } &&
-  (splitFlags [.word "nsz", .word "nnan", roundAttr]).2.length == 2
+#guard (splitFlags [.word "nnan", .word "nsz", roundAttr .rne]).1 == { nnan := true, nsz := true } &&
+  decodeRound (splitFlags [.word "nnan", .word "nsz", roundAttr .rne]).2 == some .rne
+#guard (splitFlags [.word "nsz", .word "nnan", roundAttr .rne]).1 == { nsz := true } &&
+  (splitFlags [.word "nsz", .word "nnan", roundAttr .rne]).2.length == 2
 #guard (splitFlags [.word "ninf", .word "ninf"]).1 == { ninf := true } &&
   (splitFlags [.word "ninf", .word "ninf"]).2.length == 1
 #guard (splitFlags [.word "contract", .word "reassoc", .word "olt"]).1 ==
@@ -304,34 +318,39 @@ theorem floatOpFormat_replicate (k e m : Nat) :
 #guard decodeBitcast [] [.int 16] [.float 8 7] == some (.ofBits 8 7)
 #guard decodeBitcast [] [.float 8 23] [.int 64] == none &&
   decodeBitcast [] [.int 32] [.int 32] == none && decodeBitcast [] [.float 8 23] [.float 8 23] == none
-#guard decodeBitcast [roundAttr] [.float 8 23] [.int 32] == none
+#guard decodeBitcast [roundAttr .rne] [.float 8 23] [.int 32] == none
 
--- A conversion from an integer needs `round(rne)`, an integer operand and a
+-- A conversion from an integer needs a mode, an integer operand and a
 -- float result, of any width and format.
-#guard decodeIntToFloat true [roundAttr] [.int 32] [.float 8 23] == some (.sitofp 32 8 23)
-#guard decodeIntToFloat false [roundAttr] [.int 1] [.float 15 112] == some (.uitofp 1 15 112)
+#guard decodeIntToFloat true [roundAttr .rne] [.int 32] [.float 8 23] == some (.sitofp .rne 32 8 23)
+#guard decodeIntToFloat false [roundAttr .rne] [.int 1] [.float 15 112] ==
+  some (.uitofp .rne 1 15 112)
 #guard decodeIntToFloat true [] [.int 32] [.float 8 23] == none &&
-  decodeIntToFloat true [.app "round" [.word "rtz"]] [.int 32] [.float 8 23] == none
-#guard decodeIntToFloat false [roundAttr] [.float 8 23] [.int 32] == none &&
-  decodeIntToFloat false [roundAttr] [.int 32] [.int 32] == none &&
-  decodeIntToFloat true [roundAttr] [.int 32, .int 32] [.float 8 23] == none
+  decodeIntToFloat true [.app "round" [.word "rtz"]] [.int 32] [.float 8 23] ==
+    some (.sitofp .rtz 32 8 23)
+#guard decodeIntToFloat false [roundAttr .rne] [.float 8 23] [.int 32] == none &&
+  decodeIntToFloat false [roundAttr .rne] [.int 32] [.int 32] == none &&
+  decodeIntToFloat true [roundAttr .rne] [.int 32, .int 32] [.float 8 23] == none
 
 -- A conversion between formats takes a float to a float, of any two
--- formats; `fpext` has no attribute and `fptrunc` needs `round(rne)`.
+-- formats; `fpext` has no attribute and `fptrunc` needs a mode.
 #guard decodeFpext [] [.float 8 23] [.float 11 52] == some (.fpext 8 23 11 52)
-#guard decodeFptrunc [roundAttr] [.float 11 52] [.float 8 23] == some (.fptrunc 11 52 8 23)
+#guard decodeFptrunc [roundAttr .rne] [.float 11 52] [.float 8 23] ==
+  some (.fptrunc .rne 11 52 8 23)
+#guard decodeFptrunc [roundAttr .rtn] [.float 11 52] [.float 8 23] ==
+  some (.fptrunc .rtn 11 52 8 23)
 #guard decodeFpext [] [.float 11 52] [.float 8 23] == some (.fpext 11 52 8 23)
-#guard decodeFpext [roundAttr] [.float 8 23] [.float 11 52] == none &&
+#guard decodeFpext [roundAttr .rne] [.float 8 23] [.float 11 52] == none &&
   decodeFptrunc [] [.float 11 52] [.float 8 23] == none
 #guard decodeFpext [] [.int 32] [.float 11 52] == none &&
-  decodeFptrunc [roundAttr] [.float 11 52] [.int 32] == none &&
+  decodeFptrunc [roundAttr .rne] [.float 11 52] [.int 32] == none &&
   decodeFpext [] [.float 8 23, .float 8 23] [.float 11 52] == none
 
 -- A conversion to an integer takes a float to an integer, of any format and
 -- width, with no attribute: `round(rne)` and `round(rtz)` do not decode.
 #guard decodeFloatToInt true [] [.float 8 23] [.int 32] == some (.fptosi 8 23 32)
 #guard decodeFloatToInt false [] [.float 15 112] [.int 1] == some (.fptoui 15 112 1)
-#guard decodeFloatToInt true [roundAttr] [.float 8 23] [.int 32] == none &&
+#guard decodeFloatToInt true [roundAttr .rne] [.float 8 23] [.int 32] == none &&
   decodeFloatToInt false [.app "round" [.word "rtz"]] [.float 8 23] [.int 32] == none
 #guard decodeFloatToInt true [] [.int 32] [.float 8 23] == none &&
   decodeFloatToInt false [] [.float 8 23] [.float 8 23] == none &&

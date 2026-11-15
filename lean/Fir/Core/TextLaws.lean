@@ -203,26 +203,28 @@ theorem Op.decode_encode (o : Op) : Op.decode o.name o.attrs o.sig o.returnTypes
     simp [decodeFcmpWith, find_fpred_name]
   | fbin o fl e m =>
     have hs := splitFlags_attrs fl (as := o.attrs) (by cases o <;> rfl)
+    have hr := FBin.read_name_attrs o
     cases o <;> simp only [Op.name, FBin.name, Op.attrs, Op.sig, Op.returnTypes, Op.decode,
-      decodeFBin, hs] <;> simp [FBin.attrs, FBin.attrsOk, roundAttr, isRoundAttrs, floatOpFormat]
+      decodeFBin, hs] <;> simp only [FBin.name] at hr <;> simp [hr, floatOpFormat]
   | funary o fl e m =>
     have hs := splitFlags_attrs fl (as := o.attrs) (by cases o <;> rfl)
+    have hr := FUnary.read_name_attrs o
     cases o <;> simp only [Op.name, FUnary.name, Op.attrs, Op.sig, Op.returnTypes, Op.decode,
-      decodeFUnary, hs] <;> simp [FUnary.attrs, FUnary.attrsOk, roundAttr, isRoundAttrs, floatOpFormat]
-  | fma fl e m =>
-    have hs := splitFlags_attrs fl (as := [roundAttr]) rfl
+      decodeFUnary, hs] <;> simp only [FUnary.name] at hr <;> simp [hr, floatOpFormat]
+  | fma fl r e m =>
+    have hs := splitFlags_attrs fl (as := [roundAttr r]) rfl
     simp only [Op.name, Op.attrs, Op.sig, Op.returnTypes, Op.decode, decodeFma, hs]
-    simp [roundAttr, isRoundAttrs, floatOpFormat]
+    simp [decodeRound_roundAttr, floatOpFormat]
   | sdiv _ e | udiv _ e =>
     cases e <;> simp [Op.name, Op.attrs, Op.sig, Op.returnTypes, Op.decode, binWidth, decodeExact, i]
   | toBits e m | ofBits e m => simp [Op.name, Op.attrs, Op.sig, Op.returnTypes, Op.decode, decodeBitcast, i]
-  | sitofp n e m | uitofp n e m =>
-    simp [Op.name, Op.attrs, Op.sig, Op.returnTypes, Op.decode, decodeIntToFloat, roundAttr,
-      isRoundAttrs, i]
+  | sitofp r n e m | uitofp r n e m =>
+    simp [Op.name, Op.attrs, Op.sig, Op.returnTypes, Op.decode, decodeIntToFloat,
+      decodeRound_roundAttr, i]
   | fpext e m e' m' => simp [Op.name, Op.attrs, Op.sig, Op.returnTypes, Op.decode, decodeFpext]
-  | fptrunc e m e' m' =>
-    simp [Op.name, Op.attrs, Op.sig, Op.returnTypes, Op.decode, decodeFptrunc, roundAttr,
-      isRoundAttrs]
+  | fptrunc r e m e' m' =>
+    simp [Op.name, Op.attrs, Op.sig, Op.returnTypes, Op.decode, decodeFptrunc,
+      decodeRound_roundAttr]
   | ptradd n w => simp [Op.name, Op.attrs, Op.sig, Op.returnTypes, Op.decode, decodePtrAdd, bare, i]
   | alloca k t c a n =>
     simpa [Op.name, Op.attrs, Op.sig, Op.returnTypes, Op.decode] using
@@ -420,14 +422,14 @@ theorem Op.attrs_writable (o : Op) : Attr.AllWritable o.attrs := by
     exact Attr.allWritable_append fl.attrs_writable ⟨p.name_isWord, trivial⟩
   | fbin o fl =>
     refine Attr.allWritable_append fl.attrs_writable ?_
-    cases o <;> simp [FBin.attrs, roundAttr, Attr.AllWritable, Attr.Writable] <;> decide
-  | fma fl =>
-    exact Attr.allWritable_append fl.attrs_writable
-      (by simp [roundAttr, Attr.AllWritable, Attr.Writable]; decide)
-  | sitofp | uitofp | fptrunc => simp [Op.attrs, roundAttr, Attr.AllWritable, Attr.Writable] <;> decide
+    cases o
+    all_goals first | exact roundAttr_writable _ | exact trivial
+  | fma fl r => exact Attr.allWritable_append fl.attrs_writable (roundAttr_writable r)
+  | sitofp r | uitofp r | fptrunc r => exact roundAttr_writable r
   | funary o fl =>
     refine Attr.allWritable_append fl.attrs_writable ?_
-    cases o <;> simp [FUnary.attrs, roundAttr, Attr.AllWritable, Attr.Writable] <;> decide
+    cases o
+    all_goals first | exact roundAttr_writable _ | exact trivial
   | add _ f | sub _ f | mul _ f =>
     obtain ⟨nuw, nsw⟩ := f
     cases nuw <;> cases nsw <;>

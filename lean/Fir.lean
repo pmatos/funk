@@ -3,6 +3,7 @@ import Fir.Syntax.Location
 import Fir.Syntax.Layout
 import Fir.Syntax.Module
 import Fir.Core.Types
+import Fir.Core.Rounding
 import Fir.Core.Ops
 import Fir.Core.Signature
 import Fir.Validation.Scope
@@ -163,6 +164,7 @@ import Fir.Text.Lex
 import Fir.Text.Read
 import Fir.Text.ReadLocs
 import Fir.Text.Decode
+import Fir.Core.RoundingText
 import Fir.Core.FloatOpText
 import Fir.Core.TypeText
 import Fir.Core.AllocaText

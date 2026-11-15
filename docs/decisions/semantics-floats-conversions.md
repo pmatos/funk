@@ -55,9 +55,10 @@ the spec they are `sitofp n e m` and `uitofp n e m`, with one rule,
   pattern and the rule chooses nothing (`intToFloat_valid`). Only at a format
   that validation rejects does it choose a NaN, as the arithmetic does, so
   that the rule is total.
-- Each carries `round(rne)`, the one mode M1 has; #229's open question on
-  rounding modes decides no other here. A poison operand gives poison. It is
-  never UB, and it is pure.
+- Each carries its rounding mode, and validation accepts only `round(rne)`,
+  the one mode M1 has (the human's ruling of 2026-11-15 on #229,
+  ADR-2026-11-11-1801). A poison operand gives poison. It is never UB, and it
+  is pure.
 
 Rejected: building the conversion from the arithmetic, such as the sum of the
 integer's bits as powers of two, which rounds more than once; and a rule of
@@ -109,7 +110,8 @@ the spec they are `fptosi e m n` and `fptoui e m n`, with one rule,
   `convertToIntegerTowardZero` (§5.8), C's `(int)x`, Rust's `as` and LLVM's
   `fptosi` and `fptoui`. Truncation is what the ops mean, so neither carries
   a rounding attribute: `fptosi round(rne)` and `fptoui round(rtz)` do not
-  decode. #229's question on rounding modes decides nothing here. Rejected:
+  decode, since neither rounds: the ruling on rounding modes (#229) covers only
+  the ops that round. Rejected:
   rounding to nearest even with `round(rne)`, as the conversions from
   integers do, which is not what C's and Rust's casts mean.
 - `UnpackedFloat.unpack` reads the operand, and the model's

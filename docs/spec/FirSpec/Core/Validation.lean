@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Core rules: readable blocks" =>
 
-:::moduleDocs (fingerprint := "18202785626579793766")
+:::moduleDocs (fingerprint := "14245667007404314006")
 :::
 
 :::readable Fir.Core.Ty.Valid Fir.Core.Ty.memory (pin := Fir.Core.maxWidth) (pin := Fir.Core.floatWidth) (fingerprint := "2970471969585656872")
@@ -62,7 +62,7 @@ $$`\mathrm{refs}(\mathit{op}) = \epsilon \ \text{ for every other op}`
 The general rules check that $`f` names a function of the module.
 :::
 
-:::readable Fir.Core.Op.Valid Fir.Core.Ty.IsInt (pin := Fir.isPowerOfTwo) (pin := Fir.MemLayout.limit) (pin := Fir.MemLayout.ValidAlign) (fingerprint := "16897339240257841884")
+:::readable Fir.Core.FBin.mode Fir.Core.FUnary.mode Fir.Core.Op.Valid Fir.Core.Ty.IsInt (pin := Fir.isPowerOfTwo) (pin := Fir.MemLayout.limit) (pin := Fir.MemLayout.ValidAlign) (fingerprint := "458681299536404812")
 *Definition: the core rules of an op.* Beyond its signature, which the
 {ref "The-fir-specification--Validation--The-general-rules"}[general rules]
 check, a core op obeys these rules in its op context $`C`:
@@ -79,12 +79,27 @@ $$`\frac{N < M}{C \vdash \mathsf{trunc}_{M \to N}~\text{valid}}`
 
 $$`\frac{e \le e' \qquad m \le m' \qquad (e, m) \ne (e', m')}{C \vdash \mathsf{fpext}_{e,m,e',m'}~\text{valid}}`
 
-$$`\frac{e' < e \ \text{ or } \ m' < m}{C \vdash \mathsf{fptrunc}_{e,m,e',m'}~\text{valid}}`
-$$`\frac{\phi \text{ sets neither } \mathsf{contract} \text{ nor } \mathsf{reassoc}}{C \vdash \mathit{op}_{e,m}~\phi~\text{valid}} \quad \text{for } \mathit{op} \in \{\mathsf{fcmp}, \mathit{fbin}, \mathit{funary}, \mathsf{fma}\}`
+$$`\frac{r = \mathsf{rne} \qquad e' < e \ \text{ or } \ m' < m}{C \vdash \mathsf{fptrunc}_{e,m,e',m'}~r~\text{valid}}`
+
+$$`\frac{r = \mathsf{rne}}{C \vdash \mathsf{sitofp}_{N,e,m}~r~\text{valid}} \qquad \frac{r = \mathsf{rne}}{C \vdash \mathsf{uitofp}_{N,e,m}~r~\text{valid}}`
+
+$$`\frac{\phi \text{ sets neither } \mathsf{contract} \text{ nor } \mathsf{reassoc}}{C \vdash \mathsf{fcmp}_{e,m}~\phi~p~\text{valid}}`
+
+$$`\frac{\phi \text{ sets neither } \mathsf{contract} \text{ nor } \mathsf{reassoc} \qquad \mathrm{mode}(o) \text{ is none or } \mathsf{rne}}{C \vdash \mathit{op}_{e,m}~o~\phi~\text{valid}} \quad \text{for } \mathit{op} \in \{\mathit{fbin}, \mathit{funary}\}`
+
+$$`\frac{\phi \text{ sets neither } \mathsf{contract} \text{ nor } \mathsf{reassoc} \qquad r = \mathsf{rne}}{C \vdash \mathsf{fma}_{e,m}~\phi~r~\text{valid}}`
 
 The reserved words $`\mathsf{contract}` and $`\mathsf{reassoc}` are
 permissions for passes that M2's optimizer decides, not meanings of an
 op, so a float op that carries either is not valid (ADR-2026-11-09-1549).
+An op that rounds rounds with the mode $`\mathsf{rne}`, the one M1
+accepts: the other
+{ref "The-fir-specification--Abstract-syntax--Rounding-modes"}[modes] are
+hooks in the format for a later milestone (ADR-2026-11-11-1801; the
+human's ruling of 2026-11-15 on #229). $`\mathrm{mode}(o)` is the mode of
+$`\mathsf{fadd}`, $`\mathsf{fsub}`, $`\mathsf{fmul}`, $`\mathsf{fdiv}` and
+$`\mathsf{sqrt}`, and none for $`\mathsf{frem}`, $`\mathsf{fmod}`,
+$`\mathsf{fneg}` and $`\mathsf{fabs}`, which do not round.
 
 $$`\frac{k = \mathsf{stack} \qquad c \ge 1 \qquad a \text{ is none or a valid alignment} \qquad t = \mathsf{i}W \qquad \vdash t~\text{valid}}{C \vdash \mathsf{alloca}_{N}~k~t~c~a~\text{valid}}`
 
