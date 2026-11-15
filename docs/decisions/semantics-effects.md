@@ -30,6 +30,17 @@ first ops that use them are `alloca`, which allocates in the memory of its
 result (ADR-2026-11-14-0915), and `load`, which reads the memory of its
 pointer (ADR-2026-11-14-2316).
 
+An external call, an indirect call to an unknown function and inline assembly
+without a narrower declaration carry every effect on every memory that can have
+escaped to them. An inline assembly block without a narrower declaration,
+observable or not, may also read and write the memory that a pointer operand
+points into, though passing the pointer to a block without observable does not
+make it escape (ADR-2026-11-09-1541). The human ruled on 2026-11-15 (#309),
+option A. Rejected: a pointer operand of any block escapes, which is simpler but
+makes the memory of every block that takes a pointer observable. Rejected too:
+a block must declare a read through a pointer operand, with UB under default
+effects, so passes could delete a store that the block reads on real hardware.
+
 An op may produce poison when, on some operands with no poison, a result may
 be poison: LLVM's `canCreatePoison`. That is not the poison class, which says
 how an op treats poison operands. `select` is a poison exception and makes no
