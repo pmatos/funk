@@ -2,8 +2,10 @@ import Fir
 
 /-!
 Tests of `load`'s rule with memory, run in the state layer over the tree of
-choices, the monad that `fir-ref run` computes in. No op stores yet, so a
-test writes units with the memory model's own store, then runs the rule:
+choices, the monad that `fir-ref run` computes in. A test writes units
+with the memory model's own store, so it can write units that no `store` of
+an integer writes, as a pointer's fragments or bits past a type's width,
+then runs the rule (`FirTest/Store.lean` runs `store` and `load` together):
 fresh memory reads poison; units of bits decode in the memory's byte order,
 with the bits past the type's width ignored (an `i1` from `0xFF` is 1); a
 pointer's fragments decode to poison; and a poison pointer, an access out

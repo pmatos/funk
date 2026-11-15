@@ -19,8 +19,10 @@
 //! floats `sitofp` and `uitofp`, the conversions between float formats
 //! `fpext` and `fptrunc`, and the conversions from floats to integers
 //! `fptosi` and `fptoui`. #231 adds the pointer offset `ptradd`, the
-//! stack allocation `alloca` and the load `load`. A later family adds a file and a line here.
+//! stack allocation `alloca`, the load `load` and the store `store`. A
+//! later family adds a file and a line here.
 
+mod access;
 mod align;
 mod alloca;
 mod arith;
@@ -41,9 +43,11 @@ mod int_to_float;
 mod load;
 mod pointer;
 mod rounding;
+mod store;
 mod types;
 mod width;
 
+pub use access::ORDERINGS;
 pub use arith::WRAP_FLAG_SETS;
 pub use bitwise::{BITWISE_OPS, SHIFT_OPS};
 pub use compare::{FLOAT_PREDICATES, PREDICATES};
@@ -54,7 +58,6 @@ pub use float_convert::FLOAT_CONVERSIONS;
 pub use float_text::{float_constant, has_decimals, read_float, spell_float};
 pub use float_to_int::FLOAT_TO_INT_OPS;
 pub use int_to_float::INT_TO_FLOAT_OPS;
-pub use load::ORDERINGS;
 pub use rounding::ROUNDING_MODES;
 pub use types::{
     CoreType, FLOAT_ALIASES, MAX_MEMORY, MAX_WIDTH, core_type, float_format, float_type, int_type,
@@ -105,7 +108,8 @@ pub fn dialect() -> Dialect {
         .op(float_convert::Convert("fptrunc"))
         .op(pointer::PtrAdd)
         .op(alloca::Alloca)
-        .op(load::Load)
+        .op(load::LOAD)
+        .op(store::STORE)
         .op(float_to_int::FloatToInt("fptosi"))
         .op(float_to_int::FloatToInt("fptoui"));
     float_arith::FloatArith::all().fold(core, Dialect::op)

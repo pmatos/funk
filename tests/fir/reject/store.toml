@@ -1,0 +1,339 @@
+# Must-reject texts of store (#231). It takes an integer, the value it
+# stores, then a pointer, and defines nothing; its attributes are those of
+# load, its ordering and align(A), in that order, separated by spaces
+# (ADR-2026-11-14-2316). Every ordering decodes, and validation accepts
+# only nonatomic (ADR-2026-11-09-1542); an alignment decodes when it is not
+# negative, and validation accepts a power of two no larger than 16777215,
+# the data layout's bound, as for alloca and load. A pointer of a memory
+# that the module does not declare is rejected by validation, as for every
+# pointer type.
+
+[[reject]]
+verdict = "validation-error"
+rule = "store is nonatomic in M1: the ordering unordered decodes and is rejected"
+text = '''
+func @f(%p: ptr, %v: i32) -> i32 {
+^e:
+  store unordered %v, %p @0
+  ret %v @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "store is nonatomic in M1: the ordering monotonic decodes and is rejected"
+text = '''
+func @f(%p: ptr, %v: i32) -> i32 {
+^e:
+  store monotonic %v, %p @0
+  ret %v @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "store is nonatomic in M1: the ordering acquire decodes and is rejected"
+text = '''
+func @f(%p: ptr, %v: i32) -> i32 {
+^e:
+  store acquire %v, %p @0
+  ret %v @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "store is nonatomic in M1: the ordering release decodes and is rejected"
+text = '''
+func @f(%p: ptr, %v: i32) -> i32 {
+^e:
+  store release %v, %p @0
+  ret %v @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "store is nonatomic in M1: the ordering acq_rel decodes and is rejected"
+text = '''
+func @f(%p: ptr, %v: i32) -> i32 {
+^e:
+  store acq_rel %v, %p @0
+  ret %v @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "store is nonatomic in M1: the ordering seq_cst decodes and is rejected"
+text = '''
+func @f(%p: ptr, %v: i32) -> i32 {
+^e:
+  store seq_cst %v, %p @0
+  ret %v @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "store aligns to a power of two of units: align(3) is not one"
+text = '''
+func @f(%p: ptr, %v: i32) -> i32 {
+^e:
+  store nonatomic align(3) %v, %p @0
+  ret %v @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "store aligns to a power of two of units: align(0) is not one"
+text = '''
+func @f(%p: ptr, %v: i32) -> i32 {
+^e:
+  store nonatomic align(0) %v, %p @0
+  ret %v @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "store aligns to at most 16777215 units, as the data layout does: align(16777216), 2^24, is above it"
+text = '''
+func @f(%p: ptr, %v: i32) -> i32 {
+^e:
+  store nonatomic align(16777216) %v, %p @0
+  ret %v @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "store aligns to at most 16777215 units: align(2^70) is above it, though a power of two"
+text = '''
+func @f(%p: ptr, %v: i32) -> i32 {
+^e:
+  store nonatomic align(1180591620717411303424) %v, %p @0
+  ret %v @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "store writes its ordering: a store with none does not decode"
+text = '''
+func @f(%p: ptr, %v: i32) -> i32 {
+^e:
+  store %v, %p @0
+  ret %v @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "store's ordering is one of seven words: relaxed does not decode"
+text = '''
+func @f(%p: ptr, %v: i32) -> i32 {
+^e:
+  store relaxed %v, %p @0
+  ret %v @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "store's alignment is not negative: align(-4) does not decode"
+text = '''
+func @f(%p: ptr, %v: i32) -> i32 {
+^e:
+  store nonatomic align(-4) %v, %p @0
+  ret %v @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "store writes its ordering before align(A): align first does not decode"
+text = '''
+func @f(%p: ptr, %v: i32) -> i32 {
+^e:
+  store align(4) nonatomic %v, %p @0
+  ret %v @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "store stores an integer in M1: an f32 value does not decode"
+text = '''
+func @f(%p: ptr, %v: i32, %f: f32) -> i32 {
+^e:
+  store nonatomic %f, %p @0
+  ret %v @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "store stores an integer in M1: a pointer value does not decode"
+text = '''
+func @f(%p: ptr, %v: i32) -> i32 {
+^e:
+  store nonatomic %p, %p @0
+  ret %v @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "store takes the value before the pointer: the pointer first does not decode"
+text = '''
+func @f(%p: ptr, %v: i32) -> i32 {
+^e:
+  store nonatomic %p, %v @0
+  ret %v @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "store stores through a pointer: an integer in its place does not decode"
+text = '''
+func @f(%p: ptr, %v: i32, %k: i64) -> i32 {
+^e:
+  store nonatomic %v, %k @0
+  ret %v @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "store takes a value and a pointer: the pointer alone does not decode"
+text = '''
+func @f(%p: ptr, %v: i32) -> i32 {
+^e:
+  store nonatomic %p @0
+  ret %v @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "store takes a value and a pointer: a third operand does not decode"
+text = '''
+func @f(%p: ptr, %v: i32) -> i32 {
+^e:
+  store nonatomic %v, %p, %p @0
+  ret %v @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "store defines nothing: a result written on it does not decode"
+text = '''
+func @f(%p: ptr, %v: i32) -> i32 {
+^e:
+  %r: i32 = store nonatomic %v, %p @0
+  ret %v @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "no pointer of an undeclared memory reaches a store: its definition, here a parameter of ptr(1) without memory 1 in the layout, is rejected"
+text = '''
+func @f(%p: ptr(1), %v: i32) -> i32 {
+^e:
+  store nonatomic %v, %p @0
+  ret %v @0
+}
+
+locs {
+  @0 = unknown
+}
+'''

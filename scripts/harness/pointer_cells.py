@@ -7,6 +7,8 @@ ADR-2026-11-03-0557).
   whatever its kind, count and alignment.
 - `load` is a cell for each width of the integer it loads, whatever its
   ordering and alignment.
+- `store` is a cell for each width of the integer it stores, whatever its
+  ordering and alignment.
 
 Each is a cell at the side's pointer widths, `cells.POINTER_DIFFERENTIAL`
 and `cells.POINTER_INTERPRETER`.
@@ -16,7 +18,7 @@ from cell_types import Cell, CellError, is_pointer
 from firtext import Op
 from refine import bits_of
 
-POINTER_OPS = ("ptradd", "alloca", "load")
+POINTER_OPS = ("ptradd", "alloca", "load", "store")
 
 
 def is_int(t: str) -> bool:
@@ -62,10 +64,26 @@ def memory_load(op: Op) -> Cell:
     )
 
 
+def memory_store(op: Op) -> Cell:
+    """The cell of a `store`: at the width of the integer it stores, its
+    first operand. Its ordering and alignment are not part of its cell, as
+    a load's are not. The matrix reads canonical modules, which both tools
+    decode, so the rest of its attributes needs no check here."""
+    if op.attrs and len(op.operands) == 2 and not op.results:
+        value, pointer = op.operands
+        if is_int(value) and is_pointer(pointer):
+            return Cell("pointers", op.name, "", value)
+    raise CellError(
+        f"{op.name} {' '.join(op.attrs)} of {op.operands} to {op.results} is not a cell"
+    )
+
+
 def pointer_cell(op: Op) -> Cell:
     """The cell of a pointer op."""
     if op.name == "alloca":
         return stack_allocation(op)
     if op.name == "load":
         return memory_load(op)
+    if op.name == "store":
+        return memory_store(op)
     return pointer_offset(op)

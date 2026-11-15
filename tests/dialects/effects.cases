@@ -714,6 +714,30 @@ locs {
   @0 = unknown
 }
 
+=== store writes(0),may-ub
+func @f(%p: ptr, %b: i8, %c: i1) -> i8 {
+^entry:
+  store nonatomic %b, %p @0
+  ret %b @0
+}
+
+locs {
+  @0 = unknown
+}
+
+=== store-memory-1 writes(1),may-ub
+layout memory(1, unit(16), pointer(32), little)
+
+func @f(%p: ptr(1), %b: i8, %c: i1) -> i8 {
+^entry:
+  store nonatomic align(4) %b, %p @0
+  ret %b @0
+}
+
+locs {
+  @0 = unknown
+}
+
 === fcmp-nnan may-poison
 func @f(%a: f32, %b: f32, %c: i1) -> i1 {
 ^entry:

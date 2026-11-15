@@ -9,7 +9,8 @@ The core dialect's ops: constants, integer arithmetic, bitwise ops and
 shifts, comparison and selection, width changes, `freeze` and `poison`,
 branches and calls, the float constants, comparisons, arithmetic, bit
 casts, conversions from integers, conversions between formats and
-conversions to integers, pointer offsets, stack allocation and loads.
+conversions to integers, pointer offsets, stack allocation, loads and
+stores.
 Each op below is an op instance: it carries its
 attributes and the widths it is used at, so that its operand and result
 types follow from it.
@@ -285,6 +286,16 @@ Loads (#231):
   validation accepts only the ordering `nonatomic`, and an alignment that
   is a power of two no larger than `MemLayout.limit`.
 
+Stores (#231):
+
+* `store o w a n`: stores a value of `iW`, `W = w`, through a pointer of
+  `ptr<N>`, `N = n`, with the ordering `o`, as an access aligned as a
+  `load`'s is, and gives no result. It writes the encoding of the value in
+  the units that `iW` takes in the memory `N`: zero padding past `W` bits,
+  and poison units for a poison value. A poison pointer is immediate UB,
+  as for `load`, and so is an access that faults. It writes its memory and
+  may be UB. Validation accepts what it accepts of a `load`.
+
 Conversions from a float to an integer, by Lean's float model
 (ADR-2026-11-09-1549; the human's ruling of 2026-11-12 on #354):
 
@@ -360,6 +371,7 @@ inductive Op where
   | ptradd (n w : Nat)
   | alloca (k : Memory.AllocKind) (t : Ty) (c : Nat) (a : Option Nat) (n : Nat)
   | load (o : Memory.Ordering) (w : Nat) (a : Option Nat) (n : Nat)
+  | store (o : Memory.Ordering) (w : Nat) (a : Option Nat) (n : Nat)
   | fptosi (e m n : Nat)
   | fptoui (e m n : Nat)
   | freeze (w : Nat)

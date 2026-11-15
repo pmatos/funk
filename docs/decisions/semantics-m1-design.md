@@ -6,8 +6,8 @@ wins, and the ADR is fixed or deleted (ADR-2026-11-09-1610).
 
 These are decided designs, and the spec and the tools implement only some of
 them yet: `ptr` has values (ADR-2026-11-09-1542), and its ops so far are
-`ptradd` (ADR-2026-11-13-0251), `alloca` (ADR-2026-11-14-0915) and `load`
-(ADR-2026-11-14-2316). M0 has no
+`ptradd` (ADR-2026-11-13-0251), `alloca` (ADR-2026-11-14-0915), `load`
+and `store` (ADR-2026-11-14-2316). M0 has no
 global data (ADR-2026-11-09-1546). `funk` and `fir-ref` are fixed to the core
 dialect (ADR-2026-11-09-1545). Each M1 feature goes through every layer
 (ADR-2026-11-09-1548). semantics.md says what holds in the spec and the tools

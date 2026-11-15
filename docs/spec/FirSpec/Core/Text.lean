@@ -15,7 +15,7 @@ when the Lean changes under it.
 
 #doc (Manual) "The core dialect in text: readable blocks" =>
 
-:::moduleDocs (fingerprint := "1098859506496548515")
+:::moduleDocs (fingerprint := "14413396559347216273")
 :::
 
 :::readable Fir.Core.Pred.name Fir.Core.Pred.all (pin := Fir.Core.Pred) (fingerprint := "13998240512404124084")
@@ -36,11 +36,11 @@ of $`\mathsf{fcmp}` is written as its name, as LLVM writes it: `oeq`,
 and the parser looks a name up in that list to read a predicate back.
 :::
 
-:::readable Fir.Core.Op.name (pin := Fir.Core.Op) (fingerprint := "13108608190814475083")
+:::readable Fir.Core.Op.name (pin := Fir.Core.Op) (fingerprint := "455177720261641544")
 *Definition: the name of a core op instance.* $`\mathrm{opname}(o)` is
 the name of the op of $`o`, whatever its widths and attributes:
 $`\mathrm{opname}(\mathsf{add}_{32}~\mathsf{nsw})` is `add`. Each of the
-42 {ref "The-fir-specification--Abstract-syntax--Core-ops"}[core ops] is
+43 {ref "The-fir-specification--Abstract-syntax--Core-ops"}[core ops] is
 written with the name it has in the op set, except six. The conditional
 branch $`\mathsf{cond\_br}`, which the Lean spells `condBr`, is written
 `cond_br`. The float constant, which the Lean spells `fconst`, is written
@@ -52,11 +52,11 @@ the Lean spells `toBits` and `ofBits`, are written `bitcast`: the types of
 the operand and the result tell them apart.
 :::
 
-:::readable Fir.Core.WrapFlags.attrs Fir.Core.constAttr Fir.Core.Op.attrs (pin := Fir.Core.Op) (pin := Fir.Core.WrapFlags) (pin := Fir.Core.floatLit) (fingerprint := "1568151823731527472")
+:::readable Fir.Core.WrapFlags.attrs Fir.Core.constAttr Fir.Core.Op.attrs (pin := Fir.Core.Op) (pin := Fir.Core.WrapFlags) (pin := Fir.Core.floatLit) (fingerprint := "17641654900011842387")
 *Definition: the attributes of a core op instance.* The attributes
 $`\mathrm{opattrs}(o)` of a core op instance $`o` are:
 
-$$`\begin{aligned} \mathrm{opattrs}(\mathsf{const}_N~c) &= \mathrm{constattr}_N(c) \\ \mathrm{opattrs}(\mathsf{const}_{e,m}~v) &= \mathrm{floatlit}_{e,m}(v) \\ \mathrm{opattrs}(\mathsf{icmp}_N~p) &= \mathrm{name}(p) \\ \mathrm{opattrs}(\mathsf{fcmp}_{e,m}~\phi~p) &= \mathrm{fmf}(\phi)~\mathrm{name}(p) \\ \mathrm{opattrs}(\mathsf{fma}_{e,m}~\phi~r) &= \mathrm{fmf}(\phi)~\mathtt{round}(r) \\ \mathrm{opattrs}(\mathsf{sitofp}_{N,e,m}~r) = \mathrm{opattrs}(\mathsf{uitofp}_{N,e,m}~r) &= \mathtt{round}(r) \\ \mathrm{opattrs}(\mathsf{fptrunc}_{e,m,e',m'}~r) &= \mathtt{round}(r) \\ \mathrm{opattrs}(\mathit{fbin}_{e,m}~o~\phi) = \mathrm{opattrs}(\mathit{funary}_{e,m}~o~\phi) &= \mathrm{fmf}(\phi)~\mathrm{attrs}(o) \\ \mathrm{opattrs}(\mathsf{add}_N~\mathit{fl}) &= \mathrm{flags}(\mathit{fl}) \\ \mathrm{opattrs}(\mathsf{sdiv}_N~\mathit{ex}) &= \mathrm{exact}(\mathit{ex}) \\ \mathrm{opattrs}(\mathsf{call}~f : t^* \to r^*) &= \mathsf{sym}~f \\ \mathrm{opattrs}(\mathsf{alloca}_N~k~t~c~a) &= \mathrm{allocaattrs}(k, t, c, a) \\ \mathrm{opattrs}(\mathsf{load}_N~o~W~a) &= \mathrm{loadattrs}(o, a) \\ \mathrm{opattrs}(o) &= \epsilon \quad \text{otherwise} \end{aligned}`
+$$`\begin{aligned} \mathrm{opattrs}(\mathsf{const}_N~c) &= \mathrm{constattr}_N(c) \\ \mathrm{opattrs}(\mathsf{const}_{e,m}~v) &= \mathrm{floatlit}_{e,m}(v) \\ \mathrm{opattrs}(\mathsf{icmp}_N~p) &= \mathrm{name}(p) \\ \mathrm{opattrs}(\mathsf{fcmp}_{e,m}~\phi~p) &= \mathrm{fmf}(\phi)~\mathrm{name}(p) \\ \mathrm{opattrs}(\mathsf{fma}_{e,m}~\phi~r) &= \mathrm{fmf}(\phi)~\mathtt{round}(r) \\ \mathrm{opattrs}(\mathsf{sitofp}_{N,e,m}~r) = \mathrm{opattrs}(\mathsf{uitofp}_{N,e,m}~r) &= \mathtt{round}(r) \\ \mathrm{opattrs}(\mathsf{fptrunc}_{e,m,e',m'}~r) &= \mathtt{round}(r) \\ \mathrm{opattrs}(\mathit{fbin}_{e,m}~o~\phi) = \mathrm{opattrs}(\mathit{funary}_{e,m}~o~\phi) &= \mathrm{fmf}(\phi)~\mathrm{attrs}(o) \\ \mathrm{opattrs}(\mathsf{add}_N~\mathit{fl}) &= \mathrm{flags}(\mathit{fl}) \\ \mathrm{opattrs}(\mathsf{sdiv}_N~\mathit{ex}) &= \mathrm{exact}(\mathit{ex}) \\ \mathrm{opattrs}(\mathsf{call}~f : t^* \to r^*) &= \mathsf{sym}~f \\ \mathrm{opattrs}(\mathsf{alloca}_N~k~t~c~a) &= \mathrm{allocaattrs}(k, t, c, a) \\ \mathrm{opattrs}(\mathsf{load}_N~o~W~a) = \mathrm{opattrs}(\mathsf{store}_N~o~W~a) &= \mathrm{loadattrs}(o, a) \\ \mathrm{opattrs}(o) &= \epsilon \quad \text{otherwise} \end{aligned}`
 
 and the same for $`\mathsf{sub}` and $`\mathsf{mul}` as for
 $`\mathsf{add}`, and for $`\mathsf{udiv}` as for $`\mathsf{sdiv}`. Here:
@@ -82,7 +82,7 @@ $`\mathsf{add}`, and for $`\mathsf{udiv}` as for $`\mathsf{sdiv}`. Here:
 * $`\mathrm{loadattrs}(o, a)` is the
   {ref "The-fir-specification--Text-format--Loads-in-text"}[attributes of a load]:
   the word of its ordering, and $`\mathtt{align}(a)` when it gives an
-  alignment;
+  alignment, which a store writes too;
 * $`\mathtt{round}(r)` is the
   {ref "The-fir-specification--Text-format--The-rounding-mode-in-text"}[attribute of the rounding mode]
   $`r`, and $`\mathrm{attrs}(o)` is it, with the mode that $`o` carries,
@@ -97,7 +97,7 @@ An op's widths are not among its attributes: they are the widths of the
 types written where its operands and results are defined.
 :::
 
-:::readable Fir.Core.decodeWrap Fir.Core.decodeExact Fir.Core.binWidth Fir.Core.bare Fir.Core.decodeCast Fir.Core.decodePtrAdd Fir.Core.plainBinOps Fir.Core.decodeFcmpWith Fir.Core.decodeFcmp Fir.Core.Op.decode (pin := Fir.Core.Op) (pin := Fir.Text.decodeOps) (pin := Fir.Core.decodeFloatLit) (fingerprint := "14205058754189196114")
+:::readable Fir.Core.decodeWrap Fir.Core.decodeExact Fir.Core.binWidth Fir.Core.bare Fir.Core.decodeCast Fir.Core.decodePtrAdd Fir.Core.plainBinOps Fir.Core.decodeFcmpWith Fir.Core.decodeFcmp Fir.Core.Op.decode (pin := Fir.Core.Op) (pin := Fir.Text.decodeOps) (pin := Fir.Core.decodeFloatLit) (fingerprint := "8409181786926936759")
 *Definition: reading a core op instance back.*
 $`\mathrm{decodeop}(n, a^*, t^*, r^*)` is the core op instance with the
 name $`n` and the attributes $`a^*`, whose operands have the types $`t^*`
@@ -194,6 +194,11 @@ $`\mathsf{i}W` are integer types.
   the one result type $`\mathsf{i}W`, it is the load of memory $`N` that
   its attributes give, as the section on
   {ref "The-fir-specification--Text-format--Loads-in-text"}[loads in text]
+  reads them.
+* `store`: from the operand types $`\mathsf{i}W` and then
+  $`\mathsf{ptr}\langle N \rangle` and no result, it is the store to
+  memory $`N` that its attributes give, as the section on
+  {ref "The-fir-specification--Text-format--Stores-in-text"}[stores in text]
   reads them.
 
 Every other name, and every other combination of attributes and types, is

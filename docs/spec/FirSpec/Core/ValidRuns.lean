@@ -34,17 +34,19 @@ $`\mathrm{callee}(o)` is none, $`o` is
 {ref "The-fir-specification--Execution--Poison-classes"}[total]: on every
 operand vector, its semantics, or its exit for a terminator, has some
 outcome. These are the core ops other than $`\mathsf{call}`,
-$`\mathsf{alloca}` and $`\mathsf{load}`, each total by the
+$`\mathsf{alloca}`, $`\mathsf{load}` and $`\mathsf{store}`, each total by
+the
 {ref "The-fir-specification--Execution--Core-functions-without-calls"}[previous section].
-With $`\mathsf{alloca}` and $`\mathsf{load}`, which are total with memory
-by their own rules
+With $`\mathsf{alloca}`, $`\mathsf{load}` and $`\mathsf{store}`, which
+are total with memory by their own rules
 ({ref "The-fir-specification--Memory--Stack-allocation-obligations"}[stack allocation obligations],
-{ref "The-fir-specification--Memory--Load-obligations"}[load obligations]),
+{ref "The-fir-specification--Memory--Load-obligations"}[load obligations],
+{ref "The-fir-specification--Memory--Store-obligations"}[store obligations]),
 they are the ops that the progress theorem for modules asks to be total,
 the ops that the interpreter runs by their own rule.
 :::
 
-:::readable Fir.Core.inModule_of_valid (pin := Fir.Func.InModule) (pin := Fir.Core.Op.Valid) (pin := Fir.Core.Op.sig) (pin := Fir.Core.Op.returnTypes) (pin := Fir.Module.context) (fingerprint := "15092163822788804432")
+:::readable Fir.Core.inModule_of_valid (pin := Fir.Func.InModule) (pin := Fir.Core.Op.Valid) (pin := Fir.Core.Op.sig) (pin := Fir.Core.Op.returnTypes) (pin := Fir.Module.context) (fingerprint := "15882124552330514688")
 *Theorem: every core function valid in the context of a module runs
 within that module.* Let $`M` be a core module, and $`f` a core function
 {ref "The-fir-specification--Validation--The-general-rules"}[valid] in the

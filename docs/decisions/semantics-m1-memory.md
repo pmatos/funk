@@ -2,7 +2,7 @@
 
 This page continues semantics-m1-design.md with the memory of M1: the memory
 model, its pointers, stack allocation, the memories of a run and the core's
-guarantees with memory. Aligned accesses and loads are on
+guarantees with memory. Aligned accesses, loads and stores are on
 [semantics-m1-memory-access.md](semantics-m1-memory-access.md). It is the record: when this page and an ADR
 disagree, the page wins, and the ADR is fixed or deleted (ADR-2026-11-09-1610).
 
@@ -156,7 +156,8 @@ capping the natural alignment at the pointer's.
   dialect no longer meets the lawful class there; its obligations with
   memory are proved op by op, and `alloca`'s by its own rule
   (`lean/Fir/Core/AllocaLaws.lean`). A core function that reaches no
-  `alloca` and no `load` reaches no memory (`Core.reachesNoMemory`). The semantics with
+  `alloca`, no `load` and no `store` reaches no memory
+  (`Core.reachesNoMemory`). The semantics with
   memory carries the core's guarantees (below).
 
 A `volatile` attribute on loads and stores makes the access an event of the
@@ -166,8 +167,8 @@ trace. The access cannot be removed, duplicated or reordered with other events
 ## The memories of a run
 
 The spec gives one memory of this model, for a unit of any width, in
-`lean/Fir/Memory/`, with its accesses and their laws. `alloca` and `load`
-are the ops that use memory yet (#231). Memory is a state layer over the way of computing
+`lean/Fir/Memory/`, with its accesses and their laws. `alloca`, `load` and
+`store` are the ops that use memory yet (#231). Memory is a state layer over the way of computing
 (ADR-2026-11-10-2350):
 
 - `Memories Mem unit`, in `lean/Fir/Memory/Frames.lean`, holds one memory for
@@ -209,9 +210,10 @@ to enumerate memory names, which may be infinite.
 ## The core's guarantees
 
 The semantics with memory carries the guarantees for the whole core
-dialect, `alloca` and `load` included. The statements without memory cover
-only the code that touches none: those over the set monad cover the ops other
-than `alloca` and `load`, and those that ask a function to reach no memory cover such
+dialect, `alloca`, `load` and `store` included. The statements without
+memory cover only the code that touches none: those over the set monad cover
+the ops other than `alloca`, `load` and `store`, and those that ask a
+function to reach no memory cover such
 functions. The human ruled this on 2026-11-14, on #384 (option A).
 Rejected: splitting out a memory-free core dialect, whose old statements
 would hold with no condition, with the memory ops beside it (option C),
@@ -219,7 +221,7 @@ which changes the dialect's structure where the versions with memory
 already cover every op.
 
 These hold for every core op, and for every function of a valid core
-module, `alloca` and `load` included:
+module, `alloca`, `load` and `store` included:
 
 - the lawful classes with memory: `Core.lawfulDialectTotal`,
   `Core.lawfulDialectMonotone` and `Core.lawfulDialectMemPoison`
@@ -235,9 +237,9 @@ module, `alloca` and `load` included:
   (#214; `lean/Fir/Core/MemoryCallRefine.lean`).
 
 Each new memory op keeps every one of them holding, with its own rule with
-memory and its own proofs, as `alloca` and `load` do
-(`lean/Fir/Core/AllocaLaws.lean`, `LoadLaws.lean`, joined to the tied ops by
-`Core.Op.memCases`). Stage 4e-3's `store` is next.
+memory and its own proofs, as `alloca`, `load` and `store` do
+(`lean/Fir/Core/AllocaLaws.lean`, `LoadLaws.lean`, `StoreLaws.lean`, joined
+to the tied ops by `Core.Op.memCases`).
 
 PR #382 narrowed these statements, which now cover memory-free code; beside
 each is what covers the whole core:
@@ -268,9 +270,9 @@ each is what covers the whole core:
   they served hold through `Core.Op.memCases` and
   `Core.lawfulDialectEffects`.
 - `Core.memDenoteIn_mapsDenote` still covers every op, and asks the
-  morphism to keep allocation and, since stage 4e-2, loads, which
-  `MonadMorphism.state_alloc` and `MonadMorphism.state_load` give for the
-  state layer.
+  morphism to keep allocation and, since stages 4e-2 and 4e-3, loads and
+  stores, which `MonadMorphism.state_alloc`, `MonadMorphism.state_load` and
+  `MonadMorphism.state_store` give for the state layer.
 
 `Core.Op.liftsSetM_of_terminator` and `Core.tyAttr_bare` keep their
 statements: the first has a new proof, and the second moved within

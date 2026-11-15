@@ -115,6 +115,8 @@ byte order.
 
 {includeReadable "." Fir.Core.Load "Load rules" FirSpec.Core.Load (level := 1)}
 
+{includeReadable "." Fir.Core.Store "Store rules" FirSpec.Core.Store (level := 1)}
+
 {includeReadable "." Fir.Core.MemRules "The core's rules with memory" FirSpec.Core.MemRules (level := 1)}
 
 {includeReadable "." Fir.Core.AllocaLaws "Stack allocation obligations" FirSpec.Core.AllocaLaws (level := 1)}
@@ -122,6 +124,10 @@ byte order.
 {includeReadable "." Fir.Core.LoadLaws "Load obligations" FirSpec.Core.LoadLaws (level := 1)}
 
 {includeReadable "." Fir.Core.LoadReads "A load declared without a read" FirSpec.Core.LoadReads (level := 1)}
+
+{includeReadable "." Fir.Core.StoreLaws "Store obligations" FirSpec.Core.StoreLaws (level := 1)}
+
+{includeReadable "." Fir.Core.StoreWrites "A store declared without a write" FirSpec.Core.StoreWrites (level := 1)}
 
 {includeReadable "." Fir.Core.TreeRules "The core dialect in the tree of choices" FirSpec.Core.TreeRules (level := 1)}
 

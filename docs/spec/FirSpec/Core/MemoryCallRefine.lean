@@ -17,15 +17,16 @@ pins their fingerprint; the build fails when the Lean changes under it.
 :::moduleDocs (fingerprint := "11776099395834119705")
 :::
 
-:::readable Fir.Core.Op.effects_touchesNoMemory Fir.Core.Op.touchesMemory_false Fir.Core.reachesNoMemory Fir.Core.reachesNoMemory_of_all (pin := Fir.Core.Op.effects) (fingerprint := "1684980741458823966")
+:::readable Fir.Core.Op.effects_touchesNoMemory Fir.Core.Op.touchesMemory_false Fir.Core.reachesNoMemory Fir.Core.reachesNoMemory_of_all (pin := Fir.Core.Op.effects) (fingerprint := "7289484861468658864")
 *Theorems: a core op declares a memory effect exactly when it touches
-memory, and a core function with no allocation or load in reach reaches
-no memory.* The {ref "The-fir-specification--Execution--Effect-sets"}[effects]
+memory, and a core function with no allocation, load or store in reach
+reaches no memory.* The {ref "The-fir-specification--Execution--Effect-sets"}[effects]
 of every core op that touches no memory, every one but
-$`\mathsf{alloca}` and $`\mathsf{load}`, read, write and allocate in no
-memory, and an op that declares no memory effect touches no memory, since
-$`\mathsf{alloca}_N` declares that it allocates in memory $`N` and
-$`\mathsf{load}_N` that it reads it. So in a core symbol table, the
+$`\mathsf{alloca}`, $`\mathsf{load}` and $`\mathsf{store}`, read, write
+and allocate in no memory, and an op that declares no memory effect
+touches no memory, since $`\mathsf{alloca}_N` declares that it allocates
+in memory $`N`, $`\mathsf{load}_N` that it reads it and
+$`\mathsf{store}_N` that it writes it. So in a core symbol table, the
 function named $`s`
 {ref "The-fir-specification--Memory--Touching-no-memory"}[reaches no memory]
 when no function that the walk from $`s` reaches, $`s`'s own included, has
@@ -39,8 +40,8 @@ core's memories, each core op that declares no memory effect ignores the
 memories: such an op touches no memory, so it is
 {ref "The-fir-specification--Memory--The-core___s-rules-with-memory"}[tied],
 and runs by its rule in the set monad and keeps the memories.
-$`\mathsf{alloca}` and $`\mathsf{load}`, which touch memory, declare it,
-so they are not asked.
+$`\mathsf{alloca}`, $`\mathsf{load}` and $`\mathsf{store}`, which touch
+memory, declare it, so they are not asked.
 :::
 
 :::readable Fir.Core.opsFinite (pin := Fir.Core.Op.liftsSetM) (pin := Fir.OpsFinite) (fingerprint := "8297816828923716502")
@@ -55,8 +56,10 @@ the set monad is the set of its rule in the
 by the morphism that keeps choice and UB, and a tree's choice of $`w` bits
 has $`2^w` options. $`\mathsf{alloca}` has no tie, and has
 {ref "The-fir-specification--Memory--Stack-allocation-obligations"}[one outcome]
-by its own rule; $`\mathsf{load}` has no tie either, and has
-{ref "The-fir-specification--Memory--Load-obligations"}[at most one that ends].
+by its own rule; $`\mathsf{load}` and $`\mathsf{store}` have no tie
+either, and have at most one that ends
+({ref "The-fir-specification--Memory--Load-obligations"}[load obligations],
+{ref "The-fir-specification--Memory--Store-obligations"}[store obligations]).
 :::
 
 :::readable Fir.Core.replaceBody_isRefinedBy_of_from Fir.Core.caller_isRefinedBy_of_from (fingerprint := "11864989512908111455")
@@ -97,8 +100,8 @@ in either module, its
 so the hypothesis gives refinement from given memories and the theorem
 above applies (#214). Until #214 this form asked that $`g` have no pointer
 parameter, as the human ruled on #373 (2026-11-13). A core function
-reaches no memory when no function in its reach has an $`\mathsf{alloca}`
-or a $`\mathsf{load}`, the core ops that touch memory. Its hypothesis is refinement
+reaches no memory when no function in its reach has an $`\mathsf{alloca}`,
+a $`\mathsf{load}` or a $`\mathsf{store}`, the core ops that touch memory. Its hypothesis is refinement
 with memory, from the empty memories, which says nothing of a callee that
 touches memory; such a callee uses the theorem from given memories above.
 

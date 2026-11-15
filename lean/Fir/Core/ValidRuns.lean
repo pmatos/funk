@@ -36,8 +36,8 @@ theorem Op.eq_call_of_callee {op : Op} {s : Name} (h : callee? (d := CoreDialect
   cases op <;> (cases h; try exact ⟨_, _, rfl⟩)
 
 /-- Every core terminator and every core op with no callee that touches no
-memory is total in the set monad: every core op but `call`, `alloca` and
-`load`. -/
+memory is total in the set monad: every core op but `call`, `alloca`,
+`load` and `store`. -/
 theorem Op.total_all (op : Op)
     (h : Fir.isTerminator (d := CoreDialect) op = true ∨ callee? (d := CoreDialect) op = none)
     (hm : op.touchesMemory = false) : OpTotal (d := CoreDialect) op := by
