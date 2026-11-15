@@ -34,14 +34,15 @@ choice effect, and the divisions,
 
 * Each op that is not a terminator has the rule of its family, from the
   arithmetic rules to the width change rules. `call` has none: its meaning
-  is its callee's run. `alloca` has none either: it allocates, so its rule
-  needs the memory effect, and is one of the core's rules with memory.
+  is its callee's run. `alloca` and `load` have none either: one allocates
+  and the other reads, so each rule needs the memory effect, and is one of
+  the core's rules with memory.
 * Each terminator has the rule of the control-flow rules or the branch
   rules.
 * An op has rules when one of the two tables gives it one, when it calls
   a function, or when it touches memory. Every core op has rules: each
   family gave its ops theirs, the call rules name the callee of `call`, and
-  `alloca` has its rule with memory.
+  `alloca` and `load` have their rules with memory.
 
 An op has no rules when its dialect's semantics gives it none. The rule for
 such an op, first written while its family had not landed, is the one the spec
@@ -90,16 +91,16 @@ namespace Fir.Core
 
 variable {m : Type → Type} [Monad m]
 
-/-- The core ops that touch memory: `alloca`, which allocates. Each has a
-rule only in a monad with the memory effect (the section on the core's rules
-with memory). -/
+/-- The core ops that touch memory: `alloca`, which allocates, and `load`,
+which reads. Each has a rule only in a monad with the memory effect (the
+section on the core's rules with memory). -/
 def Op.touchesMemory : Op → Bool
-  | .alloca .. => true
+  | .alloca .. | .load .. => true
   | _ => false
 
 /-- The rule of each core op that is not a terminator, in any monad with
 the choice and UB effects; `none` for `call`, whose meaning is its
-callee's run, for `alloca`, whose rule needs memory, and for the
+callee's run, for `alloca` and `load`, whose rules need memory, and for the
 terminators. -/
 def Op.denote? [MonadChoice m] [MonadUB m] : (op : Op) →
     Option (HVector toType (Fir.sig (d := CoreDialect) op) →
@@ -204,8 +205,8 @@ def Op.hasRules (op : Op) : Bool :=
 
 -- Every core op has rules: one instance of each, `add` with each of its
 -- flags, and `icmp` and `fcmp` with each of their predicates among them. `call`'s are
--- its callee's run, and `alloca`'s is its rule with memory: neither has an
--- entry in `Op.denote?`.
+-- its callee's run, and `alloca`'s and `load`'s are their rules with memory:
+-- none of them has an entry in `Op.denote?`.
 #guard (samples.filter Op.hasRules).map Op.name == samples.map Op.name
 #guard WrapFlags.all.all fun f => (Op.add 1 f).hasRules && (Op.sub 7 f).hasRules
 #guard Pred.all.all fun p => (Op.icmp p 1).hasRules
@@ -225,6 +226,8 @@ def Op.hasRules (op : Op) : Bool :=
 #guard ((Op.call "f" [.int 8] [.int 8]).denote? (m := SetM)).isNone
 #guard ((Op.alloca .stack (.int 32) 4 none 0).denote? (m := SetM)).isNone &&
   (Op.alloca .stack (.int 32) 4 none 0).hasRules
+#guard ((Op.load .nonatomic 32 none 0).denote? (m := SetM)).isNone &&
+  (Op.load .nonatomic 32 none 0).hasRules && (Op.load .seqCst 8 (some 4) 1).hasRules
 
 /-- The core dialect's semantics in a monad `m` from two tables of rules,
 `den` for the ops that are not terminators and `ex` for the terminators:

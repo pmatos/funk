@@ -37,6 +37,8 @@ byte order.
 
 {includeReadable "." Fir.Memory.AlignLaws "Aligned access laws" FirSpec.Memory.AlignLaws (level := 1)}
 
+{includeReadable "." Fir.Memory.Ordering "The ordering of an access" FirSpec.Memory.Ordering (level := 1)}
+
 {includeReadable "." Fir.Memory.Frames "The memories of a run" FirSpec.Memory.Frames (level := 1)}
 
 {includeReadable "." Fir.Memory.FrameLaws "Frame laws" FirSpec.Memory.FrameLaws (level := 1)}
@@ -111,9 +113,15 @@ byte order.
 
 {includeReadable "." Fir.Core.Alloca "Stack allocation rules" FirSpec.Core.Alloca (level := 1)}
 
+{includeReadable "." Fir.Core.Load "Load rules" FirSpec.Core.Load (level := 1)}
+
 {includeReadable "." Fir.Core.MemRules "The core's rules with memory" FirSpec.Core.MemRules (level := 1)}
 
 {includeReadable "." Fir.Core.AllocaLaws "Stack allocation obligations" FirSpec.Core.AllocaLaws (level := 1)}
+
+{includeReadable "." Fir.Core.LoadLaws "Load obligations" FirSpec.Core.LoadLaws (level := 1)}
+
+{includeReadable "." Fir.Core.LoadReads "A load declared without a read" FirSpec.Core.LoadReads (level := 1)}
 
 {includeReadable "." Fir.Core.TreeRules "The core dialect in the tree of choices" FirSpec.Core.TreeRules (level := 1)}
 

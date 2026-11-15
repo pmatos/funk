@@ -18,9 +18,9 @@ second for a callee that reaches no memory:
   core op has finitely many outcomes with memory: each op that touches no
   memory runs by its rule in the set monad and keeps the memories, and its
   rule in the set monad is the set of its rule in the tree of choices,
-  whose choices of _w_ bits have 2 to the power _w_ options; `alloca`, which
-  has no tie, has one outcome by its own rule, since an allocation is
-  deterministic. So congruence with ops of finitely many outcomes applies
+  whose choices of _w_ bits have 2 to the power _w_ options; `alloca` and
+  `load`, which have no tie, have at most one outcome that ends, each by its
+  own rule, since an allocation and a load are deterministic. So congruence with ops of finitely many outcomes applies
   (#214, `docs/decisions/semantics-refinement.md#congruence-in-the-callee`);
 * with memory, for a callee that reaches no memory in the module where it
   runs, nor in the new one: no function that its run may reach declares a
@@ -34,12 +34,13 @@ second for a callee that reaches no memory:
 
 The core dialect meets what the general theorems ask:
 
-* no core op but `alloca` declares a memory effect, so a function of a
-  core module reaches no memory when no function that its run may reach
-  has an `alloca`. The form with memory asks it of `@g`;
+* no core op but `alloca` and `load` declares a memory effect, so a
+  function of a core module reaches no memory when no function that its
+  run may reach has an `alloca` or a `load`. The form with memory asks it
+  of `@g`;
 * each core op that declares no memory effect ignores the memories, since
-  it touches none. `alloca`, the one op that touches memory, declares that
-  it allocates, so it is not asked;
+  it touches none. `alloca` and `load`, the ops that touch memory, declare
+  that one allocates and the other reads, so neither is asked;
 * the core dialect is lawful in its monotonicity, the refinement of core
   values is reflexive and transitive, and the symbols of a valid module are
   unique.
@@ -55,20 +56,22 @@ stuck path (the section on core functions with memory).
 
 namespace Fir.Core
 
-/-- A core op that touches no memory, every core op but `alloca`, declares
-no memory effect. -/
+/-- A core op that touches no memory, every core op but `alloca` and
+`load`, declares no memory effect. -/
 theorem Op.effects_touchesNoMemory (op : Op) (hm : op.touchesMemory = false) :
     (Fir.effects (d := CoreDialect) op).TouchesNoMemory := fun _ => by
   cases op with
-  | alloca => cases hm
+  | alloca | load => cases hm
   | _ => exact ⟨nofun, nofun, nofun⟩
 
 /-- A core op that declares no memory effect touches no memory: `alloca`
-declares that it allocates in the memory of its result. -/
+declares that it allocates in the memory of its result, and `load` that it
+reads the memory of its pointer. -/
 theorem Op.touchesMemory_false {op : Op} (h : (Fir.effects (d := CoreDialect) op).TouchesNoMemory) :
     op.touchesMemory = false := by
   cases op with
   | alloca _ _ _ _ n => exact ((h n).2.2 (List.mem_singleton_self n)).elim
+  | load _ _ _ n => exact ((h n).1 (List.mem_singleton_self n)).elim
   | _ => rfl
 
 /-- A function of a core table reaches no memory when no function that its
@@ -109,7 +112,8 @@ theorem opsFinite :
   cases hmem : op.touchesMemory with
   | true =>
     cases op <;> try cases hmem
-    exact ⟨fun _ => alloca_finitelyMany _ _ _ _ _ lay ρ args, fun h => nomatch h⟩
+    · exact ⟨fun _ => alloca_finitelyMany _ _ _ _ _ lay ρ args, fun h => nomatch h⟩
+    · exact ⟨fun _ => load_finitelyMany _ _ _ _ lay ρ args, fun h => nomatch h⟩
   | false => ?_
   have hm := denoteIn_mapsDenote (ChoiceTree.toSetMorphism (ε := Op)) ChoiceTree.toSet_keeps
     (fun op => .noOutcome op) (fun _ _ => False) fun _ => rfl

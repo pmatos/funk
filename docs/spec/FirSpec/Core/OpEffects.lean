@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Core effects: readable blocks" =>
 
-:::moduleDocs (fingerprint := "6821476366813944941")
+:::moduleDocs (fingerprint := "8159928607111067229")
 :::
 
 :::readable Fir.Core.Mem (fingerprint := "11401156343561318334")
@@ -25,11 +25,12 @@ memory of the pointer type $`\mathsf{ptr}\langle N \rangle`
 module has. The module's data layout declares the others by number
 (ADR-2026-11-12-1821;
 {ref "The-fir-specification--Validation--The-data-layout___s-rules"}[the data layout's rules]).
-$`\mathsf{alloca}` names the memory of its result in its effects; no other
-core op names a memory.
+$`\mathsf{alloca}` names the memory of its result in its effects, and
+$`\mathsf{load}` the memory of its pointer; no other core op names a
+memory.
 :::
 
-:::readable Fir.Core.Op.effects (fingerprint := "17678077309602420160")
+:::readable Fir.Core.Op.effects (fingerprint := "3919274005916045648")
 *Definition: the effects of each core op.* For each
 {ref "The-fir-specification--Abstract-syntax--Core-ops"}[core op instance]:
 
@@ -47,7 +48,7 @@ $$`\mathsf{shl},\ \mathsf{lshr},\ \mathsf{ashr},\ \mathsf{poison},\ \mathsf{fpto
 
 $$`\mathsf{br},\ \mathsf{ret}:\ \{\mathsf{control}\} \qquad \mathsf{cond\_br},\ \mathsf{unreachable}:\ \{\mathsf{mayUB},\ \mathsf{control}\}`
 
-$$`\mathsf{alloca}_N:\ \{\mathsf{allocates}(N)\}`
+$$`\mathsf{alloca}_N:\ \{\mathsf{allocates}(N)\} \qquad \mathsf{load}_N:\ \{\mathsf{reads}(N),\ \mathsf{mayUB},\ \mathsf{mayPoison}\}`
 
 $`\mathsf{const}` here is a constant of any type, an integer's or a
 float's. The float ops without $`\mathsf{nnan}` and $`\mathsf{ninf}`
@@ -61,6 +62,9 @@ integer that the width does not hold, an infinity or a NaN gives poison.
 $`\mathsf{alloca}_N` allocates in the memory $`N` of its result, and does
 nothing else that an effect names: it is never UB and gives a defined
 pointer, and the frame of its call frees the allocation.
+$`\mathsf{load}_N` reads the memory $`N` of its pointer, may be UB, on a
+poison pointer or an access that faults, and may give poison, for units
+that are not an integer's encoding, such as fresh memory's.
 $`\mathsf{call}`'s own rule only runs its callee, so its own set is empty;
 a call has its callee's effects. The definition lists every op, with no
 case for the rest, so a new core op does not build until it declares its

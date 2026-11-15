@@ -328,7 +328,19 @@ class Repository(unittest.TestCase):
     def test_the_core_words_hold_every_core_op(self):
         self.assertLessEqual(set(CORE_OPS), core_words())
         self.assertLessEqual(
-            {"nsw", "nuw", "exact", "slt", "true", "false", "ptr", "stack", "heap"},
+            {
+                "nsw",
+                "nuw",
+                "exact",
+                "slt",
+                "true",
+                "false",
+                "ptr",
+                "stack",
+                "heap",
+                "nonatomic",
+                "seq_cst",
+            },
             core_words(),
         )
         self.assertNotIn("align", core_words())

@@ -1,5 +1,6 @@
 import Fir.Core.Signature
 import Fir.Core.AllocaText
+import Fir.Core.LoadText
 import Fir.Core.FloatText
 import Fir.Core.FloatOpText
 import Fir.Text.Grammar
@@ -60,6 +61,9 @@ results, which are written where those values are defined.
   1, and `align(A)` when it gives an alignment, and gives a pointer of the
   memory it allocates in: `%p: ptr = alloca stack i32 4 @1`
   (ADR-2026-11-14-0915).
+* `load` has its ordering and `align(A)` when it gives an alignment, takes
+  a pointer and gives the integer it loads:
+  `%v: i32 = load nonatomic %p @1`.
 * `fptosi` and `fptoui` have no attributes, since they truncate and do not
   round, and take a float of any format to an integer of any width:
   `%i: i32 = fptosi %f @1`.
@@ -92,7 +96,8 @@ results, which are written where those values are defined.
   (ADR-2026-11-11-0951). `float(1, 1)` decodes, and validation rejects it.
 
 The section on the core types in text gives how each type is written and
-read back, and the section on stack allocation in text how `alloca` is.
+read back, the section on stack allocation in text how `alloca` is, and
+the section on loads in text how `load` is.
 
 The values of `fir-ref`'s arguments, the values in its JSON output and the
 choices that scripted mode follows (see the section "Exhaustive, scripted
@@ -143,7 +148,7 @@ def Op.name : Op → String
   | .zext .. => "zext" | .sext .. => "sext" | .trunc .. => "trunc"
   | .toBits .. | .ofBits .. => "bitcast" | .sitofp .. => "sitofp" | .uitofp .. => "uitofp"
   | .fpext .. => "fpext" | .fptrunc .. => "fptrunc"
-  | .ptradd .. => "ptradd" | .alloca .. => "alloca" | .fptosi .. => "fptosi"
+  | .ptradd .. => "ptradd" | .alloca .. => "alloca" | .load .. => "load" | .fptosi .. => "fptosi"
   | .fptoui .. => "fptoui"
   | .freeze _ => "freeze" | .poison _ => "poison" | .br => "br" | .condBr => "cond_br"
   | .ret _ => "ret" | .unreachable => "unreachable" | .call .. => "call"
@@ -171,6 +176,7 @@ def Op.attrs : Op → List Attr
   | .sdiv _ e | .udiv _ e => if e then [.word "exact"] else []
   | .call f _ _ => [.sym f]
   | .alloca k t c a _ => allocaAttrs k t c a
+  | .load o _ a _ => loadAttrs o a
   | _ => []
 
 /-- Reads the flags of `add`, `sub` or `mul`. -/
@@ -282,6 +288,7 @@ def Op.decode (n : String) (as : List Attr) (ts rs : List Ty) : Option Op :=
   | "fptrunc" => decodeFptrunc as ts rs
   | "ptradd" => decodePtrAdd as ts rs
   | "alloca" => decodeAlloca as ts rs
+  | "load" => decodeLoad as ts rs
   | "fptosi" => decodeFloatToInt true as ts rs
   | "fptoui" => decodeFloatToInt false as ts rs
   | _ => if let some mk := plainBinOps.lookup n then bare as ((binWidth ts rs).map mk) else none

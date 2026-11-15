@@ -4,6 +4,7 @@ import Fir.Core.Validation
 import Fir.Text.RoundTrip
 import Fir.Core.TypeTextLaws
 import Fir.Core.AllocaTextLaws
+import Fir.Core.LoadTextLaws
 import Fir.Core.FloatTextLaws
 import Fir.Core.FloatOpTextLaws
 
@@ -226,6 +227,8 @@ theorem Op.decode_encode (o : Op) : Op.decode o.name o.attrs o.sig o.returnTypes
   | alloca k t c a n =>
     simpa [Op.name, Op.attrs, Op.sig, Op.returnTypes, Op.decode] using
       decodeAlloca_allocaAttrs k t c a n
+  | load o w a n =>
+    simpa [Op.name, Op.attrs, Op.sig, Op.returnTypes, Op.decode] using decodeLoad_loadAttrs o w a n
   | fptosi e m n | fptoui e m n =>
     simp [Op.name, Op.attrs, Op.sig, Op.returnTypes, Op.decode, decodeFloatToInt, i]
   | _ =>
@@ -360,6 +363,7 @@ theorem Op.encode_decode {n : String} {as : List Attr} {ts rs : List Ty} {o : Op
   · exact decodeFptrunc_eq h -- fptrunc
   · exact decodePtrAdd_eq h -- ptradd
   · exact decodeAlloca_eq h -- alloca
+  · exact decodeLoad_eq h -- load
   · exact decodeFloatToInt_eq (signed := true) h -- fptosi
   · exact decodeFloatToInt_eq (signed := false) h -- fptoui
   · -- srem, urem, and, or, xor, shl, lshr and ashr
@@ -432,6 +436,7 @@ theorem Op.attrs_writable (o : Op) : Attr.AllWritable o.attrs := by
     cases e <;> simp [Op.attrs, Attr.AllWritable, Attr.Writable] <;> decide
   | call => exact ⟨trivial, trivial⟩
   | alloca k t c a => exact allocaAttrs_writable k t c a
+  | load o _ a => exact loadAttrs_writable o a
   | _ => trivial
 
 end Fir.Core
@@ -440,7 +445,7 @@ namespace Fir
 
 /-! # The laws -/
 
-/-- The core dialect's text meets the seven laws, for all 41 core ops and
+/-- The core dialect's text meets the seven laws, for all 42 core ops and
 every core type. -/
 theorem Core.lawfulDialectText : LawfulDialectText CoreDialect where
   decodeOp_encode := Core.Op.decode_encode

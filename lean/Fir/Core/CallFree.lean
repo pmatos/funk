@@ -24,9 +24,9 @@ its runs with memory, branches and loops included, on every argument
 vector of its parameter types, poison included (the section on core
 functions with memory):
 
-* _every core op but `call` and `alloca` is total_, by the obligations
-  that each family proves of its ops, and `alloca` is total with memory,
-  by its own rule;
+* _every core op but `call`, `alloca` and `load` is total_, by the
+  obligations that each family proves of its ops, and `alloca` and `load`
+  are total with memory, each by its own rule;
 * _every valid core function without calls runs within itself_: none of
   its ops calls a function; `br` and `cond_br` go only to successors they
   have and give no results; and `ret`, the only core op whose exit
@@ -55,9 +55,10 @@ def CallFree (f : Func CoreDialect) : Prop :=
 instance (f : Func CoreDialect) : Decidable (CallFree f) :=
   inferInstanceAs (Decidable (∀ b ∈ f.blocks, ∀ o ∈ b.body, o.op.isCall = false))
 
-/-- Every core op but `call` and `alloca` is total in the set monad.
-`alloca` has no rule there: it is total with memory, by its own rule (the
-section on the stack allocation obligations). -/
+/-- Every core op but `call`, `alloca` and `load` is total in the set
+monad. `alloca` and `load` have no rule there: each is total with memory,
+by its own rule (the sections on the stack allocation obligations and on
+the load obligations). -/
 theorem Op.total : (op : Op) → op.isCall = false → op.touchesMemory = false →
     OpTotal (d := CoreDialect) op
   | .const w v, _, _ => const_total w v
@@ -100,7 +101,7 @@ theorem Op.total : (op : Op) → op.isCall = false → op.touchesMemory = false 
   | .ret ts, _, _ => ret_total ts
   | .unreachable, _, _ => unreachable_total
   | .call .., h, _ => nomatch h
-  | .alloca .., _, h => nomatch h
+  | .alloca .., _, h | .load .., _, h => nomatch h
 
 /-- A core terminator that jumps goes to a successor that it has, and gives
 no results. -/

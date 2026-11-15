@@ -1,4 +1,5 @@
 import Fir.Core.AllocaLaws
+import Fir.Core.LoadLaws
 import Fir.Execution.MemoryObligationLaws
 import Fir.Core.Unlawful
 
@@ -21,16 +22,20 @@ effects. Each effect that a core op leaves out, it does not have:
   pointer offset.
 * _No control._ Every core op that does not declare control is not a
   terminator.
-* _No write, read or allocation._ Every core op but `alloca` touches no
-  memory: it runs with memory by its rule in the set monad and keeps the
-  memories, at every layout and naming of them (the section on the core's
-  rules with memory). `alloca` writes and reads no memory, and allocates
-  only in the memory it declares, by its own rule (the section on the
-  stack allocation obligations).
+* _No write, read or allocation._ Every core op but `alloca` and `load`
+  touches no memory: it runs with memory by its rule in the set monad and
+  keeps the memories, at every layout and naming of them (the section on
+  the core's rules with memory). `alloca` writes and reads no memory, and
+  allocates only in the memory it declares, by its own rule (the section
+  on the stack allocation obligations). `load` writes no memory, allocates
+  in none, and reads only the memory it declares, by its own rule (the
+  section on the load obligations).
 
-So each op but `alloca` is tied, and the first two obligations, stated over
-the semantics with memory, follow from what its rule does in the set
-monad; `alloca` meets them by its rule with memory.
+So each op but `alloca` and `load` is tied, and the first two obligations,
+stated over the semantics with memory, follow from what its rule does in
+the set monad; `alloca` meets them by its rule with memory, and `load`
+declares both may-UB and may produce poison, so neither asks anything of
+it.
 
 `call` has no rule of its own, so the obligations leave it out: its meaning
 is its callee's run, and its effects are its callee's
@@ -39,7 +44,8 @@ is its callee's run, and its effects are its callee's
 The obligations have teeth: the last section declares the core ops' effects
 with `sdiv` left without may-UB, and shows that the obligations reject that
 declaration, as the section on semantics that the obligations reject shows
-for semantics.
+for semantics. The section on a load declared without a read does the same
+for a `load` that leaves out the read of its memory.
 -/
 
 namespace Fir.Core
@@ -76,7 +82,7 @@ theorem Op.neverUB_all : (op : Op) → (Fir.effects (d := CoreDialect) op).mayUB
   | .fptrunc e m e' m', _ => convertFloat_neverUB e m e' m' false
   | .ptradd n w, _ => ptradd_neverUB n w
   | .sdiv .., h | .udiv .., h | .srem _, h | .urem _, h | .condBr, h
-  | .unreachable, h => nomatch h
+  | .unreachable, h | .load .., h => nomatch h
 
 /-! # No may produce poison -/
 
@@ -223,7 +229,7 @@ theorem Op.makesNoPoison_all : (op : Op) → (Fir.effects (d := CoreDialect) op)
   | .fptrunc e m e' m', _ => convertFloat_makesNoPoison e m e' m' false
   | .ptradd n w, _ => ptradd_makesNoPoison n w
   | .br, _ | .condBr, _ | .ret _, _ | .unreachable, _ => fun h => nomatch h
-  | .poison _, h | .shl _, h | .lshr _, h | .ashr _, h | .fptosi .., h | .fptoui .., h => nomatch h
+  | .load .., h | .poison _, h | .shl _, h | .lshr _, h | .ashr _, h | .fptosi .., h | .fptoui .., h => nomatch h
 
 /-! # No control -/
 
@@ -245,23 +251,28 @@ theorem Core.lawfulDialectEffects : LawfulDialectEffects CoreDialect where
   neverUB op _ _ h := Core.Op.memCases (P := fun op =>
       (Fir.effects (d := CoreDialect) op).mayUB = false → NeverUB (d := CoreDialect) op) op
     (fun op hm h => NeverUB.ofLifts (Core.Op.liftsSetM op hm) (Core.Op.neverUB_all op h))
-    (fun k t c a n _ => Core.alloca_neverUB k t c a n) h
+    (fun k t c a n _ => Core.alloca_neverUB k t c a n) (fun _ _ _ _ h => nomatch h) h
   makesNoPoison op _ _ h := Core.Op.memCases (P := fun op =>
       (Fir.effects (d := CoreDialect) op).mayPoison = false → MakesNoPoison (d := CoreDialect) op) op
     (fun op hm h => MakesNoPoison.ofLifts (Core.Op.liftsSetM op hm) (Core.Op.makesNoPoison_all op h))
-    (fun k t c a n _ => Core.alloca_makesNoPoison k t c a n) h
+    (fun k t c a n _ => Core.alloca_makesNoPoison k t c a n) (fun _ _ _ _ h => nomatch h) h
   notControl := Core.Op.notControl_all
   writesNot op _ _ _ _ lay ρ x _ := Core.Op.memCases op
     (fun op hm => OwnRuleHas.ofLifts (Core.Op.liftsSetM op hm) lay ρ fun c => writesNot_lift x c)
     (fun k t c a n => Core.alloca_writesNot k t c a n lay ρ x)
-  readsNot op _ _ _ _ lay ρ x _ := Core.Op.memCases op
-    (fun op hm => OwnRuleHas.ofLifts (Core.Op.liftsSetM op hm) lay ρ fun c => readsNot_lift x c)
-    (fun k t c a n => Core.alloca_readsNot k t c a n lay ρ x)
+    (fun o w a n => Core.load_writesNot o w a n lay ρ x)
+  readsNot op _ _ _ _ lay ρ x hx := Core.Op.memCases (P := fun op =>
+      ¬ ((Fir.effects (d := CoreDialect) op).reads.map ρ).Has x →
+        OwnRuleHas lay ρ (ReadsNot x) (d := CoreDialect) op) op
+    (fun op hm _ => OwnRuleHas.ofLifts (Core.Op.liftsSetM op hm) lay ρ fun c => readsNot_lift x c)
+    (fun k t c a n _ => Core.alloca_readsNot k t c a n lay ρ x)
+    (fun o w a n hx => Core.load_readsNot o w a n lay ρ x hx) hx
   allocatesNot op _ _ _ _ lay ρ x hx := Core.Op.memCases (P := fun op =>
       ¬ ((Fir.effects (d := CoreDialect) op).allocates.map ρ).Has x →
         OwnRuleHas lay ρ (AllocatesNot x) (d := CoreDialect) op) op
     (fun op hm _ => OwnRuleHas.ofLifts (Core.Op.liftsSetM op hm) lay ρ fun c => allocatesNot_lift x c)
-    (fun k t c a n hx => Core.alloca_allocatesNot k t c a n lay ρ x hx) hx
+    (fun k t c a n hx => Core.alloca_allocatesNot k t c a n lay ρ x hx)
+    (fun o w a n _ => Core.load_allocatesNot o w a n lay ρ x) hx
 
 instance : LawfulDialectEffects CoreDialect := Core.lawfulDialectEffects
 

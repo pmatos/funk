@@ -160,6 +160,8 @@ functions, blocks and ops.
 
 {includeReadable "." Fir.Core.AllocaText "Stack allocation in text" FirSpec.Core.AllocaText (level := 2)}
 
+{includeReadable "." Fir.Core.LoadText "Loads in text" FirSpec.Core.LoadText (level := 2)}
+
 {includeReadable "." Fir.Core.TextSamples "The core dialect's text, checked" FirSpec.Core.TextSamples (level := 2)}
 
 {includeReadable "." Fir.Core.FloatText "Float constants in text" FirSpec.Core.FloatText (level := 2)}
@@ -173,6 +175,8 @@ functions, blocks and ops.
 {includeReadable "." Fir.Core.TypeTextLaws "The core types in text are lawful" FirSpec.Core.TypeTextLaws (level := 2)}
 
 {includeReadable "." Fir.Core.AllocaTextLaws "Stack allocation reads back" FirSpec.Core.AllocaTextLaws (level := 2)}
+
+{includeReadable "." Fir.Core.LoadTextLaws "Loads read back" FirSpec.Core.LoadTextLaws (level := 2)}
 
 {includeReadable "." Fir.Core.FloatOpTextLaws "The float ops read back" FirSpec.Core.FloatOpTextLaws (level := 2)}
 

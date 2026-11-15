@@ -14,20 +14,22 @@ when the Lean changes under it.
 
 #doc (Manual) "Core poison classes: readable blocks" =>
 
-:::moduleDocs (fingerprint := "11889772072530232216")
+:::moduleDocs (fingerprint := "17984515185575866775")
 :::
 
-:::readable Fir.Core.Op.poisonClass (fingerprint := "7217504748417581140")
-*Definition: the poison class of each core op.* Thirty-four core ops
+:::readable Fir.Core.Op.poisonClass (fingerprint := "15768618505057600723")
+*Definition: the poison class of each core op.* Thirty-five core ops
 {ref "The-fir-specification--Execution--Poison-classes"}[propagate poison],
 and seven are exceptions:
 
-$$`\begin{aligned} \mathsf{propagates}:\ & \mathsf{const}_N,\ \mathsf{const}_{e,m},\ \mathsf{poison},\ \mathsf{add}, \\ & \mathsf{sub},\ \mathsf{mul},\ \mathsf{sdiv},\ \mathsf{udiv}, \\ & \mathsf{srem},\ \mathsf{urem},\ \mathsf{and},\ \mathsf{or}, \\ & \mathsf{xor},\ \mathsf{shl},\ \mathsf{lshr},\ \mathsf{ashr}, \\ & \mathsf{icmp},\ \mathsf{fcmp},\ \mathsf{zext},\ \mathsf{sext},\ \mathsf{trunc}, \\ & \mathit{fbin},\ \mathit{funary},\ \mathsf{fma},\ \mathsf{bitcast}^{\to \mathsf{i}},\ \mathsf{bitcast}^{\mathsf{i} \to}, \\ & \mathsf{sitofp},\ \mathsf{uitofp},\ \mathsf{fpext},\ \mathsf{fptrunc},\ \mathsf{ptradd}, \\ & \mathsf{fptosi},\ \mathsf{fptoui},\ \mathsf{alloca} \end{aligned}`
+$$`\begin{aligned} \mathsf{propagates}:\ & \mathsf{const}_N,\ \mathsf{const}_{e,m},\ \mathsf{poison},\ \mathsf{add}, \\ & \mathsf{sub},\ \mathsf{mul},\ \mathsf{sdiv},\ \mathsf{udiv}, \\ & \mathsf{srem},\ \mathsf{urem},\ \mathsf{and},\ \mathsf{or}, \\ & \mathsf{xor},\ \mathsf{shl},\ \mathsf{lshr},\ \mathsf{ashr}, \\ & \mathsf{icmp},\ \mathsf{fcmp},\ \mathsf{zext},\ \mathsf{sext},\ \mathsf{trunc}, \\ & \mathit{fbin},\ \mathit{funary},\ \mathsf{fma},\ \mathsf{bitcast}^{\to \mathsf{i}},\ \mathsf{bitcast}^{\mathsf{i} \to}, \\ & \mathsf{sitofp},\ \mathsf{uitofp},\ \mathsf{fpext},\ \mathsf{fptrunc},\ \mathsf{ptradd}, \\ & \mathsf{fptosi},\ \mathsf{fptoui},\ \mathsf{alloca},\ \mathsf{load} \end{aligned}`
 
 $$`\begin{aligned} \mathsf{exception}:\ & \mathsf{select},\ \mathsf{freeze},\ \mathsf{br}, \\ & \mathsf{cond\_br},\ \mathsf{ret},\ \mathsf{unreachable},\ \mathsf{call} \end{aligned}`
 
 $`\mathsf{alloca}`, like $`\mathsf{const}` and $`\mathsf{poison}`, has
-no operands, so it propagates poison whatever its rule.
+no operands, so it propagates poison whatever its rule. $`\mathsf{load}`
+is UB on a poison pointer, since some defined pointer in its place faults,
+so it propagates poison too.
 The definition lists every op, with no case for the rest, so a new core op
 does not build until it declares its class (ADR-2026-11-03-0600).
 $`\mathsf{cond\_br}` is `condBr` in the Lean. The Lean checks the

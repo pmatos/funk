@@ -9,7 +9,7 @@ op's context, the width rules of `zext`, `sext` and `trunc`
 (ADR-2026-10-29-2006), the format rules of `fpext` and `fptrunc` (the
 human's ruling of 2026-11-12 on #354), the rule that no float op
 carries a reserved word, `contract` or `reassoc` (ADR-2026-11-09-1549),
-and the rules of `alloca` (ADR-2026-11-14-0915).
+the rules of `alloca` (ADR-2026-11-14-0915), and the rules of `load`.
 The general rules of the previous sections already
 check every op's operand and result types against its signature, so these
 are all the rules of the core dialect. It has no rule over a whole function.
@@ -84,6 +84,14 @@ The core rules of an op beyond its signature.
   as a deep recursion is, and not a rule of validation. Its result names
   its memory, so the module's data layout checks that the module has that
   memory (ADR-2026-11-14-0915).
+* `load` has the ordering `nonatomic`, the one M1 accepts: the other
+  orderings are hooks in the format for a concurrency model
+  (ADR-2026-11-09-1542). An alignment that it writes is a power of two no
+  larger than `MemLayout.limit` (`MemLayout.ValidAlign`), as `alloca`'s
+  is; one that it does not write is the natural alignment of its type in
+  its memory. Its result is an integer type and its operand a pointer, and
+  validation checks both types as it checks every type: the width is valid
+  and the module has the memory.
 
 Every other op has no rule beyond its signature.
 -/
@@ -97,6 +105,7 @@ def Op.Valid (ctx : OpContext CoreDialect) : Op → Prop
   | .fcmp _ fl .. | .fbin _ fl .. | .funary _ fl .. | .fma fl .. => fl.Reserved = false
   | .alloca k t c a _ => k = .stack ∧ 1 ≤ c ∧ (∀ x ∈ a, MemLayout.ValidAlign x) ∧
       t.IsInt ∧ t.Valid
+  | .load o _ a _ => o = .nonatomic ∧ ∀ x ∈ a, MemLayout.ValidAlign x
   | _ => True
 
 end Fir.Core

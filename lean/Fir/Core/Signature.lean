@@ -37,6 +37,7 @@ def Op.sig : Op → List Ty
   | .sitofp n .. | .uitofp n .. => [i n]
   | .fpext e m .. | .fptrunc e m .. | .fptosi e m _ | .fptoui e m _ => [.float e m]
   | .ptradd n w => [.ptr n, i w]
+  | .load _ _ _ n => [.ptr n]
   | .freeze w => [i w]
   | .condBr => [i 1]
   | .ret ts => ts
@@ -56,6 +57,7 @@ def Op.returnTypes : Op → List Ty
   | .fpext _ _ e' m' | .fptrunc _ _ e' m' => [.float e' m']
   | .ptradd n _ | .alloca _ _ _ _ n => [.ptr n]
   | .fptosi _ _ n | .fptoui _ _ n => [i n]
+  | .load _ w _ _ => [i w]
   | .br | .condBr | .ret _ | .unreachable => []
   | .call _ _ rs => rs
 

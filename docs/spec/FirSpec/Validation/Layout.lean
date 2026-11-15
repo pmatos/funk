@@ -27,7 +27,8 @@ $`a - 1`.
 *Definition: a valid alignment.* An alignment $`a` is valid when it is a
 power of two no larger than the limit, $`2^{24} - 1`, so the largest is
 $`2^{23}`. It is the one rule of the alignment that an entry writes for its
-pointers and of the alignment that an $`\mathsf{alloca}` writes
+pointers and of the alignment that an $`\mathsf{alloca}` or a
+$`\mathsf{load}` writes
 ({ref "The-fir-specification--Validation--Core-rules"}[the
 core's rules]). A natural alignment, which an entry or an
 $`\mathsf{alloca}` that writes none takes, is not bound by it: in a memory

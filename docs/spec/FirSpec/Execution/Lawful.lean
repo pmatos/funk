@@ -68,7 +68,8 @@ instance. No path of such a run is stuck either, whatever its ops do, as
 that section proves.
 
 The core dialect is not lawful in the set monad, since
-$`\mathsf{alloca}` has no rule there, so this theorem does not apply to
+$`\mathsf{alloca}` and $`\mathsf{load}` have no rule there, so this
+theorem does not apply to
 it. Progress for every function of a valid core module is stated with
 memory, in the section on
 {ref "The-fir-specification--Memory--Core-functions-with-memory"}[core functions with memory].

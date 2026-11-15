@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Core op semantics: readable blocks" =>
 
-:::moduleDocs (fingerprint := "10053808790108493823")
+:::moduleDocs (fingerprint := "3876052977723553239")
 :::
 
 :::readable Fir.Core.Op.denote? (fingerprint := "8766929691435898115")
@@ -66,9 +66,10 @@ result:
 * $`\mathsf{fptosi}_{e,m,N}` and $`\mathsf{fptoui}_{e,m,N}`: the
   {ref "The-fir-specification--Execution--Integer-conversion-rules"}[integer conversion rules].
 
-$`\mathsf{call}`, $`\mathsf{alloca}` and the terminators have none here:
-a call's meaning is the run of its callee, $`\mathsf{alloca}` allocates,
-so its rule needs the memory effect and is one of the
+$`\mathsf{call}`, $`\mathsf{alloca}`, $`\mathsf{load}` and the
+terminators have none here: a call's meaning is the run of its callee,
+$`\mathsf{alloca}` allocates and $`\mathsf{load}` reads, so each of their
+rules needs the memory effect and is one of the
 {ref "The-fir-specification--Memory--The-core___s-rules-with-memory"}[core's rules with memory],
 and a terminator's rule says where control goes.
 The rules are written once, for every way of computing with these
@@ -100,10 +101,11 @@ tree of choices and the state layer use the same tables, or tables with
 memory, with their own $`z`.
 :::
 
-:::readable Fir.Core.Op.hasRules Fir.Core.Op.touchesMemory (pin := Fir.instDialectDenoteCoreDialectSetM) (pin := Fir.instDialectCallCoreDialect) (pin := Fir.Core.Op.callTarget?) (pin := Fir.Core.Op.denote?) (pin := Fir.Core.Op.exit?) (fingerprint := "6806789550651722301")
+:::readable Fir.Core.Op.hasRules Fir.Core.Op.touchesMemory (pin := Fir.instDialectDenoteCoreDialectSetM) (pin := Fir.instDialectCallCoreDialect) (pin := Fir.Core.Op.callTarget?) (pin := Fir.Core.Op.denote?) (pin := Fir.Core.Op.exit?) (fingerprint := "11291943496676533029")
 *Definition: the core ops that touch memory.* $`\mathsf{alloca}`, which
-allocates, touches memory, and no other core op does. Its rule needs the
-memory effect, so it has one only in a monad with memory.
+allocates, and $`\mathsf{load}`, which reads, touch memory, and no other
+core op does. Each rule needs the memory effect, so each has one only in a
+monad with memory.
 
 *Definition: an op has rules.* A core op has rules when one of the two
 blocks above gives it a rule, as an op that is not a terminator or as a
@@ -115,8 +117,8 @@ predicates, at a valid format and at one that validation rejects, each
 float op of arithmetic, both bit casts, both conversions from integers,
 both conversions between formats and both conversions to integers, among
 them;
-$`\mathsf{call}` counts through its callee, and $`\mathsf{alloca}`
-through its rule with memory.
+$`\mathsf{call}` counts through its callee, and $`\mathsf{alloca}` and
+$`\mathsf{load}` through their rules with memory.
 
 *Definition: the core dialect's semantics.* In the
 {ref "The-fir-specification--Execution--Outcomes-and-behaviours"}[set monad], the
@@ -142,6 +144,7 @@ unless one of its operand types has no value
 $`\mathsf{call}` has no rule here, and its meaning has no outcome, but no
 run reaches it: the interpreter runs the callee of an op that has one
 instead. So a call has no op-level obligation (ADR-2026-10-29-2006).
-$`\mathsf{alloca}` has no rule here either: its meaning in the set monad
-has no outcome, and its rule and its obligations are those with memory.
+$`\mathsf{alloca}` and $`\mathsf{load}` have no rule here either: their
+meaning in the set monad has no outcome, and their rules and their
+obligations are those with memory.
 :::

@@ -14,10 +14,10 @@ build fails when the Lean changes under it.
 
 #doc (Manual) "The core dialect's poison obligations: readable blocks" =>
 
-:::moduleDocs (fingerprint := "2218629604047218007")
+:::moduleDocs (fingerprint := "1445309916865288002")
 :::
 
-:::readable Fir.Core.Op.propagates_all (pin := Fir.Core.Op.poisonClass) (pin := Fir.PropagatesPoison) (pin := Fir.PoisonOut) (pin := Fir.UBByOwnRules) (pin := Fir.HVector.IsFilledBy) (fingerprint := "5988011387878053995")
+:::readable Fir.Core.Op.propagates_all Fir.Core.load_propagatesPoison (pin := Fir.Core.Op.poisonClass) (pin := Fir.PropagatesPoison) (pin := Fir.PoisonOut) (pin := Fir.UBByOwnRules) (pin := Fir.HVector.IsFilledBy) (fingerprint := "15902795243283903917")
 *Theorem: each core op that propagates poison does.* For every
 {ref "The-fir-specification--Abstract-syntax--Core-ops"}[core op] $`o`
 whose
@@ -28,8 +28,8 @@ on operands of which one is poison, every result it returns is poison,
 and it may hit UB only if it may hit UB on some operands that put a
 defined value in place of each poison.
 
-These are 34 ops: $`\mathsf{const}` at an integer type and at a float
-type, $`\mathsf{poison}`, $`\mathsf{alloca}`, $`\mathsf{add}`,
+These are 35 ops: $`\mathsf{const}` at an integer type and at a float
+type, $`\mathsf{poison}`, $`\mathsf{alloca}`, $`\mathsf{load}`, $`\mathsf{add}`,
 $`\mathsf{sub}`, $`\mathsf{mul}`, the four divisions $`\mathsf{sdiv}`,
 $`\mathsf{udiv}`, $`\mathsf{srem}` and $`\mathsf{urem}`, the bitwise ops
 $`\mathsf{and}`, $`\mathsf{or}` and $`\mathsf{xor}`, the shifts
@@ -40,7 +40,9 @@ $`\mathit{funary}` and $`\mathsf{fma}`, the two bit casts, the two
 conversions from integers $`\mathsf{sitofp}` and $`\mathsf{uitofp}`, the
 two conversions between formats $`\mathsf{fpext}` and
 $`\mathsf{fptrunc}`, the pointer offset $`\mathsf{ptradd}`, and the two
-conversions to integers $`\mathsf{fptosi}` and $`\mathsf{fptoui}`. Each proves it in the section of its family; $`\mathsf{alloca}`, like $`\mathsf{const}` and $`\mathsf{poison}`, has no operands, so it propagates poison whatever its rule. The other
+conversions to integers $`\mathsf{fptosi}` and $`\mathsf{fptoui}`. Each proves it in the section of its family; $`\mathsf{alloca}`, like $`\mathsf{const}` and $`\mathsf{poison}`, has no operands, so it propagates poison whatever its rule, and
+$`\mathsf{load}` has no outcome in the set monad, so it gives no result
+and hits no UB there. The other
 ops, $`\mathsf{select}`, $`\mathsf{freeze}`, $`\mathsf{br}`,
 $`\mathsf{cond\_br}`, $`\mathsf{ret}`, $`\mathsf{unreachable}` and
 $`\mathsf{call}`, are poison
@@ -66,10 +68,12 @@ poison: the obligation asks for a result, not for a defined one
 (ADR-2026-10-29-2006). The four divisions return one only at a width
 above zero, where a divisor that is not zero exists, and the first theorem
 gives that width. This is the one obligation that needs the op instance
-to be valid (ADR-2026-10-29-2006). $`\mathsf{alloca}` touches memory: it
-has no rule in the set monad, so no result there. It returns one with
-memory, by its own rule (the
-{ref "The-fir-specification--Memory--Stack-allocation-obligations"}[stack allocation obligations]),
+to be valid (ADR-2026-10-29-2006). $`\mathsf{alloca}` and
+$`\mathsf{load}` touch memory: neither has a rule in the set monad, so
+neither gives a result there. Each returns one with memory, by its own rule
+(the
+{ref "The-fir-specification--Memory--Stack-allocation-obligations"}[stack allocation obligations]
+and the {ref "The-fir-specification--Memory--Load-obligations"}[load obligations]),
 so the core dialect as a whole does not meet the lawful class in the set
 monad, and meets the lawful classes with memory instead.
 :::

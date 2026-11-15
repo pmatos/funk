@@ -15,7 +15,7 @@ empty entry is not a cell: a width change that the spec does not
 allow, a conversion from a format to itself, or a width for a row
 that passes no value.
 
-1507 cells, 1507 with a test.
+1515 cells, 1515 with a test.
 
 ## Differential tests
 
@@ -407,12 +407,13 @@ that passes no value.
 | `fptoui` | `f64` | 28 | 28 | 28 | 28 | 28 | 28 | 28 | 28 |
 | `fptoui` | `f128` | 28 | 28 | 28 | 28 | 28 | 28 | 28 | 28 |
 
-### Pointer ops: ptradd by an integer, alloca of one (interpreter-only tests)
+### Pointer ops: ptradd by an integer, alloca and load of one (interpreter-only tests)
 
 | op | `i1` | `i7` | `i8` | `i16` | `i32` | `i33` | `i64` | `i128` |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `ptradd` | 1 | 1 | 2 | 2 | 2 | 1 | 7 | 1 |
-| `alloca` | 2 | 1 | 3 | 1 | 3 | 2 | 2 | 4 |
+| `ptradd` | 1 | 1 | 6 | 2 | 2 | 1 | 15 | 1 |
+| `alloca` | 2 | 2 | 15 | 5 | 6 | 3 | 3 | 5 |
+| `load` | 1 | 1 | 6 | 1 | 12 | 1 | 1 | 1 |
 
 ### Passed and returned values (interpreter-only tests)
 
@@ -423,12 +424,12 @@ that passes no value.
 | `cond_br` | a successor passes nothing | 438 |  |  |  |  |  |  |  |  |  |  |  |  |  |
 | `cond_br` | a successor passes values |  | 13 | 138 | 16 | 14 | 14 | 136 | 13 | 11 | 5 | 5 | 7 | 5 | 5 |
 | `ret` | returns no value | 26 |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| `ret` | returns one value |  | 2569 | 1583 | 814 | 817 | 906 | 1609 | 816 | 1081 | 825 | 777 | 689 | 588 | 530 |
-| `ret` | returns several values |  | 54 | 186 | 39 | 26 | 27 | 186 | 49 | 47 | 5 | 6 | 5 | 7 | 5 |
+| `ret` | returns one value |  | 2570 | 1583 | 820 | 818 | 918 | 1609 | 817 | 1081 | 825 | 777 | 689 | 588 | 530 |
+| `ret` | returns several values |  | 54 | 187 | 39 | 26 | 27 | 187 | 49 | 48 | 5 | 6 | 5 | 7 | 5 |
 | `unreachable` | ends a block | 16 |  |  |  |  |  |  |  |  |  |  |  |  |  |
 | `call` | gives no result | 14 |  |  |  |  |  |  |  |  |  |  |  |  |  |
 | `call` | gives one result |  | 74 | 92 | 28 | 23 | 24 | 92 | 23 | 19 | 2 | 2 | 2 | 2 | 2 |
 | `call` | gives several results |  | 41 | 92 | 17 | 11 | 11 | 92 | 25 | 27 | 2 | 3 | 2 | 3 | 2 |
 | `func` | returns no value | 23 |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| `func` | returns one value |  | 2568 | 1583 | 815 | 817 | 906 | 1609 | 816 | 1081 | 823 | 775 | 687 | 586 | 528 |
-| `func` | returns several values |  | 54 | 186 | 39 | 26 | 27 | 186 | 49 | 45 | 5 | 6 | 5 | 7 | 5 |
+| `func` | returns one value |  | 2569 | 1583 | 821 | 818 | 918 | 1609 | 817 | 1081 | 823 | 775 | 687 | 586 | 528 |
+| `func` | returns several values |  | 54 | 187 | 39 | 26 | 27 | 187 | 49 | 46 | 5 | 6 | 5 | 7 | 5 |
