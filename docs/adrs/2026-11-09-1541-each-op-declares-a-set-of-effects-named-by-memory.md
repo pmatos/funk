@@ -14,9 +14,13 @@ Tier: direction; area: semantics
   they touch, and effects on different memories commute. An external call,
   an indirect call to an unknown function and inline assembly without a narrower declaration carry
   every effect on every memory that can have escaped to them. Such an
-  assembly block, observable or not, may also read and write the memory that
-  a pointer operand points into, though passing the pointer to a block
-  without observable does not make it escape.
+  assembly block, observable or not, may also read and write the allocation
+  that a pointer operand points into and every allocation reachable from it
+  through stored pointers: the set an external call's pointer arguments
+  expose. If a block may write escaped memory, as one without a narrower
+  declaration may, its pointer operands escape when it runs. A pointer passed
+  to a block that is not observable and may not write escaped memory does not
+  escape.
 - **Declared by the dialect,** for its own ops and the memories it adds, in
   Lean and in Rust's `OpSpec`. Rust's sets are checked against Lean's.
 - **Proved sound.** For each effect an op leaves out, the spec proves the
@@ -37,9 +41,10 @@ Tier: direction; area: semantics
 
 [semantics-effects.md](../decisions/semantics-effects.md) states what holds,
 the obligations and the human's rulings: #208 (2026-11-09), #226, option B
-(2026-11-10), and #309, option A (2026-11-15: an assembly block's pointer
-operands). semantics-interpreter.md and semantics-refinement.md state the
-totality and monotonicity obligations, and semantics-m1-design.md says how
+(2026-11-10), #309, option A (2026-11-15: an assembly block's pointer
+operands), and #240, option A (2026-11-15: what a pointer operand covers, and
+when it escapes). semantics-interpreter.md and semantics-refinement.md state
+the totality and monotonicity obligations, and semantics-m1-design.md says how
 M1's ops are classified.
 
 ## Why
@@ -58,8 +63,18 @@ with a read of another.
 - **May produce poison is the poison class.** `const`, `icmp` and `add`
   without flags would be marked as producing poison.
 - **A call carries control.** Every call would claim to be a terminator.
-- **A pointer operand of any assembly block escapes.** Simpler, but every
-  block that takes a pointer would make its memory observable.
+- **A pointer operand of any assembly block escapes.** Simpler, but a block
+  whose declaration rules out writes to escaped memory would make the memory
+  of its pointer operands observable too.
 - **A block must declare a read through a pointer operand,** with UB under
   default effects. Passes could delete a store that the block reads on real
   hardware.
+- **A pointer operand covers only the allocation it points into.** A block
+  that follows a stored pointer would have to declare more, or be UB, so
+  passes could delete a store that it reads one pointer deeper.
+- **A pointer operand covers the whole memory of its type,** every allocation
+  in memory `N` of `ptr<N>`. Simple and sound, but every store to that memory
+  would stay alive across any such block.
+- **Only observable blocks make memory escape.** A block that may write
+  escaped memory could store its pointer operand there, and outside code could
+  then reach memory that passes treat as unobserved.
