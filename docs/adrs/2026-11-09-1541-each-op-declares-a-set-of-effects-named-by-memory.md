@@ -13,10 +13,10 @@ Tier: direction; area: semantics
 - **Named by memory.** Reads, writes, allocation and freeing name the memory
   they touch, and effects on different memories commute. An external call,
   an indirect call to an unknown function and inline assembly without a narrower declaration carry
-  every effect on every memory that can have escaped to them. An inline
-  assembly block without a narrower declaration, observable or not, may also
-  read and write the memory that a pointer operand points into, though
-  passing the pointer to a block without observable does not make it escape.
+  every effect on every memory that can have escaped to them. Such an
+  assembly block, observable or not, may also read and write the memory that
+  a pointer operand points into, though passing the pointer to a block
+  without observable does not make it escape.
 - **Declared by the dialect,** for its own ops and the memories it adds, in
   Lean and in Rust's `OpSpec`. Rust's sets are checked against Lean's.
 - **Proved sound.** For each effect an op leaves out, the spec proves the
