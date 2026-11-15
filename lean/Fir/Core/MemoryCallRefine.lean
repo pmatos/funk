@@ -57,8 +57,9 @@ stuck path (the section on core functions with memory).
 
 namespace Fir.Core
 
-/-- A core op that touches no memory, every core op but `alloca`, `load`
-and `store`, declares no memory effect. -/
+/-- A core op that touches no memory, every core op but `alloca` and the
+loads and stores, `load`, `store`, `loadPtr` and `storePtr`, declares no
+memory effect. -/
 theorem Op.effects_touchesNoMemory (op : Op) (hm : op.touchesMemory = false) :
     (Fir.effects (d := CoreDialect) op).TouchesNoMemory := fun _ => by
   cases op with
@@ -66,8 +67,9 @@ theorem Op.effects_touchesNoMemory (op : Op) (hm : op.touchesMemory = false) :
   | _ => exact ⟨nofun, nofun, nofun⟩
 
 /-- A core op that declares no memory effect touches no memory: `alloca`
-declares that it allocates in the memory of its result, `load` that it
-reads the memory of its pointer, and `store` that it writes it. -/
+declares that it allocates in the memory of its result, `load` and
+`loadPtr` that they read the memory of their pointer, and `store` and
+`storePtr` that they write it. -/
 theorem Op.touchesMemory_false {op : Op} (h : (Fir.effects (d := CoreDialect) op).TouchesNoMemory) :
     op.touchesMemory = false := by
   cases op with

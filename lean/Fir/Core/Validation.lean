@@ -36,6 +36,9 @@ def Ty.Valid : Ty → Prop
   | .float e m => 2 ≤ e ∧ 1 ≤ m ∧ floatWidth e m ≤ maxWidth
   | .ptr n => n ≤ maxMemory
 
+instance : DecidablePred Ty.Valid := fun t => by
+  cases t <;> unfold Ty.Valid <;> infer_instance
+
 /-- The memory that a core type points into: `N` for `ptr<N>`, and none for
 an integer or a float. -/
 def Ty.memory : Ty → Option Nat
@@ -53,10 +56,13 @@ instance : DecidablePred Ty.IsElem := fun t => by
 
 /-- The type that `alloca` allocates values of, which it carries in its
 attributes, so that the data layout checks the memory a pointer type there
-names. No other core op carries a type of its own: `call`'s are its
-callee's, and `ret`'s the function's results. -/
+names. A type that is not valid, such as a pointer of a memory above the
+bound, breaks `alloca`'s own rule and names no memory to check, as a type
+written for a value cannot be out of bounds. No other core op carries a
+type of its own: `call`'s are its callee's, and `ret`'s the function's
+results. -/
 def Op.attrTypes : Op → List Ty
-  | .alloca _ t _ _ _ => [t]
+  | .alloca _ t _ _ _ => if t.Valid then [t] else []
   | _ => []
 
 /-- `call` refers to its callee's symbol; no other core op refers to one. -/

@@ -47,8 +47,9 @@ theorem Op.memCases {P : Op → Prop} (op : Op) (ht : ∀ op, op.touchesMemory =
   · cases op <;>
       first | exact ha .. | exact hl .. | exact hs .. | exact hlp .. | exact hsp .. | cases hm
 
-/-- A core op with an outcome in the set monad touches no memory: `alloca`,
-`load` and `store` have none there. -/
+/-- A core op with an outcome in the set monad touches no memory: `alloca`
+and the loads and stores, `load`, `store`, `loadPtr` and `storePtr`, have
+none there. -/
 theorem Op.touchesMemory_false_of_denote {op : Op}
     {args : HVector toType (Fir.sig (d := CoreDialect) op)}
     {e : Ev (HVector toType (Fir.returnTypes (d := CoreDialect) op))}

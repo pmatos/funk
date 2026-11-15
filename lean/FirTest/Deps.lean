@@ -146,6 +146,10 @@ def coreToyBitEffects (o : CoreToyBit.Op) : Effects ((Core.Mem ⊕ Empty) ⊕ Em
 #guard (DataLayout.missing (d := CoreToyBit) []
   (opTypes (d := CoreToyBit) (.inl (.inl (Core.Op.alloca .stack (.int 8) 1 none 0))))).isEmpty
 #guard (opTypes (d := CoreToyBit) (.inr (.low 8))).isEmpty
+-- A pointer type above the bound breaks `alloca`'s own rule and names no
+-- memory for the layout to check.
+#guard (opTypes (d := CoreToyBit)
+  (.inl (.inl (Core.Op.alloca .stack (.ptr 16777216) 1 none 0)))).isEmpty
 
 /-! # A module of three dialects -/
 

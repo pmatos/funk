@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Core rules: readable blocks" =>
 
-:::moduleDocs (fingerprint := "3534753342566671606")
+:::moduleDocs (fingerprint := "16215657857761837669")
 :::
 
 :::readable Fir.Core.Ty.Valid Fir.Core.Ty.memory (pin := Fir.Core.maxWidth) (pin := Fir.Core.floatWidth) (fingerprint := "2970471969585656872")
@@ -62,16 +62,19 @@ $$`\mathrm{refs}(\mathit{op}) = \epsilon \ \text{ for every other op}`
 The general rules check that $`f` names a function of the module.
 :::
 
-:::readable Fir.Core.Op.attrTypes (fingerprint := "1039991996352231798")
+:::readable Fir.Core.Op.attrTypes (fingerprint := "16874436834183304261")
 *Definition: the types a core op carries.* $`\mathsf{alloca}_N~k~t~c~a`
-carries the type $`t` that it allocates values of in its attributes:
+carries the type $`t` that it allocates values of in its attributes, when
+$`t` is valid:
 
-$$`\mathrm{optypes}(\mathsf{alloca}_N~k~t~c~a) = (t) \qquad \mathrm{optypes}(\mathit{op}) = \epsilon \ \text{ for every other op}`
+$$`\mathrm{optypes}(\mathsf{alloca}_N~k~t~c~a) = \begin{cases} (t) & \vdash t~\text{valid} \\ \epsilon & \text{otherwise} \end{cases} \qquad \mathrm{optypes}(\mathit{op}) = \epsilon \ \text{ for every other op}`
 
 So the data layout declares the memory $`M` of an
 $`\mathsf{alloca}~\mathsf{stack}~\mathsf{ptr}\langle M \rangle`, as it
-declares that of every type a function states. No other core op carries a
-type of its own: $`\mathsf{call}`'s are its callee's, and
+declares that of every type a function states. A type that is not valid,
+such as a pointer of a memory above the bound, breaks the op's own rule and
+names no memory to check, as no type written for a value can. No other
+core op carries a type of its own: $`\mathsf{call}`'s are its callee's, and
 $`\mathsf{ret}`'s the function's results.
 :::
 

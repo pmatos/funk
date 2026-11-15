@@ -78,14 +78,20 @@ pub(super) fn check_memories(
     let missing = |ty: &Type| reg.type_memory(ty).filter(|&n| memory(layout, n).is_none());
     for f in t.funcs() {
         let first = f.types().find_map(missing).or_else(|| {
-            f.body.parts().find_map(|part| match part {
-                Part::Op(o) => reg
-                    .op(&o.name)?
-                    .attr_types(&o.attrs)
-                    .iter()
-                    .find_map(missing),
-                _ => None,
-            })
+            f.body
+                .parts()
+                .filter_map(|part| match part {
+                    Part::Block(b) => Some(&b.ops),
+                    _ => None,
+                })
+                .flatten()
+                .filter(|o| !o.attrs.is_empty())
+                .find_map(|o| {
+                    reg.op(&o.name)?
+                        .attr_types(&o.attrs)
+                        .iter()
+                        .find_map(missing)
+                })
         });
         if let Some(n) = first {
             out.push(problem(&f.name, n));

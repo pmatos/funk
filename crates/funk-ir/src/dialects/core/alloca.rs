@@ -197,9 +197,11 @@ impl OpSpec for Alloca {
     /// memory the data layout must declare (`Core.Op.attrTypes`). An integer
     /// type names no memory.
     fn attr_types(&self, attrs: &[Attr]) -> Vec<Type> {
-        match parts(attrs).map(|p| p.ty) {
-            Some(AnyType::Ptr(n)) if n.as_str() == "0" => vec![Type::word("ptr")],
-            Some(AnyType::Ptr(n)) => vec![Type::app("ptr", vec![Attr::Int(n)])],
+        match (parts(attrs).map(|p| p.ty), attrs) {
+            (Some(AnyType::Ptr(_)), [_, Attr::Word(w), ..]) => vec![Type::word(w)],
+            (Some(AnyType::Ptr(_)), [_, Attr::App(h, args), ..]) => {
+                vec![Type::app(h, args.clone())]
+            }
             _ => Vec::new(),
         }
     }

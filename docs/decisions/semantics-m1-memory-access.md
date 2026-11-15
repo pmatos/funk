@@ -156,14 +156,15 @@ text and the Rust IR tell them from the integer forms by the value's type.
   `reads(N)` or `writes(N)` of the memory accessed, never of `M`. Each meets
   every obligation with memory by its own rule
   (`lean/Fir/Core/LoadPtrLaws.lean`, `StorePtrLaws.lean`).
-- With no `align(A)`, an access or an `alloca` of `ptr<M>` in memory `N`
-  is aligned to the least power of two at least its units there, but when
-  `N` is `M` to the alignment that `M`'s entry gives its pointers, which
-  differs only when the entry writes `align(A)` (`Ty.defaultAlign`). This
-  reading is the agents' and waits on a ruling of the human: the layout
-  gives `align(A)` in `M`'s own units, and nothing yet says what it means
-  in a memory of other units. Rejected for now: ignoring `align(A)`, which
-  would leave the layout's alignment with no op that reads it.
+- With no `align(A)`, an access or an `alloca` of `ptr<M>` in memory `M`
+  is aligned as `M`'s entry aligns its pointers: `align(A)` when the entry
+  writes it, else the natural alignment (text-format-layout.md#what-a-layout-means).
+  In another memory `N` it is aligned to the natural alignment there, the
+  least power of two at least its units in `N` (`Ty.defaultAlign`). That
+  second part is the agents' reading and waits on a ruling of the human:
+  `align(A)` counts `M`'s units, and nothing yet says what it means in a
+  memory of other units. Rejected for now: converting `align(A)` into
+  `N`'s units, a rule nothing specifies.
 - The type that `alloca` allocates names a memory, which the data layout
   must declare (text-format-layout.md#valid-layouts). A float element, value
   or result stays rejected: floats have no encoding in units.

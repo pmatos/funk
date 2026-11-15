@@ -40,8 +40,8 @@ core's memories, each core op that declares no memory effect ignores the
 memories: such an op touches no memory, so it is
 {ref "The-fir-specification--Memory--The-core___s-rules-with-memory"}[tied],
 and runs by its rule in the set monad and keeps the memories.
-$`\mathsf{alloca}`, $`\mathsf{load}` and $`\mathsf{store}`, which touch
-memory, declare it, so they are not asked.
+$`\mathsf{alloca}` and the loads and stores, of an integer or a pointer,
+which touch memory, declare it, so they are not asked.
 :::
 
 :::readable Fir.Core.opsFinite (pin := Fir.Core.Op.liftsSetM) (pin := Fir.OpsFinite) (fingerprint := "8297816828923716502")
