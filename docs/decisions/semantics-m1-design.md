@@ -41,8 +41,9 @@ as an assembler does. A global in a GPU memory names that memory
 An `export` global is visible to code that funk did not compile, and an
 observer sees it. Weak, common and visibility linkage wait for the C frontend,
 M4 (ADR-2026-11-09-1546). An `internal` global is observable only once its
-address escapes (ADR-2026-11-09-1540): an external call, an observable inline
-assembly block, a volatile store of the pointer or `ptr.expose` hands it out.
+address escapes (ADR-2026-11-09-1540): an external call, an inline assembly
+block that is observable or may write escaped memory (ADR-2026-11-09-1541), a
+volatile store of the pointer or `ptr.expose` hands it out.
 
 The human ruled globals on 2026-11-09, on #209. Rejected: typed globals that
 hold a fir value, which would tie globals to the shape of aggregates while a C
@@ -119,10 +120,11 @@ Each op declares a set of effects, and the spec proves the declaration sound
 different memories commute. An external call, an indirect call to an unknown
 function and inline assembly without a narrower declaration carry every effect
 on every memory that can have escaped to them. Such a block may also read and
-write the memory that a pointer operand points into; the human ruled on
-2026-11-15 (#309). Passes may rely on a
-declaration because of its proof, and each new op costs one soundness proof per
-effect it leaves out (ADR-2026-11-09-1541).
+write the allocation that a pointer operand points into and every allocation
+reachable from it through stored pointers. If a block may write escaped memory,
+its pointer operands escape when it runs. The human ruled on 2026-11-15 (#309,
+#240). Passes may rely on a declaration because of its proof, and each new op
+costs one soundness proof per effect it leaves out (ADR-2026-11-09-1541).
 
 Every core op of M0 is pure, may produce poison or may-UB, as its rules already
 say. `call` carries its callee's summary (semantics-effects.md,
@@ -221,9 +223,9 @@ declared effects allow. `fir-ref` takes the answer from the test's script, as
 for external calls. The answer for a block without observable is keyed by the
 block, its operands and the contents of the memories it declares it reads, not
 by its position in the trace. A block with no narrower declaration reads every
-memory that can have escaped to it and the memory that a pointer operand points
-into, so its key covers all of them (ADR-2026-11-09-1552,
-ADR-2026-11-09-1541).
+memory that can have escaped to it, and the allocation that a pointer operand
+points into with every allocation reachable from it through stored pointers, so
+its key covers all of them (ADR-2026-11-09-1552, ADR-2026-11-09-1541).
 
 M1 brings the spec, the parser, printer and verifier on both sides, and
 `fir-ref`. Until M4, the naive backend rejects inline assembly with a diagnostic,
