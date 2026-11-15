@@ -52,6 +52,7 @@ outside code can read.
 - **Every dangling pointer equals every other.** A target would still have to
   keep a dangling pointer wherever the source has one, though neither can be
   used without UB.
-- **Compare a dangling pointer by its integer address.** Raw addresses would
-  be compared, and the renaming has no allocation to map it to.
+- **Compare a dangling pointer by its integer address,** where the memory is
+  integral, and otherwise as dangling. Raw addresses would be compared, which
+  the renaming exists to avoid.
 - **Heap ops in the core.** C calls allocators that funk does not know by name.

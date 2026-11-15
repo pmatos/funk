@@ -75,11 +75,12 @@ address escapes (ADR-2026-11-09-1540).
 Only live allocations are compared. The contents of an allocation that the
 world has freed are not (ADR-2026-11-09-1540).
 
-Live memory can still hold a pointer into a freed allocation, which the
-renaming has nothing to map to. Such a pointer in the source's observed memory
-is poison for the comparison, so any value in the target refines it
-(ADR-2026-11-09-1540). A dangling pointer cannot be used without UB, so no
-observer can tell two of them apart.
+Live memory can still hold a pointer into a freed allocation, one the world
+freed or a stack allocation whose call has returned, and the renaming has
+nothing to map it to. Such a pointer in the source's observed memory is poison
+for the comparison, so any value in the target refines it
+(ADR-2026-11-09-1540). A dangling pointer cannot be used without UB, so nothing
+a program does can depend on its value.
 
 The human ruled escape and live memory on 2026-11-11, on #299. Rejected: only
 external calls let an address escape, so passes could delete writes to memory
@@ -90,8 +91,9 @@ can read it without UB.
 The human ruled on 2026-11-15 (#309), option C, that a dangling pointer is
 poison for the comparison. Rejected: every dangling pointer equals every other,
 which still makes a target keep a dangling pointer wherever the source has one.
-Rejected too: compare a dangling pointer by its integer address, which compares
-raw addresses and leaves the renaming nothing to map.
+Rejected too: compare a dangling pointer by its integer address where the memory
+is integral, and otherwise as dangling, which compares raw addresses that the
+renaming exists to avoid.
 
 ## The world
 
