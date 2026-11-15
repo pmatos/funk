@@ -18,7 +18,7 @@
 //! pair of two formats takes exactly one of them. Each is pure: it is never
 //! UB, and it gives poison only for a poison operand.
 
-use super::float_arith::{check_rounding, decode_rounding};
+use super::rounding::{check_rounding, decode_rounding};
 use super::type_list;
 use super::types::float_format;
 use crate::effects::Effects;
@@ -195,7 +195,7 @@ mod tests {
             results: &[],
         };
         let (x, r) = ([float_type(11, 52)], [float_type(8, 23)]);
-        for mode in super::super::float_arith::ROUNDING_MODES {
+        for mode in crate::dialects::core::ROUNDING_MODES {
             let a = [Attr::App("round".into(), vec![Attr::word(mode)])];
             let op = types(&a, &x, &r);
             assert_eq!(Convert("fptrunc").decode(&op), Ok(OpShape::default()));

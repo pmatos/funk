@@ -12,7 +12,7 @@
 //! #229). Each is pure: it is never UB, its result is never a NaN, and it
 //! gives poison only for a poison operand.
 
-use super::float_arith::{check_rounding, decode_rounding};
+use super::rounding::{check_rounding, decode_rounding};
 use super::type_list;
 use super::types::{float_format, int_width};
 use crate::effects::Effects;
@@ -145,7 +145,7 @@ mod tests {
         };
         let (i, f) = ([int_type(32)], [float_type(8, 23)]);
         for name in INT_TO_FLOAT_OPS {
-            for mode in super::super::float_arith::ROUNDING_MODES {
+            for mode in crate::dialects::core::ROUNDING_MODES {
                 let attrs = [Attr::App("round".into(), vec![Attr::word(mode)])];
                 assert_eq!(decode(name, &attrs, &i, &f), Ok(OpShape::default()));
                 let op = OpTypes {

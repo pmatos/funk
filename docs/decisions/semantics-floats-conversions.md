@@ -38,7 +38,8 @@ every bit (`lean/Fir/Core/FloatBitcast.lean`).
 
 `sitofp` and `uitofp` convert an integer to a float (stage 3). Each takes one
 value of `iN`, of any width, and gives one of `float<e,m>`, of any format; in
-the spec they are `sitofp n e m` and `uitofp n e m`, with one rule,
+the spec they are `sitofp r n e m` and `uitofp r n e m`, with `r` the rounding
+mode, and one rule,
 `intToFloat` (`lean/Fir/Core/FloatOfInt.lean`).
 
 - `sitofp` reads the operand's bits in two's complement and `uitofp` as
@@ -67,7 +68,8 @@ beside the model's.
 
 `fpext` and `fptrunc` convert a float to another format (stage 2). Each takes
 one value of `float<e,m>` and gives one of `float<e',m'>`; in the spec they are
-`fpext e m e' m'` and `fptrunc e m e' m'`, with one rule, `convertFloat`
+`fpext e m e' m'` and `fptrunc r e m e' m'`, with `r` the rounding mode, and
+one rule, `convertFloat`
 (`lean/Fir/Core/FloatConvert.lean`).
 
 - The human ruled on 2026-11-12 (#354): `fpext` applies only when the target

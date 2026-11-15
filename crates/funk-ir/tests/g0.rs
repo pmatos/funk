@@ -43,9 +43,9 @@ fn core_words() -> Vec<String> {
             .iter()
             .flat_map(|s| s.iter().map(|f| f.to_string())),
     );
-    // `sdiv exact`, the `i1` constants and the pointer type `ptr`, which
-    // the dialect does not export by name.
-    words.extend(["exact", "true", "false", "ptr"].map(String::from));
+    // `sdiv exact`, the `i1` constants, the pointer type `ptr` and the head
+    // of a rounding mode, `round`, which the dialect does not export by name.
+    words.extend(["exact", "true", "false", "ptr", "round"].map(String::from));
     words.sort();
     words.dedup();
     words

@@ -12,7 +12,7 @@
 //! poison: an integer that `iN` does not hold, an infinity or a NaN gives
 //! poison.
 
-use super::float_arith::decode_rounding;
+use super::rounding::decode_rounding;
 use super::type_list;
 use super::types::{float_format, int_width};
 use crate::effects::Effects;

@@ -140,8 +140,10 @@ order beside the model.
 
 `fadd`, `fsub`, `fmul` and `fdiv` take two values of one float type, `fneg`,
 `fabs` and `sqrt` one, and `fma` three; each gives one value of that type. In
-the spec they are three op instances: `fbin o e m`, `funary o e m` and
-`fma e m` (ADR-2026-11-09-1549).
+the spec they are three op instances: `fbin o fl e m`, `funary o fl e m` and
+`fma fl r e m`, with `fl` the fast-math flags and `r` the rounding mode, which
+`fadd`, `fsub`, `fmul`, `fdiv` and `sqrt` carry in `o` (ADR-2026-11-09-1549,
+ADR-2026-11-11-1801).
 
 - On defined operands, each op unpacks them with `UnpackedFloat.unpack`, runs
   the model's operation (`add`, `sub`, `mul`, `div`, `neg`, `abs`, `sqrt` or

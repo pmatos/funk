@@ -6,7 +6,7 @@
 //! two operands for `fadd`, `fsub`, `fmul`, `fdiv`, `frem` and `fmod`, one
 //! for `fneg`, `fabs` and `sqrt`, and three for `fma`. Each op that rounds
 //! has one attribute, its rounding mode `round(MODE)`, with MODE one of
-//! [`ROUNDING_MODES`] (`decodeRound` in `lean/Fir/Core/RoundingText.lean`).
+//! the `rounding` module's `ROUNDING_MODES`.
 //! `frem`, `fmod`, `fneg` and `fabs` do not round, since their result is
 //! exact, and have none (ADR-2026-11-11-1801). So `fadd %a, %b`,
 //! `fadd round(up) %a, %b` and `frem round(rne) %a, %b` do not decode.
@@ -20,11 +20,12 @@
 //! operand.
 
 use super::fast_math::{self, Flags};
+use super::rounding::{check_rounding, decode_rounding};
 use super::type_list;
 use super::types::float_format;
+use crate::Type;
 use crate::effects::Effects;
 use crate::registry::{OpContext, OpShape, OpSpec, OpTypes};
-use crate::{Attr, Type};
 
 /// The float ops of arithmetic: each name, its number of operands, and
 /// whether it rounds, so that it carries a rounding mode.
@@ -40,60 +41,6 @@ pub const FLOAT_ARITH_OPS: [(&str, usize, bool); 10] = [
     ("sqrt", 1, true),
     ("fma", 3, true),
 ];
-
-/// The rounding modes, as words (`RoundingMode.word`): IEEE 754's five
-/// rounding-direction attributes. Validation accepts only `rne`.
-pub const ROUNDING_MODES: [&str; 5] = ["rne", "rna", "rtp", "rtn", "rtz"];
-
-/// The mode of `a` when it is `round(MODE)` with MODE one of
-/// [`ROUNDING_MODES`].
-fn round_mode(a: &Attr) -> Option<&str> {
-    let Attr::App(head, args) = a else {
-        return None;
-    };
-    match args.as_slice() {
-        [Attr::Word(m)] if head == "round" && ROUNDING_MODES.contains(&m.as_str()) => Some(m),
-        _ => None,
-    }
-}
-
-/// Checks that the attributes of the float op `op` are one rounding mode,
-/// `round(MODE)`, when it rounds and none when it does not, or says why
-/// they are not.
-pub(super) fn decode_rounding(op: &str, rounds: bool, attrs: &[Attr]) -> Result<(), String> {
-    match (rounds, attrs) {
-        (true, [a]) if round_mode(a).is_some() => Ok(()),
-        (true, [Attr::App(head, _)]) if head == "round" => Err(format!(
-            "{op}'s rounding mode is one of {}, not {}",
-            ROUNDING_MODES.map(|m| format!("round({m})")).join(", "),
-            attrs[0]
-        )),
-        (true, []) => Err(format!(
-            "{op} has one attribute, its rounding mode round(MODE), and has none"
-        )),
-        (true, [a]) => Err(format!(
-            "{op}'s attribute is its rounding mode round(MODE), not {a}"
-        )),
-        (true, _) => Err(format!(
-            "{op} has one attribute, its rounding mode round(MODE), not {}",
-            attrs.len()
-        )),
-        (false, []) => Ok(()),
-        (false, _) => Err(format!("{op} does not round and takes no attributes")),
-    }
-}
-
-/// Checks that the float op `op`, which rounds, rounds to nearest even,
-/// `round(rne)`, the one mode M1 accepts (`Op.Valid`).
-pub(super) fn check_rounding(op: &str, attrs: &[Attr]) -> Result<(), String> {
-    match attrs.iter().find_map(round_mode) {
-        Some(m) if m != "rne" => Err(format!(
-            "{op} rounds to nearest even in M1, round(rne), not round({m}): \
-             the other rounding modes are hooks"
-        )),
-        _ => Ok(()),
-    }
-}
 
 /// The format of an op whose `n` operands and one result are of one float
 /// type (`floatOpFormat`).
@@ -162,63 +109,5 @@ impl OpSpec for FloatArith {
     /// `nnan` or `ninf` (`Core.Op.effects`).
     fn effects(&self, op: &OpTypes<'_>) -> Effects {
         fast_math::effects_of(op.attrs)
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    fn round(mode: &str) -> Attr {
-        Attr::App("round".into(), vec![Attr::word(mode)])
-    }
-
-    #[test]
-    fn rounding_decodes_as_decode_fbin_reads_it() {
-        for (op, _, rounds) in FLOAT_ARITH_OPS {
-            let want = if rounds { vec![round("rne")] } else { vec![] };
-            assert_eq!(decode_rounding(op, rounds, &want), Ok(()), "{op}");
-        }
-        for mode in ROUNDING_MODES {
-            assert_eq!(
-                decode_rounding("fadd", true, &[round(mode)]),
-                Ok(()),
-                "{mode}"
-            );
-        }
-        for (rounds, bad, why) in [
-            (true, vec![], "and has none"),
-            (true, vec![round("up")], "not round(up)"),
-            (true, vec![round("RNE")], "not round(RNE)"),
-            (true, vec![round("rne"), round("rne")], "not 2"),
-            (true, vec![Attr::word("rne")], "not rne"),
-            (true, vec![Attr::App("round".into(), vec![])], "not round()"),
-            (
-                true,
-                vec![Attr::App(
-                    "round".into(),
-                    vec![Attr::word("rne"), Attr::word("rne")],
-                )],
-                "not round(rne, rne)",
-            ),
-            (false, vec![round("rne")], "takes no attributes"),
-        ] {
-            let e = decode_rounding("fadd", rounds, &bad).unwrap_err();
-            assert!(e.starts_with("fadd") && e.contains(why), "{bad:?}: {e}");
-        }
-    }
-
-    #[test]
-    fn validation_accepts_only_round_rne() {
-        assert_eq!(check_rounding("fadd", &[round("rne")]), Ok(()));
-        assert_eq!(check_rounding("frem", &[]), Ok(()));
-        for mode in ROUNDING_MODES.into_iter().filter(|m| *m != "rne") {
-            let e = check_rounding("sqrt", &[Attr::word("nnan"), round(mode)]).unwrap_err();
-            assert!(
-                e.starts_with("sqrt rounds to nearest even")
-                    && e.contains(&format!("round({mode})")),
-                "{e}"
-            );
-        }
     }
 }

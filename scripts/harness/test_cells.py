@@ -1,6 +1,7 @@
 """Tests of the cells of the coverage matrix, and that they follow the core
 dialect's ops in Lean."""
 
+import functools
 import re
 import unittest
 from pathlib import Path
@@ -34,18 +35,20 @@ def attr_lists(body: str) -> set[str]:
     return found
 
 
+@functools.cache
 def round_attrs() -> tuple[str, ...]:
     """The rounding attributes that are cells, as the text writes them:
     `roundAttr` of each mode that `Op.Valid` accepts, every other mode
     decoding and failing validation."""
     rounding = ROUNDING_TEXT.read_text(encoding="utf-8")
     head = re.findall(r'\.app "(\w+)"', definition(rounding, "roundAttr"))
-    modes = set(re.findall(r"\br = \.(\w+)", VALIDATION.read_text(encoding="utf-8")))
+    valid = definition(VALIDATION.read_text(encoding="utf-8"), "Op.Valid")
+    modes = sorted(set(re.findall(r"\br = \.(\w+)", valid)))
     word = definition(rounding, "RoundingMode.word")
     return tuple(
         f"{h}({w})"
         for h in head
-        for m in sorted(modes)
+        for m in modes
         for w in re.findall(rf'\| \.{m} => "(\w+)"', word)
     )
 

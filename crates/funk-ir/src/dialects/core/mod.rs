@@ -40,6 +40,7 @@ mod freeze;
 mod int_to_float;
 mod load;
 mod pointer;
+mod rounding;
 mod types;
 mod width;
 
@@ -48,12 +49,13 @@ pub use bitwise::{BITWISE_OPS, SHIFT_OPS};
 pub use compare::{FLOAT_PREDICATES, PREDICATES};
 pub use div::DIVISION_OPS;
 pub use fast_math::FAST_MATH_FLAGS;
-pub use float_arith::{FLOAT_ARITH_OPS, ROUNDING_MODES};
+pub use float_arith::FLOAT_ARITH_OPS;
 pub use float_convert::FLOAT_CONVERSIONS;
 pub use float_text::{float_constant, has_decimals, read_float, spell_float};
 pub use float_to_int::FLOAT_TO_INT_OPS;
 pub use int_to_float::INT_TO_FLOAT_OPS;
 pub use load::ORDERINGS;
+pub use rounding::ROUNDING_MODES;
 pub use types::{
     CoreType, FLOAT_ALIASES, MAX_MEMORY, MAX_WIDTH, core_type, float_format, float_type, int_type,
     int_width, ptr_type,
