@@ -118,7 +118,7 @@ def floatConstOf (e m : Nat) (s : String) : Option (BitVec (Core.floatWidth e m)
 /-- An argument of type `t`: `poison` at any `iN`, any float type and any
 `ptr<N>`, or a constant of an `iN` or a float type, spelled as `valueText`
 spells it. At `ptr<N>`, `poison` is the only argument: a run starts with no
-allocation, so no pointer has provenance for one. So a pointer that
+allocation, so no pointer has provenance for one. A pointer that
 `valueText` writes, `ptr(A, O)` or `ptr(none, O)`, is the one value of the
 output that is no argument. -/
 def readArg : (t : Core.Ty) → String → Except String ⟦t⟧

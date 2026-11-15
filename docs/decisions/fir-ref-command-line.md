@@ -121,9 +121,11 @@ Its `choices` field counts the choices the path made, `0` when it made none:
   `"poison"` or, at an `iN` or a float type, spelled as the arguments are. At a
   `ptr<N>` it is `"ptr(A, O)"`, for the allocation `A` it has provenance for
   and its offset `O`, both in decimal, such as `"ptr(0, -3)"`, or
-  `"ptr(none, O)"` when it has no provenance (`FirRef.valueText`). It names no
-  address, and it is no argument. A function with no result prints
-  `"values":[]`.
+  `"ptr(none, O)"` when it has no provenance (`FirRef.valueText`). It is no
+  argument, and it names no address, so the harness compares no pointer
+  result with native code's
+  ([x86-64-backend-executable.md](x86-64-backend-executable.md#running-one-function)).
+  A function with no result prints `"values":[]`.
 - `{"kind":"ub","reason":"...","choices":N}`: immediate UB.
 - `{"kind":"fuel-exhausted","choices":N}`: the run used all its fuel.
 - `{"kind":"stuck","reason":"...","choices":N}`: the run reached a case that
