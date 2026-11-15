@@ -66,7 +66,9 @@ also the tests and the corpus. The grammar's own words, such as `func`, are not
 per-op code (ADR-2026-11-03-0600).
 
 CI keeps this line. `crates/funk-ir/tests/g0.rs` and `scripts/check_g0.py` fail
-on per-op code in generic code. `lean/FirTest/G0.lean` breaks when generic code
+on per-op code in generic code, a word of the second dialect, `gpu`, as much
+as a core word; `lean/Fir/Gpu/` is a dialect's directory, as
+`lean/Fir/Core/` is. `lean/FirTest/G0.lean` breaks when generic code
 narrows to the core dialect. Each check covers a
 place unless the line excludes it, so a new file is checked. Moving the line
 edits ADR-2026-11-03-0600 in place (ADR-2026-11-03-0600). Rejected: review by

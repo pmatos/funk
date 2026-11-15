@@ -1,0 +1,237 @@
+# Must-reject texts of the second dialect in tree, gpu (ADR-2026-11-09-1545):
+# its ops' shape, which is a parse error when it does not decode, its rule
+# that every id and size is an i32, and the dialect sets and the data layout
+# of the device modules that hold its kernels (ADR-2026-11-10-1510,
+# ADR-2026-11-12-1821).
+
+[[reject]]
+verdict = "parse-error"
+rule = "a gpu op names one of the three dimensions: gpu.w is none of them"
+text = '''
+module @dev() {
+  dialects gpu
+
+  func @k(%a: i32) -> i32 {
+  ^e:
+    %i: i32 = gpu.work_item_id gpu.w @0
+    ret %a @0
+  }
+
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "a dimension is a word of gpu: a bare x is the core's, and no dimension"
+text = '''
+module @dev() {
+  dialects gpu
+
+  func @k(%a: i32) -> i32 {
+  ^e:
+    %i: i32 = gpu.work_group_id x @0
+    ret %a @0
+  }
+
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "a gpu op takes one dimension: gpu.work_group_size names none"
+text = '''
+module @dev() {
+  dialects gpu
+
+  func @k(%a: i32) -> i32 {
+  ^e:
+    %i: i32 = gpu.work_group_size @0
+    ret %a @0
+  }
+
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "a gpu op takes one dimension: gpu.num_work_groups names two"
+text = '''
+module @dev() {
+  dialects gpu
+
+  func @k(%a: i32) -> i32 {
+  ^e:
+    %i: i32 = gpu.num_work_groups gpu.x gpu.y @0
+    ret %a @0
+  }
+
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "a gpu op takes no operand"
+text = '''
+module @dev() {
+  dialects gpu
+
+  func @k(%a: i32) -> i32 {
+  ^e:
+    %i: i32 = gpu.work_item_id gpu.x %a @0
+    ret %a @0
+  }
+
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "a gpu op gives an integer: a pointer result does not decode"
+text = '''
+module @dev() {
+  dialects gpu
+
+  func @k(%a: i32) -> i32 {
+  ^e:
+    %i: ptr = gpu.work_item_id gpu.x @0
+    ret %a @0
+  }
+
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "gpu has no barrier: an op that needs other work-items is left out of M1"
+text = '''
+module @dev() {
+  dialects gpu
+
+  func @k(%a: i32) -> i32 {
+  ^e:
+    gpu.barrier gpu.x @0
+    ret %a @0
+  }
+
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "a gpu op gives an i32: an i64 result decodes, and validation rejects it"
+text = '''
+module @dev() {
+  dialects gpu
+
+  func @k(%a: i32) -> i32 {
+  ^e:
+    %i: i64 = gpu.work_item_id gpu.x @0
+    ret %a @0
+  }
+
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "a word of gpu is valid only in a module whose dialect set names gpu: @dev names none"
+text = '''
+module @dev() {
+  func @k() -> i32 {
+  ^e:
+    %i: i32 = gpu.work_item_id gpu.x @0
+    ret %i @0
+  }
+
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "a nested module's dialect set is its own: the host names gpu, and @dev, which uses it, does not"
+text = '''
+dialects gpu
+
+module @dev() {
+  func @k() -> i32 {
+  ^e:
+    %i: i32 = gpu.work_item_id gpu.x @0
+    ret %i @0
+  }
+
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "a device module has no layout of its own: its pointer types name memories of the host's layout, which declares no memory 3"
+text = '''
+module @dev() {
+  dialects gpu
+
+  func @k(%a: i32) -> i32 {
+  ^e:
+    %p: ptr(3) = alloca stack i32 @0
+    store nonatomic %a, %p @0
+    ret %a @0
+  }
+
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "a dialect set names gpu once"
+text = '''
+module @dev() {
+  dialects gpu, gpu
+
+}
+
+locs {
+}
+'''

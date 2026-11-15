@@ -87,8 +87,12 @@ def ioErrorReport (file why : String) : String :=
 status: 0 when `m` is valid and keeps to its dialect set, 1 when it does
 not. `fir-ref` checks `m` with `Module.problems` and `Module.setProblems`,
 which run `FirRef.moduleProblems` and `FirRef.moduleSetProblems` here,
-since this module is compiled after `FirRef.Fast`. -/
-def reportModule (file : String) (m : Module CoreDialect) : String × UInt32 :=
+since this module is compiled after `FirRef.Fast`. It is written for any
+dialect, so that the Lean tests check it on the core's modules; `fir-ref`
+runs it on the sum of the core and `gpu`, `CoreGpu`. -/
+def reportModule {d : Dialect} [DialectSignature d] [DialectValidation d]
+    [DecidableDialectValidation d] [DecidableEq d.Ty] [DialectText d] [DialectSet d]
+    (file : String) (m : Module d) : String × UInt32 :=
   match m.problems ++ m.setProblems with
   | [] => (report file "accepted" [], 0)
   | ps => (report file "validation-error" (ps.map (problemJson (firsts m.locs))), 1)
@@ -96,7 +100,7 @@ def reportModule (file : String) (m : Module CoreDialect) : String × UInt32 :=
 /-- The report on the bytes of a file, and its exit status: 0 when the file
 is accepted, 1 when it is rejected. -/
 def validateBytes (file : String) (bytes : ByteArray) : String × UInt32 :=
-  match parseBytes (d := CoreDialect) bytes with
+  match parseBytes (d := CoreGpu) bytes with
   | .error e =>
     (report file "parse-error" [diagnostic "parse-error" e.reason
       [("line", toString e.pos.line), ("column", toString e.pos.col)]], 1)

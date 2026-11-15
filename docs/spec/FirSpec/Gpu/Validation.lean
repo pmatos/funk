@@ -1,0 +1,43 @@
+import VersoManual
+import Fir.Gpu.Validation
+import FirSpecSite.ReadableElab
+
+open Verso.Genre Manual
+open FirSpecSite
+
+/-!
+The readable blocks of the section on the rules of `gpu`, which renders
+`Fir.Gpu.Validation` (ADR-2026-11-05-2012). Each block explains
+declarations of that module and pins their fingerprint; the build fails
+when the Lean changes under it.
+-/
+
+#doc (Manual) "The GPU dialect's rules: readable blocks" =>
+
+:::moduleDocs (fingerprint := "5859898594511705186")
+:::
+
+:::readable Fir.Gpu.ValidTy Fir.Gpu.instDecidableValidTy (fingerprint := "4189508138758385399")
+*Definition: the valid types of `gpu`.* A type is valid in `gpu` exactly
+when it is a valid core type, since its types are the core's. Whether it
+is valid is decided.
+:::
+
+:::readable Fir.Gpu.Op.Valid Fir.Gpu.instDecidableOpValid (fingerprint := "11629276838594219585")
+*Definition: the rule of an op of `gpu`.* An op of `gpu` is valid when it
+gives an $`\mathsf{i32}`, the width of every id and size of a work-item:
+
+$$`\frac{N = 32}{C \vdash \mathsf{query}_N~q~d~\text{valid}}`
+
+So `%i: i64 = gpu.work_item_id gpu.x` decodes, and validation rejects it.
+Whether the rule holds is decided.
+:::
+
+:::readable Fir.Gpu.instDialectValidation Fir.Gpu.instDecidableDialectValidation (fingerprint := "14149218919358661348")
+*Definition: the rules of `gpu`, and their check.* `gpu` accepts the
+core's valid types, its ops refer to no symbol, and it adds no rule for a
+function, a region or an item. Whether a function is a kernel is where it
+lives: in a device module whose dialect set names `gpu`. The dialect-set
+rule already keeps every word of `gpu` out of a module whose set does not
+name it. Each of these rules is decided, so the validation check runs them.
+:::

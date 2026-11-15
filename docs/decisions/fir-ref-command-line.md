@@ -31,7 +31,8 @@ output before comparing them.
 
 ## `fir-ref fmt`
 
-`fir-ref fmt [--check] FILE...` parses each file with the core dialect. It
+`fir-ref fmt [--check] FILE...` parses each file with the dialects in tree,
+the core and `gpu` (`CoreGpu`, ADR-2026-11-09-1545), as `funk` does. It
 prints it in canonical form with the spec's printer, `Module.print`. `--check`
 prints the name of each file that is not canonical instead. The exit status is
 0 when every file is accepted, and canonical under `--check`. It is 1 when one
@@ -44,8 +45,8 @@ files, and its verdict is its exit status.
 
 ## `fir-ref validate`
 
-`fir-ref validate FILE...` parses each file with the core dialect and runs
-`Module.problems`. A FILE of `-` may appear at most once. It has no options,
+`fir-ref validate FILE...` parses each file with the core and `gpu`, as
+`fmt` does, and runs `Module.problems`. A FILE of `-` may appear at most once. It has no options,
 and its output is always JSON.
 
 It writes one object per file, on one line, in the order of the files, in the
@@ -74,12 +75,16 @@ The full form is `fir-ref run [--fuel N] [--choices C,C,... | --exhaustive
 before `--`, and each takes the next argument as its value. An argument such as
 `-5` is not an option.
 
-`fir-ref run` parses FILE with the core dialect, without validating it, and
-runs the function. A `return`, `ub` or `fuel-exhausted` result means something
+`fir-ref run` parses FILE with the core dialect alone, without validating
+it, and runs the function. A `return`, `ub` or `fuel-exhausted` result means something
 only for a module that `fir-ref validate` accepts: the interpreter does not
 check every rule of validation. The harness runs only modules that `fir-ref
 validate` must accept. `@FUNC` is the symbol as fir's text writes it, quoted
 exactly when it is not a word: `@add3`, `@"a b"`.
+
+Until the runs of a `gpu` work-item land (#212, stage 2), `run` reads the
+core alone: a text that writes a word of `gpu` is a parse error there, and
+`fmt` and `validate` read it.
 
 Rejected: validating first. Then `fir-ref run` could never report a run as
 stuck, and the interpreter's stuck paths could not be tested end to end.

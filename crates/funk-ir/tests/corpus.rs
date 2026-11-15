@@ -1,9 +1,23 @@
-//! Round trips on the shared texts of `tests/fir/`.
+//! Round trips on the shared texts of `tests/fir/`, read with the dialects
+//! that `funk` reads: the core and `gpu` (ADR-2026-11-09-1545).
 
 mod common;
 
-use common::{fir_files, parse_ok};
-use funk_ir::{Registry, print, verify};
+use common::fir_files;
+use funk_ir::dialects::gpu;
+use funk_ir::{Module, Registry, parse, print, verify};
+
+/// The core and `gpu`, as `funk` registers them.
+fn registry() -> Registry {
+    let mut r = Registry::core();
+    r.register(gpu::dialect()).expect("gpu registers");
+    r
+}
+
+/// Parses with the core and `gpu`, or fails the test.
+fn parse_ok(text: &str) -> Module {
+    parse(text, &registry()).unwrap_or_else(|e| panic!("{e}\n{text}"))
+}
 
 /// The canonical texts: those of `canonical/`, and the modules ported from
 /// LLVM's tests, in `llvm/` (ADR-2026-11-03-0643).
@@ -25,7 +39,7 @@ fn canonical_texts_print_back_byte_for_byte() {
 
 #[test]
 fn canonical_texts_are_valid() {
-    let reg = Registry::core();
+    let reg = registry();
     for (name, text) in canonical_texts() {
         let ds = verify(&parse_ok(&text), &reg);
         assert!(ds.is_empty(), "{name}: {ds:#?}");

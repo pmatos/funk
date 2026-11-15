@@ -9,10 +9,12 @@ from check_g0 import (
     CORE_POISON,
     CORE_TEXT,
     CORE_TEXT_PARTS,
+    GPU_TEXT,
     ROOT,
     core_words,
     effects_problems,
     generic_files,
+    gpu_words,
     poison_problems,
     problems,
     tokens,
@@ -229,6 +231,27 @@ class Rules(unittest.TestCase):
             ],
         )
 
+    def test_naming_importing_or_writing_the_gpu_dialect_fails(self):
+        # Generic code knows no dialect's ops, the second dialect's included
+        # (ADR-2026-11-03-0600, ADR-2026-11-09-1545).
+        gpu = 'def Query.name : Query → String\n  | .workItemId => "gpu.work_item_id"\n'
+        generic = (
+            "import Fir.Gpu.Ops\n\ndef d : Dialect := CoreGpu\n"
+            'def w := "gpu.work_item_id"\ndef m := "a gpu.work_item_id op"\n'
+        )
+        root = tree(self, {GPU_TEXT: gpu, "lean/Fir/Execution/Run.lean": generic})
+        self.assertEqual(gpu_words(root), {"gpu.work_item_id"})
+        self.assertEqual(
+            problems(root),
+            [
+                "lean/Fir/Execution/Run.lean:1: imports the gpu dialect: Fir.Gpu.Ops",
+                "lean/Fir/Execution/Run.lean:3: names the gpu dialect: CoreGpu",
+                'lean/Fir/Execution/Run.lean:4: writes the gpu dialect\'s word "gpu.work_item_id"',
+            ],
+        )
+        moved = {GPU_TEXT: gpu, "lean/Fir/Gpu/Run.lean": generic}
+        self.assertEqual(problems(tree(self, moved)), [])
+
     def test_no_words_fails(self):
         root = tree(self, {})
         (root / CORE_TEXT).write_text("", encoding="utf-8")
@@ -345,6 +368,20 @@ class Repository(unittest.TestCase):
             core_words(),
         )
         self.assertNotIn("align", core_words())
+
+    def test_the_gpu_words_hold_every_gpu_op_and_dimension(self):
+        self.assertEqual(
+            gpu_words(),
+            {
+                "gpu.work_item_id",
+                "gpu.work_group_id",
+                "gpu.work_group_size",
+                "gpu.num_work_groups",
+                "gpu.x",
+                "gpu.y",
+                "gpu.z",
+            },
+        )
 
     def test_the_parser_printer_validation_and_interpreter_are_checked(self):
         files = generic_files()

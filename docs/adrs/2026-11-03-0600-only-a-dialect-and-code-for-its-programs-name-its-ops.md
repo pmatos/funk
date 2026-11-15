@@ -10,7 +10,8 @@ Tier: direction; area: semantics
   or the dialect's classes. It is: in Rust, all of `funk-ir`'s `src/` but
   `src/dialects/`, the module generator (`src/generate.rs`,
   `src/generate/`) and the unit tests; in Lean, all of `lean/Fir/` but
-  `lean/Fir/Core/` and the text chapter's example, `Fir/Text/Example.lean`;
+  the dialects' directories, `lean/Fir/Core/` and `lean/Fir/Gpu/`, and the
+  text chapter's example, `Fir/Text/Example.lean`;
   all of `lean/FirRef/` but `fir-ref`'s command line (`Main`, `Report`,
   `Run`, `RunArgs`); and `lean/FirTest/G0.lean`. Two files of the text
   chapter, `Fir/Text/PrintParse.lean` and `Fir/Text/ParseWellFormed.lean`,
@@ -30,7 +31,8 @@ Tier: direction; area: semantics
   by its constructor in `Core.Op.poisonClass` and `Core.Op.effects`, with no
   case for the rest, so a new core op does not build until it declares them.
 - **CI keeps the line.** `crates/funk-ir/tests/g0.rs` and
-  `scripts/check_g0.py` fail on per-op code in generic code, and
+  `scripts/check_g0.py` fail on per-op code in generic code, a word of the
+  second dialect, `gpu`, included (ADR-2026-11-09-1545), and
   `lean/FirTest/G0.lean` breaks when a generic definition or theorem narrows
   to the core. Each check covers a place unless this line excludes it, so a
   new file is checked. A new dialect's directory joins `DIALECT_DIRS` in

@@ -72,9 +72,52 @@ The G0 checks show these things with it (ADR-2026-11-09-1545):
 - The generic results (round trip, refinement, congruence) are restated for a
   dialect set that includes it.
 
-Use-once (linear) values stay covered by the toy test of #167. The
-implementation of this dialect, in #212, waits for memory
-(ADR-2026-11-09-1545). Nested modules have landed (#211).
+Use-once (linear) values stay covered by the toy test of #167. Nested
+modules (#211) and memory (#231) have landed.
+
+### What holds of it today
+
+#212 builds the dialect in four stages: its text and validation, the runs
+of one work-item, work-group memory, and the generic results restated
+(the stage plan on #212). Stage 1 holds:
+
+- **Its ops.** The dialect is named `gpu`, and extends the core with no
+  types of its own (`lean/Fir/Gpu/`, `crates/funk-ir/src/dialects/gpu.rs`).
+  Its four ops each ask the work-item one question in one dimension and
+  give an `i32`: `gpu.work_item_id`, `gpu.work_group_id`,
+  `gpu.work_group_size` and `gpu.num_work_groups`, written
+  `%i: i32 = gpu.work_item_id gpu.x`. The dimension, `gpu.x`, `gpu.y` or
+  `gpu.z`, is its own attribute. An op decodes from one dimension, no
+  operand and one integer of any width; any other shape is a parse error,
+  and validation asks for an `i32`. Its effect set is empty. There is no
+  barrier: M1 leaves out the ops that need other work-items, and an op
+  without rules would break the lawful classes
+  ([fir-ref.md](fir-ref.md#an-op-without-rules)).
+- **Kernels.** A kernel is a function of a device module whose dialect set
+  names `gpu`; `gpu` adds no rule of its own for it. The device module names
+  the memories of its host's data layout (ADR-2026-11-12-1821), so its
+  `alloca`, `load`, `store` and `ptradd` on `ptr(3)` validate when the host
+  declares memory 3, and are rejected on both sides when it does not.
+- **The tools.** `funk` registers `gpu` beside the core, and `fir-ref fmt`
+  and `fir-ref validate` read the sum `CoreGpu`. `fir-ref run` reads the
+  core alone until stage 2, so a text that writes a word of `gpu` is a parse
+  error there. `funk build` compiles the host's functions and none of a
+  device module's, as for any nested module, and reports a `gpu` op in a
+  top-level function as unsupported: the dialect is terminal.
+- **The G0 checks so far.** Generic code changed only to register it: the
+  dialect's own files, `funk`'s registry and `fir-ref`'s command line name
+  it. `scripts/check_g0.py` and `crates/funk-ir/tests/g0.rs` fail on a word
+  of `gpu` in generic code, as on a core word (ADR-2026-11-03-0600). Its text
+  is lawful and its words are its own (`Gpu.lawfulDialectText`,
+  `Gpu.lawfulDialectName`), so the round trip holds for `CoreGpu` with no
+  new assumption (`Gpu.printThenParse`, `Gpu.validIsWellFormed`). The
+  corpus holds a host module with a device module, which both tools accept
+  and print byte for byte (`tests/fir/canonical/gpu-kernel.fir`), and
+  must-reject cases at both stages (`tests/fir/reject/gpu.toml`);
+  `tests/dialects/gpu.cases` is read by the Lean and the Rust tests alike.
+
+How the dialect's work-group memory gets its number in the data layout is a
+question for the human (semantics-dialects.md; the stage plan on #212).
 
 The human ruled this on 2026-11-09, on #202. Rejected: a small quantum-style
 dialect, which tests neither nested modules nor several memories; it remains a

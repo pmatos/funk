@@ -78,6 +78,10 @@ The chapters follow the WebAssembly specification:
   combine in one module, routed by the prefix of each word, how an
   extension joins a sum that holds what it depends on, and proves that the
   round trip and the poison obligations hold for the sum.
+* _The GPU dialect_ gives `gpu`, the second dialect in tree, shaped like a
+  GPU kernel language: its ops, which ask the work-item that runs a kernel
+  for its ids and sizes, their text and rules, and the proof that the round
+  trip holds for the sum of the core and `gpu`.
 
 fir is built from dialects, so that it can reach any kind of hardware
 (ADR-2026-10-29-2016). Every definition below is written once for every
@@ -303,6 +307,29 @@ extensions written apart combine in one sum.
 {includeReadable "." Fir.Sum.MonotoneLaws "Monotonicity of a sum and a lift" FirSpec.Sum.MonotoneLaws (level := 2)}
 
 {includeReadable "." Fir.Sum.MemPoisonLaws "Poison of a sum and a lift, with memory" FirSpec.Sum.MemPoisonLaws (level := 2)}
+
+# The GPU dialect
+
+The second dialect in tree, `gpu`, is shaped like a GPU kernel language
+(ADR-2026-11-09-1545). A host module holds a device module, a module nested
+in it whose dialect set names `gpu`, and the kernels are the device
+module's functions. The device module has no data layout of its own: its
+pointer types name the memories of its host's layout (ADR-2026-11-12-1821).
+`gpu` is terminal: it has no lowering to the core and no native backend
+(ADR-2026-11-09-1544). In M1 a kernel runs one work-item at a time, with
+its ids given as inputs, and no op of `gpu` needs another work-item. This
+chapter gives its abstract syntax, text, rules and effects, and the laws of
+its text; the rules by which a work-item runs come in a later section.
+
+{includeReadable "." Fir.Gpu.Ops "Abstract syntax" FirSpec.Gpu.Ops (level := 2)}
+
+{includeReadable "." Fir.Gpu.Text "Text" FirSpec.Gpu.Text (level := 2)}
+
+{includeReadable "." Fir.Gpu.Validation "Validation" FirSpec.Gpu.Validation (level := 2)}
+
+{includeReadable "." Fir.Gpu.Effects "Effects" FirSpec.Gpu.Effects (level := 2)}
+
+{includeReadable "." Fir.Gpu.TextLaws "The text is lawful" FirSpec.Gpu.TextLaws (level := 2)}
 
 # Architecture decision records
 %%%

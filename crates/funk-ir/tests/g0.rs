@@ -8,7 +8,8 @@
 //! one. And the code of every module but the dialects, the module generator
 //! and the unit tests writes no word of the core dialect's text, names the
 //! core dialect only to register it, and declares no `enum` with two or
-//! more variants named after core ops.
+//! more variants named after core ops. It writes no word of the second
+//! dialect in tree, `gpu`, either (ADR-2026-11-09-1545).
 
 mod g0_scan;
 
@@ -17,6 +18,7 @@ use std::path::Path;
 use funk_ir::dialects::core::{
     self, FAST_MATH_FLAGS, FLOAT_PREDICATES, ORDERINGS, PREDICATES, ROUNDING_MODES, WRAP_FLAG_SETS,
 };
+use funk_ir::dialects::gpu;
 use funk_ir::{Block, Func, LocRef, Location, Module, Op, Registry, parse, print, verify};
 use g0_scan::{Tok, code, enum_variants, tokens};
 
@@ -220,6 +222,31 @@ fn the_generic_modules_write_no_word_of_the_core_dialect() {
     assert!(
         found.is_empty(),
         "per-op code outside a dialect (ADR-2026-11-03-0600): {found:#?}"
+    );
+}
+
+#[test]
+fn the_generic_modules_write_no_word_of_the_gpu_dialect() {
+    let mut words: Vec<String> = gpu::dialect()
+        .ops
+        .iter()
+        .map(|op| op.name().to_string())
+        .collect();
+    assert_eq!(words.len(), gpu::OPS.len());
+    words.extend(gpu::DIMENSIONS.iter().map(|d| d.to_string()));
+    let mut found = Vec::new();
+    for (path, src) in generic_sources() {
+        for t in code(&tokens(&src)) {
+            if let Tok::Str(s) = t
+                && words.contains(&s)
+            {
+                found.push(format!("{path}: \"{s}\""));
+            }
+        }
+    }
+    assert!(
+        found.is_empty(),
+        "per-op code of gpu outside a dialect (ADR-2026-11-03-0600): {found:#?}"
     );
 }
 

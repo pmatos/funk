@@ -20,6 +20,10 @@ its command line) and of G0's Lean tests must not:
   `StoreText.lean` and `RoundingText.lean`, but `align`, which the data
   layout's generic grammar writes too.
 
+The same holds of every other dialect in tree, so the same code must not
+name the second dialect, `gpu` (ADR-2026-11-09-1545), nor import its
+modules, nor write a word of its text, `lean/Fir/Gpu/Text.lean`.
+
 The text chapter's example is a core module, so it is not checked. Two
 files of the chapter end with the core dialect's corollaries of their
 results, so they may name it, but not write its words. Comments and
@@ -53,7 +57,11 @@ CORE_EFFECTS = "lean/Fir/Core/OpEffects.lean"
 EFFECTS_DEF = "def Op.effects"
 # The dialects' own files. A new dialect's directory is added here, and
 # ADR-2026-11-03-0600, which draws the line, is edited in place to match.
-DIALECT_DIRS = ("lean/Fir/Core/",)
+DIALECT_DIRS = ("lean/Fir/Core/", "lean/Fir/Gpu/")
+# The second dialect in tree: its text, whose words generic code may not
+# write, and the names of its dialect.
+GPU_TEXT = "lean/Fir/Gpu/Text.lean"
+GPU_NAMES = {"Gpu", "GpuDialect", "GpuExt", "CoreGpu"}
 # fir-ref's command line: its entry point, its reports, and `fir-ref run` and
 # its arguments. It runs the core dialect, so it may name it.
 FIR_REF_COMMAND_LINE = {"Main", "Report", "Run", "RunArgs"}
@@ -274,6 +282,24 @@ def core_words(root: Path = ROOT) -> set[str]:
     } - SHARED_WORDS
 
 
+def gpu_words(root: Path = ROOT) -> set[str]:
+    """Return the words that the gpu dialect's text writes as strings."""
+    path = root / GPU_TEXT
+    if not path.is_file():
+        return set()
+    return {
+        s
+        for kind, s, _ in tokens(path.read_text(encoding="utf-8"))
+        if kind == "str" and WORD.fullmatch(s)
+    }
+
+
+def _dialect_of(module: str) -> str:
+    """The dialect that an imported module, which this check leaves out,
+    belongs to."""
+    return "gpu" if module.startswith("Fir.Gpu.") else "core"
+
+
 def _command_line() -> set[str]:
     return {f"lean/FirRef/{m}.lean" for m in FIR_REF_COMMAND_LINE}
 
@@ -358,22 +384,28 @@ def problems(root: Path = ROOT) -> list[str]:
     words = core_words(root)
     if not words:
         return [f"{CORE_TEXT}: no words found, so nothing would be checked"]
+    gpu = gpu_words(root)
     found = []
     for rel in generic_files(root):
         toks = tokens((root / rel).read_text(encoding="utf-8"))
         for k, (kind, s, line) in enumerate(toks):
             imported = k > 0 and toks[k - 1][1] == "import"
             parts = name_parts(s)
-            if (
+            if kind == "name" and parts[0] != "Lean" and GPU_NAMES & set(parts):
+                verb = "imports" if imported else "names"
+                found.append(f"{rel}:{line}: {verb} the gpu dialect: {s}")
+            elif (
                 kind == "name"
                 and rel not in NAME_CORE
                 and parts[0] != "Lean"
                 and (CORE_NAMES & set(parts) or (imported and is_left_out(s)))
             ):
                 verb = "imports" if imported else "names"
-                found.append(f"{rel}:{line}: {verb} the core dialect: {s}")
+                found.append(f"{rel}:{line}: {verb} the {_dialect_of(s)} dialect: {s}")
             elif kind == "str" and (s in words or INT_TYPE.fullmatch(s)):
                 found.append(f'{rel}:{line}: writes the core dialect\'s word "{s}"')
+            elif kind == "str" and s in gpu:
+                found.append(f'{rel}:{line}: writes the gpu dialect\'s word "{s}"')
     return found + poison_problems(root) + effects_problems(root)
 
 
