@@ -109,10 +109,11 @@ theorem funary_drop (o : FUnary)
   | .cons a .nil => oneFloat_drop (funaryValue_ends o fl' a) fun _ h => funaryValue_drop hle o a h
 
 /-- `fma` with fewer flags refines `fma` with more, on every operands. -/
-theorem fma_drop (args : HVector toType (Fir.sig (d := CoreDialect) (.fma fl e m))) :
+theorem fma_drop (r : RoundingMode)
+    (args : HVector toType (Fir.sig (d := CoreDialect) (.fma fl r e m))) :
     SetM.IsRefinedBy (HVector.Forall₂ TyRefinement.IsRefinedBy)
-      (DialectDenote.denote (d := CoreDialect) (.fma fl e m) args)
-      (DialectDenote.denote (d := CoreDialect) (.fma fl' e m) args) :=
+      (DialectDenote.denote (d := CoreDialect) (.fma fl r e m) args)
+      (DialectDenote.denote (d := CoreDialect) (.fma fl' r e m) args) :=
   match args with
   | .cons a (.cons b (.cons c .nil)) =>
     oneFloat_drop (fmaValues_ends fl' a b c) fun _ h => fmaValues_drop hle a b c h

@@ -50,9 +50,10 @@ fir's own are:
   (`Fir.Core.FloatRem`). It gives a NaN where IEEE 754 does: `y = 0`, an
   infinite `x`, and a NaN operand. Every other rule here holds for them
   as for `fadd`.
-* _The rounding attribute._ Every op that rounds, all but `frem`,
-  `fmod`, `fneg` and `fabs`, carries `round(rne)`, and round to nearest
-  even is the only mode M1 has, so the rules have none to read.
+* _The rounding mode._ Every op that rounds, all but `frem`, `fmod`,
+  `fneg` and `fabs`, carries a rounding mode (`Fir.Core.RoundingMode`).
+  Validation accepts only `rne`, round to nearest even, the one mode the
+  model computes, so the rules read every mode as `rne`.
 * _Poison._ A poison operand gives a poison result
   (ADR-2026-10-29-2006); the model has no poison.
 * _Formats the model does not have._ The model needs at least 2 exponent
@@ -115,20 +116,22 @@ def floatResult {μ : Type → Type} [Monad μ] [MonadChoice μ] (fl : FastMath)
 
 /-- What each float op of two operands computes in Lean's model: the
 model's operation, or, for `frem` and `fmod`, fir's remainder on the
-model's numbers. -/
+model's numbers. The model rounds to nearest even, the one mode that
+validation accepts, so the rule reads every mode as `rne`. -/
 def FBin.model : FBin → (f : Format) → UnpackedFloat → UnpackedFloat → UnpackedFloat
-  | .fadd => UnpackedFloat.add
-  | .fsub => UnpackedFloat.sub
-  | .fmul => UnpackedFloat.mul
-  | .fdiv => UnpackedFloat.div
+  | .fadd _ => UnpackedFloat.add
+  | .fsub _ => UnpackedFloat.sub
+  | .fmul _ => UnpackedFloat.mul
+  | .fdiv _ => UnpackedFloat.div
   | .frem => remainder true
   | .fmod => remainder false
 
-/-- What each float op of one operand computes in Lean's model. -/
+/-- What each float op of one operand computes in Lean's model, which
+reads `sqrt`'s mode as `rne`. -/
 def FUnary.model : FUnary → (f : Format) → UnpackedFloat → UnpackedFloat
   | .fneg => fun _ => UnpackedFloat.neg
   | .fabs => fun _ => UnpackedFloat.abs
-  | .sqrt => UnpackedFloat.sqrt
+  | .sqrt _ => UnpackedFloat.sqrt
 
 /-- The rule of `fadd`, `fsub`, `fmul`, `fdiv`, `frem` and `fmod` in
 `float<e,m>` under the flags `fl`: the model's result, or any NaN when it

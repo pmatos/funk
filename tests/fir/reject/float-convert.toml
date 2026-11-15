@@ -1,5 +1,7 @@
 # Must-reject texts of #241's conversions between float formats: fpext
-# has no attribute and fptrunc carries round(rne), and each takes one value
+# has no attribute and fptrunc carries its rounding mode, of which
+# validation accepts only round(rne) (the human's ruling of 2026-11-15 on
+# #229), and each takes one value
 # of a float type to another float type (ADR-2026-11-09-1549). Any other
 # attribute or pair of types does not decode. Validation takes fpext only
 # to a format that holds every value of the source, and fptrunc only to
@@ -38,12 +40,42 @@ locs {
 '''
 
 [[reject]]
-verdict = "parse-error"
-rule = "round(rne) is the one rounding mode: fptrunc round(rtz) does not decode"
+verdict = "validation-error"
+rule = "fptrunc rounds to nearest even in M1: round(rtz) decodes and is rejected"
 text = '''
 func @f(%x: f64) -> f32 {
 ^e:
   %r: f32 = fptrunc round(rtz) %x @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "fptrunc rounds to nearest even in M1: round(rtn) decodes and is rejected"
+text = '''
+func @f(%x: f64) -> f32 {
+^e:
+  %r: f32 = fptrunc round(rtn) %x @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "fptrunc's rounding mode is one word: round(rne, rtz) does not decode"
+text = '''
+func @f(%x: f64) -> f32 {
+^e:
+  %r: f32 = fptrunc round(rne, rtz) %x @0
   ret %r @0
 }
 

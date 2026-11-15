@@ -71,6 +71,8 @@ theorem opAttrs_bare (o : Op) : Attr.dialectsAll (opAttrs (d := CoreDialect) o) 
   have hf (fl : FastMath) : Attr.dialectsAll fl.attrs = [] := by
     rcases fl with ⟨_ | _, _ | _, _ | _, _ | _, _ | _⟩ <;>
       simp [FastMath.attrs, Attr.dialectsAll, Attr.dialects, wordDialect]
+  have hr (r : RoundingMode) : (roundAttr r).dialects = [] := by
+    cases r <;> simp [roundAttr, RoundingMode.word, Attr.dialectsAll, Attr.dialects, wordDialect]
   cases o with
   | const w v =>
     simp only [opAttrs, Op.attrs, Attr.dialectsAll, List.append_nil]
@@ -86,14 +88,13 @@ theorem opAttrs_bare (o : Op) : Attr.dialectsAll (opAttrs (d := CoreDialect) o) 
       cases p <;> decide
     simp [opAttrs, Op.attrs, Attr.dialectsAll_append, hf fl, Attr.dialectsAll, Attr.dialects, hq]
   | fbin o fl =>
-    cases o <;> simp [opAttrs, Op.attrs, Attr.dialectsAll_append, hf fl, FBin.attrs, roundAttr,
-      Attr.dialectsAll, Attr.dialects, wordDialect]
-  | fma fl =>
-    simp [opAttrs, Op.attrs, Attr.dialectsAll_append, hf fl, roundAttr, Attr.dialectsAll,
-      Attr.dialects, wordDialect]
+    cases o <;> simp [opAttrs, Op.attrs, Attr.dialectsAll_append, hf fl, FBin.attrs, hr,
+      Attr.dialectsAll]
+  | fma fl r => simp [opAttrs, Op.attrs, Attr.dialectsAll_append, hf fl, hr, Attr.dialectsAll]
+  | sitofp r | uitofp r | fptrunc r => simp [opAttrs, Op.attrs, hr, Attr.dialectsAll]
   | funary o fl =>
-    cases o <;> simp [opAttrs, Op.attrs, Attr.dialectsAll_append, hf fl, FUnary.attrs, roundAttr,
-      Attr.dialectsAll, Attr.dialects, wordDialect]
+    cases o <;> simp [opAttrs, Op.attrs, Attr.dialectsAll_append, hf fl, FUnary.attrs, hr,
+      Attr.dialectsAll]
   | add _ f | sub _ f | mul _ f => exact hw f
   | sdiv _ e | udiv _ e =>
     cases e <;> simp [opAttrs, Op.attrs, Attr.dialectsAll, Attr.dialects, wordDialect]

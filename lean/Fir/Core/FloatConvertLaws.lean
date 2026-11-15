@@ -37,17 +37,17 @@ theorem convertFloat_map {μ ν : Type → Type} [Monad μ] [Monad ν] [MonadCho
 section
 variable (e m e' m' : Nat)
 
-/-- The op instance of `fpext`, with `ext`, or of `fptrunc`, from
-`float<e,m>` to `float<e',m'>`. -/
-def convertOp : Bool → Op
-  | true => .fpext e m e' m'
-  | false => .fptrunc e m e' m'
+/-- The op instance of `fpext`, with no mode, or of `fptrunc`, with the
+mode `r`, from `float<e,m>` to `float<e',m'>`. -/
+def convertOp : Option RoundingMode → Op
+  | none => .fpext e m e' m'
+  | some r => .fptrunc r e m e' m'
 
 /-- `fpext` and `fptrunc` propagate poison: a poison operand gives only a
 poison result, and they are never UB. -/
-theorem convertFloat_propagatesPoison (ext : Bool) :
-    PropagatesPoison (d := CoreDialect) (convertOp e m e' m' ext) := by
-  cases ext <;> exact {
+theorem convertFloat_propagatesPoison (t : Option RoundingMode) :
+    PropagatesPoison (d := CoreDialect) (convertOp e m e' m' t) := by
+  cases t <;> exact {
     poisonOut := fun
       | .cons a .nil, h, _, hrs => by
         have hp : a = .poison := h.elim id False.elim
@@ -60,26 +60,26 @@ theorem convertFloat_propagatesPoison (ext : Bool) :
       | .cons a .nil, r, _, hub => absurd hub (oneFloat_not_ub (convertFloat_ends e m e' m' a) r) }
 
 /-- `fpext` and `fptrunc` return a result on a defined operand. -/
-theorem convertFloat_returnsOnDefined (ext : Bool) :
-    ReturnsOnDefined (d := CoreDialect) (convertOp e m e' m' ext) := by
+theorem convertFloat_returnsOnDefined (t : Option RoundingMode) :
+    ReturnsOnDefined (d := CoreDialect) (convertOp e m e' m' t) := by
   obtain ⟨v, hv⟩ := (convertFloat_ends e m e' m' (.value 0)).some
-  cases ext <;>
+  cases t <;>
   · refine ⟨.cons (.value 0) .nil, ?_, _, oneFloat_of hv⟩
     rintro (h | h) <;> cases h
 
 /-- `fpext` and `fptrunc` have an outcome on every operand. -/
-theorem convertFloat_total (ext : Bool) :
-    OpTotal (d := CoreDialect) (convertOp e m e' m' ext) := by
-  cases ext <;> exact fun
+theorem convertFloat_total (t : Option RoundingMode) :
+    OpTotal (d := CoreDialect) (convertOp e m e' m' t) := by
+  cases t <;> exact fun
     | .cons a .nil =>
       ⟨fun _ => by
         obtain ⟨_, hv⟩ := (convertFloat_ends e m e' m' a).some
         exact ⟨_, oneFloat_of hv⟩, fun h => nomatch h⟩
 
 /-- `fpext` and `fptrunc` are monotone. -/
-theorem convertFloat_monotone (ext : Bool) :
-    OpMonotone (d := CoreDialect) (convertOp e m e' m' ext) := by
-  cases ext <;>
+theorem convertFloat_monotone (t : Option RoundingMode) :
+    OpMonotone (d := CoreDialect) (convertOp e m e' m' t) := by
+  cases t <;>
   · intro args args' h
     refine ⟨fun _ => ?_, fun h => nomatch h⟩
     match args, args', h with
@@ -95,16 +95,16 @@ theorem convertFloat_monotone (ext : Bool) :
           exact SetM.isRefinedBy_refl (HVector.forall₂_refl Core.Ty.isRefinedBy_refl) _
 
 /-- `fpext` and `fptrunc` are never UB. -/
-theorem convertFloat_neverUB (ext : Bool) :
-    NeverUBSetM (d := CoreDialect) (convertOp e m e' m' ext) := by
-  cases ext <;> exact fun
+theorem convertFloat_neverUB (t : Option RoundingMode) :
+    NeverUBSetM (d := CoreDialect) (convertOp e m e' m' t) := by
+  cases t <;> exact fun
     | .cons a .nil, r =>
       ⟨fun _ => oneFloat_not_ub (convertFloat_ends e m e' m' a) r, fun h => nomatch h⟩
 
 /-- On a defined operand, `fpext` and `fptrunc` give a defined result. -/
-theorem convertFloat_makesNoPoison (ext : Bool) :
-    MakesNoPoisonSetM (d := CoreDialect) (convertOp e m e' m' ext) := by
-  cases ext <;> exact fun _ args hd rs hr => match args, hd, hr with
+theorem convertFloat_makesNoPoison (t : Option RoundingMode) :
+    MakesNoPoisonSetM (d := CoreDialect) (convertOp e m e' m' t) := by
+  cases t <;> exact fun _ args hd rs hr => match args, hd, hr with
     | .cons a .nil, hd, hr => by
       cases a with
       | poison => exact absurd (.inl rfl) hd

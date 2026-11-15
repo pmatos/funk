@@ -20,9 +20,10 @@ expected result that `scripts/harness/float_ref.py` computes
 A result that is not a NaN is differential at `f32` and `f64` and
 interpreter-only at every format; a NaN result is interpreter-only, with
 a choice that names the NaN, until #219. `reject/float-arith.toml` holds
-the texts of these ops that do not decode, such as `fadd` without
-`round(rne)` or with `round(rtz)`, and one at a format that validation
-rejects.
+the texts of these ops that do not decode, such as `fadd` without a mode
+or with `round(up)`, the texts with a mode other than `rne`, such as
+`fsub round(rtz)`, which decode and fail validation (the human's ruling of
+2026-11-15 on #229), and one at a format that validation rejects.
 
 The texts of #241's first stage also use the bit cast `bitcast`
 ([ADR-2026-11-09-1549](../adrs/2026-11-09-1549-floating-point-is-strict-ieee-over-generic-formats.md)).

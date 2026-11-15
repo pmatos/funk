@@ -1,43 +1,39 @@
-# A float op that rounds is written with round(rne), and no other mode decodes
+# A float op that rounds is written with round(MODE), and validation accepts only rne
 
 Status: accepted
 Tier: direction; area: text-format
 
 ## Decision
 
-- `fadd`, `fsub`, `fmul`, `fdiv`, `sqrt` and `fma` round, and each has
-  exactly one attribute, `round(rne)`, in the applied form:
-  `%s: f32 = fadd round(rne) %a, %b @1`.
-- `frem`, `fmod`, `fneg` and `fabs` do not round, since their result is
-  exact, and have no attribute: `%n: f32 = fneg %a @1`.
-- Any other attribute does not decode: no attribute on an op that rounds,
-  `round(rtz)` or any other mode, the bare word `rne`, two attributes, or
-  `round(rne)` on `frem`, `fmod`, `fneg` or `fabs`. Text that does not decode is a parse
-  error (ADR-2026-10-29-2014), so `funk verify` and `fir-ref` reject it, as
-  they reject a flag that an op does not have.
-- The op carries no mode: M1 has one, so the spec's op instances have no
-  field for it. A later mode adds a decoding and a field.
+- Each float op that rounds (`fadd`, `fsub`, `fmul`, `fdiv`, `sqrt`, `fma`,
+  `sitofp`, `uitofp`, `fptrunc`) has exactly one attribute, its rounding
+  mode, in the applied form: `%s: f32 = fadd round(rne) %a, %b @1`. An op
+  that does not round has none: `%n: f32 = fneg %a @1`.
+- Every mode decodes, and validation rejects every mode but `rne` (the
+  human's ruling of 2026-11-15 on #229, option B). So `fadd round(rtz)`
+  parses and fails validation. The op carries its mode, as a load carries
+  its ordering, and the rules read every mode as `rne`.
+- Anything else is a parse error (ADR-2026-10-29-2014): no mode on an op
+  that rounds, a word that names no mode, the bare word `rne`, two
+  attributes, and a mode on an op that does not round.
+- The mode words are IEEE 754's five rounding-direction attributes in
+  SMT-LIB's short names: `rne`, `rna`, `rtp`, `rtn` and `rtz`. The human
+  chose this set on 2026-11-15 (#229, PR #395).
 
 ## Why
 
-ADR-2026-11-09-1549 says every rounding op carries `round = rne`, that round
-to nearest even is the only mode M1 accepts, and that rounding is an
-attribute so that other modes can come back without a format break. The text
-has no `key = value` form; an attribute is a word, a number, a string, a
-symbol, a float literal or a word applied to attributes, as `float(e, m)`
-(ADR-2026-11-11-0951). Every rounding op of a text says how it rounds, so
-today's texts keep their meaning when another mode comes.
-
-Where a wrong mode is rejected, at parse time as here or by the verifier, is
-an open question to the human, raised on 2026-11-11 on #229.
+ADR-2026-11-09-1549 makes rounding an attribute so that other modes can
+come without a format break. Decoding every mode makes that hook real: a
+later mode needs a rule and a change of validation, not of the reader, as
+the atomic orderings do (ADR-2026-11-09-1542). Every rounding op says how
+it rounds, so today's texts keep their meaning when another mode comes.
+IEEE 754 names exactly five directions, and `rne` and `rtz` were already
+this format's words.
 
 ## Rejected alternatives
 
-- **Decode every IEEE mode, and let validation reject all but `rne`.** It
-  gives each op a field that no valid program sets and a rule for modes that
-  have no meaning in M1.
-- **No attribute, with round to nearest even implied.** It drops the hook
-  that ADR-2026-11-09-1549 keeps, and a later mode would change the meaning of
-  today's texts.
-- **The word `rne` alone.** Shorter, but it says nothing about what it sets,
-  and a later attribute of another kind would be ambiguous.
+- **Only `rne` decodes** (option A, as first built): a second mode would
+  change the reader as well as validation. The human ruled B.
+- **No attribute, with round to nearest even implied:** it drops the hook,
+  and a later mode would change the meaning of today's texts.
+- **The word `rne` alone:** it says nothing about what it sets.

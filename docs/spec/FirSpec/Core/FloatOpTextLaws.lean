@@ -14,10 +14,10 @@ pins their fingerprint; the build fails when the Lean changes under it.
 
 #doc (Manual) "The float ops read back: readable blocks" =>
 
-:::moduleDocs (fingerprint := "5740043468119939785")
+:::moduleDocs (fingerprint := "14909725246307615234")
 :::
 
-:::readable Fir.Core.decodeFBin_eq Fir.Core.decodeFUnary_eq Fir.Core.decodeFma_eq (pin := Fir.Core.decodeFBin) (pin := Fir.Core.decodeFUnary) (pin := Fir.Core.decodeFma) (fingerprint := "11228936610485231133")
+:::readable Fir.Core.decodeFBin_eq Fir.Core.decodeFUnary_eq Fir.Core.decodeFma_eq (pin := Fir.Core.decodeFBin) (pin := Fir.Core.decodeFUnary) (pin := Fir.Core.decodeFma) (fingerprint := "2840483223967168667")
 *Theorems: a float op of arithmetic decodes only from its own spelling.*
 If $`\mathsf{fadd}`, $`\mathsf{fsub}`, $`\mathsf{fmul}`,
 $`\mathsf{fdiv}`, $`\mathsf{frem}` or $`\mathsf{fmod}` decodes from the attributes $`a^*` and the types $`t^*`
@@ -27,8 +27,8 @@ reads it, the op it gives has its name, the attributes $`a^*` and the
 operand and result types $`t^*` and $`r^*`; and the same holds of
 $`\mathsf{fneg}`, $`\mathsf{fabs}`, $`\mathsf{sqrt}` and $`\mathsf{fma}`.
 Each op's attributes are the words of its fast-math flags and then its
-own, and the words that reading takes back put the attributes back
-together. The proof that every core op reads back, in the next section, uses them
+own, its rounding mode for an op that rounds, and the words that reading
+takes back put the attributes back together. The proof that every core op reads back, in the next section, uses them
 for these ops.
 :::
 
@@ -40,21 +40,21 @@ $`\mathtt{bitcast}`, has no attributes, so $`a^*` is empty, and has the
 operand and result types $`t^*` and $`r^*`.
 :::
 
-:::readable Fir.Core.decodeIntToFloat_eq (pin := Fir.Core.decodeIntToFloat) (fingerprint := "18079157018789560655")
+:::readable Fir.Core.decodeIntToFloat_eq (pin := Fir.Core.decodeIntToFloat) (fingerprint := "4148237927416427280")
 *Theorem: a conversion from an integer decodes only from its own
 spelling.* If $`\mathtt{sitofp}` or $`\mathtt{uitofp}` decodes from the
 attributes $`a^*` and the types $`t^*` and $`r^*`, the op it gives is
 written with that name, has the attributes $`a^*`, which are
-$`[\mathtt{round(rne)}]`, and has the operand and result types $`t^*` and
-$`r^*`.
+$`[\mathtt{round}(r)]` for the mode $`r` it carries, and has the operand
+and result types $`t^*` and $`r^*`.
 :::
 
-:::readable Fir.Core.decodeFpext_eq Fir.Core.decodeFptrunc_eq (pin := Fir.Core.decodeFpext) (pin := Fir.Core.decodeFptrunc) (fingerprint := "18338062105868789928")
+:::readable Fir.Core.decodeFpext_eq Fir.Core.decodeFptrunc_eq (pin := Fir.Core.decodeFpext) (pin := Fir.Core.decodeFptrunc) (fingerprint := "17905356444248953764")
 *Theorems: a conversion between formats decodes only from its own
 spelling.* If $`\mathtt{fpext}` or $`\mathtt{fptrunc}` decodes from the
 attributes $`a^*` and the types $`t^*` and $`r^*`, the op it gives is
 written with that name, has the attributes $`a^*`, which are none for
-$`\mathtt{fpext}` and $`[\mathtt{round(rne)}]` for $`\mathtt{fptrunc}`,
+$`\mathtt{fpext}` and $`[\mathtt{round}(r)]` for $`\mathtt{fptrunc}` with the mode $`r`,
 and has the operand and result types $`t^*` and $`r^*`.
 :::
 

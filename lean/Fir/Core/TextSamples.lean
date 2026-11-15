@@ -25,14 +25,18 @@ def samples : List Op :=
    .fconst 5 10 0x7e01] ++
   Pred.all.map (.icmp · 32) ++ FPred.all.map (.fcmp · {} 8 23) ++
   [.fcmp .uno { nnan := true, ninf := true, nsz := true } 15 112] ++
-  [.fbin .fadd {} 8 23, .fbin .fsub { nnan := true } 11 52, .fbin .fmul { ninf := true } 5 10,
-   .fbin .fdiv { nsz := true, contract := true, reassoc := true } 2 1, .funary .fneg {} 8 7,
-   .funary .fabs { nsz := true } 15 112, .funary .sqrt { nnan := true, ninf := true } 8 23,
-   .fma { nnan := true, ninf := true, nsz := true, contract := true, reassoc := true } 11 52,
+  [.fbin (.fadd .rne) {} 8 23, .fbin (.fsub .rtz) { nnan := true } 11 52,
+   .fbin (.fmul .rna) { ninf := true } 5 10,
+   .fbin (.fdiv .rtp) { nsz := true, contract := true, reassoc := true } 2 1, .funary .fneg {} 8 7,
+   .funary .fabs { nsz := true } 15 112, .funary (.sqrt .rtn) { nnan := true, ninf := true } 8 23,
+   .fma { nnan := true, ninf := true, nsz := true, contract := true, reassoc := true } .rne 11 52,
+   .fma { nnan := true } .rtz 8 23,
    .fbin .frem { nnan := true } 8 23, .fbin .fmod { ninf := true, nsz := true } 2 1] ++
   [.toBits 8 23, .ofBits 11 52, .toBits 2 1, .ofBits 15 112] ++
-  [.sitofp 32 8 23, .uitofp 64 11 52, .sitofp 1 5 10, .uitofp 128 15 112, .sitofp 7 2 1] ++
-  [.fpext 8 23 11 52, .fptrunc 11 52 8 23, .fpext 5 10 15 112, .fptrunc 8 7 5 10, .fptrunc 5 10 8 7] ++
+  [.sitofp .rne 32 8 23, .uitofp .rne 64 11 52, .sitofp .rtz 1 5 10, .uitofp .rtp 128 15 112,
+   .sitofp .rna 7 2 1] ++
+  [.fpext 8 23 11 52, .fptrunc .rne 11 52 8 23, .fpext 5 10 15 112, .fptrunc .rtn 8 7 5 10,
+   .fptrunc .rtz 5 10 8 7] ++
   [.ptradd 0 64, .ptradd 1 8, .ptradd maxMemory 1] ++
   [.alloca .stack (.int 32) 1 none 0, .alloca .stack (.int 8) 12 (some 4) 1,
    .alloca .heap (.ptr 2) 0 (some 3) maxMemory, .alloca .global (.float 8 23) 2 none 0] ++

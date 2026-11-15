@@ -22,10 +22,14 @@ explicit target attribute. When an op's IEEE result is a NaN, fir chooses any
 NaN bit pattern of the format, so payload and sign are nondeterministic. #219
 decides how `fir-ref` and the harness handle that choice (ADR-2026-11-09-1549).
 
-Every rounding op carries `round = rne`. Round to nearest even is the only value
-M1 accepts (ADR-2026-11-09-1549). Whether the verifier or the reader rejects
-another rounding mode is an open question for the human, raised on #229
-on 2026-11-11; today the reader rejects it (ADR-2026-11-11-1801).
+Every rounding op carries a rounding mode (`RoundingMode`), and round to
+nearest even, `rne`, is the only mode M1 accepts (ADR-2026-11-09-1549). The
+human ruled on 2026-11-15 (#229, option B) that every mode is read and
+validation rejects all but `rne`, so `fadd round(rtz)` parses and fails
+validation (ADR-2026-11-11-1801). The rules read every mode as `rne`: Lean's
+model rounds only to nearest even, and no valid module carries another.
+Rejected: a parse error for a wrong mode, as first built, so that a later mode
+would change the reader as well as validation.
 
 The fast-math flags are (ADR-2026-11-09-1549):
 
@@ -136,8 +140,10 @@ order beside the model.
 
 `fadd`, `fsub`, `fmul` and `fdiv` take two values of one float type, `fneg`,
 `fabs` and `sqrt` one, and `fma` three; each gives one value of that type. In
-the spec they are three op instances: `fbin o e m`, `funary o e m` and
-`fma e m` (ADR-2026-11-09-1549).
+the spec they are three op instances: `fbin o fl e m`, `funary o fl e m` and
+`fma fl r e m`, with `fl` the fast-math flags and `r` the rounding mode, which
+`fadd`, `fsub`, `fmul`, `fdiv` and `sqrt` carry in `o` (ADR-2026-11-09-1549,
+ADR-2026-11-11-1801).
 
 - On defined operands, each op unpacks them with `UnpackedFloat.unpack`, runs
   the model's operation (`add`, `sub`, `mul`, `div`, `neg`, `abs`, `sqrt` or
@@ -165,8 +171,8 @@ the spec they are three op instances: `fbin o e m`, `funary o e m` and
 - A format that validation rejects gives a chosen NaN, as above, so that the
   rules are total.
 
-Each op that rounds is written with `round(rne)`, and `fneg` and `fabs` with no
-attribute (ADR-2026-11-11-1801).
+Each op that rounds is written with its mode, `round(rne)` in a valid module,
+and `fneg` and `fabs` with no attribute (ADR-2026-11-11-1801).
 
 ## The remainders
 

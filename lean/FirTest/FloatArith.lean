@@ -88,9 +88,15 @@ def withAttr (op attr : String) (n : Nat) : RunReport :=
 
 #guard withAttr "fadd" " round(rne)" 2 == returns ["2.0"]
 #guard withAttr "frem" "" 2 == returns ["0.0"]
-#guard [("fadd", "", 2), ("fadd", " round(rtz)", 2), ("fmul", " rne", 2), ("sqrt", "", 1),
+#guard [("fadd", "", 2), ("fadd", " round(up)", 2), ("fmul", " rne", 2), ("sqrt", "", 1),
   ("fneg", " round(rne)", 1), ("fma", " round(rne) round(rne)", 3),
   ("fmod", " round(rne)", 2)].all fun (op, attr, n) =>
     (withAttr op attr n).status == 1
+-- Every mode decodes, and validation accepts only `rne`.
+#guard [("fadd", 2), ("fsub", 2), ("fmul", 2), ("fdiv", 2), ("sqrt", 1), ("fma", 3)].all
+  fun (op, n) => ["rne", "rna", "rtp", "rtn", "rtz"].all fun r =>
+    let v := FirRef.validateBytes "t.fir" (floatOp op s!" round({r})" "f32" n).toUTF8
+    v.1.startsWith ("{\"file\":\"t.fir\",\"verdict\":" ++
+      (if r = "rne" then "\"accepted\"" else "\"validation-error\""))
 
 end FirTest

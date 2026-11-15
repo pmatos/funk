@@ -14,8 +14,8 @@ Tier: direction; area: semantics
   is an explicit target attribute. A value is its bit pattern or poison.
 - **NaNs.** When an op's IEEE result is a NaN, fir chooses any NaN bit
   pattern of the format: payload and sign are nondeterministic.
-- **Rounding.** Every rounding op carries `round = rne`, the only value M1
-  accepts.
+- **Rounding.** Every rounding op carries a rounding mode, and `rne` is
+  the only one M1's validation accepts; the others decode, as hooks.
 - **Remainders.** `frem` is IEEE 754's remainder, with the quotient
   rounded to nearest even, and `fmod` is C's `fmod`, with it truncated,
   as LLVM's `frem` is. Neither rounds, since the result is exact.
@@ -30,8 +30,9 @@ Tier: direction; area: semantics
   reports any other format as a diagnostic.
 
 [semantics-floats.md](../decisions/semantics-floats.md) states each rule and
-the human's rulings: #203 (2026-11-09), #229's bounds (2026-11-11) and #310's
-remainder (2026-11-12). The rounding-mode question on #229 is still open.
+the human's rulings: #203 (2026-11-09), #229's bounds (2026-11-11), #310's
+remainder (2026-11-12) and #229's rounding modes (2026-11-15: every mode
+decodes, and validation rejects all but `rne`).
 The text writes float types, constants and the rounding attribute as
 ADR-2026-11-11-0951, ADR-2026-11-11-1438 and ADR-2026-11-11-1801 say.
 

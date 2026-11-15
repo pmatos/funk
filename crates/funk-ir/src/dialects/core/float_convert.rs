@@ -6,8 +6,10 @@
 //! Each takes one value of a float type `float<e,m>` and defines one value
 //! of another, `float<e',m'>`: the same number, rounded to nearest even
 //! when the target does not hold it. `fpext` never rounds, so it has no
-//! attribute; `fptrunc` rounds, so it carries `round(rne)`, the one mode M1
-//! has (ADR-2026-11-11-1801). Any two formats decode, and validation says
+//! attribute; `fptrunc` rounds, so it carries its rounding mode
+//! `round(MODE)` (ADR-2026-11-11-1801): every mode decodes, and validation
+//! accepts only `round(rne)`, the one mode M1 has (the human's ruling of
+//! 2026-11-15 on #229). Any two formats decode, and validation says
 //! which pairs each takes (the human's ruling of 2026-11-12 on #354):
 //! `fpext` a target with at least as many exponent bits and as many
 //! mantissa bits as the source, other than the source itself, so that it
@@ -16,7 +18,7 @@
 //! pair of two formats takes exactly one of them. Each is pure: it is never
 //! UB, and it gives poison only for a poison operand.
 
-use super::float_arith::decode_rounding;
+use super::rounding::{check_rounding, decode_rounding};
 use super::type_list;
 use super::types::float_format;
 use crate::effects::Effects;
@@ -75,6 +77,7 @@ impl OpSpec for Convert {
         let Some((from, to)) = formats(op) else {
             return Ok(());
         };
+        check_rounding(self.0, op.attrs)?;
         let (valid, rule) = if self.exact() {
             (
                 from != to && holds_every_value(from, to),
@@ -164,7 +167,7 @@ mod tests {
     }
 
     #[test]
-    fn fpext_has_no_attribute_and_fptrunc_needs_round_rne() {
+    fn fpext_has_no_attribute_and_fptrunc_needs_a_rounding_mode() {
         let (x, r) = ([float_type(8, 23)], [float_type(11, 52)]);
         let e = Convert("fpext")
             .decode(&types(&[rne()], &x, &r))
@@ -172,12 +175,21 @@ mod tests {
         assert!(e.starts_with("fpext"), "{e}");
         for bad in [
             vec![],
-            vec![Attr::App("round".into(), vec![Attr::word("rtz")])],
+            vec![Attr::App("round".into(), vec![Attr::word("up")])],
             vec![rne(), rne()],
         ] {
             let e = Convert("fptrunc").decode(&types(&bad, &r, &x)).unwrap_err();
-            assert!(e.starts_with("fptrunc") && e.contains("round(rne)"), "{e}");
+            assert!(e.starts_with("fptrunc") && e.contains("round("), "{e}");
         }
+    }
+
+    #[test]
+    fn fptrunc_decodes_every_mode_and_validation_accepts_only_rne() {
+        super::super::rounding::assert_every_mode_decodes_and_only_rne_validates(
+            &Convert("fptrunc"),
+            &[float_type(11, 52)],
+            &[float_type(8, 23)],
+        );
     }
 
     #[test]

@@ -35,9 +35,10 @@ results, which are written where those values are defined.
 * `fcmp` has its predicate, from `oeq` to `uno`, as LLVM
   writes it: `%lt: i1 = fcmp olt %a, %b @1` (ADR-2026-11-09-1549).
 * The float arithmetic `fadd`, `fsub`, `fmul`, `fdiv`, `sqrt` and `fma`
-  has one attribute, `round(rne)`, and `frem`, `fmod`, `fneg` and `fabs`
-  have none:
-  `%s: f32 = fadd round(rne) %a, %b @1` (ADR-2026-11-11-1801).
+  has one attribute, its rounding mode `round(r)`, and `frem`, `fmod`,
+  `fneg` and `fabs` have none:
+  `%s: f32 = fadd round(rne) %a, %b @1` (ADR-2026-11-11-1801). Each of
+  the five modes decodes; validation accepts only `rne`.
 * Each float op, `fcmp` and the remainders included, has its fast-math
   flags first, in the fixed order `nnan`, `ninf`, `nsz`, `contract`,
   `reassoc`, each at most once: `%s: f32 = fadd nnan nsz round(rne) %a,
@@ -48,10 +49,10 @@ results, which are written where those values are defined.
   `%f: f32 = bitcast %b @1` the `f32` of an `i32`'s bits. Its integer has
   the float's width, `1 + e + m`; an op whose widths differ does not
   decode.
-* `sitofp` and `uitofp` have one attribute, `round(rne)`, and take an
+* `sitofp` and `uitofp` have one attribute, their mode `round(r)`, and take an
   integer of any width to a float of any format:
   `%f: f64 = sitofp round(rne) %i @1`.
-* `fpext` has no attributes and `fptrunc` has one, `round(rne)`, and each
+* `fpext` has no attributes and `fptrunc` has one, its mode `round(r)`, and each
   takes a float of one format to a float of another:
   `%d: f64 = fpext %f @1` and `%f: f32 = fptrunc round(rne) %d @1`. Any
   two formats decode; validation says which pairs each takes.
@@ -173,8 +174,8 @@ def Op.attrs : Op → List Attr
   | .fconst e m v => [.float (floatLit e m v)]
   | .icmp p _ => [.word p.name]
   | .fcmp p fl _ _ => fl.attrs ++ [.word p.name]
-  | .fma fl _ _ => fl.attrs ++ [roundAttr]
-  | .sitofp .. | .uitofp .. | .fptrunc .. => [roundAttr]
+  | .fma fl r _ _ => fl.attrs ++ [roundAttr r]
+  | .sitofp r .. | .uitofp r .. | .fptrunc r .. => [roundAttr r]
   | .fbin o fl _ _ | .funary o fl _ _ => fl.attrs ++ o.attrs
   | .add _ f | .sub _ f | .mul _ f => f.attrs
   | .sdiv _ e | .udiv _ e => if e then [.word "exact"] else []
@@ -251,15 +252,15 @@ def Op.decode (n : String) (as : List Attr) (ts rs : List Ty) : Option Op :=
       if a = b then some (.icmp pr a) else none
     | _, _, _ => none
   | "fcmp" => decodeFcmp as ts rs
-  | "fadd" => decodeFBin .fadd as ts rs
-  | "fsub" => decodeFBin .fsub as ts rs
-  | "fmul" => decodeFBin .fmul as ts rs
-  | "fdiv" => decodeFBin .fdiv as ts rs
-  | "frem" => decodeFBin .frem as ts rs
-  | "fmod" => decodeFBin .fmod as ts rs
-  | "fneg" => decodeFUnary .fneg as ts rs
-  | "fabs" => decodeFUnary .fabs as ts rs
-  | "sqrt" => decodeFUnary .sqrt as ts rs
+  | "fadd" => decodeFBin "fadd" as ts rs
+  | "fsub" => decodeFBin "fsub" as ts rs
+  | "fmul" => decodeFBin "fmul" as ts rs
+  | "fdiv" => decodeFBin "fdiv" as ts rs
+  | "frem" => decodeFBin "frem" as ts rs
+  | "fmod" => decodeFBin "fmod" as ts rs
+  | "fneg" => decodeFUnary "fneg" as ts rs
+  | "fabs" => decodeFUnary "fabs" as ts rs
+  | "sqrt" => decodeFUnary "sqrt" as ts rs
   | "fma" => decodeFma as ts rs
   | "add" => do pure (.add (← binWidth ts rs) (← decodeWrap as))
   | "sub" => do pure (.sub (← binWidth ts rs) (← decodeWrap as))

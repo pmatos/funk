@@ -1,6 +1,7 @@
 """Tests of the cells of the coverage matrix, and that they follow the core
 dialect's ops in Lean."""
 
+import functools
 import re
 import unittest
 from pathlib import Path
@@ -12,6 +13,8 @@ from firtext import Op
 CORE = Path(__file__).resolve().parents[2] / "lean" / "Fir" / "Core"
 TEXT = CORE / "Text.lean"
 FLOAT_OP_TEXT = CORE / "FloatOpText.lean"
+ROUNDING_TEXT = CORE / "RoundingText.lean"
+VALIDATION = CORE / "Validation.lean"
 OPS = CORE / "Ops.lean"
 
 
@@ -32,23 +35,32 @@ def attr_lists(body: str) -> set[str]:
     return found
 
 
-def round_attrs(floats: str) -> tuple[str, ...]:
-    """The one rounding attribute that `isRoundAttrs` accepts, as the text
-    writes it."""
-    body = definition(floats, "isRoundAttrs")
-    found = re.findall(r'\| \[\.app "(\w+)" \[\.word "(\w+)"\]\] => true', body)
-    return tuple(f"{head}({mode})" for head, mode in found)
+@functools.cache
+def round_attrs() -> tuple[str, ...]:
+    """The rounding attributes that are cells, as the text writes them:
+    `roundAttr` of each mode that `Op.Valid` accepts, every other mode
+    decoding and failing validation."""
+    rounding = ROUNDING_TEXT.read_text(encoding="utf-8")
+    head = re.findall(r'\.app "(\w+)"', definition(rounding, "roundAttr"))
+    valid = definition(VALIDATION.read_text(encoding="utf-8"), "Op.Valid")
+    modes = sorted(set(re.findall(r"\br = \.(\w+)", valid)))
+    word = definition(rounding, "RoundingMode.word")
+    return tuple(
+        f"{h}({w})"
+        for h in head
+        for m in modes
+        for w in re.findall(rf'\| \.{m} => "(\w+)"', word)
+    )
 
 
 def op_attrs(floats: str, kind: str) -> dict[str, tuple[str, ...]]:
     """The attributes that each float op of `kind`, `FBin` or `FUnary`,
-    reads by its `attrsOk`: `round(rne)`, or none."""
-    body = definition(floats, f"{kind}.attrsOk")
+    reads by its name in `read`: a mode, of which `round(rne)` is a cell,
+    or none."""
+    body = definition(floats, f"{kind}.read")
     found = {}
-    for ctors, result in re.findall(r"\n  \| ([^=]*)=> (.*)", body):
-        attrs = round_attrs(floats) if "isRoundAttrs" in result else ("",)
-        for ctor in re.findall(r"\.(\w+)", ctors):
-            found[ctor] = attrs
+    for name, result in re.findall(r'\n  \| "(\w+)", as => (.*)', body):
+        found[name] = round_attrs() if "decodeRound" in result else ("",)
     return found
 
 
@@ -57,8 +69,8 @@ def decoded_attrs(text: str, floats: str) -> dict[str, tuple[str, ...]]:
     them: the arm of an op that reads its attributes with `decodeWrap`,
     `decodeExact` or `Pred.all` takes theirs, `fcmp` the predicates of
     `FPred.all` through `decodeFcmp`, a float op of arithmetic
-    takes `round(rne)` or none, as `decodeFma`, `FBin.attrsOk` and
-    `FUnary.attrsOk` read them, a conversion from an integer `round(rne)`,
+    takes `round(rne)` or none, as `decodeFma`, `FBin.read` and
+    `FUnary.read` read them, a conversion from an integer `round(rne)`,
     as `decodeIntToFloat` reads it, `fptrunc` `round(rne)` and `fpext`
     none, as `decodeFptrunc` and `decodeFpext` read them, a conversion to
     an integer none, as `decodeFloatToInt` reads it, and an op of
@@ -82,11 +94,11 @@ def decoded_attrs(text: str, floats: str) -> dict[str, tuple[str, ...]]:
         "decodeFcmp": cells.FPREDS,
         "bare": ("",),
         "decodeCast": ("",),
-        "decodeFma": round_attrs(floats),
+        "decodeFma": round_attrs(),
         "decodeBitcast": ("",),
-        "decodeIntToFloat": round_attrs(floats),
+        "decodeIntToFloat": round_attrs(),
         "decodeFpext": ("",),
-        "decodeFptrunc": round_attrs(floats),
+        "decodeFptrunc": round_attrs(),
         "decodeFloatToInt": ("",),
         "decodePtrAdd": ("",),
         "decodeAlloca": ("",),
@@ -102,7 +114,7 @@ def decoded_attrs(text: str, floats: str) -> dict[str, tuple[str, ...]]:
         if name in ("const", "call"):
             found[name] = ("",)
             continue
-        if ctor := re.search(r"(decodeFBin|decodeFUnary) \.(\w+)", arm):
+        if ctor := re.search(r'(decodeFBin|decodeFUnary) "(\w+)"', arm):
             found[name] = by_ctor[ctor.group(1)].get(ctor.group(2), ("unknown",))
             continue
         read = [
@@ -174,22 +186,22 @@ class Tests(unittest.TestCase):
                 'if e then [.word "exact"] else []',
                 "[.sym f]",
                 "fl.attrs ++ [.word p.name]",
-                "fl.attrs ++ [roundAttr]",
-                "[roundAttr]",
+                "fl.attrs ++ [roundAttr r]",
+                "[roundAttr r]",
                 "fl.attrs ++ o.attrs",
                 "allocaAttrs k t c a",
                 "loadAttrs o a",
                 "[]",
             },
         )
-        self.assertEqual(flagged["[roundAttr]"], {"sitofp", "uitofp", "fptrunc"})
-        self.assertEqual(flagged["fl.attrs ++ [roundAttr]"], {"fma"})
+        self.assertEqual(flagged["[roundAttr r]"], {"sitofp", "uitofp", "fptrunc"})
+        self.assertEqual(flagged["fl.attrs ++ [roundAttr r]"], {"fma"})
         self.assertEqual(flagged["fl.attrs ++ o.attrs"], {"fbin", "funary"})
         self.assertEqual(flagged["fl.attrs ++ [.word p.name]"], {"fcmp"})
         words, reserved = fast_math(floats, OPS.read_text(encoding="utf-8"))
         self.assertEqual(words, (*cells.FAST_MATH, *cells.RESERVED))
         self.assertEqual(reserved, cells.RESERVED)
-        self.assertEqual(round_attrs(floats), cells.ROUND)
+        self.assertEqual(round_attrs(), cells.ROUND)
         self.assertEqual(flagged["[constAttr w v]"], {"const"})
         self.assertEqual(flagged["[.float (floatLit e m v)]"], {"fconst"})
         self.assertEqual(flagged["[.word p.name]"], {"icmp"})

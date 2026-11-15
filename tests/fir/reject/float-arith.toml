@@ -1,8 +1,10 @@
 # Must-reject texts of the float arithmetic of #229 and #310: fadd, fsub,
-# fmul, fdiv, sqrt and fma carry round(rne), the one rounding mode, and
+# fmul, fdiv, sqrt and fma carry their rounding mode, round(MODE), and
 # frem, fmod, fneg and fabs, which do not round, carry no attribute
-# (ADR-2026-11-11-1801). Every other attribute does not
-# decode, as a flag an op does not have does not. Each op takes values of
+# (ADR-2026-11-11-1801). Each of the five modes decodes and validation
+# accepts only round(rne) (the human's ruling of 2026-11-15 on #229).
+# Every other attribute does not decode, as a flag an op does not have
+# does not. Each op takes values of
 # one float type, as many as it has operands, and gives one value of it
 # (ADR-2026-11-09-1549).
 
@@ -22,12 +24,132 @@ locs {
 '''
 
 [[reject]]
-verdict = "parse-error"
-rule = "round to nearest even is the one rounding mode: round(rtz) does not decode"
+verdict = "validation-error"
+rule = "fsub rounds to nearest even in M1: round(rtz) decodes and is rejected"
 text = '''
 func @f(%a: f32, %b: f32, %d: f64, %i: i32) -> f32 {
 ^e:
   %r: f32 = fsub round(rtz) %a, %b @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "fadd rounds to nearest even in M1: round(rna) decodes and is rejected"
+text = '''
+func @f(%a: f32, %b: f32, %d: f64, %i: i32) -> f32 {
+^e:
+  %r: f32 = fadd round(rna) %a, %b @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "fmul rounds to nearest even in M1: round(rtp) decodes and is rejected"
+text = '''
+func @f(%a: f32, %b: f32, %d: f64, %i: i32) -> f32 {
+^e:
+  %r: f32 = fmul round(rtp) %a, %b @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "fdiv rounds to nearest even in M1: round(rtn) decodes and is rejected"
+text = '''
+func @f(%a: f32, %b: f32, %d: f64, %i: i32) -> f32 {
+^e:
+  %r: f32 = fdiv round(rtn) %a, %b @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "sqrt rounds to nearest even in M1: round(rtz) decodes and is rejected"
+text = '''
+func @f(%a: f32, %b: f32, %d: f64, %i: i32) -> f64 {
+^e:
+  %r: f64 = sqrt round(rtz) %d @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "fma rounds to nearest even in M1: round(rtp) decodes and is rejected"
+text = '''
+func @f(%a: f32, %b: f32, %d: f64, %i: i32) -> f32 {
+^e:
+  %r: f32 = fma round(rtp) %a, %b, %a @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "a mode after the flags decodes, and validation rejects round(rtz)"
+text = '''
+func @f(%a: f32, %b: f32, %d: f64, %i: i32) -> f32 {
+^e:
+  %r: f32 = fadd nnan nsz round(rtz) %a, %b @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "a rounding mode is one of five words: round(up) does not decode"
+text = '''
+func @f(%a: f32, %b: f32, %d: f64, %i: i32) -> f32 {
+^e:
+  %r: f32 = fsub round(up) %a, %b @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "the words of the rounding modes are lower case: round(RNE) does not decode"
+text = '''
+func @f(%a: f32, %b: f32, %d: f64, %i: i32) -> f32 {
+^e:
+  %r: f32 = fadd round(RNE) %a, %b @0
   ret %r @0
 }
 

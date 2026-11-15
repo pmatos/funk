@@ -14,7 +14,7 @@ pins their fingerprint; the build fails when the Lean changes under it.
 
 #doc (Manual) "Core ops: readable blocks" =>
 
-:::moduleDocs (fingerprint := "17869889403261818575")
+:::moduleDocs (fingerprint := "2143596071862678969")
 :::
 
 :::readable Fir.Core.WrapFlags (fingerprint := "2440796118969772124")
@@ -96,20 +96,22 @@ op. Validation rejects an op that carries either, and the rules ignore
 them. A flag is off unless the op sets it.
 :::
 
-:::readable Fir.Core.FBin Fir.Core.FUnary (fingerprint := "4350115894855268594")
+:::readable Fir.Core.FBin Fir.Core.FUnary (fingerprint := "2436778371239232809")
 *Float operations.* The float arithmetic has six ops of two operands and
-three of one (ADR-2026-11-09-1549). Each that rounds rounds to nearest,
-ties to even.
+three of one (ADR-2026-11-09-1549). Each that rounds carries its
+{ref "The-fir-specification--Abstract-syntax--Rounding-modes"}[rounding mode]
+$`r`; validation accepts only $`\mathsf{rne}`, to nearest with ties to
+even, and the rules read every mode as it.
 
 ```grammar Fir.Core.FBin
 \mathit{fbin}
-fadd,fsub,fmul,fdiv   \mathsf{fadd} \mid \mathsf{fsub} \mid \mathsf{fmul} \mid \mathsf{fdiv}
+fadd,fsub,fmul,fdiv   \mathsf{fadd}~r \mid \mathsf{fsub}~r \mid \mathsf{fmul}~r \mid \mathsf{fdiv}~r
 frem,fmod             \mathsf{frem} \mid \mathsf{fmod}
 ```
 
 ```grammar Fir.Core.FUnary
 \mathit{funary}
-fneg,fabs,sqrt   \mathsf{fneg} \mid \mathsf{fabs} \mid \mathsf{sqrt}
+fneg,fabs,sqrt   \mathsf{fneg} \mid \mathsf{fabs} \mid \mathsf{sqrt}~r
 ```
 
 * $`\mathsf{fadd}` adds, $`\mathsf{fsub}` subtracts the second operand
@@ -122,10 +124,11 @@ fneg,fabs,sqrt   \mathsf{fneg} \mid \mathsf{fabs} \mid \mathsf{sqrt}
   quotient truncated. LLVM's `frem` is $`\mathsf{fmod}`, not
   $`\mathsf{frem}` (#310).
 * $`\mathsf{fneg}` negates and $`\mathsf{fabs}` gives the absolute value;
-  neither rounds. $`\mathsf{sqrt}` gives the square root, rounded.
+  neither rounds. $`\mathsf{sqrt}` gives the square root, rounded with its
+  mode.
 :::
 
-:::readable Fir.Core.Op (pin := Fir.Core.Op.Valid) (fingerprint := "5376276084848826659")
+:::readable Fir.Core.Op (pin := Fir.Core.Op.Valid) (fingerprint := "11862967255921989512")
 *Ops.* An op of the core dialect carries the width $`N` of the integers it
 works on, or the format $`\mathsf{float}\langle e,m \rangle` of the floats
 it works on, so the types of its operands and results follow from it.
@@ -224,7 +227,7 @@ $`\mathsf{float}\langle e,m \rangle`, by Lean's float model
 -       \dots
 fbin    \mathit{fbin}_{e,m}~\mathit{fmf}
 funary  \mathit{funary}_{e,m}~\mathit{fmf}
-fma     \mathsf{fma}_{e,m}~\mathit{fmf}
+fma     \mathsf{fma}_{e,m}~\mathit{fmf}~r
 ```
 
 * $`\mathit{fbin}_{e,m}` (`fbin` in the Lean) takes two values and
@@ -232,6 +235,10 @@ fma     \mathsf{fma}_{e,m}~\mathit{fmf}
   result, rounded to nearest even where the op rounds.
 * $`\mathsf{fma}_{e,m}` gives $`a \times b + c` of three values, rounded
   once.
+* An op that rounds carries a rounding mode $`r`, in $`\mathit{fbin}` and
+  $`\mathit{funary}` with its operation. Validation accepts only
+  $`\mathsf{rne}`, and the model rounds to nearest even whatever the mode,
+  since no valid module carries another.
 * When the model's result is a NaN, the op gives any NaN of the format:
   its sign and payload are a choice. None is ever UB, and a poison operand
   gives poison.
@@ -274,13 +281,14 @@ toBits,ofBits \mathsf{bitcast}_{e,m}^{\to \mathsf{i}} \mid \mathsf{bitcast}_{e,m
 ```grammar Fir.Core.Op
 \mathit{op}
 -             \dots
-sitofp,uitofp \mathsf{sitofp}_{N,e,m} \mid \mathsf{uitofp}_{N,e,m}
+sitofp,uitofp \mathsf{sitofp}_{N,e,m}~r \mid \mathsf{uitofp}_{N,e,m}~r
 ```
 
 * $`\mathsf{sitofp}_{N,e,m}` reads an $`\mathsf{i}N` as a signed integer,
   and $`\mathsf{uitofp}_{N,e,m}` as an unsigned one, and each gives that
   integer as a value of $`\mathsf{float}\langle e,m \rangle`, rounded to
-  nearest, ties to even, in Lean's float model. An integer too large for
+  nearest, ties to even, in Lean's float model. Each carries a rounding
+  mode $`r`, of which validation accepts only $`\mathsf{rne}`. An integer too large for
   the format gives an infinity of its sign, and $`0` gives $`+0`. Neither
   is ever UB or gives a NaN, and a poison operand gives poison.
 
@@ -290,7 +298,7 @@ sitofp,uitofp \mathsf{sitofp}_{N,e,m} \mid \mathsf{uitofp}_{N,e,m}
 ```grammar Fir.Core.Op
 \mathit{op}
 -             \dots
-fpext,fptrunc \mathsf{fpext}_{e,m,e',m'} \mid \mathsf{fptrunc}_{e,m,e',m'}
+fpext,fptrunc \mathsf{fpext}_{e,m,e',m'} \mid \mathsf{fptrunc}_{e,m,e',m'}~r
 ```
 
 * $`\mathsf{fpext}_{e,m,e',m'}` gives a value of
@@ -299,7 +307,8 @@ fpext,fptrunc \mathsf{fpext}_{e,m,e',m'} \mid \mathsf{fptrunc}_{e,m,e',m'}
   of it, with $`e \le e'` and $`m \le m'`, so it never rounds; and
   $`\mathsf{fptrunc}_{e,m,e',m'}` rounds it, to nearest, ties to even,
   into a format that cannot hold every value of it, with $`e' < e` or
-  $`m' < m`. The
+  $`m' < m`. $`\mathsf{fptrunc}` carries a rounding mode $`r`, of which
+  validation accepts only $`\mathsf{rne}`. The
   {ref "The-fir-specification--Validation--Core-rules"}[core rules] give
   every ordered pair of two formats to exactly one of the two (the human's
   ruling of 2026-11-12 on #354). A number too large for the target gives

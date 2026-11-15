@@ -14,10 +14,10 @@ fails when the Lean changes under it.
 
 #doc (Manual) "Float arithmetic in text: readable blocks" =>
 
-:::moduleDocs (fingerprint := "9690321193762906135")
+:::moduleDocs (fingerprint := "6009710563051250219")
 :::
 
-:::readable Fir.Core.FBin.name Fir.Core.FUnary.name (fingerprint := "906894083440061025")
+:::readable Fir.Core.FBin.name Fir.Core.FUnary.name (fingerprint := "14437250899229671676")
 *Definition: the names of the float ops.* The ops of two operands are
 written $`\mathtt{fadd}`, $`\mathtt{fsub}`, $`\mathtt{fmul}`,
 $`\mathtt{fdiv}`, $`\mathtt{frem}` and $`\mathtt{fmod}`, and those of
@@ -40,19 +40,22 @@ op has one spelling. Attributes are _free of flags_ when they do not start
 with one of the five words.
 :::
 
-:::readable Fir.Core.roundAttr Fir.Core.FBin.attrs Fir.Core.FUnary.attrs Fir.Core.isRoundAttrs Fir.Core.FBin.attrsOk Fir.Core.FUnary.attrsOk (fingerprint := "1776735331889261039")
+:::readable Fir.Core.FBin.attrs Fir.Core.FUnary.attrs Fir.Core.FBin.read Fir.Core.FUnary.read (fingerprint := "5992479220069585484")
 *Definition: the rounding attribute.* An op that rounds carries one
-attribute, $`\mathtt{round(rne)}`, the word $`\mathtt{round}` applied to
-the word $`\mathtt{rne}` (ADR-2026-11-11-1801). $`\mathsf{fadd}`,
+attribute, its mode $`\mathtt{round}(r)`
+({ref "The-fir-specification--Text-format--The-rounding-mode-in-text"}[the rounding mode in text];
+ADR-2026-11-11-1801). $`\mathsf{fadd}`,
 $`\mathsf{fsub}`, $`\mathsf{fmul}`, $`\mathsf{fdiv}`, $`\mathsf{sqrt}` and
 $`\mathsf{fma}` round; $`\mathsf{frem}`, $`\mathsf{fmod}`,
 $`\mathsf{fneg}` and $`\mathsf{fabs}` do not, since their result is
-exact, and carry no attribute. A list of attributes reads as rounding only
-when it is exactly $`[\mathtt{round(rne)}]`, and as those of an op that
-does not round only when it is empty.
+exact, and carry no attribute. Reading an op of two operands or of one by
+its name takes the attributes after the flags: for an op that rounds they
+must be exactly $`[\mathtt{round}(r)]`, with $`r` any of the five modes,
+which the op then carries; for one that does not round they must be
+empty. Any mode reads, and validation accepts only $`\mathtt{rne}`.
 :::
 
-:::readable Fir.Core.floatOpFormat Fir.Core.decodeFBin Fir.Core.decodeFUnary Fir.Core.decodeFma (fingerprint := "17911768396943427557")
+:::readable Fir.Core.floatOpFormat Fir.Core.decodeFBin Fir.Core.decodeFUnary Fir.Core.decodeFma (fingerprint := "4871091213376226508")
 *Definition: reading a float op back.* The format of a float op of $`k`
 operands is $`\mathsf{float}\langle e,m \rangle` when its operand types
 are $`k` copies of that type and its one result type is that type, and it
@@ -62,9 +65,10 @@ of its number of operands: two for $`\mathsf{fadd}`, $`\mathsf{fsub}`,
 $`\mathsf{fmul}`, $`\mathsf{fdiv}`, $`\mathsf{frem}` and
 $`\mathsf{fmod}`, one for $`\mathsf{fneg}`, $`\mathsf{fabs}` and
 $`\mathsf{sqrt}`, and three for $`\mathsf{fma}`. So
-$`\mathtt{fadd~\%a, \%b}` with no attribute, $`\mathtt{round(rtz)}`,
+$`\mathtt{fadd~\%a, \%b}` with no attribute, $`\mathtt{round(up)}`,
 $`\mathtt{frem~round(rne)~\%a, \%b}`, and an $`\mathsf{f32}` added to an
-$`\mathsf{f64}` do not decode. The flags are read first, and the
+$`\mathsf{f64}` do not decode, while $`\mathtt{fadd~round(rtz)~\%a, \%b}`
+decodes, with the mode $`\mathtt{rtz}`, for validation to reject. The flags are read first, and the
 attributes after them must be the op's own, so
 $`\mathtt{fadd~round(rne)~nnan}` does not decode either.
 :::
@@ -74,7 +78,7 @@ $`\mathtt{fadd~round(rne)~nnan}` does not decode either.
 back before the attributes after them, are those attributes. And the
 words of flags $`\phi`, before attributes free of flags, read back as
 $`\phi` and those attributes: none of the op's own attributes, a
-predicate or $`\mathtt{round(rne)}`, is a flag's word.
+predicate or $`\mathtt{round}(r)`, is a flag's word.
 :::
 
 :::readable Fir.Core.decodeBitcast (pin := Fir.Core.floatWidth) (fingerprint := "16509005206996759472")
@@ -89,25 +93,26 @@ two floats or two integers, or with $`\mathtt{round(rne)}` does not
 decode.
 :::
 
-:::readable Fir.Core.decodeIntToFloat (pin := Fir.Core.isRoundAttrs) (fingerprint := "621521718397619832")
+:::readable Fir.Core.decodeIntToFloat (pin := Fir.Core.decodeRound) (fingerprint := "13383955105414411804")
 *Definition: reading a conversion from an integer back.*
 $`\mathtt{sitofp}` and $`\mathtt{uitofp}` decode from the attributes
-$`[\mathtt{round(rne)}]`, one operand type $`\mathsf{i}N` and one result
-type $`\mathsf{float}\langle e,m \rangle`, for any $`N`, $`e` and $`m`, as
-$`\mathsf{sitofp}_{N,e,m}` and $`\mathsf{uitofp}_{N,e,m}`. So a
-conversion with no attribute or with $`\mathtt{round(rtz)}`, from a float
-or to an integer, does not decode.
+$`[\mathtt{round}(r)]`, one operand type $`\mathsf{i}N` and one result
+type $`\mathsf{float}\langle e,m \rangle`, for any mode $`r`, $`N`, $`e`
+and $`m`, as $`\mathsf{sitofp}_{N,e,m}~r` and $`\mathsf{uitofp}_{N,e,m}~r`.
+So a conversion with no attribute or with a word that is no mode, from a
+float or to an integer, does not decode; one with $`\mathtt{round(rtz)}`
+decodes, for validation to reject.
 :::
 
-:::readable Fir.Core.decodeFpext Fir.Core.decodeFptrunc (pin := Fir.Core.isRoundAttrs) (fingerprint := "3590057646203551452")
+:::readable Fir.Core.decodeFpext Fir.Core.decodeFptrunc (pin := Fir.Core.decodeRound) (fingerprint := "12046846403340649519")
 *Definition: reading a conversion between formats back.*
 $`\mathtt{fpext}` decodes from no attributes, and $`\mathtt{fptrunc}`
-from the attributes $`[\mathtt{round(rne)}]`, each with one operand type
-$`\mathsf{float}\langle e,m \rangle` and one result type
+from the attributes $`[\mathtt{round}(r)]`, for any mode $`r`, each with
+one operand type $`\mathsf{float}\langle e,m \rangle` and one result type
 $`\mathsf{float}\langle e',m' \rangle`, for any two formats, as
-$`\mathsf{fpext}_{e,m,e',m'}` and $`\mathsf{fptrunc}_{e,m,e',m'}`. So
+$`\mathsf{fpext}_{e,m,e',m'}` and $`\mathsf{fptrunc}_{e,m,e',m'}~r`. So
 $`\mathtt{fpext}` with $`\mathtt{round(rne)}`, $`\mathtt{fptrunc}`
-without it, or either from or to an integer does not decode. Which pairs
+without a mode, or either from or to an integer does not decode. Which pairs
 of formats each takes is a
 {ref "The-fir-specification--Validation--Core-rules"}[core rule] of
 validation.
@@ -124,10 +129,11 @@ other attribute, from an integer or to a float, does not decode: it
 truncates, and has no rounding mode.
 :::
 
-:::readable Fir.Core.eq_of_isRoundAttrs Fir.Core.FBin.attrs_of_attrsOk Fir.Core.FUnary.attrs_of_attrsOk Fir.Core.floatOpFormat_eq Fir.Core.floatOpFormat_replicate (fingerprint := "11995233360236892250")
-*Theorems: what the round trip needs.* Attributes that read as rounding
-are $`[\mathtt{round(rne)}]`, and attributes that read as those of an op
-of two operands or of one are its own. A format is found only at $`k` operands and one
+:::readable Fir.Core.FBin.read_eq Fir.Core.FBin.read_name_attrs Fir.Core.FUnary.read_eq Fir.Core.FUnary.read_name_attrs Fir.Core.floatOpFormat_eq Fir.Core.floatOpFormat_replicate (fingerprint := "5048987812252335490")
+*Theorems: what the round trip needs.* An op of two operands or of one
+read from a name and attributes has that name and those attributes, and
+each such op reads back from its own name and attributes, whatever its
+mode. A format is found only at $`k` operands and one
 result of it, and it is found there. So each float op reads back from how
 it is written, and from nothing else.
 :::
