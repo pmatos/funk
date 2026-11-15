@@ -181,6 +181,18 @@ def storeUB (n : Nat) (S : Mems) (w : Nat) (v : PoisonOr (BitVec w)) (a : Option
 /-- info: 'Fir.Core.store_memReturnsOnDefined' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.store_memReturnsOnDefined
 
+/-- info: 'Fir.Core.store_writesNot' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in #print axioms Fir.Core.store_writesNot
+
+/-- info: 'Fir.Core.store_allocatesNot' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in #print axioms Fir.Core.store_allocatesNot
+
+/-- info: 'Fir.Core.store_finitelyMany' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in #print axioms Fir.Core.store_finitelyMany
+
+/-- info: 'Fir.Core.store_makesNoPoison' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in #print axioms Fir.Core.store_makesNoPoison
+
 /-- info: 'Fir.Core.Unlawful.storeNoWrite_unlawful' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.Unlawful.storeNoWrite_unlawful
 

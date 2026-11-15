@@ -106,8 +106,8 @@ pub fn dialect() -> Dialect {
         .op(float_convert::Convert("fptrunc"))
         .op(pointer::PtrAdd)
         .op(alloca::Alloca)
-        .op(load::Load)
-        .op(store::Store)
+        .op(load::LOAD)
+        .op(store::STORE)
         .op(float_to_int::FloatToInt("fptosi"))
         .op(float_to_int::FloatToInt("fptoui"));
     float_arith::FloatArith::all().fold(core, Dialect::op)

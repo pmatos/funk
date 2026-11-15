@@ -411,10 +411,10 @@ that passes no value.
 
 | op | `i1` | `i7` | `i8` | `i16` | `i32` | `i33` | `i64` | `i128` |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `ptradd` | 1 | 1 | 10 | 2 | 2 | 1 | 25 | 1 |
-| `alloca` | 4 | 4 | 30 | 11 | 18 | 5 | 6 | 7 |
-| `load` | 3 | 3 | 18 | 5 | 25 | 3 | 6 | 3 |
-| `store` | 4 | 2 | 10 | 3 | 19 | 2 | 3 | 2 |
+| `ptradd` | 1 | 1 | 14 | 2 | 2 | 1 | 25 | 1 |
+| `alloca` | 4 | 4 | 30 | 17 | 18 | 5 | 6 | 7 |
+| `load` | 3 | 3 | 18 | 7 | 29 | 3 | 6 | 3 |
+| `store` | 4 | 2 | 12 | 3 | 23 | 2 | 3 | 2 |
 
 ### Passed and returned values (interpreter-only tests)
 
@@ -425,12 +425,12 @@ that passes no value.
 | `cond_br` | a successor passes nothing | 438 |  |  |  |  |  |  |  |  |  |  |  |  |  |
 | `cond_br` | a successor passes values |  | 13 | 138 | 16 | 14 | 14 | 136 | 13 | 11 | 5 | 5 | 7 | 5 | 5 |
 | `ret` | returns no value | 26 |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| `ret` | returns one value |  | 2570 | 1583 | 828 | 820 | 933 | 1609 | 820 | 1081 | 825 | 777 | 689 | 588 | 530 |
+| `ret` | returns one value |  | 2570 | 1583 | 828 | 822 | 937 | 1609 | 820 | 1081 | 825 | 777 | 689 | 588 | 530 |
 | `ret` | returns several values |  | 56 | 189 | 43 | 29 | 27 | 189 | 51 | 50 | 5 | 6 | 5 | 7 | 5 |
 | `unreachable` | ends a block | 16 |  |  |  |  |  |  |  |  |  |  |  |  |  |
 | `call` | gives no result | 14 |  |  |  |  |  |  |  |  |  |  |  |  |  |
 | `call` | gives one result |  | 74 | 92 | 28 | 23 | 24 | 92 | 23 | 19 | 2 | 2 | 2 | 2 | 2 |
 | `call` | gives several results |  | 41 | 92 | 17 | 11 | 11 | 92 | 25 | 27 | 2 | 3 | 2 | 3 | 2 |
 | `func` | returns no value | 23 |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| `func` | returns one value |  | 2569 | 1583 | 829 | 820 | 933 | 1609 | 820 | 1081 | 823 | 775 | 687 | 586 | 528 |
+| `func` | returns one value |  | 2569 | 1583 | 829 | 822 | 937 | 1609 | 820 | 1081 | 823 | 775 | 687 | 586 | 528 |
 | `func` | returns several values |  | 56 | 189 | 43 | 29 | 27 | 189 | 51 | 48 | 5 | 6 | 5 | 7 | 5 |

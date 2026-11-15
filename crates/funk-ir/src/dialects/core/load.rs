@@ -21,11 +21,10 @@
 //! [`MemLayout::LIMIT`]: crate::ir::MemLayout::LIMIT
 //! [`ORDERINGS`]: super::ORDERINGS
 
-use super::access::{access_attrs, check_access};
-use super::type_list;
+use super::access::Access;
 use super::types::{CoreType, core_type};
 use crate::effects::{Effects, MemSet};
-use crate::registry::{OpContext, OpShape, OpSpec, OpTypes};
+use crate::registry::OpTypes;
 
 /// The memory of the pointer `load` loads through, when it has one pointer
 /// operand and one integer result.
@@ -39,119 +38,52 @@ fn memory(op: &OpTypes<'_>) -> Option<u32> {
     }
 }
 
-/// `%v: i32 = load nonatomic align(4) %p`.
-pub(super) struct Load;
-
-impl OpSpec for Load {
-    fn name(&self) -> &str {
-        "load"
-    }
-
-    fn decode(&self, op: &OpTypes<'_>) -> Result<OpShape, String> {
-        if memory(op).is_none() {
-            return Err(format!(
-                "load takes a pointer and defines an integer, not {} -> {}",
-                type_list(op.operands),
-                type_list(op.results)
-            ));
-        }
-        if access_attrs(op.attrs).is_none() {
-            return Err("load takes an ordering, then align(A) when given".into());
-        }
-        Ok(OpShape::default())
-    }
-
-    fn check(&self, _cx: &OpContext<'_>, op: &OpTypes<'_>) -> Result<(), String> {
-        match access_attrs(op.attrs) {
-            Some((ordering, align)) => check_access("load", ordering, align),
-            None => Ok(()),
-        }
-    }
-
-    /// Reads its memory, may be UB and may give poison (`Core.Op.effects`).
-    fn effects(&self, op: &OpTypes<'_>) -> Effects {
-        Effects {
-            reads: memory(op).map_or(MemSet::NONE, |n| MemSet::These(vec![n.to_string()])),
-            may_ub: true,
-            may_poison: true,
-            ..Effects::PURE
-        }
+/// Reads its memory, may be UB and may give poison (`Core.Op.effects`).
+fn effects(reads: MemSet) -> Effects {
+    Effects {
+        reads,
+        may_ub: true,
+        may_poison: true,
+        ..Effects::PURE
     }
 }
+
+/// `%v: i32 = load nonatomic align(4) %p`.
+pub(super) const LOAD: Access = Access {
+    name: "load",
+    shape: "a pointer and defines an integer",
+    memory,
+    effects,
+};
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::dialects::core::{MAX_MEMORY, ORDERINGS, float_type, int_type, ptr_type};
-    use crate::{Attr, SymbolTable, Type};
-
-    fn types<'a>(attrs: &'a [Attr], operands: &'a [Type], results: &'a [Type]) -> OpTypes<'a> {
-        OpTypes {
-            attrs,
-            operands,
-            results,
-        }
-    }
-
-    fn word(w: &str) -> Attr {
-        Attr::word(w)
-    }
-
-    fn align(a: i128) -> Attr {
-        Attr::App("align".into(), vec![Attr::int(a)])
-    }
-
-    fn check(attrs: &[Attr]) -> Result<(), String> {
-        let symbols = SymbolTable::of(&[]);
-        let cx = OpContext {
-            symbols: &symbols,
-            func: "f",
-            results: &[],
-        };
-        let (operands, results) = ([ptr_type(0)], [int_type(32)]);
-        let op = types(attrs, &operands, &results);
-        Load.decode(&op)?;
-        Load.check(&cx, &op)
-    }
+    use crate::Attr;
+    use crate::dialects::core::access::tests::{align, check, types};
+    use crate::dialects::core::{MAX_MEMORY, float_type, int_type, ptr_type};
+    use crate::registry::{OpShape, OpSpec};
 
     #[test]
-    fn every_ordering_and_memory_decodes() {
-        for (o, n, w) in [
-            ("nonatomic", 0, 32),
-            ("seq_cst", 1, 1),
-            ("acq_rel", MAX_MEMORY, 128),
-        ] {
-            for attrs in [vec![word(o)], vec![word(o), align(4)]] {
+    fn every_width_and_memory_decodes() {
+        for (n, w) in [(0, 32), (1, 1), (MAX_MEMORY, 128)] {
+            for attrs in [
+                vec![Attr::word("nonatomic")],
+                vec![Attr::word("acq_rel"), align(4)],
+            ] {
                 let (operands, results) = ([ptr_type(n)], [int_type(w)]);
                 let op = types(&attrs, &operands, &results);
-                assert_eq!(Load.decode(&op), Ok(OpShape::default()), "{attrs:?}");
+                assert_eq!(LOAD.decode(&op), Ok(OpShape::default()), "{attrs:?}");
             }
         }
-        assert_eq!(ORDERINGS.len(), 7);
     }
 
     #[test]
     fn other_shapes_do_not_decode() {
         let (p, i32, f32) = (ptr_type(0), int_type(32), float_type(8, 23));
-        let ok = [word("nonatomic")];
+        let ok = [Attr::word("nonatomic")];
         for (attrs, operands, results) in [
             (vec![], vec![p.clone()], vec![i32.clone()]),
-            (vec![word("relaxed")], vec![p.clone()], vec![i32.clone()]),
-            (
-                vec![word("nonatomic"), align(-4)],
-                vec![p.clone()],
-                vec![i32.clone()],
-            ),
-            (
-                vec![word("nonatomic"), Attr::int(4)],
-                vec![p.clone()],
-                vec![i32.clone()],
-            ),
-            (
-                vec![align(4), word("nonatomic")],
-                vec![p.clone()],
-                vec![i32.clone()],
-            ),
             (ok.to_vec(), vec![p.clone()], vec![p.clone()]),
             (ok.to_vec(), vec![p.clone()], vec![f32.clone()]),
             (ok.to_vec(), vec![i32.clone()], vec![i32.clone()]),
@@ -161,37 +93,44 @@ mod tests {
         ] {
             let op = types(&attrs, &operands, &results);
             assert!(
-                Load.decode(&op).is_err(),
+                LOAD.decode(&op).is_err(),
                 "{attrs:?} {operands:?} {results:?}"
             );
         }
     }
 
     #[test]
-    fn validation_accepts_only_nonatomic_and_valid_alignments() {
-        for attrs in [
-            vec![word("nonatomic")],
-            vec![word("nonatomic"), align(1)],
-            vec![word("nonatomic"), align(1 << 23)],
-        ] {
-            assert_eq!(check(&attrs), Ok(()), "{attrs:?}");
-        }
-        for o in &ORDERINGS[1..] {
-            let e = check(&[word(o)]).unwrap_err();
-            assert!(e.starts_with("load is nonatomic in M1"), "{e}");
-        }
-        for a in [0, 3, 12, 1 << 24, (1 << 64) + 2] {
-            assert!(check(&[word("nonatomic"), align(a)]).is_err(), "{a}");
-        }
+    fn validation_names_the_load() {
+        let (operands, results) = ([ptr_type(0)], [int_type(32)]);
+        assert_eq!(
+            check(
+                &LOAD,
+                &[Attr::word("nonatomic"), align(4)],
+                &operands,
+                &results
+            ),
+            Ok(())
+        );
+        let e = check(&LOAD, &[Attr::word("acquire")], &operands, &results).unwrap_err();
+        assert!(e.starts_with("load is nonatomic in M1"), "{e}");
+        assert!(
+            check(
+                &LOAD,
+                &[Attr::word("nonatomic"), align(3)],
+                &operands,
+                &results
+            )
+            .is_err()
+        );
     }
 
     #[test]
     fn load_reads_its_memory_and_may_be_ub_or_poison() {
         for n in [0, 1, 7] {
-            let (attrs, operands, results) = ([word("nonatomic")], [ptr_type(n)], [int_type(8)]);
-            let effects = Load.effects(&types(&attrs, &operands, &results));
+            let (attrs, operands, results) =
+                ([Attr::word("nonatomic")], [ptr_type(n)], [int_type(8)]);
             assert_eq!(
-                effects,
+                LOAD.effects(&types(&attrs, &operands, &results)),
                 Effects {
                     reads: MemSet::These(vec![n.to_string()]),
                     may_ub: true,

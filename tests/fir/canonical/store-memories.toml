@@ -3,7 +3,10 @@
 # units, least significant first, and is aligned to 2, so a store at an odd
 # offset is misaligned (UB, the human's ruling of 2026-11-14 on #388), and
 # one that ends past the allocation is out of bounds. A store to one memory
-# leaves the other as it was. Interpreter-only until stage 5 of #231.
+# leaves the other as it was. An i8 takes one unit, with zeros in its high
+# eight bits. A promised alignment counts units: align(1) allows any
+# offset, and align(4) at offset 2 of a block aligned to 4 is misaligned.
+# Interpreter-only until stage 5 of #231.
 tests = [
   { func = "@two_units", args = ["67305985"], expect = ["67305985"] },
   { func = "@low_unit", args = ["67305985"], expect = ["513"] },
@@ -12,4 +15,10 @@ tests = [
   { func = "@at", args = ["1", "-7"], expect = "ub" },
   { func = "@at", args = ["4", "-7"], expect = "ub" },
   { func = "@in_each", args = ["1", "2"], expect = ["1", "2"] },
+  { func = "@byte_in_unit", args = ["-1"], expect = ["255"] },
+  { func = "@byte_in_unit", args = ["5"], expect = ["5"] },
+  { func = "@unit_aligned", args = ["1", "-7"], expect = ["-7"] },
+  { func = "@unit_aligned", args = ["3", "-7"], expect = "ub" },
+  { func = "@four_aligned", args = ["0", "-7"], expect = ["-7"] },
+  { func = "@four_aligned", args = ["2", "-7"], expect = "ub" },
 ]
