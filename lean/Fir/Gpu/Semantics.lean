@@ -97,14 +97,12 @@ variable [WorkItem]
 outcome. -/
 theorem denote_eq (op : Op) (args : HVector toType (Fir.sig (d := GpuDialect) op)) (e) :
     DialectDenote.denote (m := SetM) (d := GpuDialect) op args e ↔ e = .ok op.results :=
-  ⟨fun h => h, fun h => h⟩
+  Iff.rfl
 
 /-- The results of an op of `gpu` hold no poison. -/
 theorem results_noPoison (op : Op) : ¬ op.results.Any TyPoison.IsPoison := by
   cases op
-  rintro (h | h)
-  · cases h
-  · cases h
+  rintro (h | h) <;> cases h
 
 /-- The results of an op of `gpu` refine themselves. -/
 theorem results_refl (op : Op) :
