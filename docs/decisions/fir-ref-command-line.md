@@ -123,19 +123,20 @@ device modules hold a kernel of one name.
 
 ### Arguments and fuel
 
-There is one argument per parameter, spelled as a `const` of the parameter's
-type: `true` or `false` at `i1`, and signed decimal at every other width.
+There is one argument per parameter. At `iN` and float types it may be spelled
+as a `const` of the parameter's type: `true` or `false` at `i1`, and signed
+decimal at every other width.
 Decimals have no leading zeros, no `+` and no `-0`, and are in the type's range.
 A float of `float<e,m>` is spelled as its constants are, as `1.0` or
 `0x7fc00000`, and a float result is written the same way (ADR-2026-11-11-1438).
 `fir-ref` reads each argument as the spec's lexer and `Core.Op.decode` read it
 (see [lexing and reading](fir-ref-fast-paths.md#lexing-and-reading)).
 
-`poison`, spelled exactly so, is an argument of any `iN` and of any float type
-(`FirRef.readArg`). It is no argument of `ptr`: a run starts with no
-allocation. It is not a choice either, since `freeze` chooses a value. The
-human ruled on 2026-11-03 that `fir-ref run` takes `poison` (#123); the
-harness's use of it is in
+`poison`, spelled exactly so, is an argument of any `iN`, of any float type and
+of any `ptr<N>` (`FirRef.readArg`). It is the only argument of `ptr<N>`: a run
+starts with no allocation. `poison` is not a choice, since `freeze` chooses a
+value. The human ruled on 2026-11-03 that `fir-ref run` takes `poison` (#123);
+the harness's use of it is in
 [testing-and-harness.md](testing-and-harness.md#poison-arguments).
 
 `--fuel N` gives N steps, one for each op run, terminators included. N is
