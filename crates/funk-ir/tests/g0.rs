@@ -198,16 +198,22 @@ fn the_check_covers_the_ir_the_parser_the_printer_and_the_verifier() {
     assert!(is_core_word(&core_words(), "i32") && !is_core_word(&core_words(), "i"));
 }
 
-/// The strings of the code of `src` that are words of the core dialect,
-/// each written alone.
-fn core_words_written(words: &[String], src: &str) -> Vec<String> {
+/// The strings of the code of `src`, each written alone, that `is_word`
+/// picks.
+fn strings_written(src: &str, is_word: impl Fn(&str) -> bool) -> Vec<String> {
     code(&tokens(src))
         .into_iter()
         .filter_map(|t| match t {
-            Tok::Str(s) if is_core_word(words, &s) => Some(s),
+            Tok::Str(s) if is_word(&s) => Some(s),
             _ => None,
         })
         .collect()
+}
+
+/// The strings of the code of `src` that are words of the core dialect,
+/// each written alone.
+fn core_words_written(words: &[String], src: &str) -> Vec<String> {
+    strings_written(src, |s| is_core_word(words, s))
 }
 
 #[test]
@@ -239,13 +245,7 @@ fn gpu_words() -> Vec<String> {
 
 /// The strings of the code of `src` that are words of the gpu dialect.
 fn gpu_words_written(words: &[String], src: &str) -> Vec<String> {
-    code(&tokens(src))
-        .into_iter()
-        .filter_map(|t| match t {
-            Tok::Str(s) if words.contains(&s) => Some(s),
-            _ => None,
-        })
-        .collect()
+    strings_written(src, |s| words.iter().any(|w| w == s))
 }
 
 #[test]

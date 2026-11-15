@@ -130,7 +130,6 @@ mod tests {
 
     #[test]
     fn the_dialect_registers_beside_the_core() {
-        let mut r = crate::Registry::core();
-        r.register(dialect()).expect("gpu registers");
+        crate::dialects::in_tree();
     }
 }

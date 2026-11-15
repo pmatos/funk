@@ -3,14 +3,19 @@
 
 mod common;
 
+use std::sync::LazyLock;
+
 use common::fir_files;
 use funk_ir::dialects::in_tree;
-use funk_ir::{Module, parse, print, verify};
+use funk_ir::{Module, Registry, parse, print, verify};
+
+/// The core and `gpu`, registered once for every test of this file.
+static IN_TREE: LazyLock<Registry> = LazyLock::new(in_tree);
 
 /// Parses with the core and `gpu`, or fails the test. `common::parse_ok`
 /// reads the core alone, for the tests of the core's own texts.
 fn parse_ok(text: &str) -> Module {
-    parse(text, &in_tree()).unwrap_or_else(|e| panic!("{e}\n{text}"))
+    parse(text, &IN_TREE).unwrap_or_else(|e| panic!("{e}\n{text}"))
 }
 
 /// The canonical texts: those of `canonical/`, and the modules ported from
@@ -33,9 +38,8 @@ fn canonical_texts_print_back_byte_for_byte() {
 
 #[test]
 fn canonical_texts_are_valid() {
-    let reg = in_tree();
     for (name, text) in canonical_texts() {
-        let ds = verify(&parse_ok(&text), &reg);
+        let ds = verify(&parse_ok(&text), &IN_TREE);
         assert!(ds.is_empty(), "{name}: {ds:#?}");
     }
 }
