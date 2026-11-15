@@ -90,6 +90,12 @@ failing vector also runs on `fir-ref`. UB or a path out of fuel there makes the
 test invalid. The report names the first vector that fails, and past the budget
 `fir-ref`'s outcome on it.
 
+A pointer has no stand-in: its values are pointers, not bits, and which address
+native code takes in place of a poison pointer is a rule of the harness that
+waits on the human. So native code does not run on a poison pointer argument,
+a differential test with one fails, and such a test is interpreter-only
+([x86-64-backend-executable.md](x86-64-backend-executable.md#running-one-function)).
+
 This is sound. A run with a value in place of poison refines the run with
 poison (`Core.args_isRefinedBy`, calls and recursion included), and correct
 native code refines `fir-ref` on defined values, so by transitivity

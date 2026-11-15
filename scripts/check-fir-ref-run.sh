@@ -202,8 +202,9 @@ for arg in "$long" "1 $long"; do
     LEAN_STACK_SIZE_KB=256 runs $c/add.fir 2 "fir-ref: $arg is not a value of type i64" \
         @double "$arg" || status=1
 done
-# poison is an argument of any iN (#123) and of ptr, the only one of ptr
-# since a run starts with no allocation, but not a choice.
+# poison is an argument of any iN (#123), of any float type and of any
+# ptr<N>, where it is the only one since a run starts with no allocation.
+# It is not a choice.
 runs $c/add.fir 0 "${ret}[\"poison\"]$none" @double poison || status=1
 runs $c/add.fir 0 "${ret}[\"poison\"]$none" @add3 1 poison 3 || status=1
 runs $c/add.fir 2 'fir-ref: Poison is not a value of type i64' @double Poison || status=1
