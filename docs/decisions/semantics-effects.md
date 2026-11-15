@@ -27,8 +27,9 @@ or every memory, as an external call needs. The core dialect names each
 memory of a module by its number, as `ptr<N>` names memory `N`
 (`Core.Mem` is `Nat`) (ADR-2026-11-09-1541, ADR-2026-11-09-1542). The
 first ops that use them are `alloca`, which allocates in the memory of its
-result (ADR-2026-11-14-0915), and `load`, which reads the memory of its
-pointer (ADR-2026-11-14-2316).
+result (ADR-2026-11-14-0915), `load`, which reads the memory of its
+pointer, and `store`, which writes it and reads no memory
+(ADR-2026-11-14-2316).
 
 An op may produce poison when, on some operands with no poison, a result may
 be poison: LLVM's `canCreatePoison`. That is not the poison class, which says
@@ -168,19 +169,21 @@ monad with choice, UB and the memory effect, at the layout and naming of a run
 (`Core.Op.memDenote?`, `Core.Op.memExit?`, in `lean/Fir/Core/MemRules.lean`),
 and its semantics with memory runs them op by op in the state layer
 (`Core.memDenoteAt`), not by lifting its semantics in the set monad. Each op
-that touches no memory, every one but `alloca` and `load`, has its rule as
+that touches no memory, every one but `alloca`, `load` and `store`, has
+its rule as
 its rule with memory. A monad morphism that keeps choice and UB
 (`MonadMorphism.KeepsChoiceUB`) maps the core's semantics in one monad to its
 semantics in another, op by op (`Core.denoteIn_mapsDenote`), and with memory
 when it also keeps allocation (`Core.memDenoteIn_mapsDenote`); lifting keeps
-choice and UB, so every core op but `alloca` and `load` is tied
+choice and UB, so every core op but `alloca`, `load` and `store` is tied
 (`Core.Op.liftsSetM`), and each of its obligations with memory, effects,
-totality, monotonicity and poison, follows from that op's own tie. `alloca`
-and `load` meet each by their own rules (`lean/Fir/Core/AllocaLaws.lean`,
-`LoadLaws.lean`), and `Core.Op.memCases` splits an obligation of every core
-op into the three. `Core.memDenoteIn_mapsDenote` asks the morphism to keep
-loads as well, which `MonadMorphism.state_load` gives for the state
-layer.
+totality, monotonicity and poison, follows from that op's own tie.
+`alloca`, `load` and `store` meet each by their own rules
+(`lean/Fir/Core/AllocaLaws.lean`, `LoadLaws.lean`, `StoreLaws.lean`), and
+`Core.Op.memCases` splits an obligation of every core op into the four.
+`Core.memDenoteIn_mapsDenote` asks the morphism to keep loads and stores as
+well, which `MonadMorphism.state_load` and `MonadMorphism.state_store` give
+for the state layer.
 No theorem asks that the whole core dialect lift the set monad: `Core.liftsSetM`
 went in stage 4b-3 of #231, with its last users. The core's theorems on runs,
 fuel monotonicity, progress, no stuck path and refined arguments, are stated
@@ -195,7 +198,8 @@ for a callee that touches no memory it asks that each op that declares no
 memory effect ignore the memories (`OpsIgnoreMemory`, in
 `lean/Fir/Execution/MemoryFree.lean`), which each core op meets by its own tie
 (`Core.opsIgnoreMemory`; semantics-refinement.md#refinement-with-memory);
-`alloca` and `load` declare a memory effect, so they are not asked. The
+`alloca`, `load` and `store` declare a memory effect, so they are not
+asked. The
 test of the tie, that the core's runs with memory are its runs in the set
 monad, went with it; `lean/FirTest/MemoryRuns.lean` now shows that a core
 function that touches no memory returns from given memories what it returns
@@ -207,9 +211,10 @@ memory as the lift of its semantics in the set monad, which gives a load no
 place to read its memory's entry. `lean/FirTest/G0Effects.lean` restates the
 class and its obligations for every dialect. The obligations reject a wrong
 declaration: with `sdiv` declared without may-UB, the core dialect is not lawful
-in its effects (`Core.Unlawful.sdivNoUB_unlawful`), and with `load`
-declared without a read of its memory, over the core's own semantics with
-memory (`Core.Unlawful.loadNoRead_unlawful`). And
+in its effects (`Core.Unlawful.sdivNoUB_unlawful`), with `load` declared
+without a read of its memory, over the core's own semantics with memory
+(`Core.Unlawful.loadNoRead_unlawful`), and with `store` declared without a
+write (`Core.Unlawful.storeNoWrite_unlawful`). And
 `lean/FirTest/MemoryObligations.lean` shows that an allocation allocates, a
 store writes and a load reads.
 

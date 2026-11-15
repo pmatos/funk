@@ -14,7 +14,7 @@ pins their fingerprint; the build fails when the Lean changes under it.
 
 #doc (Manual) "Core ops: readable blocks" =>
 
-:::moduleDocs (fingerprint := "5628622360878826756")
+:::moduleDocs (fingerprint := "17869889403261818575")
 :::
 
 :::readable Fir.Core.WrapFlags (fingerprint := "2440796118969772124")
@@ -125,12 +125,12 @@ fneg,fabs,sqrt   \mathsf{fneg} \mid \mathsf{fabs} \mid \mathsf{sqrt}
   neither rounds. $`\mathsf{sqrt}` gives the square root, rounded.
 :::
 
-:::readable Fir.Core.Op (pin := Fir.Core.Op.Valid) (fingerprint := "6296022432098662550")
+:::readable Fir.Core.Op (pin := Fir.Core.Op.Valid) (fingerprint := "5376276084848826659")
 *Ops.* An op of the core dialect carries the width $`N` of the integers it
 works on, or the format $`\mathsf{float}\langle e,m \rangle` of the floats
 it works on, so the types of its operands and results follow from it.
 Below, $`c` is a constant of type $`\mathsf{i}N`, $`v` a vector of
-$`1+e+m` bits, $`t` and $`r` are types, and $`f` is a function's symbol. The ops come in sixteen families.
+$`1+e+m` bits, $`t` and $`r` are types, and $`f` is a function's symbol. The ops come in seventeen families.
 
 *Constants* put a fixed value in the program.
 
@@ -364,6 +364,20 @@ load \mathsf{load}_{N}~o~W~a
   accept only the ordering $`\mathsf{nonatomic}` and an alignment that is
   a power of two no larger than $`2^{24} - 1`.
 
+*Stores* write a value to memory (#231).
+
+```grammar Fir.Core.Op
+\mathit{op}
+-     \dots
+store \mathsf{store}_{N}~o~W~a
+```
+
+* $`\mathsf{store}_{N}~o~W~a` stores an $`\mathsf{i}W` through a pointer
+  of $`\mathsf{ptr}\langle N \rangle` and gives no result, aligned as a
+  load of $`\mathsf{i}W` is. It writes the value's encoding, with zero bits
+  past $`W`, or poison units for poison. A poison pointer, and an access
+  that faults, is immediate UB. The core rules are those of a load.
+
 *Conversions to integers* give a float's number truncated toward zero as
 an integer (ADR-2026-11-09-1549; the human's ruling of 2026-11-12 on #354).
 
@@ -444,7 +458,9 @@ validation ask:
   with $`N < M`;
 * $`\mathsf{ret}~t^*` returns the result types $`t^*` of its function;
 * $`\mathsf{call}~f : t^* \to r^*` names a symbol $`f` to which the
-  module's symbol table gives the function type $`t^* \to r^*`.
+  module's symbol table gives the function type $`t^* \to r^*`;
+* $`\mathsf{alloca}`, $`\mathsf{load}` and $`\mathsf{store}` have the
+  rules given with them above.
 
 The other ops have no core rule of their own.
 :::

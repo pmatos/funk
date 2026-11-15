@@ -126,6 +126,8 @@ import FirSpec.Core.AllocaText
 import FirSpec.Core.AllocaTextLaws
 import FirSpec.Core.LoadText
 import FirSpec.Core.LoadTextLaws
+import FirSpec.Core.StoreText
+import FirSpec.Core.StoreTextLaws
 import FirSpec.Core.TextSamples
 import FirSpec.Text.Print
 import FirSpec.Text.RoundTrip
@@ -183,6 +185,9 @@ import FirSpec.Core.AllocaLaws
 import FirSpec.Core.Load
 import FirSpec.Core.LoadLaws
 import FirSpec.Core.LoadReads
+import FirSpec.Core.Store
+import FirSpec.Core.StoreLaws
+import FirSpec.Core.StoreWrites
 import FirSpec.Memory.Ordering
 import FirSpec.Execution.MemoryCallSteps
 import FirSpec.Execution.MemoryProgress

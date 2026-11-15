@@ -205,22 +205,22 @@ theorem summary_noPoison (d : Dialect) [TyDenote d.Ty] [DecidableEq d.Ty] [TyPoi
 The core dialect declares a class and a set of effects for each of its ops,
 case by case: `Core.Op.poisonClass` and `Core.Op.effects` have no case for
 the rest, so a new core op does not build until it has both, and
-`scripts/check_g0.py` fails if a case for the rest comes back. Thirty-five
+`scripts/check_g0.py` fails if a case for the rest comes back. Thirty-six
 ops propagate poison and seven are exceptions (ADR-2026-10-29-2006). The
-samples of the core ops name all 47 of their names, the float constant
+samples of the core ops name all 48 of their names, the float constant
 sharing `const`'s and the two bit casts `bitcast`, and the checks below pin both on them.
-`alloca` allocates in the memory of its result and `load` reads the memory
-of its pointer; no other core op declares an effect on memory, and no core
-op is observable, since the core dialect has no trace yet
-(ADR-2026-11-09-1541).
+`alloca` allocates in the memory of its result, `load` reads the memory of
+its pointer and `store` writes it; no other core op declares an effect on
+memory, and no core op is observable, since the core dialect has no trace
+yet (ADR-2026-11-09-1541).
 -/
 
-#guard (Core.samples.map Core.Op.name).eraseDups.length == 47
+#guard (Core.samples.map Core.Op.name).eraseDups.length == 48
 #guard ((Core.samples.filter (Core.Op.poisonClass · == .propagates)).map Core.Op.name).eraseDups ==
   ["const", "add", "sub", "mul", "sdiv", "udiv", "srem", "urem", "and", "or", "xor", "shl", "lshr",
    "ashr", "zext", "sext", "trunc", "poison", "icmp", "fcmp", "fadd", "fsub", "fmul", "fdiv", "fneg",
    "fabs", "sqrt", "fma", "frem", "fmod", "bitcast", "sitofp", "uitofp",
-   "fpext", "fptrunc", "ptradd", "alloca", "load", "fptosi", "fptoui"]
+   "fpext", "fptrunc", "ptradd", "alloca", "load", "store", "fptosi", "fptoui"]
 #guard ((Core.samples.filter (Core.Op.poisonClass · == .exception)).map Core.Op.name).eraseDups ==
   ["select", "freeze", "br", "cond_br", "ret", "unreachable", "call"]
 #guard ((Core.samples.filter (Core.Op.effects · == {})).map Core.Op.name).eraseDups ==
@@ -228,7 +228,7 @@ op is observable, since the core dialect has no trace yet
    "fcmp", "fadd", "fdiv", "fneg", "fabs", "bitcast", "sitofp", "uitofp", "fpext", "fptrunc",
    "ptradd"]
 #guard ((Core.samples.filter (·.effects.mayUB)).map Core.Op.name).eraseDups ==
-  ["sdiv", "udiv", "srem", "urem", "cond_br", "unreachable", "load"]
+  ["sdiv", "udiv", "srem", "urem", "cond_br", "unreachable", "load", "store"]
 #guard ((Core.samples.filter (·.effects.mayPoison)).map Core.Op.name).eraseDups ==
   ["add", "sub", "mul", "sdiv", "shl", "lshr", "ashr", "poison", "fcmp", "fsub", "fmul", "sqrt",
    "fma", "frem", "fmod", "load", "fptosi", "fptoui"]
@@ -248,7 +248,9 @@ op is observable, since the core dialect has no trace yet
 #guard [({ nnan := true } : Core.FastMath), { ninf := true }, { nnan := true, nsz := true }].all
   fun fl => [Core.Op.fcmp .olt fl 8 23, .fbin .fadd fl 8 23, .funary .fneg fl 8 23,
     .fma fl 8 23].all (·.effects == { mayPoison := true })
-#guard Core.samples.all fun o => o.effects.writes == .these [] && !o.effects.observable
+#guard Core.samples.all fun o => !o.effects.observable
+#guard ((Core.samples.filter (·.effects.writes != .these [])).map Core.Op.name).eraseDups ==
+  ["store"]
 #guard ((Core.samples.filter (·.effects.reads != .these [])).map Core.Op.name).eraseDups ==
   ["load"]
 #guard ((Core.samples.filter (·.effects.allocates != .these [])).map Core.Op.name).eraseDups ==
@@ -258,6 +260,9 @@ op is observable, since the core dialect has no trace yet
     o.effects == { o.effects with reads := .these (o.sig.filterMap Core.Ty.memory) } &&
       o.effects.reads != .these [] && o.effects.mayUB && o.effects.mayPoison &&
       o.effects.allocates == .these [] && !o.effects.control
+  else if o.name == "store" then
+    o.effects == { writes := .these (o.sig.filterMap Core.Ty.memory), mayUB := true } &&
+      o.effects.writes != .these []
   else o.effects == { allocates := .these (o.returnTypes.filterMap Core.Ty.memory) }
 
 end FirTest.G0

@@ -15,7 +15,7 @@ empty entry is not a cell: a width change that the spec does not
 allow, a conversion from a format to itself, or a width for a row
 that passes no value.
 
-1515 cells, 1515 with a test.
+1523 cells, 1523 with a test.
 
 ## Differential tests
 
@@ -215,7 +215,7 @@ that passes no value.
 
 | op | flags or predicate | `i1` | `i7` | `i8` | `i16` | `i32` | `i33` | `i64` | `i128` |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `const` |  | 288 | 475 | 340 | 215 | 284 | 465 | 209 | 134 |
+| `const` |  | 288 | 475 | 340 | 215 | 284 | 465 | 211 | 134 |
 | `add` |  | 12 | 228 | 33 | 28 | 30 | 228 | 28 | 63 |
 | `add` | `nuw` | 4 | 29 | 6 | 6 | 8 | 29 | 6 | 5 |
 | `add` | `nsw` | 173 | 347 | 211 | 204 | 203 | 319 | 197 | 99 |
@@ -252,7 +252,7 @@ that passes no value.
 | `icmp` | `uge` | 6 | 29 | 6 | 6 | 6 | 29 | 6 | 4 |
 | `select` |  | 15 | 70 | 18 | 17 | 33 | 70 | 17 | 15 |
 | `freeze` |  | 23 | 56 | 56 | 56 | 56 | 56 | 56 | 11 |
-| `poison` |  | 28 | 31 | 31 | 31 | 45 | 31 | 31 | 31 |
+| `poison` |  | 28 | 31 | 31 | 31 | 46 | 31 | 31 | 31 |
 
 ### Float ops at a format (interpreter-only tests)
 
@@ -407,13 +407,14 @@ that passes no value.
 | `fptoui` | `f64` | 28 | 28 | 28 | 28 | 28 | 28 | 28 | 28 |
 | `fptoui` | `f128` | 28 | 28 | 28 | 28 | 28 | 28 | 28 | 28 |
 
-### Pointer ops: ptradd by an integer, alloca and load of one (interpreter-only tests)
+### Pointer ops: ptradd by an integer, alloca, load and store of one (interpreter-only tests)
 
 | op | `i1` | `i7` | `i8` | `i16` | `i32` | `i33` | `i64` | `i128` |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `ptradd` | 1 | 1 | 6 | 2 | 2 | 1 | 15 | 1 |
-| `alloca` | 2 | 2 | 15 | 5 | 6 | 3 | 3 | 5 |
-| `load` | 1 | 1 | 6 | 1 | 12 | 1 | 1 | 1 |
+| `ptradd` | 1 | 1 | 10 | 2 | 2 | 1 | 25 | 1 |
+| `alloca` | 4 | 4 | 30 | 11 | 18 | 5 | 6 | 7 |
+| `load` | 3 | 3 | 18 | 5 | 25 | 3 | 6 | 3 |
+| `store` | 4 | 2 | 10 | 3 | 19 | 2 | 3 | 2 |
 
 ### Passed and returned values (interpreter-only tests)
 
@@ -424,12 +425,12 @@ that passes no value.
 | `cond_br` | a successor passes nothing | 438 |  |  |  |  |  |  |  |  |  |  |  |  |  |
 | `cond_br` | a successor passes values |  | 13 | 138 | 16 | 14 | 14 | 136 | 13 | 11 | 5 | 5 | 7 | 5 | 5 |
 | `ret` | returns no value | 26 |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| `ret` | returns one value |  | 2570 | 1583 | 820 | 818 | 918 | 1609 | 817 | 1081 | 825 | 777 | 689 | 588 | 530 |
-| `ret` | returns several values |  | 54 | 187 | 39 | 26 | 27 | 187 | 49 | 48 | 5 | 6 | 5 | 7 | 5 |
+| `ret` | returns one value |  | 2570 | 1583 | 828 | 820 | 933 | 1609 | 820 | 1081 | 825 | 777 | 689 | 588 | 530 |
+| `ret` | returns several values |  | 56 | 189 | 43 | 29 | 27 | 189 | 51 | 50 | 5 | 6 | 5 | 7 | 5 |
 | `unreachable` | ends a block | 16 |  |  |  |  |  |  |  |  |  |  |  |  |  |
 | `call` | gives no result | 14 |  |  |  |  |  |  |  |  |  |  |  |  |  |
 | `call` | gives one result |  | 74 | 92 | 28 | 23 | 24 | 92 | 23 | 19 | 2 | 2 | 2 | 2 | 2 |
 | `call` | gives several results |  | 41 | 92 | 17 | 11 | 11 | 92 | 25 | 27 | 2 | 3 | 2 | 3 | 2 |
 | `func` | returns no value | 23 |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| `func` | returns one value |  | 2569 | 1583 | 821 | 818 | 918 | 1609 | 817 | 1081 | 823 | 775 | 687 | 586 | 528 |
-| `func` | returns several values |  | 54 | 187 | 39 | 26 | 27 | 187 | 49 | 46 | 5 | 6 | 5 | 7 | 5 |
+| `func` | returns one value |  | 2569 | 1583 | 829 | 820 | 933 | 1609 | 820 | 1081 | 823 | 775 | 687 | 586 | 528 |
+| `func` | returns several values |  | 56 | 189 | 43 | 29 | 27 | 189 | 51 | 48 | 5 | 6 | 5 | 7 | 5 |

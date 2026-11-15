@@ -3,10 +3,11 @@
 //! `lean/Fir/Core/Validation.lean`; #231).
 //!
 //! `%v: iW = load ORDERING [align(A)] %p` loads an `iW` through the pointer
-//! `%p` of `ptr<N>`, from memory `N`. Its attributes are, in order: the
-//! ordering, one of the words of [`ORDERINGS`]; and `align(A)`, with `A` not
-//! negative, written only when the op gives an alignment. It has one pointer
-//! operand and one integer result. Any other shape does not decode.
+//! `%p` of `ptr<N>`, from memory `N`. Its attributes are those of an access
+//! (`access.rs`), in order: the ordering, one of the words of
+//! [`ORDERINGS`]; and `align(A)`, with `A` not negative, written only when
+//! the op gives an alignment. It has one pointer operand and one integer
+//! result. Any other shape does not decode.
 //!
 //! Validation accepts only the ordering `nonatomic`, the other orderings
 //! being hooks for a concurrency model (ADR-2026-11-09-1542), and an
@@ -18,36 +19,13 @@
 //! an integer's encoding, as fresh memory's).
 //!
 //! [`MemLayout::LIMIT`]: crate::ir::MemLayout::LIMIT
+//! [`ORDERINGS`]: super::ORDERINGS
 
-use super::align::{check_align, decode_align};
+use super::access::{access_attrs, check_access};
 use super::type_list;
 use super::types::{CoreType, core_type};
 use crate::effects::{Effects, MemSet};
 use crate::registry::{OpContext, OpShape, OpSpec, OpTypes};
-use crate::{Attr, Int};
-
-/// The orderings of an access, as words (`Ordering.word`).
-pub const ORDERINGS: [&str; 7] = [
-    "nonatomic",
-    "unordered",
-    "monotonic",
-    "acquire",
-    "release",
-    "acq_rel",
-    "seq_cst",
-];
-
-/// Reads the attributes of `load`: its ordering and its alignment, or
-/// `None` when they do not decode.
-fn parts(attrs: &[Attr]) -> Option<(&str, Option<&Int>)> {
-    let [Attr::Word(ordering), rest @ ..] = attrs else {
-        return None;
-    };
-    if !ORDERINGS.contains(&ordering.as_str()) {
-        return None;
-    }
-    Some((ordering, decode_align(rest)?))
-}
 
 /// The memory of the pointer `load` loads through, when it has one pointer
 /// operand and one integer result.
@@ -77,23 +55,15 @@ impl OpSpec for Load {
                 type_list(op.results)
             ));
         }
-        if parts(op.attrs).is_none() {
+        if access_attrs(op.attrs).is_none() {
             return Err("load takes an ordering, then align(A) when given".into());
         }
         Ok(OpShape::default())
     }
 
     fn check(&self, _cx: &OpContext<'_>, op: &OpTypes<'_>) -> Result<(), String> {
-        let Some((ordering, align)) = parts(op.attrs) else {
-            return Ok(());
-        };
-        if ordering != "nonatomic" {
-            return Err(format!(
-                "load is nonatomic in M1, not {ordering}: the atomic orderings are hooks"
-            ));
-        }
-        match align {
-            Some(a) => check_align("load", a.as_str()),
+        match access_attrs(op.attrs) {
+            Some((ordering, align)) => check_access("load", ordering, align),
             None => Ok(()),
         }
     }
@@ -112,8 +82,8 @@ impl OpSpec for Load {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::dialects::core::{MAX_MEMORY, float_type, int_type, ptr_type};
-    use crate::{SymbolTable, Type};
+    use crate::dialects::core::{MAX_MEMORY, ORDERINGS, float_type, int_type, ptr_type};
+    use crate::{Attr, SymbolTable, Type};
 
     fn types<'a>(attrs: &'a [Attr], operands: &'a [Type], results: &'a [Type]) -> OpTypes<'a> {
         OpTypes {

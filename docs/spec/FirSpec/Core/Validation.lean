@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Core rules: readable blocks" =>
 
-:::moduleDocs (fingerprint := "18202785626579793766")
+:::moduleDocs (fingerprint := "16934056733062495152")
 :::
 
 :::readable Fir.Core.Ty.Valid Fir.Core.Ty.memory (pin := Fir.Core.maxWidth) (pin := Fir.Core.floatWidth) (fingerprint := "2970471969585656872")
@@ -62,7 +62,7 @@ $$`\mathrm{refs}(\mathit{op}) = \epsilon \ \text{ for every other op}`
 The general rules check that $`f` names a function of the module.
 :::
 
-:::readable Fir.Core.Op.Valid Fir.Core.Ty.IsInt (pin := Fir.isPowerOfTwo) (pin := Fir.MemLayout.limit) (pin := Fir.MemLayout.ValidAlign) (fingerprint := "16897339240257841884")
+:::readable Fir.Core.Op.Valid Fir.Core.Ty.IsInt (pin := Fir.isPowerOfTwo) (pin := Fir.MemLayout.limit) (pin := Fir.MemLayout.ValidAlign) (fingerprint := "15114825220936956090")
 *Definition: the core rules of an op.* Beyond its signature, which the
 {ref "The-fir-specification--Validation--The-general-rules"}[general rules]
 check, a core op obeys these rules in its op context $`C`:
@@ -89,6 +89,8 @@ op, so a float op that carries either is not valid (ADR-2026-11-09-1549).
 $$`\frac{k = \mathsf{stack} \qquad c \ge 1 \qquad a \text{ is none or a valid alignment} \qquad t = \mathsf{i}W \qquad \vdash t~\text{valid}}{C \vdash \mathsf{alloca}_{N}~k~t~c~a~\text{valid}}`
 
 $$`\frac{o = \mathsf{nonatomic} \qquad a \text{ is none or a valid alignment}}{C \vdash \mathsf{load}_{N}~o~W~a~\text{valid}}`
+
+$$`\frac{o = \mathsf{nonatomic} \qquad a \text{ is none or a valid alignment}}{C \vdash \mathsf{store}_{N}~o~W~a~\text{valid}}`
 
 $$`\frac{\mathit{op} \text{ is another core op}}{C \vdash \mathit{op}~\text{valid}}`
 
@@ -146,6 +148,12 @@ the op, and $`\mathrm{symtab}_C` the module's
   $`\mathsf{load}~\mathsf{nonatomic}~\mathsf{align}(4)` is valid, and
   $`\mathsf{load}~\mathsf{seq\_cst}` and
   $`\mathsf{load}~\mathsf{nonatomic}~\mathsf{align}(3)` are not.
+* $`\mathsf{store}` has the rules of $`\mathsf{load}`: the ordering
+  $`\mathsf{nonatomic}`, and a valid alignment when it gives one. Its
+  operand types, the value's $`\mathsf{i}W` and then the pointer's
+  $`\mathsf{ptr}\langle N \rangle`, are checked as every type is. So
+  $`\mathsf{store}~\mathsf{nonatomic}` is valid, and
+  $`\mathsf{store}~\mathsf{release}` is not.
 
 Every other op has no rule beyond its signature. These three definitions
 are what the core dialect

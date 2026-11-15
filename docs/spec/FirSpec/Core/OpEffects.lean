@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Core effects: readable blocks" =>
 
-:::moduleDocs (fingerprint := "8159928607111067229")
+:::moduleDocs (fingerprint := "7789416781622186035")
 :::
 
 :::readable Fir.Core.Mem (fingerprint := "11401156343561318334")
@@ -26,11 +26,11 @@ module has. The module's data layout declares the others by number
 (ADR-2026-11-12-1821;
 {ref "The-fir-specification--Validation--The-data-layout___s-rules"}[the data layout's rules]).
 $`\mathsf{alloca}` names the memory of its result in its effects, and
-$`\mathsf{load}` the memory of its pointer; no other core op names a
-memory.
+$`\mathsf{load}` and $`\mathsf{store}` the memory of their pointer; no
+other core op names a memory.
 :::
 
-:::readable Fir.Core.Op.effects (fingerprint := "3919274005916045648")
+:::readable Fir.Core.Op.effects (fingerprint := "2731684813881207414")
 *Definition: the effects of each core op.* For each
 {ref "The-fir-specification--Abstract-syntax--Core-ops"}[core op instance]:
 
@@ -50,6 +50,8 @@ $$`\mathsf{br},\ \mathsf{ret}:\ \{\mathsf{control}\} \qquad \mathsf{cond\_br},\ 
 
 $$`\mathsf{alloca}_N:\ \{\mathsf{allocates}(N)\} \qquad \mathsf{load}_N:\ \{\mathsf{reads}(N),\ \mathsf{mayUB},\ \mathsf{mayPoison}\}`
 
+$$`\mathsf{store}_N:\ \{\mathsf{writes}(N),\ \mathsf{mayUB}\}`
+
 $`\mathsf{const}` here is a constant of any type, an integer's or a
 float's. The float ops without $`\mathsf{nnan}` and $`\mathsf{ninf}`
 are pure: a NaN result and a zero of either sign under $`\mathsf{nsz}`
@@ -65,6 +67,10 @@ pointer, and the frame of its call frees the allocation.
 $`\mathsf{load}_N` reads the memory $`N` of its pointer, may be UB, on a
 poison pointer or an access that faults, and may give poison, for units
 that are not an integer's encoding, such as fresh memory's.
+$`\mathsf{store}_N` writes the memory $`N` of its pointer and may be UB,
+on a poison pointer or an access that faults. It reads no memory, its own
+included, since whether it faults depends on the allocations and not on
+their units, and it gives no result, so it makes no poison.
 $`\mathsf{call}`'s own rule only runs its callee, so its own set is empty;
 a call has its callee's effects. The definition lists every op, with no
 case for the rest, so a new core op does not build until it declares its

@@ -1,0 +1,15 @@
+# Tests of store-memories.fir: store writes the memory of its pointer, in
+# that memory's units (#231). In memory 1, of 16-bit units, an i32 takes two
+# units, least significant first, and is aligned to 2, so a store at an odd
+# offset is misaligned (UB, the human's ruling of 2026-11-14 on #388), and
+# one that ends past the allocation is out of bounds. A store to one memory
+# leaves the other as it was. Interpreter-only until stage 5 of #231.
+tests = [
+  { func = "@two_units", args = ["67305985"], expect = ["67305985"] },
+  { func = "@low_unit", args = ["67305985"], expect = ["513"] },
+  { func = "@at", args = ["0", "-7"], expect = ["-7"] },
+  { func = "@at", args = ["2", "-7"], expect = ["-7"] },
+  { func = "@at", args = ["1", "-7"], expect = "ub" },
+  { func = "@at", args = ["4", "-7"], expect = "ub" },
+  { func = "@in_each", args = ["1", "2"], expect = ["1", "2"] },
+]

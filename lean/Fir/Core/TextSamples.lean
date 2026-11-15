@@ -38,6 +38,8 @@ def samples : List Op :=
    .alloca .heap (.ptr 2) 0 (some 3) maxMemory, .alloca .global (.float 8 23) 2 none 0] ++
   [.load .nonatomic 32 none 0, .load .nonatomic 1 (some 4) 1, .load .seqCst 128 (some 3) maxMemory,
    .load .acqRel 8 none 0] ++
+  [.store .nonatomic 32 none 0, .store .nonatomic 1 (some 4) 1,
+   .store .release 128 (some 3) maxMemory, .store .monotonic 8 none 0] ++
   [.fptosi 8 23 32, .fptoui 11 52 64, .fptosi 5 10 1, .fptoui 15 112 128, .fptosi 2 1 7]
 
 -- Decoding an op's encoding, at its own types, gives the op back.

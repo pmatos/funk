@@ -40,8 +40,9 @@ has neither operands nor attributes, is a cell at each width of its result
   from each float format of the side to each of its widths (#241).
 - The pointer offset `ptradd` is a cell for each width of its integer,
   the stack allocation `alloca` for each width of the integer type it
-  allocates, whatever its kind, count and alignment, and `load` for each
-  width of the integer it loads, whatever its ordering and alignment, at
+  allocates, whatever its kind, count and alignment, and `load` and
+  `store` for each width of the integer they load and store, whatever
+  their ordering and alignment, at
   the side's pointer widths: every width for interpreter-only tests, and
   none yet for differential tests, since the backend does not lower
   pointers until stage 5 of #231 (`pointer_cells.py`).
@@ -64,8 +65,8 @@ DIFFERENTIAL = (1, 8, 16, 32, 64, 128)
 INTERPRETER = (1, 7, 8, 16, 32, 33, 64, 128)
 FLOAT_DIFFERENTIAL = ("f32", "f64")
 FLOAT_INTERPRETER = ("f16", "bf16", "f32", "f64", "f128")
-# The widths of `ptradd`'s integer, of `alloca`'s type and of `load`'s
-# result on each side (#231).
+# The widths of `ptradd`'s integer, of `alloca`'s type, of `load`'s result
+# and of `store`'s value on each side (#231).
 POINTER_DIFFERENTIAL: tuple[int, ...] = ()
 POINTER_INTERPRETER = INTERPRETER
 

@@ -98,7 +98,7 @@ $`t^*` and $`r^*`: a pointer and an integer, and a pointer of the same
 memory.
 :::
 
-:::readable Fir.Core.Op.decode_encode Fir.Core.Op.encode_decode (pin := Fir.Core.Op.sig) (pin := Fir.Core.Op.returnTypes) (fingerprint := "12255719854822790105")
+:::readable Fir.Core.Op.decode_encode Fir.Core.Op.encode_decode (pin := Fir.Core.Op.sig) (pin := Fir.Core.Op.returnTypes) (fingerprint := "11428679021640650413")
 *Theorems: every core op instance reads back from its spelling, and only
 from it.* For every core op instance $`o`, valid or not:
 
@@ -116,8 +116,8 @@ These are the first two laws of a lawful text for the core dialect. The
 proofs go op by op, for every width, flag, predicate, float format,
 float constant, float op of arithmetic, bit cast, conversion from or to
 an integer and between formats, pointer offset at every memory,
-allocation of every kind, type, count and alignment, load of every
-ordering, width, alignment and memory, and list of types. A float constant reads back because its
+allocation of every kind, type, count and alignment, load and store of
+every ordering, width, alignment and memory, and list of types. A float constant reads back because its
 signed reading names its bits exactly.
 :::
 
