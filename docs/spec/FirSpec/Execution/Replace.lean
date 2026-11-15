@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Replacing a callee: readable blocks" =>
 
-:::moduleDocs (fingerprint := "16877963756770902032")
+:::moduleDocs (fingerprint := "13513591641772786714")
 :::
 
 :::readable Fir.Func.replaceBody Fir.Item.replaceBody Fir.Module.replaceBody (fingerprint := "10617108302315699159")
@@ -84,13 +84,14 @@ the body replaced hold the same
 a function holds none, and a nested module is unchanged.
 :::
 
-:::readable Fir.Module.valid_replaceBody (pin := Fir.Module.Valid) (fingerprint := "17437293996579678251")
+:::readable Fir.Module.valid_replaceBody (pin := Fir.Module.Valid) (fingerprint := "6591664031815088025")
 *Theorem: a valid module stays valid when the new function is valid.* For
 every dialect with its validation rules, let $`M` be a
 {ref "The-fir-specification--Validation--The-general-rules"}[valid module],
 $`s` a symbol and $`b` a region, and let each function $`g` of $`M` with
 the symbol $`s`, given the body $`b`, be valid in the context of $`M`, with
-each of its types naming a memory that the layout of $`M` declares. Then
+each of its types, and each type that its ops carry in their attributes,
+naming a memory that the layout of $`M` declares. Then
 $`M[s \leftarrow b]` is valid: the symbols of its own table are those of
 $`M`, so still unique; its location table, its dialect set and its layout
 are those of $`M`; each of its functions is valid in its context, which is

@@ -14,16 +14,19 @@ changes under it.
 
 #doc (Manual) "Loads read back: readable blocks" =>
 
-:::moduleDocs (fingerprint := "7440328115179457993")
+:::moduleDocs (fingerprint := "18385148284732735519")
 :::
 
-:::readable Fir.Core.word_of_decodeOrdering Fir.Core.decodeLoad_loadAttrs Fir.Core.decodeLoad_eq (pin := Fir.Core.decodeLoad) (pin := Fir.Core.loadAttrs) (fingerprint := "16521930911237614478")
+:::readable Fir.Core.word_of_decodeOrdering Fir.Core.decodeAccess_loadAttrs Fir.Core.loadAttrs_of_decodeAccess Fir.Core.decodeLoad_loadAttrs Fir.Core.decodeLoad_loadPtr Fir.Core.decodeLoad_eq (pin := Fir.Core.decodeLoad) (pin := Fir.Core.loadAttrs) (fingerprint := "14995298371094568971")
 *Theorems: every $`\mathsf{load}` reads back from its spelling, and only
-from it.* The word that names an ordering is that ordering's word. For
-every ordering $`o`, width $`W`, alignment $`a` and memory $`N`, valid or
-not:
+from it.* The word that names an ordering is that ordering's word, and the
+attributes of a load read back as its ordering and its alignment, and are
+theirs only. For every ordering $`o`, width $`W`, alignment $`a` and
+memories $`N` and $`M`, valid or not:
 
 $$`\mathrm{decodeload}(\mathrm{loadattrs}(o, a), \mathsf{ptr}\langle N \rangle, \mathsf{i}W) = \mathsf{load}_N~o~W~a`
+
+$$`\mathrm{decodeload}(\mathrm{loadattrs}(o, a), \mathsf{ptr}\langle N \rangle, \mathsf{ptr}\langle M \rangle) = \mathsf{load}_N~o~\mathsf{ptr}\langle M \rangle~a`
 
 And if $`\mathrm{decodeload}(a^*, t^*, r^*) = op`, then $`op` is named
 `load`, its attributes are $`a^*`, it has the operand types $`t^*` and the

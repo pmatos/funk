@@ -165,9 +165,17 @@ def funcTypes (f : Func d) : List d.Ty :=
 
 @[csimp] theorem types_eq_funcTypes : @Func.types = @funcTypes := rfl
 
-/-- `SymbolTable.memoryProblems`, compiled after `types_eq_funcTypes`. -/
+/-- `Func.attrTypes`, compiled after `allBlocks_eq_allBlocks`, as
+`funcTypes` is. -/
+def funcAttrTypes (f : Func d) : List d.Ty :=
+  (f.allBlocks.flatMap (·.body)).flatMap fun o => opTypes o.op
+
+@[csimp] theorem attrTypes_eq_funcAttrTypes : @Func.attrTypes = @funcAttrTypes := rfl
+
+/-- `SymbolTable.memoryProblems`, compiled after `types_eq_funcTypes` and
+`attrTypes_eq_funcAttrTypes`. -/
 def tableMemoryProblems (l : DataLayout) (t : SymbolTable d) : List Problem :=
-  t.funcs.filterMap (fun f => memoryProblem f.name (l.missing f.types)) ++
+  t.funcs.filterMap (fun f => memoryProblem f.name (l.missing (f.types ++ f.attrTypes))) ++
   t.dialectItems.filterMap (fun i => memoryProblem i.name (l.missing i.types))
 
 @[csimp] theorem memoryProblems_eq_tableMemoryProblems :

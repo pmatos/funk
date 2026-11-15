@@ -14,30 +14,39 @@
 //!
 //! Validation accepts only the kind `stack`, a count of at least 1, an
 //! alignment that is a power of two no larger than [`MemLayout::LIMIT`], as
-//! the data layout's own alignments are, and a valid integer type. The count
+//! the data layout's own alignments are, and a valid integer or pointer
+//! type; a pointer type names a memory that the data layout must declare
+//! ([`OpSpec::attr_types`]). A float type has no encoding in units. The count
 //! has no bound: an allocation larger than a machine holds is a resource
 //! error at run time. The op is never UB and never gives poison: it
 //! allocates in its memory, and the frame of its call frees the allocation
 //! when the call returns.
 //!
 //! [`MemLayout::LIMIT`]: crate::ir::MemLayout::LIMIT
+//! [`OpSpec::attr_types`]: crate::registry::OpSpec::attr_types
 
 use super::align::{check_align, decode_align};
-use super::types::{CoreType, FLOAT_ALIASES, MAX_WIDTH, alias, core_type};
+use super::types::{CoreType, FLOAT_ALIASES, MAX_MEMORY, MAX_WIDTH, alias, core_type, ptr_type};
 use crate::effects::{Effects, MemSet};
 use crate::registry::{OpContext, OpShape, OpSpec, OpTypes};
-use crate::{Attr, Int};
+use crate::{Attr, Int, Type};
 
 /// The kinds of an allocation, as words (`AllocKind.word`).
 const ALLOC_KINDS: [&str; 3] = ["stack", "global", "heap"];
 
 /// The type `alloca` carries, read with no bound (`Ty.decodeAny`): `iN`
-/// with its digits, a float format, or a pointer of a memory.
+/// with its digits, a float format, or a pointer of a memory, with the
+/// memory's digits.
 #[derive(Clone, Debug, PartialEq, Eq)]
 enum AnyType {
     Int(Int),
     Float,
-    Ptr,
+    Ptr(Int),
+}
+
+/// The memory of a pointer type, when it is at most [`MAX_MEMORY`].
+fn valid_memory(n: &Int) -> Option<u32> {
+    n.as_str().parse::<u32>().ok().filter(|&n| n <= MAX_MEMORY)
 }
 
 /// An integer not negative, from its canonical spelling.
@@ -49,7 +58,7 @@ fn nonneg(i: &Int) -> bool {
 /// memory, or `None` when the attribute is not one.
 fn decode_any(a: &Attr) -> Option<AnyType> {
     match a {
-        Attr::Word(w) if w == "ptr" => Some(AnyType::Ptr),
+        Attr::Word(w) if w == "ptr" => Some(AnyType::Ptr(Int::from(0i128))),
         Attr::Word(w) => match w.strip_prefix('i') {
             Some(digits) => {
                 let i = Int::parse(digits)?;
@@ -71,7 +80,7 @@ fn decode_any(a: &Attr) -> Option<AnyType> {
             _ => None,
         },
         Attr::App(h, args) if h == "ptr" => match args.as_slice() {
-            [Attr::Int(n)] if nonneg(n) && n.as_str() != "0" => Some(AnyType::Ptr),
+            [Attr::Int(n)] if nonneg(n) && n.as_str() != "0" => Some(AnyType::Ptr(n.clone())),
             _ => None,
         },
         _ => None,
@@ -175,9 +184,27 @@ impl OpSpec for Alloca {
                 "alloca allocates a valid integer type, not i{}",
                 w.as_str()
             )),
-            AnyType::Float | AnyType::Ptr => {
-                Err("alloca allocates an integer type in M1, not a float or a pointer".into())
-            }
+            AnyType::Ptr(n) if valid_memory(n).is_some() => Ok(()),
+            AnyType::Ptr(n) => Err(format!(
+                "alloca allocates a valid pointer type, not ptr({})",
+                n.as_str()
+            )),
+            AnyType::Float => Err(
+                "alloca allocates an integer or a pointer type in M1, not a float: \
+                 a float has no encoding in units"
+                    .into(),
+            ),
+        }
+    }
+
+    /// The type it allocates values of, when that is a valid pointer type,
+    /// whose memory the data layout must declare (`Core.Op.attrTypes`). An
+    /// integer type names no memory, and a type that is not valid breaks
+    /// the op's own rule.
+    fn attr_types(&self, attrs: &[Attr]) -> Vec<Type> {
+        match parts(attrs).map(|p| p.ty) {
+            Some(AnyType::Ptr(n)) => valid_memory(&n).map(ptr_type).into_iter().collect(),
+            _ => Vec::new(),
         }
     }
 
@@ -210,6 +237,10 @@ mod tests {
 
     fn align(a: i128) -> Attr {
         Attr::App("align".into(), vec![Attr::int(a)])
+    }
+
+    fn ptr_attr(n: i128) -> Attr {
+        Attr::App("ptr".into(), vec![Attr::int(n)])
     }
 
     fn check(attrs: &[Attr]) -> Result<(), String> {
@@ -301,7 +332,11 @@ mod tests {
             vec![word("stack"), word("i0")],
             vec![word("stack"), word("i16777216")],
             vec![word("stack"), word("f32")],
-            vec![word("stack"), word("ptr")],
+            vec![
+                word("stack"),
+                Attr::App("float".into(), vec![Attr::int(8), Attr::int(7)]),
+            ],
+            vec![word("stack"), ptr_attr(1 << 24)],
         ] {
             assert!(check(&attrs).is_err(), "{attrs:?}");
         }
@@ -312,6 +347,9 @@ mod tests {
             vec![word("stack"), word("i32"), Attr::int(1 << 100)],
             vec![word("stack"), word("i32"), align(1 << 23)],
             vec![word("stack"), word("i16777215"), align(1)],
+            vec![word("stack"), word("ptr")],
+            vec![word("stack"), ptr_attr(1), Attr::int(3), align(2)],
+            vec![word("stack"), ptr_attr(i128::from(MAX_MEMORY))],
         ] {
             assert_eq!(check(&attrs), Ok(()), "{attrs:?}");
         }
@@ -331,6 +369,26 @@ mod tests {
         }
         for a in ["16777216", "4294967296", "1180591620717411303424"] {
             assert_eq!(check_align("alloca", a), Err(above(a)), "{a}");
+        }
+    }
+
+    #[test]
+    fn a_pointer_element_names_its_memory() {
+        assert_eq!(
+            Alloca.attr_types(&[word("stack"), word("ptr"), Attr::int(2)]),
+            vec![ptr_type(0)]
+        );
+        assert_eq!(
+            Alloca.attr_types(&[word("stack"), ptr_attr(5), align(8)]),
+            vec![ptr_type(5)]
+        );
+        for attrs in [
+            vec![word("stack"), word("i32")],
+            vec![word("stack"), word("f32")],
+            vec![word("stack"), ptr_attr(1 << 24)],
+            vec![word("stack")],
+        ] {
+            assert_eq!(Alloca.attr_types(&attrs), vec![], "{attrs:?}");
         }
     }
 

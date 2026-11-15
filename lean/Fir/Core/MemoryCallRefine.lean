@@ -57,23 +57,26 @@ stuck path (the section on core functions with memory).
 
 namespace Fir.Core
 
-/-- A core op that touches no memory, every core op but `alloca`, `load`
-and `store`, declares no memory effect. -/
+/-- A core op that touches no memory, every core op but `alloca` and the
+loads and stores, `load`, `store`, `loadPtr` and `storePtr`, declares no
+memory effect. -/
 theorem Op.effects_touchesNoMemory (op : Op) (hm : op.touchesMemory = false) :
     (Fir.effects (d := CoreDialect) op).TouchesNoMemory := fun _ => by
   cases op with
-  | alloca | load | store => cases hm
+  | alloca | load | store | loadPtr | storePtr => cases hm
   | _ => exact ⟨nofun, nofun, nofun⟩
 
 /-- A core op that declares no memory effect touches no memory: `alloca`
-declares that it allocates in the memory of its result, `load` that it
-reads the memory of its pointer, and `store` that it writes it. -/
+declares that it allocates in the memory of its result, `load` and
+`loadPtr` that they read the memory of their pointer, and `store` and
+`storePtr` that they write it. -/
 theorem Op.touchesMemory_false {op : Op} (h : (Fir.effects (d := CoreDialect) op).TouchesNoMemory) :
     op.touchesMemory = false := by
   cases op with
   | alloca _ _ _ _ n => exact ((h n).2.2 (List.mem_singleton_self n)).elim
   | load _ _ _ n => exact ((h n).1 (List.mem_singleton_self n)).elim
-  | store _ _ _ n => exact ((h n).2.1 (List.mem_singleton_self n)).elim
+  | store _ _ _ n | storePtr _ _ _ n => exact ((h n).2.1 (List.mem_singleton_self n)).elim
+  | loadPtr _ _ _ n => exact ((h n).1 (List.mem_singleton_self n)).elim
   | _ => rfl
 
 /-- A function of a core table reaches no memory when no function that its
@@ -117,6 +120,8 @@ theorem opsFinite :
     · exact ⟨fun _ => alloca_finitelyMany _ _ _ _ _ lay ρ args, fun h => nomatch h⟩
     · exact ⟨fun _ => load_finitelyMany _ _ _ _ lay ρ args, fun h => nomatch h⟩
     · exact ⟨fun _ => store_finitelyMany _ _ _ _ lay ρ args, fun h => nomatch h⟩
+    · exact ⟨fun _ => loadPtr_finitelyMany _ _ _ _ lay ρ args, fun h => nomatch h⟩
+    · exact ⟨fun _ => storePtr_finitelyMany _ _ _ _ lay ρ args, fun h => nomatch h⟩
   | false => ?_
   have hm := denoteIn_mapsDenote (ChoiceTree.toSetMorphism (ε := Op)) ChoiceTree.toSet_keeps
     (fun op => .noOutcome op) (fun _ _ => False) fun _ => rfl

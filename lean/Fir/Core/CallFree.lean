@@ -101,7 +101,8 @@ theorem Op.total : (op : Op) → op.isCall = false → op.touchesMemory = false 
   | .ret ts, _, _ => ret_total ts
   | .unreachable, _, _ => unreachable_total
   | .call .., h, _ => nomatch h
-  | .alloca .., _, h | .load .., _, h | .store .., _, h => nomatch h
+  | .alloca .., _, h | .load .., _, h | .store .., _, h | .loadPtr .., _, h
+  | .storePtr .., _, h => nomatch h
 
 /-- A core terminator that jumps goes to a successor that it has, and gives
 no results. -/

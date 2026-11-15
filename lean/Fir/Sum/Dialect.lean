@@ -301,6 +301,9 @@ instance instDialectValidation [DialectValidation base] [DialectValidation (base
   tyMemory
     | .inl t => tyMemory t
     | .inr t => tyMemory (d := base.over e) (.inr t)
+  opTypes
+    | .inl o => (opTypes o).map .inl
+    | .inr o => opTypes (d := base.over e) o
   validItem := ValidItem
 
 /-- The sum's rules can be decided when each side's can. -/

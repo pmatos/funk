@@ -32,7 +32,7 @@ each rule has as its set what it is in the set monad, and `fir-ref run`'s
 modes give the spec's outcomes on the conversions.
 :::
 
-:::readable Fir.Core.intToFloatOp (pin := Fir.Core.Op) (fingerprint := "4459349966717066364")
+:::readable Fir.Core.intToFloatOp (pin := Fir.Core.Op) (fingerprint := "15111799187457772231")
 *Definition: the conversion of a signedness.* $`\mathrm{conv}^r_{N,e,m}(\mathit{true})`
 is $`\mathsf{sitofp}_{N,e,m}~r`, and $`\mathrm{conv}^r_{N,e,m}(\mathit{false})`
 is $`\mathsf{uitofp}_{N,e,m}~r`, so that the theorems below are stated once

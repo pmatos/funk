@@ -61,9 +61,10 @@ pointer's.
   `MemLayout.limit` (`MemLayout.ValidAlign`). With no `align(A)` the access
   is aligned to the natural alignment of `iW` in its memory
   (`MemLayout.intAlign`), as the human ruled on 2026-11-11 (#231, Q4).
-- The result is an integer type until float and pointer loads land, as the
-  human ruled on 2026-11-14 (#382, Q2): pointer loads come with pointer
-  elements, in stage 4d-2b of #231.
+- The result is an integer type, or a pointer type (below; the human's
+  ruling of 2026-11-14 on #382, Q2, gives pointer loads to stage 4d-2b).
+  A float result stays rejected: #231 covers integers and pointers, and a
+  float has no encoding in units yet.
 - A poison pointer is immediate UB. Some defined pointer in its place, one
   with no provenance, faults, so this is UB by the op's own rules. Otherwise
   the op is the aligned load of the units of `iW`, its bits rounded up to
@@ -99,9 +100,7 @@ memory is its pointer's.
   `load`, above: the same ordering words, `nonatomic` alone valid, and
   `align(A)` valid as `alloca`'s is (`Core.Op.Valid`; the shared Rust
   module `crates/funk-ir/src/dialects/core/access.rs`).
-- The value is an integer type, as for `load` (the human's ruling of
-  2026-11-14 on #382, Q2); pointer stores come with pointer elements, in
-  stage 4d-2b of #231.
+- The value is an integer type or, as for `load`, a pointer type (below).
 - A poison pointer is immediate UB, whatever the value, for the reason of
   `load`'s. Otherwise the op is the aligned store of the value's encoding
   in the memory's units and byte order (ADR-2026-11-12-2125): its bits
@@ -132,3 +131,47 @@ memory is its pointer's.
 `Core.memDenoteIn_mapsDenote` asks the morphism to keep stores, which
 `MonadMorphism.state_store` gives for the state layer. Every whole-core
 guarantee keeps its statement (semantics-m1-memory.md#the-cores-guarantees).
+
+## Pointers in memory
+
+A pointer is stored, loaded and allocated as an integer is, through the
+same ops (stage 4d-2b of #231; the human's ruling of 2026-11-14 on #382,
+Q2): `%p: ptr = alloca stack ptr 2`, `store nonatomic %q, %p` with `%q` a
+pointer, and `%r: ptr(1) = load nonatomic %p`. The Lean names the pointer
+forms `Op.loadPtr` and `Op.storePtr` (`lean/Fir/Core/PtrAccess.lean`); the
+text and the Rust IR tell them from the integer forms by the value's type.
+
+- A `ptr<M>` takes the units of `M`'s pointer width in the memory `N` it is
+  stored in, each a fragment of the pointer with the memory `M`, in `N`'s
+  byte order (ADR-2026-11-12-2125). A pointer stored and loaded back is the
+  same pointer, its provenance and offset kept.
+- A pointer load gives poison from anything but one pointer's fragments of
+  memory `M`, in order: fresh memory, units of bits, a pointer of another
+  memory, a pointer partly overwritten. An integer load from fragments
+  gives poison too, so an integer copy of memory carries no pointer (the
+  human's ruling of 2026-11-11 on #231, Q3). The non-integral flag changes
+  none of this: punning is poison in every memory, and the flag bounds
+  only `ptr.expose` and `ptr.from_int` (#232).
+- Effects, poison class and validation are those of `load` and `store`:
+  `reads(N)` or `writes(N)` of the memory accessed, never of `M`. Each meets
+  every obligation with memory by its own rule
+  (`lean/Fir/Core/LoadPtrLaws.lean`, `StorePtrLaws.lean`).
+- With no `align(A)`, an access or an `alloca` of `ptr<M>` in memory `M`
+  is aligned as `M`'s entry aligns its pointers: `align(A)` when the entry
+  writes it, else the natural alignment (text-format-layout.md#what-a-layout-means).
+  In another memory `N` it is aligned to the natural alignment there, the
+  least power of two at least its units in `N` (`Ty.defaultAlign`). That
+  second part is the agents' reading and waits on a ruling of the human:
+  `align(A)` counts `M`'s units, and nothing yet says what it means in a
+  memory of other units. Rejected for now: converting `align(A)` into
+  `N`'s units, a rule nothing specifies.
+- The type that `alloca` allocates names a memory, which the data layout
+  must declare (text-format-layout.md#valid-layouts). A float element, value
+  or result stays rejected: floats have no encoding in units.
+
+`Core.Op.memCases` gained a case for each of `loadPtr` and `storePtr`, and
+`Module.valid_replaceBody` asks that the new body's ops carry types of
+memories the layout declares (`ha`). `Core.memDenoteIn_mapsDenote` is
+unchanged: its morphism keeps loads and stores, whatever they access. Every
+whole-core guarantee keeps its statement
+(semantics-m1-memory.md#the-cores-guarantees).

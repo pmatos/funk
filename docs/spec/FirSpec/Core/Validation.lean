@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Core rules: readable blocks" =>
 
-:::moduleDocs (fingerprint := "11353196402327572871")
+:::moduleDocs (fingerprint := "16215657857761837669")
 :::
 
 :::readable Fir.Core.Ty.Valid Fir.Core.Ty.memory (pin := Fir.Core.maxWidth) (pin := Fir.Core.floatWidth) (fingerprint := "2970471969585656872")
@@ -62,7 +62,23 @@ $$`\mathrm{refs}(\mathit{op}) = \epsilon \ \text{ for every other op}`
 The general rules check that $`f` names a function of the module.
 :::
 
-:::readable Fir.Core.FBin.mode Fir.Core.FUnary.mode Fir.Core.Op.Valid Fir.Core.Ty.IsInt (pin := Fir.isPowerOfTwo) (pin := Fir.MemLayout.limit) (pin := Fir.MemLayout.ValidAlign) (fingerprint := "3778462431777004037")
+:::readable Fir.Core.Op.attrTypes (fingerprint := "16874436834183304261")
+*Definition: the types a core op carries.* $`\mathsf{alloca}_N~k~t~c~a`
+carries the type $`t` that it allocates values of in its attributes, when
+$`t` is valid:
+
+$$`\mathrm{optypes}(\mathsf{alloca}_N~k~t~c~a) = \begin{cases} (t) & \vdash t~\text{valid} \\ \epsilon & \text{otherwise} \end{cases} \qquad \mathrm{optypes}(\mathit{op}) = \epsilon \ \text{ for every other op}`
+
+So the data layout declares the memory $`M` of an
+$`\mathsf{alloca}~\mathsf{stack}~\mathsf{ptr}\langle M \rangle`, as it
+declares that of every type a function states. A type that is not valid,
+such as a pointer of a memory above the bound, breaks the op's own rule and
+names no memory to check, as no type written for a value can. No other
+core op carries a type of its own: $`\mathsf{call}`'s are its callee's, and
+$`\mathsf{ret}`'s the function's results.
+:::
+
+:::readable Fir.Core.FBin.mode Fir.Core.FUnary.mode Fir.Core.Op.Valid Fir.Core.Ty.IsElem (pin := Fir.isPowerOfTwo) (pin := Fir.MemLayout.limit) (pin := Fir.MemLayout.ValidAlign) (fingerprint := "6623338735285745")
 *Definition: the core rules of an op.* Beyond its signature, which the
 {ref "The-fir-specification--Validation--The-general-rules"}[general rules]
 check, a core op obeys these rules in its op context $`C`:
@@ -101,11 +117,15 @@ $`\mathsf{fadd}`, $`\mathsf{fsub}`, $`\mathsf{fmul}`, $`\mathsf{fdiv}` and
 $`\mathsf{sqrt}`, and none for $`\mathsf{frem}`, $`\mathsf{fmod}`,
 $`\mathsf{fneg}` and $`\mathsf{fabs}`, which do not round.
 
-$$`\frac{k = \mathsf{stack} \qquad c \ge 1 \qquad a \text{ is none or a valid alignment} \qquad t = \mathsf{i}W \qquad \vdash t~\text{valid}}{C \vdash \mathsf{alloca}_{N}~k~t~c~a~\text{valid}}`
+$$`\frac{k = \mathsf{stack} \qquad c \ge 1 \qquad a \text{ is none or a valid alignment} \qquad t \in \{\mathsf{i}W, \mathsf{ptr}\langle M \rangle\} \qquad \vdash t~\text{valid}}{C \vdash \mathsf{alloca}_{N}~k~t~c~a~\text{valid}}`
 
 $$`\frac{o = \mathsf{nonatomic} \qquad a \text{ is none or a valid alignment}}{C \vdash \mathsf{load}_{N}~o~W~a~\text{valid}}`
 
 $$`\frac{o = \mathsf{nonatomic} \qquad a \text{ is none or a valid alignment}}{C \vdash \mathsf{store}_{N}~o~W~a~\text{valid}}`
+
+and the same for the load and store of a pointer,
+$`\mathsf{load}_{N}~o~\mathsf{ptr}\langle M \rangle~a` and
+$`\mathsf{store}_{N}~o~\mathsf{ptr}\langle M \rangle~a`.
 
 $$`\frac{\mathit{op} \text{ is another core op}}{C \vdash \mathit{op}~\text{valid}}`
 
@@ -141,13 +161,20 @@ the op, and $`\mathrm{symtab}_C` the module's
   $`2^{23}` is the largest alignment it gives. One that gives none takes its
   type's natural alignment, which the bound does not cover, as the human
   ruled on 2026-11-14 (#385). Its type is a valid integer type
-  $`\mathsf{i}W`. Its count has no bound: an allocation larger than a
-  machine holds is a resource error at run time, as a deep recursion is.
+  $`\mathsf{i}W` or pointer type $`\mathsf{ptr}\langle M \rangle`, as
+  stage 4d-2b of #231 adds pointer loads and stores (the human's ruling of
+  2026-11-14 on #382); a float type has no encoding in units, and M1 has
+  no float loads or stores. Its count has no bound: an allocation larger
+  than a machine holds is a resource error at run time, as a deep
+  recursion is.
   Its result's type $`\mathsf{ptr}\langle N \rangle` names its memory,
   which the module's data layout must declare, as for every pointer type
-  (ADR-2026-11-14-0915). So $`\mathsf{alloca}~\mathsf{stack}~\mathsf{i32}~4`
-  and $`\mathsf{alloca}~\mathsf{stack}~\mathsf{i8}~\mathsf{align}(2^{23})`
-  are valid, and $`\mathsf{alloca}~\mathsf{heap}~\mathsf{i32}`,
+  (ADR-2026-11-14-0915), and so does a pointer type that it allocates
+  values of, which it carries in its attributes ($`\mathrm{optypes}`). So
+  $`\mathsf{alloca}~\mathsf{stack}~\mathsf{i32}~4`,
+  $`\mathsf{alloca}~\mathsf{stack}~\mathsf{i8}~\mathsf{align}(2^{23})`
+  and $`\mathsf{alloca}~\mathsf{stack}~\mathsf{ptr}~2` are valid, and
+  $`\mathsf{alloca}~\mathsf{heap}~\mathsf{i32}`,
   $`\mathsf{alloca}~\mathsf{stack}~\mathsf{i32}~0`,
   $`\mathsf{alloca}~\mathsf{stack}~\mathsf{i8}~\mathsf{align}(3)`,
   $`\mathsf{alloca}~\mathsf{stack}~\mathsf{i8}~\mathsf{align}(2^{24})` and
@@ -169,8 +196,12 @@ the op, and $`\mathrm{symtab}_C` the module's
   $`\mathsf{ptr}\langle N \rangle`, are checked as every type is. So
   $`\mathsf{store}~\mathsf{nonatomic}` is valid, and
   $`\mathsf{store}~\mathsf{release}` is not.
+* The load and store of a pointer have the rules of $`\mathsf{load}` and
+  $`\mathsf{store}`. The pointer type $`\mathsf{ptr}\langle M \rangle`
+  that they load or store is a value's type, so the data layout must
+  declare memory $`M`, as for every type.
 
-Every other op has no rule beyond its signature. These three definitions
+Every other op has no rule beyond its signature. These definitions
 are what the core dialect
 {ref "The-fir-specification--Validation--Scope-and-symbols"}[adds to validation].
 :::

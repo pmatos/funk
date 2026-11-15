@@ -32,7 +32,7 @@ each rule has as its set what it is in the set monad, and `fir-ref run`'s
 modes give the spec's outcomes on the conversions between formats.
 :::
 
-:::readable Fir.Core.convertOp (pin := Fir.Core.Op) (fingerprint := "9681142072252092657")
+:::readable Fir.Core.convertOp (pin := Fir.Core.Op) (fingerprint := "5578389647634086994")
 *Definition: the conversion of a kind.* $`\mathrm{conv}_{e,m,e',m'}(\mathit{none})`
 is $`\mathsf{fpext}_{e,m,e',m'}`, which has no rounding mode, and
 $`\mathrm{conv}_{e,m,e',m'}(r)` is $`\mathsf{fptrunc}_{e,m,e',m'}~r`, with

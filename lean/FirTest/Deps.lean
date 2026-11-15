@@ -135,6 +135,21 @@ def coreToyBitEffects (o : CoreToyBit.Op) : Effects ((Core.Mem ⊕ Empty) ⊕ Em
 #guard decodeTy (d := CoreToyBit) (.word "i8") == some (.inl (.inl (.int 8)))
 #guard decodeTy (d := CoreToyBit) (.word "bit.i8") == none
 #guard decodeTy (d := CoreToyBit) (.word "toy.bit") == none
+-- The type that a core `alloca` carries reaches the sum's layout check
+-- through both sums, so an `alloca` of pointers of memory 2 needs memory 2;
+-- an `alloca` of integers needs none, and an op of the lifted bit dialect
+-- carries no type.
+#guard opTypes (d := CoreToyBit) (.inl (.inl (Core.Op.alloca .stack (.ptr 2) 1 none 0))) ==
+  [.inl (.inl (.ptr 2))]
+#guard DataLayout.missing (d := CoreToyBit) []
+  (opTypes (d := CoreToyBit) (.inl (.inl (Core.Op.alloca .stack (.ptr 2) 1 none 0)))) == [2]
+#guard (DataLayout.missing (d := CoreToyBit) []
+  (opTypes (d := CoreToyBit) (.inl (.inl (Core.Op.alloca .stack (.int 8) 1 none 0))))).isEmpty
+#guard (opTypes (d := CoreToyBit) (.inr (.low 8))).isEmpty
+-- A pointer type above the bound breaks `alloca`'s own rule and names no
+-- memory for the layout to check.
+#guard (opTypes (d := CoreToyBit)
+  (.inl (.inl (Core.Op.alloca .stack (.ptr 16777216) 1 none 0)))).isEmpty
 
 /-! # A module of three dialects -/
 

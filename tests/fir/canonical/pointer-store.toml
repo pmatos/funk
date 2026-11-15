@@ -1,0 +1,46 @@
+# Tests of pointer-store.fir: load and store take a pointer of any memory as
+# their value (stage 4d-2b of #231; the human's ruling of 2026-11-14 on
+# #382), and alloca allocates pointers. A pointer is stored as its
+# fragments, each with its memory, in the units of the memory's pointer
+# width, so a pointer stored and loaded back is the same pointer, its
+# provenance and offset kept, and a pointer copied as a pointer still
+# reaches what it pointed to. A pointer load from fresh memory, from units of
+# bits or from a pointer with one byte overwritten gives poison, and so does
+# an integer load from a pointer's fragments, whole or one byte of them, so
+# an integer copy of a pointer carries no pointer (Q3 of the human's rulings
+# of 2026-11-11 on #231, ADR-2026-11-12-2125). With no align(A) a pointer of
+# memory 0 is aligned to 8 bytes, so a store at offset 4 is UB unless it
+# writes align(4), and a store into an allocation of bytes, aligned to 1, is
+# UB too. A poison pointer to load or store through is UB; a stored poison
+# pointer loads as poison. A load through the slot of a call that returned
+# is UB. fir-ref writes a pointer as ptr(A, O). The backend lowers load and
+# store in stage 5 of #231, so each test is interpreter-only.
+tests = [
+  { func = "@round_trip", args = ["67305985"], expect = ["67305985"] },
+  { func = "@round_trip", args = ["poison"], expect = ["poison"] },
+  { func = "@same_pointer", args = ["3"], expect = ["ptr(0, 3)"] },
+  { func = "@same_pointer", args = ["-9"], expect = ["ptr(0, -9)"] },
+  { func = "@same_pointer", args = ["poison"], expect = ["poison"] },
+  { func = "@chain", args = ["-2"], expect = ["-2"] },
+  { func = "@fresh", expect = ["poison"] },
+  { func = "@from_bits", args = ["0"], expect = ["poison"] },
+  { func = "@bits_of_pointer", expect = ["poison"] },
+  { func = "@byte_of_pointer", args = ["0"], expect = ["poison"] },
+  { func = "@byte_of_pointer", args = ["7"], expect = ["poison"] },
+  { func = "@overwritten", args = ["0", "0"], expect = ["poison"] },
+  { func = "@overwritten", args = ["7", "0"], expect = ["poison"] },
+  { func = "@integer_copy", expect = ["poison"] },
+  { func = "@pointer_copy", args = ["-77"], expect = ["-77"] },
+  { func = "@stored_poison", args = ["poison"], expect = ["poison"] },
+  { func = "@through_poison", args = ["poison"], expect = "ub" },
+  { func = "@store_through_poison", args = ["poison"], expect = "ub" },
+  { func = "@at", args = ["0"], expect = ["ptr(0, 0)"] },
+  { func = "@at", args = ["8"], expect = ["ptr(0, 0)"] },
+  { func = "@at", args = ["4"], expect = "ub" },
+  { func = "@at", args = ["16"], expect = "ub" },
+  { func = "@at", args = ["-8"], expect = "ub" },
+  { func = "@at_four", args = ["4"], expect = ["ptr(0, 0)"] },
+  { func = "@at_four", args = ["2"], expect = "ub" },
+  { func = "@in_bytes", expect = "ub" },
+  { func = "@freed", expect = "ub" },
+]

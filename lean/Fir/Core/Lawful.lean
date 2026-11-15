@@ -9,17 +9,16 @@ set monad, at every core op instance whose types validation accepts, from
 the obligations that each op family proves, in the sections from the
 constant obligations to the branch obligations:
 
-* _Propagation._ Each of the 36 ops that propagate poison does, at every
+* _Propagation._ Each of the 38 ops that propagate poison does, at every
   width and float format: `const` at an integer and at a float type,
   `poison`, the arithmetic, the four divisions, the bitwise ops and
   shifts, `icmp`, `fcmp`, the width changes, the float arithmetic, the
   bit casts, the conversions from integers, the conversions between
   formats, the pointer offset, the conversions to integers, `alloca`,
-  which has no operands, and `load` and `store`, which have no outcome in
-  the set monad.
-* _A result on defined operands._ Each of them but `alloca`, `load` and
-  `store` returns a
-  result on some operand vector with no poison. `poison` does on the empty
+  which has no operands, and the loads and stores, `load`, `store`,
+  `loadPtr` and `storePtr`, which have no outcome in the set monad.
+* _A result on defined operands._ Each of them but `alloca` and the loads
+  and stores returns a result on some operand vector with no poison. `poison` does on the empty
   vector, where its result is poison: the obligation asks for a result, not
   for a defined one (ADR-2026-10-29-2006). The four divisions do only at a
   width above zero, and validation accepts `iN` only for N of at least
@@ -31,17 +30,18 @@ constant obligations to the branch obligations:
 * _Totality and monotonicity._ Every core terminator and every core op
   with no callee is total and monotone, at every width: every core op but
   `call`, which the obligations leave out, since its meaning is its
-  callee's run (ADR-2026-10-29-2006), and `alloca`, `load` and `store`,
-  which are monotone at once but not total, since they have no rule in the
-  set monad.
+  callee's run (ADR-2026-10-29-2006), and `alloca` and the loads and
+  stores, which are monotone at once but not total, since they have no
+  rule in the set monad.
 
 So the core dialect as a whole does not meet the lawful class of the set
-monad: `alloca`, `load` and `store` have no outcome there. What this
+monad: `alloca` and the loads and stores have no outcome there. What this
 section proves covers the ops that touch no memory. The core's guarantees
 are those of the semantics with memory, which each op meets: an op that
-touches no memory from its tie and what it meets here, and `alloca`, `load`
-and `store` by their own rules (the sections on the stack allocation, load
-and store obligations and on every valid core function, with memory).
+touches no memory from its tie and what it meets here, and `alloca` and
+the loads and stores by their own rules (the sections on the stack
+allocation, load, store, pointer load and pointer store obligations and on
+every valid core function, with memory).
 -/
 
 namespace Fir.Core
@@ -55,6 +55,18 @@ theorem load_propagatesPoison (o : Memory.Ordering) (w : Nat) (a : Option Nat) (
 /-- `store` propagates poison in the set monad, where it has no outcome. -/
 theorem store_propagatesPoison (o : Memory.Ordering) (w : Nat) (a : Option Nat) (n : Nat) :
     PropagatesPoison (d := CoreDialect) (.store o w a n) where
+  poisonOut | .cons _ (.cons _ .nil), _, _, hrs => hrs.elim
+  ubByOwnRules | .cons _ (.cons _ .nil), _, _, hub => hub.elim
+
+/-- `loadPtr` propagates poison in the set monad, where it has no outcome. -/
+theorem loadPtr_propagatesPoison (o : Memory.Ordering) (mp : Nat) (a : Option Nat) (n : Nat) :
+    PropagatesPoison (d := CoreDialect) (.loadPtr o mp a n) where
+  poisonOut | .cons _ .nil, _, _, hrs => hrs.elim
+  ubByOwnRules | .cons _ .nil, _, _, hub => hub.elim
+
+/-- `storePtr` propagates poison in the set monad, where it has no outcome. -/
+theorem storePtr_propagatesPoison (o : Memory.Ordering) (mp : Nat) (a : Option Nat) (n : Nat) :
+    PropagatesPoison (d := CoreDialect) (.storePtr o mp a n) where
   poisonOut | .cons _ (.cons _ .nil), _, _, hrs => hrs.elim
   ubByOwnRules | .cons _ (.cons _ .nil), _, _, hub => hub.elim
 
@@ -94,6 +106,8 @@ theorem Op.propagates_all : (op : Op) → Fir.poisonClass (d := CoreDialect) op 
   | .alloca k t c a n, _ => alloca_propagatesPoison k t c a n
   | .load o w a n, _ => load_propagatesPoison o w a n
   | .store o w a n, _ => store_propagatesPoison o w a n
+  | .loadPtr o mp a n, _ => loadPtr_propagatesPoison o mp a n
+  | .storePtr o mp a n, _ => storePtr_propagatesPoison o mp a n
   | .fptosi e m n, _ => floatToInt_propagatesPoison e m n true
   | .fptoui e m n, _ => floatToInt_propagatesPoison e m n false
   | .poison w, _ => poison_propagatesPoison w
@@ -148,6 +162,7 @@ theorem Op.returnsOnDefined_valid : (op : Op) → op.touchesMemory = false →
   | .poison w, _, _, _ => poison_returnsOnDefined w
   | .select _, _, _, h | .freeze _, _, _, h | .br, _, _, h | .condBr, _, _, h | .ret _, _, _, h
   | .unreachable, _, _, h | .call .., _, _, h => nomatch h
-  | .alloca .., h, _, _ | .load .., h, _, _ | .store .., h, _, _ => nomatch h
+  | .alloca .., h, _, _ | .load .., h, _, _ | .store .., h, _, _ | .loadPtr .., h, _, _
+  | .storePtr .., h, _, _ => nomatch h
 
 end Fir.Core

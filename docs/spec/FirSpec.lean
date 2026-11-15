@@ -106,6 +106,8 @@ functions, blocks and ops.
 
 {includeReadable "." Fir.Core.Rounding "Rounding modes" FirSpec.Core.Rounding (level := 2)}
 
+{includeReadable "." Fir.Core.OpAttrs "Core op attributes" FirSpec.Core.OpAttrs (level := 2)}
+
 {includeReadable "." Fir.Core.Ops "Core ops" FirSpec.Core.Ops (level := 2)}
 
 {includeReadable "." Fir.Core.Signature "Core signatures" FirSpec.Core.Signature (level := 2)}

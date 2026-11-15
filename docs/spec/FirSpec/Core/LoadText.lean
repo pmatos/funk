@@ -14,7 +14,7 @@ changes under it.
 
 #doc (Manual) "Loads in text: readable blocks" =>
 
-:::moduleDocs (fingerprint := "11158375899741009847")
+:::moduleDocs (fingerprint := "2736816571920547997")
 :::
 
 :::readable Fir.Memory.Ordering.word Fir.Core.decodeOrdering Fir.Core.decodeOrdering_word (pin := Fir.Memory.Ordering) (fingerprint := "8016647151057053803")
@@ -25,16 +25,19 @@ are written as the words `nonatomic`, `unordered`, `monotonic`,
 as the ordering it writes. No other word names an ordering.
 :::
 
-:::readable Fir.Core.loadAttrs Fir.Core.decodeLoad (pin := Fir.Core.decodeAlign) (fingerprint := "2688275533736665463")
+:::readable Fir.Core.loadAttrs Fir.Core.decodeAccess Fir.Core.decodeLoad (pin := Fir.Core.decodeAlign) (fingerprint := "3908799011580622421")
 *Definition: the text of $`\mathsf{load}`.* The attributes of
-$`\mathsf{load}_N~o~W~a` are the word of its ordering $`o`, then
+$`\mathsf{load}_N~o~W~a`, and of the load of a pointer, are the word of its ordering $`o`, then
 $`\mathtt{align}(a)` when it gives an alignment, separated by spaces:
 
 $$`\mathrm{loadattrs}(o, a) = \mathrm{word}(o)~[\mathtt{align}(a)]`
 
-$`\mathrm{decodeload}(a^*, t^*, r^*)` reads it back: one operand of a
+$`\mathrm{decodeaccess}(a^*)` reads the attributes of a load or a store
+back, as an ordering and an alignment, and
+$`\mathrm{decodeload}(a^*, t^*, r^*)` reads a load back: one operand of a
 pointer type $`\mathsf{ptr}\langle N \rangle`, one result of an integer
-type $`\mathsf{i}W`, an ordering's word, and an alignment written as
+type $`\mathsf{i}W`, or of a pointer type $`\mathsf{ptr}\langle M \rangle`
+for the load of a pointer, an ordering's word, and an alignment written as
 $`\mathsf{alloca}`'s is. Any other shape does not decode. So
 `%v: i32 = load nonatomic %p @1` loads an $`\mathsf{i32}` at its natural
 alignment, and `%v: i8 = load nonatomic align(4) %q @1` an $`\mathsf{i8}`

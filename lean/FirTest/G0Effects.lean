@@ -261,7 +261,7 @@ yet (ADR-2026-11-09-1541).
       o.effects.reads != .these [] && o.effects.mayUB && o.effects.mayPoison &&
       o.effects.allocates == .these [] && !o.effects.control
   else if o.name == "store" then
-    o.effects == { writes := .these (o.sig.filterMap Core.Ty.memory), mayUB := true } &&
+    o.effects == { writes := .these ((o.sig.getLast?.bind Core.Ty.memory).toList), mayUB := true } &&
       o.effects.writes != .these []
   else o.effects == { allocates := .these (o.returnTypes.filterMap Core.Ty.memory) }
 

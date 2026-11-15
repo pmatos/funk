@@ -1,6 +1,6 @@
 import Fir.Core.AllocaLaws
 import Fir.Core.LoadLaws
-import Fir.Core.StoreLaws
+import Fir.Core.StorePtrLaws
 import Fir.Execution.MemoryObligationLaws
 import Fir.Core.Unlawful
 
@@ -87,7 +87,8 @@ theorem Op.neverUB_all : (op : Op) → (Fir.effects (d := CoreDialect) op).mayUB
   | .fptrunc r e m e' m', _ => convertFloat_neverUB e m e' m' (some r)
   | .ptradd n w, _ => ptradd_neverUB n w
   | .sdiv .., h | .udiv .., h | .srem _, h | .urem _, h | .condBr, h
-  | .unreachable, h | .load .., h | .store .., h => nomatch h
+  | .unreachable, h | .load .., h | .store .., h | .loadPtr .., h | .storePtr .., h =>
+    nomatch h
 
 /-! # No may produce poison -/
 
@@ -224,7 +225,8 @@ theorem Op.makesNoPoison_all : (op : Op) → (Fir.effects (d := CoreDialect) op)
       obtain ⟨b, he, _⟩ := (freeze_denote w a _).1 hr
       cases he
       exact not_any_of_ne fun h => nomatch h
-  | .call .., _ | .alloca .., _ | .store .., _ => fun _ _ _ _ hr => hr.elim
+  | .call .., _ | .alloca .., _ | .store .., _ | .storePtr .., _ =>
+    fun _ _ _ _ hr => hr.elim
   | .fbin o fl e m, h => fbin_makesNoPoison o fl e m h
   | .funary o fl e m, h => funary_makesNoPoison o fl e m h
   | .fma fl r e m, h => fma_makesNoPoison fl r e m h
@@ -257,12 +259,13 @@ theorem Core.lawfulDialectEffects : LawfulDialectEffects CoreDialect where
       (Fir.effects (d := CoreDialect) op).mayUB = false → NeverUB (d := CoreDialect) op) op
     (fun op hm h => NeverUB.ofLifts (Core.Op.liftsSetM op hm) (Core.Op.neverUB_all op h))
     (fun k t c a n _ => Core.alloca_neverUB k t c a n) (fun _ _ _ _ h => nomatch h)
-    (fun _ _ _ _ h => nomatch h) h
+    (fun _ _ _ _ h => nomatch h) (fun _ _ _ _ h => nomatch h) (fun _ _ _ _ h => nomatch h) h
   makesNoPoison op _ _ h := Core.Op.memCases (P := fun op =>
       (Fir.effects (d := CoreDialect) op).mayPoison = false → MakesNoPoison (d := CoreDialect) op) op
     (fun op hm h => MakesNoPoison.ofLifts (Core.Op.liftsSetM op hm) (Core.Op.makesNoPoison_all op h))
     (fun k t c a n _ => Core.alloca_makesNoPoison k t c a n) (fun _ _ _ _ h => nomatch h)
-    (fun o w a n _ => Core.store_makesNoPoison o w a n) h
+    (fun o w a n _ => Core.store_makesNoPoison o w a n) (fun _ _ _ _ h => nomatch h)
+    (fun o mp a n _ => Core.storePtr_makesNoPoison o mp a n) h
   notControl := Core.Op.notControl_all
   writesNot op _ _ _ _ lay ρ x hx := Core.Op.memCases (P := fun op =>
       ¬ ((Fir.effects (d := CoreDialect) op).writes.map ρ).Has x →
@@ -270,21 +273,27 @@ theorem Core.lawfulDialectEffects : LawfulDialectEffects CoreDialect where
     (fun op hm _ => OwnRuleHas.ofLifts (Core.Op.liftsSetM op hm) lay ρ fun c => writesNot_lift x c)
     (fun k t c a n _ => Core.alloca_writesNot k t c a n lay ρ x)
     (fun o w a n _ => Core.load_writesNot o w a n lay ρ x)
-    (fun o w a n hx => Core.store_writesNot o w a n lay ρ x hx) hx
+    (fun o w a n hx => Core.store_writesNot o w a n lay ρ x hx)
+    (fun o mp a n _ => Core.loadPtr_writesNot o mp a n lay ρ x)
+    (fun o mp a n hx => Core.storePtr_writesNot o mp a n lay ρ x hx) hx
   readsNot op _ _ _ _ lay ρ x hx := Core.Op.memCases (P := fun op =>
       ¬ ((Fir.effects (d := CoreDialect) op).reads.map ρ).Has x →
         OwnRuleHas lay ρ (ReadsNot x) (d := CoreDialect) op) op
     (fun op hm _ => OwnRuleHas.ofLifts (Core.Op.liftsSetM op hm) lay ρ fun c => readsNot_lift x c)
     (fun k t c a n _ => Core.alloca_readsNot k t c a n lay ρ x)
     (fun o w a n hx => Core.load_readsNot o w a n lay ρ x hx)
-    (fun o w a n _ => Core.store_readsNot o w a n lay ρ x) hx
+    (fun o w a n _ => Core.store_readsNot o w a n lay ρ x)
+    (fun o mp a n hx => Core.loadPtr_readsNot o mp a n lay ρ x hx)
+    (fun o mp a n _ => Core.storePtr_readsNot o mp a n lay ρ x) hx
   allocatesNot op _ _ _ _ lay ρ x hx := Core.Op.memCases (P := fun op =>
       ¬ ((Fir.effects (d := CoreDialect) op).allocates.map ρ).Has x →
         OwnRuleHas lay ρ (AllocatesNot x) (d := CoreDialect) op) op
     (fun op hm _ => OwnRuleHas.ofLifts (Core.Op.liftsSetM op hm) lay ρ fun c => allocatesNot_lift x c)
     (fun k t c a n hx => Core.alloca_allocatesNot k t c a n lay ρ x hx)
     (fun o w a n _ => Core.load_allocatesNot o w a n lay ρ x)
-    (fun o w a n _ => Core.store_allocatesNot o w a n lay ρ x) hx
+    (fun o w a n _ => Core.store_allocatesNot o w a n lay ρ x)
+    (fun o mp a n _ => Core.loadPtr_allocatesNot o mp a n lay ρ x)
+    (fun o mp a n _ => Core.storePtr_allocatesNot o mp a n lay ρ x) hx
 
 instance : LawfulDialectEffects CoreDialect := Core.lawfulDialectEffects
 

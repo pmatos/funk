@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Core op semantics: readable blocks" =>
 
-:::moduleDocs (fingerprint := "17144611865154743455")
+:::moduleDocs (fingerprint := "13546835037080206771")
 :::
 
 :::readable Fir.Core.Op.denote? (fingerprint := "4904635401474457729")
@@ -105,10 +105,11 @@ tree of choices and the state layer use the same tables, or tables with
 memory, with their own $`z`.
 :::
 
-:::readable Fir.Core.Op.hasRules Fir.Core.Op.touchesMemory (pin := Fir.instDialectDenoteCoreDialectSetM) (pin := Fir.instDialectCallCoreDialect) (pin := Fir.Core.Op.callTarget?) (pin := Fir.Core.Op.denote?) (pin := Fir.Core.Op.exit?) (fingerprint := "8109643344099670837")
+:::readable Fir.Core.Op.hasRules Fir.Core.Op.touchesMemory (pin := Fir.instDialectDenoteCoreDialectSetM) (pin := Fir.instDialectCallCoreDialect) (pin := Fir.Core.Op.callTarget?) (pin := Fir.Core.Op.denote?) (pin := Fir.Core.Op.exit?) (fingerprint := "1293411919349281793")
 *Definition: the core ops that touch memory.* $`\mathsf{alloca}`, which
 allocates, $`\mathsf{load}`, which reads, and $`\mathsf{store}`, which
-writes, touch memory, and no other core op does. Each rule needs the memory effect, so each has one only in a
+writes, an integer or a pointer (`loadPtr` and `storePtr` in the Lean),
+touch memory, and no other core op does. Each rule needs the memory effect, so each has one only in a
 monad with memory.
 
 *Definition: an op has rules.* A core op has rules when one of the two
@@ -121,8 +122,8 @@ predicates, at a valid format and at one that validation rejects, each
 float op of arithmetic, both bit casts, both conversions from integers,
 both conversions between formats and both conversions to integers, among
 them;
-$`\mathsf{call}` counts through its callee, and $`\mathsf{alloca}`,
-$`\mathsf{load}` and $`\mathsf{store}` through their rules with memory.
+$`\mathsf{call}` counts through its callee, and $`\mathsf{alloca}` and
+the loads and stores through their rules with memory.
 
 *Definition: the core dialect's semantics.* In the
 {ref "The-fir-specification--Execution--Outcomes-and-behaviours"}[set monad], the
@@ -148,8 +149,8 @@ unless one of its operand types has no value
 $`\mathsf{call}` has no rule here, and its meaning has no outcome, but no
 run reaches it: the interpreter runs the callee of an op that has one
 instead. So a call has no op-level obligation (ADR-2026-10-29-2006).
-$`\mathsf{alloca}`, $`\mathsf{load}` and $`\mathsf{store}` have no rule
-here either: their
+$`\mathsf{alloca}` and the loads and stores have no rule here either:
+their
 meaning in the set monad has no outcome, and their rules and their
 obligations are those with memory.
 :::

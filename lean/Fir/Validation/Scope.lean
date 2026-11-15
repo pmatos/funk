@@ -13,8 +13,9 @@ This chapter gives the rules that hold for every dialect: types, scoping,
 SSA dominance, block arguments, successors, terminators, symbols, isolation
 from above and locations. Each dialect adds rules for its own ops and types,
 a rule over a whole function, rules for the kinds of region and of item
-that it registers, and the memory that each of its pointer types names, as
-the last definition of this section says; the core dialect's rules have a section of their own. A text that does not decode is rejected before
+that it registers, the memory that each of its pointer types names and the
+types that each of its ops carries in its attributes, as the last
+definition of this section says; the core dialect's rules have a section of their own. A text that does not decode is rejected before
 validation, by the parser (see the text format chapter).
 
 The rules are propositions. The validation check, at the end of this
@@ -255,6 +256,11 @@ The rules a dialect adds to validation.
   memory. Validation requires that the layout declare each memory that a
   type names (ADR-2026-11-12-1821). A dialect without pointer types names
   none.
+* `opTypes` lists the types that an op carries in its attributes, beyond
+  the types of its operands and results, such as the type of the values
+  that the core's `alloca` allocates. Validation checks the memory that
+  each names, as it checks the memory of every type a function states. An
+  op that carries no type lists none, the default.
 -/
 class DialectValidation (d : Dialect) where
   validTy : d.Ty → Prop
@@ -268,7 +274,8 @@ class DialectValidation (d : Dialect) where
   validItem : {host : Dialect} → DialectView d host → FuncContext host → DialectItem host →
     Prop := fun _ _ _ => False
   tyMemory : d.Ty → Option Nat := fun _ => none
+  opTypes : d.Op → List d.Ty := fun _ => []
 export DialectValidation (validTy symbolRefs validOp validFunc regionKindNames validRegion
-  itemKindNames validItem tyMemory)
+  itemKindNames validItem tyMemory opTypes)
 
 end Fir

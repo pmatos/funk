@@ -42,10 +42,11 @@ has neither operands nor attributes, is a cell at each width of its result
   the stack allocation `alloca` for each width of the integer type it
   allocates, whatever its kind, count and alignment, and `load` and
   `store` for each width of the integer they load and store, whatever
-  their ordering and alignment, at
-  the side's pointer widths: every width for interpreter-only tests, and
-  none yet for differential tests, since the backend does not lower
-  pointers until stage 5 of #231 (`pointer_cells.py`).
+  their ordering and alignment, at the side's pointer widths: every width
+  for interpreter-only tests, and none yet for differential tests, since
+  the backend does not lower pointers until stage 5 of #231. `alloca`,
+  `load` and `store` of a pointer, of any memory, are one cell more each,
+  `ptr`, on the sides that have pointer cells (`pointer_cells.py`).
 - `br`, and each successor of `cond_br`, passes nothing, or values of a
   width or float format. `ret` returns no value, one, or several; a `call`
   gives no result, one, or several; and so does the function that a test
@@ -58,7 +59,7 @@ from typing import NamedTuple
 
 from cell_types import Cell, CellError
 from firtext import Op
-from pointer_cells import POINTER_OPS, pointer_cell
+from pointer_cells import POINTER, POINTER_OPS, pointer_cell
 from refine import bits_of, float_format
 
 DIFFERENTIAL = (1, 8, 16, 32, 64, 128)
@@ -299,13 +300,22 @@ def catalog(
         ]
     )
     if offsets:
-        columns = tuple(map(ty, offsets))
+        columns = (*map(ty, offsets), POINTER)
         tables.append(
             Table(
                 "pointers",
                 columns,
                 tuple(
-                    Row(op, "", tuple(Cell("pointers", op, "", t) for t in columns))
+                    Row(
+                        op,
+                        "",
+                        tuple(
+                            None
+                            if op == "ptradd" and t == POINTER
+                            else Cell("pointers", op, "", t)
+                            for t in columns
+                        ),
+                    )
                     for op in POINTER_OPS
                 ),
             )

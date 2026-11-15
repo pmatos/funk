@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "The data layout's rules: readable blocks" =>
 
-:::moduleDocs (fingerprint := "267871382322375035")
+:::moduleDocs (fingerprint := "12670868677768531487")
 :::
 
 :::readable Fir.isPowerOfTwo (fingerprint := "18023849196204137947")
@@ -76,12 +76,13 @@ $`\mathrm{memory}(t)`, or when $`t` names no memory. Whether it does can be
 decided.
 :::
 
-:::readable Fir.SymbolTable.MemoriesIn Fir.Module.MemoriesDeclared (fingerprint := "17413471415812578625")
+:::readable Fir.Func.attrTypes Fir.SymbolTable.MemoriesIn Fir.Module.MemoriesDeclared (fingerprint := "12736814380526601669")
 *Definition: the memories that a module's types name.* The memories of the
 symbol table $`T` are in the layout $`L` when $`L` has the memory of each
 type that each function of $`T` states, its results, its parameters and
-the values its blocks define, and of each type that each item of a
-dialect's kind of $`T` states. The layout of the module $`M` declares the
+the values its blocks define, of each type that an op of each function of
+$`T` carries in its attributes, $`\mathrm{optypes}`, op by op, and of each
+type that each item of a dialect's kind of $`T` states. The layout of the module $`M` declares the
 memories of $`M` when the memories of each of its symbol tables, its own and
 each nested module's at any depth, are in it. A nested module has no layout
 of its own, so its types name the memories of the module that holds it.
@@ -89,5 +90,6 @@ of its own, so its types name the memories of the module that holds it.
 So a function that takes a $`\mathsf{ptr}\langle 1\rangle` is valid only in
 a module whose layout declares memory 1, while one that takes a
 $`\mathsf{ptr}`, which is $`\mathsf{ptr}\langle 0\rangle`, is valid in every
-module.
+module; and so is an $`\mathsf{alloca}` of $`\mathsf{ptr}\langle 1\rangle`
+values.
 :::

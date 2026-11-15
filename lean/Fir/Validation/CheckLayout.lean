@@ -5,8 +5,9 @@ import Fir.Validation.Layout
 The check of a data layout follows its rule: the problems of each entry, in
 order, then each memory that the layout declares more than once. The check
 of a module's memories names, for each function and each item of a
-dialect's kind whose types name a memory that the layout does not declare,
-the first such memory (ADR-2026-11-12-1821).
+dialect's kind whose types, or for a function the types that its ops carry
+in their attributes, name a memory that the layout does not declare, the
+first such memory (ADR-2026-11-12-1821).
 -/
 
 namespace Fir
@@ -79,15 +80,17 @@ theorem memoryProblem_eq_none (sym : Name) (ns : List Nat) : memoryProblem sym n
 
 /-- The problems of the memories that a symbol table's types name: one for
 each function, then one for each item of a dialect's kind, whose types name
-a memory that the layout does not declare. -/
+a memory that the layout does not declare. A function's types are those it
+states, then those its ops carry in their attributes. -/
 def SymbolTable.memoryProblems (l : DataLayout) (t : SymbolTable d) : List Problem :=
-  t.funcs.filterMap (fun f => memoryProblem f.name (l.missing f.types)) ++
+  t.funcs.filterMap (fun f => memoryProblem f.name (l.missing (f.types ++ f.attrTypes))) ++
   t.dialectItems.filterMap (fun i => memoryProblem i.name (l.missing i.types))
 
 theorem SymbolTable.memoryProblems_eq_nil (l : DataLayout) (t : SymbolTable d) :
     t.memoryProblems l = [] ↔ t.MemoriesIn l := by
   simp only [SymbolTable.memoryProblems, List.append_eq_nil_iff, List.filterMap_eq_nil_iff,
-    memoryProblem_eq_none, DataLayout.missing_eq_nil]
-  exact ⟨fun ⟨a, b⟩ => ⟨a, b⟩, fun ⟨a, b⟩ => ⟨a, b⟩⟩
+    memoryProblem_eq_none, DataLayout.missing_eq_nil, List.mem_append]
+  exact ⟨fun ⟨a, b⟩ => ⟨fun f hf ty h => a f hf ty (.inl h), b, fun f hf ty h => a f hf ty (.inr h)⟩,
+    fun ⟨a, b, c⟩ => ⟨fun f hf ty h => h.elim (a f hf ty) (c f hf ty), b⟩⟩
 
 end Fir

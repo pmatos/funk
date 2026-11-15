@@ -126,11 +126,15 @@ capping the natural alignment at the pointer's.
   call frees a stack allocation when the call returns.
 - Validation accepts the kind `stack` alone, a count of at least 1, a power
   of two for `A` no larger than `MemLayout.limit` (`MemLayout.ValidAlign`,
-  the layout's own rule) and a valid integer type.
+  the layout's own rule) and a valid integer or pointer type.
   `global` and `heap` decode, as hooks in the format (ADR-2026-11-09-1542).
-- The element is an integer type until float and pointer loads and stores
-  land, as the human ruled on 2026-11-14 (#382). Rejected: float and pointer
-  elements now, with no access to read or write them.
+- The element is an integer or a pointer type: the human ruled on
+  2026-11-14 (#382) that pointer elements come with their loads and
+  stores, which stage 4d-2b of #231 adds
+  ([semantics-m1-memory-access.md](semantics-m1-memory-access.md#pointers-in-memory)).
+  A float element stays rejected: a float has no encoding in units, and M1
+  has no float loads or stores. Rejected: float and pointer elements before
+  any access could read or write them.
 - `A` is at most `MemLayout.limit`, 2^24 - 1, the bound of the data layout's
   own alignments, so the largest `A` is 2^23; the count has no bound. An
   allocation larger than a machine holds is a resource error at run time, as
@@ -238,8 +242,9 @@ module, `alloca`, `load` and `store` included:
 
 Each new memory op keeps every one of them holding, with its own rule with
 memory and its own proofs, as `alloca`, `load` and `store` do
-(`lean/Fir/Core/AllocaLaws.lean`, `LoadLaws.lean`, `StoreLaws.lean`, joined
-to the tied ops by `Core.Op.memCases`).
+(`lean/Fir/Core/AllocaLaws.lean`, `LoadLaws.lean`, `StoreLaws.lean`,
+`LoadPtrLaws.lean`, `StorePtrLaws.lean`, joined to the tied ops by
+`Core.Op.memCases`).
 
 PR #382 narrowed these statements, which now cover memory-free code; beside
 each is what covers the whole core:

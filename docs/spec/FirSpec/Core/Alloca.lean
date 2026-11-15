@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Stack allocation rules: readable blocks" =>
 
-:::moduleDocs (fingerprint := "183720006938447818")
+:::moduleDocs (fingerprint := "12657828243829581902")
 :::
 
 :::readable Fir.Core.Ty.units Fir.Core.Ty.units?_int (pin := Fir.MemLayout.bitsUnits) (pin := Fir.Core.Ty.units?) (fingerprint := "15487003486979289830")
@@ -41,7 +41,7 @@ gives the integer, as the human ruled on 2026-11-14 (#378): in memory 0,
 $`\mathsf{i32}` is aligned to 4 units.
 :::
 
-:::readable Fir.Core.allocaShape Fir.Core.allocaRule (pin := Fir.MonadMemory) (pin := Fir.Core.Op) (fingerprint := "14991609447691672401")
+:::readable Fir.Core.Ty.defaultAlign Fir.Core.allocaShape Fir.Core.allocaRule (pin := Fir.MonadMemory) (pin := Fir.Core.Op) (fingerprint := "5090443110427556766")
 *Definition: the rule of $`\mathsf{alloca}`.* Let a run's memories have
 the layout entries $`\ell`, and let the run name the core's memory $`x`
 as $`\rho(x)`. For $`\mathsf{alloca}_N~k~t~c~a`, which allocates $`c`
@@ -52,7 +52,13 @@ memory $`M`. The allocation takes
 
 $$`n = c \cdot \mathrm{units}_{e,p}(t) \qquad \text{units, aligned to} \qquad \begin{cases} a & \text{if } a \text{ is given} \\ \mathrm{align}_{e,p}(t) & \text{otherwise} \end{cases}`
 
-where $`\mathrm{align}_{e,p}(t)` is the natural alignment of $`t`. In a
+where $`\mathrm{align}_{e,p}(t)` is the default alignment of $`t`: its
+natural alignment, the least power of two that is at least
+$`\mathrm{units}_{e,p}(t)`, but for $`\mathsf{ptr}\langle N \rangle`
+itself the alignment that $`e` gives its pointers, the natural one unless
+the entry writes $`\mathsf{align}(A)`. $`\mathrm{units}_{e,p}` counts
+$`\mathsf{i}W` as its $`W` bits and $`\mathsf{ptr}\langle M \rangle` as
+$`p(M)` bits, each rounded up to whole units of $`e`. In a
 monad with the
 {ref "The-fir-specification--Memory--The-memory-effect"}[memory effect],
 the rule of $`\mathsf{alloca}_N~k~t~c~a` takes no operands, allocates $`n`

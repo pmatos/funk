@@ -4,6 +4,7 @@ import FirSpec.Syntax.Module
 import FirSpec.Syntax.Layout
 import FirSpec.Core.Types
 import FirSpec.Core.Rounding
+import FirSpec.Core.OpAttrs
 import FirSpec.Core.Ops
 import FirSpec.Core.Signature
 import FirSpec.Core.Poison
@@ -190,6 +191,9 @@ import FirSpec.Core.LoadReads
 import FirSpec.Core.Store
 import FirSpec.Core.StoreLaws
 import FirSpec.Core.StoreWrites
+import FirSpec.Core.PtrAccess
+import FirSpec.Core.LoadPtrLaws
+import FirSpec.Core.StorePtrLaws
 import FirSpec.Memory.Ordering
 import FirSpec.Execution.MemoryCallSteps
 import FirSpec.Execution.MemoryProgress

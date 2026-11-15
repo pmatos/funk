@@ -1,0 +1,22 @@
+# Tests of pointer-store-memories.fir: pointers stored in a memory of 16-bit
+# units whose entry gives its 32-bit pointers an alignment of 4 units (stage
+# 4d-2b of #231). A pointer of memory 1 takes two units of memory 1 and four
+# bytes of memory 0; a pointer of memory 0 takes four units of memory 1.
+# Each reads back from either memory and still reaches what it pointed to.
+# A pointer of one memory loaded as a pointer of the other gives poison
+# (ADR-2026-11-12-2125). With no align(A), a pointer of memory 1 stored in
+# memory 1 is aligned to the 4 units its entry gives, so a store at offset 2
+# is UB unless it writes align(2). Interpreter-only until stage 5 of #231.
+tests = [
+  { func = "@own_memory", args = ["-300"], expect = ["-300"] },
+  { func = "@default_in_one", args = ["7"], expect = ["7"] },
+  { func = "@one_in_default", args = ["12345"], expect = ["12345"] },
+  { func = "@wrong_memory", expect = ["poison"] },
+  { func = "@wrong_memory_in_one", expect = ["poison"] },
+  { func = "@at", args = ["0"], expect = ["ptr(0, 0)"] },
+  { func = "@at", args = ["4"], expect = ["ptr(0, 0)"] },
+  { func = "@at", args = ["2"], expect = "ub" },
+  { func = "@at", args = ["8"], expect = "ub" },
+  { func = "@at_two", args = ["2"], expect = ["ptr(0, 0)"] },
+  { func = "@at_two", args = ["1"], expect = "ub" },
+]

@@ -34,15 +34,16 @@ choice effect, and the divisions,
 
 * Each op that is not a terminator has the rule of its family, from the
   arithmetic rules to the width change rules. `call` has none: its meaning
-  is its callee's run. `alloca`, `load` and `store` have none either: they
-  allocate, read and write, so each rule needs the memory effect, and is
+  is its callee's run. `alloca`, and the loads `load` and `loadPtr` and
+  the stores `store` and `storePtr`, have none either: they allocate, read
+  and write, so each rule needs the memory effect, and is
   one of the core's rules with memory.
 * Each terminator has the rule of the control-flow rules or the branch
   rules.
 * An op has rules when one of the two tables gives it one, when it calls
   a function, or when it touches memory. Every core op has rules: each
   family gave its ops theirs, the call rules name the callee of `call`, and
-  `alloca`, `load` and `store` have their rules with memory.
+  `alloca` and the loads and stores have their rules with memory.
 
 An op has no rules when its dialect's semantics gives it none. The rule for
 such an op, first written while its family had not landed, is the one the spec
@@ -91,11 +92,12 @@ namespace Fir.Core
 
 variable {m : Type → Type} [Monad m]
 
-/-- The core ops that touch memory: `alloca`, which allocates, `load`,
-which reads, and `store`, which writes. Each has a rule only in a monad with the memory effect (the
-section on the core's rules with memory). -/
+/-- The core ops that touch memory: `alloca`, which allocates, `load` and
+`loadPtr`, which read, and `store` and `storePtr`, which write. Each has a
+rule only in a monad with the memory effect (the section on the core's
+rules with memory). -/
 def Op.touchesMemory : Op → Bool
-  | .alloca .. | .load .. | .store .. => true
+  | .alloca .. | .load .. | .store .. | .loadPtr .. | .storePtr .. => true
   | _ => false
 
 /-- The rule of each core op that is not a terminator, in any monad with
@@ -233,6 +235,10 @@ def Op.hasRules (op : Op) : Bool :=
   (Op.load .nonatomic 32 none 0).hasRules && (Op.load .seqCst 8 (some 4) 1).hasRules
 #guard ((Op.store .nonatomic 32 none 0).denote? (m := SetM)).isNone &&
   (Op.store .nonatomic 32 none 0).hasRules && (Op.store .seqCst 8 (some 4) 1).hasRules
+#guard ((Op.loadPtr .nonatomic 0 none 0).denote? (m := SetM)).isNone &&
+  (Op.loadPtr .nonatomic 0 none 0).hasRules && (Op.loadPtr .seqCst 2 (some 4) 1).hasRules
+#guard ((Op.storePtr .nonatomic 0 none 0).denote? (m := SetM)).isNone &&
+  (Op.storePtr .nonatomic 0 none 0).hasRules && (Op.storePtr .seqCst 2 (some 4) 1).hasRules
 
 /-- The core dialect's semantics in a monad `m` from two tables of rules,
 `den` for the ops that are not terminators and `ex` for the terminators:

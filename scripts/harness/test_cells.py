@@ -15,7 +15,7 @@ TEXT = CORE / "Text.lean"
 FLOAT_OP_TEXT = CORE / "FloatOpText.lean"
 ROUNDING_TEXT = CORE / "RoundingText.lean"
 VALIDATION = CORE / "Validation.lean"
-OPS = CORE / "Ops.lean"
+OP_ATTRS = CORE / "OpAttrs.lean"
 
 
 def definition(text: str, name: str) -> str:
@@ -198,7 +198,7 @@ class Tests(unittest.TestCase):
         self.assertEqual(flagged["fl.attrs ++ [roundAttr r]"], {"fma"})
         self.assertEqual(flagged["fl.attrs ++ o.attrs"], {"fbin", "funary"})
         self.assertEqual(flagged["fl.attrs ++ [.word p.name]"], {"fcmp"})
-        words, reserved = fast_math(floats, OPS.read_text(encoding="utf-8"))
+        words, reserved = fast_math(floats, OP_ATTRS.read_text(encoding="utf-8"))
         self.assertEqual(words, (*cells.FAST_MATH, *cells.RESERVED))
         self.assertEqual(reserved, cells.RESERVED)
         self.assertEqual(round_attrs(), cells.ROUND)
@@ -209,7 +209,9 @@ class Tests(unittest.TestCase):
         self.assertEqual(flagged['if e then [.word "exact"] else []'], {"sdiv", "udiv"})
         self.assertEqual(flagged["[.sym f]"], {"call"})
         self.assertEqual(flagged["allocaAttrs k t c a"], {"alloca"})
-        self.assertEqual(flagged["loadAttrs o a"], {"load", "store"})
+        self.assertEqual(
+            flagged["loadAttrs o a"], {"load", "store", "loadPtr", "storePtr"}
+        )
         self.assertEqual(flagged["[]"], set())
 
     def test_the_ops_of_the_core_dialect(self):
