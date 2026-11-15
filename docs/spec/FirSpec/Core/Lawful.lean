@@ -14,10 +14,10 @@ build fails when the Lean changes under it.
 
 #doc (Manual) "The core dialect's poison obligations: readable blocks" =>
 
-:::moduleDocs (fingerprint := "3105497344376858780")
+:::moduleDocs (fingerprint := "15518506438951342135")
 :::
 
-:::readable Fir.Core.Op.propagates_all Fir.Core.load_propagatesPoison Fir.Core.store_propagatesPoison (pin := Fir.Core.Op.poisonClass) (pin := Fir.PropagatesPoison) (pin := Fir.PoisonOut) (pin := Fir.UBByOwnRules) (pin := Fir.HVector.IsFilledBy) (fingerprint := "7003194252048928386")
+:::readable Fir.Core.Op.propagates_all Fir.Core.load_propagatesPoison Fir.Core.store_propagatesPoison Fir.Core.loadPtr_propagatesPoison Fir.Core.storePtr_propagatesPoison (pin := Fir.Core.Op.poisonClass) (pin := Fir.PropagatesPoison) (pin := Fir.PoisonOut) (pin := Fir.UBByOwnRules) (pin := Fir.HVector.IsFilledBy) (fingerprint := "335173487208573809")
 *Theorem: each core op that propagates poison does.* For every
 {ref "The-fir-specification--Abstract-syntax--Core-ops"}[core op] $`o`
 whose
@@ -28,9 +28,9 @@ on operands of which one is poison, every result it returns is poison,
 and it may hit UB only if it may hit UB on some operands that put a
 defined value in place of each poison.
 
-These are 36 ops: $`\mathsf{const}` at an integer type and at a float
-type, $`\mathsf{poison}`, $`\mathsf{alloca}`, $`\mathsf{load}`,
-$`\mathsf{store}`, $`\mathsf{add}`,
+These are 38 ops: $`\mathsf{const}` at an integer type and at a float
+type, $`\mathsf{poison}`, $`\mathsf{alloca}`, $`\mathsf{load}` and
+$`\mathsf{store}` of an integer and of a pointer, $`\mathsf{add}`,
 $`\mathsf{sub}`, $`\mathsf{mul}`, the four divisions $`\mathsf{sdiv}`,
 $`\mathsf{udiv}`, $`\mathsf{srem}` and $`\mathsf{urem}`, the bitwise ops
 $`\mathsf{and}`, $`\mathsf{or}` and $`\mathsf{xor}`, the shifts
@@ -42,7 +42,7 @@ conversions from integers $`\mathsf{sitofp}` and $`\mathsf{uitofp}`, the
 two conversions between formats $`\mathsf{fpext}` and
 $`\mathsf{fptrunc}`, the pointer offset $`\mathsf{ptradd}`, and the two
 conversions to integers $`\mathsf{fptosi}` and $`\mathsf{fptoui}`. Each proves it in the section of its family; $`\mathsf{alloca}`, like $`\mathsf{const}` and $`\mathsf{poison}`, has no operands, so it propagates poison whatever its rule, and
-$`\mathsf{load}` and $`\mathsf{store}` have no outcome in the set monad,
+the loads and stores have no outcome in the set monad,
 so they give no result and hit no UB there. The other
 ops, $`\mathsf{select}`, $`\mathsf{freeze}`, $`\mathsf{br}`,
 $`\mathsf{cond\_br}`, $`\mathsf{ret}`, $`\mathsf{unreachable}` and

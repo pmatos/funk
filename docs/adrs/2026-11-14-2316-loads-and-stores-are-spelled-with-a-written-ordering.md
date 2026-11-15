@@ -7,14 +7,16 @@ Tier: direction; area: semantics
 
 - **The load.** `%v: iW = load ORDERING [align(A)] %p`, for example
   `%v: i32 = load nonatomic align(4) %p`. It has one operand, the pointer,
-  and one result. Its memory is its pointer's.
+  and one result, an integer or a pointer (stage 4d-2b of #231). Its memory
+  is its pointer's.
 - **The store.** `store ORDERING [align(A)] %v, %p`, with no result, the
-  value before the pointer, its memory the pointer's (stage 4e-3 of #231).
+  value, an integer or a pointer, before the pointer, its memory the
+  pointer's (stage 4e-3 of #231).
 - **The attributes.** The ordering is always written, then `align(A)` only
   when the op gives an alignment, separated by spaces as every op's
   attributes are, so each instance has one spelling. With no `align(A)` the
   access is aligned to the natural alignment of its type in its memory
-  (`MemLayout.intAlign`).
+  (`MemLayout.intAlign`), and a pointer as `alloca` aligns one.
 - **The orderings.** The words are LLVM's: `nonatomic`, `unordered`,
   `monotonic`, `acquire`, `release`, `acq_rel` and `seq_cst`
   (`Memory.Ordering` in `lean/Fir/Memory/Ordering.lean`). Every one decodes;

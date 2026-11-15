@@ -4,14 +4,15 @@ ADR-2026-11-03-0557).
 - `ptradd`, which has no attributes, is a cell for each width of its
   integer.
 - `alloca` is a cell for each width of the integer type it allocates,
-  whatever its kind, count and alignment.
+  whatever its kind, count and alignment, and one, `ptr`, for a pointer
+  type of any memory (stage 4d-2b of #231).
 - `load` is a cell for each width of the integer it loads, whatever its
-  ordering and alignment.
+  ordering and alignment, and one, `ptr`, for a pointer of any memory.
 - `store` is a cell for each width of the integer it stores, whatever its
-  ordering and alignment.
+  ordering and alignment, and one, `ptr`, for a pointer of any memory.
 
 Each is a cell at the side's pointer widths, `cells.POINTER_DIFFERENTIAL`
-and `cells.POINTER_INTERPRETER`.
+and `cells.POINTER_INTERPRETER`, and the pointer cells with them.
 """
 
 from cell_types import Cell, CellError, is_pointer
@@ -19,12 +20,22 @@ from firtext import Op
 from refine import bits_of
 
 POINTER_OPS = ("ptradd", "alloca", "load", "store")
+# The column of the pointer cells of `alloca`, `load` and `store`.
+POINTER = "ptr"
 
 
 def is_int(t: str) -> bool:
     """Whether `t` is an integer type `iN`."""
     bits = bits_of(t)
     return bits is not None and bits[1]
+
+
+def element(t: str) -> str | None:
+    """The column of a type that memory holds: an integer type's own, and
+    `ptr` for a pointer type of any memory; none for any other type."""
+    if is_int(t):
+        return t
+    return POINTER if is_pointer(t) else None
 
 
 def pointer_offset(op: Op) -> Cell:
@@ -39,26 +50,28 @@ def pointer_offset(op: Op) -> Cell:
 
 def stack_allocation(op: Op) -> Cell:
     """The cell of an `alloca`: at the width of the integer type it
-    allocates, its second attribute after its kind. Its count and alignment
+    allocates, its second attribute after its kind, or at `ptr`. Its count and alignment
     are not part of its cell, as a constant's value is not. The matrix
     reads canonical modules, which both tools decode, so the rest of its
     attributes needs no check here."""
     if len(op.attrs) >= 2 and not op.operands and len(op.results) == 1:
-        element = op.attrs[1]
-        if is_pointer(op.results[0]) and is_int(element):
-            return Cell("pointers", op.name, "", element)
+        column = element(op.attrs[1])
+        if is_pointer(op.results[0]) and column:
+            return Cell("pointers", op.name, "", column)
     raise CellError(f"{op.name} {' '.join(op.attrs)} to {op.results} is not a cell")
 
 
 def memory_load(op: Op) -> Cell:
-    """The cell of a `load`: at the width of the integer it loads. Its
+    """The cell of a `load`: at the width of the integer it loads, or at
+    `ptr`. Its
     ordering and alignment are not part of its cell, as an allocation's
     count is not. The matrix reads canonical modules, which both tools
     decode, so the rest of its attributes needs no check here."""
     if op.attrs and len(op.operands) == len(op.results) == 1:
         [pointer], [result] = op.operands, op.results
-        if is_pointer(pointer) and is_int(result):
-            return Cell("pointers", op.name, "", result)
+        column = element(result)
+        if is_pointer(pointer) and column:
+            return Cell("pointers", op.name, "", column)
     raise CellError(
         f"{op.name} {' '.join(op.attrs)} of {op.operands} to {op.results} is not a cell"
     )
@@ -66,13 +79,14 @@ def memory_load(op: Op) -> Cell:
 
 def memory_store(op: Op) -> Cell:
     """The cell of a `store`: at the width of the integer it stores, its
-    first operand. Its ordering and alignment are not part of its cell, as
+    first operand, or at `ptr`. Its ordering and alignment are not part of its cell, as
     a load's are not. The matrix reads canonical modules, which both tools
     decode, so the rest of its attributes needs no check here."""
     if op.attrs and len(op.operands) == 2 and not op.results:
         value, pointer = op.operands
-        if is_int(value) and is_pointer(pointer):
-            return Cell("pointers", op.name, "", value)
+        column = element(value)
+        if column and is_pointer(pointer):
+            return Cell("pointers", op.name, "", column)
     raise CellError(
         f"{op.name} {' '.join(op.attrs)} of {op.operands} to {op.results} is not a cell"
     )

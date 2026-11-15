@@ -37,8 +37,9 @@ def Op.sig : Op → List Ty
   | .sitofp n .. | .uitofp n .. => [i n]
   | .fpext e m .. | .fptrunc e m .. | .fptosi e m _ | .fptoui e m _ => [.float e m]
   | .ptradd n w => [.ptr n, i w]
-  | .load _ _ _ n => [.ptr n]
+  | .load _ _ _ n | .loadPtr _ _ _ n => [.ptr n]
   | .store _ w _ n => [i w, .ptr n]
+  | .storePtr _ m _ n => [.ptr m, .ptr n]
   | .freeze w => [i w]
   | .condBr => [i 1]
   | .ret ts => ts
@@ -59,7 +60,8 @@ def Op.returnTypes : Op → List Ty
   | .ptradd n _ | .alloca _ _ _ _ n => [.ptr n]
   | .fptosi _ _ n | .fptoui _ _ n => [i n]
   | .load _ w _ _ => [i w]
-  | .br | .condBr | .ret _ | .unreachable | .store .. => []
+  | .loadPtr _ m _ _ => [.ptr m]
+  | .br | .condBr | .ret _ | .unreachable | .store .. | .storePtr .. => []
   | .call _ _ rs => rs
 
 /-- `br`, `cond_br`, `ret` and `unreachable` end a block. -/

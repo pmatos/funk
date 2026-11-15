@@ -3,20 +3,22 @@
 //! `lean/Fir/Core/Validation.lean`; #231).
 //!
 //! `%v: iW = load ORDERING [align(A)] %p` loads an `iW` through the pointer
-//! `%p` of `ptr<N>`, from memory `N`. Its attributes are those of an access
-//! (`access.rs`), in order: the ordering, one of the words of
-//! [`ORDERINGS`]; and `align(A)`, with `A` not negative, written only when
-//! the op gives an alignment. It has one pointer operand and one integer
-//! result. Any other shape does not decode.
+//! `%p` of `ptr<N>`, from memory `N`, and `%r: ptr<M> = load ...` loads a
+//! pointer of memory `M` (`loadPtr`; stage 4d-2b of #231). Its attributes
+//! are those of an access (`access.rs`), in order: the ordering, one of the
+//! words of [`ORDERINGS`]; and `align(A)`, with `A` not negative, written
+//! only when the op gives an alignment. It has one pointer operand and one
+//! integer or pointer result. Any other shape does not decode.
 //!
 //! Validation accepts only the ordering `nonatomic`, the other orderings
 //! being hooks for a concurrency model (ADR-2026-11-09-1542), and an
 //! alignment that is a power of two no larger than [`MemLayout::LIMIT`], as
 //! `alloca`'s is. With no `align(A)` the access is aligned to the natural
-//! alignment of `iW` in memory `N`. The op reads memory `N`, may be UB (on a
-//! poison pointer, or an access out of bounds, to a freed allocation,
-//! without provenance or misaligned) and may give poison (units that are not
-//! an integer's encoding, as fresh memory's).
+//! alignment of `iW` in memory `N`, or to the default alignment of `ptr<M>`
+//! there, as `alloca`'s. The op reads memory `N`, may be UB (on a poison
+//! pointer, or an access out of bounds, to a freed allocation, without
+//! provenance or misaligned) and may give poison (units that are not an
+//! encoding of its type, as fresh memory's, or a punned load).
 //!
 //! [`MemLayout::LIMIT`]: crate::ir::MemLayout::LIMIT
 //! [`ORDERINGS`]: super::ORDERINGS
@@ -27,11 +29,11 @@ use crate::effects::{Effects, MemSet};
 use crate::registry::OpTypes;
 
 /// The memory of the pointer `load` loads through, when it has one pointer
-/// operand and one integer result.
+/// operand and one integer or pointer result.
 fn memory(op: &OpTypes<'_>) -> Option<u32> {
     match (op.operands, op.results) {
         ([p], [r]) => match (core_type(p)?, core_type(r)?) {
-            (CoreType::Ptr(n), CoreType::Int(_)) => Some(n),
+            (CoreType::Ptr(n), CoreType::Int(_) | CoreType::Ptr(_)) => Some(n),
             _ => None,
         },
         _ => None,
@@ -51,7 +53,7 @@ fn effects(reads: MemSet) -> Effects {
 /// `%v: i32 = load nonatomic align(4) %p`.
 pub(super) const LOAD: Access = Access {
     name: "load",
-    shape: "a pointer and defines an integer",
+    shape: "a pointer and defines an integer or a pointer",
     memory,
     effects,
 };
@@ -79,12 +81,26 @@ mod tests {
     }
 
     #[test]
+    fn a_pointer_of_any_memory_loads_through_a_pointer_of_any_memory() {
+        for (n, m) in [(0, 0), (1, 0), (0, 1), (MAX_MEMORY, 2)] {
+            let attrs = [Attr::word("nonatomic")];
+            let (operands, results) = ([ptr_type(n)], [ptr_type(m)]);
+            let op = types(&attrs, &operands, &results);
+            assert_eq!(LOAD.decode(&op), Ok(OpShape::default()), "{n} {m}");
+            assert_eq!(
+                LOAD.effects(&op).reads,
+                MemSet::These(vec![n.to_string()]),
+                "{n} {m}"
+            );
+        }
+    }
+
+    #[test]
     fn other_shapes_do_not_decode() {
         let (p, i32, f32) = (ptr_type(0), int_type(32), float_type(8, 23));
         let ok = [Attr::word("nonatomic")];
         for (attrs, operands, results) in [
             (vec![], vec![p.clone()], vec![i32.clone()]),
-            (ok.to_vec(), vec![p.clone()], vec![p.clone()]),
             (ok.to_vec(), vec![p.clone()], vec![f32.clone()]),
             (ok.to_vec(), vec![i32.clone()], vec![i32.clone()]),
             (ok.to_vec(), vec![p.clone(), p.clone()], vec![i32.clone()]),

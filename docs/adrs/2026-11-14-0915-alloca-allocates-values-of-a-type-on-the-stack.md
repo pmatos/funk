@@ -11,16 +11,19 @@ Tier: direction; area: semantics
   not 1, and `align(A)` only when given, so each instance has one spelling.
   Its memory is its result's.
 - **Its meaning.** It allocates `COUNT` times the units of `TYPE` in memory
-  `N`, with kind `KIND`, aligned to `A` units, or to the type's natural alignment
-  (`MemLayout.intAlign`). The result has provenance for the allocation at
+  `N`, with kind `KIND`, aligned to `A` units, or to the type's natural
+  alignment (`MemLayout.intAlign` for `iW`; semantics-m1-memory-access.md
+  says what holds for `ptr<M>`). The result has provenance for the allocation at
   offset 0, whose units are poison. A stack allocation is freed when its call
   returns. It is never UB, its result is never poison, and its effect is
   "allocates in memory `N`".
 - **What M1 accepts.** The kind `stack` alone (`global` and `heap` decode, as
   hooks: ADR-2026-11-09-1542), a count of at least 1, a power of two `A` no
   larger than `MemLayout.limit` (2^24 - 1), which bounds a written `A` only
-  (#385), and a valid integer type. The count has no bound: one too large
-  for the machine is a resource error at run time, as a deep recursion is.
+  (#385), and a valid integer or pointer type, whose memory the data layout
+  declares (stage 4d-2b of #231); a float has no encoding in units. The
+  count has no bound: one too large for the machine is a resource error at
+  run time, as a deep recursion is.
 
 ## Why
 
@@ -30,7 +33,7 @@ pointer rule. On 2026-11-14 (#382) the human confirmed the spaces, one
 attribute grammar for every dialect, and ruled: integer elements until float
 and pointer loads and stores land; `A` bounded as the layout line bounds its
 own alignments, the count unbounded; and the G0 check's exemption of `align`
-kept
+kept. Pointer elements came with their loads and stores, in stage 4d-2b
 (semantics-m1-memory.md).
 
 ## Rejected alternatives

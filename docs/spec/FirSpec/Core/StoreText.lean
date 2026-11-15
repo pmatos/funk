@@ -14,18 +14,20 @@ when the Lean changes under it.
 
 #doc (Manual) "Stores in text: readable blocks" =>
 
-:::moduleDocs (fingerprint := "18323177005968872548")
+:::moduleDocs (fingerprint := "5791420018318324702")
 :::
 
-:::readable Fir.Core.decodeStore (pin := Fir.Core.decodeOrdering) (pin := Fir.Core.decodeAlign) (fingerprint := "18375257840442844432")
+:::readable Fir.Core.decodeStore (pin := Fir.Core.decodeOrdering) (pin := Fir.Core.decodeAlign) (fingerprint := "14631777381098178618")
 *Definition: the text of $`\mathsf{store}`.* The attributes of
 $`\mathsf{store}_N~o~W~a` are those of a load, written as
 $`\mathrm{loadattrs}(o, a)`: the word of its ordering $`o`, then
 $`\mathtt{align}(a)` when it gives an alignment. Its operands are the
 value, then the pointer, and it has no result.
 $`\mathrm{decodestore}(a^*, t^*, r^*)` reads it back: two operands, of an
-integer type $`\mathsf{i}W` and then a pointer type
-$`\mathsf{ptr}\langle N \rangle`, no result, an ordering's word, and an
+integer type $`\mathsf{i}W`, or a pointer type
+$`\mathsf{ptr}\langle M \rangle` for the store of a pointer, and then a
+pointer type $`\mathsf{ptr}\langle N \rangle`, no result, an ordering's
+word, and an
 alignment written as $`\mathsf{alloca}`'s is. Any other shape does not
 decode. So `store nonatomic %v, %p @1` stores an $`\mathsf{i32}` `%v` at
 its natural alignment, and `store nonatomic align(4) %b, %q @1` an

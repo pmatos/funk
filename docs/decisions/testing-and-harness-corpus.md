@@ -81,7 +81,9 @@ The pointer ops have a table of their own (`cells.POINTER_OPS`, the
 catalog's `pointers` table): `ptradd` has a cell at each width of its integer,
 the stack allocation `alloca` a cell at each width of the integer type it
 allocates, `load` a cell at each width of the integer it loads, and
-`store` a cell at each width of the integer it stores. Only
+`store` a cell at each width of the integer it stores; each of the three
+has one more cell, `ptr`, for a pointer of any memory (stage 4d-2b of
+#231). Only
 the interpreter-only side has their cells: the backend lowers pointers in
 stage 5 of #231, which gives the differential side its widths. A
 run's pointers come from `alloca`, so the tests that fill the `ptradd` cells

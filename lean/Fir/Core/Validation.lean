@@ -41,13 +41,22 @@ def Ty.memory : Ty → Option Nat
   | .ptr n => some n
   | _ => none
 
-/-- An integer type: the types that M1's `alloca` allocates. -/
-def Ty.IsInt : Ty → Prop
-  | .int _ => True
-  | _ => False
+/-- An integer or a pointer type: the types that M1's `alloca` allocates,
+the ones a value of which has an encoding in units. -/
+def Ty.IsElem : Ty → Prop
+  | .int _ | .ptr _ => True
+  | .float _ _ => False
 
-instance : DecidablePred Ty.IsInt := fun t => by
-  cases t <;> unfold Ty.IsInt <;> infer_instance
+instance : DecidablePred Ty.IsElem := fun t => by
+  cases t <;> unfold Ty.IsElem <;> infer_instance
+
+/-- The type that `alloca` allocates values of, which it carries in its
+attributes, so that the data layout checks the memory a pointer type there
+names. No other core op carries a type of its own: `call`'s are its
+callee's, and `ret`'s the function's results. -/
+def Op.attrTypes : Op → List Ty
+  | .alloca _ t _ _ _ => [t]
+  | _ => []
 
 /-- `call` refers to its callee's symbol; no other core op refers to one. -/
 def Op.symbolRefs : Op → List String
@@ -80,11 +89,15 @@ The core rules of an op beyond its signature.
   power of two of units (the human's ruling of 2026-11-11 on #231) no
   larger than `MemLayout.limit`, the data layout's rule for its own
   alignments (`MemLayout.ValidAlign`; the human's ruling of 2026-11-14 on
-  #382), and its type is a valid integer type. Its count has no bound: an
-  allocation larger than a machine holds is a resource error at run time,
+  #382), and its type is a valid integer or pointer type, as stage 4d-2b
+  of #231 adds pointer loads and stores (the human's ruling of 2026-11-14
+  on #382); a float type has no encoding in units, and M1 has no float
+  loads or stores. Its count has no bound: an allocation larger than a
+  machine holds is a resource error at run time,
   as a deep recursion is, and not a rule of validation. Its result names
-  its memory, so the module's data layout checks that the module has that
-  memory (ADR-2026-11-14-0915).
+  its memory, and a pointer type that it allocates values of names one
+  too (`Op.attrTypes`), so the module's data layout checks that the module
+  has each (ADR-2026-11-14-0915).
 * `load` has the ordering `nonatomic`, the one M1 accepts: the other
   orderings are hooks in the format for a concurrency model
   (ADR-2026-11-09-1542). An alignment that it writes is a power of two no
@@ -97,6 +110,10 @@ The core rules of an op beyond its signature.
   alignment that it writes valid as `alloca`'s is. Its operands are an
   integer type, the value it stores, and a pointer, which validation
   checks as it checks every type.
+* `loadPtr` and `storePtr`, the loads and stores of a pointer, have the
+  rules of `load`. The pointer they load or store is a value of the
+  function, so validation checks that the module has its memory as it
+  checks every type.
 
 Every other op has no rule beyond its signature.
 -/
@@ -109,8 +126,9 @@ def Op.Valid (ctx : OpContext CoreDialect) : Op → Prop
   | .fptrunc e m e' m' => ¬(e ≤ e' ∧ m ≤ m')
   | .fcmp _ fl .. | .fbin _ fl .. | .funary _ fl .. | .fma fl .. => fl.Reserved = false
   | .alloca k t c a _ => k = .stack ∧ 1 ≤ c ∧ (∀ x ∈ a, MemLayout.ValidAlign x) ∧
-      t.IsInt ∧ t.Valid
-  | .load o _ a _ | .store o _ a _ => o = .nonatomic ∧ ∀ x ∈ a, MemLayout.ValidAlign x
+      t.IsElem ∧ t.Valid
+  | .load o _ a _ | .store o _ a _ | .loadPtr o _ a _ | .storePtr o _ a _ =>
+    o = .nonatomic ∧ ∀ x ∈ a, MemLayout.ValidAlign x
   | _ => True
 
 end Fir.Core
@@ -123,5 +141,6 @@ instance : DialectValidation CoreDialect where
   validOp := Core.Op.Valid
   validFunc _ _ _ := True
   tyMemory := Core.Ty.memory
+  opTypes := Core.Op.attrTypes
 
 end Fir

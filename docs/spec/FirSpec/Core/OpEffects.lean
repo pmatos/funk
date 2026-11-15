@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Core effects: readable blocks" =>
 
-:::moduleDocs (fingerprint := "7789416781622186035")
+:::moduleDocs (fingerprint := "4170350126311395825")
 :::
 
 :::readable Fir.Core.Mem (fingerprint := "11401156343561318334")
@@ -30,7 +30,7 @@ $`\mathsf{load}` and $`\mathsf{store}` the memory of their pointer; no
 other core op names a memory.
 :::
 
-:::readable Fir.Core.Op.effects (fingerprint := "2731684813881207414")
+:::readable Fir.Core.Op.effects (fingerprint := "891018950220000484")
 *Definition: the effects of each core op.* For each
 {ref "The-fir-specification--Abstract-syntax--Core-ops"}[core op instance]:
 
@@ -52,6 +52,12 @@ $$`\mathsf{alloca}_N:\ \{\mathsf{allocates}(N)\} \qquad \mathsf{load}_N:\ \{\mat
 
 $$`\mathsf{store}_N:\ \{\mathsf{writes}(N),\ \mathsf{mayUB}\}`
 
+The load and store of a pointer, $`\mathsf{load}_N~o~\mathsf{ptr}\langle M \rangle~a`
+and $`\mathsf{store}_N~o~\mathsf{ptr}\langle M \rangle~a` (`loadPtr` and
+`storePtr` in the Lean), have the sets of $`\mathsf{load}_N` and
+$`\mathsf{store}_N`: the memory is $`N`, the pointer's they access
+through, never the memory $`M` of the pointer they load or store.
+
 $`\mathsf{const}` here is a constant of any type, an integer's or a
 float's. The float ops without $`\mathsf{nnan}` and $`\mathsf{ninf}`
 are pure: a NaN result and a zero of either sign under $`\mathsf{nsz}`
@@ -66,7 +72,8 @@ nothing else that an effect names: it is never UB and gives a defined
 pointer, and the frame of its call frees the allocation.
 $`\mathsf{load}_N` reads the memory $`N` of its pointer, may be UB, on a
 poison pointer or an access that faults, and may give poison, for units
-that are not an integer's encoding, such as fresh memory's.
+that are not an encoding of its type, such as fresh memory's or a punned
+load's.
 $`\mathsf{store}_N` writes the memory $`N` of its pointer and may be UB,
 on a poison pointer or an access that faults. It reads no memory, its own
 included, since whether it faults depends on the allocations and not on

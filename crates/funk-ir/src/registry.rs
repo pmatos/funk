@@ -106,6 +106,15 @@ pub trait OpSpec: Send + Sync {
     /// [`OpShape::terminator`] is false, as Lean's `notControl` proves.
     fn effects(&self, op: &OpTypes<'_>) -> Effects;
 
+    /// The types that the op instance carries in its attributes `attrs`,
+    /// beyond its operand and result types, such as the type that `alloca`
+    /// allocates values of (`DialectValidation.opTypes`). The verifier
+    /// checks that the data layout declares each memory they name. An op
+    /// that carries no type gives none, the default.
+    fn attr_types(&self, _attrs: &[crate::Attr]) -> Vec<Type> {
+        Vec::new()
+    }
+
     /// The symbol of the function that the op instance used at `op` calls,
     /// or `None` for an op that calls none (`callee?`, `DialectCall`). The
     /// interpreter runs the callee of an op that is not a terminator, and

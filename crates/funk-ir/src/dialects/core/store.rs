@@ -3,11 +3,12 @@
 //! `lean/Fir/Core/Validation.lean`; #231).
 //!
 //! `store ORDERING [align(A)] %v, %p` stores the `iW` `%v` through the
-//! pointer `%p` of `ptr<N>`, to memory `N`, and gives no result. Its
+//! pointer `%p` of `ptr<N>`, to memory `N`, and gives no result; a value of
+//! `ptr<M>` is stored as its fragments (`storePtr`; stage 4d-2b of #231). Its
 //! attributes are those of a load (`access.rs`): the ordering, then
 //! `align(A)` when the op gives an alignment (ADR-2026-11-14-2316). It has
-//! two operands, the integer value and then the pointer, and no result. Any
-//! other shape does not decode.
+//! two operands, the integer or pointer value and then the pointer, and no
+//! result. Any other shape does not decode.
 //!
 //! Validation accepts what it accepts of a load: the ordering `nonatomic`
 //! and an alignment that is a power of two no larger than the data layout's
@@ -24,11 +25,11 @@ use crate::effects::{Effects, MemSet};
 use crate::registry::OpTypes;
 
 /// The memory of the pointer `store` stores through, when it has an integer
-/// operand, then a pointer operand, and no result.
+/// or pointer operand, then a pointer operand, and no result.
 fn memory(op: &OpTypes<'_>) -> Option<u32> {
     match (op.operands, op.results) {
         ([v, p], []) => match (core_type(v)?, core_type(p)?) {
-            (CoreType::Int(_), CoreType::Ptr(n)) => Some(n),
+            (CoreType::Int(_) | CoreType::Ptr(_), CoreType::Ptr(n)) => Some(n),
             _ => None,
         },
         _ => None,
@@ -47,7 +48,7 @@ fn effects(writes: MemSet) -> Effects {
 /// `store nonatomic align(4) %v, %p`.
 pub(super) const STORE: Access = Access {
     name: "store",
-    shape: "an integer and then a pointer, and defines nothing",
+    shape: "an integer or a pointer and then a pointer, and defines nothing",
     memory,
     effects,
 };
@@ -75,6 +76,21 @@ mod tests {
     }
 
     #[test]
+    fn a_pointer_of_any_memory_stores_through_a_pointer_of_any_memory() {
+        for (m, n) in [(0, 0), (1, 0), (0, 1), (MAX_MEMORY, 2)] {
+            let attrs = [Attr::word("nonatomic")];
+            let operands = [ptr_type(m), ptr_type(n)];
+            let op = types(&attrs, &operands, &[]);
+            assert_eq!(STORE.decode(&op), Ok(OpShape::default()), "{m} {n}");
+            assert_eq!(
+                STORE.effects(&op).writes,
+                MemSet::These(vec![n.to_string()]),
+                "{m} {n}"
+            );
+        }
+    }
+
+    #[test]
     fn other_shapes_do_not_decode() {
         let (p, i32, f32) = (ptr_type(0), int_type(32), float_type(8, 23));
         let ok = [Attr::word("nonatomic")];
@@ -82,7 +98,6 @@ mod tests {
             (vec![], vec![i32.clone(), p.clone()], vec![]),
             (ok.to_vec(), vec![p.clone(), i32.clone()], vec![]),
             (ok.to_vec(), vec![f32.clone(), p.clone()], vec![]),
-            (ok.to_vec(), vec![p.clone(), p.clone()], vec![]),
             (ok.to_vec(), vec![i32.clone(), i32.clone()], vec![]),
             (ok.to_vec(), vec![p.clone()], vec![]),
             (ok.to_vec(), vec![i32.clone(), p.clone(), p.clone()], vec![]),

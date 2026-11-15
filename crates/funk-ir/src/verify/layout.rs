@@ -13,11 +13,13 @@
 //! whose types name a memory that the layout does not declare gets one
 //! diagnostic, which names the first such memory in the order of
 //! `Func.types`: its results, its parameters, then the values that each
-//! block defines.
+//! block defines; and then of `Func.attrTypes`: the types that its ops
+//! carry in their attributes, op by op.
 
 use std::collections::HashSet;
 
 use super::Diagnostic;
+use crate::ir::Part;
 use crate::ir::layout::memory;
 use crate::ir::{ByteOrder, MemLayout, Table, Type};
 use crate::registry::Registry;
@@ -75,7 +77,17 @@ pub(super) fn check_memories(
 ) {
     let missing = |ty: &Type| reg.type_memory(ty).filter(|&n| memory(layout, n).is_none());
     for f in t.funcs() {
-        if let Some(n) = f.types().find_map(missing) {
+        let first = f.types().find_map(missing).or_else(|| {
+            f.body.parts().find_map(|part| match part {
+                Part::Op(o) => reg
+                    .op(&o.name)?
+                    .attr_types(&o.attrs)
+                    .iter()
+                    .find_map(missing),
+                _ => None,
+            })
+        });
+        if let Some(n) = first {
             out.push(problem(&f.name, n));
         }
     }

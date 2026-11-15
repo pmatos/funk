@@ -1,5 +1,5 @@
 # Must-reject texts of load (#231). It takes one pointer operand
-# and defines an integer; its attributes are its ordering and align(A),
+# and defines an integer or a pointer (stage 4d-2b); its attributes are its ordering and align(A),
 # in that order, separated by spaces. Every ordering decodes, and
 # validation accepts only nonatomic (ADR-2026-11-09-1542); an alignment
 # decodes when it is not negative, and validation accepts a power of two no
@@ -219,26 +219,11 @@ locs {
 
 [[reject]]
 verdict = "parse-error"
-rule = "load loads an integer type: an f32 result does not decode"
+rule = "load loads an integer or a pointer type: an f32 result does not decode"
 text = '''
 func @f(%p: ptr, %k: i64) -> i32 {
 ^e:
   %v: f32 = load nonatomic %p @0
-  ret %v @0
-}
-
-locs {
-  @0 = unknown
-}
-'''
-
-[[reject]]
-verdict = "parse-error"
-rule = "load loads an integer type in M1: a pointer result does not decode"
-text = '''
-func @f(%p: ptr, %k: i64) -> i32 {
-^e:
-  %v: ptr = load nonatomic %p @0
   ret %v @0
 }
 
@@ -301,6 +286,52 @@ func @f(%p: ptr) -> i32 {
   %v: i0 = load nonatomic %p @0
   %c: i32 = const 0 @0
   ret %c @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "a load of a pointer of an undeclared memory is rejected: its result of ptr(2) names memory 2, which the layout does not declare"
+text = '''
+func @f(%p: ptr) -> i8 {
+^e:
+  %q: ptr(2) = load nonatomic %p @0
+  %v: i8 = const 0 @0
+  ret %v @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "a load of a pointer is nonatomic in M1: the ordering acquire decodes and is rejected"
+text = '''
+func @f(%p: ptr) -> ptr {
+^e:
+  %q: ptr = load acquire %p @0
+  ret %q @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "a load of a pointer aligns to a power of two: align(6) is rejected"
+text = '''
+func @f(%p: ptr) -> ptr {
+^e:
+  %q: ptr = load nonatomic align(6) %p @0
+  ret %q @0
 }
 
 locs {

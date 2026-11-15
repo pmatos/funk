@@ -2,7 +2,7 @@ import Fir.Core.FloatArithLaws
 import Fir.Core.FloatOfIntLaws
 import Fir.Core.FloatConvertLaws
 import Fir.Core.Alloca
-import Fir.Core.Store
+import Fir.Core.PtrAccess
 import Fir.Core.Lawful
 import Fir.Execution.MemoryRuns
 
@@ -22,8 +22,9 @@ memory effect, over the memories of a run, whose layout entries are `lay`,
 where the run names the core's memory `x` as `ρ x`. An op that touches
 memory reads the entry `lay (ρ x)` of the memory it accesses
 (ADR-2026-11-13-0906). `alloca`'s rule allocates in the memory of its
-result, `load`'s reads the memory of its pointer and `store`'s writes it:
-each is its rule with memory alone, and has no rule in the set monad.
+result, `load`'s and `loadPtr`'s read the memory of their pointer, and
+`store`'s and `storePtr`'s write it: each is its rule with memory alone,
+and has no rule in the set monad.
 Every other core op touches no memory, and its rule with memory is its
 rule. The core's semantics with memory runs those rules in the state layer
 over the set monad, op by op; an op with no rule, as `call`, has no outcome
@@ -31,11 +32,12 @@ there, as in the set monad.
 
 Lifting a computation of the set monad into the state layer keeps choice
 and UB, so it maps each rule in the set monad to the same rule with memory.
-So each core op but `alloca`, `load` and `store` is tied: it runs with
-memory by its rule in the set monad and keeps the memories. Each obligation
-with memory of a tied op follows from its own tie and its obligation in the
-set monad, and `alloca`, `load` and `store` meet each by their own proofs
-(the sections on the stack allocation, load and store obligations). No
+So each core op but `alloca` and the loads and stores is tied: it runs
+with memory by its rule in the set monad and keeps the memories. Each
+obligation with memory of a tied op follows from its own tie and its
+obligation in the set monad, and `alloca` and the loads and stores meet
+each by their own proofs (the sections on the stack allocation, load,
+store, pointer load and pointer store obligations). No
 theorem asks that the whole core dialect lift the set monad.
 -/
 
@@ -112,7 +114,7 @@ theorem denoteIn_mapsDenote (zm : {α : Type} → Op → μ α) (zn : {α : Type
       | .srem _, args => ruleOfEv_map φ hk sremValues args
       | .urem _, args => ruleOfEv_map φ hk uremValues args
       | .br, _ | .condBr, _ | .ret _, _ | .unreachable, _ | .call .., _ | .alloca .., _
-      | .load .., _ | .store .., _ => hz _
+      | .load .., _ | .store .., _ | .loadPtr .., _ | .storePtr .., _ => hz _
     exit := fun
       | .br, _ | .ret _, _ => φ.map_pure _
       | .condBr, .cons c .nil => exitOfEv_map φ hk (condBrExit c)
@@ -123,8 +125,8 @@ theorem denoteIn_mapsDenote (zm : {α : Type} → Op → μ α) (zn : {α : Type
       | .freeze _, _ | .poison _, _ | .call .., _ | .fconst .., _
       | .fcmp .., _ | .fbin .., _ | .funary .., _ | .fma .., _ | .toBits .., _ | .ofBits .., _
       | .sitofp .., _ | .uitofp .., _ | .fpext .., _ | .fptrunc .., _
-      | .ptradd .., _ | .alloca .., _ | .load .., _ | .store .., _ | .fptosi .., _
-      | .fptoui .., _ => hz _ }
+      | .ptradd .., _ | .alloca .., _ | .load .., _ | .store .., _ | .loadPtr .., _
+      | .storePtr .., _ | .fptosi .., _ | .fptoui .., _ => hz _ }
 
 end
 
@@ -147,6 +149,10 @@ def Op.memDenote? (lay : N → MemLayout) (ρ : Mem → N) [MonadMemory N (units
     | .cons p .nil => loadRule lay ρ w a n p
   | .store _ w a n => some fun
     | .cons v (.cons p .nil) => storeRule lay ρ w a n v p
+  | .loadPtr _ mp a n => some fun
+    | .cons p .nil => loadPtrRule lay ρ mp a n p
+  | .storePtr _ mp a n => some fun
+    | .cons v (.cons p .nil) => storePtrRule lay ρ mp a n v p
   | op => op.denote? (m := m)
 
 /-- The rule of each core terminator, with memory: its rule in `Op.exit?`,
@@ -201,6 +207,18 @@ theorem memDenoteIn_mapsDenote {μ ν : Type → Type} [Monad μ] [Monad ν] [Mo
           cases (p : PoisonOr Memory.Pointer) with
           | poison => exact hk.ub _
           | value q => exact (φ.map_map _ _).trans (congrArg _ (hs _ _ _ _))
+      | loadPtr o mp a n =>
+        match args with
+        | .cons p .nil =>
+          cases (p : PoisonOr Memory.Pointer) with
+          | poison => exact hk.ub _
+          | value q => exact (φ.map_map _ _).trans (congrArg _ (hl _ _ _ _))
+      | storePtr o mp a n =>
+        match args with
+        | .cons v (.cons p .nil) =>
+          cases (p : PoisonOr Memory.Pointer) with
+          | poison => exact hk.ub _
+          | value q => exact (φ.map_map _ _).trans (congrArg _ (hs _ _ _ _))
       | _ =>
         exact @MonadMorphism.MapsDenote.denote μ ν _ _ φ CoreDialect _ _ (denoteIn @zm)
           (denoteIn @zn) h _ args)
@@ -241,7 +259,7 @@ theorem Op.liftsSetM (op : Op) (hm : op.touchesMemory = false) :
       exact propext ⟨fun h => by rcases h with ⟨_, h, _⟩ | ⟨_, h, _⟩ <;> exact h, False.elim⟩
   obtain ⟨hd, he⟩ := h
   cases op with
-  | alloca | load | store => cases hm
+  | alloca | load | store | loadPtr | storePtr => cases hm
   | _ => exact ⟨(hd _ args).symm, (he _ args).symm⟩
 
 end Core

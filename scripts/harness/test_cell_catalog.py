@@ -100,7 +100,14 @@ class Catalog(unittest.TestCase):
         )
         self.assertEqual(
             tables["pointers"].rows[0].entries,
-            (Cell("pointers", "ptradd", "", "i7"),),
+            (Cell("pointers", "ptradd", "", "i7"), None),
+        )
+        self.assertEqual(
+            tables["pointers"].rows[1].entries,
+            (
+                Cell("pointers", "alloca", "", "i7"),
+                Cell("pointers", "alloca", "", "ptr"),
+            ),
         )
 
     def test_empty_axes_keep_labelled_rows_but_no_typed_cells(self):

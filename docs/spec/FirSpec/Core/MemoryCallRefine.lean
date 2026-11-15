@@ -17,16 +17,16 @@ pins their fingerprint; the build fails when the Lean changes under it.
 :::moduleDocs (fingerprint := "11776099395834119705")
 :::
 
-:::readable Fir.Core.Op.effects_touchesNoMemory Fir.Core.Op.touchesMemory_false Fir.Core.reachesNoMemory Fir.Core.reachesNoMemory_of_all (pin := Fir.Core.Op.effects) (fingerprint := "6951968889614417050")
+:::readable Fir.Core.Op.effects_touchesNoMemory Fir.Core.Op.touchesMemory_false Fir.Core.reachesNoMemory Fir.Core.reachesNoMemory_of_all (pin := Fir.Core.Op.effects) (fingerprint := "4810579396596054104")
 *Theorems: a core op declares a memory effect exactly when it touches
 memory, and a core function with no allocation, load or store in reach
 reaches no memory.* The {ref "The-fir-specification--Execution--Effect-sets"}[effects]
 of every core op that touches no memory, every one but
-$`\mathsf{alloca}`, $`\mathsf{load}` and $`\mathsf{store}`, read, write
-and allocate in no memory, and an op that declares no memory effect
-touches no memory, since $`\mathsf{alloca}_N` declares that it allocates
-in memory $`N`, $`\mathsf{load}_N` that it reads it and
-$`\mathsf{store}_N` that it writes it. So in a core symbol table, the
+$`\mathsf{alloca}` and the loads and stores, read, write and allocate in
+no memory, and an op that declares no memory effect touches no memory,
+since $`\mathsf{alloca}_N` declares that it allocates in memory $`N`,
+$`\mathsf{load}_N` of an integer or a pointer that it reads it and
+$`\mathsf{store}_N` of either that it writes it. So in a core symbol table, the
 function named $`s`
 {ref "The-fir-specification--Memory--Touching-no-memory"}[reaches no memory]
 when no function that the walk from $`s` reaches, $`s`'s own included, has

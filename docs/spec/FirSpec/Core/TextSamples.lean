@@ -14,10 +14,10 @@ build fails when the Lean changes under it.
 
 #doc (Manual) "The core dialect's text, checked: readable blocks" =>
 
-:::moduleDocs (fingerprint := "16346609955173615331")
+:::moduleDocs (fingerprint := "9302430205169712939")
 :::
 
-:::readable Fir.Core.samples (pin := Fir.instDialectTextCoreDialect) (fingerprint := "8956156024965257954")
+:::readable Fir.Core.samples (pin := Fir.instDialectTextCoreDialect) (fingerprint := "15269983539242023802")
 *Definition: the core dialect's text, and one instance of every core op.*
 The functions of the
 {ref "The-fir-specification--Text-format--The-core-dialect-in-text"}[previous section],
@@ -26,8 +26,8 @@ $`\mathrm{tyattr}` and $`\mathrm{decodety}`, are the core dialect's
 {ref "The-fir-specification--Text-format--Grammar"}[text], so the parser
 and the printer of every dialect read and write core modules. The samples
 are a list of op instances that
-holds each of the 43 core ops at least once, both bit casts, both conversions from integers, both conversions between formats, both conversions to integers, the pointer offset in three memories, and $`\mathsf{alloca}` of each kind, with and without a count and an alignment, of an integer, a pointer and a float type, and $`\mathsf{load}` and $`\mathsf{store}` with
-four of their orderings each, with and without an alignment, among them, with each of the ten
+holds each of the 45 core ops at least once, both bit casts, both conversions from integers, both conversions between formats, both conversions to integers, the pointer offset in three memories, and $`\mathsf{alloca}` of each kind, with and without a count and an alignment, of an integer, a pointer and a float type, and $`\mathsf{load}` and $`\mathsf{store}` of an integer with
+four of their orderings each, and of a pointer with three, with and without an alignment, among them, with each of the ten
 predicates and each of the fourteen float predicates, at widths from 1 to
 128, float constants at `f32`, `f64`, `f16` and
 $`\mathsf{float}\langle 2,1 \rangle`, with and without each flag, the

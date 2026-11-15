@@ -260,8 +260,8 @@ Stack allocation (#231; the human's ruling of 2026-11-14 on #378):
   it returns. Its units are poison until a store writes them. It is never
   UB, never gives poison, and allocates in the memory `n`. M1's validation
   accepts only the kind `stack`, a count of at least 1, an alignment that
-  is a power of two no larger than `MemLayout.limit`, and an integer type
-  `t`; the count has no bound (ADR-2026-11-14-0915).
+  is a power of two no larger than `MemLayout.limit`, and an integer or
+  pointer type `t`; the count has no bound (ADR-2026-11-14-0915).
 
 Loads (#231):
 
@@ -286,6 +286,21 @@ Stores (#231):
   and poison units for a poison value. A poison pointer is immediate UB,
   as for `load`, and so is an access that faults. It writes its memory and
   may be UB. Validation accepts what it accepts of a `load`.
+
+Loads and stores of pointers (#231; the human's ruling of 2026-11-14 on
+#382):
+
+* `loadPtr o m a n`: loads a `ptr<M>`, `M = m`, through a pointer of
+  `ptr<N>`, `N = n`, as `load` loads an integer: the units that a pointer
+  of memory `M` takes in memory `N`, decoded as a pointer. Only the
+  fragments of one pointer of memory `M`, in order, give that pointer;
+  any other units give poison. Its effects are `load`'s.
+* `storePtr o m a n`: stores a `ptr<M>` through a pointer of `ptr<N>`, as
+  `store` stores an integer: the pointer's fragments, or poison units for
+  poison. Its effects are `store`'s.
+
+With no alignment, either access is aligned to the default alignment of
+`ptr<M>` in memory `N`, as an `alloca` of `ptr<M>` is.
 
 Conversions from a float to an integer, by Lean's float model
 (ADR-2026-11-09-1549; the human's ruling of 2026-11-12 on #354):
@@ -363,6 +378,8 @@ inductive Op where
   | alloca (k : Memory.AllocKind) (t : Ty) (c : Nat) (a : Option Nat) (n : Nat)
   | load (o : Memory.Ordering) (w : Nat) (a : Option Nat) (n : Nat)
   | store (o : Memory.Ordering) (w : Nat) (a : Option Nat) (n : Nat)
+  | loadPtr (o : Memory.Ordering) (m : Nat) (a : Option Nat) (n : Nat)
+  | storePtr (o : Memory.Ordering) (m : Nat) (a : Option Nat) (n : Nat)
   | fptosi (e m n : Nat)
   | fptoui (e m n : Nat)
   | freeze (w : Nat)

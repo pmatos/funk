@@ -40,6 +40,9 @@ def samples : List Op :=
    .load .acqRel 8 none 0] ++
   [.store .nonatomic 32 none 0, .store .nonatomic 1 (some 4) 1,
    .store .release 128 (some 3) maxMemory, .store .monotonic 8 none 0] ++
+  [.loadPtr .nonatomic 0 none 0, .loadPtr .nonatomic 1 (some 4) 0,
+   .loadPtr .seqCst maxMemory (some 3) 1, .storePtr .nonatomic 0 none 0,
+   .storePtr .nonatomic 0 (some 2) 1, .storePtr .release maxMemory none maxMemory] ++
   [.fptosi 8 23 32, .fptoui 11 52 64, .fptosi 5 10 1, .fptoui 15 112 128, .fptosi 2 1 7]
 
 -- Decoding an op's encoding, at its own types, gives the op back.

@@ -78,18 +78,28 @@ memory 0, or one that the layout declares. So `ptr(N)` is valid exactly
 when the layout declares `N`. A dialect says which memory its pointer types
 name through `DialectValidation.tyMemory` (in Rust, `TypeSpec::memory`); the
 core's `ptr(N)` names `N`. The rule covers every type that a function
-states, its results, parameters and the values its blocks define, and the
-types of each item of a dialect's kind, at any depth of nesting. Both rules
+states, its results, parameters and the values its blocks define, the
+types that its ops carry in their attributes, and the types of each item
+of a dialect's kind, at any depth of nesting. A dialect lists the types an
+op carries through `DialectValidation.opTypes` (in Rust,
+`OpSpec::attr_types`), routed through sums and lifts as `tyMemory` is; the
+core's one op that carries a type is `alloca`, so `alloca stack ptr(2)`
+needs memory 2 in the layout (stage 4d-2b of #231). A function's problem
+names the first undeclared memory of its stated types, then of the types
+its ops carry (`Func.attrTypes`). Both rules
 are fields of `Module.Valid`, in `lean/Fir/Validation/Layout.lean`, and
 `Module.problems` checks them after the symbol tables
 (`lean/Fir/Validation/CheckLayout.lean`): first each entry's problems and
 each memory declared twice, then, for each function or item whose types
 name an undeclared memory, one problem that names the first such memory.
 The Rust verifier does the same, in `crates/funk-ir/src/verify/layout.rs`.
-`fir-ref validate` runs the check with a copy of `Func.types` compiled after
-its walk of a function's blocks, so it takes no stack per level of nesting.
+`fir-ref validate` runs the check with copies of `Func.types` and
+`Func.attrTypes` compiled after its walk of a function's blocks, so it takes
+no stack per level of nesting.
 
-Rejected: checking the memory of `ptr(N)` in the core's rule of types,
+Rejected: checking the memory of a type in an op's attributes in the op's
+own rule, which sees no layout, so every dialect's op rule would need it.
+Rejected too: checking the memory of `ptr(N)` in the core's rule of types,
 which sees no module, so every dialect's type rule would need the layout as
 a parameter; a rule beside `Module.Valid`, as the dialect set's is, which
 would leave valid modules with pointers of memories they do not have.

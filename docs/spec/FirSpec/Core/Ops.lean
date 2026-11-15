@@ -14,7 +14,7 @@ pins their fingerprint; the build fails when the Lean changes under it.
 
 #doc (Manual) "Core ops: readable blocks" =>
 
-:::moduleDocs (fingerprint := "17869889403261818575")
+:::moduleDocs (fingerprint := "12805473698288002781")
 :::
 
 :::readable Fir.Core.WrapFlags (fingerprint := "2440796118969772124")
@@ -125,7 +125,7 @@ fneg,fabs,sqrt   \mathsf{fneg} \mid \mathsf{fabs} \mid \mathsf{sqrt}
   neither rounds. $`\mathsf{sqrt}` gives the square root, rounded.
 :::
 
-:::readable Fir.Core.Op (pin := Fir.Core.Op.Valid) (fingerprint := "5376276084848826659")
+:::readable Fir.Core.Op (pin := Fir.Core.Op.Valid) (fingerprint := "16305042693646555354")
 *Ops.* An op of the core dialect carries the width $`N` of the integers it
 works on, or the format $`\mathsf{float}\langle e,m \rangle` of the floats
 it works on, so the types of its operands and results follow from it.
@@ -343,14 +343,15 @@ alloca \mathsf{alloca}_{N}~k~t~c~a
   {ref "The-fir-specification--Validation--Core-rules"}[core rules]
   accept only the kind $`\mathsf{stack}`, a count of at least 1, an
   alignment that is a power of two no larger than $`2^{24} - 1`, and an
-  integer type; the count has no bound (ADR-2026-11-14-0915).
+  integer or a pointer type; the count has no bound (ADR-2026-11-14-0915).
 
 *Loads* read a value from memory (#231).
 
 ```grammar Fir.Core.Op
 \mathit{op}
 -    \dots
-load \mathsf{load}_{N}~o~W~a
+load    \mathsf{load}_{N}~o~W~a
+loadPtr \mathsf{load}_{N}~o~\mathsf{ptr}\langle M \rangle~a
 ```
 
 * $`\mathsf{load}_{N}~o~W~a` loads an $`\mathsf{i}W` through a pointer of
@@ -363,13 +364,17 @@ load \mathsf{load}_{N}~o~W~a
   {ref "The-fir-specification--Validation--Core-rules"}[core rules]
   accept only the ordering $`\mathsf{nonatomic}` and an alignment that is
   a power of two no larger than $`2^{24} - 1`.
+* $`\mathsf{load}_{N}~o~\mathsf{ptr}\langle M \rangle~a` (`loadPtr`)
+  loads a pointer of memory $`M` in the same way. Only one such pointer's
+  fragments, in order, give it; other units give poison (#231, Q3).
 
 *Stores* write a value to memory (#231).
 
 ```grammar Fir.Core.Op
 \mathit{op}
 -     \dots
-store \mathsf{store}_{N}~o~W~a
+store    \mathsf{store}_{N}~o~W~a
+storePtr \mathsf{store}_{N}~o~\mathsf{ptr}\langle M \rangle~a
 ```
 
 * $`\mathsf{store}_{N}~o~W~a` stores an $`\mathsf{i}W` through a pointer
@@ -377,6 +382,8 @@ store \mathsf{store}_{N}~o~W~a
   load of $`\mathsf{i}W` is. It writes the value's encoding, with zero bits
   past $`W`, or poison units for poison. A poison pointer, and an access
   that faults, is immediate UB. The core rules are those of a load.
+* $`\mathsf{store}_{N}~o~\mathsf{ptr}\langle M \rangle~a` (`storePtr`)
+  stores a pointer's fragments, or poison units, in the same way.
 
 *Conversions to integers* give a float's number truncated toward zero as
 an integer (ADR-2026-11-09-1549; the human's ruling of 2026-11-12 on #354).
@@ -459,8 +466,8 @@ validation ask:
 * $`\mathsf{ret}~t^*` returns the result types $`t^*` of its function;
 * $`\mathsf{call}~f : t^* \to r^*` names a symbol $`f` to which the
   module's symbol table gives the function type $`t^* \to r^*`;
-* $`\mathsf{alloca}`, $`\mathsf{load}` and $`\mathsf{store}` have the
-  rules given with them above.
+* $`\mathsf{alloca}`, and $`\mathsf{load}` and $`\mathsf{store}` of an
+  integer or a pointer, have the rules given with them above.
 
 The other ops have no core rule of their own.
 :::

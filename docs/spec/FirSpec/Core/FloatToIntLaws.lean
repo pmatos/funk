@@ -17,7 +17,7 @@ pins their fingerprint; the build fails when the Lean changes under it.
 :::moduleDocs (fingerprint := "5273593330559932615")
 :::
 
-:::readable Fir.Core.floatToIntOp (pin := Fir.Core.Op) (fingerprint := "17214171742058984373")
+:::readable Fir.Core.floatToIntOp (pin := Fir.Core.Op) (fingerprint := "15433247886235843071")
 *Definition: the conversion of a signedness.* $`\mathrm{conv}_{e,m,N}(\mathit{true})`
 is $`\mathsf{fptosi}_{e,m,N}`, and $`\mathrm{conv}_{e,m,N}(\mathit{false})`
 is $`\mathsf{fptoui}_{e,m,N}`, so that the theorems below are stated once

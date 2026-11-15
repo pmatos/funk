@@ -197,7 +197,9 @@ class Tests(unittest.TestCase):
         self.assertEqual(flagged['if e then [.word "exact"] else []'], {"sdiv", "udiv"})
         self.assertEqual(flagged["[.sym f]"], {"call"})
         self.assertEqual(flagged["allocaAttrs k t c a"], {"alloca"})
-        self.assertEqual(flagged["loadAttrs o a"], {"load", "store"})
+        self.assertEqual(
+            flagged["loadAttrs o a"], {"load", "store", "loadPtr", "storePtr"}
+        )
         self.assertEqual(flagged["[]"], set())
 
     def test_the_ops_of_the_core_dialect(self):

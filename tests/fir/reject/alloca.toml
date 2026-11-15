@@ -4,9 +4,10 @@
 # align(A), in that order, separated by spaces. A kind, a type, a count of 0
 # and an alignment decode when they are well formed, and validation says
 # which M1 accepts: the kind stack, a count of at least 1, a power of two no
-# larger than 16777215, the data layout's bound, and a valid integer type.
-# The count has no bound. A result of a memory that the module does not
-# declare is rejected by validation, as for every pointer type.
+# larger than 16777215, the data layout's bound, and a valid integer or
+# pointer type (stage 4d-2b of #231). The count has no bound. A result of a
+# memory that the module does not declare is rejected by validation, as for
+# every pointer type, and so is a pointer type that it allocates values of.
 
 [[reject]]
 verdict = "validation-error"
@@ -250,26 +251,11 @@ locs {
 
 [[reject]]
 verdict = "validation-error"
-rule = "alloca allocates an integer type in M1: f32 is rejected"
+rule = "alloca allocates an integer or a pointer type in M1: f32, which has no encoding in units, is rejected"
 text = '''
 func @f() -> ptr {
 ^e:
   %p: ptr = alloca stack f32 @0
-  ret %p @0
-}
-
-locs {
-  @0 = unknown
-}
-'''
-
-[[reject]]
-verdict = "validation-error"
-rule = "alloca allocates an integer type in M1: ptr is rejected"
-text = '''
-func @f() -> ptr {
-^e:
-  %p: ptr = alloca stack ptr @0
   ret %p @0
 }
 
@@ -315,6 +301,51 @@ text = '''
 func @f() -> ptr(1) {
 ^e:
   %p: ptr(1) = alloca stack i32 @0
+  ret %p @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "alloca allocates pointers of a memory that the module has: ptr(2) without memory 2 in the layout is rejected"
+text = '''
+func @f() -> ptr {
+^e:
+  %p: ptr = alloca stack ptr(2) 4 @0
+  ret %p @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "alloca allocates pointers of a valid memory: ptr(16777216) is above the bound and is rejected"
+text = '''
+func @f() -> ptr {
+^e:
+  %p: ptr = alloca stack ptr(16777216) @0
+  ret %p @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "alloca allocates no float type in M1: bf16 has no encoding in units and is rejected"
+text = '''
+func @f() -> ptr {
+^e:
+  %p: ptr = alloca stack bf16 2 @0
   ret %p @0
 }
 

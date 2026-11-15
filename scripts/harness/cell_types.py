@@ -13,7 +13,9 @@ class Cell(NamedTuple):
     `width` is a width, a float format, the result type of a width change
     or a conversion, the width of a pointer offset's integer, of the
     integer an `alloca` allocates, of the integer a `load` loads or of the
-    integer a `store` stores, or empty where nothing is passed."""
+    integer a `store` stores, `ptr` for a pointer that an `alloca`
+    allocates, a `load` loads or a `store` stores, or empty where nothing
+    is passed."""
 
     table: str
     op: str

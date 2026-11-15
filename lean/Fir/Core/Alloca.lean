@@ -27,10 +27,13 @@ never UB, and its result is never poison. The rule needs the memory effect
 and the layout entry of the memory it allocates in, so `alloca` has no rule
 in the set monad (the section on the core's rules with memory).
 
-M1's validation accepts only an integer type. The rule counts a pointer
-type `ptr<M>` by the width of the pointers of memory `M`, the units its
-encoding takes, and gives a float type, which has no encoding, no units;
-no valid module reaches either yet.
+M1's validation accepts an integer type and a pointer type. A pointer type
+`ptr<M>` takes the units of the width of memory `M`'s pointers in memory
+`N`, the units its encoding takes. Its natural alignment in memory `N` is
+the least power of two that is at least those units, but in memory `M`
+itself it is the alignment that `M`'s layout entry gives its pointers,
+which is that power of two unless the entry writes `align(A)`. A float
+type has no encoding and takes no units; validation rejects it.
 -/
 
 namespace Fir.Core
@@ -61,14 +64,24 @@ theorem Ty.naturalAlign_int (e : MemLayout) (ptrBits : Nat → Nat) (w : Nat) :
 
 variable {N : Type} {m : Type → Type} [Monad m]
 
+/-- The alignment of a value of the type `t` in the memory `ρ n` of a run
+whose memories have the entries `lay`, when an op gives none: its natural
+alignment there, but for a pointer of the memory `n` itself the alignment
+that its entry gives its pointers (`MemLayout.alignment`), the natural one
+unless the entry writes `align(A)`. -/
+def Ty.defaultAlign (lay : N → MemLayout) (ρ : Mem → N) (n : Nat) (t : Ty) : Nat :=
+  match t with
+  | .ptr m => if m = n then (lay (ρ n)).alignment
+    else t.naturalAlign (lay (ρ n)) fun j => (lay (ρ j)).pointer
+  | _ => t.naturalAlign (lay (ρ n)) fun j => (lay (ρ j)).pointer
+
 /-- The units and the alignment of an allocation of `c` values of the type
 `t` in the memory `ρ n` of a run whose memories have the entries `lay`,
-with the alignment `a`, or the type's natural alignment when `a` is
+with the alignment `a`, or the type's default alignment when `a` is
 `none`. -/
 def allocaShape (lay : N → MemLayout) (ρ : Mem → N) (t : Ty) (c : Nat) (a : Option Nat)
     (n : Nat) : Nat × Nat :=
-  let ptrBits := fun j => (lay (ρ j)).pointer
-  (c * t.units (lay (ρ n)) ptrBits, a.getD (t.naturalAlign (lay (ρ n)) ptrBits))
+  (c * t.units (lay (ρ n)) (fun j => (lay (ρ j)).pointer), a.getD (t.defaultAlign lay ρ n))
 
 /-- The rule of `alloca k t c a n`, in a monad with the memory effect on the
 memories of a run whose layout entries are `lay`, where the run names the
@@ -87,6 +100,18 @@ example : allocaShape (fun _ : Unit => MemLayout.default) (fun _ => ()) (.int 32
     (16, 4) ∧
     allocaShape (fun _ : Unit => MemLayout.default) (fun _ => ()) (.int 8) 12 (some 4) 0 =
       (12, 4) := by
+  decide +kernel
+
+/-- Two pointers of memory 0 take 16 units of memory 0, aligned to 8; in a
+memory 1 whose entry writes `align(4)` for its 32-bit pointers in 16-bit
+units, a pointer of memory 1 takes 2 units aligned to 4, and one of memory
+0 takes 4 units aligned to 4, its natural alignment there. -/
+example : allocaShape (fun _ : Unit => MemLayout.default) (fun _ => ()) (.ptr 0) 2 none 0 =
+    (16, 8) ∧
+    let lay := fun n : Nat => if n = 1 then
+      { mem := 1, unit := 16, pointer := 32, order := .little, align := some 4 } else
+      MemLayout.default
+    allocaShape lay id (.ptr 1) 1 none 1 = (2, 4) ∧ allocaShape lay id (.ptr 0) 1 none 1 = (4, 4) := by
   decide +kernel
 
 end Fir.Core

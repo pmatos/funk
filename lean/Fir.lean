@@ -54,6 +54,7 @@ import Fir.Core.Pointer
 import Fir.Core.Alloca
 import Fir.Core.Load
 import Fir.Core.Store
+import Fir.Core.PtrAccess
 import Fir.Core.FloatToInt
 import Fir.Core.Control
 import Fir.Core.Branch
@@ -134,6 +135,8 @@ import Fir.Core.LoadLaws
 import Fir.Core.LoadReads
 import Fir.Core.StoreLaws
 import Fir.Core.StoreWrites
+import Fir.Core.LoadPtrLaws
+import Fir.Core.StorePtrLaws
 import Fir.Core.EffectLaws
 import Fir.Core.MemoryRuns
 import Fir.Core.MemoryCallRefine

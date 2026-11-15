@@ -152,7 +152,7 @@ SECTIONS = {
     "float_conversions": ("Conversions between formats", ("from",), "to "),
     "float_to_int": ("Conversions to integers", ("op", "from"), "to "),
     "pointers": (
-        "Pointer ops: ptradd by an integer, alloca, load and store of one",
+        "Pointer ops: ptradd by an integer, alloca, load and store of one or of a pointer",
         ("op",),
         "",
     ),

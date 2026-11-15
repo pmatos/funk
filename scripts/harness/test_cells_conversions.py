@@ -123,7 +123,8 @@ class Tests(unittest.TestCase):
                 Cell("pointers", op, "", w)
                 for op in cells.POINTER_OPS
                 for w in ("i1", "i64")
-            },
+            }
+            | {Cell("pointers", op, "", "ptr") for op in ("alloca", "load", "store")},
         )
         self.assertFalse(any(c.table == "pointers" for c in cells.cells((8,))))
         self.assertEqual(cells.POINTER_DIFFERENTIAL, ())
@@ -158,13 +159,27 @@ class Tests(unittest.TestCase):
         for bad in [
             Op("alloca", ("stack",), (), ("ptr",), ()),
             Op("alloca", ("stack", "f32"), (), ("ptr",), ()),
-            Op("alloca", ("stack", "ptr"), (), ("ptr",), ()),
             Op("alloca", ("stack", "i32"), ("i32",), ("ptr",), ()),
             Op("alloca", ("stack", "i32"), (), ("i64",), ()),
             Op("alloca", ("stack", "i32"), (), (), ()),
         ]:
             with self.subTest(op=bad), self.assertRaises(CellError):
                 of_op(bad)
+
+    def test_memory_ops_of_a_pointer_of_any_memory_are_one_cell(self):
+        for ptr in ("ptr", "ptr(1)"):
+            for op, op_name in [
+                (Op("alloca", ("stack", ptr, "3"), (), ("ptr",), ()), "alloca"),
+                (Op("load", ("nonatomic",), ("ptr(2)",), (ptr,), ()), "load"),
+                (Op("store", ("nonatomic",), (ptr, "ptr"), (), ()), "store"),
+            ]:
+                with self.subTest(op=op):
+                    self.assertEqual(of_op(op), {Cell("pointers", op_name, "", "ptr")})
+        found = cells.cells(cells.INTERPRETER, offsets=cells.POINTER_INTERPRETER)
+        self.assertEqual(
+            {c for c in found if c.table == "pointers" and c.width == "ptr"},
+            {Cell("pointers", op, "", "ptr") for op in ("alloca", "load", "store")},
+        )
 
     def test_a_load_is_a_cell_for_each_width_of_its_result(self):
         for attrs in [("nonatomic",), ("nonatomic", "align(4)"), ("seq_cst",)]:
@@ -175,7 +190,6 @@ class Tests(unittest.TestCase):
         for bad in [
             Op("load", (), ("ptr",), ("i32",), ()),
             Op("load", ("nonatomic",), ("ptr",), ("f32",), ()),
-            Op("load", ("nonatomic",), ("ptr",), ("ptr",), ()),
             Op("load", ("nonatomic",), ("i64",), ("i32",), ()),
             Op("load", ("nonatomic",), ("ptr", "ptr"), ("i32",), ()),
             Op("load", ("nonatomic",), ("ptr",), (), ()),
@@ -193,7 +207,6 @@ class Tests(unittest.TestCase):
             Op("store", (), ("i32", "ptr"), (), ()),
             Op("store", ("nonatomic",), ("ptr", "i32"), (), ()),
             Op("store", ("nonatomic",), ("f32", "ptr"), (), ()),
-            Op("store", ("nonatomic",), ("ptr", "ptr"), (), ()),
             Op("store", ("nonatomic",), ("i32",), (), ()),
             Op("store", ("nonatomic",), ("i32", "ptr"), ("i32",), ()),
         ]:
