@@ -17,9 +17,10 @@ Tier: direction; area: semantics
   assembly block, observable or not, may also read and write the allocation
   that a pointer operand points into and every allocation reachable from it
   through stored pointers: the set an external call's pointer arguments
-  expose. If a block may write escaped memory, its pointer operands escape
-  when it runs; otherwise passing a pointer to a block without observable
-  does not make it escape.
+  expose. If a block may write escaped memory, as one without a narrower
+  declaration may, its pointer operands escape when it runs. A pointer passed
+  to a block that is not observable and may not write escaped memory does not
+  escape.
 - **Declared by the dialect,** for its own ops and the memories it adds, in
   Lean and in Rust's `OpSpec`. Rust's sets are checked against Lean's.
 - **Proved sound.** For each effect an op leaves out, the spec proves the
@@ -62,8 +63,9 @@ with a read of another.
 - **May produce poison is the poison class.** `const`, `icmp` and `add`
   without flags would be marked as producing poison.
 - **A call carries control.** Every call would claim to be a terminator.
-- **A pointer operand of any assembly block escapes.** Simpler, but every
-  block that takes a pointer would make its memory observable.
+- **A pointer operand of any assembly block escapes.** Simpler, but a block
+  whose declaration rules out writes to escaped memory would make the memory
+  of its pointer operands observable too.
 - **A block must declare a read through a pointer operand,** with UB under
   default effects. Passes could delete a store that the block reads on real
   hardware.

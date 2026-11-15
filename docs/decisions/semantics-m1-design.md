@@ -41,9 +41,10 @@ as an assembler does. A global in a GPU memory names that memory
 An `export` global is visible to code that funk did not compile, and an
 observer sees it. Weak, common and visibility linkage wait for the C frontend,
 M4 (ADR-2026-11-09-1546). An `internal` global is observable only once its
-address escapes (ADR-2026-11-09-1540): an external call, an inline assembly
-block that is observable or may write escaped memory (ADR-2026-11-09-1541), a
-volatile store of the pointer or `ptr.expose` hands it out.
+address escapes (ADR-2026-11-09-1540): an external call, an observable inline
+assembly block, one that gets it as a pointer operand and may write escaped
+memory (ADR-2026-11-09-1541), a volatile store of the pointer or `ptr.expose`
+hands it out.
 
 The human ruled globals on 2026-11-09, on #209. Rejected: typed globals that
 hold a fir value, which would tie globals to the shape of aggregates while a C
@@ -122,7 +123,7 @@ function and inline assembly without a narrower declaration carry every effect
 on every memory that can have escaped to them. Such a block may also read and
 write the allocation that a pointer operand points into and every allocation
 reachable from it through stored pointers. If a block may write escaped memory,
-its pointer operands escape when it runs. The human ruled on 2026-11-15 (#309,
+as such a block may, its pointer operands escape when it runs. The human ruled on 2026-11-15 (#309,
 #240). Passes may rely on a declaration because of its proof, and each new op
 costs one soundness proof per effect it leaves out (ADR-2026-11-09-1541).
 

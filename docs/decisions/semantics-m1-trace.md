@@ -64,8 +64,9 @@ LLVM's capture tracking (ADR-2026-11-09-1540):
 - a volatile store whose stored value is the pointer;
 - `ptr.expose`.
 
-A pointer passed to an inline assembly block that is not observable and may
-not write escaped memory does not escape, though the block may read and write
+A block without a narrower declaration may write escaped memory, so its
+pointer operands escape. A pointer passed to an inline assembly block that is
+not observable and may not write escaped memory does not escape, though the block may read and write
 the allocation it points into and every allocation reachable from it through
 stored pointers (ADR-2026-11-09-1541, semantics-effects.md). The human ruled on
 2026-11-15 (#240) that a block that may write escaped memory makes its pointer
@@ -96,8 +97,8 @@ that assembly or a volatile store had already handed out. Rejected too:
 compare a freed allocation as it was just before the free, though no program
 can read it without UB.
 
-The human ruled on 2026-11-15 (#309), option C, that a dangling pointer is
-poison for the comparison. Rejected: every dangling pointer equals every other,
+The human ruled on 2026-11-15 (#309), option C, that a dangling pointer in
+observed memory is poison for the comparison. Rejected: every dangling pointer equals every other,
 which still makes a target keep a dangling pointer wherever the source has one.
 Rejected too: compare a dangling pointer by its integer address where the memory
 is integral, and otherwise as dangling, which compares raw addresses that the

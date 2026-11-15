@@ -37,11 +37,13 @@ escaped to them. An inline assembly block without a narrower declaration,
 observable or not, may also read and write the allocation that a pointer
 operand points into and every allocation reachable from it through stored
 pointers: the set an external call's pointer arguments expose. If a block may
-write escaped memory, its pointer operands escape when it runs; otherwise
-passing a pointer to a block without observable does not make it escape
+write escaped memory, its pointer operands escape when it runs. A block without
+a narrower declaration may, so its pointer operands escape. A pointer passed to
+a block that is not observable and may not write escaped memory does not escape
 (ADR-2026-11-09-1541). The human ruled on 2026-11-15, on #309 (option A) and on
 #240 (option A, and the escape rule). Rejected: a pointer operand of any block
-escapes, which makes the memory of every block that takes a pointer observable.
+escapes, which is simpler but makes observable the memory of a block whose
+declaration rules out writes to escaped memory.
 Rejected too: a block must declare a read through a pointer operand, with UB
 under default effects, so passes could delete a store that the block reads on
 real hardware. Rejected for #240: an operand covers only the allocation it
