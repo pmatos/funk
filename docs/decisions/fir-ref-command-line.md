@@ -99,9 +99,10 @@ A float of `float<e,m>` is spelled as its constants are, as `1.0` or
 `fir-ref` reads each argument as the spec's lexer and `Core.Op.decode` read it
 (see [lexing and reading](fir-ref-fast-paths.md#lexing-and-reading)).
 
-`poison`, spelled exactly so, is an argument of any `iN` and of any float type
-(`FirRef.readArg`). It is no argument of `ptr`: a run starts with no
-allocation. It is not a choice either, since `freeze` chooses a value. The
+`poison`, spelled exactly so, is an argument of any `iN`, of any float type and
+of any `ptr<N>` (`FirRef.readArg`). It is the only argument of `ptr<N>`: a run
+starts with no allocation, so no pointer has provenance for one. It is not a
+choice either, since `freeze` chooses a value. The
 human ruled on 2026-11-03 that `fir-ref run` takes `poison` (#123); the
 harness's use of it is in
 [testing-and-harness.md](testing-and-harness.md#poison-arguments).
