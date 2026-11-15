@@ -62,6 +62,10 @@ LLVM's capture tracking (ADR-2026-11-09-1540):
 - a volatile store whose stored value is the pointer;
 - `ptr.expose`.
 
+A pointer passed to an inline assembly block without observable does not
+escape, though the block may read and write the memory it points into
+(ADR-2026-11-09-1541, semantics-effects.md).
+
 An `internal` global is observable only once its address escapes by one of
 these ways, even when only an integer from `ptr.expose` holds it. Until then a
 store to it is invisible and can be removed, and a pass that removes one first
@@ -71,12 +75,23 @@ address escapes (ADR-2026-11-09-1540).
 Only live allocations are compared. The contents of an allocation that the
 world has freed are not (ADR-2026-11-09-1540).
 
+Live memory can still hold a pointer into a freed allocation, which the
+renaming has nothing to map to. Such a pointer in the source's observed memory
+is poison for the comparison, so any value in the target refines it
+(ADR-2026-11-09-1540). A dangling pointer cannot be used without UB, so no
+observer can tell two of them apart.
+
 The human ruled escape and live memory on 2026-11-11, on #299. Rejected: only
 external calls let an address escape, so passes could delete writes to memory
 that assembly or a volatile store had already handed out. Rejected too:
 compare a freed allocation as it was just before the free, though no program
-can read it without UB. #309 asks two questions that these rulings leave open,
-and neither is decided.
+can read it without UB.
+
+The human ruled on 2026-11-15 (#309), option C, that a dangling pointer is
+poison for the comparison. Rejected: every dangling pointer equals every other,
+which still makes a target keep a dangling pointer wherever the source has one.
+Rejected too: compare a dangling pointer by its integer address, which compares
+raw addresses and leaves the renaming nothing to map.
 
 ## The world
 

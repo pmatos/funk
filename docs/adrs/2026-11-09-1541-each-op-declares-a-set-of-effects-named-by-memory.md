@@ -13,7 +13,10 @@ Tier: direction; area: semantics
 - **Named by memory.** Reads, writes, allocation and freeing name the memory
   they touch, and effects on different memories commute. An external call,
   an indirect call to an unknown function and inline assembly without a narrower declaration carry
-  every effect on every memory that can have escaped to them.
+  every effect on every memory that can have escaped to them. An inline
+  assembly block without a narrower declaration, observable or not, may also
+  read and write the memory that a pointer operand points into, though
+  passing the pointer does not make it escape.
 - **Declared by the dialect,** for its own ops and the memories it adds, in
   Lean and in Rust's `OpSpec`. Rust's sets are checked against Lean's.
 - **Proved sound.** For each effect an op leaves out, the spec proves the
@@ -33,8 +36,9 @@ Tier: direction; area: semantics
   computed per symbol table and proved sound.
 
 [semantics-effects.md](../decisions/semantics-effects.md) states what holds,
-the obligations and the human's rulings: #208 (2026-11-09) and #226, option B
-(2026-11-10). semantics-interpreter.md and semantics-refinement.md state the
+the obligations and the human's rulings: #208 (2026-11-09), #226, option B
+(2026-11-10), and #309, option A (2026-11-15: an assembly block's pointer
+operands). semantics-interpreter.md and semantics-refinement.md state the
 totality and monotonicity obligations, and semantics-m1-design.md says how
 M1's ops are classified.
 
@@ -54,3 +58,8 @@ with a read of another.
 - **May produce poison is the poison class.** `const`, `icmp` and `add`
   without flags would be marked as producing poison.
 - **A call carries control.** Every call would claim to be a terminator.
+- **A pointer operand of any assembly block escapes.** Simpler, but every
+  block that takes a pointer would make its memory observable.
+- **A block must declare a read through a pointer operand,** with UB under
+  default effects. Passes could delete a store that the block reads on real
+  hardware.

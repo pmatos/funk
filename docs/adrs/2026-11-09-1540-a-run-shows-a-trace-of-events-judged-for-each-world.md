@@ -16,7 +16,8 @@ Tier: direction; area: semantics
   not observed, so a store to it can be removed.
 - **Up to renaming.** Two ends of a run match when some one-to-one renaming of
   allocations makes their observed memory equal. Raw addresses are never
-  compared.
+  compared. A pointer into a freed allocation in the source's observed memory
+  is poison for the comparison, so any value in the target refines it.
 - **The world.** A callee that funk did not compile answers from the world:
   its results, writes into escaped memory, and heap allocations it creates or
   frees. `malloc` stays an external declaration.
@@ -28,7 +29,7 @@ Tier: direction; area: semantics
 what each event holds, the ways an address escapes, and how tests script the
 world. The human ruled this on 2026-11-09, on #207, and on 2026-11-11 on #251
 (what an observer sees, heap from the world) and on #299 (escape, live memory
-only).
+only), and on 2026-11-15 on #309 (a dangling pointer is poison).
 
 ## Why
 
@@ -48,4 +49,9 @@ outside code can read.
   that assembly or a volatile store had already handed out.
 - **Compare freed allocations as they were before the free.** No program can
   read them without UB.
+- **Every dangling pointer equals every other.** A target would still have to
+  keep a dangling pointer wherever the source has one, though neither can be
+  used without UB.
+- **Compare a dangling pointer by its integer address.** Raw addresses would
+  be compared, and the renaming has no allocation to map it to.
 - **Heap ops in the core.** C calls allocators that funk does not know by name.
