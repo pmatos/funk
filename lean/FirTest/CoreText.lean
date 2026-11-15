@@ -58,27 +58,32 @@ namespace Fir.Core
 #guard Op.decode "fcmp" [.word "slt"] [.float 8 23, .float 8 23] [.int 1] == none
 #guard Op.decode "fcmp" [.word "olt"] [.int 32, .int 32] [.int 1] == none
 #guard Op.decode "icmp" [.word "eq"] [.float 8 23, .float 8 23] [.int 1] == none
--- A float op that rounds needs `round(rne)`; `fneg` and `fabs` take none.
-#guard Op.decode "fadd" [roundAttr] [.float 8 23, .float 8 23] [.float 8 23] == some (.fbin .fadd {} 8 23)
+-- A float op that rounds needs its mode, any of the five; `fneg` and `fabs`
+-- take none.
+#guard Op.decode "fadd" [roundAttr .rne] [.float 8 23, .float 8 23] [.float 8 23] ==
+  some (.fbin (.fadd .rne) {} 8 23)
 #guard Op.decode "fadd" [] [.float 8 23, .float 8 23] [.float 8 23] == none
-#guard Op.decode "fdiv" [.app "round" [.word "rtz"]] [.float 8 23, .float 8 23] [.float 8 23] == none
-#guard Op.decode "fneg" [roundAttr] [.float 8 23] [.float 8 23] == none
-#guard Op.decode "frem" [roundAttr] [.float 8 23, .float 8 23] [.float 8 23] == none
+#guard Op.decode "fdiv" [.app "round" [.word "rtz"]] [.float 8 23, .float 8 23] [.float 8 23] ==
+  some (.fbin (.fdiv .rtz) {} 8 23)
+#guard Op.decode "fdiv" [.app "round" [.word "up"]] [.float 8 23, .float 8 23] [.float 8 23] == none
+#guard Op.decode "fneg" [roundAttr .rne] [.float 8 23] [.float 8 23] == none
+#guard Op.decode "frem" [roundAttr .rne] [.float 8 23, .float 8 23] [.float 8 23] == none
 #guard Op.decode "sqrt" [] [.float 8 23] [.float 8 23] == none
-#guard Op.decode "fma" [roundAttr] [.float 8 23, .float 8 23, .float 8 23] [.float 8 23] ==
-  some (.fma {} 8 23)
-#guard Op.decode "fma" [roundAttr] [.float 8 23, .float 8 23] [.float 8 23] == none
-#guard Op.decode "fadd" [roundAttr] [.int 32, .int 32] [.int 32] == none
+#guard Op.decode "fma" [roundAttr .rne] [.float 8 23, .float 8 23, .float 8 23] [.float 8 23] ==
+  some (.fma {} .rne 8 23)
+#guard Op.decode "fma" [roundAttr .rne] [.float 8 23, .float 8 23] [.float 8 23] == none
+#guard Op.decode "fadd" [roundAttr .rne] [.int 32, .int 32] [.int 32] == none
 -- `sitofp` and `uitofp` take an integer of any width to a float of any
--- format, with `round(rne)`.
-#guard Op.decode "sitofp" [roundAttr] [.int 33] [.float 5 10] == some (.sitofp 33 5 10)
-#guard Op.decode "uitofp" [roundAttr] [.int 8] [.float 11 52] == some (.uitofp 8 11 52)
+-- format, with a mode.
+#guard Op.decode "sitofp" [roundAttr .rne] [.int 33] [.float 5 10] == some (.sitofp .rne 33 5 10)
+#guard Op.decode "uitofp" [roundAttr .rtz] [.int 8] [.float 11 52] == some (.uitofp .rtz 8 11 52)
 #guard Op.decode "sitofp" [] [.int 32] [.float 8 23] == none
-#guard Op.decode "uitofp" [roundAttr] [.float 8 23] [.float 8 23] == none
+#guard Op.decode "uitofp" [roundAttr .rne] [.float 8 23] [.float 8 23] == none
 -- `fpext` and `fptrunc` take a float to a float, of any two formats.
 #guard Op.decode "fpext" [] [.float 5 10] [.float 8 23] == some (.fpext 5 10 8 23)
-#guard Op.decode "fptrunc" [roundAttr] [.float 8 7] [.float 5 10] == some (.fptrunc 8 7 5 10)
-#guard Op.decode "fpext" [roundAttr] [.float 8 23] [.float 11 52] == none
+#guard Op.decode "fptrunc" [roundAttr .rne] [.float 8 7] [.float 5 10] ==
+  some (.fptrunc .rne 8 7 5 10)
+#guard Op.decode "fpext" [roundAttr .rne] [.float 8 23] [.float 11 52] == none
 #guard Op.decode "fptrunc" [] [.float 11 52] [.float 8 23] == none
 #guard Op.decode "fpext" [] [.int 32] [.float 11 52] == none
 -- `ptradd` takes a pointer and an integer of any width, and gives a pointer
@@ -95,7 +100,7 @@ namespace Fir.Core
 -- width, with no attribute.
 #guard Op.decode "fptosi" [] [.float 5 10] [.int 33] == some (.fptosi 5 10 33)
 #guard Op.decode "fptoui" [] [.float 11 52] [.int 1] == some (.fptoui 11 52 1)
-#guard Op.decode "fptosi" [roundAttr] [.float 8 23] [.int 32] == none
+#guard Op.decode "fptosi" [roundAttr .rne] [.float 8 23] [.int 32] == none
 #guard Op.decode "fptoui" [] [.int 32] [.int 32] == none
 
 end Fir.Core

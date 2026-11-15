@@ -103,11 +103,11 @@ theorem denoteIn_mapsDenote (zm : {α : Type} → Op → μ α) (zn : {α : Type
       | .freeze _, .cons a .nil => φ.map_bind_pure (freezeValue_map φ hk a) _
       | .fbin o fl _ _, .cons a (.cons b .nil) => φ.map_bind_pure (fbinValues_map φ hk o fl a b) _
       | .funary o fl _ _, .cons a .nil => φ.map_bind_pure (funaryValue_map φ hk o fl a) _
-      | .fma fl _ _, .cons a (.cons b (.cons c .nil)) =>
+      | .fma fl _ _ _, .cons a (.cons b (.cons c .nil)) =>
         φ.map_bind_pure (fmaValues_map φ hk fl a b c) _
-      | .sitofp _ e m, .cons a .nil => φ.map_bind_pure (intToFloat_map φ hk e m true a) _
-      | .uitofp _ e m, .cons a .nil => φ.map_bind_pure (intToFloat_map φ hk e m false a) _
-      | .fpext e m e' m', .cons a .nil | .fptrunc e m e' m', .cons a .nil =>
+      | .sitofp _ _ e m, .cons a .nil => φ.map_bind_pure (intToFloat_map φ hk e m true a) _
+      | .uitofp _ _ e m, .cons a .nil => φ.map_bind_pure (intToFloat_map φ hk e m false a) _
+      | .fpext e m e' m', .cons a .nil | .fptrunc _ e m e' m', .cons a .nil =>
         φ.map_bind_pure (convertFloat_map φ hk e m e' m' a) _
       | .sdiv _ x, args => ruleOfEv_map φ hk (sdivWith x) args
       | .udiv _ x, args => ruleOfEv_map φ hk (udivWith x) args

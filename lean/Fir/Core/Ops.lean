@@ -1,3 +1,4 @@
+import Fir.Core.OpAttrs
 import Fir.Core.Types
 import Fir.Memory.Model
 import Fir.Memory.Ordering
@@ -47,93 +48,6 @@ could take would be UB.
 -/
 
 namespace Fir.Core
-
-/--
-The flags of `add`, `sub` and `mul`. Each one is a promise about the
-operands; when it is broken, the result is poison.
-
-* `nuw` (no unsigned wrap): the operands, read as unsigned integers, give a
-  result that fits in `N` bits.
-* `nsw` (no signed wrap): the operands, read as two's-complement signed
-  integers, give a result that fits in `N` bits.
--/
-structure WrapFlags where
-  nuw : Bool := false
-  nsw : Bool := false
-  deriving Repr, DecidableEq, Inhabited
-
-/--
-The predicate of an integer comparison. `eq` and `ne` compare bits. The `s`
-predicates read the operands as signed integers, the `u` predicates as
-unsigned: `lt` is less than, `le` less or equal, `gt` greater than and `ge`
-greater or equal.
--/
-inductive Pred where
-  | eq | ne | slt | sle | sgt | sge | ult | ule | ugt | uge
-  deriving Repr, DecidableEq, Inhabited
-
-/--
-The predicate of a float comparison, as LLVM names it. An `o` predicate is
-ordered: it is false when either operand is a NaN. A `u` predicate is
-unordered: it is true when either operand is a NaN. Otherwise each compares
-the numbers that the operands encode, so `-0` equals `+0`: `eq` is equal,
-`ne` not equal, `lt` less than, `le` less or equal, `gt` greater than and
-`ge` greater or equal. `ord` holds when neither operand is a NaN, and `uno`
-when either is (ADR-2026-11-09-1549).
--/
-inductive FPred where
-  | oeq | one | olt | ole | ogt | oge | ord
-  | ueq | une | ult | ule | ugt | uge | uno
-  deriving Repr, DecidableEq, Inhabited
-
-/--
-The fast-math flags of a float op (ADR-2026-11-09-1549). Each of the first
-three is a promise about the op's operands or result:
-
-* `nnan` (no NaNs): no operand and no result is a NaN. A NaN operand or
-  result makes the result poison.
-* `ninf` (no infinities): no operand and no result is an infinity. An
-  infinite operand or result makes the result poison.
-* `nsz` (no signed zeros): the sign of a zero result does not matter. A
-  zero result is `+0` or `-0`, a free choice.
-
-`contract` and `reassoc` are reserved words. They are permissions for
-passes, not meanings of an op, and M2's optimizer decides them, so
-validation rejects an op that carries either, and the rules ignore them.
--/
-structure FastMath where
-  nnan : Bool := false
-  ninf : Bool := false
-  nsz : Bool := false
-  contract : Bool := false
-  reassoc : Bool := false
-  deriving Repr, DecidableEq, Inhabited
-
-/-- Whether the flags hold a reserved word, `contract` or `reassoc`. -/
-def FastMath.Reserved (fl : FastMath) : Bool := fl.contract || fl.reassoc
-
-/--
-A float op of two operands (ADR-2026-11-09-1549): `fadd` adds, `fsub`
-subtracts the second operand from the first, `fmul` multiplies and `fdiv`
-divides the first by the second, each rounded to nearest even. `frem` and
-`fmod` give the remainder of the first by the second, `x - n * y`, which
-is exact, so they do not round: `frem`'s `n` is the quotient rounded to
-nearest, ties to even, IEEE 754's remainder, and `fmod`'s is the quotient
-truncated, C's `fmod` and LLVM's `frem` (#310).
--/
-inductive FBin where
-  | fadd | fsub | fmul | fdiv | frem | fmod
-  deriving Repr, DecidableEq, Inhabited
-
-/--
-A float op of one operand (ADR-2026-11-09-1549): `fneg` negates, `fabs`
-gives the absolute value, and `sqrt` the square root, rounded to nearest
-even. Only `sqrt` rounds: a negation or an absolute value is a float of
-the format.
--/
-inductive FUnary where
-  | fneg | fabs | sqrt
-  deriving Repr, DecidableEq, Inhabited
 
 /--
 An op instance of the core dialect. `w` is the width `N` of the integers the
@@ -188,15 +102,18 @@ Comparison and selection:
 Float arithmetic, by Lean's float model, with a NaN result that is any NaN
 of the format (ADR-2026-11-09-1549). Each is never UB, and a poison operand
 gives poison. Each carries the fast-math flags `fl`: a broken `nnan` or
-`ninf` gives poison, and with `nsz` a zero result has either sign:
+`ninf` gives poison, and with `nsz` a zero result has either sign. Each
+op that rounds carries a rounding mode `r` (`RoundingMode`). M1's
+validation accepts only `rne`, round to nearest even, and the rules read
+every mode as `rne`, since no valid module carries another:
 
 * `fbin o fl e m`: the op `o`, `fadd`, `fsub`, `fmul`, `fdiv`, `frem` or
   `fmod`, of two values of `float<e,m>`; all but `frem` and `fmod`, whose
-  result is exact, round to nearest even.
+  result is exact, round, with the mode that `o` carries.
 * `funary o fl e m`: the op `o`, `fneg`, `fabs` or `sqrt`, of one value of
-  `float<e,m>`; `sqrt` rounds to nearest even.
-* `fma fl e m`: `a * b + c` of three values of `float<e,m>`, rounded once,
-  to nearest even.
+  `float<e,m>`; `sqrt` rounds, with the mode that it carries.
+* `fma fl r e m`: `a * b + c` of three values of `float<e,m>`, rounded once,
+  with the mode `r`.
 
 Width changes:
 
@@ -217,10 +134,13 @@ Each is never UB, and a poison operand gives poison.
 Conversions from an integer to a float, by Lean's float model
 (ADR-2026-11-09-1549):
 
-* `sitofp n e m`: the integer that an `iN` holds, read as signed, as a
-  value of `float<e,m>`, rounded to nearest even.
-* `uitofp n e m`: the integer that an `iN` holds, read as unsigned, as a
-  value of `float<e,m>`, rounded to nearest even.
+* `sitofp r n e m`: the integer that an `iN` holds, read as signed, as a
+  value of `float<e,m>`, rounded with the mode `r`.
+* `uitofp r n e m`: the integer that an `iN` holds, read as unsigned, as a
+  value of `float<e,m>`, rounded with the mode `r`.
+
+Validation accepts only the mode `rne`, round to nearest even, and the
+rules read every mode as `rne`.
 
 A result too large for the format is an infinity of its sign, and zero
 gives `+0`. Neither is ever UB or gives a NaN, and a poison operand gives
@@ -232,9 +152,10 @@ Conversions between two float formats, by Lean's float model
 * `fpext e m e' m'`: a value of `float<e,m>` as a value of
   `float<e',m'>`, where `e ≤ e'` and `m ≤ m'`, so the target holds every
   value of the source and nothing rounds.
-* `fptrunc e m e' m'`: a value of `float<e,m>` rounded, to nearest even,
-  into `float<e',m'>`, a format that cannot hold every value of the
-  source: `e' < e` or `m' < m`.
+* `fptrunc r e m e' m'`: a value of `float<e,m>` rounded, with the mode
+  `r`, into `float<e',m'>`, a format that cannot hold every value of the
+  source: `e' < e` or `m' < m`. Validation accepts only the mode `rne`,
+  and the rule reads every mode as `rne`.
 
 Every ordered pair of two formats takes exactly one of them, and a format
 to itself takes neither. Zeros and infinities keep their sign, and a NaN
@@ -363,17 +284,17 @@ inductive Op where
   | fcmp (p : FPred) (fl : FastMath) (e m : Nat)
   | fbin (o : FBin) (fl : FastMath) (e m : Nat)
   | funary (o : FUnary) (fl : FastMath) (e m : Nat)
-  | fma (fl : FastMath) (e m : Nat)
+  | fma (fl : FastMath) (r : RoundingMode) (e m : Nat)
   | select (w : Nat)
   | zext (m n : Nat)
   | sext (m n : Nat)
   | trunc (m n : Nat)
   | toBits (e m : Nat)
   | ofBits (e m : Nat)
-  | sitofp (n e m : Nat)
-  | uitofp (n e m : Nat)
+  | sitofp (r : RoundingMode) (n e m : Nat)
+  | uitofp (r : RoundingMode) (n e m : Nat)
   | fpext (e m e' m' : Nat)
-  | fptrunc (e m e' m' : Nat)
+  | fptrunc (r : RoundingMode) (e m e' m' : Nat)
   | ptradd (n w : Nat)
   | alloca (k : Memory.AllocKind) (t : Ty) (c : Nat) (a : Option Nat) (n : Nat)
   | load (o : Memory.Ordering) (w : Nat) (a : Option Nat) (n : Nat)

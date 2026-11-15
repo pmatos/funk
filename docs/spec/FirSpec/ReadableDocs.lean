@@ -3,6 +3,8 @@ import FirSpec.Syntax.Location
 import FirSpec.Syntax.Module
 import FirSpec.Syntax.Layout
 import FirSpec.Core.Types
+import FirSpec.Core.Rounding
+import FirSpec.Core.OpAttrs
 import FirSpec.Core.Ops
 import FirSpec.Core.Signature
 import FirSpec.Core.Poison
@@ -135,6 +137,7 @@ import FirSpec.Core.TypeTextLaws
 import FirSpec.Core.FloatOpTextLaws
 import FirSpec.Core.TextLaws
 import FirSpec.Core.FloatText
+import FirSpec.Core.RoundingText
 import FirSpec.Core.FloatOpText
 import FirSpec.Core.FloatTextLaws
 import FirSpec.Text.Lex

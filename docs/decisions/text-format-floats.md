@@ -66,20 +66,26 @@ and hexadecimal for every value, which the human did not rule
 `%lt: i1 = fcmp olt %a, %b` (ADR-2026-11-09-1549).
 
 Each float op that rounds, `fadd`, `fsub`, `fmul`, `fdiv`, `sqrt` and `fma`,
-has one attribute, `round(rne)`, in the applied form:
+has one attribute, its rounding mode, in the applied form:
 `%s: f32 = fadd round(rne) %a, %b`. `sitofp` and `uitofp` round too, from an
 integer of any width to a float of any format, and no other pair of types
 decodes (#241). `frem`, `fmod`, `fneg` and `fabs` do not
 round, since their result is exact, and have none: `%q: f64 = frem %a, %b`.
-Any other attribute does not decode, so a missing mode, `round(rtz)`, the bare
-word `rne`, two attributes, `fneg round(rne)` and `frem round(rne)` are parse
-errors. The op
-carries no mode, since M1 has one; a later mode adds a decoding and a field
-(ADR-2026-11-09-1549, ADR-2026-11-11-1801). Rejected: decoding every IEEE
-mode and letting validation reject all but `rne`, which gives each op a field
-that no valid program sets; no attribute, which drops the hook that keeps
-today's texts' meaning when another mode comes; and the bare word `rne`,
-which says nothing about what it sets.
+
+The human ruled on 2026-11-15 (#229, option B) that every mode is read and
+validation rejects all but `rne`: `fadd round(rtz) %a, %b` parses, the op
+carries the mode `rtz`, and `funk verify` and `fir-ref validate` reject it, as
+they reject a load's atomic ordering. The mode words are IEEE 754's five
+rounding-direction attributes in SMT-LIB's short names, `rne`, `rna`, `rtp`,
+`rtn` and `rtz` (`lean/Fir/Core/RoundingText.lean`); the human chose this
+set on 2026-11-15, over LLVM's names and a set without `rna`. Any other attribute does not decode, so a missing
+mode, a word that names no mode (`round(up)`, `round(RNE)`), the bare word
+`rne`, two attributes, `fneg round(rne)` and `frem round(rne)` are parse errors
+(ADR-2026-11-09-1549, ADR-2026-11-11-1801). Rejected: a parse error for every
+mode but `rne`, as first built, so a later mode would change the reader as well
+as validation; no attribute, which drops the hook that keeps today's texts'
+meaning when another mode comes; and the bare word `rne`, which says nothing
+about what it sets.
 
 A float op, `fcmp` and the remainders included, writes its fast-math flags
 first, as LLVM does, each at most once, in the fixed order `nnan`, `ninf`,
@@ -99,8 +105,9 @@ Rejected: one name for each direction, which the types already tell apart, and
 any pair of widths decoding with validation rejecting the wrong ones, as for
 `zext`, which gives the spec an op instance that no program may hold.
 
-`fpext` has no attribute, since it never rounds, and `fptrunc` has
-`round(rne)`: `%d: f64 = fpext %f` and `%f: f32 = fptrunc round(rne) %d`. Each
+`fpext` has no attribute, since it never rounds, and `fptrunc` has its mode,
+`round(rne)` in a valid module: `%d: f64 = fpext %f` and
+`%f: f32 = fptrunc round(rne) %d`. Each
 takes one float type to another, and any two formats decode; which pair takes
 which op is a rule of validation, as the widths of `zext` and `trunc` are
 ([semantics-floats-conversions.md](semantics-floats-conversions.md#the-conversions)), so `fpext` from
@@ -118,8 +125,3 @@ and no other pair of types decodes. `fptosi round(rne)`, `fptoui round(rtz)` and
 any other attribute are parse errors, as an attribute that an op does not have
 is (#241). Rejected: `round(rtz)` on both, which would spell their one meaning
 as a mode and decode a field that no other value can take.
-
-Open question to the human, raised on 2026-11-11 on #229 and not yet ruled:
-whether a wrong rounding mode stays a parse error, as built, or is read and
-then rejected by the verifier, as #229's text says. Until the human rules,
-what is built holds.

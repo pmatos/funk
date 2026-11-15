@@ -46,7 +46,7 @@ they are the ops that the progress theorem for modules asks to be total,
 the ops that the interpreter runs by their own rule.
 :::
 
-:::readable Fir.Core.inModule_of_valid (pin := Fir.Func.InModule) (pin := Fir.Core.Op.Valid) (pin := Fir.Core.Op.sig) (pin := Fir.Core.Op.returnTypes) (pin := Fir.Module.context) (fingerprint := "14672646364382769059")
+:::readable Fir.Core.inModule_of_valid (pin := Fir.Func.InModule) (pin := Fir.Core.Op.Valid) (pin := Fir.Core.Op.sig) (pin := Fir.Core.Op.returnTypes) (pin := Fir.Module.context) (fingerprint := "17603866799742578698")
 *Theorem: every core function valid in the context of a module runs
 within that module.* Let $`M` be a core module, and $`f` a core function
 {ref "The-fir-specification--Validation--The-general-rules"}[valid] in the

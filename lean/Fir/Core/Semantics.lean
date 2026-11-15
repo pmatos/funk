@@ -148,7 +148,7 @@ def Op.denote? [MonadChoice m] [MonadUB m] : (op : Op) →
     | .cons a .nil => do
       let v ← funaryValue o fl a
       pure (.cons v .nil)
-  | .fma fl _ _ => some fun
+  | .fma fl _ _ _ => some fun
     | .cons a (.cons b (.cons c .nil)) => do
       let v ← fmaValues fl a b c
       pure (.cons v .nil)
@@ -164,15 +164,15 @@ def Op.denote? [MonadChoice m] [MonadUB m] : (op : Op) →
     | .cons a .nil => pure (.cons (bitcastValue a) .nil)
   | .ofBits _ _ => some fun
     | .cons a .nil => pure (.cons (bitcastValue a) .nil)
-  | .sitofp _ e m => some fun
+  | .sitofp _ _ e m => some fun
     | .cons a .nil => do
       let v ← intToFloat e m true a
       pure (.cons v .nil)
-  | .uitofp _ e m => some fun
+  | .uitofp _ _ e m => some fun
     | .cons a .nil => do
       let v ← intToFloat e m false a
       pure (.cons v .nil)
-  | .fpext e m e' m' | .fptrunc e m e' m' => some fun
+  | .fpext e m e' m' | .fptrunc _ e m e' m' => some fun
     | .cons a .nil => do
       let v ← convertFloat e m e' m' a
       pure (.cons v .nil)
@@ -213,13 +213,16 @@ def Op.hasRules (op : Op) : Bool :=
 #guard WrapFlags.all.all fun f => (Op.add 1 f).hasRules && (Op.sub 7 f).hasRules
 #guard Pred.all.all fun p => (Op.icmp p 1).hasRules
 #guard FPred.all.all fun p => (Op.fcmp p {} 8 23).hasRules && (Op.fcmp p {} 1 0).hasRules
-#guard [FBin.fadd, .fsub, .fmul, .fdiv, .frem, .fmod].all fun o =>
+#guard [FBin.fadd .rne, .fsub .rtz, .fmul .rna, .fdiv .rtp, .frem, .fmod].all fun o =>
   (Op.fbin o {} 8 23).hasRules && (Op.fbin o { nnan := true } 1 0).hasRules
-#guard [FUnary.fneg, .fabs, .sqrt].all fun o => (Op.funary o { nsz := true } 5 10).hasRules
-#guard (Op.fma { ninf := true } 11 52).hasRules
+#guard [FUnary.fneg, .fabs, .sqrt .rne, .sqrt .rtn].all fun o =>
+  (Op.funary o { nsz := true } 5 10).hasRules
+#guard (Op.fma { ninf := true } .rne 11 52).hasRules && (Op.fma {} .rtz 8 23).hasRules
 #guard (Op.toBits 8 23).hasRules && (Op.ofBits 11 52).hasRules && (Op.ofBits 1 0).hasRules
-#guard (Op.sitofp 32 8 23).hasRules && (Op.uitofp 128 5 10).hasRules && (Op.sitofp 1 1 0).hasRules
-#guard (Op.fpext 8 23 11 52).hasRules && (Op.fptrunc 11 52 8 23).hasRules && (Op.fpext 1 0 1 0).hasRules
+#guard (Op.sitofp .rne 32 8 23).hasRules && (Op.uitofp .rtz 128 5 10).hasRules &&
+  (Op.sitofp .rne 1 1 0).hasRules
+#guard (Op.fpext 8 23 11 52).hasRules && (Op.fptrunc .rne 11 52 8 23).hasRules &&
+  (Op.fptrunc .rtp 11 52 8 23).hasRules && (Op.fpext 1 0 1 0).hasRules
 #guard (Op.ptradd 0 64).hasRules && (Op.ptradd 1 1).hasRules && (Op.ptradd 0 0).hasRules
 #guard (Op.fptosi 8 23 32).hasRules && (Op.fptoui 5 10 128).hasRules && (Op.fptosi 1 0 1).hasRules
 #guard (Op.br).hasRules && (Op.condBr).hasRules && (Op.unreachable).hasRules &&

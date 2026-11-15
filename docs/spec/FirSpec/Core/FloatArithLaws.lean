@@ -14,7 +14,7 @@ fails when the Lean changes under it.
 
 #doc (Manual) "Float arithmetic obligations: readable blocks" =>
 
-:::moduleDocs (fingerprint := "12386514364464993236")
+:::moduleDocs (fingerprint := "8080185452381480985")
 :::
 
 :::readable Fir.Core.fbinValues_ends Fir.Core.funaryValue_ends Fir.Core.fmaValues_ends (pin := Fir.Core.fbinValues) (pin := Fir.Core.funaryValue) (pin := Fir.Core.fmaValues) (fingerprint := "2194462485675605231")
@@ -37,7 +37,7 @@ runs $`s` and gives its value as the one result of an op. When $`s` ends:
 A result vector of one defined float holds no poison.
 :::
 
-:::readable Fir.Core.fbin_propagatesPoison Fir.Core.fbin_returnsOnDefined Fir.Core.fbin_total Fir.Core.fbin_monotone Fir.Core.fbin_neverUB Fir.Core.fbin_makesNoPoison (pin := Fir.PropagatesPoison) (pin := Fir.ReturnsOnDefined) (pin := Fir.OpTotal) (pin := Fir.OpMonotone) (pin := Fir.NeverUBSetM) (pin := Fir.MakesNoPoisonSetM) (pin := Fir.Core.Op.denote?) (fingerprint := "10714345508414870915")
+:::readable Fir.Core.fbin_propagatesPoison Fir.Core.fbin_returnsOnDefined Fir.Core.fbin_total Fir.Core.fbin_monotone Fir.Core.fbin_neverUB Fir.Core.fbin_makesNoPoison (pin := Fir.PropagatesPoison) (pin := Fir.ReturnsOnDefined) (pin := Fir.OpTotal) (pin := Fir.OpMonotone) (pin := Fir.NeverUBSetM) (pin := Fir.MakesNoPoisonSetM) (pin := Fir.Core.Op.denote?) (fingerprint := "5712571384344614145")
 *Theorem: $`\mathsf{fadd}`, $`\mathsf{fsub}`, $`\mathsf{fmul}`,
 $`\mathsf{fdiv}`, $`\mathsf{frem}` and $`\mathsf{fmod}` are lawful, at
 every format.* Under fir's execution
@@ -60,7 +60,7 @@ and the obligations of a pure op:
   that it may produce poison, so there is nothing to show.
 :::
 
-:::readable Fir.Core.funary_propagatesPoison Fir.Core.funary_returnsOnDefined Fir.Core.funary_total Fir.Core.funary_monotone Fir.Core.funary_neverUB Fir.Core.funary_makesNoPoison (pin := Fir.PropagatesPoison) (pin := Fir.ReturnsOnDefined) (pin := Fir.OpTotal) (pin := Fir.OpMonotone) (pin := Fir.NeverUBSetM) (pin := Fir.MakesNoPoisonSetM) (pin := Fir.Core.Op.denote?) (fingerprint := "8855256622809643237")
+:::readable Fir.Core.funary_propagatesPoison Fir.Core.funary_returnsOnDefined Fir.Core.funary_total Fir.Core.funary_monotone Fir.Core.funary_neverUB Fir.Core.funary_makesNoPoison (pin := Fir.PropagatesPoison) (pin := Fir.ReturnsOnDefined) (pin := Fir.OpTotal) (pin := Fir.OpMonotone) (pin := Fir.NeverUBSetM) (pin := Fir.MakesNoPoisonSetM) (pin := Fir.Core.Op.denote?) (fingerprint := "14499135260790696631")
 *Theorem: $`\mathsf{fneg}`, $`\mathsf{fabs}` and $`\mathsf{sqrt}` are
 lawful, at every format.* They meet the same obligations as the ops of two
 operands, by the same reasons, on one operand: a poison operand gives
@@ -69,8 +69,8 @@ operands give refined results, and none is ever UB or, without
 $`\mathsf{nnan}` and $`\mathsf{ninf}`, gives poison on a defined operand.
 :::
 
-:::readable Fir.Core.fma_propagatesPoison Fir.Core.fma_returnsOnDefined Fir.Core.fma_total Fir.Core.fma_monotone Fir.Core.fma_neverUB Fir.Core.fma_makesNoPoison (pin := Fir.PropagatesPoison) (pin := Fir.ReturnsOnDefined) (pin := Fir.OpTotal) (pin := Fir.OpMonotone) (pin := Fir.NeverUBSetM) (pin := Fir.MakesNoPoisonSetM) (pin := Fir.Core.Op.denote?) (fingerprint := "3720497939878057174")
-*Theorem: $`\mathsf{fma}` is lawful, at every format.* It meets the same
+:::readable Fir.Core.fma_propagatesPoison Fir.Core.fma_returnsOnDefined Fir.Core.fma_total Fir.Core.fma_monotone Fir.Core.fma_neverUB Fir.Core.fma_makesNoPoison (pin := Fir.PropagatesPoison) (pin := Fir.ReturnsOnDefined) (pin := Fir.OpTotal) (pin := Fir.OpMonotone) (pin := Fir.NeverUBSetM) (pin := Fir.MakesNoPoisonSetM) (pin := Fir.Core.Op.denote?) (fingerprint := "8466053221518638089")
+*Theorem: $`\mathsf{fma}` is lawful, at every format and rounding mode.* It meets the same
 obligations on three operands: any poison operand gives poison, three
 $`+0` give a result, every operand vector has a way to end, refined
 operands give refined results, and it is never UB or, without

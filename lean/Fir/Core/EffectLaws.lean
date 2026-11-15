@@ -80,11 +80,11 @@ theorem Op.neverUB_all : (op : Op) → (Fir.effects (d := CoreDialect) op).mayUB
   | .call .., _ | .alloca .., _ => fun _ _ => ⟨fun _ h => h, fun h => nomatch h⟩
   | .fbin o fl e m, _ => fbin_neverUB o fl e m
   | .funary o fl e m, _ => funary_neverUB o fl e m
-  | .fma fl e m, _ => fma_neverUB fl e m
-  | .sitofp n e m, _ => intToFloat_neverUB n e m true
-  | .uitofp n e m, _ => intToFloat_neverUB n e m false
-  | .fpext e m e' m', _ => convertFloat_neverUB e m e' m' true
-  | .fptrunc e m e' m', _ => convertFloat_neverUB e m e' m' false
+  | .fma fl r e m, _ => fma_neverUB fl r e m
+  | .sitofp r n e m, _ => intToFloat_neverUB r n e m true
+  | .uitofp r n e m, _ => intToFloat_neverUB r n e m false
+  | .fpext e m e' m', _ => convertFloat_neverUB e m e' m' none
+  | .fptrunc r e m e' m', _ => convertFloat_neverUB e m e' m' (some r)
   | .ptradd n w, _ => ptradd_neverUB n w
   | .sdiv .., h | .udiv .., h | .srem _, h | .urem _, h | .condBr, h
   | .unreachable, h | .load .., h | .store .., h | .loadPtr .., h | .storePtr .., h =>
@@ -229,11 +229,11 @@ theorem Op.makesNoPoison_all : (op : Op) → (Fir.effects (d := CoreDialect) op)
     fun _ _ _ _ hr => hr.elim
   | .fbin o fl e m, h => fbin_makesNoPoison o fl e m h
   | .funary o fl e m, h => funary_makesNoPoison o fl e m h
-  | .fma fl e m, h => fma_makesNoPoison fl e m h
-  | .sitofp n e m, _ => intToFloat_makesNoPoison n e m true
-  | .uitofp n e m, _ => intToFloat_makesNoPoison n e m false
-  | .fpext e m e' m', _ => convertFloat_makesNoPoison e m e' m' true
-  | .fptrunc e m e' m', _ => convertFloat_makesNoPoison e m e' m' false
+  | .fma fl r e m, h => fma_makesNoPoison fl r e m h
+  | .sitofp r n e m, _ => intToFloat_makesNoPoison r n e m true
+  | .uitofp r n e m, _ => intToFloat_makesNoPoison r n e m false
+  | .fpext e m e' m', _ => convertFloat_makesNoPoison e m e' m' none
+  | .fptrunc r e m e' m', _ => convertFloat_makesNoPoison e m e' m' (some r)
   | .ptradd n w, _ => ptradd_makesNoPoison n w
   | .br, _ | .condBr, _ | .ret _, _ | .unreachable, _ => fun h => nomatch h
   | .load .., h | .poison _, h | .shl _, h | .lshr _, h | .ashr _, h | .fptosi .., h | .fptoui .., h => nomatch h

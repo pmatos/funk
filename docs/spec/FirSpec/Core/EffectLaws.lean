@@ -17,7 +17,7 @@ fingerprint; the build fails when the Lean changes under it.
 :::moduleDocs (fingerprint := "3715093879706990322")
 :::
 
-:::readable Fir.Core.Op.neverUB_all (pin := Fir.Core.Op.effects) (pin := Fir.NeverUBSetM) (fingerprint := "14756341356274828456")
+:::readable Fir.Core.Op.neverUB_all (pin := Fir.Core.Op.effects) (pin := Fir.NeverUBSetM) (fingerprint := "14677004782973582221")
 *Theorem: each core op that does not declare may-UB never ends in UB in
 the set monad.*
 Every core op but $`\mathsf{sdiv}`, $`\mathsf{udiv}`, $`\mathsf{srem}`,
@@ -60,7 +60,7 @@ $`\mathsf{mul}` that does not declare $`\mathsf{mayPoison}` has no flags.*
 Its flags $`f` are neither $`\mathsf{nuw}` nor $`\mathsf{nsw}`.
 :::
 
-:::readable Fir.Core.Op.makesNoPoison_all (pin := Fir.Core.Op.effects) (pin := Fir.MakesNoPoisonSetM) (fingerprint := "100839863513643446")
+:::readable Fir.Core.Op.makesNoPoison_all (pin := Fir.Core.Op.effects) (pin := Fir.MakesNoPoisonSetM) (fingerprint := "10412607546830066195")
 *Theorem: each core op that does not declare $`\mathsf{mayPoison}` makes no
 poison in the set monad.* On operands with no poison, $`\mathsf{const}`, $`\mathsf{add}`,
 $`\mathsf{sub}` and $`\mathsf{mul}` without flags, $`\mathsf{sdiv}` and
@@ -78,7 +78,7 @@ integer or a pointer declare $`\mathsf{mayPoison}`, so the obligation asks
 nothing of them.
 :::
 
-:::readable Fir.Core.Op.notControl_all (pin := Fir.Core.Op.effects) (fingerprint := "720441947110205140")
+:::readable Fir.Core.Op.notControl_all (pin := Fir.Core.Op.effects) (fingerprint := "16334104312758792901")
 *Theorem: each core op that does not declare $`\mathsf{control}` is not a
 terminator.* The core terminators are $`\mathsf{br}`,
 $`\mathsf{cond\_br}`, $`\mathsf{ret}` and $`\mathsf{unreachable}`, and each
@@ -112,7 +112,7 @@ may-UB. So a pass may rely on the core ops' effect sets
 (ADR-2026-11-09-1541).
 :::
 
-:::readable Fir.Core.Unlawful.sdivNoUB Fir.Core.Unlawful.sdivNoUB_unlawful (pin := Fir.Core.Op.effects) (pin := Fir.NeverUB) (pin := Fir.Core.memDenoteAt) (fingerprint := "7259381036118813598")
+:::readable Fir.Core.Unlawful.sdivNoUB Fir.Core.Unlawful.sdivNoUB_unlawful (pin := Fir.Core.Op.effects) (pin := Fir.NeverUB) (pin := Fir.Core.memDenoteAt) (fingerprint := "16471706855748573631")
 *Definition and theorem: the obligations reject a wrong declaration.* The
 declaration $`\mathrm{eff}'` gives each core op its set but
 $`\mathsf{sdiv}`, which it declares without $`\mathsf{mayUB}`. Over the

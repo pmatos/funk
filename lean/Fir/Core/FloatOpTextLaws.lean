@@ -18,37 +18,33 @@ namespace Fir.Core
 
 /-- `fadd`, `fsub`, `fmul`, `fdiv`, `frem` and `fmod` decode only from
 their own name, attributes, operand types and result type. -/
-theorem decodeFBin_eq {o : FBin} {as : List Attr} {ts rs : List Ty} {op : Op}
-    (h : decodeFBin o as ts rs = some op) :
-    op.name = o.name ∧ op.attrs = as ∧ op.sig = ts ∧ op.returnTypes = rs := by
+theorem decodeFBin_eq {n : String} {as : List Attr} {ts rs : List Ty} {op : Op}
+    (h : decodeFBin n as ts rs = some op) :
+    op.name = n ∧ op.attrs = as ∧ op.sig = ts ∧ op.returnTypes = rs := by
   unfold decodeFBin at h
-  dsimp only at h
-  split at h
-  · rename_i hok
-    obtain ⟨⟨e, m⟩, hf, rfl⟩ := Option.map_eq_some_iff.mp h
-    obtain ⟨rfl, rfl⟩ := floatOpFormat_eq hf
-    refine ⟨rfl, ?_, rfl, rfl⟩
-    show (splitFlags as).1.attrs ++ o.attrs = as
-    rw [FBin.attrs_of_attrsOk hok]
-    exact splitFlags_spec as
-  · cases h
+  obtain ⟨o, ho, h⟩ := Option.bind_eq_some_iff.mp h
+  obtain ⟨⟨e, m⟩, hf, rfl⟩ := Option.map_eq_some_iff.mp h
+  obtain ⟨rfl, rfl⟩ := floatOpFormat_eq hf
+  obtain ⟨hn, ha⟩ := FBin.read_eq ho
+  refine ⟨hn, ?_, rfl, rfl⟩
+  show (splitFlags as).1.attrs ++ o.attrs = as
+  rw [ha]
+  exact splitFlags_spec as
 
 /-- `fneg`, `fabs` and `sqrt` decode only from their own name, attributes,
 operand type and result type. -/
-theorem decodeFUnary_eq {o : FUnary} {as : List Attr} {ts rs : List Ty} {op : Op}
-    (h : decodeFUnary o as ts rs = some op) :
-    op.name = o.name ∧ op.attrs = as ∧ op.sig = ts ∧ op.returnTypes = rs := by
+theorem decodeFUnary_eq {n : String} {as : List Attr} {ts rs : List Ty} {op : Op}
+    (h : decodeFUnary n as ts rs = some op) :
+    op.name = n ∧ op.attrs = as ∧ op.sig = ts ∧ op.returnTypes = rs := by
   unfold decodeFUnary at h
-  dsimp only at h
-  split at h
-  · rename_i hok
-    obtain ⟨⟨e, m⟩, hf, rfl⟩ := Option.map_eq_some_iff.mp h
-    obtain ⟨rfl, rfl⟩ := floatOpFormat_eq hf
-    refine ⟨rfl, ?_, rfl, rfl⟩
-    show (splitFlags as).1.attrs ++ o.attrs = as
-    rw [FUnary.attrs_of_attrsOk hok]
-    exact splitFlags_spec as
-  · cases h
+  obtain ⟨o, ho, h⟩ := Option.bind_eq_some_iff.mp h
+  obtain ⟨⟨e, m⟩, hf, rfl⟩ := Option.map_eq_some_iff.mp h
+  obtain ⟨rfl, rfl⟩ := floatOpFormat_eq hf
+  obtain ⟨hn, ha⟩ := FUnary.read_eq ho
+  refine ⟨hn, ?_, rfl, rfl⟩
+  show (splitFlags as).1.attrs ++ o.attrs = as
+  rw [ha]
+  exact splitFlags_spec as
 
 /-- `fma` decodes only from its own name, attributes, operand types and
 result type. -/
@@ -56,16 +52,13 @@ theorem decodeFma_eq {as : List Attr} {ts rs : List Ty} {op : Op}
     (h : decodeFma as ts rs = some op) :
     op.name = "fma" ∧ op.attrs = as ∧ op.sig = ts ∧ op.returnTypes = rs := by
   unfold decodeFma at h
-  dsimp only at h
-  split at h
-  · rename_i hr
-    obtain ⟨⟨e, m⟩, hf, rfl⟩ := Option.map_eq_some_iff.mp h
-    obtain ⟨rfl, rfl⟩ := floatOpFormat_eq hf
-    refine ⟨rfl, ?_, rfl, rfl⟩
-    show (splitFlags as).1.attrs ++ [roundAttr] = as
-    rw [← eq_of_isRoundAttrs hr]
-    exact splitFlags_spec as
-  · cases h
+  obtain ⟨r, hr, h⟩ := Option.bind_eq_some_iff.mp h
+  obtain ⟨⟨e, m⟩, hf, rfl⟩ := Option.map_eq_some_iff.mp h
+  obtain ⟨rfl, rfl⟩ := floatOpFormat_eq hf
+  refine ⟨rfl, ?_, rfl, rfl⟩
+  show (splitFlags as).1.attrs ++ [roundAttr r] = as
+  rw [← eq_of_decodeRound hr]
+  exact splitFlags_spec as
 
 /-- `bitcast` decodes only from its own name, attributes, operand type and
 result type, in either direction. -/
@@ -90,11 +83,8 @@ theorem decodeIntToFloat_eq {signed : Bool} {as : List Attr} {ts rs : List Ty} {
       op.returnTypes = rs := by
   unfold decodeIntToFloat at h
   split at h
-  · split at h
-    · rename_i hr
-      cases h
-      cases signed <;> exact ⟨rfl, (eq_of_isRoundAttrs hr).symm, rfl, rfl⟩
-    · cases h
+  · obtain ⟨r, hr, rfl⟩ := Option.map_eq_some_iff.mp h
+    cases signed <;> exact ⟨rfl, (eq_of_decodeRound hr).symm, rfl, rfl⟩
   · cases h
 
 /-- `fpext` decodes only from its own name, attributes, operand type and
@@ -118,11 +108,8 @@ theorem decodeFptrunc_eq {as : List Attr} {ts rs : List Ty} {op : Op}
     op.name = "fptrunc" ∧ op.attrs = as ∧ op.sig = ts ∧ op.returnTypes = rs := by
   unfold decodeFptrunc at h
   split at h
-  · split at h
-    · rename_i hr
-      cases h
-      exact ⟨rfl, (eq_of_isRoundAttrs hr).symm, rfl, rfl⟩
-    · cases h
+  · obtain ⟨r, hr, rfl⟩ := Option.map_eq_some_iff.mp h
+    exact ⟨rfl, (eq_of_decodeRound hr).symm, rfl, rfl⟩
   · cases h
 
 /-- `fptosi` and `fptoui` decode only from their own name, attributes,

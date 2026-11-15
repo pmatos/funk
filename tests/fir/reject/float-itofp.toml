@@ -1,5 +1,7 @@
 # Must-reject texts of #241's conversions from integers to floats: sitofp
-# and uitofp carry round(rne) and take one value of an integer type to a
+# and uitofp carry their rounding mode, of which validation accepts only
+# round(rne) (the human's ruling of 2026-11-15 on #229), and take one value
+# of an integer type to a
 # float type, of any width and format (ADR-2026-11-09-1549). Any other
 # attribute or pair of types does not decode, and validation rejects a
 # width or format that it rejects everywhere.
@@ -20,12 +22,42 @@ locs {
 '''
 
 [[reject]]
-verdict = "parse-error"
-rule = "round(rne) is the one rounding mode: uitofp round(rtz) does not decode"
+verdict = "validation-error"
+rule = "uitofp rounds to nearest even in M1: round(rtz) decodes and is rejected"
 text = '''
 func @f(%i: i32) -> f32 {
 ^e:
   %r: f32 = uitofp round(rtz) %i @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "sitofp rounds to nearest even in M1: round(rna) decodes and is rejected"
+text = '''
+func @f(%i: i32) -> f32 {
+^e:
+  %r: f32 = sitofp round(rna) %i @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "a rounding mode is one of five words: sitofp round(near) does not decode"
+text = '''
+func @f(%i: i32) -> f32 {
+^e:
+  %r: f32 = sitofp round(near) %i @0
   ret %r @0
 }
 

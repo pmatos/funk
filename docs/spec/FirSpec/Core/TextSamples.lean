@@ -14,10 +14,10 @@ build fails when the Lean changes under it.
 
 #doc (Manual) "The core dialect's text, checked: readable blocks" =>
 
-:::moduleDocs (fingerprint := "9302430205169712939")
+:::moduleDocs (fingerprint := "11887426546123024953")
 :::
 
-:::readable Fir.Core.samples (pin := Fir.instDialectTextCoreDialect) (fingerprint := "15269983539242023802")
+:::readable Fir.Core.samples (pin := Fir.instDialectTextCoreDialect) (fingerprint := "13162035440266460672")
 *Definition: the core dialect's text, and one instance of every core op.*
 The functions of the
 {ref "The-fir-specification--Text-format--The-core-dialect-in-text"}[previous section],

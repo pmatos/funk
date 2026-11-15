@@ -17,7 +17,7 @@ changes under it.
 :::moduleDocs (fingerprint := "6668287062299218849")
 :::
 
-:::readable Fir.Core.Unlawful.loadNoRead Fir.Core.Unlawful.load_typesValid (pin := Fir.Core.Op.effects) (fingerprint := "10727455769837905162")
+:::readable Fir.Core.Unlawful.loadNoRead Fir.Core.Unlawful.load_typesValid (pin := Fir.Core.Op.effects) (fingerprint := "16630047219764988643")
 *Definition: a declaration without a read.* The declaration gives every
 core op its
 {ref "The-fir-specification--Execution--Core-effects"}[effects],

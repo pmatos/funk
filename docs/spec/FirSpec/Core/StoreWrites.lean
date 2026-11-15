@@ -17,7 +17,7 @@ fails when the Lean changes under it.
 :::moduleDocs (fingerprint := "7026218142577757368")
 :::
 
-:::readable Fir.Core.Unlawful.storeNoWrite Fir.Core.Unlawful.store_typesValid (pin := Fir.Core.Op.effects) (fingerprint := "767523123437958871")
+:::readable Fir.Core.Unlawful.storeNoWrite Fir.Core.Unlawful.store_typesValid (pin := Fir.Core.Op.effects) (fingerprint := "1898334460989131878")
 *Definition: a declaration without a write.* The declaration gives every
 core op its
 {ref "The-fir-specification--Execution--Core-effects"}[effects],

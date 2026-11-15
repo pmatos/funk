@@ -15,7 +15,8 @@ The proofs are those of the float arithmetic of one operand, whose
 operand is a float where these take an integer: the rule gives a float
 result of the model on a value, which has a way to end, is never UB and
 is defined bits, and poison on poison. None of this looks at what the
-model computes, so the proofs hold at every format, valid or not.
+model computes, so the proofs hold at every format and rounding mode,
+valid or not.
 -/
 
 namespace Fir.Core
@@ -34,18 +35,18 @@ theorem intToFloat_map {μ ν : Type → Type} [Monad μ] [Monad ν] [MonadChoic
   cases a <;> first | exact φ.map_pure _ | (dsimp only [intToFloat]; exact floatResult_map φ hk _)
 
 section
-variable (n e m : Nat)
+variable (r : RoundingMode) (n e m : Nat)
 
 /-- The op instance of `sitofp`, with `signed`, or of `uitofp`, from `iN`
-to `float<e,m>`. -/
+to `float<e,m>`, with the mode `r`. -/
 def intToFloatOp : Bool → Op
-  | true => .sitofp n e m
-  | false => .uitofp n e m
+  | true => .sitofp r n e m
+  | false => .uitofp r n e m
 
 /-- `sitofp` and `uitofp` propagate poison: a poison operand gives only a
 poison result, and they are never UB. -/
 theorem intToFloat_propagatesPoison (signed : Bool) :
-    PropagatesPoison (d := CoreDialect) (intToFloatOp n e m signed) := by
+    PropagatesPoison (d := CoreDialect) (intToFloatOp r n e m signed) := by
   cases signed <;> exact {
     poisonOut := fun
       | .cons a .nil, h, _, hrs => by
@@ -60,7 +61,7 @@ theorem intToFloat_propagatesPoison (signed : Bool) :
 
 /-- `sitofp` and `uitofp` return a result on a defined operand. -/
 theorem intToFloat_returnsOnDefined (signed : Bool) :
-    ReturnsOnDefined (d := CoreDialect) (intToFloatOp n e m signed) := by
+    ReturnsOnDefined (d := CoreDialect) (intToFloatOp r n e m signed) := by
   obtain ⟨v, hv⟩ := (intToFloat_ends (n := n) e m signed (.value 0)).some
   cases signed <;>
   · refine ⟨.cons (.value 0) .nil, ?_, _, oneFloat_of hv⟩
@@ -68,7 +69,7 @@ theorem intToFloat_returnsOnDefined (signed : Bool) :
 
 /-- `sitofp` and `uitofp` have an outcome on every operand. -/
 theorem intToFloat_total (signed : Bool) :
-    OpTotal (d := CoreDialect) (intToFloatOp n e m signed) := by
+    OpTotal (d := CoreDialect) (intToFloatOp r n e m signed) := by
   cases signed <;> exact fun
     | .cons a .nil =>
       ⟨fun _ => by
@@ -77,7 +78,7 @@ theorem intToFloat_total (signed : Bool) :
 
 /-- `sitofp` and `uitofp` are monotone. -/
 theorem intToFloat_monotone (signed : Bool) :
-    OpMonotone (d := CoreDialect) (intToFloatOp n e m signed) := by
+    OpMonotone (d := CoreDialect) (intToFloatOp r n e m signed) := by
   cases signed <;>
   · intro args args' h
     refine ⟨fun _ => ?_, fun h => nomatch h⟩
@@ -95,13 +96,13 @@ theorem intToFloat_monotone (signed : Bool) :
 
 /-- `sitofp` and `uitofp` are never UB. -/
 theorem intToFloat_neverUB (signed : Bool) :
-    NeverUBSetM (d := CoreDialect) (intToFloatOp n e m signed) := by
+    NeverUBSetM (d := CoreDialect) (intToFloatOp r n e m signed) := by
   cases signed <;> exact fun
     | .cons a .nil, r => ⟨fun _ => oneFloat_not_ub (intToFloat_ends e m _ a) r, fun h => nomatch h⟩
 
 /-- On a defined operand, `sitofp` and `uitofp` give a defined result. -/
 theorem intToFloat_makesNoPoison (signed : Bool) :
-    MakesNoPoisonSetM (d := CoreDialect) (intToFloatOp n e m signed) := by
+    MakesNoPoisonSetM (d := CoreDialect) (intToFloatOp r n e m signed) := by
   cases signed <;> exact fun _ args hd rs hr => match args, hd, hr with
     | .cons a .nil, hd, hr => by
       cases a with

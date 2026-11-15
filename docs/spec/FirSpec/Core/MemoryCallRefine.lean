@@ -17,7 +17,7 @@ pins their fingerprint; the build fails when the Lean changes under it.
 :::moduleDocs (fingerprint := "11776099395834119705")
 :::
 
-:::readable Fir.Core.Op.effects_touchesNoMemory Fir.Core.Op.touchesMemory_false Fir.Core.reachesNoMemory Fir.Core.reachesNoMemory_of_all (pin := Fir.Core.Op.effects) (fingerprint := "4810579396596054104")
+:::readable Fir.Core.Op.effects_touchesNoMemory Fir.Core.Op.touchesMemory_false Fir.Core.reachesNoMemory Fir.Core.reachesNoMemory_of_all (pin := Fir.Core.Op.effects) (fingerprint := "13728156600363051665")
 *Theorems: a core op declares a memory effect exactly when it touches
 memory, and a core function with no allocation, load or store in reach
 reaches no memory.* The {ref "The-fir-specification--Execution--Effect-sets"}[effects]
