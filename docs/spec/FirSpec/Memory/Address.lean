@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Addresses: readable blocks" =>
 
-:::moduleDocs (fingerprint := "11415205262792294873")
+:::moduleDocs (fingerprint := "3727198755483566784")
 :::
 
 :::readable Fir.Memory.alignUp (fingerprint := "5903328988636615743")
@@ -25,26 +25,29 @@ $$`\lceil c \rceil_\alpha = \left\lfloor \frac{c + \alpha - 1}{\alpha} \right\rf
 
 So $`\lceil 1 \rceil_4 = 4`, $`\lceil 5 \rceil_4 = 8` and
 $`\lceil 7 \rceil_1 = 7`. For $`\alpha = 0` it is $`c`: no address but 0 is
-a multiple of 0, so an allocation aligned to 0 gets no address anyway.
+a multiple of 0, so an allocation aligned to 0 fits only at 0.
 :::
 
 :::readable Fir.Memory.Block.leavesRoom Fir.Memory.roomFrom (fingerprint := "731093680196006974")
 *Definition: leaving room.* A block $`(k, \alpha, \vec{x}, \ell, y^?)`
-leaves room for $`n` units from the address $`x` when it is freed, or has
-no address, or its addresses and those of the new range do not overlap:
+leaves room for $`n` units from the address $`z` when it is freed, or has
+no address, or its addresses and those from $`z` to $`z + n` do not
+overlap:
 
-$$`\ell = \mathsf{false} \;\lor\; y^? = \bot \;\lor\; x + n \le y \;\lor\; y + |\vec{x}| \le x`
+$$`\ell = \mathsf{false} \;\lor\; y^? = \bot \;\lor\; z + n \le y \;\lor\; y + |\vec{x}| \le z`
 
 The blocks of a memory but the allocation $`a` leave room when each of
 them does. A freed block always leaves room, so its addresses may be given
-again.
+again. An allocation of no units takes no address, so it may share its
+address with another, as zero-sized objects may in LLVM and Rust; no op
+of M1 makes one.
 :::
 
 :::readable Fir.Memory.Block.giveAddr (fingerprint := "15790123385326876867")
 *Definition: giving a block an address.* A block with no address gets
-$`x`; a block that has one keeps it:
+$`z`; a block that has one keeps it:
 
-$$`\mathrm{give}_x(k, \alpha, \vec{x}, \ell, \bot) = (k, \alpha, \vec{x}, \ell, x) \qquad \mathrm{give}_x(k, \alpha, \vec{x}, \ell, y) = (k, \alpha, \vec{x}, \ell, y)`
+$$`\mathrm{give}_z(k, \alpha, \vec{x}, \ell, \bot) = (k, \alpha, \vec{x}, \ell, z) \qquad \mathrm{give}_z(k, \alpha, \vec{x}, \ell, y) = (k, \alpha, \vec{x}, \ell, y)`
 :::
 
 :::readable Fir.Memory.Memory.addrOf (fingerprint := "1378434035811052063")
@@ -53,60 +56,65 @@ address of the block $`M[a]`, when $`M` has that block and it was given
 one, and $`\bot` otherwise.
 :::
 
-:::readable Fir.Memory.Memory.fits (fingerprint := "3303481555155894563")
-*Definition: an address that fits.* In a memory $`M` whose pointers are
-$`P` bits wide, the address $`x` fits the allocation $`a`, with
+:::readable Fir.Memory.Memory.fits (fingerprint := "12756641956678186969")
+*Definition: an address that fits.* Between the bounds $`lo` and $`hi`,
+the address $`z` fits the allocation $`a` of $`M`, with
 $`M[a] = (k, \alpha, \vec{x}, \ell, y^?)`, when
 
-$$`0 < x \;\land\; \alpha \mid x \;\land\; x + |\vec{x}| < 2^P`
+$$`lo \le z \;\land\; \alpha \mid z \;\land\; z + |\vec{x}| \le hi`
 
 and every other block of $`M` leaves room for $`|\vec{x}|` units from
-$`x`. So no allocation is at 0; every address of the allocation, and the
-one past its end, is an address of the memory and not 0; and no live
-allocation with an address overlaps it. No address fits an allocation
-that $`M` does not have. The spec allows any address that fits.
+$`z`. No address fits an allocation that $`M` does not have. The spec
+allows any address that fits. In a memory of $`P`-bit pointers, the
+strictest reading of the bounds is $`lo = 1` and $`hi = 2^P - 1`: no
+allocation is at 0, and the address one past its end is an address of the
+memory and not 0. The loosest is $`lo = 0` and $`hi = 2^P`. Which one holds
+is a question for the human (#232), and every law holds at every bound.
 :::
 
 :::readable Fir.Memory.Memory.expose (fingerprint := "14914568477453096129")
 *Definition: exposing an allocation.* Exposing the allocation $`a` of
-$`M` at $`x` gives its block the address $`x`, unless it has one:
-$`M[a] := \mathrm{give}_x(M[a])`. Nothing else changes, and an id the
+$`M` at $`z` gives its block the address $`z`, unless it has one:
+$`M[a] := \mathrm{give}_z(M[a])`. Nothing else changes, and an id the
 memory does not have changes nothing.
 :::
 
-:::readable Fir.Memory.bumpFrom Fir.Memory.Memory.bump (fingerprint := "11435310927553796152")
+:::readable Fir.Memory.bumpFrom Fir.Memory.Memory.bump (fingerprint := "923466775074454332")
 *Definition: the canonical addresses.* The canonical layout lays the blocks
-$`b_0, b_1, \ldots` of $`M` out in the order they were made, from the
-address 1. With $`c_0 = 1`, the block $`b_i`, of alignment $`\alpha_i`
-and size $`n_i`, is at
+$`b_0, b_1, \ldots` of $`M` out in the order they were made, from $`lo`.
+With $`c_0 = lo`, the block $`b_i`, of alignment $`\alpha_i` and size
+$`n_i`, is at
 
 $$`\mathrm{bump}_M(i) = \lceil c_i \rceil_{\alpha_i} \qquad c_{i+1} = \mathrm{bump}_M(i) + n_i + 1`
 
-So one address is left unused after each block. Two blocks of 4 and 2
-units, aligned to 4 and 8, are at 4 and 16. The address of $`b_i` depends
-only on the blocks made before it.
+So one address is left unused after each block. From 1, two blocks of 4
+and 2 units, aligned to 4 and 8, are at 4 and 16. The address of $`b_i`
+depends only on the blocks made before it.
 :::
 
-:::readable Fir.Memory.fitAfter (fingerprint := "11893542091238316513")
-*Definition: an address just after a block.* For the allocation $`a`,
-aligned to $`\alpha`, $`\mathrm{after}_M(a)` walks the blocks of $`M` in
-order and gives $`\lceil y + n \rceil_\alpha` for the first live block, at
-$`y` and of size $`n`, for which that address fits $`a`, or $`\bot` when
-there is none.
+:::readable Fir.Memory.keepLow Fir.Memory.lowestFrom (fingerprint := "12393342139840133767")
+*Definition: the lowest candidate.* For the allocation $`a`, aligned to
+$`\alpha`, $`\mathrm{lowest}_M(a, z^?, \vec{c})` walks the blocks
+$`\vec{c}` in order, starting from the address $`z^?` found so far, if
+any. For each live block of $`\vec{c}` at $`y`, of size $`n`, for which
+$`\lceil y + n \rceil_\alpha` fits $`a`, it keeps the lower of that
+address and the one found so far. It gives the one found at the end.
 :::
 
-:::readable Fir.Memory.Memory.canonical (fingerprint := "6253861919625802359")
+:::readable Fir.Memory.Memory.lowestFit (fingerprint := "18403868619878256079")
+*Definition: the lowest address that fits.* For the allocation $`a` of
+$`M`, aligned to $`\alpha`, $`\mathrm{lowest}_M(a)` starts from
+$`\lceil lo \rceil_\alpha` when it fits, and walks every block of $`M`.
+The {ref "The-fir-specification--Memory--Address-laws"}[next section]
+proves that it is the lowest address that fits $`a`, and $`\bot` when no
+address fits.
+:::
+
+:::readable Fir.Memory.Memory.canonical (fingerprint := "15824697222970042406")
 *Definition: the canonical layout.* The address that the canonical layout
-gives the allocation $`a` of $`M`, of alignment $`\alpha`, is the first of
-these that fits $`a`:
-
-1. its canonical address, $`\mathrm{bump}_M(a)`;
-2. $`\lceil 1 \rceil_\alpha`;
-3. $`\mathrm{after}_M(a)`.
-
-It is $`\bot` when none of them fits. While every exposed allocation has
-its canonical address and the layout stays below $`2^P`, the first one
-fits. `fir-ref` gives addresses so (#232). The
-{ref "The-fir-specification--Memory--Address-laws"}[next section] proves
-that it gives an address that fits whenever any address fits.
+gives the allocation $`a` of $`M` is its canonical address,
+$`\mathrm{bump}_M(a)`, when that fits $`a`, and the lowest address that
+fits $`a` otherwise, or $`\bot` when none does. While every exposed
+allocation has its canonical address and the layout stays below $`hi`,
+the first one fits. `fir-ref` gives addresses so (#232).
 :::

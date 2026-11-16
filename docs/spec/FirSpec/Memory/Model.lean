@@ -80,10 +80,10 @@ Managed memory can be added as another kind.
 
 :::readable Fir.Memory.Block (fingerprint := "9612083655881060158")
 *Definition: an allocation's block.* A block is a tuple
-$`(k, \alpha, \vec{x}, \ell, x^?)`: its kind $`k`, its alignment
+$`(k, \alpha, \vec{x}, \ell, y^?)`: its kind $`k`, its alignment
 $`\alpha \in \mathbb{N}`, its units $`\vec{x}`, whether it is live,
 $`\ell \in \{\mathsf{true}, \mathsf{false}\}`, and its address
-$`x^?`, given once it is exposed. Its size is $`|\vec{x}|`. The alignment
+$`y^?`, a number given once it is exposed, or $`\bot`. Its size is $`|\vec{x}|`. The alignment
 counts units: it is what every address the block may be given is a
 multiple of, so that an op that accesses memory can check an access
 against it (#231). The ops that allocate give a power of two, as the human

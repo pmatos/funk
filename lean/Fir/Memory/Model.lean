@@ -116,7 +116,7 @@ structure Block (u : Nat) where
   deriving Repr, DecidableEq
 
 /-- The shape of a block: its kind, its alignment, its size and its
-liveness, everything but what its units hold. -/
+liveness, everything but what its units hold and its address. -/
 def Block.shape {u : Nat} (b : Block u) : AllocKind × Nat × Nat × Bool :=
   (b.kind, b.align, b.units.length, b.live)
 

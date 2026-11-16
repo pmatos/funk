@@ -13,8 +13,8 @@ were made (#232). The laws below say what that order gives:
   canonical address of each allocation made after it. So no two canonical
   addresses overlap.
 * So while every allocation with an address has its canonical one, the
-  canonical address of an allocation fits when it ends below `2 ^ P`, and
-  the canonical layout gives it that address.
+  canonical address of an allocation fits when it ends by the upper bound,
+  and the canonical layout gives it that address.
 * Allocating moves no canonical address: an allocation's canonical address
   depends only on the allocations made before it.
 
@@ -77,31 +77,29 @@ theorem bumpFrom_append : ∀ {c : Nat} {bs : List (Block u)} {a : Nat} (b : Blo
 namespace Memory
 
 /-- Allocating moves no canonical address. -/
-theorem bump_alloc (M : Memory u) (k : AllocKind) (n al : Nat) {a : AllocId}
-    (h : a < M.blocks.length) : (M.alloc k n al).2.bump a = M.bump a :=
+theorem bump_alloc (M : Memory u) (k : AllocKind) (n al lo : Nat) {a : AllocId}
+    (h : a < M.blocks.length) : (M.alloc k n al).2.bump lo a = M.bump lo a :=
   bumpFrom_append _ h
 
 /-- The canonical addresses of two allocations do not overlap: the earlier
 ends before the later starts. -/
-theorem bump_lt {M : Memory u} {i j : AllocId} {b : Block u} (h : M.blocks[i]? = some b)
-    (hij : i < j) : M.bump i + b.units.length < M.bump j :=
+theorem bump_lt {M : Memory u} {lo : Nat} {i j : AllocId} {b : Block u}
+    (h : M.blocks[i]? = some b) (hij : i < j) : M.bump lo i + b.units.length < M.bump lo j :=
   bumpFrom_lt h hij
 
 /-- While every allocation with an address has its canonical one, the
 canonical address of an allocation aligned to more than 0 fits when it
-ends below `2 ^ P`. -/
-theorem fits_bump {M : Memory u} {P a : Nat} {b : Block u} (hb : M.blocks[a]? = some b)
-    (hal : 0 < b.align) (hcanon : ∀ j z, M.addrOf j = some z → z = M.bump j)
-    (hP : M.bump a + b.units.length < 2 ^ P) : M.fits P a (M.bump a) = true := by
-  refine fits_eq_true.mpr ⟨b, hb, ?_, dvd_bumpFrom hb hal, hP, ?_⟩
-  · have := le_bumpFrom 1 M.blocks a
-    exact this
+ends by `hi`. -/
+theorem fits_bump {M : Memory u} {lo hi a : Nat} {b : Block u} (hb : M.blocks[a]? = some b)
+    (hal : 0 < b.align) (hcanon : ∀ j z, M.addrOf j = some z → z = M.bump lo j)
+    (hhi : M.bump lo a + b.units.length ≤ hi) : M.fits lo hi a (M.bump lo a) = true := by
+  refine fits_eq_true.mpr ⟨b, hb, le_bumpFrom lo M.blocks a, dvd_bumpFrom hb hal, hhi, ?_⟩
   · intro j c hc hne
     unfold Block.leavesRoom
     cases hz : c.addr with
     | none => rfl
     | some z =>
-      have hzj : z = M.bump j := hcanon j z (by simp [addrOf, hc, hz])
+      have hzj : z = M.bump lo j := hcanon j z (by simp [addrOf, hc, hz])
       subst hzj
       simp only [Bool.or_eq_true, decide_eq_true_eq]
       rcases Nat.lt_or_gt_of_ne hne with hlt | hgt
@@ -109,8 +107,8 @@ theorem fits_bump {M : Memory u} {P a : Nat} {b : Block u} (hb : M.blocks[a]? = 
       · exact .inl (.inr (Nat.le_of_lt (bump_lt hb hgt)))
 
 /-- So the canonical layout then gives the canonical address. -/
-theorem canonical_bump {M : Memory u} {P a : Nat} (h : M.fits P a (M.bump a) = true) :
-    M.canonical P a = some (M.bump a) := by
+theorem canonical_bump {M : Memory u} {lo hi a : Nat} (h : M.fits lo hi a (M.bump lo a) = true) :
+    M.canonical lo hi a = some (M.bump lo a) := by
   simp [canonical, h]
 
 end Memory
@@ -123,20 +121,22 @@ def reuseWitness : Memory 8 :=
   ((((Memory.empty.alloc .stack 4 4).2.expose 0 4).free 0).alloc .stack 4 4).2
 
 /-- In the witness, the first allocation has the address 4 and is freed,
-the address 4 fits the second, with 64-bit pointers, and the second may be
-given it. -/
+the address 4 fits the second, with 64-bit pointers under the strictest
+reading of the bounds, and the second may be given it. -/
 theorem reuseWitness_reuses : reuseWitness.addrOf 0 = some 4 ∧
-    reuseWitness.blocks[0]?.map (·.live) = some false ∧ reuseWitness.fits 64 1 4 = true ∧
+    reuseWitness.blocks[0]?.map (·.live) = some false ∧
+    reuseWitness.fits 1 (2 ^ 64 - 1) 1 4 = true ∧
     (reuseWitness.expose 1 4).addrOf 1 = some 4 := by
   decide
 
 /-- The spec does not imply that a freed allocation's address is never
 given to a later allocation. -/
-theorem addresses_not_fresh : ¬ ∀ (M : Memory 8) (P a a' x : Nat), a < a' →
-    M.addrOf a = some x → M.blocks[a]?.map (·.live) = some false → M.fits P a' x = false := by
+theorem addresses_not_fresh : ¬ ∀ (M : Memory 8) (lo hi a a' x : Nat), a < a' →
+    M.addrOf a = some x → M.blocks[a]?.map (·.live) = some false →
+      M.fits lo hi a' x = false := by
   intro h
   have ⟨h₁, h₂, h₃, _⟩ := reuseWitness_reuses
-  have := h reuseWitness 64 0 1 4 (by decide) h₁ h₂
+  have := h reuseWitness 1 (2 ^ 64 - 1) 0 1 4 (by decide) h₁ h₂
   rw [h₃] at this
   exact Bool.noConfusion this
 

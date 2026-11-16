@@ -11,8 +11,8 @@ section says when the memories of one run refine those of another:
 * a unit is refined by itself, and a poison unit by any unit. A unit of bits
   or a fragment of a pointer is refined by nothing else, so that a fragment
   keeps its pointer's provenance;
-* a block is refined by a block of the same kind, alignment, liveness,
-  size and address, if it has one. While it is live, the other's units refine its units one by one. No
+* a block is refined by a block of the same kind, alignment, liveness and
+  size, with the same address or, in both, none. While it is live, the other's units refine its units one by one. No
   access reaches a freed block, so the units of a freed block are not
   compared, and a store to a block that is then freed may be dropped;
 * a memory is refined by a memory whose blocks refine its own, one by one,

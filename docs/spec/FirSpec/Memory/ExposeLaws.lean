@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Exposure laws: readable blocks" =>
 
-:::moduleDocs (fingerprint := "11230716126885637442")
+:::moduleDocs (fingerprint := "1194117721472522362")
 :::
 
 :::readable Fir.Memory.Block.giveAddr_shape Fir.Memory.Block.giveAddr_units Fir.Memory.Block.giveAddr_live Fir.Memory.Block.giveAddr_write (pin := Fir.Memory.Block.giveAddr) (fingerprint := "9446545998985700524")
@@ -24,14 +24,14 @@ then is giving the address to the block written.
 :::
 
 :::readable Fir.Memory.Memory.expose_getElem? Fir.Memory.Memory.expose_shapes Fir.Memory.Memory.expose_contents (pin := Fir.Memory.Memory.expose) (fingerprint := "16175337384227445494")
-*Theorems: what exposing changes.* After exposing $`a` at $`x`, the
-block $`a` is $`\mathrm{give}_x(M[a])` and every other block is as it
+*Theorems: what exposing changes.* After exposing $`a` at $`z`, the
+block $`a` is $`\mathrm{give}_z(M[a])` and every other block is as it
 was. So every block keeps its shape and its units.
 :::
 
 :::readable Fir.Memory.Memory.addrOf_expose_of_none Fir.Memory.Memory.addrOf_expose_of_some Fir.Memory.Memory.addrOf_expose_ne (pin := Fir.Memory.Memory.addrOf) (fingerprint := "18153239210037965542")
 *Theorems: the addresses after exposing.* Exposing an allocation of $`M`
-with no address at $`x` gives it the address $`x`. One that has the
+with no address at $`z` gives it the address $`z`. One that has the
 address $`y` keeps $`y`. Every other allocation keeps its address.
 :::
 
@@ -42,7 +42,7 @@ same reason. A load, aligned or not, gives what it gave, whether an
 access is aligned is the same, and a store, aligned or not, faults for the
 same reason or gives the memory it gave, exposed:
 
-$$`\mathrm{store}(M[a := \mathrm{give}_x], p, \vec{y}) = \mathrm{store}(M, p, \vec{y})[a := \mathrm{give}_x]`
+$$`\mathrm{store}(M[a := \mathrm{give}_z], p, \vec{y}) = \mathrm{store}(M, p, \vec{y})[a := \mathrm{give}_z]`
 :::
 
 :::readable Fir.Memory.Memory.addrOf_alloc_new Fir.Memory.Memory.addrOf_alloc_lt Fir.Memory.Memory.addrOf_free Fir.Memory.Memory.addrOf_store (fingerprint := "10243060688549114162")
@@ -58,10 +58,11 @@ the same address before. So exposing the same allocation at the same
 address in $`M \sqsubseteq M'` gives memories that refine each other.
 :::
 
-:::readable Fir.Memory.Block.IsRefinedBy.leavesRoom Fir.Memory.roomFrom_isRefinedBy Fir.Memory.Memory.IsRefinedBy.addrOf Fir.Memory.Memory.IsRefinedBy.fits Fir.Memory.Memory.bumpFrom_isRefinedBy Fir.Memory.Memory.fitAfter_isRefinedBy Fir.Memory.Memory.IsRefinedBy.canonical (fingerprint := "2396237259725188598")
+:::readable Fir.Memory.Block.IsRefinedBy.leavesRoom Fir.Memory.roomFrom_isRefinedBy Fir.Memory.Memory.IsRefinedBy.addrOf Fir.Memory.Memory.IsRefinedBy.fits Fir.Memory.Memory.bumpFrom_isRefinedBy Fir.Memory.Memory.lowestFrom_isRefinedBy Fir.Memory.Memory.IsRefinedBy.lowestFit Fir.Memory.Memory.IsRefinedBy.canonical (fingerprint := "1660268409456979510")
 *Theorems: refined memories agree on addresses.* Blocks that refine each
 other have the same liveness, size and address, so they leave room for
 the same addresses. In $`M \sqsubseteq M'` every allocation has the same
 address, the same addresses fit it, its canonical address is the same,
-and the canonical layout gives it the same address.
+the lowest address that fits it is the same, and the canonical layout
+gives it the same address.
 :::

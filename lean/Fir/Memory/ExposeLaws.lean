@@ -254,8 +254,8 @@ theorem IsRefinedBy.addrOf {M M' : Memory u} (h : M ⊑ M') (a : AllocId) :
   · simp [h₁, h₂, hb.2.2.2.2.1]
 
 /-- The same addresses fit in memories that refine each other. -/
-theorem IsRefinedBy.fits {M M' : Memory u} (h : M ⊑ M') (P a x : Nat) :
-    M.fits P a x = M'.fits P a x := by
+theorem IsRefinedBy.fits {M M' : Memory u} (h : M ⊑ M') (lo hi a x : Nat) :
+    M.fits lo hi a x = M'.fits lo hi a x := by
   unfold Memory.fits
   rcases List.IsRefinedBy.getElem? h a with ⟨h₁, h₂⟩ | ⟨b, b', h₁, h₂, hb⟩
   · rw [h₁, h₂]
@@ -272,26 +272,35 @@ theorem bumpFrom_isRefinedBy :
     exact bumpFrom_isRefinedBy h.2 a
   | _, [], _ :: _, h, _ | _, _ :: _, [], h, _ => (h : False).elim
 
-/-- The address `fitAfter` gives is the same in memories that refine each
+/-- The address `lowestFrom` gives is the same in memories that refine each
 other, over blocks that refine each other. -/
-theorem fitAfter_isRefinedBy {M M' : Memory u} (hM : M ⊑ M') (P a al : Nat) :
-    ∀ {cs cs' : List (Block u)}, cs ⊑ cs' → fitAfter M P a al cs = fitAfter M' P a al cs'
-  | [], [], _ => rfl
-  | c :: cs, c' :: cs', h => by
+theorem lowestFrom_isRefinedBy {M M' : Memory u} (hM : M ⊑ M') (lo hi a al : Nat) :
+    ∀ {best : Option Nat} {cs cs' : List (Block u)}, cs ⊑ cs' →
+      lowestFrom M lo hi a al best cs = lowestFrom M' lo hi a al best cs'
+  | _, [], [], _ => rfl
+  | best, c :: cs, c' :: cs', h => by
     obtain ⟨-, -, hl, hn, ha, -⟩ := h.1
-    simp only [fitAfter, ha, hl, hn, hM.fits, fitAfter_isRefinedBy hM P a al h.2]
-  | [], _ :: _, h | _ :: _, [], h => (h : False).elim
+    simp only [lowestFrom, ha, hl, hn, hM.fits]
+    exact lowestFrom_isRefinedBy hM lo hi a al h.2
+  | _, [], _ :: _, h | _, _ :: _, [], h => (h : False).elim
+
+/-- The lowest address that fits is the same in memories that refine each
+other. -/
+theorem IsRefinedBy.lowestFit {M M' : Memory u} (h : M ⊑ M') (lo hi a : Nat) :
+    M.lowestFit lo hi a = M'.lowestFit lo hi a := by
+  unfold Memory.lowestFit
+  rcases List.IsRefinedBy.getElem? h a with ⟨h₁, h₂⟩ | ⟨b, b', h₁, h₂, hb⟩
+  · rw [h₁, h₂]
+  · simp only [h₁, h₂, hb.2.1, IsRefinedBy.fits h]
+    exact lowestFrom_isRefinedBy h lo hi a _ h
 
 /-- The canonical layout gives the same address in memories that refine
 each other. -/
-theorem IsRefinedBy.canonical {M M' : Memory u} (h : M ⊑ M') (P a : Nat) :
-    M.canonical P a = M'.canonical P a := by
+theorem IsRefinedBy.canonical {M M' : Memory u} (h : M ⊑ M') (lo hi a : Nat) :
+    M.canonical lo hi a = M'.canonical lo hi a := by
   unfold Memory.canonical Memory.bump
   rw [bumpFrom_isRefinedBy h a]
-  simp only [IsRefinedBy.fits h, fitAfter_isRefinedBy h P a _ h]
-  rcases List.IsRefinedBy.getElem? h a with ⟨h₁, h₂⟩ | ⟨b, b', h₁, h₂, hb⟩
-  · rw [h₁, h₂]
-  · simp only [h₁, h₂, hb.2.1]
+  simp only [IsRefinedBy.fits h, IsRefinedBy.lowestFit h]
 
 end Memory
 

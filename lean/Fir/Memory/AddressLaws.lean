@@ -5,20 +5,18 @@ import Fir.Memory.Address
 
 The laws below say what the addresses of the previous section are:
 
-* An address fits an allocation exactly when it is not 0, it is a multiple
-  of the allocation's alignment, the allocation ends below `2 ^ P`, and no
-  other live allocation with an address overlaps it.
+* An address fits an allocation exactly when the allocation stays within
+  the bounds, the address is a multiple of its alignment, and no other
+  live allocation with an address overlaps it.
+* The lowest address that fits is a candidate: the first multiple of the
+  alignment from the lower bound, or the first from where a live
+  allocation with an address ends.
 * The canonical layout is one of the assignments that the spec allows:
   the address it gives fits, and it gives one whenever any address fits
-  (#232). So `fir-ref`, which runs it, makes one of the choices that the
-  spec allows, and fails to give an address only where no address fits.
-* The canonical addresses are in the order the allocations were made, and
-  no two of them overlap. So while every allocation with an address has
-  its canonical one, the canonical address of another fits when the
-  allocation ends below `2 ^ P`. Allocating keeps every canonical address.
-* The spec does not imply that addresses are fresh: a later allocation
-  may get exactly the address of one that was freed, as a witness shows
-  (the human's ruling of 2026-11-10 on #232).
+  (#232). When the canonical address does not fit, it gives the lowest
+  address that fits. So `fir-ref`, which runs it, makes one of the choices
+  that the spec allows, and fails to give an address only where no address
+  fits.
 -/
 
 namespace Fir.Memory
@@ -89,12 +87,12 @@ theorem roomFrom_eq_true {x n a : Nat} :
 
 namespace Memory
 
-/-- The address `x` fits the allocation `a` exactly when it is not 0, it
-is a multiple of the allocation's alignment, the allocation ends below
-`2 ^ P`, and every other allocation leaves room for it. -/
-theorem fits_eq_true {M : Memory u} {P a x : Nat} :
-    M.fits P a x = true ↔ ∃ b, M.blocks[a]? = some b ∧ 0 < x ∧ b.align ∣ x ∧
-      x + b.units.length < 2 ^ P ∧
+/-- The address `x` fits the allocation `a` exactly when the allocation
+stays from `lo` to `hi`, `x` is a multiple of its alignment, and every
+other allocation leaves room for it. -/
+theorem fits_eq_true {M : Memory u} {lo hi a x : Nat} :
+    M.fits lo hi a x = true ↔ ∃ b, M.blocks[a]? = some b ∧ lo ≤ x ∧ b.align ∣ x ∧
+      x + b.units.length ≤ hi ∧
       ∀ j c, M.blocks[j]? = some c → j ≠ a → c.leavesRoom x b.units.length = true := by
   unfold fits
   cases hb : M.blocks[a]? with
@@ -103,30 +101,29 @@ theorem fits_eq_true {M : Memory u} {P a x : Nat} :
     simp only [Bool.and_eq_true, decide_eq_true_eq, roomFrom_eq_true, Nat.zero_add,
       Option.some.injEq, exists_eq_left', and_assoc]
 
-/-- A fitting address is a fitting candidate, or there is a lower one that
-fits: aligning 1 up, or aligning up the end of a live allocation with an
-address. -/
-theorem fits_candidate {M : Memory u} {P a : Nat} {b : Block u} (hb : M.blocks[a]? = some b) :
-    ∀ x, M.fits P a x = true → ∃ y, M.fits P a y = true ∧ (y = alignUp 1 b.align ∨
-      ∃ (j : Nat) (c : Block u) (z : Nat), M.blocks[j]? = some c ∧ c.addr = some z ∧ c.live = true ∧
-        y = alignUp (z + c.units.length) b.align) := by
-  intro x
-  induction x using Nat.strongRecOn with
-  | _ x ih =>
-  intro hx
-  obtain ⟨b', hb', hx0, hdvd, hlt, hroom⟩ := fits_eq_true.mp hx
+/-- A fitting address is a candidate, or a lower address fits: the
+candidates are the first multiple of the alignment from `lo`, and the first
+multiples from where each live allocation with an address ends. -/
+theorem fits_candidate {M : Memory u} {lo hi a : Nat} {b : Block u} (hb : M.blocks[a]? = some b)
+    {x : Nat} (hx : M.fits lo hi a x = true) : (x = alignUp lo b.align ∨
+      ∃ (j : Nat) (c : Block u) (z : Nat), M.blocks[j]? = some c ∧ c.addr = some z ∧
+        c.live = true ∧ x = alignUp (z + c.units.length) b.align) ∨
+      ∃ y, y < x ∧ M.fits lo hi a y = true := by
+  obtain ⟨b', hb', hlo, hdvd, hhi, hroom⟩ := fits_eq_true.mp hx
   rw [hb, Option.some.injEq] at hb'
   subst hb'
-  have hal : 0 < b.align := by
-    rcases Nat.eq_zero_or_pos b.align with h | h
-    · rw [h, Nat.zero_dvd] at hdvd
-      omega
-    · exact h
-  by_cases hle : x ≤ b.align
-  · refine ⟨x, hx, .inl (alignUp_eq hal hdvd (by omega) (by omega)).symm⟩
+  rcases Nat.eq_zero_or_pos b.align with h0 | hal
+  · -- Aligned to 0, the allocation fits only at 0, which is `lo` aligned up.
+    rw [h0, Nat.zero_dvd] at hdvd
+    subst hdvd
+    refine .inl (.inl ?_)
+    simp only [alignUp, h0, ↓reduceIte]
+    omega
+  by_cases hle : x < lo + b.align
+  · exact .inl (.inl (alignUp_eq hal hdvd hlo hle).symm)
   · have hdvd' : b.align ∣ x - b.align := Nat.dvd_sub hdvd (Nat.dvd_refl _)
-    by_cases hx' : M.fits P a (x - b.align) = true
-    · exact ih (x - b.align) (by omega) hx'
+    by_cases hx' : M.fits lo hi a (x - b.align) = true
+    · exact .inr ⟨x - b.align, by omega, hx'⟩
     · -- The address below does not fit, so a live block is in its way.
       have : ¬ ∀ j c, M.blocks[j]? = some c → j ≠ a →
           c.leavesRoom (x - b.align) b.units.length = true := fun h =>
@@ -147,82 +144,155 @@ theorem fits_candidate {M : Memory u} {P a : Nat} {b : Block u} (hb : M.blocks[a
           · simp [hlive'] at hl
           · omega
           · exact h₄
-        exact ⟨x, hx, .inr ⟨j, c, z, hc, hz, hlive',
-          (alignUp_eq hal hdvd hend (by omega)).symm⟩⟩
+        exact .inl (.inr ⟨j, c, z, hc, hz, hlive',
+          (alignUp_eq hal hdvd hend (by omega)).symm⟩)
 
 end Memory
 
-/-- An address that `fitAfter` gives fits. -/
-theorem fitAfter_fits {M : Memory u} {P a al y : Nat} :
-    ∀ {cs : List (Block u)}, fitAfter M P a al cs = some y → M.fits P a y = true
-  | [], h => by simp [fitAfter] at h
-  | c :: cs, h => by
-    unfold fitAfter at h
-    split at h
-    · split at h
-      · rename_i hc
-        simp only [Option.some.injEq] at h
-        subst h
-        simp only [Bool.and_eq_true] at hc
-        exact hc.2
-      · exact fitAfter_fits h
-    · exact fitAfter_fits h
+/-! # The lowest address that fits -/
 
-/-- `fitAfter` gives an address when the end of a live block of `cs` with
-an address, aligned up, fits. -/
-theorem fitAfter_isSome {M : Memory u} {P a al : Nat} :
-    ∀ {cs : List (Block u)} {c : Block u} {z : Nat}, c ∈ cs → c.addr = some z → c.live = true →
-      M.fits P a (alignUp (z + c.units.length) al) = true → (fitAfter M P a al cs).isSome
-  | c' :: cs, c, z, hm, hz, hl, hf => by
-    unfold fitAfter
-    rcases List.mem_cons.mp hm with rfl | hm
-    · simp [hz, hl, hf]
+/-- Keeping the lower of an address found so far and another gives one at
+most each of them. -/
+theorem keepLow_le {best : Option Nat} {z : Nat} :
+    ∃ y, keepLow best z = some y ∧ y ≤ z ∧ ∀ b, best = some b → y ≤ b := by
+  cases best with
+  | none => exact ⟨z, rfl, Nat.le_refl z, fun _ h => nomatch h⟩
+  | some b =>
+    exact ⟨min b z, rfl, Nat.min_le_right b z, fun _ h => by
+      cases h; exact Nat.min_le_left _ _⟩
+
+/-- The lowest address of `lowestFrom` fits, when the one it starts with
+does. -/
+theorem lowestFrom_fits {M : Memory u} {lo hi a al y : Nat} :
+    ∀ {best : Option Nat} {cs : List (Block u)}, (∀ b, best = some b → M.fits lo hi a b = true) →
+      lowestFrom M lo hi a al best cs = some y → M.fits lo hi a y = true
+  | best, [], hb, h => hb y h
+  | best, c :: cs, hb, h => by
+    unfold lowestFrom at h
+    refine lowestFrom_fits ?_ h
+    intro b' hb'
+    split at hb'
+    · split at hb'
+      · rename_i hc
+        simp only [Bool.and_eq_true] at hc
+        cases best with
+        | none =>
+          simp only [keepLow, Option.some.injEq] at hb'
+          exact hb' ▸ hc.2
+        | some b₀ =>
+          simp only [keepLow, Option.some.injEq] at hb'
+          rw [← hb']
+          rcases Nat.le_total b₀ (alignUp (_ + c.units.length) al) with hle | hle
+          · rw [Nat.min_eq_left hle]
+            exact hb b₀ rfl
+          · rw [Nat.min_eq_right hle]
+            exact hc.2
+      · exact hb b' hb'
+    · exact hb b' hb'
+
+/-- `lowestFrom` gives an address at most the one it starts with. -/
+theorem lowestFrom_le_best {M : Memory u} {lo hi a al : Nat} :
+    ∀ {best : Option Nat} {cs : List (Block u)} {b : Nat}, best = some b →
+      ∃ y, lowestFrom M lo hi a al best cs = some y ∧ y ≤ b
+  | _, [], b, h => ⟨b, h, Nat.le_refl b⟩
+  | best, c :: cs, b, h => by
+    unfold lowestFrom
+    split
     · split
-      · split
-        · rfl
-        · exact fitAfter_isSome hm hz hl hf
-      · exact fitAfter_isSome hm hz hl hf
+      · obtain ⟨y, hy, -, hyb⟩ := keepLow_le (best := best) (z := alignUp (_ + c.units.length) al)
+        obtain ⟨y', hy', hle⟩ := lowestFrom_le_best (M := M) (lo := lo) (hi := hi) (a := a)
+          (al := al) (cs := cs) hy
+        exact ⟨y', hy', Nat.le_trans hle (hyb b h)⟩
+      · exact lowestFrom_le_best h
+    · exact lowestFrom_le_best h
+
+/-- `lowestFrom` gives an address at most the end of each live block of
+`cs` with an address, aligned up, that fits. -/
+theorem lowestFrom_le_after {M : Memory u} {lo hi a al : Nat} :
+    ∀ {best : Option Nat} {cs : List (Block u)} {c : Block u} {z : Nat}, c ∈ cs →
+      c.addr = some z → c.live = true → M.fits lo hi a (alignUp (z + c.units.length) al) = true →
+      ∃ y, lowestFrom M lo hi a al best cs = some y ∧ y ≤ alignUp (z + c.units.length) al
+  | best, c' :: cs, c, z, hm, hz, hl, hf => by
+    rcases List.mem_cons.mp hm with rfl | hm
+    · unfold lowestFrom
+      simp only [hz, hl, hf, Bool.and_self, ↓reduceIte]
+      obtain ⟨y, hy, hyz, -⟩ := keepLow_le (best := best) (z := alignUp (z + c.units.length) al)
+      obtain ⟨y', hy', hle⟩ := lowestFrom_le_best (M := M) (lo := lo) (hi := hi) (a := a)
+        (al := al) (cs := cs) hy
+      exact ⟨y', hy', Nat.le_trans hle hyz⟩
+    · unfold lowestFrom
+      exact lowestFrom_le_after hm hz hl hf
 
 namespace Memory
 
+/-- The lowest fit fits. -/
+theorem lowestFit_fits {M : Memory u} {lo hi a x : Nat} (h : M.lowestFit lo hi a = some x) :
+    M.fits lo hi a x = true := by
+  unfold lowestFit at h
+  split at h
+  · simp at h
+  · refine lowestFrom_fits ?_ h
+    intro b hb
+    split at hb
+    · rename_i hf
+      simp only [Option.some.injEq] at hb
+      exact hb ▸ hf
+    · simp at hb
+
+/-- The lowest fit is at most every address that fits. -/
+theorem lowestFit_le {M : Memory u} {lo hi a : Nat} :
+    ∀ x, M.fits lo hi a x = true → ∃ y, M.lowestFit lo hi a = some y ∧ y ≤ x := by
+  intro x
+  induction x using Nat.strongRecOn with
+  | _ x ih =>
+  intro hx
+  obtain ⟨b, hb, -⟩ := fits_eq_true.mp hx
+  rcases fits_candidate hb hx with (rfl | ⟨j, c, z, hc, hz, hl, rfl⟩) | ⟨y, hyx, hy⟩
+  · unfold lowestFit
+    rw [hb]
+    simp only [hx, ↓reduceIte]
+    exact lowestFrom_le_best rfl
+  · unfold lowestFit
+    rw [hb]
+    exact lowestFrom_le_after (List.mem_of_getElem? hc) hz hl hx
+  · obtain ⟨y', hy', hle⟩ := ih y hyx hy
+    exact ⟨y', hy', Nat.le_trans hle (Nat.le_of_lt hyx)⟩
+
 /-- An address that the canonical layout gives fits. -/
-theorem canonical_fits {M : Memory u} {P a x : Nat} (h : M.canonical P a = some x) :
-    M.fits P a x = true := by
+theorem canonical_fits {M : Memory u} {lo hi a x : Nat} (h : M.canonical lo hi a = some x) :
+    M.fits lo hi a x = true := by
   unfold canonical at h
+  dsimp only at h
   split at h
   · rename_i hf
     simp only [Option.some.injEq] at h
     exact h ▸ hf
-  · split at h
-    · simp at h
-    · split at h
-      · rename_i hf
-        simp only [Option.some.injEq] at h
-        exact h ▸ hf
-      · exact fitAfter_fits h
+  · exact lowestFit_fits h
+
+/-- When the canonical address does not fit, the canonical layout gives an
+address at most every address that fits: the lowest. -/
+theorem canonical_lowest {M : Memory u} {lo hi a x : Nat}
+    (hb : M.fits lo hi a (M.bump lo a) = false) (h : M.fits lo hi a x = true) :
+    ∃ y, M.canonical lo hi a = some y ∧ y ≤ x := by
+  unfold canonical
+  simp only [hb, Bool.false_eq_true, ↓reduceIte]
+  exact lowestFit_le x h
 
 /-- The canonical layout gives an address whenever an address fits. With
 `canonical_fits`, it is one of the assignments that the spec allows. -/
-theorem canonical_isSome {M : Memory u} {P a x : Nat} (h : M.fits P a x = true) :
-    (M.canonical P a).isSome := by
-  obtain ⟨b, hb, -⟩ := fits_eq_true.mp h
-  unfold canonical
-  split
-  · rfl
-  · rw [hb]
-    simp only
-    split
-    · rfl
-    · rename_i h₁
-      obtain ⟨y, hy, hc⟩ := fits_candidate hb x h
-      rcases hc with rfl | ⟨j, c, z, hc, hz, hl, rfl⟩
-      · exact absurd hy h₁
-      · exact fitAfter_isSome (List.mem_of_getElem? hc) hz hl hy
+theorem canonical_isSome {M : Memory u} {lo hi a x : Nat} (h : M.fits lo hi a x = true) :
+    (M.canonical lo hi a).isSome := by
+  cases hb : M.fits lo hi a (M.bump lo a) with
+  | true => simp [canonical, hb]
+  | false =>
+    obtain ⟨y, hy, -⟩ := canonical_lowest hb h
+    simp [hy]
 
 /-- An address fits the allocation `a` exactly when the canonical layout
 gives it one, which fits. -/
-theorem exists_fits_iff {M : Memory u} {P a : Nat} :
-    (∃ x, M.fits P a x = true) ↔ ∃ x, M.canonical P a = some x ∧ M.fits P a x = true := by
+theorem exists_fits_iff {M : Memory u} {lo hi a : Nat} :
+    (∃ x, M.fits lo hi a x = true) ↔
+      ∃ x, M.canonical lo hi a = some x ∧ M.fits lo hi a x = true := by
   constructor
   · rintro ⟨x, hx⟩
     obtain ⟨y, hy⟩ := Option.isSome_iff_exists.mp (canonical_isSome hx)
