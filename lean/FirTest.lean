@@ -90,6 +90,9 @@ import FirTest.Equiv
 import FirTest.EquivNsw
 import FirTest.Gpu
 import FirTest.GpuRuns
+import FirTest.GpuG0
+import FirTest.GpuG0Effects
+import FirTest.GpuG0Runs
 
 /-!
 The Lean tests. Building this library runs their checks. This root module
