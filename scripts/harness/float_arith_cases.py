@@ -109,21 +109,24 @@ ORDERED = ("fsub", "fdiv", "frem", "fmod")
 # The choices of a NaN result, in turn: `m + 1` bits, the top one the
 # sign, read as a signed integer.
 NAN_CHOICES = (0, -1, 1)
-# The lines of a tests' header that say how a NaN result is tested, at a
-# format the backend lowers or not, with the type its choice is spelled as.
-NAN_HEAD = {
-    True: lambda ty: [
+
+
+def nan_head(native: bool, ty: str) -> list[str]:
+    """The lines of a tests' header that say how a NaN result is tested, at
+    a format the backend lowers or not, with the type `ty` its choice is
+    spelled as."""
+    if not native:
+        return [
+            "# A NaN result is any NaN: its test is interpreter-only and names",
+            "# the NaN by a choice of the sign and the mantissa, as signed",
+            f"# {ty}.",
+        ]
+    return [
         "# A NaN result is any NaN: its interpreter-only test names the NaN",
         f"# by a choice of the sign and the mantissa, as signed {ty}. Its",
         "# differential test passes when fir-ref gives native code's NaN, as",
         "# it does when the harness has it try that NaN (ADR-2026-11-16-1630).",
-    ],
-    False: lambda ty: [
-        "# A NaN result is any NaN: its test is interpreter-only and names",
-        "# the NaN by a choice of the sign and the mantissa, as signed",
-        f"# {ty}.",
-    ],
-}
+    ]
 
 
 # The reference's function of each op.
@@ -216,7 +219,7 @@ def tests_text(name: str, t: str) -> str:
             "# Each test is interpreter-only: the backend does not lower",
             f"# {t}, so fir-ref alone runs it and must give what it expects.",
         ]
-    head += NAN_HEAD[native](f"i{m + 1}")
+    head += nan_head(native, f"i{m + 1}")
     lines = []
     turn = 0
     for op, bits in cases(f, name):

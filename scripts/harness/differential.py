@@ -216,7 +216,7 @@ class _Run:
             if j.status == INVALID:
                 return on, j
             if j.status != PASSED:
-                if isinstance(self.ref, BudgetExceeded) or not self.ref.complete:
+                if _partial(self.ref):
                     j = self._recheck(args, j)
                 return f"{on}, one of {each}", j
             shown = shown or f"{on}, and passes on all {each}"
@@ -262,9 +262,7 @@ class _Run:
         found = []
         if isinstance(ref, Outcomes):
             found = [("fir-ref", o) for o in ref.outcomes]
-        if isinstance(ref, BudgetExceeded) or (
-            isinstance(ref, Outcomes) and not ref.complete
-        ):
+        if _partial(ref):
             for seed in sets.SEEDS:
                 got = self.runs.sampled(args, seed)
                 if not isinstance(got, str):
@@ -285,6 +283,14 @@ class _Run:
                     " the fuel budget: raise the test's budget",
                 )
         return Judgement(j.status, f"{j.why}; on {on}, fir-ref {_show(ref)}")
+
+
+def _partial(ref) -> bool:
+    """Whether fir-ref's report `ref` lists only a part of the set, or none
+    of it past the budget, so seeded runs may reach outcomes it misses."""
+    return isinstance(ref, BudgetExceeded) or (
+        isinstance(ref, Outcomes) and not ref.complete
+    )
 
 
 def _interpreter_only(ref) -> str | None:

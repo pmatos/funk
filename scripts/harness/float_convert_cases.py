@@ -50,8 +50,8 @@ from float_arith_cases import (
     DIFFERENTIAL,
     FORMATS,
     NAN_CHOICES,
-    NAN_HEAD,
     nan_bits,
+    nan_head,
     write_corpus,
 )
 from float_ref import TWO, Format
@@ -163,7 +163,7 @@ def tests_text(module: str) -> str:
             f"# {s} and {t} both, so fir-ref alone runs it and must give what it",
             "# expects.",
         ]
-    head += NAN_HEAD[native](f"i{g.m + 1}")
+    head += nan_head(native, f"i{g.m + 1}")
     lines = []
     name = f"@{s}_{t}"
     nans = 0
