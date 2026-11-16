@@ -18,7 +18,7 @@ changes under it.
 :::moduleDocs (fingerprint := "7274398011190664022")
 :::
 
-:::readable Fir.Core.freezeValue (pin := Fir.MonadChoice) (pin := Fir.SetM.instMonadChoice) (pin := Fir.ChoiceTree.instMonadChoice) (fingerprint := "1188688411120997030")
+:::readable Fir.Core.freezeValue (pin := Fir.MonadChoice) (pin := Fir.SetM.instMonadChoice) (pin := Fir.ChoiceTree.instMonadChoice) (fingerprint := "9855121414993952927")
 *Definition: the rule of $`\mathsf{freeze}`.* For every width $`N`, for
 every way of computing with the
 {ref "The-fir-specification--Execution--Effects-and-op-semantics"}[choice effect],

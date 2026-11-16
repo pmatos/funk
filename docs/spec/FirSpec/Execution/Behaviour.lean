@@ -65,7 +65,7 @@ ub   \mathsf{ub}~\mathit{reason}
 ```
 :::
 
-:::readable Fir.SetM (pin := Fir.SetM.instMonad) (pin := Fir.SetM.instMonadChoice) (pin := Fir.SetM.instMonadUB) (fingerprint := "1177755487130324875")
+:::readable Fir.SetM (pin := Fir.SetM.instMonad) (pin := Fir.SetM.instMonadChoice) (pin := Fir.SetM.instMonadUB) (fingerprint := "6847622695015654472")
 *Definition: the set monad.* $`\mathsf{freeze}` of poison may choose any value,
 so one function on one input can run in many ways. The interpreter
 computes all of them at once by reading each computation as the set of

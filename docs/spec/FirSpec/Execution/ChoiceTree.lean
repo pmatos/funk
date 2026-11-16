@@ -14,10 +14,25 @@ when the Lean changes under it.
 
 #doc (Manual) "Choice trees: readable blocks" =>
 
-:::moduleDocs (fingerprint := "6496917131333773362")
+:::moduleDocs (fingerprint := "8630786636484428849")
 :::
 
-:::readable Fir.ChoiceTree (fingerprint := "6945210103657211533")
+:::readable Fir.ChoiceKind (fingerprint := "408001718835782902")
+*Definition: the kind of a choice.* A choice of $`w` bits is for bits of
+any use, $`\mathsf{bits}`, such as $`\mathsf{freeze}`'s, or is the sign
+and mantissa of a NaN of $`\mathsf{float}\langle e, w - 1\rangle`,
+$`\mathsf{nan}~e`, which a float op's NaN result chooses. The kind does
+not change what a choice means: only a walk that tries a few NaNs reads it
+(ADR-2026-11-16-0855).
+
+```grammar Fir.ChoiceKind
+\mathit{kind}
+bits  \mathsf{bits}
+nan   \mathsf{nan}~e
+```
+:::
+
+:::readable Fir.ChoiceTree (fingerprint := "10706221436376405855")
 *Definition: a tree of choices.* A tree of choices is a computation written
 out as a tree, so that a program can walk it. A path from the root to a
 leaf is one way the run may go. Its results are in a set $`A`, and $`E` is the set of reasons for which a path
@@ -28,7 +43,7 @@ may end with no outcome.
 pure        \mathsf{pure}~a \quad (a \in A)
 ub          \mathsf{ub}~\mathit{reason}
 noOutcome   \mathsf{no\_outcome}~e \quad (e \in E)
-choose      \mathsf{choose}~w~(b \mapsto \mathit{tree}_b)
+choose      \mathsf{choose}~w~\mathit{kind}~(b \mapsto \mathit{tree}_b)
 ```
 
 * $`\mathsf{pure}~a`: the path ends with the result $`a`.
@@ -38,13 +53,13 @@ choose      \mathsf{choose}~w~(b \mapsto \mathit{tree}_b)
   no outcome at all, for the reason $`e`. An op without execution rules
   ends its path so, since the set monad gives it the empty set of ways to
   end (`docs/decisions/fir-ref.md#an-op-without-rules`).
-* $`\mathsf{choose}~w~(b \mapsto \mathit{tree}_b)`: the path chooses $`w`
-  bits, and goes on with the subtree $`\mathit{tree}_b` for the bits
+* $`\mathsf{choose}~w~c~(b \mapsto \mathit{tree}_b)`: the path chooses $`w`
+  bits, of the kind $`c`, and goes on with the subtree $`\mathit{tree}_b` for the bits
   $`b`. The node has one subtree for each of the $`2^w` vectors of $`w`
   bits.
 :::
 
-:::readable Fir.ChoiceTree.bind (pin := Fir.ChoiceTree.instMonad) (pin := Fir.ChoiceTree.instMonadChoice) (pin := Fir.ChoiceTree.instMonadUB) (fingerprint := "6710891819122759510")
+:::readable Fir.ChoiceTree.bind (pin := Fir.ChoiceTree.instMonad) (pin := Fir.ChoiceTree.instMonadChoice) (pin := Fir.ChoiceTree.instMonadUB) (fingerprint := "8833494712106854317")
 *Definition: the steps of a computation, as trees.* To run a tree $`t`,
 then $`g` on its result, $`t \mathbin{>\!\!>\!\!=} g` puts $`g(a)` in place
 of each leaf $`\mathsf{pure}~a` of $`t`, and keeps its other leaves and
@@ -52,12 +67,14 @@ its choices:
 
 $$`\begin{aligned} \mathsf{pure}~a \mathbin{>\!\!>\!\!=} g & = g(a) \\ \mathsf{ub}~r \mathbin{>\!\!>\!\!=} g & = \mathsf{ub}~r \\ \mathsf{no\_outcome}~e \mathbin{>\!\!>\!\!=} g & = \mathsf{no\_outcome}~e \end{aligned}`
 
-$$`\begin{aligned} & \mathsf{choose}~w~(b \mapsto t_b) \mathbin{>\!\!>\!\!=} g \\ & \quad = \mathsf{choose}~w~(b \mapsto t_b \mathbin{>\!\!>\!\!=} g) \end{aligned}`
+$$`\begin{aligned} & \mathsf{choose}~w~c~(b \mapsto t_b) \mathbin{>\!\!>\!\!=} g \\ & \quad = \mathsf{choose}~w~c~(b \mapsto t_b \mathbin{>\!\!>\!\!=} g) \end{aligned}`
 
 With it, trees are a monad: a value $`a` is the leaf $`\mathsf{pure}~a`,
 the {ref "The-fir-specification--Execution--Effects-and-op-semantics"}[choice]
 of $`w` bits is the node
-$`\mathsf{choose}~w~(b \mapsto \mathsf{pure}~b)`, and
+$`\mathsf{choose}~w~\mathsf{bits}~(b \mapsto \mathsf{pure}~b)`, the NaN
+choice of $`\mathsf{float}\langle e,m\rangle` is
+$`\mathsf{choose}~(m + 1)~(\mathsf{nan}~e)~(b \mapsto \mathsf{pure}~b)`, and
 {ref "The-fir-specification--Execution--Effects-and-op-semantics"}[UB]
 with a reason $`r` is the leaf $`\mathsf{ub}~r`. So the
 {ref "The-fir-specification--Execution--The-interpreter"}[interpreter],
@@ -86,7 +103,7 @@ holds the ways its paths end, as a computation of the
 
 $$`\begin{aligned} \mathrm{set}(\mathsf{pure}~a) & = \{ \mathsf{ok}~a \} \\ \mathrm{set}(\mathsf{ub}~r) & = \{ \mathsf{ub}~r \} \\ \mathrm{set}(\mathsf{no\_outcome}~e) & = \emptyset \end{aligned}`
 
-$$`\mathrm{set}(\mathsf{choose}~w~(b \mapsto t_b)) = \textstyle\bigcup_b \mathrm{set}(t_b)`
+$$`\mathrm{set}(\mathsf{choose}~w~c~(b \mapsto t_b)) = \textstyle\bigcup_b \mathrm{set}(t_b)`
 
 A path with no outcome adds nothing, and a choice gathers the ways of all
 its subtrees. This set is the meaning of a tree, and what the theorems
@@ -112,17 +129,18 @@ each op's semantics in trees has the op's semantics in the set monad as
 its set.
 :::
 
-:::readable Fir.ChoiceTree.toSet_choose Fir.ChoiceTree.toSet_ub (pin := Fir.SetM.instMonadChoice) (pin := Fir.SetM.instMonadUB) (fingerprint := "6036697414325508384")
+:::readable Fir.ChoiceTree.toSet_choose Fir.ChoiceTree.toSet_chooseNaN Fir.ChoiceTree.toSet_ub (pin := Fir.SetM.instMonadChoice) (pin := Fir.SetM.instMonadUB) (fingerprint := "5722069438619464835")
 *Theorem: the effects are the same in both monads.* For every width
 $`w`, the set of the choice of $`w` bits is the set monad's choice of
-$`w` bits, every vector of $`w` bits; and for every reason $`r`, the set
+$`w` bits, every vector of $`w` bits, and so is the set of a NaN choice of
+$`m + 1` bits, whatever its kind; and for every reason $`r`, the set
 of UB with $`r` is the set monad's UB with $`r`, $`\{\mathsf{ub}~r\}`.
 Op rules that are written once for any monad with these effects, such as
 those of the core dialect, therefore have the same meaning in trees as in
 the set monad.
 :::
 
-:::readable Fir.ChoiceTree.toSet_keeps (pin := Fir.MonadMorphism.KeepsChoiceUB) (fingerprint := "3468794217983405298")
+:::readable Fir.ChoiceTree.toSet_keeps (pin := Fir.MonadMorphism.KeepsChoiceUB) (fingerprint := "14657660594861957137")
 *Theorem: the set of a tree keeps choice and UB.* By the two theorems
 above, $`\mathrm{set}`
 {ref "The-fir-specification--Execution--Monad-morphisms"}[keeps choice and UB].

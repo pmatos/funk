@@ -35,15 +35,15 @@ variable {ε α : Type}
 /-- The size of a tree: each leaf counts 1, each choice 2 and each edge
 from a choice to one of its subtrees 1. -/
 def treeSize : ChoiceTree ε α → Nat
-  | .choose w k => ((ChoiceTree.allBits w).map fun b => treeSize (k b) + 1).sum + 2
+  | .choose w _ k => ((ChoiceTree.allBits w).map fun b => treeSize (k b) + 1).sum + 2
   | _ => 1
 
 theorem le_sum_of_mem : ∀ {l : List Nat} {x : Nat}, x ∈ l → x ≤ l.sum
   | _ :: _, _, .head _ => by simp only [List.sum_cons]; omega
   | _ :: _, _, .tail _ h => by have := le_sum_of_mem h; simp only [List.sum_cons]; omega
 
-theorem treeSize_lt {w : Nat} (k : BitVec w → ChoiceTree ε α) (b : BitVec w) :
-    treeSize (k b) < treeSize (.choose w k) := by
+theorem treeSize_lt {w : Nat} {c : ChoiceKind} (k : BitVec w → ChoiceTree ε α) (b : BitVec w) :
+    treeSize (k b) < treeSize (.choose w c k) := by
   have := le_sum_of_mem (List.mem_map.2 ⟨b, ChoiceTree.mem_allBits b, rfl⟩ :
     treeSize (k b) + 1 ∈ (ChoiceTree.allBits w).map fun b => treeSize (k b) + 1)
   simp only [treeSize]
@@ -58,9 +58,9 @@ variable {d : Dialect} [TyDenote d.Ty] [DialectSignature d] [DecidableEq d.Ty] [
 
 local notation "Mems" => Memories N unit
 
-theorem tree_of_choose {c : Cur d ε Mems} {st : List (Frame d)} {w : Nat}
-    {k : BitVec w → Cur d ε Mems × List (Frame d)} (h : advance M c st = .choose w k) :
-    tree M c st = .choose w fun b => tree M (k b).1 (k b).2 := by
+theorem tree_of_choose {c : Cur d ε Mems} {st : List (Frame d)} {w : Nat} {kd : ChoiceKind}
+    {k : BitVec w → Cur d ε Mems × List (Frame d)} (h : advance M c st = .choose w kd k) :
+    tree M c st = .choose w kd fun b => tree M (k b).1 (k b).2 := by
   rw [← advance_tree, h]; rfl
 
 theorem tree_of_leaf {c : Cur d ε Mems} {st : List (Frame d)} {l : Leaf d ε}
@@ -76,8 +76,8 @@ def scriptFrom {σ : Type} (read : (w : Nat) → σ → Option (BitVec w))
     Except (ChoiceTree.Misfit σ) (Leaf d ε × Nat) :=
   match advance M s.1 s.2, cs with
   | .leaf l, cs => (leafTree l).script read cs made
-  | .choose w _, [] => .error (.short made w)
-  | .choose w k, x :: cs => match read w x with
+  | .choose w _ _, [] => .error (.short made w)
+  | .choose w _ k, x :: cs => match read w x with
     | some b => scriptFrom read (k b) cs (made + 1)
     | none => .error (.unread made w x)
 termination_by cs.length
@@ -87,9 +87,9 @@ theorem scriptFrom_eq {σ : Type} (read : (w : Nat) → σ → Option (BitVec w)
     scriptFrom M read s cs made = (tree M s.1 s.2).script read cs made := by
   fun_induction scriptFrom M read s cs made with
   | case1 s made l cs h => rw [tree_of_leaf M h]
-  | case2 s made w k h => rw [tree_of_choose M h]; rfl
-  | case3 s made w k x cs h b hb ih => rw [ih, tree_of_choose M h, ChoiceTree.script, hb]
-  | case4 s made w k x cs h hb => rw [tree_of_choose M h, ChoiceTree.script, hb]
+  | case2 s made w c k h => rw [tree_of_choose M h]; rfl
+  | case3 s made w c k x cs h b hb ih => rw [ih, tree_of_choose M h, ChoiceTree.script, hb]
+  | case4 s made w c k x cs h hb => rw [tree_of_choose M h, ChoiceTree.script, hb]
 
 /-! # Sampled mode -/
 
@@ -107,7 +107,7 @@ def sampleFrom {γ : Type} (draw : (w : Nat) → γ → BitVec w × γ)
     Leaf d ε × List ChoiceTree.Chosen :=
   match _h : advance M s.1 s.2 with
   | .leaf l => (l, acc.reverse)
-  | .choose w k =>
+  | .choose w _ k =>
     let dr := draw w g
     sampleFrom draw (k dr.1) dr.2 (⟨w, dr.1⟩ :: acc)
 termination_by treeSize (tree M s.1 s.2)
@@ -119,7 +119,7 @@ theorem sampleFrom_eq {γ : Type} (draw : (w : Nat) → γ → BitVec w × γ)
       (((tree M s.1 s.2).sample draw g).1, acc.reverse ++ ((tree M s.1 s.2).sample draw g).2) := by
   fun_induction sampleFrom M draw s g acc with
   | case1 s g acc l h => rw [tree_of_leaf M h, sample_leafTree]; simp
-  | case2 s g acc w k h dr ih => rw [ih, tree_of_choose M h]; simp [ChoiceTree.sample, dr]
+  | case2 s g acc w c k h dr ih => rw [ih, tree_of_choose M h]; simp [ChoiceTree.sample, dr]
 
 /-! # Exhaustive mode -/
 
@@ -201,7 +201,7 @@ def exploreFrom : List (Work d ε Mems) → List (Leaf d ε × Nat) → Option (
   | [], acc => some acc.reverse
   | .state s budget made :: rest, acc => match _h : advance M s.1 s.2 with
     | .leaf l => exploreFrom rest ((l, made) :: acc)
-    | .choose w k =>
+    | .choose w _ k =>
       if w ≤ budget then
         exploreFrom (.values w k (ChoiceTree.allBits w) (budget - w) (made + 1) :: rest) acc
       else none
@@ -248,7 +248,7 @@ theorem exploreFrom_eq (ps : List (Work d ε Mems)) (acc : List (Leaf d ε × Na
       simp [shift]
     rw [he]
     rfl
-  | case3 s budget made rest acc w k h hw ih =>
+  | case3 s budget made rest acc w c k h hw ih =>
     rw [ih]
     simp only [ChoiceTree.collect]
     have hE : ∀ φ : Leaf d ε × Nat → Leaf d ε × Nat,
@@ -273,7 +273,7 @@ theorem exploreFrom_eq (ps : List (Work d ε Mems)) (acc : List (Leaf d ε × Na
       (ChoiceTree.allBits w) [] with
     | none => rfl
     | some L => simp only [Option.map_some, List.map_map, shift_shift]
-  | case4 s budget made rest acc w k h hw =>
+  | case4 s budget made rest acc w c k h hw =>
     rw [ChoiceTree.collect]
     have h2 : explored M (.state s budget made) = none := by
       simp only [explored, exploredState]

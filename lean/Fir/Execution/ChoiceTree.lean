@@ -11,19 +11,30 @@ can walk instead, the _tree of choices_ (ADR-2026-10-29-2017,
 tree. A leaf says how a path ends: with a result, with immediate UB, or with no
 outcome at all, the empty set that an op without execution rules has
 (`docs/decisions/fir-ref.md#an-op-without-rules`). A node is a choice of _w_
-bits, with one subtree for each value the bits may take.
+bits, with one subtree for each value the bits may take, labelled with the
+kind of the choice: a NaN's sign and mantissa, or bits of any other use.
 
 Trees are a lawful monad: running a tree then `pure` gives the tree, and
 sequences of trees associate. The tree's meaning is a set: each tree maps
 to the set of the ways its paths end. That map is a monad morphism that keeps
 choice and UB, so a run of the interpreter in the tree maps to its run in
 the set monad, by the previous section.
-`fir-ref`'s three modes walk the tree: exhaustive mode visits every path,
-scripted mode follows the one path that a choice sequence names, and
-sampled mode draws one.
+`fir-ref`'s modes walk the tree: exhaustive mode visits every path,
+scripted mode follows the one path that a choice sequence names,
+sampled mode draws one, and a walk that tries a few NaNs visits the paths
+on which each NaN choice is one of a few NaNs.
 -/
 
 namespace Fir
+
+/-- What a choice of `w` bits is for: bits of any use, such as `freeze`'s, or
+the sign and mantissa of a NaN of `float<e, w - 1>`, which a float op's NaN
+result chooses. The set of a choice is the same either way; only a walk that
+tries a few NaNs in place of every one reads it (ADR-2026-11-16-0855). -/
+inductive ChoiceKind where
+  | bits
+  | nan (e : Nat)
+  deriving DecidableEq, Repr
 
 /-- A computation as a tree of choices. `ε` says why a path may end with no
 outcome. -/
@@ -34,8 +45,9 @@ inductive ChoiceTree (ε α : Type) where
   | ub (reason : String)
   /-- The path ends with no outcome, for the reason `e`. -/
   | noOutcome (e : ε)
-  /-- A choice of `w` bits: the path goes on with `k b` for the bits `b`. -/
-  | choose (w : Nat) (k : BitVec w → ChoiceTree ε α)
+  /-- A choice of `w` bits, of the kind `c`: the path goes on with `k b`
+  for the bits `b`. -/
+  | choose (w : Nat) (c : ChoiceKind) (k : BitVec w → ChoiceTree ε α)
 
 namespace ChoiceTree
 
@@ -46,7 +58,7 @@ def bind : ChoiceTree ε α → (α → ChoiceTree ε β) → ChoiceTree ε β
   | .pure a, f => f a
   | .ub r, _ => .ub r
   | .noOutcome e, _ => .noOutcome e
-  | .choose w k, f => .choose w fun b => (k b).bind f
+  | .choose w c k, f => .choose w c fun b => (k b).bind f
 
 instance : Monad (ChoiceTree ε) where
   pure := .pure
@@ -55,24 +67,26 @@ instance : Monad (ChoiceTree ε) where
 /-- A tree whose every result goes on with `pure` is the tree itself. -/
 theorem bind_pure : ∀ t : ChoiceTree ε α, t.bind .pure = t
   | .pure _ | .ub _ | .noOutcome _ => rfl
-  | .choose w k => by
+  | .choose w c k => by
     simp only [bind]
-    exact congrArg (ChoiceTree.choose w) (funext fun b => bind_pure (k b))
+    exact congrArg (ChoiceTree.choose w c) (funext fun b => bind_pure (k b))
 
 /-- Binds of trees associate. -/
 theorem bind_assoc : ∀ (t : ChoiceTree ε α) (f : α → ChoiceTree ε β) (g : β → ChoiceTree ε γ),
     (t.bind f).bind g = t.bind fun a => (f a).bind g
   | .pure _, _, _ | .ub _, _, _ | .noOutcome _, _, _ => rfl
-  | .choose w k, f, g => by
+  | .choose w c k, f, g => by
     simp only [bind]
-    exact congrArg (ChoiceTree.choose w) (funext fun b => bind_assoc (k b) f g)
+    exact congrArg (ChoiceTree.choose w c) (funext fun b => bind_assoc (k b) f g)
 
 /-- The tree of choices is a lawful monad. -/
 instance : LawfulMonad (ChoiceTree ε) :=
   LawfulMonad.mk' (ChoiceTree ε) (fun t => bind_pure t) (fun _ _ => rfl)
     (fun t f g => bind_assoc t f g)
 
-instance : MonadChoice (ChoiceTree ε) := ⟨fun w => .choose w .pure⟩
+instance : MonadChoice (ChoiceTree ε) where
+  choose w := .choose w .bits .pure
+  chooseNaN e mb := .choose (mb + 1) (.nan e) .pure
 
 instance : MonadUB (ChoiceTree ε) := ⟨.ub⟩
 
@@ -86,7 +100,7 @@ def toSet : ChoiceTree ε α → SetM α
   | .pure a => fun e => e = .ok a
   | .ub r => fun e => e = .ub r
   | .noOutcome _ => fun _ => False
-  | .choose _ k => fun e => ∃ b, (k b).toSet e
+  | .choose _ _ k => fun e => ∃ b, (k b).toSet e
 
 /-- The set of a tree that runs `f` on each result is the set monad's bind. -/
 theorem toSet_bind (t : ChoiceTree ε α) (f : α → ChoiceTree ε β) :
@@ -115,7 +129,7 @@ theorem toSet_bind (t : ChoiceTree ε α) (f : α → ChoiceTree ε β) :
     exact ⟨False.elim, fun
       | .inl ⟨_, h, _⟩ => h
       | .inr ⟨_, h, _⟩ => h⟩
-  | choose w k ih =>
+  | choose w c k ih =>
     funext e
     apply propext
     show (∃ b, ((k b).bind f).toSet e) ↔
@@ -142,6 +156,11 @@ def toSetMorphism : MonadMorphism (ChoiceTree ε) SetM where
 theorem toSet_choose (w : Nat) :
     (MonadChoice.choose w : ChoiceTree ε (BitVec w)).toSet = MonadChoice.choose w := rfl
 
+/-- A choice of a NaN's sign and mantissa is the set monad's. -/
+theorem toSet_chooseNaN (e mb : Nat) :
+    (MonadChoice.chooseNaN e mb : ChoiceTree ε (BitVec (mb + 1))).toSet =
+      MonadChoice.chooseNaN e mb := rfl
+
 /-- `toSet` maps frames to frames: in both, a frame is the computation
 itself. -/
 theorem toSet_mapsFrame : (toSetMorphism (ε := ε)).MapsFrame := fun _ => rfl
@@ -152,7 +171,7 @@ theorem toSet_ub (r : String) :
 
 /-- `toSet` keeps choice and UB. -/
 theorem toSet_keeps : (toSetMorphism (ε := ε)).KeepsChoiceUB :=
-  ⟨toSet_choose (ε := ε), fun r => toSet_ub (ε := ε) r⟩
+  ⟨toSet_choose (ε := ε), toSet_chooseNaN (ε := ε), fun r => toSet_ub (ε := ε) r⟩
 
 end ChoiceTree
 

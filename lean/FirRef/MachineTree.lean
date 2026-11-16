@@ -147,8 +147,8 @@ theorem advance_tree (c : Cur d ε (Memories N unit)) (st : List (Frame d)) :
   | case14 n f env o os st e =>
     show _ = Prod.fst <$> kont M st (.noOutcome e)
     rw [kont_noOutcome]; rfl
-  | case15 n f env o os st w k =>
-    show _ = Prod.fst <$> kont M st (.choose w fun b => _)
+  | case15 n f env o os st w c k =>
+    show _ = Prod.fst <$> kont M st (.choose w c fun b => _)
     rw [kont_choose]; rfl
   | case16 n f env o args st S h ih =>
     rw [ih]
@@ -176,8 +176,8 @@ theorem advance_tree (c : Cur d ε (Memories N unit)) (st : List (Frame d)) :
   | case21 n f env o args st e =>
     show _ = Prod.fst <$> kont M st (.noOutcome e)
     rw [kont_noOutcome]; rfl
-  | case22 n f env o args st w k =>
-    show _ = Prod.fst <$> kont M st (.choose w fun b => _)
+  | case22 n f env o args st w c k =>
+    show _ = Prod.fst <$> kont M st (.choose w c fun b => _)
     rw [kont_choose]; rfl
   | case23 vs k S => rfl
   | case24 vs k S fr st h env' hb ih =>
