@@ -221,34 +221,34 @@ def sampledReport (name : String) : RunLeaf V × List ChoiceTree.Chosen → RunR
           ("sequence", jsonArray (cs.map (jsonString ∘ chosenText)))]),
         status := if stuck then 1 else 0 }
 
-/-- The report of exhaustive mode on a run of the function whose symbol is
-written `name`, with a choice budget of `budget` bits: every way its paths
-end, each once, or that some path chooses more than the budget. -/
-def exhaustiveReport (name : String) (budget : Nat) : Option (List (RunLeaf V × Nat)) → RunReport
+/-- The report of an exhaustive walk on a run of the function whose symbol
+is written `name`, with a choice budget of `budget` bits: every way its
+paths end, each once, with the fields `more` after the choices, or that some
+path chooses more than the budget. -/
+def outcomesReport (name : String) (budget : Nat) (more : List (String × String)) :
+    Option (List (RunLeaf V × Nat)) → RunReport
   | none => { out := resultJson "choice-budget-exceeded" [("budget", toString budget)], status := 0 }
   | some ls => match ls.mapM (fun (l, c) => (pathFields (V := V) l.pathEnd).map (·, c)) with
     | .error op => noRules name op
     | .ok ps =>
       let choices := ps.foldl (fun m p => max m p.2) 0
-      { out := resultJson "outcomes" [("choices", toString choices),
-          ("outcomes", jsonArray (distinct (ps.map (jsonObject ·.1.1))))],
+      { out := resultJson "outcomes" ([("choices", toString choices)] ++ more ++
+          [("outcomes", jsonArray (distinct (ps.map (jsonObject ·.1.1))))]),
         status := if ps.any (·.1.2) then 1 else 0 }
+
+/-- The report of exhaustive mode on a run of the function whose symbol is
+written `name`, with a choice budget of `budget` bits. -/
+def exhaustiveReport (name : String) (budget : Nat) : Option (List (RunLeaf V × Nat)) → RunReport :=
+  outcomesReport name budget []
 
 /-- The report of exhaustive mode that tries a few NaNs, `--exhaustive
 --nans`, on a run of the function whose symbol is written `name`, with a
-choice budget of `budget` bits: as exhaustive mode's, and whether the
+choice budget of `budget` bits: exhaustive mode's, with whether the
 outcomes are the whole set, `complete`, which they are when no path made a
 NaN choice (`Gpu.exhaustiveNaN_exact`). -/
-def exhaustiveNaNReport (name : String) (budget : Nat) :
-    Option (List (RunLeaf V × Nat × Nat)) → RunReport
-  | none => { out := resultJson "choice-budget-exceeded" [("budget", toString budget)], status := 0 }
-  | some ls => match ls.mapM (fun (l, c, n) => (pathFields (V := V) l.pathEnd).map (·, c, n)) with
-    | .error op => noRules name op
-    | .ok ps =>
-      let choices := ps.foldl (fun m p => max m p.2.1) 0
-      { out := resultJson "outcomes" [("choices", toString choices),
-          ("complete", if ps.all (·.2.2 == 0) then "true" else "false"),
-          ("outcomes", jsonArray (distinct (ps.map (jsonObject ·.1.1))))],
-        status := if ps.any (·.1.2) then 1 else 0 }
+def exhaustiveNaNReport (name : String) (budget : Nat) (r : Option (List (RunLeaf V × Nat × Nat))) :
+    RunReport :=
+  let complete := if (r.getD []).all (·.2.2 == 0) then "true" else "false"
+  outcomesReport name budget [("complete", complete)] (r.map (·.map fun (l, c, _) => (l, c)))
 
 end FirRef
