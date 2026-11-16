@@ -7,9 +7,10 @@
 # run it, and the native result must equal fir-ref's. Each
 # result that is not a NaN is also checked by an interpreter-only
 # test with expect.
-# A NaN result is any NaN: its test is interpreter-only and names
-# the NaN by a choice of the sign and the mantissa, as signed
-# i53. Native code is not compared on a NaN result yet (#219).
+# A NaN result is any NaN: its interpreter-only test names the NaN
+# by a choice of the sign and the mantissa, as signed i53. Its
+# differential test passes when fir-ref gives native code's NaN, as
+# it does when the harness has it try that NaN (ADR-2026-11-16-1630).
 tests = [
   { func = "@fadd", args = ["1.0", "1.0"] },
   { func = "@fadd", args = ["1.0", "1.0"], expect = ["2.0"] },
@@ -41,10 +42,13 @@ tests = [
   { func = "@fadd", args = ["0.0", "-0.0"], expect = ["0.0"] },
   { func = "@fadd", args = ["-5.0e-324", "5.0e-324"] },
   { func = "@fadd", args = ["-5.0e-324", "5.0e-324"], expect = ["0.0"] },
+  { func = "@fadd", args = ["0x7ff0000000000000", "0xfff0000000000000"] },
   { func = "@fadd", args = ["0x7ff0000000000000", "0xfff0000000000000"], choices = ["0"], expect = ["0x7ff8000000000000"] },
   { func = "@fadd", args = ["0xfff0000000000000", "1.7976931348623157e308"] },
   { func = "@fadd", args = ["0xfff0000000000000", "1.7976931348623157e308"], expect = ["0xfff0000000000000"] },
+  { func = "@fadd", args = ["0xffffffffffffffff", "1.0"] },
   { func = "@fadd", args = ["0xffffffffffffffff", "1.0"], choices = ["-1"], expect = ["0xffffffffffffffff"] },
+  { func = "@fadd", args = ["1.0", "0x7ff0000000000001"] },
   { func = "@fadd", args = ["1.0", "0x7ff0000000000001"], choices = ["1"], expect = ["0x7ff0000000000001"] },
   { func = "@fsub", args = ["1.0", "1.0"] },
   { func = "@fsub", args = ["1.0", "1.0"], expect = ["0.0"] },
@@ -66,12 +70,15 @@ tests = [
   { func = "@fsub", args = ["-1.7976931348623157e308", "1.7976931348623157e308"], expect = ["0xfff0000000000000"] },
   { func = "@fsub", args = ["1.7976931348623157e308", "-1.7976931348623157e308"] },
   { func = "@fsub", args = ["1.7976931348623157e308", "-1.7976931348623157e308"], expect = ["0x7ff0000000000000"] },
+  { func = "@fsub", args = ["0x7ff0000000000000", "0x7ff0000000000000"] },
   { func = "@fsub", args = ["0x7ff0000000000000", "0x7ff0000000000000"], choices = ["0"], expect = ["0x7ff8000000000000"] },
   { func = "@fsub", args = ["0.0", "0x7ff0000000000000"] },
   { func = "@fsub", args = ["0.0", "0x7ff0000000000000"], expect = ["0xfff0000000000000"] },
   { func = "@fsub", args = ["0x7ff0000000000000", "0.0"] },
   { func = "@fsub", args = ["0x7ff0000000000000", "0.0"], expect = ["0x7ff0000000000000"] },
+  { func = "@fsub", args = ["1.0", "0xffffffffffffffff"] },
   { func = "@fsub", args = ["1.0", "0xffffffffffffffff"], choices = ["-1"], expect = ["0xffffffffffffffff"] },
+  { func = "@fsub", args = ["0xffffffffffffffff", "1.0"] },
   { func = "@fsub", args = ["0xffffffffffffffff", "1.0"], choices = ["1"], expect = ["0x7ff0000000000001"] },
   { func = "@fmul", args = ["1.5", "1.5"] },
   { func = "@fmul", args = ["1.5", "1.5"], expect = ["2.25"] },
@@ -97,9 +104,11 @@ tests = [
   { func = "@fmul", args = ["-5.0e-324", "2.225073858507201e-308"], expect = ["-0.0"] },
   { func = "@fmul", args = ["-0.0", "1.0"] },
   { func = "@fmul", args = ["-0.0", "1.0"], expect = ["-0.0"] },
+  { func = "@fmul", args = ["0.0", "0x7ff0000000000000"] },
   { func = "@fmul", args = ["0.0", "0x7ff0000000000000"], choices = ["0"], expect = ["0x7ff8000000000000"] },
   { func = "@fmul", args = ["-1.0", "0x7ff0000000000000"] },
   { func = "@fmul", args = ["-1.0", "0x7ff0000000000000"], expect = ["0xfff0000000000000"] },
+  { func = "@fmul", args = ["0xffffffffffffffff", "0.0"] },
   { func = "@fmul", args = ["0xffffffffffffffff", "0.0"], choices = ["-1"], expect = ["0xffffffffffffffff"] },
   { func = "@fdiv", args = ["1.0", "3.0"] },
   { func = "@fdiv", args = ["1.0", "3.0"], expect = ["0.3333333333333333"] },
@@ -121,7 +130,9 @@ tests = [
   { func = "@fdiv", args = ["1.0", "-0.0"], expect = ["0xfff0000000000000"] },
   { func = "@fdiv", args = ["-0.0", "1.0"] },
   { func = "@fdiv", args = ["-0.0", "1.0"], expect = ["-0.0"] },
+  { func = "@fdiv", args = ["0.0", "0.0"] },
   { func = "@fdiv", args = ["0.0", "0.0"], choices = ["1"], expect = ["0x7ff0000000000001"] },
+  { func = "@fdiv", args = ["0x7ff0000000000000", "0x7ff0000000000000"] },
   { func = "@fdiv", args = ["0x7ff0000000000000", "0x7ff0000000000000"], choices = ["0"], expect = ["0x7ff8000000000000"] },
   { func = "@fdiv", args = ["1.0", "0x7ff0000000000000"] },
   { func = "@fdiv", args = ["1.0", "0x7ff0000000000000"], expect = ["0.0"] },
@@ -159,7 +170,9 @@ tests = [
   { func = "@fdiv", args = ["-0.0", "1.0"], expect = ["-0.0"] },
   { func = "@fdiv", args = ["1.0", "-0.0"] },
   { func = "@fdiv", args = ["1.0", "-0.0"], expect = ["0xfff0000000000000"] },
+  { func = "@fdiv", args = ["1.0", "0xffffffffffffffff"] },
   { func = "@fdiv", args = ["1.0", "0xffffffffffffffff"], choices = ["-1"], expect = ["0xffffffffffffffff"] },
+  { func = "@fdiv", args = ["0xffffffffffffffff", "1.0"] },
   { func = "@fdiv", args = ["0xffffffffffffffff", "1.0"], choices = ["1"], expect = ["0x7ff0000000000001"] },
   { func = "@fadd", args = ["poison", "0.0"] },
   { func = "@fsub", args = ["poison", "0.0"] },

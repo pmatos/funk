@@ -9,11 +9,14 @@ runtime needs no reader of decimals. The harness converts at that boundary:
 each float argument to its bits before a native run, and each float that
 native code returns back to its spelling. Both are exact on bits, so
 comparing spellings compares bits.
+
+`nans` reads which of native code's results are NaNs, for `fir-ref run
+--exhaustive --nans` (ADR-2026-11-16-1630).
 """
 
 import float_text
 import standins
-from refine import DECIMAL, POISON, float_format
+from refine import DECIMAL, FLOAT_ALIASES, INT_TYPE, POISON, float_format
 
 
 def to_native(args: tuple[str, ...], params) -> tuple[str, ...]:
@@ -45,4 +48,34 @@ def from_native(values, types):
             continue
         width = 1 + fmt[0] + fmt[1]
         out.append(float_text.spell(*fmt, int(v) & ((1 << width) - 1)))
+    return tuple(out)
+
+
+def is_nan(e: int, m: int, b: int) -> bool:
+    """Whether `b` is the bits of a NaN of `float<e,m>`."""
+    return b >> m & (1 << e) - 1 == (1 << e) - 1 and b & (1 << m) - 1 != 0
+
+
+def nans(values, types) -> tuple[str, ...]:
+    """The bits of each value that native code returned that is a NaN,
+    once each and in order, as `--nans` takes them: a float of its format
+    that is a NaN, or an integer whose bits are a NaN of a float format of
+    its width, as a NaN that went through `bitcast` or memory is."""
+    if not isinstance(values, tuple) or types is None or len(types) != len(values):
+        return ()
+    out = []
+    for v, ty in zip(values, types):
+        fmt = float_format(ty)
+        if fmt is not None:
+            b = float_text.decode(*fmt, v)
+            formats = [fmt]
+        elif (n := INT_TYPE.fullmatch(ty)) and DECIMAL.fullmatch(v):
+            width = int(n.group(1))
+            b = int(v) & ((1 << width) - 1)
+            formats = [f for f in FLOAT_ALIASES.values() if 1 + sum(f) == width]
+        else:
+            continue
+        nan = f"0x{b:x}" if b is not None else None
+        if nan and nan not in out and any(is_nan(*f, b) for f in formats):
+            out.append(nan)
     return tuple(out)

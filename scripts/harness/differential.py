@@ -3,8 +3,9 @@
 The corpus runner supplies function types and an adapter for tool runs; it
 does not coordinate witnesses, samples, poison stand-ins or rechecks.
 The rules remain those of ADR-2026-10-30-2135 and
-docs/decisions/testing-and-harness.md#poison-arguments, and for a generated run
-ADR-2026-11-08-2115. Process mechanics belong to `execution.py`.
+docs/decisions/testing-and-harness.md#poison-arguments, for a generated run
+ADR-2026-11-08-2115, and for a run that makes NaN choices ADR-2026-11-16-1630.
+Process mechanics belong to `execution.py`.
 """
 
 from dataclasses import dataclass
@@ -39,7 +40,12 @@ class Runs(Protocol):
 
     unavailable: str | None
 
-    def exhaustive(self, args: tuple[str, ...]) -> Outcomes | BudgetExceeded | str: ...
+    def exhaustive(
+        self, args: tuple[str, ...], nans: tuple[str, ...] | None = None
+    ) -> Outcomes | BudgetExceeded | str:
+        """`fir-ref run --exhaustive`, with `--nans` and the NaNs `nans`
+        unless they are None."""
+        ...
 
     def scripted(
         self, args: tuple[str, ...], choices: tuple[str, ...] | None
@@ -68,7 +74,7 @@ def evaluate(test: Test, result_types, param_types, runs: Runs) -> Evaluation:
     the caller owns the test's name, report counts and final exit status.
     """
     return _Run(test, result_types, param_types, runs).compare(
-        runs.exhaustive(test.args)
+        runs.exhaustive(test.args, ())
     )
 
 
@@ -83,7 +89,7 @@ def evaluate_generated(
     the generator is a second opinion on it. Any other run is judged as a
     differential test.
     """
-    ref = runs.exhaustive(test.args)
+    ref = runs.exhaustive(test.args, ())
     detail = f"fir-ref {_show(ref)}"
     why = _interpreter_only(ref)
     wrong = (why or _not_defined(ref)) if defined else None
@@ -102,6 +108,9 @@ class _Run:
         self.types = result_types
         self.params = param_types
         self.runs = runs
+        # fir-ref's report on the test's arguments with native code's NaNs,
+        # by the NaNs.
+        self.with_nans = {}
 
     def compare(self, ref) -> Evaluation:
         """Judge the test on fir-ref's report `ref` on its arguments."""
@@ -115,11 +124,13 @@ class _Run:
         shown, j = self._native(decided)
         detail += f"; native code {shown}"
         if t.results and j.status == PASSED:
-            checked = (
-                f"{len(sets.SEEDS)} seeded runs give declared results"
-                if isinstance(self.ref, BudgetExceeded)
-                else "the set is the declared results"
-            )
+            seeded = f"{len(sets.SEEDS)} seeded runs give declared results"
+            if isinstance(self.ref, BudgetExceeded):
+                checked = seeded
+            elif self.ref.complete:
+                checked = "the set is the declared results"
+            else:
+                checked = f"each outcome listed is declared, and {seeded}"
             j = Judgement(PASSED, f"each witness gives its result, and {checked}")
         failure = self.ref if isinstance(self.ref, str) else None
         return Evaluation(j, detail + (f": {j.why}" if j.why else ""), failure)
@@ -148,9 +159,36 @@ class _Run:
         # Preserve a reference-side verdict even if native execution failed.
         if decided is not None:
             return decided
-        if isinstance(self.ref, BudgetExceeded):
+        if isinstance(self.ref, BudgetExceeded) or (
+            self.test.results and not self.ref.complete
+        ):
             return sets.judge_declared(self.test.results, native, self.types)
-        return sets.judge_set(self.ref, native, self.types)
+        j = sets.judge_set(self.ref, native, self.types)
+        nans = native_floats.nans(native, self.types)
+        if self.ref.complete or j.status != FAILED or not nans:
+            return j
+        return self._with_nans(native, nans)
+
+    def _with_nans(self, native, nans: tuple[str, ...]) -> Judgement:
+        """Judges a native result outside the part of the set that fir-ref
+        listed, on the part it lists when it also tries native code's NaNs
+        `nans` at each NaN choice (ADR-2026-11-16-1630)."""
+        if nans not in self.with_nans:
+            self.with_nans[nans] = self.runs.exhaustive(self.test.args, nans)
+        ref = self.with_nans[nans]
+        tried = f"with native code's NaNs {', '.join(nans)}, fir-ref {_show(ref)}"
+        if isinstance(ref, str):
+            return Judgement(FAILED, tried)
+        if isinstance(ref, BudgetExceeded):
+            return Judgement(
+                INVALID,
+                f"{tried}: each NaN choice costs bits when it tries native"
+                " code's NaNs, so there is no set to judge by, and the test"
+                " proves nothing unless it declares its results, each with a"
+                " witness",
+            )
+        j = sets.judge_set(ref, native, self.types)
+        return Judgement(j.status, f"{tried}{': ' + j.why if j.why else ''}")
 
     def _native(self, decided: Judgement | None) -> tuple[str, Judgement]:
         t = self.test
@@ -196,7 +234,9 @@ class _Run:
             if j is not None:
                 return j
         if isinstance(self.ref, Outcomes):
-            return sets.undeclared(self.ref, t.results)
+            j = sets.undeclared(self.ref, t.results)
+            if j is not None or self.ref.complete:
+                return j
         for seed in sets.SEEDS:
             got = self.runs.sampled(t.args, seed)
             j = sets.sample(seed, got, t.results)
@@ -215,7 +255,7 @@ class _Run:
         different precedence and must not replace this classification.
         """
         on = " ".join(args)
-        ref = self.runs.exhaustive(args)
+        ref = self.runs.exhaustive(args, ())
         found = []
         if isinstance(ref, Outcomes):
             found = [("fir-ref", o) for o in ref.outcomes]

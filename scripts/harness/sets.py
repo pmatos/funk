@@ -54,18 +54,22 @@ class Path:
 
 @dataclass(frozen=True)
 class Outcomes:
-    """What exhaustive mode reports: every outcome of the run, each once,
-    and the most choices that one path made."""
+    """What exhaustive mode reports: the outcomes of the run, each once,
+    and the most choices that one path made. With `--nans`, `complete` says
+    whether they are every outcome of the run, as they are when no path
+    made a NaN choice, or only some."""
 
     choices: int
     outcomes: tuple[Outcome, ...]
+    complete: bool = True
 
     def show(self) -> str:
         if self.choices == 0 and len(self.outcomes) == 1:
             return self.outcomes[0].show()
         n, c = len(self.outcomes), self.choices
+        some = "" if self.complete else ", trying a few NaNs at its NaN choices,"
         return (
-            f"makes {c} choice{'s' if c != 1 else ''} and gives"
+            f"makes {c} choice{'s' if c != 1 else ''}{some} and gives"
             f" {n} outcome{'s' if n != 1 else ''}"
         )
 
@@ -130,7 +134,9 @@ def member(outcomes, native, types, what: str = "outcomes") -> Judgement:
 
 
 def judge_set(ref: Outcomes, native, types) -> Judgement:
-    """Judges a differential test on the set that exhaustive mode lists."""
+    """Judges a differential test on the set that exhaustive mode lists.
+    When it lists a part of the set, a result outside it fails, and the
+    failure says so."""
     if ref.choices == 0:
         if len(ref.outcomes) != 1:
             return Judgement(
@@ -139,7 +145,19 @@ def judge_set(ref: Outcomes, native, types) -> Judgement:
                 " makes no choice",
             )
         return refines(ref.outcomes[0], native, types)
-    return problem(ref.outcomes) or member(ref.outcomes, native, types)
+    j = problem(ref.outcomes) or member(ref.outcomes, native, types)
+    if ref.complete or j.status != FAILED or isinstance(native, str):
+        return j
+    return Judgement(FAILED, f"{j.why}; {CUT_SHORT}")
+
+
+# Why a result outside a part of the set fails (ADR-2026-11-16-1630).
+CUT_SHORT = (
+    "fir-ref cut the NaN choices short, trying only the positive quiet NaN"
+    " and native code's NaNs, so a NaN whose bits integer ops change is not"
+    " listed: a test that computes on a NaN's bits declares its results,"
+    " each with a witness"
+)
 
 
 def judge_declared(results, native, types) -> Judgement:
@@ -175,29 +193,32 @@ def witness(i: int, r: Declared, got) -> Judgement | None:
 
 
 def undeclared(ref: Outcomes, results) -> Judgement | None:
-    """Checks that the declared results are exactly the set's outcomes."""
+    """Checks that the declared results are exactly the set's outcomes, or,
+    when `ref` lists a part of the set, that they hold its outcomes."""
     declared = {r.values for r in results}
     missing = [o for o in ref.outcomes if o.values not in declared]
-    if not missing:
-        held = {o.values for o in ref.outcomes}
-        extra = [r for r in results if r.values not in held]
-        if extra:
+    if missing:
+        first = show_values(missing[0].values)
+        if len(missing) == 1:
             return Judgement(
-                FAILED,
-                f"the test declares {show_values(extra[0].values)},"
-                " which the set does not hold",
+                FAILED, f"the test does not declare {first}, which the set holds"
             )
-        return None
-    first = show_values(missing[0].values)
-    if len(missing) == 1:
         return Judgement(
-            FAILED, f"the test does not declare {first}, which the set holds"
+            FAILED,
+            f"the test does not declare {len(missing)} outcomes of the set,"
+            f" such as {first}",
         )
-    return Judgement(
-        FAILED,
-        f"the test does not declare {len(missing)} outcomes of the set,"
-        f" such as {first}",
-    )
+    if not ref.complete:
+        return None
+    held = {o.values for o in ref.outcomes}
+    extra = [r for r in results if r.values not in held]
+    if extra:
+        return Judgement(
+            FAILED,
+            f"the test declares {show_values(extra[0].values)},"
+            " which the set does not hold",
+        )
+    return None
 
 
 def sample(seed: int, got, results) -> Judgement | None:

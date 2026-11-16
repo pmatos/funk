@@ -119,16 +119,20 @@ and each leaf counts its path's NaN choices; when no path made one, the list
 is exactly the set (`ChoiceTree.exploreNaN_toSet`). `Gpu.exhaustiveNaN_memOutcomes`
 and `Gpu.exhaustiveNaN_exact` state both for the runs with memory of the core
 and `gpu`, which `fir-ref run --exhaustive --nans` computes
-([the command line](fir-ref-command-line.md#trying-a-few-nans)).
+([the command line](fir-ref-command-line.md#trying-a-few-nans)). Its machine
+(`lean/FirRef/RunNaN.lean`) charges a choice's bits, `Machine.tryBits`, before
+it lists the values to try, so a choice past the budget, such as `freeze` of
+an `i64`, lists none of its 2^64 values.
 
 The subset misses a NaN whose bits integer ops change before they reach a
 result, and UB or a stuck path that only an untried payload reaches. Each
 NaN given is tried at every NaN choice, so the paths grow with the NaN
 choices on a path, within the budget; the quiet NaN alone costs no bit, so
-with no NaN given a run has one path through its NaN choices. The harness is
-to give `fir-ref` native code's own result bits as the NaNs to try, so that a
-listed outcome is a proof that the native result is in the set; #219 builds
-that judgement (ADR-2026-11-16-0855). Rejected: a symbolic "any NaN" outcome, which is
+with no NaN given a run has one path through its NaN choices. The harness
+gives `fir-ref` native code's own NaNs to try, so that a listed outcome is a
+proof that the native result is in the set (ADR-2026-11-16-0855,
+[testing-and-harness-floats.md](testing-and-harness-floats.md#how-a-nan-result-is-judged)).
+Rejected: a symbolic "any NaN" outcome, which is
 exact only while no op reads a NaN's bits, and `bitcast` and memory read
 them.
 

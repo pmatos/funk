@@ -44,6 +44,44 @@ cells, with the float tables on a page of their own past the file-size budget;
 and no cells for flags, with a flagged test counting towards the op without
 flags, which leaves no check that each flag's rule is tested.
 
+## How a NaN result is judged
+
+A float op whose result is a NaN chooses its sign and mantissa, and the
+harness judges native code's NaN on the part of the set that `fir-ref`
+lists when it tries a few NaNs (ADR-2026-11-16-0855, ADR-2026-11-16-1630).
+The human ruled on 2026-11-16 (#219 Q1) that the harness judges NaN
+results this way, with declared results as the fallback for a program that
+computes on a NaN's bits, and that NaN tries count against the 16-bit
+choice budget (#219 Q2).
+
+- A differential test runs `fir-ref run --exhaustive --nans` with no NaN
+  given, so a NaN choice tries the positive quiet NaN and costs no bit. A
+  run with no NaN choice is `complete`, and is judged as any other
+  ([testing-and-harness.md](testing-and-harness.md#differential-tests)).
+- Otherwise each outcome listed is one of the set, so the set's rules
+  apply to them, and a native result that refines one passes.
+- When the native result refines none, `differential.py` runs `fir-ref`
+  again with native code's NaNs as `--nans`, once for each list, and
+  judges on what it lists then. `native_floats.nans` reads them: each
+  float result that is a NaN, and each integer result whose bits are a NaN
+  of a float format of its width, as a NaN that went through `bitcast` or
+  memory is.
+- Each NaN given costs bits at every NaN choice of a path: with one, 17 NaN
+  choices on a path pass the budget. That run then proves nothing, so the
+  test is invalid unless it declares its results.
+- A result outside the list fails, and the failure says that `fir-ref` cut
+  the NaN choices short.
+- A test whose result integer ops compute from a NaN's bits declares its
+  results, each with a witness. Against a part of the set, each listed
+  outcome must be declared, and the 32 seeded runs must each give a
+  declared result, as past the budget.
+
+The list misses a NaN whose bits integer ops change, hence the declared
+fallback, and UB or a stuck path that only an untried NaN reaches. A pass
+is still sound: the native result is in the set. Rejected: native code
+first, with its NaNs always given, which charges the budget on runs that
+pass with the quiet NaN.
+
 ## The exact-rational reference
 
 `scripts/harness/float_ref.py` computes IEEE 754 results at any format
@@ -75,12 +113,13 @@ the known answers of the spec's remainder at `f16`, `bf16`, `f64` and
 
 A result that is not a NaN is a differential test at `f32` and `f64`, and an
 interpreter-only test at every format. A NaN result is any NaN
-(ADR-2026-11-09-1549), so its test is interpreter-only, with a choice that names
+(ADR-2026-11-09-1549), so its interpreter-only test has a choice that names
 the NaN: the quiet NaN, every bit set, or the signalling NaN with only the
-lowest mantissa bit, in turn. Native code is not compared on a NaN result until
-#219 decides how one is judged. `test_float_arith_cases.py` checks that the
-committed files are what the generator writes, and checks every expected
-result against `float_ref.py` again. A new hard input reaches every format,
+lowest mantissa bit, in turn. At `f32` and `f64` it is a differential test
+too, judged as [above](#how-a-nan-result-is-judged).
+`test_float_arith_cases.py` checks that the committed files are what the
+generator writes, and checks every expected result against `float_ref.py`
+again. A new hard input reaches every format,
 both tools and the coverage matrix by running the generator.
 
 `crates/funk/tests/float_arith.rs` checks each op natively against the host's
@@ -143,8 +182,8 @@ source's values on either side of each halfway value. Each finite case comes
 with its negation, and three NaNs and poison close each module. Each expected
 result is `float_ref.convert`'s. A NaN operand gives any NaN, so its case is
 interpreter-only with a choice, as in the arithmetic corpus; every other case
-is interpreter-only with its expected result, and differential too from `f32`
-to `f64` and from `f64` to `f32`. `test_float_convert_cases.py` checks that the
+is interpreter-only with its expected result. From `f32` to `f64` and from
+`f64` to `f32` every case is differential too. `test_float_convert_cases.py` checks that the
 committed files are what the generator writes, checks each expected result
 against the reference, checks the reference against the host's `struct`
 between `f16`, `f32` and `f64`, and checks that the cases reach overflow,
@@ -196,3 +235,14 @@ and that each flag decides a case of each op. At `f32` and `f64` each case is a
 differential test too: native code ignores the flags, and its result refines
 poison and either zero. `reject/float-flags.toml` holds the texts of the flags
 that do not decode and those that validation rejects.
+
+## A NaN through memory
+
+`tests/fir/canonical/float-nan-memory` casts a NaN to the integer of its
+width, stores it and loads it back, at `f32` and `f64` (#219): M1 has no
+float loads or stores. A function that returns the whole integer is a
+differential test on native code's NaN as above. One that returns the byte
+holding the sign declares both bytes, each with a witness that chooses the
+sign, since integer ops cut it from the NaN. The flag corpus has no NaN
+result to compare: under `nnan` a NaN gives poison, and its cases under
+`ninf` and `nsz` give none.

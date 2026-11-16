@@ -20,9 +20,9 @@ Tier: direction; area: fir-ref
   `"complete":true` when no path made a NaN choice, and the list is then
   exactly the set (`Gpu.exhaustiveNaN_exact`); otherwise `"complete":false`.
 
-The harness is to give the `V`s from native code's own results, so that a
-native NaN is a listed outcome when a NaN choice can give it; #219 builds
-that judgement.
+The harness gives the `V`s from native code's own results, so that a
+native NaN is a listed outcome when a NaN choice can give it
+(ADR-2026-11-16-1630).
 
 ## Why
 

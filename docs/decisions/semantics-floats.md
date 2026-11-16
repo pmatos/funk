@@ -239,7 +239,8 @@ for it, and exhaustive mode at `f32` and `f64` passes its 16-bit budget. With
 `--nans`, exhaustive mode tries the positive quiet NaN and the NaNs it is
 given, and lists a part of the run's outcomes, proved to be outcomes of the
 run ([fir-ref-command-line.md](fir-ref-command-line.md#trying-a-few-nans)).
-The harness does not yet judge native NaN results with it (#219). `fcmp`'s result is
+The harness judges native NaN results with it
+([testing-and-harness-floats.md](testing-and-harness-floats.md#how-a-nan-result-is-judged)). `fcmp`'s result is
 never a NaN, so it is differential already. The naive backend lowers `f32` and
 `f64`: it passes and returns them in SSE registers as System V does
 ([x86-64-backend-abi.md](x86-64-backend-abi.md#floats-in-sse-registers)), and

@@ -47,8 +47,9 @@ class RecordedRuns(Runs):
         self.calls.append(call)
         return self.responses.popleft()
 
-    def exhaustive(self, args):
-        return self._next("exhaustive", args)
+    def exhaustive(self, args, nans=None):
+        # The first run's `--nans` with none given is implied.
+        return self._next("exhaustive", args, *([nans] if nans else []))
 
     def scripted(self, args, choices):
         return self._next("scripted", args, choices)
@@ -305,7 +306,7 @@ class Differential(unittest.TestCase):
 
     def test_tool_start_errors_propagate_to_the_corpus_runner(self):
         class CannotStart(RecordedRuns):
-            def exhaustive(self, args):
+            def exhaustive(self, args, nans=None):
                 raise OSError("cannot start fir-ref")
 
         runs = CannotStart()

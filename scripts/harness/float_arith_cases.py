@@ -25,10 +25,11 @@ computes, apart from Lean, rounding to nearest even.
   interpreter-only test too, which checks `fir-ref` against the reference;
   at the other formats it is interpreter-only.
 - A NaN result is any NaN of the format, and `fir-ref` chooses its sign and
-  mantissa, so each such case is interpreter-only, with a choice that
-  names the NaN: the quiet NaN, every bit set, or the signalling NaN with
-  the lowest mantissa bit, in turn. Native code is not compared on a NaN
-  result until #219 decides how a NaN result is judged.
+  mantissa, so each such case has an interpreter-only test with a choice
+  that names the NaN: the quiet NaN, every bit set, or the signalling NaN
+  with the lowest mantissa bit, in turn. At `f32` and `f64` it is a
+  differential test too, which passes when native code's NaN is one that
+  `fir-ref` gives when it tries native code's NaNs (ADR-2026-11-16-1630).
 - A poison operand gives poison: differential at `f32` and `f64`, and
   interpreter-only elsewhere.
 """
@@ -108,6 +109,21 @@ ORDERED = ("fsub", "fdiv", "frem", "fmod")
 # The choices of a NaN result, in turn: `m + 1` bits, the top one the
 # sign, read as a signed integer.
 NAN_CHOICES = (0, -1, 1)
+# The lines of a tests' header that say how a NaN result is tested, at a
+# format the backend lowers or not, with the type its choice is spelled as.
+NAN_HEAD = {
+    True: lambda ty: [
+        "# A NaN result is any NaN: its interpreter-only test names the NaN",
+        f"# by a choice of the sign and the mantissa, as signed {ty}. Its",
+        "# differential test passes when fir-ref gives native code's NaN, as",
+        "# it does when the harness has it try that NaN (ADR-2026-11-16-1630).",
+    ],
+    False: lambda ty: [
+        "# A NaN result is any NaN: its test is interpreter-only and names",
+        "# the NaN by a choice of the sign and the mantissa, as signed",
+        f"# {ty}.",
+    ],
+}
 
 
 # The reference's function of each op.
@@ -200,11 +216,7 @@ def tests_text(name: str, t: str) -> str:
             "# Each test is interpreter-only: the backend does not lower",
             f"# {t}, so fir-ref alone runs it and must give what it expects.",
         ]
-    head += [
-        "# A NaN result is any NaN: its test is interpreter-only and names",
-        "# the NaN by a choice of the sign and the mantissa, as signed",
-        f"# i{m + 1}. Native code is not compared on a NaN result yet (#219).",
-    ]
+    head += NAN_HEAD[native](f"i{m + 1}")
     lines = []
     turn = 0
     for op, bits in cases(f, name):
@@ -214,6 +226,8 @@ def tests_text(name: str, t: str) -> str:
             c = NAN_CHOICES[turn % len(NAN_CHOICES)]
             turn += 1
             want = spell(e, m, nan_bits(f, c))
+            if native:
+                lines.append(f'  {{ func = "@{op}", args = [{args}] }},')
             lines.append(
                 f'  {{ func = "@{op}", args = [{args}], choices = ["{c}"], '
                 f'expect = ["{want}"] }},'
