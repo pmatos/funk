@@ -211,14 +211,22 @@ ${ret}["1"$ones]$none
 {"kind":"outcomes","choices":0,"outcomes":[${ret}["1"$ones]}]} --exhaustive
 ${ret}["1"$ones],"choices":0,"sequence":[]} --seed 7
 END
-while read -r want run; do
-    # shellcheck disable=SC2086 # RUN is a list of words.
-    (ulimit -c 0 && LEAN_STACK_SIZE_KB=256 runs "$tmp/wide.fir" 0 "$want" $run) || status=1
+while read -r values run; do
+    for mode in '' --exhaustive '--seed 7'; do
+        case $mode in
+        '') want="$ret$values$none" ;;
+        --exhaustive) want="{\"kind\":\"outcomes\",\"choices\":0,\"outcomes\":[$ret$values}]}" ;;
+        *) want="$ret$values,\"choices\":0,\"sequence\":[]}" ;;
+        esac
+        # shellcheck disable=SC2086 # MODE and RUN are lists of words.
+        (ulimit -c 0 && LEAN_STACK_SIZE_KB=256 runs "$tmp/wide.fir" 0 "$want" $mode $run) ||
+            status=1
+    done
 done <<END
-${ret}["1"${ones:0:4*9999}]$none @call
-${ret}["1"]$none @args
-${ret}["1"]$none @br
-${ret}["1"]$none @g $(printf '1 %.0s' $(seq $n))
+["1"${ones:0:4*9999}] @call
+["1"] @args
+["1"] @br
+["1"] @g $(printf '1 %.0s' $(seq $n))
 END
 # freeze of poison makes a choice: %a + 1 overflows i2 at 1
 # (docs/decisions/fir-ref-command-line.md#scripted-and-exhaustive-modes).

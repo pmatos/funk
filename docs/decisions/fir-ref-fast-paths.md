@@ -161,6 +161,10 @@ another matter: an op that reads many values bound long before passes them
 all in `young` for each operand, since `lookOperands` pays its debt only
 after the op, so a call that returns 100,000 values took 30 seconds, and
 200,000 took 294. `main` takes the same time where it does not overflow.
+The loops cost ordinary runs too: each value now takes a list cell and a
+pair besides its place in the vector, and the sum moves every core op's
+operands and results. The loop of `@sum` to 3,000,000 took about 7.5
+seconds against 6.9 on `main`.
 
 Rejected: a `@[csimp]` theorem on `Dialect.sum.instDialectDenote`. An
 instance's code is compiled where it is declared, so `fir-ref` would still

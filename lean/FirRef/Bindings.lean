@@ -23,8 +23,11 @@ move a value into `old` only after lookups have passed it about `rent`
 times on average, the time that all lookups spend in `young` is linear in
 the number of values bound and lookups made, whoever defined what, and
 each value moves into `old` once, where an insert or a lookup takes time
-logarithmic in its size. `rent` and `deep` are how `fir-ref` spends its
-time, not rules of fir: any values give the same results.
+logarithmic in its size. The lookups of one op's operands pay together,
+after the op, so an op that reads `n` values bound long before passes
+about `n²` entries (`docs/decisions/fir-ref-fast-paths.md#wide-values`).
+`rent` and `deep` are how `fir-ref` spends its time, not rules of fir: any
+values give the same results.
 
 `get` says what bindings give each name, `Agrees` that they give every name
 what a spec environment gives it, and `toEnv` is such an environment.
