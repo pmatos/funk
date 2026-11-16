@@ -18,6 +18,7 @@ import FirTest.Div
 import FirTest.Compare
 import FirTest.FloatCompare
 import FirTest.FloatArith
+import FirTest.NaNRuns
 import FirTest.FloatBitcast
 import FirTest.FloatOfInt
 import FirTest.FloatConvert

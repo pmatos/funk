@@ -235,7 +235,7 @@ include hk
 `ν`. -/
 theorem anyNaN_map : φ.map (anyNaN (μ := μ) e m) = anyNaN e m := by
   unfold anyNaN
-  rw [φ.map_bind, hk.choose]
+  rw [φ.map_bind, hk.chooseNaN]
   simp only [φ.map_pure]
 
 /-- Such a morphism maps `b` with either sign in `μ` to the same in `ν`. -/

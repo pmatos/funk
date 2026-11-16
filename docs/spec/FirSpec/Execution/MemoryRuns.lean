@@ -30,7 +30,7 @@ leaving it at once gives back the memories,
 $`\mathrm{exit}(\mathrm{enter}(S)) = S`.
 :::
 
-:::readable Fir.MonadMorphism.liftState_keeps Fir.SetM.ub_bind (pin := Fir.MonadMorphism.KeepsChoiceUB) (fingerprint := "750416787570381964")
+:::readable Fir.MonadMorphism.liftState_keeps Fir.SetM.ub_bind (pin := Fir.MonadMorphism.KeepsChoiceUB) (fingerprint := "1245451902508512407")
 *Theorem: lifting keeps choice and UB.* Lifting into the layer keeps a
 choice of $`w` bits: choosing and then keeping the state is choosing in
 the layer. It keeps UB when, in $`m`, UB ends a path whatever follows it:

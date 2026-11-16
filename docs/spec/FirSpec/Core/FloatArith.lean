@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Float arithmetic rules: readable blocks" =>
 
-:::moduleDocs (fingerprint := "41355676644410827")
+:::moduleDocs (fingerprint := "5966511511236297498")
 :::
 
 :::readable Fir.Core.nanBits (fingerprint := "1042529435153672994")
@@ -33,9 +33,10 @@ bit alone $`\mathtt{0xffc00000}`, $`c = 1` the signalling NaN
 $`\mathtt{0x7f800001}`, and all ones $`\mathtt{0xffffffff}`.
 :::
 
-:::readable Fir.Core.anyNaN Fir.Core.floatResult (pin := Fir.Core.flagResult) (pin := Fir.Core.operandsBreak) (fingerprint := "2301328144975383141")
+:::readable Fir.Core.anyNaN Fir.Core.floatResult (pin := Fir.Core.flagResult) (pin := Fir.Core.operandsBreak) (fingerprint := "3601701145246041828")
 *Definition: the result of a float op.* $`\mathrm{anynan}_{e,m}` chooses
-$`m + 1` bits $`c` and gives the value $`\mathrm{nan}_{e,m}(c)`: every NaN
+$`m + 1` bits $`c` with the NaN choice $`\mathrm{choose}_{\mathrm{nan}}(e, m)`
+of the {ref "The-fir-specification--Execution--Effects-and-op-semantics"}[choice effect], and gives the value $`\mathrm{nan}_{e,m}(c)`: every NaN
 of the format is one way it ends.
 
 A float op computes in Lean's model, whose format $`F` has $`e`

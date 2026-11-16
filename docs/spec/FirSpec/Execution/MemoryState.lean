@@ -14,16 +14,16 @@ when the Lean changes under it.
 
 #doc (Manual) "The state layer: readable blocks" =>
 
-:::moduleDocs (fingerprint := "15303662645042433147")
+:::moduleDocs (fingerprint := "9243498527954999500")
 :::
 
-:::readable Fir.instMonadChoiceStateT Fir.instMonadUBStateT Fir.instMonadFrameStateT Fir.instMonadMemoryStateT Fir.MonadMorphism.state (fingerprint := "14670536983485653626")
+:::readable Fir.instMonadChoiceStateT Fir.instMonadUBStateT Fir.instMonadFrameStateT Fir.instMonadMemoryStateT Fir.MonadMorphism.state (fingerprint := "110102527492520551")
 *Definition: the state layer.* Over a monad $`m`, a computation of the
 state layer takes the memories $`S` before it, and is a computation of
 $`m` whose results are pairs $`(a, S')` of a result and the memories
 after it. Its effects are:
 
-* a choice of $`w` bits is $`m`'s, and keeps $`S`;
+* a choice of $`w` bits is $`m`'s, and keeps $`S`, and so is a NaN choice;
 * UB is $`m`'s: it ends the path, which then shows no memory;
 * a frame runs $`x` from $`\mathrm{enter}(S)`, and leaves the call on the
   memories $`x` ends with:
@@ -40,14 +40,14 @@ the state layer over $`n`: it translates each computation at each state,
 $`x \mapsto (S \mapsto \varphi(x(S)))`.
 :::
 
-:::readable Fir.MonadMorphism.state_mapsFrame Fir.MonadMorphism.state_choose Fir.MonadMorphism.state_ub (fingerprint := "13676839641991408209")
+:::readable Fir.MonadMorphism.state_mapsFrame Fir.MonadMorphism.state_choose Fir.MonadMorphism.state_chooseNaN Fir.MonadMorphism.state_ub (fingerprint := "12073770933935650719")
 *Theorem: a translation through the layer keeps its effects.* It keeps
 frames, since a frame of the layer is built from the monad's own steps.
-It keeps a choice of $`w` bits when $`\varphi` keeps it, and UB when
-$`\varphi` keeps UB.
+It keeps a choice of $`w` bits when $`\varphi` keeps it, a NaN choice
+when $`\varphi` keeps that, and UB when $`\varphi` keeps UB.
 :::
 
-:::readable Fir.MonadMorphism.state_keeps (pin := Fir.MonadMorphism.KeepsChoiceUB) (fingerprint := "10206560632729164557")
+:::readable Fir.MonadMorphism.state_keeps (pin := Fir.MonadMorphism.KeepsChoiceUB) (fingerprint := "15950878119703196822")
 *Theorem: a translation that keeps choice and UB keeps them through the
 layer.* When $`\varphi` keeps choice and UB, so does its translation
 through the layer, by the two theorems above.

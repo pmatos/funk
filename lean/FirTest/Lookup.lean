@@ -202,6 +202,7 @@ def runBy (spec : Bool) (m : Module CoreDialect) (func : String) (args : List St
     | .ok vs, .exhaustive b => exhaustiveReport name b <| if spec then
         (Core.modeTree m f vs defaultFuel).explore b
       else Core.exhaustive m f vs defaultFuel b
+    | .ok _, .exhaustiveNaN .. => fails 2 "the core's own modes have no walk that tries NaNs"
     | .ok vs, .sampled s => sampledReport name <| if spec then
         (Core.modeTree m f vs defaultFuel).sample draw ⟨s.toUInt64⟩
       else Core.sampled draw m f vs defaultFuel ⟨s.toUInt64⟩

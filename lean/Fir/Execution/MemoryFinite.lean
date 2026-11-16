@@ -63,7 +63,7 @@ theorem ChoiceTree.toSet_finitelyMany {ε : Type} : ∀ t : ChoiceTree ε α, t.
   | .pure a => ⟨[a], fun _ h => by cases h; exact List.mem_singleton_self _⟩
   | .ub _ => ⟨[], fun _ h => nomatch h⟩
   | .noOutcome _ => ⟨[], fun _ h => h.elim⟩
-  | .choose w k => by
+  | .choose w _ k => by
     have hk := fun b => ChoiceTree.toSet_finitelyMany (k b)
     refine ⟨(allBits w).flatMap fun b => Classical.choose (hk b), fun a ⟨b, hb⟩ => ?_⟩
     exact List.mem_flatMap.2 ⟨b, mem_allBits b, Classical.choose_spec (hk b) a hb⟩

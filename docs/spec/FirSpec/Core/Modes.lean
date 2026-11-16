@@ -17,7 +17,7 @@ when the Lean changes under it.
 :::moduleDocs (fingerprint := "6302047697601312163")
 :::
 
-:::readable Fir.Core.modeTree Fir.Core.exhaustive Fir.Core.scripted (pin := Fir.ChoiceTree.explore) (pin := Fir.ChoiceTree.script) (pin := Fir.Func.memTree) (fingerprint := "16032556225835297298")
+:::readable Fir.Core.modeTree Fir.Core.exhaustive Fir.Core.scripted (pin := Fir.ChoiceTree.explore) (pin := Fir.ChoiceTree.script) (pin := Fir.Func.memTree) (fingerprint := "4497826646937963846")
 *Definition: exhaustive and scripted mode on a core function.* For a core
 function $`f` of a module $`M`, arguments $`\vec{v}` of its parameter
 types and fuel $`k`, let
@@ -36,13 +36,15 @@ the run names the core's memories by themselves:
   by a given $`\mathrm{read}`, from no choices made: the leaf it reaches
   and its number of choices, or why $`\mathit{cs}` does not fit.
 
-`fir-ref` computes these, and sampled mode below, and nothing else, to
-report a run. So it runs a module with the units, byte orders and pointer
+`fir-ref` computes these, and sampled mode below, on the sum of the core
+and `gpu`, which runs a core function as the core alone does (the section
+on the modes of the core and `gpu`), and there also the walk that tries a
+few NaNs, to report a run. So it runs a module with the units, byte orders and pointer
 widths that its own layout declares
 (`docs/decisions/fir-ref-memory.md#the-modes-run-with-memory`).
 :::
 
-:::readable Fir.Core.sampled (pin := Fir.ChoiceTree.sample) (fingerprint := "10923238690838616042")
+:::readable Fir.Core.sampled (pin := Fir.ChoiceTree.sample) (fingerprint := "975734535298047826")
 *Definition: sampled mode on a core function.* For a function
 $`\mathrm{draw}` and a generator $`g`,
 $`\mathrm{sampled}(M, f, \vec{v}, k, g)` is sampled mode on the tree of

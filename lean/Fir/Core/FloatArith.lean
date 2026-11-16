@@ -35,8 +35,8 @@ fir's own are:
 
 * _The NaN of a result._ The model has one NaN, with no payload and no
   sign. When the model's result is a NaN, fir's result is any NaN of the
-  format: the rule chooses a sign and the `m` bits of a mantissa, and
-  gives the NaN with those bits. A mantissa of zeros would spell an
+  format: the rule chooses a sign and the `m` bits of a mantissa, with
+  the choice effect's NaN choice, and gives the NaN with those bits. A mantissa of zeros would spell an
   infinity, so it stands for the quiet NaN, whose mantissa has only its
   top bit set. So every NaN of the format, quiet or signalling, with any
   payload and either sign, may be the result, and nothing else may
@@ -90,7 +90,7 @@ def nanBits (e m : Nat) (c : BitVec (m + 1)) : BitVec (floatWidth e m) :=
 /-- Any NaN of `float<e,m>`: the rule chooses its sign and mantissa. -/
 def anyNaN {μ : Type → Type} [Monad μ] [MonadChoice μ] (e m : Nat) :
     μ (PoisonOr (BitVec (floatWidth e m))) := do
-  let c ← MonadChoice.choose (m + 1)
+  let c ← MonadChoice.chooseNaN e m
   pure (.value (nanBits e m c))
 
 /-- The result of a float op in `float<e,m>` under the flags `fl`, whose

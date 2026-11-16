@@ -14,16 +14,24 @@ when the Lean changes under it.
 
 #doc (Manual) "Effects and op semantics: readable blocks" =>
 
-:::moduleDocs (fingerprint := "8189947596634871092")
+:::moduleDocs (fingerprint := "8780724159278605477")
 :::
 
-:::readable Fir.MonadChoice (fingerprint := "4733032598783633289")
+:::readable Fir.MonadChoice (fingerprint := "17910636895159052972")
 *Definition: the choice effect.* A computation may choose bits:
 $`\mathrm{choose}(w)` gives $`w` arbitrary bits, a vector of $`w` bits that
 nothing in the program fixes. A run that chooses can go on in
 $`2^w` ways, one for each vector. $`\mathsf{freeze}` of poison chooses
 once, and every use of the frozen value then sees the bits it chose
 (ADR-2026-10-29-2017).
+
+A float op whose result is a NaN chooses the NaN's sign and mantissa,
+$`\mathrm{choose}_{\mathrm{nan}}(e, m)`, $`m + 1` bits of the format
+$`\mathsf{float}\langle e,m\rangle`. It is $`\mathrm{choose}(m + 1)`
+unless a monad says otherwise, and only the
+{ref "The-fir-specification--Execution--Choice-trees"}[tree of choices]
+does, to label the choice, so that a walk of the tree can try a few NaNs
+where it cannot try them all (ADR-2026-11-16-0855).
 :::
 
 :::readable Fir.MonadUB (fingerprint := "13343653773008458106")

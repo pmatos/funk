@@ -77,7 +77,7 @@ operands give refined results, and it is never UB or, without
 $`\mathsf{nnan}` and $`\mathsf{ninf}`, gives poison on defined operands.
 :::
 
-:::readable Fir.Core.fbinValues_map Fir.Core.funaryValue_map Fir.Core.fmaValues_map (pin := Fir.MonadMorphism.KeepsChoiceUB) (fingerprint := "9255555616796018444")
+:::readable Fir.Core.fbinValues_map Fir.Core.funaryValue_map Fir.Core.fmaValues_map (pin := Fir.MonadMorphism.KeepsChoiceUB) (fingerprint := "9600322737377306391")
 *Theorem: the rules in another monad.* For every monad morphism
 $`\varphi` that
 {ref "The-fir-specification--Execution--Monad-morphisms"}[keeps choice and UB],

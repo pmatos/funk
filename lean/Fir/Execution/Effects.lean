@@ -22,6 +22,11 @@ sees the bits it chose.
 -/
 class MonadChoice (m : Type → Type) where
   choose : (w : Nat) → m (BitVec w)
+  /-- A NaN result of a float op in `float<e,mb>` chooses its sign and
+  mantissa, `mb + 1` bits (ADR-2026-11-09-1549). It is a choice of `mb + 1`
+  bits, and only a monad that walks the choices tells it apart, so that a
+  walk can try a few NaNs where it cannot try them all. -/
+  chooseNaN (e mb : Nat) : m (BitVec (mb + 1)) := choose (mb + 1)
 
 /--
 Immediate UB: `ub reason` ends the run with undefined behaviour, such as

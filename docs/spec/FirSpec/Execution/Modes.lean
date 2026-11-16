@@ -14,7 +14,7 @@ build fails when the Lean changes under it.
 
 #doc (Manual) "Exhaustive, scripted and sampled modes: readable blocks" =>
 
-:::moduleDocs (fingerprint := "12678480739736433358")
+:::moduleDocs (fingerprint := "10569892650345021518")
 :::
 
 :::readable Fir.ChoiceTree.Leaf Fir.ChoiceTree.Leaf.ev? (fingerprint := "5326550102879268601")
@@ -60,14 +60,15 @@ $`\mathit{acc}` and of the lists $`g` gives, and that it gives something
 only when $`g` gives a list for every element.
 :::
 
-:::readable Fir.ChoiceTree.explore (fingerprint := "4835524489367745027")
+:::readable Fir.ChoiceTree.explore (fingerprint := "13598658221882494765")
 *Definition: exhaustive mode.* $`\mathrm{explore}(t, B)` lists every leaf
 of the tree $`t`, each with the number of choices on its path, when no
 path chooses more than $`B` bits in all, and fails otherwise:
 
 $$`\begin{aligned} & \mathrm{explore}(\mathsf{pure}~a, B) = [(\mathsf{ok}~a, 0)] \\ & \mathrm{explore}(\mathsf{ub}~r, B) = [(\mathsf{ub}~r, 0)] \\ & \mathrm{explore}(\mathsf{no\_outcome}~e, B) \\ & \quad = [(\mathsf{no\_outcome}~e, 0)] \end{aligned}`
 
-On a node $`\mathsf{choose}~w~(b \mapsto t_b)` with $`w \le B`, it
+On a node $`\mathsf{choose}~w~c~(b \mapsto t_b)` of any kind $`c`, with
+$`w \le B`, it
 explores each subtree $`t_b` with the budget $`B - w`, for each $`b` of
 $`\mathrm{bits}(w)` in order, adds one to each count, and joins the lists;
 it fails if one of them fails. With $`w > B` it fails.
@@ -88,10 +89,10 @@ Each way the tree may end is a leaf in the list, and each leaf in the
 list that has an outcome is a way the tree may end.
 :::
 
-:::readable Fir.ChoiceTree.Within Fir.ChoiceTree.collect_isSome Fir.ChoiceTree.explore_isSome_iff (fingerprint := "17971800377253183443")
+:::readable Fir.ChoiceTree.Within Fir.ChoiceTree.collect_isSome Fir.ChoiceTree.explore_isSome_iff (fingerprint := "12533589728584485959")
 *Definition: within a budget.* A tree is _within_ the budget $`B` when no
 path of it chooses more than $`B` bits in all: a leaf always is, and
-$`\mathsf{choose}~w~(b \mapsto t_b)` is when $`w \le B` and every $`t_b`
+$`\mathsf{choose}~w~c~(b \mapsto t_b)` is when $`w \le B` and every $`t_b`
 is within $`B - w`.
 
 *Theorem: exhaustive mode fails only when it must.* For every tree $`t`
@@ -124,7 +125,7 @@ long     \mathsf{long}~\mathit{made}~\mathit{length}
   sequence has $`\mathit{length}` values.
 :::
 
-:::readable Fir.ChoiceTree.script (fingerprint := "7178701191173250")
+:::readable Fir.ChoiceTree.script (fingerprint := "16609521679019339584")
 *Definition: scripted mode.* $`\mathrm{script}(t, \mathit{cs}, n)` follows
 the path of the tree $`t` that the choice sequence $`\mathit{cs}` names,
 after $`n` choices already made, and gives the leaf it reaches with the
@@ -133,7 +134,8 @@ which it takes as a parameter, reads the value $`s` as $`w` bits, or does
 not. Here $`[]` is the empty sequence, $`s :: \mathit{cs}` is the
 sequence whose first value is $`s`, followed by $`\mathit{cs}`, and
 $`|\mathit{cs}|` is the length of $`\mathit{cs}`. On a leaf, and on a
-node $`t = \mathsf{choose}~w~(b \mapsto t_b)` whose first value reads:
+node $`t = \mathsf{choose}~w~c~(b \mapsto t_b)`, of any kind $`c`, whose
+first value reads:
 
 $$`\begin{aligned} & \mathrm{script}(\mathsf{no\_outcome}~e, \mathit{cs}, n) \\ & \quad = (\mathsf{no\_outcome}~e, n) \\ & \mathrm{script}(\mathsf{pure}~a, [], n) = (\mathsf{ok}~a, n) \\ & \mathrm{script}(\mathsf{ub}~r, [], n) = (\mathsf{ub}~r, n) \\ & \mathrm{script}(t, s :: \mathit{cs}, n) \\ & \quad = \mathrm{script}(t_b, \mathit{cs}, n + 1) \\ & \qquad \text{when } \mathrm{read}(w, s) = b \end{aligned}`
 
@@ -161,13 +163,14 @@ Read as $`w` bits, it gives $`b` when $`u = w`, and does not read
 otherwise.
 :::
 
-:::readable Fir.ChoiceTree.sample (fingerprint := "8872992951821754338")
+:::readable Fir.ChoiceTree.sample (fingerprint := "1467443537577545210")
 *Definition: sampled mode.* $`\mathrm{sample}(t, g)` follows one path of
 the tree $`t`, drawing each choice as the path reaches it, and gives the
 leaf it reaches with the values it chose, in order. A function
 $`\mathrm{draw}(w, g)`, which it takes as a parameter, gives $`w` bits and
 the next state of the generator $`g`. At a leaf it ends with no values,
-and at a node $`t = \mathsf{choose}~w~(b \mapsto t_b)` it draws $`w` bits
+and at a node $`t = \mathsf{choose}~w~c~(b \mapsto t_b)`, of any kind
+$`c`, it draws $`w` bits
 and puts them before the values that the rest of the path chose:
 
 $$`\begin{aligned} & \mathrm{sample}(\mathsf{pure}~a, g) = (\mathsf{ok}~a, []) \\ & \mathrm{sample}(\mathsf{ub}~r, g) = (\mathsf{ub}~r, []) \\ & \mathrm{sample}(\mathsf{no\_outcome}~e, g) \\ & \quad = (\mathsf{no\_outcome}~e, []) \\ & \mathrm{sample}(t, g) = (\ell, (w, b) :: \mathit{cs}) \end{aligned}`

@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Modes of the core and gpu: readable blocks" =>
 
-:::moduleDocs (fingerprint := "18432909577289361846")
+:::moduleDocs (fingerprint := "11672538903844191493")
 :::
 
 :::readable Fir.Gpu.memName (fingerprint := "9143936946335769858")
@@ -41,16 +41,16 @@ memory, and so, with the core's, the sum's rules in the tree to
 its rules with memory, at every layout and naming of the sum's memories.
 :::
 
-:::readable Fir.Gpu.modeTree Fir.Gpu.Leaf Fir.Gpu.exhaustive Fir.Gpu.scripted Fir.Gpu.sampled (pin := Fir.ChoiceTree.explore) (pin := Fir.ChoiceTree.script) (pin := Fir.ChoiceTree.sample) (pin := Fir.Func.memTree) (fingerprint := "5545297005511440311")
+:::readable Fir.Gpu.modeTree Fir.Gpu.Leaf Fir.Gpu.exhaustive Fir.Gpu.scripted Fir.Gpu.sampled (pin := Fir.ChoiceTree.explore) (pin := Fir.ChoiceTree.script) (pin := Fir.ChoiceTree.sample) (pin := Fir.Func.memTree) (fingerprint := "9581748472841987171")
 *Definition: the modes on a function of the sum.* At a work-item, for a
 function $`f` of a module $`M` of the sum, arguments $`\vec{v}` and fuel
 $`k`, the tree of $`f`'s run is its run with memory in the tree of choices,
 from the empty memories, where each memory has its entry in $`M`'s data
 layout and the run names the sum's memories by their numbers. A leaf of the
 tree is how a path ends. Exhaustive, scripted and sampled mode walk the
-tree as they walk the core's. `fir-ref run` computes these three, on a
-function of the module or a kernel of a nested module run in the module of
-its table, and nothing else.
+tree as they walk the core's. `fir-ref run` computes these three, and the
+walk that tries a few NaNs below, on a function of the module or a kernel
+of a nested module run in the module of its table, and nothing else.
 :::
 
 :::readable Fir.Gpu.exhaustive_memOutcomes Fir.Gpu.exhaustive_memStuck (pin := Fir.Run.outcomes) (pin := Fir.Run.IsStuck) (pin := Fir.ChoiceTree.Leaf.pathEnd) (fingerprint := "14287693176026857430")
@@ -58,6 +58,21 @@ its table, and nothing else.
 work-item, within its choice budget, exhaustive mode on a function of the
 sum lists exactly the outcomes of its run with memory at the fuel it runs
 with, and lists a stuck path exactly when the run has one.
+:::
+
+:::readable Fir.Gpu.exhaustiveNaN (pin := Fir.ChoiceTree.exploreNaN) (fingerprint := "8539463227524929146")
+*Definition: the walk that tries a few NaNs on a function of the sum.* At a
+work-item, with the numbers $`\vec{n}`, it walks the tree of the run as
+the {ref "The-fir-specification--Memory--Exhaustive-runs-that-try-a-few-NaNs"}[walk that tries a few NaNs]
+does. `fir-ref run --exhaustive --nans` computes it (ADR-2026-11-16-0855).
+:::
+
+:::readable Fir.Gpu.exhaustiveNaN_memOutcomes Fir.Gpu.exhaustiveNaN_memStuck Fir.Gpu.exhaustiveNaN_exact (pin := Fir.Run.outcomes) (pin := Fir.Run.IsStuck) (pin := Fir.ChoiceTree.Leaf.pathEnd) (fingerprint := "13630301087183346647")
+*Theorems: the walk that tries a few NaNs gives outcomes, and all of them
+without a NaN choice.* At every work-item, each outcome that it lists on a
+function of the sum, and each stuck path, is one of its run with memory at
+the fuel it runs with. When no path that it lists made a NaN choice, it
+lists exactly the outcomes of the run.
 :::
 
 :::readable Fir.Gpu.scripted_memOutcomes Fir.Gpu.scripted_memStuck (pin := Fir.Run.outcomes) (pin := Fir.Run.IsStuck) (pin := Fir.ChoiceTree.Leaf.pathEnd) (fingerprint := "1707494772383201581")
