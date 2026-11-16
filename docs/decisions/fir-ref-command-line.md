@@ -71,7 +71,7 @@ and has no text output to choose from.
 ## `fir-ref run`
 
 The full form is `fir-ref run [--fuel N] [--choices C,C,... | --exhaustive
-[--choice-bits B] | --seed S] [--work-item-id X,Y,Z] [--work-group-id X,Y,Z]
+[--choice-bits B] [--nans V,V,...] | --seed S] [--work-item-id X,Y,Z] [--work-group-id X,Y,Z]
 [--work-group-size X,Y,Z] [--num-work-groups X,Y,Z] FILE @FUNC [ARG...]`.
 Options come anywhere before `--`, and each takes the next argument as its
 value. An argument such as `-5` is not an option.
@@ -211,6 +211,29 @@ Rejected: exhaustive mode by default. It would have changed every existing
 run's output at once; a scripted default keeps a run that makes no choice as it
 was. Also rejected: a JSON `kind` for a sequence that does not fit, since the
 choices are arguments and a tool error never passes.
+
+### Trying a few NaNs
+
+`--nans V,V,...` goes with `--exhaustive`, and is a usage error without it.
+Each `V` is a bit pattern, `0x` and hexadecimal digits, separated by commas
+with no spaces; the empty text gives none. At a NaN choice of `float<e,m>`,
+the run tries the positive quiet NaN, then each `V` that is a NaN of that
+format, in order and each once; a `V` that is not is skipped. Every other
+choice is tried in full, as `--exhaustive` alone does. A NaN choice costs
+the fewest bits that count the NaNs it tries: none with no `V`, 1 with one, and
+`--choice-bits` bounds them with the other choices (ADR-2026-11-16-0855,
+[fir-ref.md](fir-ref.md#trying-a-few-nans)).
+
+Its result is exhaustive mode's, with one more field after `choices`:
+`{"kind":"outcomes","choices":N,"complete":B,"outcomes":[O,...]}`. `B` is
+`true` when no path made a NaN choice, and the outcomes are then exactly the
+run's; otherwise it is `false`, and each outcome is one of the run's, though
+the run may have others (`Gpu.exhaustiveNaN_memOutcomes`,
+`Gpu.exhaustiveNaN_exact`). Past the budget, the result is
+`choice-budget-exceeded`, as without `--nans`.
+
+Rejected: trying a few values at every wide choice, which would change the
+rule for `freeze` past the budget, where a test declares its results.
 
 ### Sampled mode
 

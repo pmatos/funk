@@ -215,6 +215,7 @@ import FirSpec.Execution.MemoryFree
 import FirSpec.Execution.MemoryFreeRuns
 import FirSpec.Execution.MemoryFreeReplace
 import FirSpec.Execution.MemoryModes
+import FirSpec.Execution.NaNModes
 import FirSpec.Core.MemoryRuns
 import FirSpec.Core.MemoryCallRefine
 import FirSpec.Sum.Names

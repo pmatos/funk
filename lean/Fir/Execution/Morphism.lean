@@ -76,13 +76,15 @@ theorem MonadMorphism.map_bind_pure {α β : Type} {x : m α} {y : n α} (h : φ
   simp only [φ.map_pure]
 
 /-- The morphism keeps choice and UB: it maps a choice of `w` bits to a
-choice of `w` bits, and UB to UB for the same reason. A rule written once
+choice of `w` bits, a choice of a NaN to a choice of a NaN, and UB to UB for the same reason. A rule written once
 for any monad with these two effects then means in `n` what its image of
 the rule in `m` means. -/
 structure MonadMorphism.KeepsChoiceUB [MonadChoice m] [MonadChoice n] [MonadUB m] [MonadUB n] :
     Prop where
   /-- A choice of bits maps to a choice of bits. -/
   choose : ∀ w, φ.map (MonadChoice.choose w) = MonadChoice.choose w
+  /-- A choice of a NaN's sign and mantissa maps to one. -/
+  chooseNaN : ∀ e mb, φ.map (MonadChoice.chooseNaN e mb) = MonadChoice.chooseNaN e mb
   /-- UB maps to UB, for the same reason. -/
   ub : ∀ {α : Type} (r : String), φ.map (MonadUB.ub r : m α) = MonadUB.ub r
 

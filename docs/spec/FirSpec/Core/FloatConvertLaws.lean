@@ -17,7 +17,7 @@ pins their fingerprint; the build fails when the Lean changes under it.
 :::moduleDocs (fingerprint := "498563472756415881")
 :::
 
-:::readable Fir.Core.convertFloat_ends Fir.Core.convertFloat_map (pin := Fir.Core.convertFloat) (pin := Fir.Core.Ends) (pin := Fir.MonadMorphism.KeepsChoiceUB) (fingerprint := "8878047545628183774")
+:::readable Fir.Core.convertFloat_ends Fir.Core.convertFloat_map (pin := Fir.Core.convertFloat) (pin := Fir.Core.Ends) (pin := Fir.MonadMorphism.KeepsChoiceUB) (fingerprint := "12152912872957780309")
 *Theorems: the rules of the conversions between formats end, and mean the same in
 another monad.* On every operand, the rule of $`\mathsf{fpext}` and
 of $`\mathsf{fptrunc}`
