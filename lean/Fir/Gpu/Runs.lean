@@ -1,4 +1,4 @@
-import Fir.Gpu.Semantics
+import Fir.Gpu.WorkGroup
 import Fir.Sum.RunLaws
 import Fir.Sum.TotalLaws
 import Fir.Sum.MonotoneLaws
@@ -59,10 +59,6 @@ instance coreGpu_lawfulMonotone : LawfulDialectMonotone CoreGpu :=
 instance coreGpu_lawfulMemPoison : LawfulDialectMemPoison CoreGpu :=
   Dialect.sum.lawfulMemPoison fun _ h => h
 
-/-- Every op of `gpu` is monotone with memory, at every width. -/
-theorem Op.memMonotone (op : Op) : MemMonotone (d := GpuDialect) op :=
-  MemMonotone.ofLifts (LiftsSetM.opLifts (d := GpuDialect) op) (Op.monotone op)
-
 /-- Every op of the sum that runs by its own rule is monotone with memory, at
 every width, valid or not. -/
 theorem memMonotone_all :
@@ -99,13 +95,13 @@ theorem inModule_of_valid {M : Module CoreGpu} {f : Func CoreGpu} (hv : f.Valid 
         rw [Dialect.sum.eq_map_of_mapM_getLeft hps, Dialect.sum.eq_map_of_mapM_getLeft hrs]
         rfl
       · exact hvalid.elim
-    · cases op; cases h
+    · cases op <;> cases h
   jumps _ _ o _ hT args i h := by
     generalize o.op = op at hT args h ⊢
     rcases op with op | op
     · obtain ⟨hlt, hr⟩ := Core.Op.exit_goto op _ hT h
       exact ⟨hlt, by change (returnTypes op).map _ = []; rw [hr]; rfl⟩
-    · cases op; cases hT
+    · cases op <;> cases hT
   returns b hb o ho hT args h := by
     obtain ⟨i, hi, rfl⟩ := List.getElem_of_mem ho
     have hvalid : validOp ⟨M.context.symbols, f.results⟩ b.body[i].op :=
@@ -122,7 +118,7 @@ theorem inModule_of_valid {M : Module CoreGpu} {f : Func CoreGpu} (hv : f.Valid 
         subst hvalid
         exact (Dialect.sum.eq_map_of_mapM_getLeft hrs).symm
       · exact hvalid.elim
-    · cases op; cases hT
+    · cases op <;> cases hT
 
 variable {N : Type} [DecidableEq N] (lay : N → MemLayout) (ρ : DialectEffects.Mem CoreGpu → N)
 
@@ -135,7 +131,7 @@ theorem inModuleAt_of_valid {M : Module CoreGpu} {f : Func CoreGpu} (hv : f.Vali
     rcases ho : o.op with op | op
     · rw [ho] at hT
       exact Dialect.sum.opLiftsSetM_inl (Core.Op.liftsSetM_of_terminator hT)
-    · rw [ho] at hT; cases op; cases hT
+    · rw [ho] at hT; cases op <;> cases hT
 
 variable {M : Module CoreGpu} {t : SymbolTable CoreGpu} {f : Func CoreGpu}
 
@@ -176,12 +172,17 @@ theorem args_isRefinedBy (M : Module CoreGpu) (f : Func CoreGpu)
   Func.memRuns_isRefinedBy_of_from lay ρ (Func.memRunsFrom_args_isRefinedBy M (fun g _ => hm g) f
     (hm f) h (Memory.Memories.isRefinedBy_refl _))
 
-/-- Each op of `gpu` has one outcome with memory, at every layout and naming. -/
+/-- Each op of `gpu` has one outcome with memory, at every layout and naming:
+a question its results, and an allocation its one allocation. -/
 theorem opsFinite_gpu (ρ : DialectEffects.Mem GpuDialect → N) :
     letI := DialectMemDenote.denoteAt (d := GpuDialect) lay ρ
-    OpsFinite GpuDialect N (unitsOf lay) := fun op _ _ =>
-  ⟨fun _ => FinitelyMany.lift ⟨[op.results], fun _ h => by cases h; exact List.mem_singleton_self _⟩,
-    fun h => by cases op; cases h⟩
+    OpsFinite GpuDialect N (unitsOf lay)
+  | .query q d w, _, args => ⟨fun _ => by
+      rw [(query_liftsSetM q d w lay ρ args).1]
+      exact FinitelyMany.lift
+        ⟨[queryResults q d w], fun _ h => by cases h; exact List.mem_singleton_self _⟩,
+    fun h => by cases h⟩
+  | .alloc t c a n, _, args => ⟨fun _ => Op.alloc_finitelyMany t c a n lay ρ args, fun h => by cases h⟩
 
 /-- Every op of the sum that runs by its own rule has finitely many outcomes
 with memory, at every layout and naming. -/

@@ -111,7 +111,7 @@ and every size 1, a grid of one work-item, so a run that gives none runs a
 host function as before. In each dimension the id must be below the size
 and the work-group's id below the count (`Gpu.WorkItem.Valid`); anything
 else is a usage error. The options go with any function, a host function
-included; they change only what the ops of `gpu` give.
+included; they change only what the questions of `gpu` give.
 
 This spelling is an implementation choice of #212's second stage, taken
 without a ruling, and the human may rule on it. `@M::@FUNC` follows MLIR's

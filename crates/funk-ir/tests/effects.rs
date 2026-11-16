@@ -74,7 +74,7 @@ fn effects_of(reg: &Registry, c: &Case) -> Effects {
 fn each_op_has_the_effects_of_its_lean_declaration() {
     let reg = in_tree();
     let cs = cases();
-    assert_eq!(cs.len(), 97);
+    assert_eq!(cs.len(), 98);
     for c in &cs {
         assert_eq!(effects_of(&reg, c).to_string(), c.effects, "{}", c.name);
     }
@@ -105,10 +105,10 @@ fn the_cases_pin_every_op_and_every_flag() {
             if op.name == "icmp" || op.name == "fcmp" {
                 flags.pop();
             }
-            // alloca's words are its kind and its type, and load's and
-            // store's their ordering, which change no set: alloca allocates
-            // in its result's memory, load reads its pointer's and store
-            // writes it.
+            // alloca's words are its kind and its type, gpu's a dimension or
+            // the type of gpu.work_group_alloca, and load's and store's their
+            // ordering, which change no set: an allocation allocates in its
+            // result's memory, load reads its pointer's and store writes it.
             if ["alloca", "load", "store"].contains(&op.name.as_str())
                 || gpu::OPS.contains(&op.name.as_str())
             {

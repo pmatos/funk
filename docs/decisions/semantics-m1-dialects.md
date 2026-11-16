@@ -79,18 +79,19 @@ modules (#211) and memory (#231) have landed.
 
 #212 builds the dialect in four stages: its text and validation, the runs
 of one work-item, work-group memory, and the generic results restated
-(the stage plan on #212). Stages 1 and 2 hold:
+(the stage plan on #212). Stages 1 to 3 hold:
 
 - **Its ops.** The dialect is named `gpu`, and extends the core with no
   types of its own (`lean/Fir/Gpu/`, `crates/funk-ir/src/dialects/gpu.rs`).
-  Its four ops each ask the work-item one question in one dimension and
+  Four of its ops each ask the work-item one question in one dimension and
   give an `i32`: `gpu.work_item_id`, `gpu.work_group_id`,
   `gpu.work_group_size` and `gpu.num_work_groups`, written
   `%i: i32 = gpu.work_item_id gpu.x`. The dimension, `gpu.x`, `gpu.y` or
   `gpu.z`, is its own attribute. An op decodes from one dimension, no
   operand and one integer of any width; any other shape is a parse error,
-  and validation asks for an `i32`. Its effect set is empty. There is no
-  barrier: M1 leaves out the ops that need other work-items, and an op
+  and validation asks for an `i32`. Their effect set is empty. A fifth,
+  `gpu.work_group_alloca`, allocates in work-group memory (below). There is
+  no barrier: M1 leaves out the ops that need other work-items, and an op
   without rules would break the lawful classes
   ([fir-ref.md](fir-ref.md#an-op-without-rules)).
 - **Kernels.** A kernel is a function of a device module whose dialect set
@@ -100,15 +101,19 @@ of one work-item, work-group memory, and the generic results restated
   declares memory 3, and are rejected on both sides when it does not.
 - **One work-item runs** (stage 2). The work-item is the run's input, as
   its arguments are: its id, its work-group's id, the work-group's size and
-  the number of work-groups, in each dimension (`Gpu.WorkItem`). An op of
-  `gpu` gives the answer to its question, modulo 2 to the power of its
-  width; it is never poison or UB and touches no memory
+  the number of work-groups, in each dimension (`Gpu.WorkItem`). A
+  question of `gpu` gives the answer, modulo 2 to the power of its width;
+  it is never poison or UB and touches no memory
   (`lean/Fir/Gpu/Semantics.lean`). A kernel runs in its own table, the
   module of that table (`Module.nest`): its calls name functions of the
   device module, and its memories are its host's.
-- **Its guarantees** (stage 2). The empty effect set of `gpu` is proved
-  sound at every work-item (`Gpu.lawfulDialectEffects`), and `gpu` is
-  lawful, and lawful with memory in its totality, monotonicity and poison.
+- **Its guarantees** (stages 2 and 3). The effect set of each op of `gpu`
+  is proved sound at every work-item (`Gpu.lawfulDialectEffects`), and
+  `gpu` is lawful with memory in its totality, monotonicity and poison
+  (`lean/Fir/Gpu/WorkGroup.lean`): a question by its tie to the set monad,
+  and `gpu.work_group_alloca` by its own rule, as `alloca` is. Since stage
+  3, `gpu` meets no lawful class of the set monad and does not lift it, as
+  the core does not: an allocation has no rule there.
   The sum `CoreGpu` keeps every guarantee of the whole core with memory
   (semantics-m1-memory.md#the-cores-guarantees), at every work-item, for
   the functions of every table of a valid module, nested at any depth: the
@@ -150,10 +155,61 @@ of one work-item, work-group memory, and the generic results restated
   must-reject cases at both stages (`tests/fir/reject/gpu.toml`);
   `tests/dialects/gpu.cases` is read by the Lean and the Rust tests alike.
 
-How the dialect's work-group memory gets its number in the data layout is a
-question for the human (semantics-dialects.md; the stage plan on #212).
-
 The human ruled this on 2026-11-09, on #202. Rejected: a small quantum-style
 dialect, which tests neither nested modules nor several memories; it remains a
 candidate for a later G0 check. Rejected too: a CPU-shaped dialect such as
 checked arithmetic, which tests little of what G0 is about.
+
+### Work-group memory
+
+Stage 3 of #212. The human ruled on 2026-11-16, on #212 (Q1, option A):
+work-group memory is an ordinary memory of the host's data layout, any
+memory that it declares, with no number fixed. `gpu` owns no memory name:
+its memories are the core's (`Gpu.instDialectMemOver`). It gives a declared
+memory its meaning (ADR-2026-11-09-1542;
+[semantics-dialects.md](semantics-dialects.md#the-sum-in-the-spec)).
+
+- **The op.** `%p: ptr(3) = gpu.work_group_alloca i32 64 align(4)` allocates
+  room for 64 `i32` in memory 3, the memory of its result, as `alloca`
+  does. Its attributes are `alloca`'s after the kind: the type, the count
+  when not 1 and `align(A)` when given. It writes no kind, and a kind does
+  not decode. Validation has `alloca`'s rules but the kind: at least one
+  value, a power-of-two alignment within the layout's limit, an integer or
+  pointer type, and the data layout declares the result's memory and the
+  memory of a pointer type it allocates (`Gpu.Op.Valid`,
+  `Gpu.Op.attrTypes`). Its effect is to allocate in its result's memory,
+  `allocates(N)`, as `alloca`'s is. The name and spelling are an
+  implementation choice of stage 3, which the human may rule on: the name
+  follows `gpu.work_group_*`, and the attributes reuse `alloca`'s reading
+  (`Gpu.decodeAlloc`; `crates/funk-ir/src/dialects/core/alloca.rs`'s shape).
+- **Its lifetime with one work-item.** It allocates with the units and the
+  alignment `alloca` would take in that memory, but with the kind `global`,
+  the kind of an allocation that lives for the whole run (`Gpu.allocRule`).
+  No frame records it, so no call frees it when it returns: in M1, where a
+  run is the run of one work-item of a kernel, the allocation lives from
+  the op until the run ends, whichever function of the device module ran
+  the op. Each run of the op makes a new allocation, so an op in a loop or
+  in a function called twice gives distinct blocks. A stack allocation of
+  the same function is freed when its call returns. Rejected: a new kind of
+  allocation, which changes the core's memory model and lets `alloca`
+  decode it; and `alloca stack`, which a callee's return frees.
+- **What is left for several work-items.** All the work-items of one
+  work-group share one work-group allocation, and work-groups do not share
+  theirs. M1 runs one work-item, so no rule says how two work-items' runs of
+  the op name the same block, which work-group's block a work-item sees,
+  when the block's units become poison again between work-groups, or how
+  a store by one work-item is seen by a load of another; that waits for a
+  concurrency model (S6) and barriers.
+- **The #231 ops on it.** `ptr(N)`, `ptradd`, `load` and `store`, of
+  integers and of pointers, work on work-group memory unchanged, on
+  memories with units of 16 and 8 bits and pointers of 32 and 16 bits
+  (`tests/fir/canonical/gpu-work-group.fir`, `FirTest.GpuRuns`,
+  `tests/dialects/gpu.cases`); no core op, theorem or `fir-ref` path
+  changed.
+- **Changed statements.** `Gpu.lawful` (the dialect lawful in the set
+  monad) and `Gpu.instLiftsSetM` are removed, and the set-monad lemmas of
+  the ops, `denote_eq`, `results_noPoison`, `results_refl`, `propagates`
+  and `Op.monotone`, now speak of the questions alone
+  (`Gpu.query_denote_eq` and its siblings). Every guarantee with memory of
+  `gpu` and of the sum `CoreGpu` holds as before, and now covers the
+  allocation too.

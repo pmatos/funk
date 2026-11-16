@@ -1,6 +1,7 @@
 import Fir.Gpu.Effects
 import Fir.Gpu.Validation
 import Fir.Core.MemoryRuns
+import Fir.Core.Alloca
 
 /-!
 The rules of `gpu` (ADR-2026-11-09-1545). In M1 a kernel runs one
@@ -14,12 +15,23 @@ modulo 2 to the power `N`. Validation asks for an `i32`. A work-item of
 its grid (`WorkItem.Valid`) has each id below its size and each number below
 2 to the power 32, and is what `fir-ref run` takes.
 
-An op of `gpu` takes no operand, reads, writes and allocates in no memory,
-is never UB and never gives poison. So it runs by its rule in the set monad
-and keeps the memories, at every naming of its memories, and the dialect
-meets every obligation of its classes, at every work-item: it is lawful,
-its empty effect set is sound (`Gpu.lawfulDialectEffects`), and it is
-lawful in its totality, its monotonicity and its poison with memory.
+A question of `gpu` takes no operand, reads, writes and allocates in no
+memory, is never UB and never gives poison. So it runs by its rule in the
+set monad and keeps the memories, at every naming of its memories: it is
+tied to the set monad, as the core's ops that touch no memory are.
+
+`gpu.work_group_alloca` allocates as `alloca` does (the section on stack
+allocation), in the memory of its result, with the units and the alignment
+that `alloca` would take there (`Core.allocaShape`), but with the kind
+`global`, the kind of an allocation that lives for the whole run: no frame
+records it, so no call frees it when it returns. One work-item runs at a
+time, and a run is the run of one work-item, so its allocation lives from
+the op until the run of the kernel ends, whichever function of the device
+module ran the op. Each time the op runs it makes a new allocation. How the
+work-items of one work-group share one allocation is left for when several
+work-items run. It needs memory, so it has no rule in the set monad, as
+`alloca` has none, and `gpu` does not lift the set monad: the section on
+work-group allocation proves the dialect's obligations with memory.
 -/
 
 namespace Fir.Gpu
@@ -63,28 +75,54 @@ section
 
 variable [w : WorkItem]
 
-/-- The results of an op of `gpu`: the work-item's answer to its question
-in its dimension, as a value of its width. -/
-def Op.results : (op : Op) → HVector toType (Fir.returnTypes (d := GpuDialect) op)
-  | .query q d n => .cons (.value (BitVec.ofNat n (w.answer q d)) : PoisonOr (BitVec n)) .nil
+/-- The results of a question: the work-item's answer to it in its
+dimension, as a value of its width. -/
+def queryResults (q : Query) (d : Dim) (n : Nat) :
+    HVector toType (Fir.returnTypes (d := GpuDialect) (Op.query q d n)) :=
+  .cons (.value (BitVec.ofNat n (w.answer q d)) : PoisonOr (BitVec n)) .nil
 
-/-- The rules of `gpu` in any monad: an op gives its results. No op of
-`gpu` is a terminator, so the interpreter never asks for an exit; it is
-written as a return. -/
-@[reducible] def denoteIn (m : Type → Type) [Monad m] : DialectDenote GpuDialect m where
-  denote op _ := pure op.results
+/-- The rules of `gpu` in a monad with no memory: a question gives its
+results, and `gpu.work_group_alloca`, which has no rule there, does `z`. No
+op of `gpu` is a terminator, so the interpreter never asks for an exit; it
+is written as a return. -/
+@[reducible] def denoteIn (m : Type → Type) [Monad m] (z : {α : Type} → m α) :
+    DialectDenote GpuDialect m where
+  denote
+    | .query q d n, _ => pure (queryResults q d n)
+    | .alloc .., _ => z
   exit _ _ := pure .ret
 
-/-- The rules of `gpu` in the set monad. -/
-instance instDialectDenote : DialectDenote GpuDialect SetM := denoteIn SetM
+/-- The rules of `gpu` in the set monad: an allocation has no outcome
+there. -/
+instance instDialectDenote : DialectDenote GpuDialect SetM := denoteIn SetM fun _ => False
 
-/-- No op of `gpu` touches memory: at every naming of its memories, it runs
-by its rule in the set monad and keeps the memories. -/
-instance instDialectMemDenote : DialectMemDenote GpuDialect := DialectMemDenote.ofSetM
+variable {N : Type} {m : Type → Type} [Monad m]
 
-/-- The semantics of `gpu` with memory lifts its semantics in the set
-monad. -/
-instance instLiftsSetM : LiftsSetM GpuDialect := DialectMemDenote.ofSetM_liftsSetM
+/-- The rule of `gpu.work_group_alloca`, in a monad with the memory effect
+on the memories of a run whose layout entries are `lay`, where the run names
+`gpu`'s memory `x` as `ρ x`: it allocates the units of `c` values of `t` in
+the memory of its result, with the alignment `a` or the type's default one,
+as `alloca` does, but of the kind `global`, which lives for the whole run,
+and gives the pointer to the allocation. -/
+def allocRule (lay : N → MemLayout) (ρ : DialectEffects.Mem GpuDialect → N)
+    [MonadMemory N (unitsOf lay) m] (t : Core.Ty) (c : Nat) (a : Option Nat) (n : Nat) :
+    m (HVector toType (Fir.returnTypes (d := GpuDialect) (Op.alloc t c a n))) :=
+  (fun p => .cons (.value p) .nil) <$>
+    MonadMemory.alloc (ρ (.inl n)) .global (Core.allocaShape lay (fun x => ρ (.inl x)) t c a n).1
+      (Core.allocaShape lay (fun x => ρ (.inl x)) t c a n).2
+
+/-- The rules of `gpu` in a monad with memory: a question gives its results,
+and an allocation allocates. -/
+@[reducible] def memDenoteIn (lay : N → MemLayout) (ρ : DialectEffects.Mem GpuDialect → N)
+    [MonadMemory N (unitsOf lay) m] : DialectDenote GpuDialect m where
+  denote
+    | .query q d n, _ => pure (queryResults q d n)
+    | .alloc t c a n, _ => allocRule lay ρ t c a n
+  exit _ _ := pure .ret
+
+/-- The semantics of `gpu` with memory, at each layout and naming of its
+memories: its rules in the state layer over the set monad. -/
+instance instDialectMemDenote : DialectMemDenote GpuDialect := ⟨fun lay ρ => memDenoteIn lay ρ⟩
 
 end
 
@@ -93,69 +131,62 @@ instance instDialectCall : DialectCall GpuDialect := ⟨fun _ => none⟩
 
 variable [WorkItem]
 
-/-- An op of `gpu` gives its results: it never ends in UB and has one
+/-- A question of `gpu` gives its results: it never ends in UB and has one
 outcome. -/
-theorem denote_eq (op : Op) (args : HVector toType (Fir.sig (d := GpuDialect) op)) (e) :
-    DialectDenote.denote (m := SetM) (d := GpuDialect) op args e ↔ e = .ok op.results :=
+theorem query_denote_eq (q : Query) (d : Dim) (n : Nat)
+    (args : HVector toType (Fir.sig (d := GpuDialect) (Op.query q d n))) (e) :
+    DialectDenote.denote (m := SetM) (d := GpuDialect) (Op.query q d n) args e ↔
+      e = .ok (queryResults q d n) :=
   Iff.rfl
 
-/-- The results of an op of `gpu` hold no poison. -/
-theorem results_noPoison (op : Op) : ¬ op.results.Any TyPoison.IsPoison := by
-  cases op
+/-- The results of a question hold no poison. -/
+theorem queryResults_noPoison (q : Query) (d : Dim) (n : Nat) :
+    ¬ (queryResults q d n).Any TyPoison.IsPoison := by
   rintro (h | h) <;> cases h
 
-/-- The results of an op of `gpu` refine themselves. -/
-theorem results_refl (op : Op) :
-    HVector.Forall₂ TyRefinement.IsRefinedBy op.results op.results := by
-  cases op
-  exact ⟨Core.Ty.isRefinedBy_refl (t := .int _) _, trivial⟩
+/-- The results of a question refine themselves. -/
+theorem queryResults_refl (q : Query) (d : Dim) (n : Nat) :
+    HVector.Forall₂ TyRefinement.IsRefinedBy (queryResults q d n) (queryResults q d n) :=
+  ⟨Core.Ty.isRefinedBy_refl (t := .int _) _, trivial⟩
 
-/-- Each op of `gpu` propagates poison: it takes no operand, and never ends
-in UB. -/
-theorem propagates (op : Op) : PropagatesPoison (d := GpuDialect) op where
-  poisonOut args h := by cases op; cases args; cases h
-  ubByOwnRules args _ h := by cases op; cases args; cases h
+/-- A question touches no memory: at every layout and naming, it runs with
+memory by its rule in the set monad and keeps the memories. -/
+theorem query_liftsSetM (q : Query) (d : Dim) (n : Nat) :
+    OpLiftsSetM (d := GpuDialect) (Op.query q d n) := fun _ _ _ =>
+  ⟨funext fun S => (pure_bind (f := fun a => (pure (a, S) : SetM _)) _).symm,
+    funext fun S => (pure_bind (f := fun a => (pure (a, S) : SetM _)) Exit.ret).symm⟩
 
-/-- Each op of `gpu` is monotone, at every width: it gives the same results
+/-- A question propagates poison: it takes no operand, and never ends in
+UB. -/
+theorem query_propagates (q : Query) (d : Dim) (n : Nat) :
+    PropagatesPoison (d := GpuDialect) (Op.query q d n) where
+  poisonOut args h := by cases args; cases h
+  ubByOwnRules args _ h := by cases args; cases h
+
+/-- A question is monotone, at every width: it gives the same results
 whatever its operands. -/
-theorem Op.monotone (op : Op) : OpMonotone (d := GpuDialect) op := fun _ _ _ =>
-  ⟨fun _ e he => by cases he; exact ⟨_, rfl, results_refl op⟩, fun h => by cases op; cases h⟩
+theorem query_monotone (q : Query) (d : Dim) (n : Nat) :
+    OpMonotone (d := GpuDialect) (Op.query q d n) := fun _ _ _ =>
+  ⟨fun _ e he => by cases he; exact ⟨_, rfl, queryResults_refl q d n⟩, fun h => by cases h⟩
 
-/-- `gpu` is lawful, at every work-item: each op propagates poison, returns
-a result, and is total and monotone. -/
-instance lawful : LawfulDialectPoison GpuDialect where
-  poison_isRefinedBy {t} := match t with
-    | .inl _ => fun _ => Core.Ty.poison_isRefinedBy
-    | .inr e => e.elim
-  propagates op _ _ := propagates op
-  returnsOnDefined op _ _ := by
-    cases op
-    exact ⟨.nil, nofun, _, rfl⟩
-  total op _ _ args := ⟨fun _ => ⟨_, rfl⟩, fun h => by cases op; cases h⟩
-  monotone op _ _ := Op.monotone op
+/-- A question has an outcome on every operand vector. -/
+theorem query_total (q : Query) (d : Dim) (n : Nat) : OpTotal (d := GpuDialect) (Op.query q d n) :=
+  fun _ => ⟨fun _ => ⟨_, rfl⟩, fun h => by cases h⟩
 
-/-- The effect set of `gpu`, empty, is sound at every work-item: no op ends
-in UB, gives poison, or writes, reads or allocates in a memory, and no op
-is a terminator. -/
-instance lawfulDialectEffects : LawfulDialectEffects GpuDialect where
-  neverUB op _ _ _ := NeverUB.ofSetM fun _ _ =>
-    ⟨fun _ h => (nomatch (denote_eq op _ _).1 h), fun h => by cases op; cases h⟩
-  makesNoPoison op _ _ _ := MakesNoPoison.ofSetM fun _ _ _ _ hr => by
-    cases hr
-    exact results_noPoison op
-  notControl op _ := by cases op; rfl
-  writesNot := DialectMemDenote.ofSetM_writesNot
-  readsNot := DialectMemDenote.ofSetM_readsNot
-  allocatesNot := DialectMemDenote.ofSetM_allocatesNot
+/-- A question returns a result on the empty, defined operand vector. -/
+theorem query_returnsOnDefined (q : Query) (d : Dim) (n : Nat) :
+    ReturnsOnDefined (d := GpuDialect) (Op.query q d n) :=
+  ⟨.nil, nofun, _, rfl⟩
 
-/-- `gpu` is lawful in its totality: it is lawful, and it lifts the set
-monad. -/
-instance lawfulTotal : LawfulDialectTotal GpuDialect := LawfulDialectTotal.ofLawful
+/-- A question never ends in UB in the set monad. -/
+theorem query_neverUBSetM (q : Query) (d : Dim) (n : Nat) :
+    NeverUBSetM (d := GpuDialect) (Op.query q d n) := fun _ _ =>
+  ⟨fun _ h => (nomatch (query_denote_eq q d n _ _).1 h), fun h => by cases h⟩
 
-/-- `gpu` is lawful in its monotonicity. -/
-instance lawfulMonotone : LawfulDialectMonotone GpuDialect := LawfulDialectMonotone.ofLawful
-
-/-- `gpu` is lawful in its poison with memory. -/
-instance lawfulMemPoison : LawfulDialectMemPoison GpuDialect := LawfulDialectMemPoison.ofLawful
+/-- A question makes no poison in the set monad. -/
+theorem query_makesNoPoisonSetM (q : Query) (d : Dim) (n : Nat) :
+    MakesNoPoisonSetM (d := GpuDialect) (Op.query q d n) := fun _ _ _ _ hr => by
+  cases hr
+  exact queryResults_noPoison q d n
 
 end Fir.Gpu

@@ -14,7 +14,7 @@ changes under it.
 
 #doc (Manual) "The GPU dialect's rules: readable blocks" =>
 
-:::moduleDocs (fingerprint := "2991841930195314186")
+:::moduleDocs (fingerprint := "17903078686097201281")
 :::
 
 :::readable Fir.Gpu.WorkItem Fir.Gpu.WorkItem.answer (fingerprint := "18027391566621417795")
@@ -46,8 +46,8 @@ are all $`0` and whose sizes and counts are all $`1`. It is one of its grid,
 and it is the one that `fir-ref run` runs when no option gives another.
 :::
 
-:::readable Fir.Gpu.Op.results Fir.Gpu.denoteIn Fir.Gpu.instDialectDenote (fingerprint := "12468139233404181554")
-*Definition: the rules of `gpu`.* At a work-item $`w`, the op
+:::readable Fir.Gpu.queryResults Fir.Gpu.denoteIn Fir.Gpu.instDialectDenote (fingerprint := "8658076471805830616")
+*Definition: the rules of `gpu` with no memory.* At a work-item $`w`, the op
 $`\mathsf{query}_N~q~d` takes no operand and gives one result, the
 answer of $`w` to $`q` in $`d`, as an integer of $`N` bits, modulo
 $`2^N`:
@@ -55,43 +55,51 @@ $`2^N`:
 $$`\mathsf{query}_N~q~d \Downarrow (\mathrm{answer}_w(q, d) \bmod 2^N)`
 
 It is never poison and never UB, and it makes no choice: it is the same
-in every monad, where it gives its result at once. No op of `gpu` is a
-terminator, so the interpreter never asks where one goes; it is written as
-a return.
+in every monad, where it gives its result at once. An allocation needs
+memory, so in a monad without it it does what the monad gives an op with
+no rule: in the set monad it has no outcome, as `alloca` has none. No op of
+`gpu` is a terminator, so the interpreter never asks where one goes; it is
+written as a return.
 :::
 
-:::readable Fir.Gpu.instDialectMemDenote Fir.Gpu.instLiftsSetM Fir.Gpu.instDialectCall (fingerprint := "57592451508523719")
-*Definition: `gpu` with memory, and its calls.* No op of `gpu` touches
-memory: wherever a run names its memories, each op runs by its rule in the
-set monad and keeps the memories, so its semantics with memory lifts its
-semantics in the set monad. No op of `gpu` calls a function.
+:::readable Fir.Gpu.allocRule Fir.Gpu.memDenoteIn Fir.Gpu.instDialectMemDenote Fir.Gpu.instDialectCall (pin := Fir.Core.allocaShape) (fingerprint := "13996876194564049396")
+*Definition: the rules of `gpu` with memory, and its calls.* Where a run's
+memories have the layout entries $`\mathit{lay}` and the run names `gpu`'s
+memory $`x` as $`\rho(x)`, a question gives its results and keeps the
+memories, and $`\mathsf{alloc}_n~t~c~a` allocates in the memory
+$`\rho(n)` the units and alignment that `alloca` would take there,
+$`\mathrm{allocaShape}(t, c, a, n)`, with the kind $`\mathsf{global}`, and
+gives the pointer $`p` to the allocation:
+
+$$`\langle \mathsf{alloc}_n~t~c~a, S\rangle \Downarrow \langle [p], S' \rangle \quad\text{where}\quad (p, S') = S.\mathrm{alloc}(\rho(n), \mathsf{global}, \mathrm{allocaShape}(t, c, a, n))`
+
+A global allocation is recorded in no frame, so no call frees it when it
+returns: it lives until the run ends. A run is the run of one work-item,
+so the allocation lives from the op to the end of the kernel's run,
+whichever function of the device module ran the op, and each run of the op
+makes a new allocation. How the work-items of one work-group share one
+allocation is left for when several work-items run. No op of `gpu` calls a
+function.
 :::
 
-:::readable Fir.Gpu.denote_eq Fir.Gpu.results_noPoison Fir.Gpu.results_refl (fingerprint := "16039041179146263412")
-*Lemmas: what an op of `gpu` gives.* In the set monad, an op of `gpu` ends
-only with its results. Its results hold no poison, and they refine
-themselves.
+:::readable Fir.Gpu.query_denote_eq Fir.Gpu.queryResults_noPoison Fir.Gpu.queryResults_refl (fingerprint := "175932838683491064")
+*Lemmas: what a question gives.* In the set monad, a question ends only
+with its results. Its results hold no poison, and they refine themselves.
 :::
 
-:::readable Fir.Gpu.propagates Fir.Gpu.Op.monotone Fir.Gpu.lawful (fingerprint := "6693562354796987970")
-*Theorems: `gpu` is lawful.* At every work-item, each op of `gpu`
-propagates poison, since it takes no operand and is never UB; it returns a
-result on the empty, defined operand vector; it is total; and it is
-monotone at every width, since it gives the same result whatever its
-operands. A poison value of a valid type, a core type, is refined by every
-value of its type. So `gpu` meets the poison obligations.
+:::readable Fir.Gpu.query_liftsSetM (fingerprint := "7883783630560395389")
+*Lemma: a question is tied.* At every layout and naming of `gpu`'s
+memories, a question runs with memory by its rule in the set monad and
+keeps the memories, as a core op that touches no memory does.
 :::
 
-:::readable Fir.Gpu.lawfulDialectEffects (fingerprint := "8033647288015854687")
-*Theorem: the effect set of `gpu` is sound.* At every work-item, each op of
-`gpu`, which declares the empty effect set, is never UB, makes no poison on
-operands with no poison, is not a terminator, and, wherever a run names its
-memories, writes, reads and allocates in no memory. So the dialect's
-declaration of its effects is proved.
-:::
-
-:::readable Fir.Gpu.lawfulTotal Fir.Gpu.lawfulMonotone Fir.Gpu.lawfulMemPoison (fingerprint := "7232679307526935766")
-*Theorems: `gpu` is lawful with memory.* `gpu` is lawful and lifts the set
-monad, so at every work-item it is lawful in its totality, its monotonicity
-and its poison with memory.
+:::readable Fir.Gpu.query_propagates Fir.Gpu.query_monotone Fir.Gpu.query_total Fir.Gpu.query_returnsOnDefined Fir.Gpu.query_neverUBSetM Fir.Gpu.query_makesNoPoisonSetM (fingerprint := "6257091572041050134")
+*Lemmas: a question meets the obligations in the set monad.* At every
+work-item, a question propagates poison, since it takes no operand and is
+never UB; it is monotone at every width, since it gives the same result
+whatever its operands; it is total; it returns a result on the empty,
+defined operand vector; it never ends in UB; and it makes no poison. With
+its tie, each of these gives the obligation with memory (the section on
+work-group allocation). `gpu` as a whole meets no lawful class of the set
+monad, since an allocation has no outcome there, as the core does not.
 :::

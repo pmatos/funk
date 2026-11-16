@@ -1,0 +1,8 @@
+tests = [
+  { func = "@dev::@shared", args = ["-5"], expect = ["-5"], work_item = { id = [3, 0, 0], group_size = [8, 1, 1] } },
+  { func = "@dev::@shared", args = ["123456"], expect = ["123456"], work_item = { id = [7, 0, 0], group_size = [8, 1, 1] } },
+  { func = "@dev::@shared", args = ["1"], expect = "ub", work_item = { id = [8, 0, 0], group_size = [9, 1, 1] } },
+  { func = "@dev::@freed", args = ["1"], expect = "ub" },
+  { func = "@dev::@twice", expect = ["ptr(0, 0)", "ptr(1, 0)"] },
+  { func = "@dev::@misaligned", expect = "ub" },
+]

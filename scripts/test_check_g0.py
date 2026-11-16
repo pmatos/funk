@@ -391,6 +391,7 @@ class Repository(unittest.TestCase):
                 "gpu.work_group_id",
                 "gpu.work_group_size",
                 "gpu.num_work_groups",
+                "gpu.work_group_alloca",
                 "gpu.x",
                 "gpu.y",
                 "gpu.z",

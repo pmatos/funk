@@ -319,12 +319,15 @@ The second dialect in tree, `gpu`, is shaped like a GPU kernel language
 in it whose dialect set names `gpu`, and the kernels are the device
 module's functions. The device module has no data layout of its own: its
 pointer types name the memories of its host's layout (ADR-2026-11-12-1821).
-`gpu` is terminal: it has no lowering to the core and no native backend
+Work-group memory is one of them, any memory that the layout declares:
+`gpu` owns no memory, and its op `gpu.work_group_alloca` gives a declared
+memory its meaning by allocating there for the whole run of the kernel (the
+human's ruling of 2026-11-16 on #212). `gpu` is terminal: it has no lowering to the core and no native backend
 (ADR-2026-11-09-1544). In M1 a kernel runs one work-item at a time, with
 its ids given as inputs, and no op of `gpu` needs another work-item. This
 chapter gives its abstract syntax, text, rules and effects, the laws of its
-text, the rules by which a work-item runs, the guarantees of the sum of the
-core and `gpu`, for the functions of every table of a valid module, a device
+text, the rules by which a work-item runs, how it allocates in work-group
+memory, the guarantees of the sum of the core and `gpu`, for the functions of every table of a valid module, a device
 module's kernels included, and the modes that `fir-ref run` walks.
 
 {includeReadable "." Fir.Gpu.Ops "Abstract syntax" FirSpec.Gpu.Ops (level := 2)}
@@ -338,6 +341,8 @@ module's kernels included, and the modes that `fir-ref run` walks.
 {includeReadable "." Fir.Gpu.TextLaws "The text is lawful" FirSpec.Gpu.TextLaws (level := 2)}
 
 {includeReadable "." Fir.Gpu.Semantics "Execution" FirSpec.Gpu.Semantics (level := 2)}
+
+{includeReadable "." Fir.Gpu.WorkGroup "Work-group allocation" FirSpec.Gpu.WorkGroup (level := 2)}
 
 {includeReadable "." Fir.Gpu.Runs "Runs of the core and gpu" FirSpec.Gpu.Runs (level := 2)}
 

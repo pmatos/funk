@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "The GPU dialect's rules: readable blocks" =>
 
-:::moduleDocs (fingerprint := "5859898594511705186")
+:::moduleDocs (fingerprint := "10677295734459586330")
 :::
 
 :::readable Fir.Gpu.ValidTy Fir.Gpu.instDecidableValidTy (fingerprint := "4189508138758385399")
@@ -23,19 +23,28 @@ when it is a valid core type, since its types are the core's. Whether it
 is valid is decided.
 :::
 
-:::readable Fir.Gpu.Op.Valid Fir.Gpu.instDecidableOpValid (fingerprint := "11629276838594219585")
-*Definition: the rule of an op of `gpu`.* An op of `gpu` is valid when it
-gives an $`\mathsf{i32}`, the width of every id and size of a work-item:
+:::readable Fir.Gpu.Op.Valid Fir.Gpu.Op.attrTypes Fir.Gpu.instDecidableOpValid (fingerprint := "1064520712639969876")
+*Definition: the rule of an op of `gpu`.* A question of `gpu` is valid
+when it gives an $`\mathsf{i32}`, the width of every id and size of a
+work-item. An allocation has the rules of `alloca` but its kind: it
+allocates at least one value, its alignment, when given, is a power of two
+no larger than the data layout's limit, and its type is a valid integer or
+pointer type:
 
-$$`\frac{N = 32}{C \vdash \mathsf{query}_N~q~d~\text{valid}}`
+$$`\frac{N = 32}{C \vdash \mathsf{query}_N~q~d~\text{valid}} \qquad \frac{1 \le c \quad (a~\text{absent or a valid alignment}) \quad t \in \{\mathsf{i}W, \mathsf{ptr}\langle m\rangle\}~\text{valid}}{C \vdash \mathsf{alloc}_n~t~c~a~\text{valid}}`
 
 So `%i: i64 = gpu.work_item_id gpu.x` decodes, and validation rejects it.
-Whether the rule holds is decided.
+An allocation carries its type $`t` in its attributes, and when $`t` is
+valid the data layout checks the memory a pointer type there names, as for
+`alloca`; its result type names the memory $`n`, which the layout checks as
+it checks every type. So work-group memory is any memory that the host's
+data layout declares. Whether the rule holds is decided.
 :::
 
-:::readable Fir.Gpu.instDialectValidation Fir.Gpu.instDecidableDialectValidation (fingerprint := "14149218919358661348")
+:::readable Fir.Gpu.instDialectValidation Fir.Gpu.instDecidableDialectValidation (fingerprint := "7719433257487037105")
 *Definition: the rules of `gpu`, and their check.* `gpu` accepts the
-core's valid types, its ops refer to no symbol, and it adds no rule for a
+core's valid types, its ops refer to no symbol, an allocation carries its
+type, and it adds no rule for a
 function, a region or an item. Whether a function is a kernel is where it
 lives: in a device module whose dialect set names `gpu`. The dialect-set
 rule already keeps every word of `gpu` out of a module whose set does not

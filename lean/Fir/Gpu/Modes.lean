@@ -13,11 +13,14 @@ core alone (the section on the core's modes): with memory, in the state
 layer over the tree of choices, from the empty memories, each memory with
 its entry in the module's data layout, which a nested table shares with
 its host. The run names the sum's memories by the core's numbers
-(`memName`): `gpu` has no memory of its own, so its names are the core's.
+(`memName`): `gpu` has no memory of its own, so its names are the core's,
+and work-group memory is the memory of the host's layout that an
+allocation's result names.
 
 A core op runs by its rule in the tree, and an op without rules ends its
-path with no outcome, naming the core op; an op of `gpu` gives the
-work-item's answer. Each side's semantics in the tree denotes its semantics
+path with no outcome, naming the core op; a question of `gpu` gives the
+work-item's answer, and `gpu.work_group_alloca` allocates for the whole
+run. Each side's semantics in the tree denotes its semantics
 with memory, so the sum's does (`Dialect.sum.mapsDenote`), and the theorems
 of exhaustive, scripted and sampled modes hold of the runs with memory of
 every function of the sum, at every work-item, on every argument vector, at
@@ -36,42 +39,47 @@ def memName : DialectEffects.Mem CoreGpu → Nat
 
 variable [WorkItem]
 
-/-- The rules of `gpu` in the state layer over the tree of choices: an op
-gives its results and keeps the memories. -/
-@[instance_reducible] def treeDenote (σ : Type) : DialectDenote GpuDialect (StateT σ (ChoiceTree Core.Op)) :=
-  letI := denoteIn (ChoiceTree Core.Op)
-  DialectDenote.liftState σ
+/-- The rules of `gpu` in the state layer over the tree of choices, where a
+run's memories have the layout entries `lay` and the run names `gpu`'s
+memory `x` as `ρ x`: a question gives its results and keeps the memories,
+and an allocation allocates. -/
+@[instance_reducible] def treeDenote {N : Type} [DecidableEq N] (lay : N → MemLayout)
+    (ρ : DialectEffects.Mem GpuDialect → N) :
+    DialectDenote GpuDialect (StateT (Memories N (unitsOf lay)) (ChoiceTree Core.Op)) :=
+  memDenoteIn lay ρ
 
 /-- The sum's semantics in the state layer over the tree of choices, where a
 run's memories have the layout entries `lay` and the run names the sum's
 memory `x` as `ρ x`: a core op runs by its rule with memory, an op with no
-rule ends its path with no outcome, and an op of `gpu` gives its results. -/
+rule ends its path with no outcome, and an op of `gpu` by its rule. -/
 @[instance_reducible] def memTreeDenote {N : Type} [DecidableEq N] (lay : N → MemLayout)
     (ρ : DialectEffects.Mem CoreGpu → N) :
     DialectDenote CoreGpu (StateT (Memories N (unitsOf lay)) (ChoiceTree Core.Op)) :=
   letI := Core.memTreeDenote lay (ρ ∘ DialectMemOver.ofBase (base := CoreDialect) (e := GpuExt))
-  letI := treeDenote (Memories N (unitsOf lay))
+  letI := treeDenote lay ρ
   Dialect.sum.instDialectDenote
 
 variable {N : Type} [DecidableEq N] (lay : N → MemLayout)
 
 /-- The rules of `gpu` in the layer over the tree denote its semantics with
-memory: `toSet` through the layer keeps a result and the memories. -/
+memory: `toSet` through the layer keeps a result, the memories and an
+allocation. -/
 theorem treeMapsDenote (ρ : DialectEffects.Mem GpuDialect → N) :
-    letI := treeDenote (Memories N (unitsOf lay))
+    letI := treeDenote lay ρ
     MemMapsDenote (d := GpuDialect) lay (ε := Core.Op) ρ :=
   @MonadMorphism.MapsDenote.mk _ _ _ _ (ChoiceTree.toSetState Core.Op (Memories N (unitsOf lay)))
-    GpuDialect _ _ (treeDenote _) (DialectMemDenote.denoteAt (d := GpuDialect) lay ρ)
-    (fun op _ => funext fun S => by
-      show ChoiceTree.toSetMorphism (ε := Core.Op).map (pure op.results >>= fun a => pure (a, S)) =
-        (pure op.results >>= fun a => pure (a, S) : SetM _)
-      rw [ChoiceTree.toSetMorphism.map_bind, ChoiceTree.toSetMorphism.map_pure]
-      simp only [ChoiceTree.toSetMorphism.map_pure])
-    (fun _ _ => funext fun S => by
-      show ChoiceTree.toSetMorphism (ε := Core.Op).map (pure Exit.ret >>= fun a => pure (a, S)) =
-        (pure Exit.ret >>= fun a => pure (a, S) : SetM _)
-      rw [ChoiceTree.toSetMorphism.map_bind, ChoiceTree.toSetMorphism.map_pure]
-      simp only [ChoiceTree.toSetMorphism.map_pure])
+    GpuDialect _ _ (treeDenote lay ρ) (DialectMemDenote.denoteAt (d := GpuDialect) lay ρ)
+    (fun op _ => by
+      cases op with
+      | query => exact MonadMorphism.map_pure _ _
+      | alloc t c a n =>
+        show (ChoiceTree.toSetState Core.Op (Memories N (unitsOf lay))).map
+            (allocRule (m := StateT _ (ChoiceTree Core.Op)) lay ρ t c a n) =
+          allocRule (m := StateT (Memories N (unitsOf lay)) SetM) lay ρ t c a n
+        unfold allocRule
+        erw [MonadMorphism.map_map]
+        exact congrArg _ (ChoiceTree.toSetMorphism.state_alloc (Mem := N) (unit := unitsOf lay) _ _ _ _))
+    (fun _ _ => MonadMorphism.map_pure _ _)
 
 /-- The sum's semantics in the layer over the tree denotes its semantics with
 memory, wherever a run names the sum's memories, whatever their entries. -/
@@ -82,7 +90,7 @@ theorem memMapsDenote (ρ : DialectEffects.Mem CoreGpu → N) :
     (Core.memTreeDenote lay (ρ ∘ DialectMemOver.ofBase (base := CoreDialect) (e := GpuExt)))
     (DialectMemDenote.denoteAt (d := CoreDialect) lay
       (ρ ∘ DialectMemOver.ofBase (base := CoreDialect) (e := GpuExt)))
-    (treeDenote (Memories N (unitsOf lay))) (DialectMemDenote.denoteAt (d := GpuDialect) lay ρ)
+    (treeDenote lay ρ) (DialectMemDenote.denoteAt (d := GpuDialect) lay ρ)
     (Core.memMapsDenote lay (ρ ∘ DialectMemOver.ofBase (base := CoreDialect) (e := GpuExt)))
     (treeMapsDenote lay ρ)
 

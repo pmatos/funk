@@ -14,7 +14,7 @@ changes under it.
 
 #doc (Manual) "The GPU dialect in text: readable blocks" =>
 
-:::moduleDocs (fingerprint := "7486314130026323358")
+:::moduleDocs (fingerprint := "17107465643293711732")
 :::
 
 :::readable Fir.Gpu.Dim.word Fir.Gpu.Dim.decode Fir.Gpu.Query.name Fir.Gpu.Query.decode (fingerprint := "16323960579810849510")
@@ -27,17 +27,28 @@ Reading goes the other way: a word in the table gives its dimension or
 question, and every other word gives none.
 :::
 
-:::readable Fir.Gpu.Op.name Fir.Gpu.Op.attrs Fir.Gpu.Op.decode (fingerprint := "18053255040518801968")
+:::readable Fir.Gpu.allocName Fir.Gpu.Op.name Fir.Gpu.Op.attrs Fir.Gpu.decodeAlloc Fir.Gpu.Op.decode (fingerprint := "16870728750848640350")
 *Definition: the text of an op of `gpu`.* $`\mathsf{query}_N~q~d` is
 written as the name of $`q`, then the word of $`d` as its one attribute,
 with its result type $`\mathsf{i}N`:
-`%i: i32 = gpu.work_item_id gpu.x`. An op decodes from the name of a
+`%i: i32 = gpu.work_item_id gpu.x`. A question decodes from the name of a
 question, exactly one attribute that is the word of a dimension, no
 operand and one integer result of any width $`N`. Every other shape does
 not decode, and is a parse error: a dimension such as `gpu.w` or a bare
 `x`, no dimension or two, an operand, or a result that is not one integer.
-So `gpu.barrier`, which no question names, does not decode either: M1
+So `gpu.barrier`, which no op names, does not decode either: M1
 leaves out the ops that need other work-items (ADR-2026-11-09-1545).
+
+$`\mathsf{alloc}_n~t~c~a` is named `gpu.work_group_alloca`, with result
+type $`\mathsf{ptr}\langle n\rangle`, and its attributes are those of
+`alloca` after its kind: the type $`t`, the count $`c` when it is not 1, and
+`align(A)` with $`A = a` when $`a` is given, such as
+`%p: ptr(3) = gpu.work_group_alloca i32 64 align(4)`. It writes no kind,
+since its allocation always lives for the whole run of the kernel. It
+decodes as `alloca` reads the same attributes after the kind `global`,
+with no operand and one pointer result: a kind written, such as `stack`, a
+count of 1, a negative count or alignment, an operand or an integer result
+does not decode.
 :::
 
 :::readable Fir.Gpu.tyAttr Fir.Gpu.decodeTy Fir.Gpu.instDialectText (fingerprint := "16315305427099094252")

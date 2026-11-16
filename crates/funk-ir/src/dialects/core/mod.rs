@@ -49,6 +49,9 @@ mod width;
 
 pub use access::ORDERINGS;
 pub use alloca::{Allocation, allocation};
+pub(crate) use alloca::{
+    check_shape, memory as allocation_memory, shape_attr_types, shape_decodes,
+};
 pub use arith::WRAP_FLAG_SETS;
 pub use bitwise::{BITWISE_OPS, SHIFT_OPS};
 pub use compare::{FLOAT_PREDICATES, PREDICATES};

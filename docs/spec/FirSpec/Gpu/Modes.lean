@@ -14,27 +14,30 @@ when the Lean changes under it.
 
 #doc (Manual) "Modes of the core and gpu: readable blocks" =>
 
-:::moduleDocs (fingerprint := "12996735757576008372")
+:::moduleDocs (fingerprint := "15896224889737347525")
 :::
 
 :::readable Fir.Gpu.memName (fingerprint := "10519120774356071085")
 *Definition: the run's names for the sum's memories.* `gpu` has no memory
 of its own, so each memory of the sum is a core memory, and the run names
-it by its number, as the core's modes do.
+it by its number, as the core's modes do. Work-group memory is the memory
+of the host's layout that an allocation's result names.
 :::
 
-:::readable Fir.Gpu.treeDenote Fir.Gpu.memTreeDenote (fingerprint := "15357908394491314700")
+:::readable Fir.Gpu.treeDenote Fir.Gpu.memTreeDenote (fingerprint := "8396692771373994944")
 *Definition: the sum's rules in the tree of choices.* In the state layer
-over the tree of choices, an op of `gpu` gives its results and keeps the
-memories. A core op runs by the core's rules with memory in the tree, where
+over the tree of choices, a question of `gpu` gives its results and keeps
+the memories, and an allocation allocates for the whole run by its rule
+with memory. A core op runs by the core's rules with memory in the tree, where
 the run names each core memory as the sum does; an op with no rule ends its
 path with no outcome, naming that op.
 :::
 
-:::readable Fir.Gpu.treeMapsDenote Fir.Gpu.memMapsDenote (fingerprint := "2309198931269732136")
+:::readable Fir.Gpu.treeMapsDenote Fir.Gpu.memMapsDenote (fingerprint := "13419976580743854577")
 *Theorems: the tree denotes the runs with memory.* Taking the set of each
-path through the state layer maps the rules of `gpu` in the tree to its
-rules with memory, and so, with the core's, the sum's rules in the tree to
+path through the state layer keeps a result, the memories and an
+allocation, so it maps the rules of `gpu` in the tree to its rules with
+memory, and so, with the core's, the sum's rules in the tree to
 its rules with memory, at every layout and naming of the sum's memories.
 :::
 
