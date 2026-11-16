@@ -1,16 +1,18 @@
 import Fir
 
 /-!
-The effects of each core op instance, on the shared cases of
-`tests/dialects/effects.cases`, which `crates/funk-ir/tests/effects.rs`
-reads too, so the Rust registry's sets are `Core.Op.effects`
-(ADR-2026-11-09-1541).
+The effects of each op instance of the dialects in tree, the core and
+`gpu`, on the shared cases of `tests/dialects/effects.cases`, which
+`crates/funk-ir/tests/effects.rs` reads too, so the Rust registry's sets
+are `Core.Op.effects` and those of `gpu` (ADR-2026-11-09-1541), each read
+in the sum `CoreGpu`. A memory of the sum is named by the core's number.
 
 Each case names the set of the first op of the entry block of `@f`. A set
 is written `pure`, or as its effects joined by `,`, in the order of the
 fields of `Effects`. The cases pin all 48 core op names, every flag set of `add`,
-`sub` and `mul`, and `exact` on `sdiv` and `udiv`; the Rust test checks that
-they cover each attribute that changes a set.
+`sub` and `mul`, and `exact` on `sdiv` and `udiv`, and the four ops of
+`gpu`; the Rust test checks that they cover each attribute that changes a
+set.
 -/
 
 namespace FirTest.EffectCases
@@ -53,8 +55,8 @@ def cases : List Case :=
     | _ => none
 
 /-- The op that a case pins: the first op of the entry block of `@f`. -/
-def Case.op (c : Case) : Option Core.Op :=
-  match (Fir.parse c.text : Except ParseError (Module CoreDialect)) with
+def Case.op (c : Case) : Option CoreGpu.Op :=
+  match (Fir.parse c.text : Except ParseError (Module CoreGpu)) with
   | .ok m => m.items.findSome? fun
       | .func f => if f.name == "f" then f.body.blocks.head? >>= (·.body.head?) |>.map (·.op)
         else none
@@ -65,14 +67,20 @@ def Case.op (c : Case) : Option Core.Op :=
 that the case names. -/
 def Case.holds (c : Case) : Bool :=
   match c.op with
-  | some o => render (fun n : Core.Mem => toString n) (effects (d := CoreDialect) o) == c.set
+  | some o => render (fun n => toString (Gpu.memName n)) (effects (d := CoreGpu) o) == c.set
   | none => false
 
-#guard cases.length == 93
+/-- The core op that a case pins, if it pins one. -/
+def Case.coreOp (c : Case) : Option Core.Op := c.op.bind Sum.getLeft?
+
+#guard cases.length == 97
 #guard (cases.filter (!·.holds)).map (·.name) == []
--- The cases pin every core op.
-#guard ((cases.filterMap Case.op).map Core.Op.name).eraseDups.length == 48
+-- The cases pin every core op, and every op of `gpu`.
+#guard ((cases.filterMap Case.coreOp).map Core.Op.name).eraseDups.length == 48
 #guard (Core.samples.map Core.Op.name).all fun n =>
-  (cases.filterMap Case.op).any (·.name == n)
+  (cases.filterMap Case.coreOp).any (·.name == n)
+#guard ((cases.filterMap (·.op.bind Sum.getRight?)).map fun
+  | .query q _ _ => q.name).eraseDups == ["gpu.work_item_id", "gpu.work_group_id",
+    "gpu.work_group_size", "gpu.num_work_groups"]
 
 end FirTest.EffectCases

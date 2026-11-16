@@ -34,6 +34,7 @@ class ProcessRuns(Runs):
                 "run",
                 "--fuel",
                 str(self.test.fuel),
+                *self.test.work_item_options(),
                 *options,
                 "--",
                 str(self.path),

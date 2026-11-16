@@ -8,9 +8,9 @@ These are decided designs, and the spec and the tools implement only some of
 them yet: `ptr` has values (ADR-2026-11-09-1542), and its ops so far are
 `ptradd` (ADR-2026-11-13-0251), `alloca` (ADR-2026-11-14-0915), `load`
 and `store` (ADR-2026-11-14-2316). M0 has no
-global data (ADR-2026-11-09-1546). `funk`, `fir-ref fmt` and `fir-ref
-validate` read the core and the second dialect, `gpu`, and `fir-ref run` the
-core alone (ADR-2026-11-09-1545; semantics-m1-dialects.md). Each M1 feature goes through every layer
+global data (ADR-2026-11-09-1546). `funk`, `fir-ref fmt`, `fir-ref
+validate` and `fir-ref run` read the core and the second dialect, `gpu`
+(ADR-2026-11-09-1545; semantics-m1-dialects.md). Each M1 feature goes through every layer
 (ADR-2026-11-09-1548). semantics.md says what holds in the spec and the tools
 today. process.md says what M1 covers. semantics-m1-trace.md says what a run
 shows and how the world answers it, and semantics-m1-dialects.md says how

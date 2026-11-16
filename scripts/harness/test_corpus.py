@@ -9,6 +9,7 @@ from corpus import (
     DEFAULT_FUEL,
     Test,
     load,
+    nested,
     param_types,
     parse_rejects,
     parse_tests,
@@ -85,9 +86,91 @@ class Tests(unittest.TestCase):
         )
         self.assertEqual(tests[1].show(), "canonical/m.fir @g 1")
 
+    def test_a_kernel_s_work_item(self):
+        tests, problems = self.parse(
+            "tests = [\n"
+            '  { func = "@dev::@k", args = ["1"], expect = ["4"], work_item = {'
+            " num_groups = [5, 1, 1], id = [3, 0, 0], group_size = [4, 1, 1] } },\n"
+            '  { func = "@dev::@inner::@k", expect = ["0"] },\n'
+            "]\n"
+        )
+        self.assertEqual(problems, [])
+        m = "canonical/m.fir"
+        self.assertEqual(
+            tests,
+            [
+                Test(
+                    m,
+                    "@dev::@k",
+                    ("1",),
+                    DEFAULT_FUEL,
+                    ("4",),
+                    work_item=(
+                        ("id", (3, 0, 0)),
+                        ("group_size", (4, 1, 1)),
+                        ("num_groups", (5, 1, 1)),
+                    ),
+                ),
+                Test(m, "@dev::@inner::@k", (), DEFAULT_FUEL, ("0",)),
+            ],
+        )
+        self.assertEqual(
+            tests[0].show(),
+            "canonical/m.fir --work-item-id 3,0,0 --work-group-size 4,1,1"
+            " --num-work-groups 5,1,1 @dev::@k 1 (interpreter only)",
+        )
+
+    def test_a_quoted_symbol_may_hold_a_path_s_separator(self):
+        self.assertTrue(nested("@dev::@k"))
+        self.assertTrue(nested('@"d e"::@k'))
+        self.assertFalse(nested('@"a::b"'))
+        self.assertFalse(nested("@f"))
+        tests, problems = self.parse("tests = [{ func = '@\"a::b\"' }]\n")
+        self.assertEqual(problems, [])
+        self.assertEqual(tests, [Test("canonical/m.fir", '@"a::b"')])
+
     def test_format_errors(self):
         for toml, needle in [
             ('test = [{ func = "@f" }]', "unknown key test"),
+            ('tests = [{ func = "@d::@k" }]', "a kernel's test is interpreter-only"),
+            (
+                'tests = [{ func = "@d::@k", expect = [], work_item = { id = [1, 0, 0] } }]',
+                "work_item: id in x is not below group_size",
+            ),
+            (
+                (
+                    'tests = [{ func = "@d::@k", expect = [],'
+                    " work_item = { group_id = [0, 2, 0], num_groups = [1, 2, 1] } }]"
+                ),
+                "work_item: group_id in y is not below num_groups",
+            ),
+            (
+                'tests = [{ func = "@f", work_item = { id = [0, 0, 0] } }]',
+                "a kernel's test is interpreter-only",
+            ),
+            (
+                'tests = [{ func = "@d::@k", expect = [], work_item = [0] }]',
+                "work_item is a table",
+            ),
+            (
+                'tests = [{ func = "@d::@k", expect = [], work_item = { x = [0, 0, 0] } }]',
+                "work_item: unknown key x",
+            ),
+            (
+                'tests = [{ func = "@d::@k", expect = [], work_item = { id = [0, 0] } }]',
+                "work_item: id is three numbers",
+            ),
+            (
+                'tests = [{ func = "@d::@k", expect = [], work_item = { id = [0, 0, -1] } }]',
+                "work_item: id is three numbers",
+            ),
+            (
+                (
+                    'tests = [{ func = "@d::@k", expect = [],'
+                    " work_item = { group_size = [4294967296, 1, 1] } }]"
+                ),
+                "work_item: group_size is three numbers",
+            ),
             ('tests = [{ func = "@f", choices = ["1"] }]', "choices go with expect"),
             (
                 'tests = [{ func = "@f", choices = ["1,2"], expect = [] }]',

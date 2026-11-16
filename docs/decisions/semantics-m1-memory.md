@@ -244,6 +244,10 @@ module, `alloca`, `load` and `store` included:
   `Core.caller_isRefinedBy_of_from`, with no condition on the callee
   (#214; `lean/Fir/Core/MemoryCallRefine.lean`).
 
+The sum of the core and `gpu` keeps every one of them, at every work-item,
+for the functions of every table of a valid module, a device module's
+kernels included (`lean/Fir/Gpu/Runs.lean`, #212; semantics-m1-dialects.md).
+
 Each new memory op keeps every one of them holding, with its own rule with
 memory and its own proofs, as `alloca`, `load` and `store` do
 (`lean/Fir/Core/AllocaLaws.lean`, `LoadLaws.lean`, `StoreLaws.lean`,

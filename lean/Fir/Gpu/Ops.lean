@@ -23,8 +23,8 @@ one question in one dimension and gives the answer as an `i32`:
 * `%n: i32 = gpu.num_work_groups gpu.x` is the number of work-groups.
 
 This section gives the dialect's abstract syntax and signature; its text,
-its rules and its effects follow in sections of their own. Its execution
-rules come with the runs of a work-item (#212, stage 2).
+its rules, its effects and its execution rules, by which one work-item runs,
+follow in sections of their own.
 -/
 
 namespace Fir.Gpu
@@ -67,8 +67,8 @@ instance Gpu.instDialectName : DialectName GpuExt := ⟨"gpu"⟩
 /-- The dialect `gpu` over the core: its ops, at the core's types. -/
 abbrev GpuDialect : Dialect := CoreDialect.over GpuExt
 
-/-- The sum of the core and `gpu`: what `funk`, `fir-ref fmt` and
-`fir-ref validate` read. -/
+/-- The sum of the core and `gpu`: what `funk`, `fir-ref fmt`,
+`fir-ref validate` and `fir-ref run` read. -/
 abbrev CoreGpu : Dialect := CoreDialect ⊞ GpuExt
 
 namespace Gpu

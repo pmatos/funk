@@ -9,7 +9,7 @@ pub mod gpu;
 use crate::Registry;
 
 /// The dialects in tree, registered: the core and `gpu`. `funk` reads these,
-/// as `fir-ref fmt` and `fir-ref validate` read `CoreGpu`.
+/// as `fir-ref fmt`, `fir-ref validate` and `fir-ref run` read `CoreGpu`.
 pub fn in_tree() -> Registry {
     let mut r = Registry::core();
     r.register(gpu::dialect())

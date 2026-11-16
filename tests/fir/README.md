@@ -47,11 +47,20 @@ tests = [
     { values = ["0"], witness = ["5"] },
   ] },
   { func = "@freeze_poison", args = ["63"], choices = ["-64"], expect = ["-64"] },
+  { func = "@dev::@k", expect = ["11"], work_item = { id = [3, 0, 0], group_size = [4, 1, 1] } },
 ]
 ```
 
 - `func` is the function's symbol as text writes it. Write a quoted symbol
-  in a TOML literal string, between single quotes.
+  in a TOML literal string, between single quotes. A function of a nested
+  module, such as a kernel of a device module, is written as the path of
+  its modules, `@dev::@k`, as `fir-ref run` names it.
+- `work_item` gives the work-item that a kernel runs as
+  ([fir-ref-command-line.md](../../docs/decisions/fir-ref-command-line.md#kernels-and-the-work-item)):
+  `id`, `group_id`, `group_size` and `num_groups`, each three numbers below
+  2^32, one per dimension; each id 0 and each size 1 by default. A test of
+  a nested module's function, or one with `work_item`, is interpreter-only,
+  since `funk build` builds no nested module's functions.
 - `args` gives one argument per parameter, each spelled as a constant of
   its type: `true` or `false` at `i1`, signed decimal at every other width,
   and a float as its constants are spelled, as `1.0` or `0x7fc00000`
