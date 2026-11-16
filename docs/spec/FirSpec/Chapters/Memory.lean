@@ -111,6 +111,8 @@ byte order.
 
 {includeReadable "." Fir.Execution.MemoryStoreLaws "Stores in the state layer" FirSpec.Execution.MemoryStoreLaws (level := 1)}
 
+{includeReadable "." Fir.Execution.MemoryBindLaws "Sequences in the state layer" FirSpec.Execution.MemoryBindLaws (level := 1)}
+
 {includeReadable "." Fir.Execution.MemoryCopyLaws "Copies of units in the state layer" FirSpec.Execution.MemoryCopyLaws (level := 1)}
 
 {includeReadable "." Fir.Core.Alloca "Stack allocation rules" FirSpec.Core.Alloca (level := 1)}

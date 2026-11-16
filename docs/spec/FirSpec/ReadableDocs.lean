@@ -183,6 +183,7 @@ import FirSpec.Execution.MemoryTotal
 import FirSpec.Execution.MemoryAllocLaws
 import FirSpec.Execution.MemoryLoadLaws
 import FirSpec.Execution.MemoryStoreLaws
+import FirSpec.Execution.MemoryBindLaws
 import FirSpec.Execution.MemoryCopyLaws
 import FirSpec.Core.Alloca
 import FirSpec.Core.AllocaLaws

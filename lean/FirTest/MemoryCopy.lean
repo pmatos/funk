@@ -3,7 +3,7 @@ import Fir
 /-!
 Tests of the copy of units (#234) on memories of 8-bit units: a pointer
 copied unit by unit keeps its fragments, and loads back as the same pointer;
-poison and fresh units are copied as poison; part of a pointer is copied as
+fresh units copied over bits leave poison; part of a pointer is copied as
 its fragments alone; overlapping ranges are copied from what the source
 held before, in both directions; another memory is left as it was; and a
 copy faults as its load does, then as its store does.
@@ -55,9 +55,9 @@ def units (S : Except Fault Two) (a : Nat) (n : Nat) : Except Fault (List (MemUn
 #guard (units (S1.bind (·.copy false p1 ⟨some 0, 3⟩ 1 1 1)) 1 2).map
   (decodePtr (u := 8) 0 2 .little) == .ok .poison
 
--- Fresh units are poison, and a copy of them is poison.
-#guard units (S1.bind (·.copy false ⟨some 1, 4⟩ ⟨some 1, 0⟩ 4 1 1)) 1 8 ==
-  .ok (List.replicate 8 .poison)
+-- Fresh units are poison, and a copy of them over bits makes those units
+-- poison.
+#guard units (S1.bind (·.copy false p0 p1 2 1 1)) 0 4 == .ok ([.poison, .poison] ++ frags)
 
 -- A copy writes the units its load gave: overlapping ranges get what the
 -- source held before the copy, moving forward and backward alike.
@@ -68,9 +68,10 @@ def units (S : Except Fault Two) (a : Nat) (n : Nat) : Except Fault (List (MemUn
 -- A copy of a range onto itself changes nothing.
 #guard units (S1.bind (·.copy false p0 p0 4 1 1)) 0 4 == units S1 0 4
 
--- A copy reaches no other memory.
-#guard (S1.bind fun S => (S.copy false p1 p0 4 1 1).bind fun S' => S'.load true p0 2 1) ==
-  .ok [.poison, .poison]
+-- A copy reaches no other memory, not even the allocation of the same id
+-- there.
+#guard (S1.bind fun S => (S.store true p0 [b1, b2] 1).bind fun S =>
+  (S.copy false p0 p1 2 1 1).bind fun S' => S'.load true p0 2 1) == .ok [b1, b2]
 
 -- A copy faults as its load does first, then as its store does.
 #guard (S1.bind (·.copy false p1 ⟨some 0, 2⟩ 4 1 1)).map (fun _ => ()) == .error .outOfBounds
@@ -79,6 +80,11 @@ def units (S : Except Fault Two) (a : Nat) (n : Nat) : Except Fault (List (MemUn
 #guard (S1.bind (·.copy false ⟨none, 0⟩ p0 1 1 1)).map (fun _ => ()) == .error .noProvenance
 #guard (S1.bind (·.copy false ⟨some 1, 7⟩ p0 2 1 1)).map (fun _ => ()) == .error .outOfBounds
 #guard (S1.bind (·.copy false ⟨some 1, 1⟩ p0 2 1 2)).map (fun _ => ()) == .error .misaligned
+#guard (S1.bind (·.copy false ⟨some 1, 7⟩ p0 2 2 1)).map (fun _ => ()) == .error .misaligned
+-- A copy of units is an access through both pointers whatever its length:
+-- one of no units still faults through a pointer with no provenance.
+#guard (S1.bind (·.copy false ⟨none, 0⟩ p0 0 1 1)).map (fun _ => ()) == .error .noProvenance
+#guard (S1.bind (·.copy false p1 p0 0 1 1)).map (fun _ => ()) == .ok ()
 
 /-- The laws hold of the example: a copy of units, in the state layer, ends
 with the memories that `Memories.copy` gives. -/

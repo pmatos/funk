@@ -166,21 +166,27 @@ to funk's own runtime routines `memcpy`, `memmove` and `memset`, not the C
 library's, so a program that only copies, moves or sets memory keeps the
 static link without the C library (ADR-2026-11-09-1551).
 
-The spec does not have the ops yet. It has the step that copy and move
-share, the copy of units: a load of `n` units of one memory through the
-source, then a store of them through the destination
-(`lean/Fir/Execution/MemoryCopyLaws.lean`, stage 1 of #234). The load leaves
-the memories as they were, so overlapping ranges get what the source held
-before the copy. In the state layer the copy of units has one outcome. It
-writes, reads and allocates in no other memory, allocates nothing in its
-own, and refines from refining memories. These are the obligations of an op
-that reads and writes one memory.
-
 The human ruled these ops on 2026-11-09, on #220. On 2026-11-11 the human ruled
 on #251 that set writes one unit value, not a byte, and on #274 that funk's
 runtime carries its own routines, in place of the C library's that #220 named;
 #234 builds them. Rejected: calls to external functions with known meanings,
 which lose provenance and make every copy an event.
+
+The spec does not have the ops yet. It has the step that copy and move
+share once their own checks pass, the copy of units: a load of `n` units
+of one memory through the source, then a store of them through the
+destination (`lean/Fir/Execution/MemoryCopyLaws.lean`, stage 1 of #234).
+It is an access through both pointers, so it faults through a dangling
+pointer even for `n = 0`; whether the ops reach it for a zero length, and
+whether a copy onto its own range is UB, wait for the human's rulings on
+#234. The load leaves the memories as they were, so overlapping ranges get
+what the source held before the copy. In the state layer the copy of units
+has one outcome. It writes, reads and allocates in no other memory,
+allocates nothing in its own, and refines from refining memories: the
+obligations of an op that reads and writes one memory. Each but the read
+follows from the load's and the store's through the laws of sequences
+(`lean/Fir/Execution/MemoryBindLaws.lean`). This paragraph records agent
+work, not a ruling.
 
 ## Aggregates
 

@@ -132,6 +132,7 @@ import Fir.Core.MemRules
 import Fir.Execution.MemoryAllocLaws
 import Fir.Execution.MemoryLoadLaws
 import Fir.Execution.MemoryStoreLaws
+import Fir.Execution.MemoryBindLaws
 import Fir.Execution.MemoryCopyLaws
 import Fir.Core.AllocaLaws
 import Fir.Core.LoadLaws

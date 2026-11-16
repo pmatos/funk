@@ -14,7 +14,7 @@ build fails when the Lean changes under it.
 
 #doc (Manual) "Copies of units in the state layer: readable blocks" =>
 
-:::moduleDocs (fingerprint := "12108950992469254454")
+:::moduleDocs (fingerprint := "569326385043553866")
 :::
 
 :::readable Fir.Memory.Memories.copy Fir.copyUnits (pin := Fir.Memory.Memories.load) (pin := Fir.Memory.Memories.store) (fingerprint := "11199979554107459263")
@@ -30,18 +30,19 @@ it is the effect's load, then its store:
 $$`\mathrm{copy}_x(p, q, n) = \mathrm{load}_x(q, n, \alpha) \mathbin{>\!\!>\!\!=} \lambda \vec{y}.\ \mathrm{store}_x(p, \vec{y}, \alpha')`
 
 The load leaves the memories as they were, so a copy whose ranges overlap
-writes what $`q` pointed to before it began.
+writes what $`q` pointed to before it began. A copy of units is an
+access through both pointers, so a copy of no units still faults through
+a pointer with no provenance, or into a freed allocation.
 :::
 
-:::readable Fir.copyUnits_load Fir.copyUnits_apply Fir.copyUnits_ok (pin := Fir.instMonadMemoryStateT) (fingerprint := "5467805648302377586")
+:::readable Fir.copyUnits_load Fir.copyUnits_apply (pin := Fir.instMonadMemoryStateT) (fingerprint := "18105581918089164010")
 *Theorems: how a copy of units ends.* In the
 {ref "The-fir-specification--Memory--The-state-layer"}[state layer] over
 the set monad, a copy of units ends from the memories $`S` as the store of
 $`\vec{y}` from $`S` ends, when the load of $`S` gives the units
 $`\vec{y}`, and in UB, for the reason of the load's fault, when it faults.
 So it ends in one of two ways: with the memories that the copy of $`S`
-gives, or in UB, for the reason of its fault. A copy of units that ends is
-a store, from the memories it started from.
+gives, or in UB, for the reason of its fault.
 :::
 
 :::readable Fir.copyUnits_hasOutcome Fir.copyUnits_finitelyMany (pin := Fir.HasOutcome) (pin := Fir.FinitelyMany) (fingerprint := "721620124852889285")
@@ -57,7 +58,9 @@ and at most one that ends, so it has
 $`y \ne x`, a copy of units in $`x` meets the
 {ref "The-fir-specification--Memory--Memory-obligations"}[obligation]
 that it writes no unit of $`y`, as its store does. For every memory $`y`,
-$`x` included, it neither allocates nor frees in $`y`.
+$`x` included, it neither allocates nor frees in $`y`. Both follow from
+the load's and the store's, by the laws of
+{ref "The-fir-specification--Memory--Sequences-in-the-state-layer"}[sequences].
 :::
 
 :::readable Fir.copyUnits_readsNot (pin := Fir.ReadsNot) (pin := Fir.ReadsNot.Match) (fingerprint := "14500743825601682829")
@@ -76,6 +79,8 @@ $`x`, its own memory, so a copy declares a read and a write of $`x`.
 {ref "The-fir-specification--Memory--Refining-memories"}[refine] $`S`, a
 copy of units faults for the same reason as from $`S`, or its load gives
 units that refine those it gives from $`S`, so its store gives memories
-that refine those it gives from $`S`, or faults as that store does. So it
+that refine those it gives from $`S`, or faults as that store does, by
+the law of refinement of
+{ref "The-fir-specification--Memory--Sequences-in-the-state-layer"}[sequences]. So it
 is {ref "The-fir-specification--Memory--Monotonicity-with-memory"}[monotone with memory].
 :::

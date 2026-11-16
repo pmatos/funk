@@ -1,3 +1,4 @@
+import Fir.Execution.MemoryBindLaws
 import Fir.Execution.MemoryLoadLaws
 import Fir.Execution.MemoryStoreLaws
 
@@ -6,15 +7,19 @@ import Fir.Execution.MemoryStoreLaws
 
 Copying and moving memory carry each unit across exactly: bits, poison and
 pointer fragments alike, so that a copied pointer keeps its provenance
-(ADR-2026-11-09-1551). Both are a _copy of units_: a load of `n` units of
-one memory through the source pointer, then a store of the same units
-through the destination pointer, in the same memory. The load leaves the
-memories as they were, so the store sees what the copy started from, and a
-copy whose ranges overlap writes what the source held before the copy
-began, as a move must. The rules of the ops that copy, move and set memory
-(#234) decide what comes before the copy of units, such as the checks of
-their operands; this section proves what the copy of units does on its
-own.
+(ADR-2026-11-09-1551). The step they share is a _copy of units_: a load of
+`n` units of one memory through the source pointer, then a store of the
+same units through the destination pointer, in the same memory. The load
+leaves the memories as they were, so the store sees what the copy started
+from, and a copy whose ranges overlap writes what the source held before
+the copy began, as a move must.
+
+A copy of units is an access through both pointers, so it faults as they
+do, whatever `n` is: through a pointer with no provenance or into a freed
+allocation, it faults even for `n = 0`. Whether the ops that copy and move
+memory reach it for a zero length, and what they check before it, such as
+an overlap of their ranges, is for their rules to decide (#234); this
+section proves what the copy of units does on its own.
 
 In the state layer over the set monad a copy of units has one outcome from
 any memories: UB, for the reason of the load's fault or the store's, or
@@ -30,8 +35,10 @@ that reads and writes one memory and does nothing else:
 * from memories that refine others, it faults for the same reason, or
   gives memories that refine the others'.
 
-It may end in UB, so it declares may-UB. It reads and writes its own
-memory, so no obligation asks that it not read or write that one.
+Each but the third follows from the load's and the store's, through the
+laws of sequences of the previous section. It may end in UB, so it
+declares may-UB. It reads and writes its own memory, so no obligation asks
+that it not read or write that one.
 -/
 
 namespace Fir
@@ -102,44 +109,23 @@ theorem copyUnits_apply (S : Memories Mem unit) (e : Ev (Unit × Memories Mem un
     exact store_apply x dst us al' S e
 
 /-- A copy of units always has an outcome. -/
-theorem copyUnits_hasOutcome : HasOutcome (copyUnits (m := SM) x dst src n al al') := fun S => by
-  cases h : S.copy x dst src n al al' with
-  | ok S' => exact ⟨_, (copyUnits_apply x dst src n al al' S _).2 (.inl ⟨S', h, rfl⟩)⟩
-  | error f => exact ⟨_, (copyUnits_apply x dst src n al al' S _).2 (.inr ⟨f, h, rfl⟩)⟩
+theorem copyUnits_hasOutcome : HasOutcome (copyUnits (m := SM) x dst src n al al') :=
+  (load_hasOutcome x src n al).bind fun us => store_hasOutcome x dst us al'
 
 /-- A copy of units has at most one outcome that ends. -/
 theorem copyUnits_finitelyMany : FinitelyMany (copyUnits (m := SM) x dst src n al al') :=
-  fun S => by
-  refine ⟨match S.copy x dst src n al al' with
-    | .ok S' => [((), S')]
-    | .error _ => [], fun r hr => ?_⟩
-  rcases (copyUnits_apply x dst src n al al' S _).1 hr with ⟨S', h, he⟩ | ⟨_, _, he⟩ <;>
-    cases he
-  simp [h]
-
-/-- A copy of units that ends is a store of the units its load gives, from
-the memories it started from. -/
-theorem copyUnits_ok {S S' : Memories Mem unit}
-    (h : copyUnits (m := SM) x dst src n al al' S (.ok ((), S'))) :
-    ∃ us, MonadMemory.store (m := SM) x dst us al' S (.ok ((), S')) := by
-  rcases (copyUnits_load x dst src n al al' S _).1 h with ⟨us, -, hs⟩ | ⟨_, _, he⟩
-  · exact ⟨us, hs⟩
-  · cases he
+  (load_finitelyMany x src n al).bind fun us => store_finitelyMany x dst us al'
 
 /-- A copy of units writes no unit of any memory but its own. -/
 theorem copyUnits_writesNot {y : Mem} (hy : x ≠ y) :
-    WritesNot y (copyUnits (m := SM) x dst src n al al') := by
-  intro S _ S' h
-  obtain ⟨us, hs⟩ := copyUnits_ok x dst src n al al' h
-  exact store_writesNot x dst us al' hy S () S' hs
+    WritesNot y (copyUnits (m := SM) x dst src n al al') :=
+  (load_writesNot x src n al y).bind fun us => store_writesNot x dst us al' hy
 
 /-- A copy of units neither allocates nor frees in any memory, its own
 included. -/
 theorem copyUnits_allocatesNot (y : Mem) :
-    AllocatesNot y (copyUnits (m := SM) x dst src n al al') := by
-  intro S _ S' h
-  obtain ⟨us, hs⟩ := copyUnits_ok x dst src n al al' h
-  exact store_allocatesNot x dst us al' y S () S' hs
+    AllocatesNot y (copyUnits (m := SM) x dst src n al al') :=
+  (load_allocatesNot x src n al y).bind fun us => store_allocatesNot x dst us al' y
 
 /-- A copy of units does not read another memory: replacing it changes
 neither what the copy loads nor what its store does. -/
@@ -157,18 +143,7 @@ theorem copyUnits_readsNot {y : Mem} (hy : x ≠ y) :
 reason, or gives memories that refine the others'. -/
 theorem copyUnits_refines :
     StateRefinedBy Eq (copyUnits (m := SM) x dst src n al al')
-      (copyUnits x dst src n al al') := by
-  intro S S' hS e he
-  rcases (copyUnits_load x dst src n al al' S' e).1 he with ⟨us', h', hs'⟩ | ⟨f, h', rfl⟩
-  · rcases hS.load x src n al with ⟨f, h₁, h₂⟩ | ⟨us, us'', h₁, h₂, hu⟩
-    · rw [h₂] at h'
-      cases h'
-    · rw [h₂] at h'
-      cases h'
-      obtain ⟨e₀, he₀, hle⟩ := store_refines x dst al' hu S S' hS e hs'
-      exact ⟨e₀, (copyUnits_load x dst src n al al' S e₀).2 (.inl ⟨us, h₁, he₀⟩), hle⟩
-  · rcases hS.load x src n al with ⟨f', h₁, h₂⟩ | ⟨us, us', h₁, h₂, -⟩ <;> rw [h₂] at h' <;>
-      cases h'
-    exact ⟨_, (copyUnits_load x dst src n al al' S _).2 (.inr ⟨_, h₁, rfl⟩), trivial⟩
+      (copyUnits x dst src n al al') :=
+  (load_refines x src n al).bind fun _ _ hu => store_refines x dst al' hu
 
 end Fir
