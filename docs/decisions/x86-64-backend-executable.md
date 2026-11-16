@@ -26,14 +26,11 @@ pointer argument is interpreter-only. A pointer result is the address, which
 says nothing of the spec's allocation and offset, so the harness compares no
 pointer result
 ([x86-64-backend-lowering-memory.md](x86-64-backend-lowering-memory.md#pointers)).
-The human ruled on 2026-11-15 (#399): pointers on the command line are read
-and printed as 64-bit addresses and never compared, and poison-pointer tests
-stay interpreter-only. Rejected: refusing to build a module with a pointer
-parameter or result, since a module builds whole and a function that takes a
-pointer may be called by one that the harness runs; a run that refuses such
-a function, which hides an address that is useful when reading a run; and a
-stand-in address for a poison pointer, such as 0, which would change the
-harness's rules.
+This contract is as the human ruled on 2026-11-15 (#399). Rejected: refusing
+to build a module with a pointer parameter or result, since a module builds
+whole and a function that takes a pointer may be called by one that the
+harness runs; and a run that refuses such a function, which hides an address
+that is useful when reading a run.
 
 On success it writes one line to standard output, `{"values":["V1","V2"]}`, a
 JSON list of the returned values in order, each a string with the same
@@ -152,14 +149,16 @@ never outgrows its stack.
 
 ### A recursive run
 
-A function from which a cycle is reachable is recursive. So is, for its stack,
-a function from which an `alloca` on a cycle of branches is reachable, whose
-run's stack grows with its input as a recursion's does (stage 5 of #231). The
-human ruled on 2026-11-15 (#399) that it takes the recursive run's stack,
-which the ruling of 2026-11-02 below gives a recursion. Its figure is then the
-most a run uses when it makes no call within a cycle and runs no `alloca` more
-than once, and the least the runtime reserves for it. The runtime reads the soft `RLIMIT_STACK` with `getrlimit`,
-rounded down to a page, and reserves the smaller of it and the machine's memory
+A function from which a cycle is reachable is recursive. An `alloca` on a
+cycle of its function's branches, whose run's stack grows with its input as a
+recursion's does, gives its function the recursive run's stack, which the
+ruling of 2026-11-02 below gives a recursion: the human ruled on 2026-11-15
+(#399). So a function from which such an `alloca` is reachable is recursive
+for its stack too, as one from which a cycle is reachable is. Its figure is
+then the most a run uses when it makes no call within a cycle and runs no
+`alloca` more than once, and the least the runtime reserves for it. The
+runtime reads the soft `RLIMIT_STACK` with `getrlimit`, rounded down to a
+page, and reserves the smaller of it and the machine's memory
 and swap, from `sysinfo`, never less than the figure. `RLIM_INFINITY` (`ulimit
 -s unlimited`) leaves memory and swap as the bound, as does a failed
 `getrlimit`. So by default a recursive run gets 8 MiB, as a C or Rust program

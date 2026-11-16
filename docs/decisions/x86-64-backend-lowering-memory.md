@@ -26,12 +26,11 @@ other memory, of 16-bit units or 32-bit pointers, is reported as unsupported
 where it is defined, so no op of that memory is lowered and no access to it
 is miscompiled (`lower/memory.rs`, `realised`).
 
-#231 asks for the default memory. The human ruled on 2026-11-15 (#399):
-every memory with 8-bit units and 64-bit little-endian pointers is lowered
-as memory 0 is, and every other memory is reported unsupported. Rejected:
-realising only memory 0, which would report a memory that x86-64 holds just
-as it holds memory 0; and realising a memory of wider units by scaling its
-offsets, which nothing in M1 asks for, so such a memory is reported.
+#231 asks for the default memory; realising every memory of bytes is as the
+human ruled on 2026-11-15 (#399). Rejected: realising only memory 0, which
+would report a memory that x86-64 holds just as it holds memory 0; and
+realising a memory of wider units by scaling its offsets, which nothing in M1
+asks for, so such a memory is reported.
 
 ## Pointer offsets
 
@@ -95,7 +94,7 @@ An `alloca` in a block on no cycle of its function's branches runs at most
 once per call. Its most, its rounded bytes and its alignment less 16, adds to
 the function's stack need. An `alloca` on a cycle makes the need unbounded, as
 a recursion does, so a run gets the process's stack limit and says when it
-outgrows it
+outgrows it, as the human ruled on 2026-11-15 (#399)
 ([x86-64-backend-executable.md](x86-64-backend-executable.md#the-figure)).
 
 Rejected: a slot in the frame for each `alloca`, which one in a loop would
