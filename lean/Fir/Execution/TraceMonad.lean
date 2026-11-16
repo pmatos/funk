@@ -251,12 +251,14 @@ def MonadMorphism.trace : MonadMorphism (StateT σ SetM) (TraceM A σ) where
     simp only [TraceM.lift_pure]
 
 /-- A choice in the traced layer is the lift of a choice. -/
-instance : MonadChoice (TraceM A σ) :=
-  ⟨fun w => TraceM.lift (MonadChoice.choose w : StateT σ SetM (BitVec w))⟩
+instance : MonadChoice (TraceM A σ) where
+  choose w := TraceM.lift (MonadChoice.choose w : StateT σ SetM (BitVec w))
+  chooseNaN e mb := TraceM.lift (MonadChoice.chooseNaN e mb : StateT σ SetM (BitVec (mb + 1)))
 
 /-- The lift keeps choice and UB. -/
 theorem MonadMorphism.trace_keeps : (MonadMorphism.trace A σ).KeepsChoiceUB where
   choose _ := rfl
+  chooseNaN _ _ := rfl
   ub r := by
     funext s e
     apply propext
@@ -342,19 +344,24 @@ theorem TraceM.mapActs_singleton (x : TraceM A σ α) : TraceM.mapActs (fun a =>
   · intro hx
     exact ⟨e, hx, by cases e <;> simp [TraceEnd.mapActs]⟩
 
+/-- Mapping the acts of a lift changes nothing, since a lift shows nothing. -/
+theorem TraceM.mapActs_lift (g : A → List B) (x : StateT σ SetM α) :
+    TraceM.mapActs g (TraceM.lift x) = TraceM.lift x := by
+  funext s e
+  apply propext
+  constructor
+  · rintro ⟨_, (⟨a, s', h, rfl⟩ | ⟨r, h, rfl⟩), rfl⟩
+    · exact .inl ⟨a, s', h, rfl⟩
+    · exact .inr ⟨r, h, rfl⟩
+  · rintro (⟨a, s', h, rfl⟩ | ⟨r, h, rfl⟩)
+    · exact ⟨_, .inl ⟨a, s', h, rfl⟩, rfl⟩
+    · exact ⟨_, .inr ⟨r, h, rfl⟩, rfl⟩
+
 /-- Mapping acts keeps choice and UB, since a choice and UB show nothing. -/
 theorem MonadMorphism.mapActs_keeps (g : A → List B) :
     (MonadMorphism.mapActs σ g).KeepsChoiceUB where
-  choose w := by
-    funext s e
-    apply propext
-    constructor
-    · rintro ⟨_, (⟨a, s', h, rfl⟩ | ⟨r, h, rfl⟩), rfl⟩
-      · exact .inl ⟨a, s', h, rfl⟩
-      · exact .inr ⟨r, h, rfl⟩
-    · rintro (⟨a, s', h, rfl⟩ | ⟨r, h, rfl⟩)
-      · exact ⟨_, .inl ⟨a, s', h, rfl⟩, rfl⟩
-      · exact ⟨_, .inr ⟨r, h, rfl⟩, rfl⟩
+  choose _ := TraceM.mapActs_lift g _
+  chooseNaN _ _ := TraceM.mapActs_lift g _
   ub r := by
     funext s e
     exact propext ⟨fun ⟨_, h, he⟩ => by cases (h : _ = _); exact he, fun h => ⟨_, rfl, h⟩⟩

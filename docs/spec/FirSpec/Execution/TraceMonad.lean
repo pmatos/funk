@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "The traced layer: readable blocks" =>
 
-:::moduleDocs (fingerprint := "9362349711118071202")
+:::moduleDocs (fingerprint := "5742007098808131438")
 :::
 
 :::readable Fir.Paths Fir.Paths.pure_bind Fir.Paths.bind_pure Fir.Paths.bind_assoc (pin := Fir.Paths.instMonad) (pin := Fir.Paths.instLawfulMonad) (fingerprint := "8066813908157793877")
@@ -72,12 +72,13 @@ sequence to the sequence of the lifts, so it maps each computation built
 from them, the interpreter's run among them.
 :::
 
-:::readable Fir.MonadMorphism.trace_keeps (pin := Fir.instMonadChoiceTraceM) (fingerprint := "8821926147027715528")
+:::readable Fir.MonadMorphism.trace_keeps (pin := Fir.instMonadChoiceTraceM) (fingerprint := "9445398385178387790")
 *Definition: choice in the traced layer.* A choice of $`w` bits is the lift
-of a choice.
+of a choice, and so is a choice of a NaN.
 
 *Theorem: the lift keeps choice and UB.* It maps a choice of bits to a
-choice of bits, and UB to UB for the same reason.
+choice of bits, a choice of a NaN to a choice of a NaN, and UB to UB for the
+same reason.
 :::
 
 :::readable Fir.TraceEnd.mapActs Fir.TraceEnd.mapActs_after Fir.TraceM.mapActs Fir.TraceM.mapActs_pure Fir.TraceM.mapActs_bind Fir.MonadMorphism.mapActs (fingerprint := "8103156743329502883")
@@ -91,13 +92,14 @@ a sequence to the sequence of the images, since it maps a concatenation of
 traces to the concatenation of their images.
 :::
 
-:::readable Fir.TraceM.mapActs_mapActs Fir.TraceM.mapActs_singleton Fir.MonadMorphism.mapActs_keeps (fingerprint := "12931065612970221528")
+:::readable Fir.TraceM.mapActs_mapActs Fir.TraceM.mapActs_singleton Fir.TraceM.mapActs_lift Fir.MonadMorphism.mapActs_keeps (fingerprint := "140070231224752104")
 *Theorem: mapping acts twice.* Mapping by $`h` then by $`g` maps each act
 $`a` to the image by $`g` of $`h(a)`, and mapping each act to itself
 changes nothing.
 
-*Theorem: mapping acts keeps choice and UB.* A choice and UB show nothing,
-so their images are themselves.
+*Theorem: mapping acts keeps choice and UB.* A lift shows nothing, so its
+image is itself. A choice, of bits or of a NaN, is a lift, and UB shows
+nothing either, so their images are themselves.
 :::
 
 :::readable Fir.MonadMorphism.trace_mapsFrame Fir.MonadMorphism.mapActs_mapsFrame (pin := Fir.instMonadFrameTraceMMemories) (fingerprint := "2848511684395890237")
