@@ -88,23 +88,27 @@ fn decode_any(a: &Attr) -> Option<AnyType> {
     }
 }
 
-/// The parts of a decoded `alloca`: its kind, its type, its count and its
-/// alignment.
-struct Parts<'a> {
-    kind: &'a str,
+/// The attributes of an allocation after its kind: its type, its count and
+/// its alignment. `gpu.work_group_alloca` writes them as `alloca` does,
+/// with no kind (`decodeAlloc` in `lean/Fir/Gpu/Text.lean`).
+struct Shape<'a> {
     ty: AnyType,
     count: Option<&'a Int>,
     align: Option<&'a Int>,
 }
 
-/// Reads the attributes of `alloca`, or `None` when they do not decode.
-fn parts(attrs: &[Attr]) -> Option<Parts<'_>> {
-    let [Attr::Word(kind), ty, rest @ ..] = attrs else {
+/// The parts of a decoded `alloca`: its kind, and the shape that follows.
+struct Parts<'a> {
+    kind: &'a str,
+    shape: Shape<'a>,
+}
+
+/// Reads the attributes of an allocation after its kind, or `None` when
+/// they do not decode.
+fn shape(attrs: &[Attr]) -> Option<Shape<'_>> {
+    let [ty, rest @ ..] = attrs else {
         return None;
     };
-    if !ALLOC_KINDS.contains(&kind.as_str()) {
-        return None;
-    }
     let ty = decode_any(ty)?;
     let (count, rest) = match rest {
         [Attr::Int(c), rest @ ..] if nonneg(c) && c.as_str() != "1" => (Some(c), rest),
@@ -112,12 +116,84 @@ fn parts(attrs: &[Attr]) -> Option<Parts<'_>> {
         rest => (None, rest),
     };
     let align = decode_align(rest)?;
+    Some(Shape { ty, count, align })
+}
+
+/// Reads the attributes of `alloca`, or `None` when they do not decode.
+fn parts(attrs: &[Attr]) -> Option<Parts<'_>> {
+    let [Attr::Word(kind), rest @ ..] = attrs else {
+        return None;
+    };
+    if !ALLOC_KINDS.contains(&kind.as_str()) {
+        return None;
+    }
     Some(Parts {
         kind,
-        ty,
-        count,
-        align,
+        shape: shape(rest)?,
     })
+}
+
+/// Whether the attributes of an allocation after its kind decode.
+pub(crate) fn shape_decodes(attrs: &[Attr]) -> bool {
+    shape(attrs).is_some()
+}
+
+/// The rules of an allocation beyond its kind, for the op `op` whose
+/// attributes after its kind are `attrs`: at least one value, an alignment
+/// that `check_align` accepts, and a valid integer or pointer type
+/// (`Core.Op.Valid`, `Gpu.Op.Valid`). Attributes that do not decode break
+/// no rule here: decoding reports them.
+pub(crate) fn check_shape(op: &str, attrs: &[Attr]) -> Result<(), String> {
+    shape(attrs).map_or(Ok(()), |p| check_shape_of(op, &p))
+}
+
+/// The rules of an allocation beyond its kind, on its decoded shape.
+fn check_shape_of(op: &str, p: &Shape<'_>) -> Result<(), String> {
+    if p.count.is_some_and(|c| c.as_str() == "0") {
+        return Err(format!("{op} allocates at least one value, not 0"));
+    }
+    if let Some(a) = p.align {
+        check_align(op, a.as_str())?;
+    }
+    let valid_width = |w: &Int| {
+        w.as_str()
+            .parse::<u32>()
+            .is_ok_and(|w| (1..=MAX_WIDTH).contains(&w))
+    };
+    match &p.ty {
+        AnyType::Int(w) if valid_width(w) => Ok(()),
+        AnyType::Int(w) => Err(format!(
+            "{op} allocates a valid integer type, not i{}",
+            w.as_str()
+        )),
+        AnyType::Ptr(n) if valid_memory(n).is_some() => Ok(()),
+        AnyType::Ptr(n) => Err(format!(
+            "{op} allocates a valid pointer type, not ptr({})",
+            n.as_str()
+        )),
+        AnyType::Float => Err(format!(
+            "{op} allocates an integer or a pointer type in M1, not a float: \
+             a float has no encoding in units"
+        )),
+    }
+}
+
+/// The type that an allocation whose attributes after its kind are
+/// `attrs` allocates values of, when that is a valid pointer type, whose
+/// memory the data layout must declare (`Core.Op.attrTypes`,
+/// `Gpu.Op.attrTypes`). An integer type names no memory, and a type that
+/// is not valid breaks the op's own rule.
+pub(crate) fn shape_attr_types(attrs: &[Attr]) -> Vec<Type> {
+    shape(attrs).map(|p| shape_types(&p)).unwrap_or_default()
+}
+
+/// The type that a decoded shape allocates values of, when that is a valid
+/// pointer type.
+fn shape_types(p: &Shape<'_>) -> Vec<Type> {
+    match &p.ty {
+        AnyType::Ptr(n) => valid_memory(n).map(ptr_type).into_iter().collect(),
+        _ => Vec::new(),
+    }
 }
 
 /// What a valid `alloca` allocates, read from its attributes: the type of
@@ -138,7 +214,7 @@ pub struct Allocation<'a> {
 /// unless they decode with the kind `stack`, the one M1 has, and an
 /// element and an alignment that validation accepts.
 pub fn allocation(attrs: &[Attr]) -> Option<Allocation<'_>> {
-    let p = parts(attrs).filter(|p| p.kind == "stack")?;
+    let p = parts(attrs).filter(|p| p.kind == "stack")?.shape;
     let element = match &p.ty {
         AnyType::Int(w) => CoreType::Int(
             w.as_str()
@@ -165,15 +241,24 @@ pub fn allocation(attrs: &[Attr]) -> Option<Allocation<'_>> {
     })
 }
 
-/// The memory of the pointer `alloca` defines, when it has no operands and
-/// one pointer result.
-fn memory(op: &OpTypes<'_>) -> Option<u32> {
+/// The memory of the pointer that an allocation defines, when it has no
+/// operands and one pointer result.
+pub(crate) fn memory(op: &OpTypes<'_>) -> Option<u32> {
     match (op.operands, op.results) {
         ([], [r]) => match core_type(r)? {
             CoreType::Ptr(n) => Some(n),
             CoreType::Int(_) | CoreType::Float { .. } => None,
         },
         _ => None,
+    }
+}
+
+/// The effects of an allocation: it allocates in the memory of its result
+/// (`Core.Op.effects`, `Gpu.Op.effects`).
+pub(crate) fn allocation_effects(op: &OpTypes<'_>) -> Effects {
+    Effects {
+        allocates: memory(op).map_or(MemSet::NONE, |n| MemSet::These(vec![n.to_string()])),
+        ..Effects::PURE
     }
 }
 
@@ -213,34 +298,7 @@ impl OpSpec for Alloca {
                 p.kind
             ));
         }
-        if p.count.is_some_and(|c| c.as_str() == "0") {
-            return Err("alloca allocates at least one value, not 0".into());
-        }
-        if let Some(a) = p.align {
-            check_align("alloca", a.as_str())?;
-        }
-        let valid_width = |w: &Int| {
-            w.as_str()
-                .parse::<u32>()
-                .is_ok_and(|w| (1..=MAX_WIDTH).contains(&w))
-        };
-        match &p.ty {
-            AnyType::Int(w) if valid_width(w) => Ok(()),
-            AnyType::Int(w) => Err(format!(
-                "alloca allocates a valid integer type, not i{}",
-                w.as_str()
-            )),
-            AnyType::Ptr(n) if valid_memory(n).is_some() => Ok(()),
-            AnyType::Ptr(n) => Err(format!(
-                "alloca allocates a valid pointer type, not ptr({})",
-                n.as_str()
-            )),
-            AnyType::Float => Err(
-                "alloca allocates an integer or a pointer type in M1, not a float: \
-                 a float has no encoding in units"
-                    .into(),
-            ),
-        }
+        check_shape_of("alloca", &p.shape)
     }
 
     /// The type it allocates values of, when that is a valid pointer type,
@@ -248,18 +306,14 @@ impl OpSpec for Alloca {
     /// integer type names no memory, and a type that is not valid breaks
     /// the op's own rule.
     fn attr_types(&self, attrs: &[Attr]) -> Vec<Type> {
-        match parts(attrs).map(|p| p.ty) {
-            Some(AnyType::Ptr(n)) => valid_memory(&n).map(ptr_type).into_iter().collect(),
-            _ => Vec::new(),
-        }
+        parts(attrs)
+            .map(|p| shape_types(&p.shape))
+            .unwrap_or_default()
     }
 
     /// Allocates in its memory (`Core.Op.effects`).
     fn effects(&self, op: &OpTypes<'_>) -> Effects {
-        Effects {
-            allocates: memory(op).map_or(MemSet::NONE, |n| MemSet::These(vec![n.to_string()])),
-            ..Effects::PURE
-        }
+        allocation_effects(op)
     }
 }
 

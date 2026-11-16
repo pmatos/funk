@@ -35,9 +35,13 @@ def words(text: str, name: str) -> dict[str, str]:
 class FollowsLean(unittest.TestCase):
     def assert_cells_follow(self, ops: str, text: str, valid: str) -> None:
         """One cell per constructor of `Query` and of `Dim`, by the words
-        that `Text.lean` gives them, at the one width of `Op.Valid`; `Op`
+        that `Text.lean` gives them, at the one width of `Op.Valid`; and
+        the work-group allocation, by the name `Text.lean` gives it. `Op`
         has no other constructor."""
-        self.assertEqual(constructors(ops, "Op"), ["query"])
+        self.assertEqual(constructors(ops, "Op"), ["query", "alloc"])
+        self.assertIn(
+            f'def allocName : String := "{gpu_cells.WORK_GROUP_ALLOCA}"', text
+        )
         queries = words(text, "Query.name")
         self.assertEqual(
             tuple(queries.get(q) for q in constructors(ops, "Query")),
@@ -91,11 +95,32 @@ class Cells(unittest.TestCase):
             with self.subTest(op=op), self.assertRaises(CellError):
                 of_op(op)
 
+    def test_the_cells_of_a_work_group_allocation(self):
+        name = gpu_cells.WORK_GROUP_ALLOCA
+        for attrs, column in [
+            (("i32", "64", "align(4)"), "i32"),
+            (("i7",), "i7"),
+            (("ptr(3)",), "ptr"),
+            (("ptr",), "ptr"),
+        ]:
+            op = Op(name, attrs, (), ("ptr(3)",), ())
+            self.assertEqual(of_op(op), {Cell("gpu_memory", name, "", column)})
+        for op in [
+            Op(name, ("f32",), (), ("ptr(3)",), ()),
+            Op(name, ("i32",), (), ("i32",), ()),
+            Op(name, (), (), ("ptr(3)",), ()),
+        ]:
+            with self.subTest(op=op), self.assertRaises(CellError):
+                of_op(op)
+
     def test_the_cell_set(self):
         found = [c for c in cells.cells((8,), gpu=True) if c.table == "gpu"]
         self.assertEqual(len(found), 12)
         self.assertEqual(found[1], Cell("gpu", "gpu.work_item_id", "gpu.y", "i32"))
         self.assertFalse(any(c.table == "gpu" for c in cells.cells((8,))))
+        memory = [c for c in cells.cells((8,), offsets=(8, 16), gpu=True)]
+        memory = [c.width for c in memory if c.table == "gpu_memory"]
+        self.assertEqual(memory, ["i8", "i16", "ptr"])
 
     def test_only_the_interpreter_only_side_has_them(self):
         self.assertEqual(

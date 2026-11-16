@@ -14,13 +14,21 @@ when the Lean changes under it.
 
 #doc (Manual) "The GPU dialect's text is lawful: readable blocks" =>
 
-:::moduleDocs (fingerprint := "10250467856576467108")
+:::moduleDocs (fingerprint := "16820041166475890215")
 :::
 
 :::readable Fir.Gpu.Query.decode_name Fir.Gpu.Query.name_decode Fir.Gpu.Dim.decode_word Fir.Gpu.Dim.word_decode (fingerprint := "17115323010254968280")
 *Theorem: the words of the questions and dimensions read back.* Reading
 the name of a question gives the question, and a name reads only as the
 question it names; the same holds of the word of each dimension.
+:::
+
+:::readable Fir.Gpu.Query.name_ne Fir.Gpu.decodeAlloc_attrs Fir.Gpu.decodeAlloc_eq (fingerprint := "4129414752083663723")
+*Lemmas: an allocation's text.* No question is named
+`gpu.work_group_alloca`. An allocation reads back from its attributes,
+since they are those of `alloca` after the kind `global`, which reads back
+as `alloca`; and attributes read as an allocation only when they are its
+own, at a pointer result of its memory, with no operand.
 :::
 
 :::readable Fir.Gpu.Op.decode_encode Fir.Gpu.Op.encode_decode (fingerprint := "1317897471734365385")
@@ -43,11 +51,13 @@ only from their own text, op names are words, attributes can be written,
 and valid types are written as types.
 :::
 
-:::readable Fir.Gpu.dialectsAll_attrs Fir.Gpu.lawfulDialectName (fingerprint := "16019133885697219364")
-*Theorem: `gpu` writes its words under its name.* The words of an op's
-attribute name the dialect $`\texttt{gpu}` alone. So each op name and each
-dimension of `gpu` is a word of $`\texttt{gpu}`, and `gpu` has no type of
-its own and registers no region kind or kind of item.
+:::readable Fir.Gpu.dialectsAll_attrs Fir.Gpu.lawfulDialectName (fingerprint := "7538987385444002555")
+*Theorem: `gpu` writes its words under its name.* The words of a question's
+attribute name the dialect $`\texttt{gpu}` alone, and those of an
+allocation's attributes, the core's type, count and alignment, name no
+dialect. So each op name and each dimension of `gpu` is a word of
+$`\texttt{gpu}`, and `gpu` has no type of its own and registers no region
+kind or kind of item.
 :::
 
 :::readable Fir.Gpu.name_new Fir.Gpu.instLawfulDialectTextSum Fir.Gpu.validIsWellFormed Fir.Gpu.printThenParse Fir.Gpu.parseThenPrint Fir.Gpu.print_injective (fingerprint := "4004277751942047869")

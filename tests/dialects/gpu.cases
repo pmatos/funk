@@ -5,7 +5,8 @@ and gpu registered, as `fir-ref` and `funk` read them. A case is `accept`,
 `invalid` (it parses and prints as itself, and validation rejects it) or
 `malformed` (it does not parse). The kernels live in a device module, a
 module nested in the host whose dialect set names gpu; the host's data
-layout gives the memories that the device module's pointer types name.
+layout gives the memories that the device module's pointer types name, and
+`gpu.work_group_alloca` allocates in any of them.
 === accept host-and-device
 layout memory(3, unit(8), pointer(32), little)
 
@@ -133,6 +134,64 @@ func @k() {
 ^e:
   gpu.barrier gpu.x @0
   ret @0
+}
+
+locs {
+  @0 = unknown
+}
+=== accept work-group-memory
+layout memory(3, unit(16), pointer(32), little), memory(5, unit(8), pointer(16), little)
+
+module @dev() {
+  dialects gpu
+
+  func @k(%v: i32) -> i32 {
+  ^e:
+    %buf: ptr(3) = gpu.work_group_alloca i32 64 align(4) @0
+    %i: i32 = gpu.work_item_id gpu.x @0
+    %q: ptr(3) = ptradd %buf, %i @0
+    store nonatomic %v, %q @0
+    %pp: ptr(5) = gpu.work_group_alloca ptr(3) @0
+    store nonatomic %q, %pp @0
+    %r: ptr(3) = load nonatomic %pp @0
+    %w: i32 = load nonatomic %r @0
+    ret %w @0
+  }
+
+}
+
+locs {
+  @0 = unknown
+}
+=== invalid work-group-alloca-of-nothing
+layout memory(3, unit(8), pointer(32), little)
+
+module @dev() {
+  dialects gpu
+
+  func @k() -> ptr(3) {
+  ^e:
+    %p: ptr(3) = gpu.work_group_alloca i32 0 @0
+    ret %p @0
+  }
+
+}
+
+locs {
+  @0 = unknown
+}
+=== malformed work-group-alloca-with-a-kind
+layout memory(3, unit(8), pointer(32), little)
+
+module @dev() {
+  dialects gpu
+
+  func @k() -> ptr(3) {
+  ^e:
+    %p: ptr(3) = gpu.work_group_alloca stack i32 @0
+    ret %p @0
+  }
+
 }
 
 locs {

@@ -50,9 +50,9 @@ def Case.holds (c : Case) : Bool :=
   | .error _, .malformed => true
   | _, _ => false
 
-#guard cases.length == 8
-#guard (cases.filter (·.verdict == .accept)).length == 2
-#guard (cases.filter (·.verdict == .malformed)).length == 3
+#guard cases.length == 11
+#guard (cases.filter (·.verdict == .accept)).length == 3
+#guard (cases.filter (·.verdict == .malformed)).length == 4
 #guard (cases.filter (!·.holds)).map (·.name) == []
 
 /-- The messages of a case's problems. -/
@@ -71,6 +71,8 @@ def messages (name : String) : List String :=
   ["the function writes a word of the dialect gpu, which the module's dialect set does not name"]
 #guard messages "device-memory-not-declared" ==
   ["a type names memory 3, which the data layout does not declare"]
+-- `gpu.work_group_alloca` has `alloca`'s rules but its kind.
+#guard messages "work-group-alloca-of-nothing" == ["the op breaks its dialect's own rule"]
 
 -- The core alone reads no word of `gpu`.
 #guard (cases.filter fun c => c.verdict == .accept &&

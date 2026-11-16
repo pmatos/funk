@@ -164,6 +164,11 @@ SECTIONS = {
     ),
     "values": ("Passed and returned values", ("op", "what"), ""),
     "gpu": ("Ops of the gpu dialect in a dimension", ("op", "dimension"), ""),
+    "gpu_memory": (
+        "Work-group allocation of the gpu dialect, of one or of a pointer",
+        ("op",),
+        "",
+    ),
 }
 
 
@@ -218,7 +223,7 @@ def catalog_row(counts: Counter, kind: str, row: cells.Row) -> list[str]:
     """Format a row's labels and cell counts, retaining applicability blanks."""
     if kind == "float_conversions":
         shown = [code(row.key)]
-    elif kind == "pointers":
+    elif kind in ("pointers", "gpu_memory"):
         shown = [code(row.op)]
     elif kind == "values":
         shown = [code(row.op), WHAT[row.op][row.key]]

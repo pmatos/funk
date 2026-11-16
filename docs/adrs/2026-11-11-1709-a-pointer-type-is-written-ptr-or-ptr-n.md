@@ -17,7 +17,10 @@ Tier: direction; area: text-format
 - `ptr(N)` decodes for every `N` in range. Whether the module has memory `N`
   is validation's rule: every module has memory 0, and another memory exists
   only when the module's data layout declares it.
-- `ptr(N)` is the core's. A dialect that adds memories of its own names their
+- `ptr(N)` is the core's, and points into every memory that the data layout
+  declares: a dialect gives a declared memory its meaning and uses `ptr(N)`
+  for it (ADR-2026-11-09-1542; the human's ruling of 2026-11-16 on #212).
+  A dialect with memories outside the layout's numbers would name their
   pointers in its own types, `name.word`.
 
 ## Why

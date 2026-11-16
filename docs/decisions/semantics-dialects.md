@@ -55,10 +55,19 @@ The core's own memory names are the numbers of `ptr<N>` (`Core.Mem` is
 `Nat`): the memories that a module's data layout declares, memory 0 among
 them, are the core's, since a core pointer type names each of them. An
 extension over the core names them through `ofBase`, and its `Own` names
-are memories outside those numbers. A dialect that wants a memory of its
-own with a layout entry, such as a GPU's shared memory, raises how its name
-and its number meet when it lands. The second dialect, `gpu`, is the first:
-its work-group memory waits for the human's answer, asked on #212.
+are memories outside those numbers. A dialect gives a declared memory its
+meaning rather than owning a memory with a layout entry: `gpu`'s work-group
+memory is any memory of the host's data layout, named by its number, and
+`gpu.work_group_alloca`, which allocates there for the whole run of a
+kernel, is what makes it work-group memory. `gpu` has no `Own` memory, and
+the core's `ptr<N>`, `alloca`, `load`, `store` and `ptradd` work on that
+memory unchanged, with effects named by its number
+(ADR-2026-11-09-1542; the human's ruling of 2026-11-16 on #212, Q1). Rejected:
+a memory name of `gpu`'s own that the layout line binds to a number, which
+names memory 3 twice, the core's and the dialect's, so a pass could reorder
+a core store and a `gpu` load of it; and a pointer type and loads and stores
+of `gpu`'s own, which every #231 op would have to be built and proved
+again for.
 
 A word belongs to the dialect named before its first `.`. A bare word
 belongs to the core (`wordDialect`). Reading an op or a type sends a word of

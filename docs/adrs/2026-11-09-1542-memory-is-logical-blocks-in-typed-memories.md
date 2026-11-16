@@ -18,9 +18,11 @@ Tier: direction; area: semantics
   pointer, with the provenance of an exposed allocation that contains the
   address. No other op converts between pointers and integers.
 - **Typed memories.** A pointer type names its memory: the core `ptr` is
-  memory 0, and a dialect may add memories of its own, such as the GPU
-  dialect's shared memory (ADR-2026-11-09-1545). A pointer moves
-  between memories only through an op that a dialect provides. The module's
+  memory 0, and a dialect gives a declared memory its meaning, as the GPU
+  dialect's op that allocates there makes a memory of the data layout its
+  work-group shared memory (ADR-2026-11-09-1545; the human's ruling of
+  2026-11-16 on #212). A pointer moves between memories only through an op
+  that a dialect provides. The module's
   data layout gives each memory its unit of addressing, 8-bit bytes unless it
   says otherwise, and its pointer width.
 - **Addresses in `fir-ref`.** Only exposed allocations have integer

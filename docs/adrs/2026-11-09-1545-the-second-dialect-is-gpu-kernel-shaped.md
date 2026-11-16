@@ -9,9 +9,11 @@ Tier: direction; area: semantics
   module holds a nested device module (ADR-2026-11-09-1543) whose dialect set
   includes the GPU dialect, and kernel functions live there. It adds ops of
   its own, such as work-item and work-group ids and sizes, at least one type
-  or attribute of its own, and a memory in a non-default address space, such
-  as work-group shared memory (ADR-2026-11-09-1542), with effects named by
-  that memory.
+  or attribute of its own, and gives a memory in a non-default address space
+  its meaning, such as work-group shared memory, with effects named by that
+  memory: the memory is one that the data layout declares, and the dialect's
+  op that allocates there makes it work-group memory (ADR-2026-11-09-1542;
+  the human's ruling of 2026-11-16 on #212).
 - **One work-item in M1.** `fir-ref` runs one work-item of a kernel, with its
   ids given as inputs. Ops whose meaning needs other work-items, such as
   barriers, are left out or admitted without execution rules. A launch op in

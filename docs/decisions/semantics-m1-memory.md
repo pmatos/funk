@@ -34,8 +34,12 @@ reasoning. Rejected too: logical blocks with no integer casts in M1, so C and
 kernel code that casts pointers could not be lowered in M1.
 
 A pointer type names its memory. The core `ptr` is `ptr<0>`, and other memories
-are `ptr<N>`. A dialect may add memories of its own. A pointer moves between
-memories only through an op that a dialect provides (ADR-2026-11-09-1542). The
+are `ptr<N>`. A dialect gives a declared memory its meaning: `gpu`'s
+work-group memory is any memory of the data layout, made work-group memory
+by the op that allocates there (the human's ruling of 2026-11-16 on #212;
+[semantics-m1-dialects.md](semantics-m1-dialects.md#work-group-memory)).
+A pointer moves between memories only through an op that a dialect
+provides (ADR-2026-11-09-1542). The
 spec and the tools have the pointer types: a value of `ptr<N>` is poison or a
 pointer, refined only by itself. Every module has memory 0, so `ptr` is valid
 in every module, and `ptr<N>` for `N ≥ 1` is valid when the module's data
