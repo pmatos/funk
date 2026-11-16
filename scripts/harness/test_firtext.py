@@ -104,13 +104,22 @@ class Tests(unittest.TestCase):
             "dialects toy\n\n"
             "func @g() {\n^e:\n  ret @0\n}\n\n"
             "module @dev() {\n  dialects toy\n\n"
-            "  func @g(%a: i8) {\n  ^e:\n    x {\n    } @0\n    ret %b @0\n  }\n\n"
-            "  module @inner() {\n  }\n\n}\n\n"
+            "  func @g(%a: i8) {\n  ^e:\n    call @k %a @0\n    ret @0\n  }\n\n"
+            '  module @"in::ner"() {\n'
+            "    func @k() {\n    ^e:\n      call @g @0\n      ret @0\n    }\n\n"
+            "  }\n\n  module @empty() {\n  }\n\n}\n\n"
             "func @h() {\n^e:\n  ret @0\n}\n\nlocs {\n  @0 = unknown\n}\n"
         )
         functions = read(text)
-        self.assertEqual(list(functions), ["@g", "@h"])
+        self.assertEqual(
+            list(functions), ["@g", "@dev::@g", '@dev::@"in::ner"::@k', "@h"]
+        )
         self.assertEqual(functions["@g"].params, ())
+        self.assertEqual(functions["@dev::@g"].params, ("i8",))
+        self.assertEqual(functions["@dev::@g"].callees(), {"@dev::@k"})
+        inner = functions['@dev::@"in::ner"::@k']
+        self.assertEqual(inner.scope, '@dev::@"in::ner"::')
+        self.assertEqual(inner.callees(), {'@dev::@"in::ner"::@g'})
 
     def test_a_data_layout_is_skipped(self):
         text = (
@@ -125,7 +134,8 @@ class Tests(unittest.TestCase):
         for text, needle in [
             ("func @f() {\n^e:\n  ret %x @0\n}\nlocs {\n}\n", "%x is not defined"),
             ("global @g() {\n}\nlocs {\n}\n", "an item of kind global"),
-            ("module @m() {\n  func @f() {\n", "a nested module does not end"),
+            ("module @m() {\n  func @f() {\n", "the end: expected }"),
+            ("module @m() {\n", "the end: expected }"),
             ("layout memory(1, unit(8)", "an entry of the data layout does not end"),
             ("func @f() {\n^e:\n  ret @0\n}\n", "expected word"),
             ("locs {\n}\nfunc", "text after the location table"),
