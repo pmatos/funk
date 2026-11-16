@@ -16,6 +16,7 @@ this page and an ADR disagree, the page wins, and the ADR is fixed or deleted
 - semantics-m1-design.md: the M1 design, most of it not built yet;
 - semantics-m1-memory.md: M1's memory, its pointer ops and stack allocation;
 - semantics-m1-memory-access.md: aligned accesses, loads and stores in M1;
+- semantics-m1-addresses.md: the addresses of exposed allocations in M1;
 - semantics-m1-dialects.md: dialects, levels and the second dialect in M1;
 - semantics-m1-trace.md: what an M1 run shows.
 

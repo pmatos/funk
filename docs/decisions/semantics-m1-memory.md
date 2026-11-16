@@ -93,6 +93,8 @@ the address assignments the spec allows, so exhaustive mode stays finite.
 `fir-ref` covers one assignment, not all of them. A test whose observations
 depend on an exposed address is interpreter-only, and the harness never compares
 raw addresses (ADR-2026-11-09-1542).
+[semantics-m1-addresses.md](semantics-m1-addresses.md) says which addresses
+an allocation may be given, and what the canonical layout is.
 
 Memory ops carry an `ordering` attribute. M1 accepts only `nonatomic`, so a
 concurrency model (S6) needs no format change. Allocations carry a kind: stack,

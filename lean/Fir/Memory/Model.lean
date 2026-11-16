@@ -1,6 +1,7 @@
 /-!
 Memory is made of _logical blocks_ (ADR-2026-11-09-1542). Each allocation is
-a block of its own: an array of abstract units, with no address. A pointer
+a block of its own: an array of abstract units, with no address until it
+is exposed (the section on addresses). A pointer
 names the allocation it may access, its _provenance_, and an offset into it.
 Two allocations never overlap, so a pass may assume that pointers into
 different allocations do not alias.
@@ -37,8 +38,9 @@ reaches these operations, are left to the ops that use them.
 A block records the alignment it was allocated with, in units: every address
 it may be given is a multiple of it. An op's access carries an alignment too,
 a promise that its address is a multiple of it, and a misaligned access is
-immediate UB (the human's ruling of 2026-11-11 on #231). A block has no
-address, so an _aligned access_ is one that is aligned at every address its
+immediate UB (the human's ruling of 2026-11-11 on #231). Whether an access
+is aligned never depends on the address an exposed block was given, so an
+_aligned access_ is one that is aligned at every address its
 block may be given: its alignment divides the block's and the pointer's
 offset (the human's ruling of 2026-11-14 on #388; rejected: aligned at some
 address, under which no pass or backend could rely on the promise). An
@@ -96,18 +98,21 @@ inductive AllocKind where
   | heap
   deriving Repr, DecidableEq
 
-/-- An allocation: its kind, its alignment, its units, and whether it is
-still live. The alignment counts units: a block has no address, and the
-alignment is what every address it is given is a multiple of, so that an
+/-- An allocation: its kind, its alignment, its units, whether it is still
+live, and its address once it is exposed. The alignment counts units:
+every address the block may be given is a multiple of it, so that an
 access can be checked against it (#231). The ops that allocate give a power
 of two, as the human ruled on 2026-11-11 on #231, and validation rejects
 any other; the model itself takes any number. A freed block keeps its
-units, but no access may reach them. -/
+units, but no access may reach them. A block has no address until it is
+exposed, and then keeps the one it was given (#232; the section on
+addresses). -/
 structure Block (u : Nat) where
   kind : AllocKind
   align : Nat
   units : List (MemUnit u)
   live : Bool
+  addr : Option Nat
   deriving Repr, DecidableEq
 
 /-- The shape of a block: its kind, its alignment, its size and its
@@ -148,13 +153,14 @@ def Block.read (b : Block u) (o n : Nat) : List (MemUnit u) :=
   (b.units.drop o).take n
 
 /-- The block with its units from offset `o` on replaced by `us`. Its kind,
-alignment and liveness stay as they were, and so does its size when the
+alignment, liveness and address stay as they were, and so does its size when the
 units fit in it, from `o` to `o + |us|`. A store writes only units that
 fit, as its access checks. -/
 def Block.write (b : Block u) (o : Nat) (us : List (MemUnit u)) : Block u :=
   { b with units := b.units.take o ++ us ++ b.units.drop (o + us.length) }
 
-/-- The block, freed: no longer live, with its kind, alignment and units. -/
+/-- The block, freed: no longer live, with its kind, alignment, units and
+address. -/
 def Block.kill (b : Block u) : Block u := { b with live := false }
 
 namespace Memory
@@ -163,10 +169,10 @@ namespace Memory
 def empty : Memory u := ⟨[]⟩
 
 /-- Allocates a block of `n` units of kind `k`, aligned to `al` units. Its
-units are poison, its id is one that no allocation had before, and it gives
-the pointer to its first unit. -/
+units are poison, it has no address yet, its id is one that no allocation
+had before, and it gives the pointer to its first unit. -/
 def alloc (M : Memory u) (k : AllocKind) (n al : Nat) : Pointer × Memory u :=
-  (⟨some M.blocks.length, 0⟩, ⟨M.blocks ++ [⟨k, al, List.replicate n .poison, true⟩]⟩)
+  (⟨some M.blocks.length, 0⟩, ⟨M.blocks ++ [⟨k, al, List.replicate n .poison, true, none⟩]⟩)
 
 /-- Frees the allocation `a`: it stays in the memory, and no access may
 reach it again. Freeing changes nothing else. It never faults: freeing an
