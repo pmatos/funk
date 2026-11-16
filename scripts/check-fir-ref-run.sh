@@ -18,8 +18,9 @@
 # allocation outlives the call that made it (#212, stage 3). On a 256 KiB
 # stack, it runs a ret of 100,000 values, calls with 100,000 results and
 # 100,000 arguments, a br of 100,000 block arguments and a function of
-# 100,000 parameters (#405); the call whose ret reads its 100,000 results
-# takes time near linear in them (#413).
+# 100,000 parameters (#405). The ret after that call reads 100,000 values
+# bound long before, which took 33 seconds per mode before #413; the check
+# compares results and sets no limit on time.
 set -euo pipefail
 
 if [[ $# -ne 1 ]]; then
@@ -187,8 +188,9 @@ END
 # of 100,000 values runs in each mode, and so do a call that returns
 # 100,000 values, a call of 100,000 arguments, a br of 100,000 block
 # arguments and a function of 100,000 parameters, given on the command line.
-# The ret after that call reads values bound long before, each lookup
-# paying before the next (#413).
+# The call is in a file of its own, so that the other runs do not read it.
+# Its ret reads values bound long before, each lookup paying before the
+# next (#413).
 n=100000
 ones=$(printf ',"1"%.0s' $(seq 2 $n))
 ps=$(printf ', %%p%d: i8' $(seq 2 $n))
@@ -201,13 +203,16 @@ ps=$(printf ', %%p%d: i8' $(seq 2 $n))
     printf '\nfunc @br() -> i8 {\n^e:\n  %%c: i8 = const 1 @0\n'
     printf '  br ^b(%%c%s) @0\n^b(%%p1: i8%s):\n  ret %%p%d @0\n}\n' \
         "$(printf ', %%c%.0s' $(seq 2 $n))" "$ps" "$n"
-    printf '\nfunc @h() -> i8%s {\n^e:\n  %%c: i8 = const 1 @0\n' "$(printf ', i8%.0s' $(seq 2 $n))"
+    printf '\nlocs {\n  @0 = unknown\n}\n'
+} >"$tmp/wide.fir"
+{
+    printf 'func @h() -> i8%s {\n^e:\n  %%c: i8 = const 1 @0\n' "$(printf ', i8%.0s' $(seq 2 $n))"
     printf '  ret %%c%s @0\n}\n' "$(printf ', %%c%.0s' $(seq 2 $n))"
     printf '\nfunc @call() -> i8%s {\n^e:\n' "$(printf ', i8%.0s' $(seq 2 $n))"
     printf '  %%r1: i8%s = call @h @0\n' "$(printf ', %%r%d: i8' $(seq 2 $n))"
     printf '  ret %%r1%s @0\n}\n' "$(printf ', %%r%d' $(seq 2 $n))"
     printf '\nlocs {\n  @0 = unknown\n}\n'
-} >"$tmp/wide.fir"
+} >"$tmp/wide-call.fir"
 while read -r want mode; do
     # shellcheck disable=SC2086 # MODE is a list of words.
     (ulimit -c 0 && LEAN_STACK_SIZE_KB=256 runs "$tmp/wide.fir" 0 "$want" $mode @f) || status=1
@@ -216,7 +221,7 @@ ${ret}["1"$ones]$none
 {"kind":"outcomes","choices":0,"outcomes":[${ret}["1"$ones]}]} --exhaustive
 ${ret}["1"$ones],"choices":0,"sequence":[]} --seed 7
 END
-while read -r values run; do
+while read -r file values run; do
     for mode in '' --exhaustive '--seed 7'; do
         case $mode in
         '') want="$ret$values$none" ;;
@@ -224,14 +229,14 @@ while read -r values run; do
         *) want="$ret$values,\"choices\":0,\"sequence\":[]}" ;;
         esac
         # shellcheck disable=SC2086 # MODE and RUN are lists of words.
-        (ulimit -c 0 && LEAN_STACK_SIZE_KB=256 runs "$tmp/wide.fir" 0 "$want" $mode $run) ||
+        (ulimit -c 0 && LEAN_STACK_SIZE_KB=256 runs "$tmp/$file" 0 "$want" $mode $run) ||
             status=1
     done
 done <<END
-["1"$ones] @call
-["1"] @args
-["1"] @br
-["1"] @g $(printf '1 %.0s' $(seq $n))
+wide-call.fir ["1"$ones] @call
+wide.fir ["1"] @args
+wide.fir ["1"] @br
+wide.fir ["1"] @g $(printf '1 %.0s' $(seq $n))
 END
 # freeze of poison makes a choice: %a + 1 overflows i2 at 1
 # (docs/decisions/fir-ref-command-line.md#scripted-and-exhaustive-modes).

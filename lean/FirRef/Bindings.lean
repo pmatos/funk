@@ -150,40 +150,27 @@ def zipRevH : List (Name × d.Ty) → {ts : List d.Ty} → HVector toType ts →
 
 variable [DecidableEq d.Ty]
 
-/-- What `lookOperands` gives: values, with the bindings after their
-lookups, or why the op is stuck. -/
-inductive Looked (d : Dialect) [TyDenote d.Ty] (ts : List d.Ty) where
-  | ok (vs : HVector toType ts) (b : Bindings d)
-  | fail (e : Stuck)
-
-/-- The values of the names `xs`, one for each type of `ts`, with `b` after
-their lookups, or why `Env.operands` is stuck on them. It walks the names in
-a loop of tail calls, with the values found so far in `acc`, the last first,
-and builds the vector at the end (`ofRev`), so it takes no stack per operand
-(#405). Each lookup pays before the next, so an op that reads many values
-bound long before moves `young` into `old` once and reads the rest there
-(#413). -/
-def lookOperands (b : Bindings d) (ts : List d.Ty) (xs : List Name) : Looked d ts :=
+/-- `Env.operands`, on bindings: the values of the names `xs`, one for each
+type of `ts`, with `b` after their lookups, or why `Env.operands` is stuck
+on them. It walks the names in a loop of tail calls, with the values found
+so far in `acc`, the last first, and builds the vector at the end
+(`ofRev`), so it takes no stack per operand (#405). Each lookup pays before
+the next, so an op that reads many values bound long before moves `young`
+into `old` once and reads the rest there (#413). -/
+def args (b : Bindings d) (ts : List d.Ty) (xs : List Name) :
+    Except Stuck (HVector toType ts × Bindings d) :=
   go b ts xs [] rfl
 where
   go : Bindings d → (rest : List d.Ty) → List Name → (acc : List (DVal d)) →
-      (acc.map (·.1)).reverse ++ rest = ts → Looked d ts
-    | b, [], [], acc, h => .ok (ofRev acc (by simpa using h)) b
+      (acc.map (·.1)).reverse ++ rest = ts → Except Stuck (HVector toType ts × Bindings d)
+    | b, [], [], acc, h => .ok (ofRev acc (by simpa using h), b)
     | b, t :: rest, x :: xs, acc, h => match look b x with
       | .hit ⟨t', v⟩ k =>
         if ht : t' = t then
           go (b.pay (cost k)) rest xs (⟨t', v⟩ :: acc) (by subst ht; simpa using h)
-        else .fail ⟨s!"%{x} does not have the operand's type"⟩
-      | .miss => .fail ⟨s!"%{x} is not defined"⟩
-    | _, _, _, _, _ => .fail ⟨"an op has a number of operands other than its op instance takes"⟩
-
-/-- `Env.operands`, on bindings: it looks each name up once, and each
-lookup pays before the next. -/
-@[inline] def args (b : Bindings d) (ts : List d.Ty) (xs : List Name) :
-    Except Stuck (HVector toType ts × Bindings d) :=
-  match lookOperands b ts xs with
-  | .ok vs b => pure (vs, b)
-  | .fail e => .error e
+        else .error ⟨s!"%{x} does not have the operand's type"⟩
+      | .miss => .error ⟨s!"%{x} is not defined"⟩
+    | _, _, _, _, _ => .error ⟨"an op has a number of operands other than its op instance takes"⟩
 
 /-- The values of the names `xs`, after `acc`, the last first. -/
 def values (b : Bindings d) : List Name → List (DVal d) → Except Stuck (List (DVal d) × Bindings d)
