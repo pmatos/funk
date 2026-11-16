@@ -197,13 +197,13 @@ for v in 0 1 -2 -1; do outcomes+="${ret}[\"$v\"]},"; done
 runs "$tmp/freeze.fir" 0 "${outcomes%,}]}" --exhaustive @f 1 || status=1
 runs "$tmp/freeze.fir" 0 '{"kind":"choice-budget-exceeded","budget":1}' \
     --exhaustive --choice-bits 1 @f 1 || status=1
-# With --nans, exhaustive mode tries at a NaN choice the quiet NaNs and the
+# With --nans, exhaustive mode tries at a NaN choice the quiet NaN and the
 # NaNs it is given, and says whether the outcomes are complete (#219).
 all="${outcomes%,}]}"
 runs "$tmp/freeze.fir" 0 "${all/\"choices\":1,/\"choices\":1,\"complete\":true,}" \
     --exhaustive --nans 0x7fc00000 @f 1 || status=1
 nans='{"kind":"outcomes","choices":1,"complete":false,"outcomes":['
-for v in 0x7fc00000 0xffc00000 0x7f800001; do nans+="${ret}[\"$v\"]},"; done
+for v in 0x7fc00000 0x7f800001; do nans+="${ret}[\"$v\"]},"; done
 runs $c/float-binary-f32.fir 0 "${nans%,}]}" --exhaustive --nans 0x7f800001,0x3f800000 \
     @fsub 0x7f800000 0x7f800000 || status=1
 runs $c/add.fir 2 'fir-ref: 9223372036854775808 is not a value of type i64' \

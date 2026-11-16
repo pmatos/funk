@@ -70,7 +70,7 @@ def usage : String := "usage: fir-ref fmt [--check] FILE...
               --choice-bits B   with --exhaustive, choose at most B bits
                                 in all on one path (default 16)
               --nans V,...      with --exhaustive, try at each NaN choice
-                                only the quiet NaNs and each bit pattern
+                                only the quiet NaN and each bit pattern
                                 V, such as 0x7fc00000, that is a NaN of
                                 its format, and print whether the
                                 outcomes are complete

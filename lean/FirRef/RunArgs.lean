@@ -22,9 +22,9 @@ next argument as its value. An argument such as `-5` is not an option.
 * `--choice-bits B`: exhaustive mode's choice budget, B bits in all on one
   path; 16 by default.
 * `--nans V,V,...`: with `--exhaustive`, try at each NaN choice only the
-  quiet NaN of each sign and each `V` that is a NaN of its format
-  (`Gpu.exhaustiveNaN`). Each `V` is a bit pattern, `0x` and hexadecimal
-  digits, separated by commas, with no spaces; the empty text gives none.
+  positive quiet NaN and each `V` that is a NaN of its format
+  (`Gpu.exhaustiveNaN`). Each `V` is a bit pattern, `0x` and lowercase
+  hexadecimal digits, separated by commas, with no spaces; the empty text gives none.
 * `--seed S`: sampled mode instead of scripted mode: each choice is drawn
   from a generator seeded with S, from 0 to 2^64 - 1.
 * `--work-item-id X,Y,Z`, `--work-group-id X,Y,Z`, `--work-group-size X,Y,Z`
@@ -72,24 +72,21 @@ def optionNat (opt what n : String) : Except String Nat :=
 otherwise the texts between its commas. -/
 def choiceList (s : String) : List String := if s.isEmpty then [] else s.splitOn ","
 
-/-- The bit pattern that `v` spells: `0x` and one or more hexadecimal
-digits. -/
+/-- The bit pattern that `v` spells: `0x` and one or more lowercase
+hexadecimal digits, as fir's text writes them, read as the lexer reads
+them (`Text.hexValue`). -/
 def hexBits (v : String) : Option Nat :=
   let ds := v.toList.drop 2
-  if v.startsWith "0x" && !ds.isEmpty then
-    ds.foldlM (fun n c =>
-      if c.isDigit then some (16 * n + (c.toNat - '0'.toNat))
-      else if 'a' ≤ c && c ≤ 'f' then some (16 * n + (c.toNat - 'a'.toNat + 10))
-      else if 'A' ≤ c && c ≤ 'F' then some (16 * n + (c.toNat - 'A'.toNat + 10))
-      else none) 0
+  if v.startsWith "0x" && !ds.isEmpty && ds.all Text.isHexDigit then some (Text.hexValue ds)
   else none
 
 /-- The NaNs that `--nans` spells: none for the empty text, and otherwise
-the bit pattern between each pair of commas. -/
+the bit pattern between each pair of commas. An error names the first
+text that is no bit pattern. -/
 def nanList (v : String) : Except String (List Nat) :=
-  if v.isEmpty then .ok [] else match (v.splitOn ",").mapM hexBits with
-    | some ns => .ok ns
-    | none => .error s!"--nans takes bit patterns, as 0x7fc00000,0xffc00000, not {shown v}"
+  if v.isEmpty then .ok [] else (v.splitOn ",").mapM fun n => match hexBits n with
+    | some b => .ok b
+    | none => .error s!"--nans takes bit patterns, as 0x7fc00000,0xffc00000, not {shown n}"
 
 /-- The three numbers that the value `v` of the work-item option `opt`
 spells, one per dimension: ASCII decimal digits below 2^32, joined by

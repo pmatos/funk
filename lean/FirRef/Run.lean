@@ -18,8 +18,9 @@ line (`docs/decisions/fir-ref-command-line.md#fir-ref-run`).
 `fir-ref` runs the interpreter in the state layer over the spec's tree of
 choices, from the empty memories, with the rules of the core and `gpu`, and
 walks the tree in one of the modes below, the spec's `Gpu.scripted`,
-`Gpu.exhaustive` and `Gpu.sampled`, which Lean proves sound for the runs
-with memory (`Gpu.scripted_memOutcomes`, `Gpu.exhaustive_memOutcomes` and
+`Gpu.exhaustive`, `Gpu.exhaustiveNaN` and `Gpu.sampled`, which Lean proves
+sound for the runs with memory (`Gpu.scripted_memOutcomes`,
+`Gpu.exhaustive_memOutcomes`, `Gpu.exhaustiveNaN_memOutcomes` and
 `Gpu.sampled_memOutcomes`):
 
 * scripted mode, the default, follows the one path that a choice sequence
@@ -30,7 +31,7 @@ with memory (`Gpu.scripted_memOutcomes`, `Gpu.exhaustive_memOutcomes` and
 * exhaustive mode, `--exhaustive`, reports every outcome of the run, when
   no path chooses more bits in all than its budget, `--choice-bits`;
 * with `--nans`, exhaustive mode tries, at each NaN choice of a float op,
-  only the quiet NaN of each sign and the NaNs it is given, the spec's
+  only the positive quiet NaN and the NaNs it is given, the spec's
   `Gpu.exhaustiveNaN`: each outcome it reports is one of the run's
   (`Gpu.exhaustiveNaN_memOutcomes`), and all of them when no path made a NaN
   choice (`Gpu.exhaustiveNaN_exact`);
@@ -115,8 +116,9 @@ def readGpuArgs : (ts : List CoreGpu.Ty) → List String → Except String (HVec
 
 /-! # The modes, by the machine
 
-`runBytes` below calls the spec's `Gpu.scripted`, `Gpu.exhaustive` and
-`Gpu.sampled`, the modes of the sum of the core and `gpu` at a work-item;
+`runBytes` below calls the spec's `Gpu.scripted`, `Gpu.exhaustive`,
+`Gpu.exhaustiveNaN` and `Gpu.sampled`, the modes of the sum of the core and
+`gpu` at a work-item;
 the core's own modes, `Core.scripted`, `Core.exhaustive` and
 `Core.sampled`, are what it called before #212. The theorems here make Lean
 compile calls of either as calls of

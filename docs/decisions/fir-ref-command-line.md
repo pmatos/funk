@@ -217,10 +217,10 @@ choices are arguments and a tool error never passes.
 `--nans V,V,...` goes with `--exhaustive`, and is a usage error without it.
 Each `V` is a bit pattern, `0x` and hexadecimal digits, separated by commas
 with no spaces; the empty text gives none. At a NaN choice of `float<e,m>`,
-the run tries the quiet NaN of each sign, then each `V` that is a NaN of that
+the run tries the positive quiet NaN, then each `V` that is a NaN of that
 format, in order and each once; a `V` that is not is skipped. Every other
 choice is tried in full, as `--exhaustive` alone does. A NaN choice costs
-the fewest bits that count the NaNs it tries, 1 for the two quiet NaNs, and
+the fewest bits that count the NaNs it tries: none with no `V`, 1 with one, and
 `--choice-bits` bounds them with the other choices (ADR-2026-11-16-0855,
 [fir-ref.md](fir-ref.md#trying-a-few-nans)).
 

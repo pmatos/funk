@@ -7,8 +7,8 @@ A float op whose result is a NaN chooses its sign and mantissa: `m + 1` bits
 in `float<e,m>`, 24 in `f32` and 53 in `f64` (ADR-2026-11-09-1549). Exhaustive
 mode tries every value of a choice, so a run that makes such a choice goes past
 any budget it can walk. The tree labels that choice, `ChoiceKind.nan e`, and
-the walk below tries, at a NaN choice, only a few NaNs: the quiet NaN of each
-sign, and each bit pattern of a list it is given that is a NaN of the format.
+the walk below tries, at a NaN choice, only a few NaNs: the positive quiet NaN,
+and each bit pattern of a list it is given that is a NaN of the format.
 At every other choice it tries every value, as exhaustive mode does
 (ADR-2026-11-16-0855).
 
@@ -38,11 +38,13 @@ def isNaNBits (e m n : Nat) : Bool :=
 
 /-- The NaNs that the walk tries at a NaN choice of `w = m + 1` bits in
 `float<e,m>`, as the values of the choice, the top bit the sign and the low
-`m` bits the mantissa: the quiet NaN, with only the top mantissa bit set, of
-each sign, then each NaN of `nans`, each value once. -/
+`m` bits the mantissa: the positive quiet NaN, with only the top mantissa
+bit set, then each NaN of `nans`, each value once. With no NaNs given, a NaN
+choice tries one value and charges nothing, so a run with any number of NaN
+choices has one path through them. -/
 def nanTries (nans : List Nat) (e w : Nat) : List (BitVec w) :=
   let m := w - 1
-  ((2 ^ (m - 1) :: (2 ^ m + 2 ^ (m - 1)) ::
+  ((2 ^ (m - 1) ::
       (nans.filter (isNaNBits e m)).map fun n => n / 2 ^ (e + m) * 2 ^ m + n % 2 ^ m).map
     (BitVec.ofNat w)).eraseDups
 
@@ -54,7 +56,7 @@ it tries, the bits it charges, and whether the choice is a NaN's (`1`) or
 not (`0`). -/
 def tryAt (nans : List Nat) (w : Nat) : ChoiceKind → List (BitVec w) × Nat × Nat
   | .bits => (allBits w, w, 0)
-  | .nan e => (nanTries nans e w, bitsFor (nanTries nans e w).length, 1)
+  | .nan e => let ts := nanTries nans e w; (ts, bitsFor ts.length, 1)
 
 /-- The walk that tries a few NaNs, with the NaNs `nans`: every leaf it
 reaches, each with the choices and the NaN choices on its path, when no path

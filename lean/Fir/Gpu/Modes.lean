@@ -116,8 +116,8 @@ def exhaustive (M : Module CoreGpu) (f : Func CoreGpu) (args : HVector toType (f
 
 /-- Exhaustive mode that tries a few NaNs, `fir-ref run --exhaustive --nans`,
 on the function `f` of the module `M` at the work-item: the paths of its run
-with memory on which each NaN choice is the quiet NaN of either sign or a NaN
-of `nans`, each with its choices and its NaN choices, when no path charges
+with memory on which each NaN choice is the positive quiet NaN or a NaN of
+`nans`, each with its choices and its NaN choices, when no path charges
 more than `budget` bits in all (ADR-2026-11-16-0855). -/
 def exhaustiveNaN (M : Module CoreGpu) (f : Func CoreGpu)
     (args : HVector toType (f.params.map (·.2))) (fuel budget : Nat) (nans : List Nat) :

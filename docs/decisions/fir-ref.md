@@ -111,7 +111,7 @@ choices is a node of the kind `ChoiceKind.nan e`. Every other choice has the
 kind `bits` (ADR-2026-11-16-0855).
 
 `ChoiceTree.exploreNaN` walks the tree as exhaustive mode does, but at a NaN
-choice it tries only the quiet NaN of each sign and the NaNs it is given that
+choice it tries only the positive quiet NaN and the NaNs it is given that
 are NaNs of the format, and charges the budget the bits that count them
 (`lean/Fir/Execution/NaNModes.lean`). Each leaf it lists is a way the tree
 may end (`ChoiceTree.exploreNaN_sub`), so its list is a subset of the set,
@@ -122,10 +122,13 @@ and `gpu`, which `fir-ref run --exhaustive --nans` computes
 ([the command line](fir-ref-command-line.md#trying-a-few-nans)).
 
 The subset misses a NaN whose bits integer ops change before they reach a
-result, and UB or a stuck path that only an untried payload reaches. The
-harness gives `fir-ref` native code's own result bits as the NaNs to try, so
-a pass is a proof that the native result is in the set
-(ADR-2026-11-16-0855). Rejected: a symbolic "any NaN" outcome, which is
+result, and UB or a stuck path that only an untried payload reaches. Each
+NaN given is tried at every NaN choice, so the paths grow with the NaN
+choices on a path, within the budget; the quiet NaN alone costs no bit, so
+with no NaN given a run has one path through its NaN choices. The harness is
+to give `fir-ref` native code's own result bits as the NaNs to try, so that a
+listed outcome is a proof that the native result is in the set; #219 builds
+that judgement (ADR-2026-11-16-0855). Rejected: a symbolic "any NaN" outcome, which is
 exact only while no op reads a NaN's bits, and `bitcast` and memory read
 them.
 

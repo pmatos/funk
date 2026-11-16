@@ -14,23 +14,24 @@ fails when the Lean changes under it.
 
 #doc (Manual) "Exhaustive runs that try a few NaNs: readable blocks" =>
 
-:::moduleDocs (fingerprint := "5596578939864592225")
+:::moduleDocs (fingerprint := "13600435852547743554")
 :::
 
-:::readable Fir.ChoiceTree.isNaNBits Fir.ChoiceTree.nanTries Fir.ChoiceTree.bitsFor Fir.ChoiceTree.tryAt (fingerprint := "3441778784682940205")
+:::readable Fir.ChoiceTree.isNaNBits Fir.ChoiceTree.nanTries Fir.ChoiceTree.bitsFor Fir.ChoiceTree.tryAt (fingerprint := "15499989719813371334")
 *Definition: the values that the walk tries at a choice.* A number $`n` is
 the bits of a NaN of $`\mathsf{float}\langle e,m\rangle` when it has
 $`1 + e + m` bits at most, every exponent bit set and a mantissa that is
 not zero. At a NaN choice of $`w = m + 1` bits, given the numbers
 $`\vec{n}`, the walk tries, each once and in this order:
 
-* the quiet NaN, with only the top mantissa bit set, of each sign:
-  $`2^{m-1}` and $`2^m + 2^{m-1}`;
+* the positive quiet NaN, with only the top mantissa bit set: $`2^{m-1}`;
 * for each $`n` of $`\vec{n}` that is the bits of a NaN of the format, its
   sign and mantissa: $`\lfloor n / 2^{e+m} \rfloor \cdot 2^m + (n \bmod 2^m)`.
 
 It charges such a choice the fewest bits that count the values it tries,
-$`\lfloor \log_2 (2k - 1) \rfloor` for $`k` values. At a choice of the kind
+$`\lfloor \log_2 (2k - 1) \rfloor` for $`k` values, so nothing for the
+quiet NaN alone: with no numbers given, a run with any number of NaN choices
+has one path through them. At a choice of the kind
 $`\mathsf{bits}` it tries every one of the $`2^w` values and charges $`w`
 bits, as exhaustive mode does.
 :::
@@ -56,7 +57,7 @@ path of the tree.
 
 :::readable Fir.ChoiceTree.collect_ne_nil Fir.ChoiceTree.nanTries_ne_nil Fir.ChoiceTree.tryAt_ne_nil Fir.ChoiceTree.exploreNaN_ne_nil (pin := Fir.ChoiceTree.collect) (fingerprint := "652390963901420308")
 *Theorem: the walk lists at least one leaf.* The walk tries at least one
-value at every choice, the quiet NaNs at a NaN choice and every value at
+value at every choice, the quiet NaN at a NaN choice and every value at
 any other, so it lists at least one leaf of every tree.
 :::
 

@@ -236,7 +236,7 @@ and takes `poison` at a float type. It gives one result, with no choice, for
 every result that is not a NaN, so `funk` and `fir-ref` compare those
 differentially. A NaN result makes a choice, so scripted mode needs `--choices`
 for it, and exhaustive mode at `f32` and `f64` passes its 16-bit budget. With
-`--nans`, exhaustive mode tries the quiet NaN of each sign and the NaNs it is
+`--nans`, exhaustive mode tries the positive quiet NaN and the NaNs it is
 given, and lists a part of the run's outcomes, proved to be outcomes of the
 run ([fir-ref-command-line.md](fir-ref-command-line.md#trying-a-few-nans)).
 The harness does not yet judge native NaN results with it (#219). `fcmp`'s result is
