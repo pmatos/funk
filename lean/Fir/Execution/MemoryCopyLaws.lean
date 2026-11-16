@@ -78,17 +78,15 @@ theorem copyUnits_load (S : Memories Mem unit) (e : Ev (Unit × Memories Mem uni
     copyUnits (m := SM) x dst src n al al' S e ↔
       (∃ us, S.load x src n al = .ok us ∧ MonadMemory.store (m := SM) x dst us al' S e) ∨
         ∃ f, S.load x src n al = .error f ∧ e = .ub f.reason := by
-  show ((∃ p, MonadMemory.load (m := SM) x src n al S (.ok p) ∧
-      MonadMemory.store (m := SM) x dst p.1 al' p.2 e) ∨
-    ∃ r, MonadMemory.load (m := SM) x src n al S (.ub r) ∧ e = .ub r) ↔ _
+  rw [copyUnits, SetM.stateBind_apply]
   constructor
-  · rintro (⟨⟨us, S₁⟩, hl, hs⟩ | ⟨r, hl, rfl⟩)
+  · rintro (⟨us, S₁, hl, hs⟩ | ⟨r, hl, rfl⟩)
     · rcases (load_apply x src n al S _).1 hl with ⟨_, h, he⟩ | ⟨_, _, he⟩ <;> cases he
       exact .inl ⟨us, h, hs⟩
     · rcases (load_apply x src n al S _).1 hl with ⟨_, _, he⟩ | ⟨f, h, he⟩ <;> cases he
       exact .inr ⟨f, h, rfl⟩
   · rintro (⟨us, h, hs⟩ | ⟨f, h, rfl⟩)
-    · exact .inl ⟨(us, S), (load_apply x src n al S _).2 (.inl ⟨us, h, rfl⟩), hs⟩
+    · exact .inl ⟨us, S, (load_apply x src n al S _).2 (.inl ⟨us, h, rfl⟩), hs⟩
     · exact .inr ⟨_, (load_apply x src n al S _).2 (.inr ⟨f, h, rfl⟩), rfl⟩
 
 /-- The ways a copy of units may end: with the memories that the copy

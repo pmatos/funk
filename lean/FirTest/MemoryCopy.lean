@@ -43,30 +43,38 @@ after `S`. -/
 def units (S : Except Fault Two) (a : Nat) (n : Nat) : Except Fault (List (MemUnit 8)) :=
   S.bind fun S => S.load false ⟨some a, 0⟩ n 1
 
+/-- `S1` after a copy of `n` units of the memory `false` from `src` to `dst`. -/
+def copied (dst src : Pointer) (n al al' : Nat) : Except Fault Two :=
+  S1.bind (·.copy false dst src n al al')
+
+/-- The fault of a copy from `S1`, or `()` when it has none. -/
+def fault (dst src : Pointer) (n al al' : Nat) : Except Fault Unit :=
+  (copied dst src n al al').map fun _ => ()
+
 -- A pointer copied unit by unit keeps its fragments, and with them its
 -- provenance, so a load of a pointer from the copy decodes `p0` again.
-#guard units (S1.bind (·.copy false p1 ⟨some 0, 2⟩ 2 1 1)) 1 2 == .ok frags
-#guard (units (S1.bind (·.copy false p1 ⟨some 0, 2⟩ 2 1 1)) 1 2).map
+#guard units (copied p1 ⟨some 0, 2⟩ 2 1 1) 1 2 == .ok frags
+#guard (units (copied p1 ⟨some 0, 2⟩ 2 1 1) 1 2).map
   (decodePtr (u := 8) 0 2 .little) == .ok (.value p0)
 
 -- Part of a pointer is copied as its fragment alone, which loads back as
 -- poison.
-#guard units (S1.bind (·.copy false p1 ⟨some 0, 3⟩ 1 1 1)) 1 1 == .ok [.frag 0 p0 1]
-#guard (units (S1.bind (·.copy false p1 ⟨some 0, 3⟩ 1 1 1)) 1 2).map
+#guard units (copied p1 ⟨some 0, 3⟩ 1 1 1) 1 1 == .ok [.frag 0 p0 1]
+#guard (units (copied p1 ⟨some 0, 3⟩ 1 1 1) 1 2).map
   (decodePtr (u := 8) 0 2 .little) == .ok .poison
 
 -- Fresh units are poison, and a copy of them over bits makes those units
 -- poison.
-#guard units (S1.bind (·.copy false p0 p1 2 1 1)) 0 4 == .ok ([.poison, .poison] ++ frags)
+#guard units (copied p0 p1 2 1 1) 0 4 == .ok ([.poison, .poison] ++ frags)
 
 -- A copy writes the units its load gave: overlapping ranges get what the
 -- source held before the copy, moving forward and backward alike.
-#guard units (S1.bind (·.copy false ⟨some 0, 1⟩ p0 3 1 1)) 0 4 == .ok [b1, b1, b2, .frag 0 p0 0]
-#guard units (S1.bind (·.copy false p0 ⟨some 0, 1⟩ 3 1 1)) 0 4 ==
+#guard units (copied ⟨some 0, 1⟩ p0 3 1 1) 0 4 == .ok [b1, b1, b2, .frag 0 p0 0]
+#guard units (copied p0 ⟨some 0, 1⟩ 3 1 1) 0 4 ==
   .ok [b2, .frag 0 p0 0, .frag 0 p0 1, .frag 0 p0 1]
 
 -- A copy of a range onto itself changes nothing.
-#guard units (S1.bind (·.copy false p0 p0 4 1 1)) 0 4 == units S1 0 4
+#guard units (copied p0 p0 4 1 1) 0 4 == units S1 0 4
 
 -- A copy reaches no other memory, not even the allocation of the same id
 -- there.
@@ -74,17 +82,16 @@ def units (S : Except Fault Two) (a : Nat) (n : Nat) : Except Fault (List (MemUn
   (S.copy false p0 p1 2 1 1).bind fun S' => S'.load true p0 2 1) == .ok [b1, b2]
 
 -- A copy faults as its load does first, then as its store does.
-#guard (S1.bind (·.copy false p1 ⟨some 0, 2⟩ 4 1 1)).map (fun _ => ()) == .error .outOfBounds
-#guard (S1.bind (·.copy false ⟨none, 0⟩ ⟨some 0, 9⟩ 1 1 1)).map (fun _ => ()) ==
-  .error .outOfBounds
-#guard (S1.bind (·.copy false ⟨none, 0⟩ p0 1 1 1)).map (fun _ => ()) == .error .noProvenance
-#guard (S1.bind (·.copy false ⟨some 1, 7⟩ p0 2 1 1)).map (fun _ => ()) == .error .outOfBounds
-#guard (S1.bind (·.copy false ⟨some 1, 1⟩ p0 2 1 2)).map (fun _ => ()) == .error .misaligned
-#guard (S1.bind (·.copy false ⟨some 1, 7⟩ p0 2 2 1)).map (fun _ => ()) == .error .misaligned
+#guard fault p1 ⟨some 0, 2⟩ 4 1 1 == .error .outOfBounds
+#guard fault ⟨none, 0⟩ ⟨some 0, 9⟩ 1 1 1 == .error .outOfBounds
+#guard fault ⟨none, 0⟩ p0 1 1 1 == .error .noProvenance
+#guard fault ⟨some 1, 7⟩ p0 2 1 1 == .error .outOfBounds
+#guard fault ⟨some 1, 1⟩ p0 2 1 2 == .error .misaligned
+#guard fault ⟨some 1, 7⟩ p0 2 2 1 == .error .misaligned
 -- A copy of units is an access through both pointers whatever its length:
 -- one of no units still faults through a pointer with no provenance.
-#guard (S1.bind (·.copy false ⟨none, 0⟩ p0 0 1 1)).map (fun _ => ()) == .error .noProvenance
-#guard (S1.bind (·.copy false p1 p0 0 1 1)).map (fun _ => ()) == .ok ()
+#guard fault ⟨none, 0⟩ p0 0 1 1 == .error .noProvenance
+#guard fault p1 p0 0 1 1 == .ok ()
 
 /-- The laws hold of the example: a copy of units, in the state layer, ends
 with the memories that `Memories.copy` gives. -/
