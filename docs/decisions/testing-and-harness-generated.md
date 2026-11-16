@@ -13,9 +13,9 @@ Every pull request runs generated programs on `fir-ref` and as native code
 and 500 random texts for `fir-ref fmt`.
 
 `generate::program` makes a module of the backend's widths and argument vectors,
-often at boundary values. Its functions are random, bounded (`bounded.rs`), or
-planted to end in UB or out of fuel. Arguments hold no `poison`, since each one
-multiplies native runs.
+often at boundary values. Its functions are random, bounded (`bounded.rs`),
+planted to end in UB or out of fuel, or float functions (`floats.rs`).
+Arguments hold no `poison`, since each one multiplies native runs.
 
 A generated run is judged differently from a corpus test:
 
@@ -28,26 +28,6 @@ A generated run is judged differently from a corpus test:
   judges it.
 - Otherwise the run is a differential test by the corpus's rules.
 - A stuck path fails in every case.
-
-### Float functions
-
-Each program also has one or two float functions (`floats.rs`, #219), at
-`f32` or `f64`. A float function is one block: a chain of one to five ops
-that may give a NaN (the arithmetic ops, `fpext` and `fptrunc`), each on the
-value before it, so every value reaches `ret`. It may also return an earlier
-float and an `fcmp` result. Its arguments are often zeros, infinities, quiet
-and signalling NaNs with payloads, and boundary values. It has no fast-math
-flag, no integer op on a NaN's bits and no UB, so its runs are compared with
-native code by the rules of
-[testing-and-harness-floats.md](testing-and-harness-floats.md#how-a-nan-result-is-judged).
-
-A second run of `fir-ref` that tries native code's NaNs charges every NaN
-choice. A float function has at most two float results and five ops that
-may choose a NaN, so it charges at most 2 bits for each, 10 in all, within
-the budget of a generated run, since the human ruled on 2026-11-16 that NaN
-tries count against the budget (#219 Q2). Rejected: making a run past the
-budget interpreter-only, which would hide a native NaN that no NaN choice
-gives.
 
 Ordinary runs have 20,000 steps of fuel. Runs of the functions that stay
 defined have 1,000,000, and planted fuel runs have 1,000 (ADR-2026-11-08-2115).
@@ -66,6 +46,28 @@ function, but random functions recurse until they return or fuel stops them.
 So a run that returns very deep could outgrow the native stack although the
 code is right; if one appears, it is the stack's limit, not a miscompile
 ([testing-and-harness.md](testing-and-harness.md#a-run-that-outgrows-its-stack)).
+
+### Float functions
+
+Each program also has one or two float functions (`floats.rs`, #219), at
+`f32` or `f64`. A float function is one block: a chain of one to five ops
+that may give a NaN (the arithmetic ops, `fpext` and `fptrunc`), each on the
+value before it, so every value reaches `ret`. It may also return an earlier
+float and an `fcmp` result. Its arguments are often zeros, infinities, quiet
+and signalling NaNs with payloads, and boundary values. It has no fast-math
+flag, no integer op on a NaN's bits and no UB, so its runs are compared with
+native code by the rules of
+[testing-and-harness-floats.md](testing-and-harness-floats.md#how-a-nan-result-is-judged).
+Each of their runs reaches native code, so they count towards the share that
+the hook's floor asks for.
+
+A second run of `fir-ref` that tries native code's NaNs charges every NaN
+choice. A float function has at most two float results and five ops that
+may choose a NaN, so it charges at most 2 bits for each, 10 in all, within
+the budget of a generated run, since the human ruled on 2026-11-16 that NaN
+tries count against the budget (#219 Q2). Rejected: making a run past the
+budget interpreter-only, which would hide a native NaN that no NaN choice
+gives.
 
 ### Fresh seeds
 
