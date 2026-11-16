@@ -198,8 +198,10 @@ def outcomes(ran: Ran) -> Outcomes | BudgetExceeded | str:
     """What `fir-ref run --exhaustive` reports
     (docs/decisions/fir-ref-command-line.md#scripted-and-exhaustive-modes):
     every outcome of the run and the most `choices` that one path made, with
-    exit status 1 when one is `stuck` and 0 otherwise; or that a path would
-    choose more bits than the `budget`, with exit status 0."""
+    exit status 1 when one is `stuck` and 0 otherwise; with `--nans`, also
+    whether the outcomes are `complete`
+    (docs/decisions/fir-ref-command-line.md#trying-a-few-nans); or that a
+    path would choose more bits than the `budget`, with exit status 0."""
     if ran.status not in (0, 1):
         return failure(ran)
     obj = one_json_line(ran.stdout)
@@ -212,13 +214,16 @@ def outcomes(ran: Ran) -> Outcomes | BudgetExceeded | str:
         return bad if budget is None or ran.status != 0 else BudgetExceeded(budget)
     items = obj.get("outcomes")
     choices = count(obj.get("choices"))
+    complete = obj.get("complete", True)
     if kind != OUTCOMES or choices is None or not isinstance(items, list):
         return bad
     found = [read_outcome(i) if isinstance(i, dict) else None for i in items]
-    if not found or None in found:
+    if not found or None in found or not isinstance(complete, bool):
         return bad
     status = 1 if any(o.kind == STUCK for o in found) else 0
-    return bad if ran.status != status else Outcomes(choices, tuple(found))
+    if ran.status != status:
+        return bad
+    return Outcomes(choices, tuple(found), complete)
 
 
 def native_values(ran: Ran) -> tuple[str, ...] | OutOfStack | str:

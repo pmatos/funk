@@ -74,7 +74,12 @@ tests = [
   equal, or anything of its type where `fir-ref` returns poison. A run that
   makes no choice has one outcome. UB or fuel exhausted among the outcomes
   makes the test invalid, which counts as a failure: raise the fuel budget, or
-  make the test interpreter-only. A native run that outgrows its stack makes
+  make the test interpreter-only. A run whose float op gives a NaN lists
+  only the outcomes with the NaNs that `fir-ref` tries, the positive quiet
+  NaN and native code's own, and the native result must refine one of
+  those
+  ([testing-and-harness-floats.md](../../docs/decisions/testing-and-harness-floats.md#how-a-nan-result-is-judged)).
+  A native run that outgrows its stack makes
   the test invalid too: recurse less deep, or raise `ulimit -s`
   ([testing-and-harness.md](../../docs/decisions/testing-and-harness.md#a-run-that-outgrows-its-stack)).
   Native code takes no `poison`: it runs on each

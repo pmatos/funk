@@ -29,6 +29,18 @@ class Execution(unittest.TestCase):
             ["fir-ref", "run", "--fuel", "99", "--exhaustive", "--", "m.fir", "@f", "0"]
         )
 
+    def test_exhaustive_passes_the_nans_it_is_given(self):
+        out = '{"kind":"choice-budget-exceeded","budget":16}\n'
+        with patch.object(tools, "run", return_value=tools.Ran(0, out, "")) as run:
+            self.runs.exhaustive(("0",), ())
+            self.runs.exhaustive(("0",), ("0xffc00000", "0x7fc00001"))
+        mode = ["fir-ref", "run", "--fuel", "99", "--exhaustive", "--nans"]
+        tail = ["--", "m.fir", "@f", "0"]
+        self.assertEqual(run.call_args_list[0].args[0], mode + [""] + tail)
+        self.assertEqual(
+            run.call_args_list[1].args[0], mode + ["0xffc00000,0x7fc00001"] + tail
+        )
+
     def test_scripted_distinguishes_omitted_and_explicit_empty_choices(self):
         response = tools.Ran(0, '{"kind":"return","values":["7"],"choices":0}\n', "")
         with patch.object(tools, "run", return_value=response) as run:
