@@ -4,36 +4,49 @@ import Fir.Execution.MemoryRuns
 /-!
 # Traced runs
 
-A traced run at one budget is the set of the ways it may end, each with the
-trace it showed: with a result, or stuck, or with UB and its reason. Its
-traced observable behaviour is what it shows over every budget:
+A traced run marks its steps. Before each op runs by its rule, the run shows
+a _step_, a mark in its trace that the world never sees. So the trace of a
+path tells, of each act, how many ops had run when the path showed it. A
+traced run at one budget is the set of the ways it may end, each with its
+marked trace: with a result, or stuck, or with UB and its reason.
 
-* a return or UB, after a finite trace, that some budget reaches;
-* silent divergence after the finite trace _t_: at every budget the run can
-  run out of fuel having shown a prefix of _t_, and from some budget on
-  having shown _t_ itself;
-* an infinite trace: for each _k_, from some budget on, the run can run out
-  of fuel having shown the first _k_ acts of the trace.
+Its traced observable behaviour is what it shows over every budget. The
+acts of a marked trace are its trace; the steps only date them.
 
-As for M0's outcomes, reading divergence so assumes that every choice has
-finitely many options. Then, by König's lemma, a run that can run out of
-fuel at every budget having shown more and more of a trace has one infinite
-path along which it shows that trace (the section on outcomes and
-behaviours).
+* A return or UB, after a finite trace, that some budget reaches.
+* Silent divergence after the finite trace _t_: from some number _N_ of
+  steps on, at every budget the run can run out of fuel having shown _t_,
+  all of it in its first _N_ steps; and at every budget it can run out of
+  fuel having shown a prefix of _t_.
+* An infinite trace _T_: there are numbers of steps _K(k)_ such that at
+  every budget _n_ the run can run out of fuel having shown a prefix of _T_,
+  with at least _k_ acts in its first _K(k)_ steps whenever _K(k) ≤ n_.
 
-A run with no event is a traced run whose every path shows an empty trace.
-Its traced observable behaviour is its observable behaviour, each outcome
-with an empty trace, divergence silent from the start; and refinement of
-such traced behaviours is refinement of the behaviours.
+Without the steps, a run that can return arbitrarily late after its last
+act could not be told apart from one that falls silent after it, nor a run
+that can show arbitrarily many acts before it returns from one that shows
+acts forever: at each budget both can run out of fuel after the same acts.
+The steps tell them apart. When every choice has finitely many options, the
+paths that meet one of these conditions at every budget are the prefixes of
+an infinite path, by König's lemma, and that path shows _t_ and then falls
+silent, or shows _T_. An event may have infinitely many answers, so an
+event's answers count as a choice here too.
+
+A run with no act, whose paths end as a run of the set monad, has the
+observable behaviour of that run, each outcome with an empty trace, and
+divergence silent from the start; so refinement of such traced runs is
+refinement of the runs.
 
 # A dialect's events
 
 A dialect says what its events and their answers are, how one event refines
 another, and gives its ops a semantics in the traced layer, wherever a run
 names its memories. The traced runs of a function are the runs of the
-interpreter in that layer, from no trace and the empty memories. A dialect
+interpreter in the traced layer of marked traces, where each op shows a
+step and then runs by the dialect's rule, from the empty memories. Erasing
+the steps maps them to the runs by the dialect's rules alone. A dialect
 whose ops show no event has, in the traced layer, its semantics with memory,
-lifted: its traced runs are then its runs with memory with an empty trace,
+lifted: its traced runs then show no act and end as its runs with memory,
 and every theorem about the refinement of its runs with memory holds of its
 traced runs. M0's tests have no events, so they keep their results.
 -/
@@ -42,69 +55,126 @@ namespace Fir
 
 open Memory
 
-/-! # Traced runs and their behaviour -/
+/-! # Marked traces -/
 
-/-- A traced run at one budget: the set of the ways it may end, each with the
-trace it showed. A path ends with a result or stuck, after the trace, or
-with UB, its reason and the trace. -/
-abbrev TRun (A O : Type) : Type :=
-  Paths (Except (String × List A) (Except Stuck (Result O) × List A))
+/-- An element of a marked trace: a step of the run, or an act. -/
+inductive Step (A : Type) where
+  | tick
+  | act (a : A)
 
 variable {A O : Type}
 
+/-- The acts of an element of a marked trace: none for a step. -/
+def Step.acts : Step A → List A
+  | .tick => []
+  | .act a => [a]
+
+/-- The acts of a marked trace: its trace. -/
+def Step.actsOf (mt : List (Step A)) : List A := mt.flatMap Step.acts
+
+/-- What a marked trace shows in its first `N` steps: its elements before its
+step `N + 1`. -/
+def Step.upTo : Nat → List (Step A) → List (Step A)
+  | _, [] => []
+  | N, .act a :: mt => .act a :: upTo N mt
+  | 0, .tick :: _ => []
+  | N + 1, .tick :: mt => .tick :: upTo N mt
+
+/-- What a marked trace shows in its first steps is a prefix of what it
+shows. -/
+theorem Step.actsOf_upTo_prefix : ∀ (N : Nat) (mt : List (Step A)),
+    Step.actsOf (Step.upTo N mt) <+: Step.actsOf mt
+  | _, [] => List.prefix_refl []
+  | N, .act a :: mt => by
+    simpa [upTo, actsOf, acts] using actsOf_upTo_prefix N mt
+  | 0, .tick :: mt => by simp [upTo, actsOf]
+  | N + 1, .tick :: mt => by
+    simpa [upTo, actsOf, acts] using actsOf_upTo_prefix N mt
+
+/-- A marked trace with no act shows none in its first steps. -/
+theorem Step.actsOf_upTo_eq_nil {mt : List (Step A)} (h : Step.actsOf mt = []) (N : Nat) :
+    Step.actsOf (Step.upTo N mt) = [] := by
+  obtain ⟨t, ht⟩ := Step.actsOf_upTo_prefix N mt
+  rw [h] at ht
+  exact (List.append_eq_nil_iff.mp ht).1
+
+/-! # Traced runs and their behaviour -/
+
+/-- A traced run at one budget: the set of the ways it may end, each with its
+marked trace. A path ends with a result or stuck, or with UB and its
+reason. -/
+abbrev TRun (A O : Type) : Type :=
+  Paths (Except (String × List (Step A)) (Except Stuck (Result O) × List (Step A)))
+
 /-- The traced observable behaviour of a run that takes fuel: each return and
 UB that some budget reaches, with its trace; silent divergence after a
-finite trace; and the infinite traces that the run shows more and more of
-as its budget grows. -/
+finite trace that the run shows within a bounded number of steps; and each
+infinite trace that the run shows more of in a bounded number of steps as
+its budget grows. -/
 def traceObservable (run : Nat → TRun A O) : TBehaviour A O
-  | .ret tr o => ∃ n, run n (.ok (.ok (.ret o), tr))
-  | .ub tr r => ∃ n, run n (.error (r, tr))
-  | .diverge tr => ∃ N, ∀ n, ∃ tr', run n (.ok (.ok .fuelExhausted, tr')) ∧ tr' <+: tr ∧
-      (N ≤ n → tr' = tr)
-  | .reacts T => ∀ k, ∃ N, ∀ n, N ≤ n →
-      ∃ tr, run n (.ok (.ok .fuelExhausted, tr)) ∧ ∀ i, i < k → tr[i]? = some (T i)
+  | .ret tr o => ∃ n mt, run n (.ok (.ok (.ret o), mt)) ∧ Step.actsOf mt = tr
+  | .ub tr r => ∃ n mt, run n (.error (r, mt)) ∧ Step.actsOf mt = tr
+  | .diverge tr => ∃ N, ∀ n, ∃ mt, run n (.ok (.ok .fuelExhausted, mt)) ∧
+      Step.actsOf mt <+: tr ∧ (N ≤ n → Step.actsOf (Step.upTo N mt) = tr)
+  | .reacts T => ∃ K : Nat → Nat, ∀ n, ∃ mt, run n (.ok (.ok .fuelExhausted, mt)) ∧
+      (∀ i a, (Step.actsOf mt)[i]? = some a → a = T i) ∧
+      ∀ k, K k ≤ n → k ≤ (Step.actsOf (Step.upTo (K k) mt)).length
 
-/-- A run with no event, as a traced run whose every path shows an empty
-trace. -/
-def TRun.ofRun (s : Run O) : TRun A O
-  | .ok (r, tr) => tr = [] ∧ s (.ok r)
-  | .error (r, tr) => tr = [] ∧ s (.ub r)
+/-- The traced run `R` shows no act, and its paths end as those of the run
+`s` of the set monad. -/
+structure TRun.NoActs (R : TRun A O) (s : Run O) : Prop where
+  ok_acts : ∀ x mt, R (.ok (x, mt)) → Step.actsOf mt = []
+  error_acts : ∀ r mt, R (.error (r, mt)) → Step.actsOf mt = []
+  ok_iff : ∀ x, (∃ mt, R (.ok (x, mt))) ↔ s (.ok x)
+  error_iff : ∀ r, (∃ mt, R (.error (r, mt))) ↔ s (.ub r)
 
-/-- The traced observable behaviour of a run with no event is its observable
-behaviour, each outcome with an empty trace. -/
-theorem traceObservable_ofRun (run : Nat → Run O) :
-    traceObservable (A := A) (fun n => TRun.ofRun (run n)) = .ofBehaviour (observable run) := by
+/-- The traced observable behaviour of a run that shows no act is the
+observable behaviour of the run of the set monad whose paths it ends as,
+each outcome with an empty trace. -/
+theorem traceObservable_of_noActs {run : Nat → TRun A O} {s : Nat → Run O}
+    (h : ∀ n, (run n).NoActs (s n)) : traceObservable run = .ofBehaviour (observable s) := by
   funext t
   apply propext
   cases t with
   | ret tr o =>
     constructor
-    · rintro ⟨n, rfl, h⟩
-      exact ⟨.ret o, ⟨n, h⟩, rfl⟩
-    · rintro ⟨o' | _ | _, h, he⟩ <;> cases he
-      obtain ⟨n, h⟩ := h
-      exact ⟨n, rfl, h⟩
+    · rintro ⟨n, mt, hr, rfl⟩
+      rw [(h n).ok_acts _ _ hr]
+      exact ⟨.ret o, ⟨n, (h n).ok_iff _ |>.1 ⟨mt, hr⟩⟩, rfl⟩
+    · rintro ⟨o' | _ | _, ho, he⟩ <;> cases he
+      obtain ⟨n, hs⟩ := ho
+      obtain ⟨mt, hr⟩ := (h n).ok_iff _ |>.2 hs
+      exact ⟨n, mt, hr, (h n).ok_acts _ _ hr⟩
   | ub tr r =>
     constructor
-    · rintro ⟨n, rfl, h⟩
-      exact ⟨.ub r, ⟨n, h⟩, rfl⟩
-    · rintro ⟨_ | r' | _, h, he⟩ <;> cases he
-      obtain ⟨n, h⟩ := h
-      exact ⟨n, rfl, h⟩
+    · rintro ⟨n, mt, hr, rfl⟩
+      rw [(h n).error_acts _ _ hr]
+      exact ⟨.ub r, ⟨n, (h n).error_iff _ |>.1 ⟨mt, hr⟩⟩, rfl⟩
+    · rintro ⟨_ | r' | _, ho, he⟩ <;> cases he
+      obtain ⟨n, hs⟩ := ho
+      obtain ⟨mt, hr⟩ := (h n).error_iff _ |>.2 hs
+      exact ⟨n, mt, hr, (h n).error_acts _ _ hr⟩
   | diverge tr =>
     constructor
-    · rintro ⟨N, h⟩
-      obtain ⟨_, ⟨rfl, _⟩, _, hN⟩ := h N
-      cases hN (Nat.le_refl N)
-      exact ⟨.fuelExhausted, fun n => (h n).elim fun _ h => h.1.2, rfl⟩
-    · rintro ⟨_ | _ | _, h, he⟩ <;> cases he
-      exact ⟨0, fun n => ⟨[], ⟨rfl, h n⟩, List.prefix_refl [], fun _ => rfl⟩⟩
+    · rintro ⟨N, hN⟩
+      obtain ⟨mt, hr, _, he⟩ := hN N
+      have h0 := Step.actsOf_upTo_eq_nil ((h N).ok_acts _ _ hr) N
+      rw [he (Nat.le_refl N)] at h0
+      subst h0
+      exact ⟨.fuelExhausted, fun n => (h n).ok_iff _ |>.1 ((hN n).elim fun mt h => ⟨mt, h.1⟩), rfl⟩
+    · rintro ⟨_ | _ | _, ho, he⟩ <;> cases he
+      refine ⟨0, fun n => ?_⟩
+      obtain ⟨mt, hr⟩ := (h n).ok_iff _ |>.2 (ho n)
+      have h0 := (h n).ok_acts _ _ hr
+      exact ⟨mt, hr, h0 ▸ List.prefix_refl [], fun _ => Step.actsOf_upTo_eq_nil h0 0⟩
   | reacts T =>
     constructor
-    · intro h
-      obtain ⟨N, hN⟩ := h 1
-      obtain ⟨_, ⟨rfl, _⟩, h0⟩ := hN N (Nat.le_refl N)
-      exact nomatch h0 0 Nat.one_pos
+    · rintro ⟨K, hK⟩
+      obtain ⟨mt, hr, _, hk⟩ := hK (K 1)
+      have h0 := Step.actsOf_upTo_eq_nil ((h _).ok_acts _ _ hr) (K 1)
+      have := hk 1 (Nat.le_refl _)
+      rw [h0] at this
+      simp at this
     · rintro ⟨_ | _ | _, _, he⟩ <;> cases he
 
 /-! # The traced runs of functions -/
@@ -137,20 +207,14 @@ theorem isRefinedBy_trans (hA : ∀ {a b c : A}, a ⊑ b → b ⊑ c → a ⊑ c
     (hfg : f ⊑ g) (hgh : g ⊑ h) : f ⊑ h :=
   fun a => TBehaviour.isRefinedBy_trans hA hO (hfg a) (hgh a)
 
-/-- The runs of a function with no event, as traced runs. -/
-def ofFuncRuns (F : FuncRuns Args O) : FuncTraceRuns Args A O :=
-  fun a n => TRun.ofRun (F a n)
-
-/-- Functions with no event refine as traced functions exactly when they
-refine as functions. -/
-theorem ofFuncRuns_isRefinedBy_iff {src tgt : FuncRuns Args O} :
-    (ofFuncRuns src : FuncTraceRuns Args A O) ⊑ (ofFuncRuns tgt : FuncTraceRuns Args A O) ↔
-      src ⊑ tgt := by
+/-- Traced functions that show no act refine exactly when the functions whose
+runs they end as refine. -/
+theorem isRefinedBy_iff_of_noActs {src tgt : FuncTraceRuns Args A O} {F G : FuncRuns Args O}
+    (hs : ∀ a n, (src a n).NoActs (F a n)) (ht : ∀ a n, (tgt a n).NoActs (G a n)) :
+    src ⊑ tgt ↔ F ⊑ G := by
   show (∀ a, _) ↔ ∀ a, _
   refine forall_congr' fun a => ?_
-  show traceObservable (fun n => TRun.ofRun (src a n)) ⊑
-      traceObservable (fun n => TRun.ofRun (tgt a n)) ↔ _
-  rw [traceObservable_ofRun, traceObservable_ofRun]
+  rw [traceObservable_of_noActs (hs a), traceObservable_of_noActs (ht a)]
   exact TBehaviour.ofBehaviour_isRefinedBy_iff
 
 end FuncTraceRuns
@@ -191,20 +255,64 @@ abbrev DialectTrace.Acts (d : Dialect) [TyDenote d.Ty] [DialectSignature d] [Dia
     [DialectTrace d] : Type :=
   Act (DialectTrace.Event d) (DialectTrace.Answer d)
 
-variable [DecidableEq d.Ty] [DialectCall d] {N : Type} [DecidableEq N] (lay : N → MemLayout)
-  (ρ : DialectEffects.Mem d → N)
+/-- A step of the run, in the traced layer of marked traces. -/
+def TraceM.tick {σ : Type} : TraceM (Step A) σ Unit := fun s e => e = .ok ((), [.tick], s)
+
+variable {N : Type} [DecidableEq N] (lay : N → MemLayout) (ρ : DialectEffects.Mem d → N)
+
+/-- The dialect's semantics in the traced layer of marked traces: each op
+shows a step, then runs by the dialect's rule, each act of its traces an act
+of the marked trace. -/
+@[instance_reducible] def DialectTrace.stepAt :
+    DialectDenote d (TraceM (Step (DialectTrace.Acts d)) (Memories N (unitsOf lay))) :=
+  letI := DialectTrace.traceAt (d := d) lay ρ
+  { denote op args := TraceM.tick >>= fun _ =>
+      TraceM.mapActs (fun a => [.act a]) (DialectDenote.denote op args)
+    exit op args := TraceM.tick >>= fun _ =>
+      TraceM.mapActs (fun a => [.act a]) (DialectDenote.exit op args) }
+
+variable [DecidableEq d.Ty] [DialectCall d]
 
 /-- The traced runs of the function `f` of the module `M`, where a run names
 the dialect's memory `x` as `ρ x`, whose layout entry is `lay (ρ x)`: its run
-in the traced layer, by the dialect's semantics there, from no trace and the
-empty memories, at each budget, on each argument vector of its parameter
-types. An observer sees the trace and what it returns. -/
+in the traced layer of marked traces, each op showing a step before it runs
+by the dialect's rule, from the empty memories, at each budget, on each
+argument vector of its parameter types. An observer sees the acts of the
+trace and what it returns. -/
 def Func.traceRuns (M : Module d) (f : Func d) :
     FuncTraceRuns (HVector toType (f.params.map (·.2))) (DialectTrace.Acts d) (List (DVal d)) :=
-  letI := DialectTrace.traceAt (d := d) lay ρ
+  letI := DialectTrace.stepAt (d := d) lay ρ
   fun args fuel e => ∃ e',
-    (f.run M (m := TraceM (DialectTrace.Acts d) (Memories N (unitsOf lay))) args fuel).run
-      ([], Memories.empty) e' ∧ e = e'.map fun p => (p.1, p.2.1)
+    (f.run M (m := TraceM (Step (DialectTrace.Acts d)) (Memories N (unitsOf lay))) args fuel).run
+      Memories.empty e' ∧ e = e'.map fun p => (p.1, p.2.1)
+
+/-- Erasing the steps of the traced runs of a function gives its runs in the
+traced layer by the dialect's rules alone. -/
+theorem Func.run_eraseSteps (M : Module d) (f : Func d)
+    (args : HVector toType (f.params.map (·.2))) (fuel : Nat) :
+    letI := DialectTrace.stepAt (d := d) lay ρ
+    letI := DialectTrace.traceAt (d := d) lay ρ
+    ((MonadMorphism.mapActs (Memories N (unitsOf lay)) Step.acts).except Stuck).map
+        (f.run M (m := TraceM (Step (DialectTrace.Acts d)) (Memories N (unitsOf lay))) args fuel) =
+      f.run M (m := TraceM (DialectTrace.Acts d) (Memories N (unitsOf lay))) args fuel := by
+  letI := DialectTrace.stepAt (d := d) lay ρ
+  letI := DialectTrace.traceAt (d := d) lay ρ
+  have hstep : ∀ {α : Type} (x : TraceM (DialectTrace.Acts d) (Memories N (unitsOf lay)) α),
+      TraceM.mapActs Step.acts (TraceM.tick >>= fun _ => TraceM.mapActs (fun a => [.act a]) x) = x := by
+    intro α x
+    rw [TraceM.mapActs_bind]
+    have htick : TraceM.mapActs (σ := Memories N (unitsOf lay)) (A := Step (DialectTrace.Acts d))
+        Step.acts TraceM.tick = pure () := by
+      funext s e
+      exact propext ⟨fun ⟨_, h, he⟩ => by cases (h : _ = _); exact he, fun h => ⟨_, rfl, h⟩⟩
+    rw [htick, TraceM.pure_bind, TraceM.mapActs_mapActs]
+    exact TraceM.mapActs_singleton x
+  have hmaps : (MonadMorphism.mapActs (Memories N (unitsOf lay))
+      (Step.acts (A := DialectTrace.Acts d))).MapsDenote (d := d) := by
+    constructor <;> intro op args
+    · exact hstep (DialectDenote.denote (m := TraceM (DialectTrace.Acts d) _) op args)
+    · exact hstep (DialectDenote.exit (m := TraceM (DialectTrace.Acts d) _) op args)
+  exact Func.run_map hmaps (MonadMorphism.mapActs_mapsFrame _) M f args fuel
 
 /-- A dialect whose ops show no event: wherever a run names its memories,
 its semantics in the traced layer is its semantics with memory, lifted. -/
@@ -215,26 +323,71 @@ class LiftsMem (d : Dialect) [TyDenote d.Ty] [DecidableEq d.Ty] [DialectSignatur
     letI := DialectTrace.traceAt (d := d) lay ρ
     (MonadMorphism.trace (DialectTrace.Acts d) (Memories N (unitsOf lay))).MapsDenote (d := d)
 
-/-- The traced runs of a function of a dialect whose ops show no event are its
-runs with memory, each path with an empty trace. -/
-theorem Func.traceRuns_eq [DialectMemDenote d] [LiftsMem d] (M : Module d) (f : Func d) :
-    f.traceRuns lay ρ M = .ofFuncRuns (f.memRuns lay ρ M) := by
+/-- The traced runs of a function of a dialect whose ops show no event show
+no act, and end as its runs with memory. -/
+theorem Func.traceRuns_noActs [DialectMemDenote d] [LiftsMem d] (M : Module d) (f : Func d)
+    (args : HVector toType (f.params.map (·.2))) (fuel : Nat) :
+    (f.traceRuns lay ρ M args fuel).NoActs (f.memRuns lay ρ M args fuel) := by
   letI := DialectMemDenote.denoteAt (d := d) lay ρ
   letI := DialectTrace.traceAt (d := d) lay ρ
-  funext args fuel e
-  have hrun := Func.run_map (LiftsMem.lifts lay ρ) MonadMorphism.trace_mapsFrame M f args fuel
-  simp only [Func.traceRuns, ← hrun, MonadMorphism.except, MonadMorphism.trace, ExceptT.run,
-    ExceptT.mk, TraceM.lift, FuncTraceRuns.ofFuncRuns, Func.memRuns]
-  apply propext
-  rcases e with ⟨r, tr⟩ | ⟨a, tr⟩ <;>
-    simp only [TRun.ofRun, Functor.map, Function.comp] <;> constructor
-  · rintro ⟨_, (⟨_, _, _, rfl⟩ | ⟨r', h, rfl⟩), he⟩ <;> cases he
-    exact ⟨rfl, .inr ⟨r, h, rfl⟩⟩
-  · rintro ⟨rfl, (⟨_, _, he⟩ | ⟨r', h, he⟩)⟩ <;> cases he
-    exact ⟨_, .inr ⟨r, h, rfl⟩, rfl⟩
-  · rintro ⟨_, (⟨a, s', h, rfl⟩ | ⟨_, _, rfl⟩), he⟩ <;> cases he
-    exact ⟨rfl, .inl ⟨(a, s'), h, rfl⟩⟩
-  · rintro ⟨rfl, (⟨⟨a, s'⟩, h, he⟩ | ⟨_, _, he⟩)⟩ <;> cases he
-    exact ⟨_, .inl ⟨a, s', h, rfl⟩, rfl⟩
+  letI := DialectTrace.stepAt (d := d) lay ρ
+  have hY : TraceM.mapActs Step.acts
+      ((f.run M (m := TraceM (Step (DialectTrace.Acts d)) (Memories N (unitsOf lay))) args fuel).run) =
+      TraceM.lift (f.run M (m := StateT (Memories N (unitsOf lay)) SetM) args fuel).run :=
+    (congrArg ExceptT.run (Func.run_eraseSteps lay ρ M f args fuel)).trans
+      (congrArg ExceptT.run (Func.run_map (LiftsMem.lifts lay ρ) MonadMorphism.trace_mapsFrame
+        M f args fuel)).symm
+  have hfwd : ∀ e', ((f.run M (m := TraceM (Step (DialectTrace.Acts d)) (Memories N (unitsOf lay))) args fuel).run
+        Memories.empty e') → TraceM.lift (A := DialectTrace.Acts d)
+          (f.run M (m := StateT (Memories N (unitsOf lay)) SetM) args fuel).run Memories.empty
+          (e'.mapActs Step.acts) := fun e' h => hY ▸ ⟨e', h, rfl⟩
+  have hbwd : ∀ e, TraceM.lift (A := DialectTrace.Acts d)
+      (f.run M (m := StateT (Memories N (unitsOf lay)) SetM) args fuel).run Memories.empty e →
+      ∃ e', ((f.run M (m := TraceM (Step (DialectTrace.Acts d)) (Memories N (unitsOf lay))) args
+          fuel).run Memories.empty e') ∧ e = e'.mapActs Step.acts := fun e h => (hY ▸ h :)
+  refine ⟨?_, ?_, fun x => ⟨?_, ?_⟩, fun r => ⟨?_, ?_⟩⟩
+  · rintro x mt ⟨(⟨_, _⟩ | ⟨_, _, _⟩), h, he⟩ <;> cases he
+    rcases hfwd _ h with ⟨_, _, _, he⟩ | ⟨_, _, he⟩
+    · simp only [TraceEnd.mapActs, Except.ok.injEq, Prod.mk.injEq] at he
+      exact he.2.1
+    · cases he
+  · rintro r mt ⟨(⟨_, _⟩ | ⟨_, _, _⟩), h, he⟩ <;> cases he
+    rcases hfwd _ h with ⟨_, _, _, he⟩ | ⟨_, _, he⟩
+    · cases he
+    · simp only [TraceEnd.mapActs, Except.error.injEq, Prod.mk.injEq] at he
+      exact he.2
+  · rintro ⟨mt, (⟨_, _⟩ | ⟨_, _, _⟩), h, he⟩ <;> cases he
+    rcases hfwd _ h with ⟨_, _, hz, he⟩ | ⟨_, _, he⟩
+    · simp only [TraceEnd.mapActs, Except.ok.injEq, Prod.mk.injEq] at he
+      obtain ⟨rfl, -, -⟩ := he
+      exact .inl ⟨_, hz, rfl⟩
+    · cases he
+  · rintro (⟨⟨_, S'⟩, hz, he⟩ | ⟨_, _, he⟩) <;> cases (he : _ = _)
+    obtain ⟨(⟨_, _⟩ | ⟨_, mt, _⟩), h, he⟩ := hbwd _ (.inl ⟨_, S', hz, rfl⟩)
+    · cases he
+    · simp only [TraceEnd.mapActs, Except.ok.injEq, Prod.mk.injEq] at he
+      obtain ⟨rfl, -, -⟩ := he
+      exact ⟨mt, _, h, rfl⟩
+  · rintro ⟨mt, (⟨_, _⟩ | ⟨_, _, _⟩), h, he⟩ <;> cases he
+    rcases hfwd _ h with ⟨_, _, _, he⟩ | ⟨_, hz, he⟩
+    · cases he
+    · simp only [TraceEnd.mapActs, Except.error.injEq, Prod.mk.injEq] at he
+      obtain ⟨rfl, -⟩ := he
+      exact .inr ⟨_, hz, rfl⟩
+  · rintro (⟨_, _, he⟩ | ⟨_, hz, he⟩) <;> cases (he : _ = _)
+    obtain ⟨(⟨_, mt⟩ | ⟨_, _, _⟩), h, he⟩ := hbwd _ (.inr ⟨_, hz, rfl⟩)
+    · simp only [TraceEnd.mapActs, Except.error.injEq, Prod.mk.injEq] at he
+      obtain ⟨rfl, -⟩ := he
+      exact ⟨mt, _, h, rfl⟩
+    · cases he
+
+/-- The traced observable behaviour of a function of a dialect whose ops show
+no event is its observable behaviour with memory, each outcome with an empty
+trace. So refinement of its traced runs is refinement of its runs with
+memory, and every theorem on the latter holds of the former. -/
+theorem Func.traceObservable_traceRuns [DialectMemDenote d] [LiftsMem d] (M : Module d)
+    (f : Func d) (args : HVector toType (f.params.map (·.2))) :
+    traceObservable (f.traceRuns lay ρ M args) = .ofBehaviour (observable (f.memRuns lay ρ M args)) :=
+  traceObservable_of_noActs (Func.traceRuns_noActs lay ρ M f args)
 
 end Fir

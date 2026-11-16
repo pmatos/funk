@@ -157,7 +157,14 @@ on poison and on 5 at a world that answers them differently.
 
 A traced run diverges in one of two ways: it falls silent after a finite
 trace, or it shows acts forever. Neither refines the other, and a run that
-shows one act and then falls silent refines neither. A run with no event is a
+shows one act and then falls silent refines neither. Each op marks a step in
+the trace, which the world never sees, so divergence is judged by when a run
+showed its acts: a run that may return arbitrarily late after its last act
+does not fall silent after it, and a run that may show arbitrarily many acts
+before it returns does not show acts forever. Rejected: judge divergence only
+by the acts that a run has shown when it runs out of fuel at each budget,
+which cannot tell those runs from runs that hang after the acts, or show
+acts forever. A run with no event is a
 traced run whose every trace is empty, and its traced refinement is its
 refinement as today, so M0's tests keep their results.
 
