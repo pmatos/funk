@@ -6,8 +6,11 @@ the record: when this page and an ADR disagree, the page wins, and the ADR is
 fixed or deleted (ADR-2026-11-09-1610). ADR-2026-11-09-1540 holds the
 direction decision.
 
-These are decided designs, and the spec and the tools do not implement them
-yet. semantics-refinement.md says what a run shows in M0.
+These are decided designs. The spec defines traces, worlds and traced
+refinement (`lean/Fir/Execution/Trace*.lean`); what an observer sees of
+memory at a return, the world's writes, and `fir-ref`'s scripted worlds are
+not implemented yet (#233). semantics-refinement.md says what a run shows in
+M0.
 
 ## What a run shows
 
@@ -139,6 +142,24 @@ events before the UB (ADR-2026-11-09-1540).
 
 Every refinement theorem gains a quantifier over worlds. The first theorems to
 be restated are those that #206 and #209 touch.
+
+In the spec, the world's answer to an event is any answer, and the trace
+records it. One act refines another when its event refines the other's, with
+poison refined as for values, and both have the same answer, so the world
+answers what the target shows: where the source shows poison in an event, the
+target may show any value, and the world's answer to that value is an answer
+to the source's poison, which may be any value. Refinement of traced
+behaviours is then equivalent to refinement at every world, since every trace
+is shown at some world. Rejected: one world that answers the source's poison
+and the target's value apart. Refined arguments would then fail: a function
+that returns the world's answer to its argument would return different values
+on poison and on 5 at a world that answers them differently.
+
+A traced run diverges in one of two ways: it falls silent after a finite
+trace, or it shows acts forever. Neither refines the other, and a run that
+shows one act and then falls silent refines neither. A run with no event is a
+traced run whose every trace is empty, and its traced refinement is its
+refinement as today, so M0's tests keep their results.
 
 ## Scripts and native runs
 

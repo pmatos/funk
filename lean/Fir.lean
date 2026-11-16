@@ -152,6 +152,9 @@ import Fir.Execution.SummarySound
 import Fir.Execution.MemoryFree
 import Fir.Execution.MemoryFreeRuns
 import Fir.Execution.MemoryFreeReplace
+import Fir.Execution.Trace
+import Fir.Execution.TraceMonad
+import Fir.Execution.TraceRuns
 import Fir.Memory.Model
 import Fir.Memory.Ordering
 import Fir.Memory.Laws
