@@ -6,12 +6,13 @@
 # scripts/harness/float_convert_cases.py, which computes each expected
 # result with scripts/harness/float_ref.py, apart from Lean.
 # A test without expect is differential: fir-ref and native code
-# run it, and the native result must equal fir-ref's. Each
-# result that is not a NaN is also checked by an interpreter-only
-# test with expect.
-# A NaN operand gives any NaN of the target: its test is
-# interpreter-only and names the NaN by a choice of the sign and the
-# mantissa. Native code is not compared on a NaN result yet (#219).
+# run it, and the native result must be one that fir-ref gives.
+# Each result that is not a NaN is also checked by an
+# interpreter-only test with expect.
+# A NaN result is any NaN: its interpreter-only test names the NaN
+# by a choice of the sign and the mantissa, as signed i53. Its
+# differential test passes when fir-ref gives native code's NaN, as
+# it does when the harness has it try that NaN (ADR-2026-11-16-1630).
 tests = [
   { func = "@f32_f64", args = ["0.0"] },
   { func = "@f32_f64", args = ["0.0"], expect = ["0.0"] },
@@ -41,8 +42,11 @@ tests = [
   { func = "@f32_f64", args = ["-3.4028235e38"], expect = ["-3.4028234663852886e38"] },
   { func = "@f32_f64", args = ["0xff800000"] },
   { func = "@f32_f64", args = ["0xff800000"], expect = ["0xfff0000000000000"] },
+  { func = "@f32_f64", args = ["0x7fc00000"] },
   { func = "@f32_f64", args = ["0x7fc00000"], choices = ["0"], expect = ["0x7ff8000000000000"] },
+  { func = "@f32_f64", args = ["0x7f800001"] },
   { func = "@f32_f64", args = ["0x7f800001"], choices = ["-1"], expect = ["0xffffffffffffffff"] },
+  { func = "@f32_f64", args = ["0xffffffff"] },
   { func = "@f32_f64", args = ["0xffffffff"], choices = ["1"], expect = ["0x7ff0000000000001"] },
   { func = "@f32_f64", args = ["poison"] },
   { func = "@f32_f64", args = ["poison"], expect = ["poison"] },

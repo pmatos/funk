@@ -7,7 +7,7 @@ says how to read it.
 
 | op | flags or predicate | `i1` | `i8` | `i16` | `i32` | `i64` | `i128` |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| `const` |  | 517 | 784 | 445 | 803 | 673 | 639 |
+| `const` |  | 517 | 784 | 445 | 803 | 675 | 639 |
 | `add` |  | 205 | 359 | 311 | 299 | 434 | 534 |
 | `add` | `nuw` | 8 | 29 | 29 | 31 | 29 | 35 |
 | `add` | `nsw` | 211 | 225 | 206 | 218 | 205 | 107 |
@@ -68,43 +68,43 @@ says how to read it.
 | `fcmp` | `nnan` | 2 | 2 |
 | `fcmp` | `ninf` | 2 | 2 |
 | `fcmp` | `nsz` | 2 | 2 |
-| `fadd` | `round(rne)` | 17 | 17 |
+| `fadd` | `round(rne)` | 20 | 20 |
 | `fadd` | `nnan` | 3 | 3 |
 | `fadd` | `ninf` | 3 | 3 |
 | `fadd` | `nsz` | 3 | 3 |
-| `fsub` | `round(rne)` | 13 | 13 |
+| `fsub` | `round(rne)` | 20 | 20 |
 | `fsub` | `nnan` | 3 | 3 |
 | `fsub` | `ninf` | 3 | 3 |
 | `fsub` | `nsz` | 2 | 2 |
-| `fmul` | `round(rne)` | 14 | 14 |
+| `fmul` | `round(rne)` | 16 | 16 |
 | `fmul` | `nnan` | 3 | 3 |
 | `fmul` | `ninf` | 3 | 3 |
 | `fmul` | `nsz` | 2 | 2 |
-| `fdiv` | `round(rne)` | 29 | 29 |
+| `fdiv` | `round(rne)` | 33 | 33 |
 | `fdiv` | `nnan` | 3 | 3 |
 | `fdiv` | `ninf` | 3 | 3 |
 | `fdiv` | `nsz` | 2 | 2 |
-| `frem` |  | 32 | 32 |
+| `frem` |  | 43 | 43 |
 | `frem` | `nnan` | 3 | 3 |
 | `frem` | `ninf` | 2 | 2 |
 | `frem` | `nsz` | 3 | 3 |
-| `fmod` |  | 25 | 25 |
+| `fmod` |  | 31 | 31 |
 | `fmod` | `nnan` | 3 | 3 |
 | `fmod` | `ninf` | 2 | 2 |
 | `fmod` | `nsz` | 2 | 2 |
-| `fneg` |  | 4 | 4 |
+| `fneg` |  | 5 | 5 |
 | `fneg` | `nnan` | 2 | 2 |
 | `fneg` | `ninf` | 2 | 2 |
 | `fneg` | `nsz` | 2 | 2 |
-| `fabs` |  | 3 | 3 |
+| `fabs` |  | 4 | 4 |
 | `fabs` | `nnan` | 2 | 2 |
 | `fabs` | `ninf` | 2 | 2 |
 | `fabs` | `nsz` | 2 | 2 |
-| `sqrt` | `round(rne)` | 10 | 10 |
+| `sqrt` | `round(rne)` | 13 | 13 |
 | `sqrt` | `nnan` | 3 | 3 |
 | `sqrt` | `ninf` | 2 | 2 |
 | `sqrt` | `nsz` | 2 | 2 |
-| `fma` | `round(rne)` | 13 | 13 |
+| `fma` | `round(rne)` | 15 | 15 |
 | `fma` | `nnan` | 3 | 3 |
 | `fma` | `ninf` | 3 | 3 |
 | `fma` | `nsz` | 2 | 2 |
@@ -136,9 +136,9 @@ says how to read it.
 
 | op | from | to | tests |
 | --- | --- | --- | --- |
-| `bitcast` | `f32` | `i32` | 17 |
+| `bitcast` | `f32` | `i32` | 21 |
 | `bitcast` | `i32` | `f32` | 17 |
-| `bitcast` | `f64` | `i64` | 17 |
+| `bitcast` | `f64` | `i64` | 21 |
 | `bitcast` | `i64` | `f64` | 17 |
 
 ## Conversions from integers
@@ -162,8 +162,8 @@ says how to read it.
 
 | from | to `f32` | to `f64` |
 | --- | --- | --- |
-| `f32` |  | `fpext` 15 |
-| `f64` | `fptrunc` 57 |  |
+| `f32` |  | `fpext` 18 |
+| `f64` | `fptrunc` 60 |  |
 
 ## Conversions to integers
 
@@ -178,10 +178,10 @@ says how to read it.
 
 | op | `i1` | `i8` | `i16` | `i32` | `i64` | `i128` | `ptr` |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| `ptradd` | 2 | 4 | 4 | 4 | 27 | 4 |  |
-| `alloca` | 2 | 12 | 6 | 36 | 6 | 5 | 4 |
-| `load` | 2 | 33 | 7 | 15 | 6 | 5 | 4 |
-| `store` | 4 | 9 | 6 | 38 | 6 | 5 | 4 |
+| `ptradd` | 2 | 4 | 4 | 4 | 29 | 4 |  |
+| `alloca` | 2 | 12 | 6 | 40 | 10 | 5 | 4 |
+| `load` | 2 | 35 | 7 | 18 | 9 | 5 | 4 |
+| `store` | 4 | 9 | 6 | 42 | 10 | 5 | 4 |
 
 ## Passed and returned values
 
@@ -192,12 +192,12 @@ says how to read it.
 | `cond_br` | a successor passes nothing | 858 |  |  |  |  |  |  |  |  |
 | `cond_br` | a successor passes values |  | 58 | 140 | 132 | 160 | 132 | 153 | 9 | 7 |
 | `ret` | returns no value | 73 |  |  |  |  |  |  |  |  |
-| `ret` | returns one value |  | 2947 | 1620 | 1276 | 1699 | 1459 | 2490 | 494 | 420 |
+| `ret` | returns one value |  | 2947 | 1622 | 1276 | 1702 | 1462 | 2490 | 533 | 459 |
 | `ret` | returns several values |  | 282 | 432 | 266 | 249 | 399 | 539 | 9 | 9 |
 | `unreachable` | ends a block | 38 |  |  |  |  |  |  |  |  |
 | `call` | gives no result | 35 |  |  |  |  |  |  |  |  |
 | `call` | gives one result |  | 89 | 87 | 80 | 87 | 93 | 130 | 2 | 2 |
 | `call` | gives several results |  | 171 | 220 | 126 | 111 | 191 | 279 | 3 | 4 |
 | `func` | returns no value | 41 |  |  |  |  |  |  |  |  |
-| `func` | returns one value |  | 2947 | 1620 | 1276 | 1699 | 1459 | 2490 | 492 | 418 |
+| `func` | returns one value |  | 2947 | 1622 | 1276 | 1702 | 1462 | 2490 | 531 | 457 |
 | `func` | returns several values |  | 282 | 432 | 266 | 240 | 399 | 503 | 9 | 9 |

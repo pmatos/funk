@@ -33,6 +33,17 @@ def nanSize (nans : List Nat) : ChoiceTree ε α → Nat
 theorem nanSize_pos (nans : List Nat) : ∀ t : ChoiceTree ε α, 0 < nanSize nans t
   | .choose .. | .pure _ | .ub _ | .noOutcome _ => by simp only [nanSize]; omega
 
+/-- The bits that the walk charges at a choice of `w` bits of the kind `c`,
+without listing the values it tries: a choice past the budget lists none,
+which for `freeze` of an `i64` would be 2^64 values. -/
+def tryBits (nans : List Nat) (w : Nat) : ChoiceKind → Nat
+  | .bits => w
+  | .nan e => ChoiceTree.bitsFor (ChoiceTree.nanTries nans e w).length
+
+theorem tryBits_eq (nans : List Nat) (w : Nat) (c : ChoiceKind) :
+    tryBits nans w c = (ChoiceTree.tryAt nans w c).2.1 := by
+  cases c <;> rfl
+
 variable {d : Dialect} [TyDenote d.Ty] [DialectSignature d] [DecidableEq d.Ty] [DialectCall d]
   {N : Type} [DecidableEq N] {unit : N → Nat}
   [DialectDenote d (StateT (Memories N unit) (ChoiceTree ε))] (M : Module d)
@@ -85,8 +96,8 @@ def exploreNaNFrom (nans : List Nat) :
   | .state s budget made nan :: rest, acc => match _h : advance M s.1 s.2 with
     | .leaf l => exploreNaNFrom nans rest ((l, made, nan) :: acc)
     | .choose w c k =>
-      let t := ChoiceTree.tryAt nans w c
-      if t.2.1 ≤ budget then
+      if tryBits nans w c ≤ budget then
+        let t := ChoiceTree.tryAt nans w c
         exploreNaNFrom nans (.values w k t.1 (budget - t.2.1) (made + 1) (nan + t.2.2) :: rest) acc
       else none
   | .values _ _ [] _ _ _ :: rest, acc => exploreNaNFrom nans rest acc
@@ -136,7 +147,8 @@ theorem exploreNaNFrom_eq (nans : List Nat) (ps : List (NaNWork d ε Mems))
       simp [shiftNaN]
     rw [he]
     rfl
-  | case3 s budget made nan rest acc w c k h t hw ih =>
+  | case3 s budget made nan rest acc w c k h hw t ih =>
+    rw [tryBits_eq] at hw
     rw [ih]
     simp only [ChoiceTree.collect]
     have hE : ∀ φ : Leaf d ε × Nat × Nat → Leaf d ε × Nat × Nat,
@@ -162,12 +174,13 @@ theorem exploreNaNFrom_eq (nans : List Nat) (ps : List (NaNWork d ε Mems))
       t.1 [] with
     | none => rfl
     | some L => simp only [Option.map_some, List.map_map, shiftNaN_shiftNaN]
-  | case4 s budget made nan rest acc w c k h t hw =>
+  | case4 s budget made nan rest acc w c k h hw =>
+    rw [tryBits_eq] at hw
     rw [ChoiceTree.collect]
     have h2 : nanExplored M nans (.state s budget made nan) = none := by
       simp only [nanExplored, nanState]
       rw [tree_of_choose M h]
-      simp only [ChoiceTree.exploreNaN, t, ite_eq_right hw, Option.map_none]
+      simp only [ChoiceTree.exploreNaN, ite_eq_right hw, Option.map_none]
     rw [h2]
   | case5 w k budget made nan rest acc ih =>
     rw [ih, ChoiceTree.collect]
