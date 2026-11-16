@@ -118,15 +118,10 @@ def bumpFrom (c : Nat) : List (Block u) → AllocId → Nat
   | b :: _, 0 => alignUp c b.align
   | b :: bs, a + 1 => bumpFrom (alignUp c b.align + b.units.length + 1) bs a
 
-/-- The lower of an address found so far, if any, and `z`. -/
-def keepLow (best : Option Nat) (z : Nat) : Option Nat :=
-  match best with
-  | none => some z
-  | some b => some (min b z)
-
 /-- The lowest address that fits the allocation `a`, of alignment `al`,
 among `best` and the first multiples of `al` from where each live block of
-`cs` with an address ends. It walks the blocks in a loop. -/
+`cs` with an address ends, keeping the lower of the two at each block. It
+walks the blocks in a loop. -/
 def lowestFrom (M : Memory u) (lo hi a al : Nat) : Option Nat → List (Block u) → Option Nat
   | best, [] => best
   | best, c :: cs =>
@@ -134,7 +129,7 @@ def lowestFrom (M : Memory u) (lo hi a al : Nat) : Option Nat → List (Block u)
       (match c.addr with
         | some y =>
           if c.live && M.fits lo hi a (alignUp (y + c.units.length) al) then
-            keepLow best (alignUp (y + c.units.length) al)
+            Option.merge min best (some (alignUp (y + c.units.length) al))
           else best
         | none => best) cs
 

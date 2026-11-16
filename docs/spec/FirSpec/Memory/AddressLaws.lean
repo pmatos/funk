@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Address laws: readable blocks" =>
 
-:::moduleDocs (fingerprint := "7705903047543020209")
+:::moduleDocs (fingerprint := "13213713090563566759")
 :::
 
 :::readable Fir.Memory.le_alignUp Fir.Memory.dvd_alignUp Fir.Memory.alignUp_eq (pin := Fir.Memory.alignUp) (fingerprint := "16294352692073450699")
@@ -41,7 +41,7 @@ with an address overlaps $`z - \alpha` but not $`z`, so it ends between
 $`z - \alpha` and $`z`, and $`z` is its end aligned up.
 :::
 
-:::readable Fir.Memory.keepLow_le Fir.Memory.lowestFrom_fits Fir.Memory.lowestFrom_le_best Fir.Memory.lowestFrom_le_after (pin := Fir.Memory.keepLow) (pin := Fir.Memory.lowestFrom) (fingerprint := "4054831746464081869")
+:::readable Fir.Memory.merge_min_le Fir.Memory.lowestFrom_fits Fir.Memory.lowestFrom_le_best Fir.Memory.lowestFrom_le_after (pin := Fir.Memory.lowestFrom) (fingerprint := "8674437092306975150")
 *Theorems: the lowest candidate.* Keeping the lower of two addresses gives
 one at most each. The walk gives an address that fits when the one it
 starts from does, at most the one it starts from, and at most

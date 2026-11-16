@@ -153,8 +153,8 @@ end Memory
 
 /-- Keeping the lower of an address found so far and another gives one at
 most each of them. -/
-theorem keepLow_le {best : Option Nat} {z : Nat} :
-    ∃ y, keepLow best z = some y ∧ y ≤ z ∧ ∀ b, best = some b → y ≤ b := by
+theorem merge_min_le {best : Option Nat} {z : Nat} :
+    ∃ y, Option.merge min best (some z) = some y ∧ y ≤ z ∧ ∀ b, best = some b → y ≤ b := by
   cases best with
   | none => exact ⟨z, rfl, Nat.le_refl z, fun _ h => nomatch h⟩
   | some b =>
@@ -177,10 +177,10 @@ theorem lowestFrom_fits {M : Memory u} {lo hi a al y : Nat} :
         simp only [Bool.and_eq_true] at hc
         cases best with
         | none =>
-          simp only [keepLow, Option.some.injEq] at hb'
+          simp only [Option.merge, Option.some.injEq] at hb'
           exact hb' ▸ hc.2
         | some b₀ =>
-          simp only [keepLow, Option.some.injEq] at hb'
+          simp only [Option.merge, Option.some.injEq] at hb'
           rw [← hb']
           rcases Nat.le_total b₀ (alignUp (_ + c.units.length) al) with hle | hle
           · rw [Nat.min_eq_left hle]
@@ -199,7 +199,7 @@ theorem lowestFrom_le_best {M : Memory u} {lo hi a al : Nat} :
     unfold lowestFrom
     split
     · split
-      · obtain ⟨y, hy, -, hyb⟩ := keepLow_le (best := best) (z := alignUp (_ + c.units.length) al)
+      · obtain ⟨y, hy, -, hyb⟩ := merge_min_le (best := best) (z := alignUp (_ + c.units.length) al)
         obtain ⟨y', hy', hle⟩ := lowestFrom_le_best (M := M) (lo := lo) (hi := hi) (a := a)
           (al := al) (cs := cs) hy
         exact ⟨y', hy', Nat.le_trans hle (hyb b h)⟩
@@ -216,7 +216,7 @@ theorem lowestFrom_le_after {M : Memory u} {lo hi a al : Nat} :
     rcases List.mem_cons.mp hm with rfl | hm
     · unfold lowestFrom
       simp only [hz, hl, hf, Bool.and_self, ↓reduceIte]
-      obtain ⟨y, hy, hyz, -⟩ := keepLow_le (best := best) (z := alignUp (z + c.units.length) al)
+      obtain ⟨y, hy, hyz, -⟩ := merge_min_le (best := best) (z := alignUp (z + c.units.length) al)
       obtain ⟨y', hy', hle⟩ := lowestFrom_le_best (M := M) (lo := lo) (hi := hi) (a := a)
         (al := al) (cs := cs) hy
       exact ⟨y', hy', Nat.le_trans hle hyz⟩

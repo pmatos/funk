@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Addresses: readable blocks" =>
 
-:::moduleDocs (fingerprint := "3727198755483566784")
+:::moduleDocs (fingerprint := "16308740697931773137")
 :::
 
 :::readable Fir.Memory.alignUp (fingerprint := "5903328988636615743")
@@ -92,7 +92,7 @@ and 2 units, aligned to 4 and 8, are at 4 and 16. The address of $`b_i`
 depends only on the blocks made before it.
 :::
 
-:::readable Fir.Memory.keepLow Fir.Memory.lowestFrom (fingerprint := "12393342139840133767")
+:::readable Fir.Memory.lowestFrom (fingerprint := "7689994772747648918")
 *Definition: the lowest candidate.* For the allocation $`a`, aligned to
 $`\alpha`, $`\mathrm{lowest}_M(a, z^?, \vec{c})` walks the blocks
 $`\vec{c}` in order, starting from the address $`z^?` found so far, if

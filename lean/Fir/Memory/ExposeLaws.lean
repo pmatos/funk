@@ -49,27 +49,26 @@ theorem expose_getElem? (M : Memory u) (a x j : Nat) :
     (M.expose a x).blocks[j]? = (M.blocks[j]?).map fun b => if a = j then b.giveAddr x else b := by
   simp [expose, List.getElem?_modify]
 
-/-- Exposing keeps the shape of every block. -/
-theorem expose_shapes (M : Memory u) (a x : Nat) :
-    (M.expose a x).blocks.map Block.shape = M.blocks.map Block.shape := by
+/-- Exposing keeps whatever of each block giving it an address keeps. -/
+theorem expose_map {α : Type} (M : Memory u) (a x : Nat) (f : Block u → α)
+    (hf : ∀ b, f (b.giveAddr x) = f b) : (M.expose a x).blocks.map f = M.blocks.map f := by
   apply List.ext_getElem?
   intro j
   simp only [List.getElem?_map, expose_getElem?, Option.map_map]
   congr 1
   funext b
   simp only [Function.comp_apply]
-  split <;> simp
+  split <;> simp [hf]
+
+/-- Exposing keeps the shape of every block. -/
+theorem expose_shapes (M : Memory u) (a x : Nat) :
+    (M.expose a x).blocks.map Block.shape = M.blocks.map Block.shape :=
+  M.expose_map a x _ (Block.giveAddr_shape x)
 
 /-- Exposing keeps the units of every block. -/
 theorem expose_contents (M : Memory u) (a x : Nat) :
-    (M.expose a x).blocks.map (·.units) = M.blocks.map (·.units) := by
-  apply List.ext_getElem?
-  intro j
-  simp only [List.getElem?_map, expose_getElem?, Option.map_map]
-  congr 1
-  funext b
-  simp only [Function.comp_apply]
-  split <;> simp
+    (M.expose a x).blocks.map (·.units) = M.blocks.map (·.units) :=
+  M.expose_map a x _ (Block.giveAddr_units x)
 
 /-- An exposed allocation that had no address has the one it was given. -/
 theorem addrOf_expose_of_none {M : Memory u} {a : AllocId} (ha : a < M.blocks.length)
