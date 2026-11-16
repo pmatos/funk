@@ -75,6 +75,11 @@ choice budget (#219 Q2).
   results, each with a witness. Against a part of the set, each listed
   outcome must be declared, and the 32 seeded runs must each give a
   declared result, as past the budget.
+- A native result on poison's stand-ins that fails against a part of the
+  set is rechecked as past the budget
+  ([testing-and-harness.md](testing-and-harness.md#poison-arguments)):
+  `fir-ref` runs on the failing vector, with the seeded runs, and UB or
+  fuel exhausted there makes the test invalid.
 
 The list misses a NaN whose bits integer ops change, hence the declared
 fallback, and UB or a stuck path that only an untried NaN reaches. A pass
