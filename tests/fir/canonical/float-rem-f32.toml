@@ -5,9 +5,9 @@
 # Written by scripts/harness/float_arith_cases.py, which computes each
 # expected result with scripts/harness/float_ref.py, apart from Lean.
 # A test without expect is differential: fir-ref and native code
-# run it, and the native result must equal fir-ref's. Each
-# result that is not a NaN is also checked by an interpreter-only
-# test with expect.
+# run it, and the native result must be one that fir-ref gives.
+# Each result that is not a NaN is also checked by an
+# interpreter-only test with expect.
 # A NaN result is any NaN: its interpreter-only test names the NaN
 # by a choice of the sign and the mantissa, as signed i24. Its
 # differential test passes when fir-ref gives native code's NaN, as

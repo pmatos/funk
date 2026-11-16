@@ -48,7 +48,10 @@ class RecordedRuns(Runs):
         return self.responses.popleft()
 
     def exhaustive(self, args, nans=None):
-        # The first run's `--nans` with none given is implied.
+        # Every exhaustive run passes `--nans`; with none given it is
+        # implied in the call recorded.
+        if nans is None:
+            raise AssertionError("an exhaustive run without --nans")
         return self._next("exhaustive", args, *([nans] if nans else []))
 
     def scripted(self, args, choices):

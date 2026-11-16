@@ -9,7 +9,7 @@ import native_floats
 import sets
 from corpus import Test
 from differential import evaluate
-from refine import FAILED, INVALID, PASSED, UB, Outcome
+from refine import FAILED, INVALID, PASSED, STUCK, UB, Outcome
 from sets import SEEDS, BudgetExceeded, Declared, Outcomes, Path
 from test_differential import RecordedRuns, returned
 
@@ -49,6 +49,12 @@ class SetRules(unittest.TestCase):
         self.assertIn("cut the NaN choices short", j.why)
         whole = replace(QUIET_ONLY, complete=True)
         self.assertNotIn("short", sets.judge_set(whole, ("1.0",), F32).why)
+
+    def test_a_stuck_path_fails_with_no_word_of_nans(self):
+        stuck = Outcomes(1, (returned(QUIET), Outcome(STUCK)), False)
+        j = sets.judge_set(stuck, ("1.0",), F32)
+        self.assertEqual(j.status, FAILED)
+        self.assertNotIn("short", j.why)
 
     def test_a_part_of_the_set_needs_its_outcomes_declared_and_no_more(self):
         results = (Declared(("127",), ("0",)), Declared(("-1",), ("-1",)))
@@ -119,6 +125,21 @@ class Judged(unittest.TestCase):
         self.assertEqual(j.status, INVALID)
         self.assertIn("chooses more than its budget of 16 bits", j.why)
         self.assertIn("declares its results, each with a witness", j.why)
+
+    def test_a_second_run_that_fails_is_fir_ref_s_failure(self):
+        runs = RecordedRuns(QUIET_ONLY, (X86_NATIVE,), "exits with status 3")
+        result = self.judge(runs)
+        self.assertEqual(result.judgement.status, FAILED)
+        self.assertEqual(result.reference_failure, "exits with status 3")
+
+    def test_a_failing_stand_in_is_rechecked_with_seeds(self):
+        test = replace(NAN_TEST, args=("poison", INF))
+        ub = Outcomes(1, (returned(QUIET), Outcome(UB, reason="r")), False)
+        drawn = [Path(returned(QUIET), 1, ("0",))] * len(SEEDS)
+        runs = RecordedRuns(QUIET_ONLY, ("1065353216",), ub, *drawn)
+        j = self.judge(runs, test).judgement
+        self.assertEqual(j.status, INVALID)
+        self.assertIn("so the run on poison hits UB", j.why)
 
     def test_ub_that_a_native_nan_reaches_proves_nothing(self):
         ub = Outcomes(1, (returned(QUIET), Outcome(UB, reason="r")), False)

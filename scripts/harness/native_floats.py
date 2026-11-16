@@ -16,6 +16,7 @@ comparing spellings compares bits.
 
 import float_text
 import standins
+from float_ref import Format
 from refine import DECIMAL, FLOAT_ALIASES, INT_TYPE, POISON, float_format
 
 
@@ -51,11 +52,6 @@ def from_native(values, types):
     return tuple(out)
 
 
-def is_nan(e: int, m: int, b: int) -> bool:
-    """Whether `b` is the bits of a NaN of `float<e,m>`."""
-    return b >> m & (1 << e) - 1 == (1 << e) - 1 and b & (1 << m) - 1 != 0
-
-
 def nans(values, types) -> tuple[str, ...]:
     """The bits of each value that native code returned that is a NaN,
     once each and in order, as `--nans` takes them: a float of its format
@@ -75,7 +71,8 @@ def nans(values, types) -> tuple[str, ...]:
             formats = [f for f in FLOAT_ALIASES.values() if 1 + sum(f) == width]
         else:
             continue
-        nan = f"0x{b:x}" if b is not None else None
-        if nan and nan not in out and any(is_nan(*f, b) for f in formats):
+        if b is None or not any(Format(*f).decode(b) == ("nan",) for f in formats):
+            continue
+        if (nan := f"0x{b:x}") not in out:
             out.append(nan)
     return tuple(out)

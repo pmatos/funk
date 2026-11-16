@@ -145,7 +145,10 @@ def judge_set(ref: Outcomes, native, types) -> Judgement:
                 " makes no choice",
             )
         return refines(ref.outcomes[0], native, types)
-    j = problem(ref.outcomes) or member(ref.outcomes, native, types)
+    p = problem(ref.outcomes)
+    if p is not None:
+        return p
+    j = member(ref.outcomes, native, types)
     if ref.complete or j.status != FAILED or isinstance(native, str):
         return j
     return Judgement(FAILED, f"{j.why}; {CUT_SHORT}")
@@ -153,10 +156,9 @@ def judge_set(ref: Outcomes, native, types) -> Judgement:
 
 # Why a result outside a part of the set fails (ADR-2026-11-16-1630).
 CUT_SHORT = (
-    "fir-ref cut the NaN choices short, trying only the positive quiet NaN"
-    " and native code's NaNs, so a NaN whose bits integer ops change is not"
-    " listed: a test that computes on a NaN's bits declares its results,"
-    " each with a witness"
+    "fir-ref cut the NaN choices short, trying only a few NaNs at each, so a"
+    " NaN whose bits integer ops change is not listed: a test that computes"
+    " on a NaN's bits declares its results, each with a witness"
 )
 
 

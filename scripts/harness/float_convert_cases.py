@@ -153,9 +153,9 @@ def tests_text(module: str) -> str:
     if native:
         head += [
             "# A test without expect is differential: fir-ref and native code",
-            "# run it, and the native result must equal fir-ref's. Each",
-            "# result that is not a NaN is also checked by an interpreter-only",
-            "# test with expect.",
+            "# run it, and the native result must be one that fir-ref gives.",
+            "# Each result that is not a NaN is also checked by an",
+            "# interpreter-only test with expect.",
         ]
     else:
         head += [
