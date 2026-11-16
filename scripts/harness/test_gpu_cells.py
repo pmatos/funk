@@ -47,8 +47,8 @@ class FollowsLean(unittest.TestCase):
         self.assertEqual(
             tuple(dims.get(d) for d in constructors(ops, "Dim")), gpu_cells.DIMS
         )
-        widths = re.findall(r"\| \.query _ _ w => w = (\d+)", valid)
-        self.assertEqual([f"i{w}" for w in widths], [gpu_cells.GPU_WIDTH])
+        rules = re.findall(r"^\s*\| \.query _ _ w => (.*?)\s*$", valid, re.MULTILINE)
+        self.assertEqual(rules, [f"w = {gpu_cells.GPU_WIDTH.removeprefix('i')}"])
 
     def test_the_ops_of_gpu(self):
         self.assert_cells_follow(lean("Ops"), lean("Text"), lean("Validation"))
@@ -66,8 +66,12 @@ class FollowsLean(unittest.TestCase):
             self.assertEqual(ops.count(edit[0]), 1, edit[0])
             with self.subTest(edit=name), self.assertRaises(AssertionError):
                 self.assert_cells_follow(ops.replace(*edit), text, valid)
-        with self.subTest(edit="a width"), self.assertRaises(AssertionError):
-            self.assert_cells_follow(ops, text, valid.replace("w = 32", "w = 64"))
+        for name, rule in [
+            ("a changed width", "w = 64"),
+            ("an added width", "w = 32 ∨ w = 64"),
+        ]:
+            with self.subTest(edit=name), self.assertRaises(AssertionError):
+                self.assert_cells_follow(ops, text, valid.replace("w = 32", rule))
 
 
 class Cells(unittest.TestCase):
