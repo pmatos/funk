@@ -14,15 +14,20 @@ second decodes each op in that scope.
 A text that follows the grammar but does not decode is rejected, with the
 position of the part that does not decode (ADR-2026-10-29-2014):
 
-* an item whose kind is neither `func`, `module` nor a word of a dialect,
-  at its kind. An item of a dialect's kind decodes whichever dialect
-  registers it: that is validation's question (ADR-2026-11-09-1543);
+* an item whose kind is neither `func`, `module`, `aggregate` nor a word
+  of a dialect, at its kind. An item of a dialect's kind decodes whichever
+  dialect registers it: that is validation's question (ADR-2026-11-09-1543);
 * a `func` with attributes, at its first attribute; a `func` whose body
   holds a dialect set, at its kind; and one whose body holds items, at the
   first;
 * a `module` with parameters, results or attributes, at the first of them,
   and one whose body holds blocks, at its kind;
 * an item of a dialect's kind whose body is not empty, at its kind;
+* an aggregate's layout with parameters or results, at the first of them;
+  one whose body is not empty, at its kind; and one whose attributes are
+  not its memory, size and alignment, then fields, at the first attribute
+  that does not decode, or at its kind when it has fewer than three
+  (ADR-2026-11-16-1546);
 * a type that does not decode, at the type;
 * an entry of the data layout that does not decode, at the entry
   (ADR-2026-11-12-1821);
@@ -176,6 +181,32 @@ def decodeDialectItem (kind : String) (kindPos : TextPos) (name : String) (param
     pure (.dialect ⟨kind, name, params, results, attrs.map (·.1)⟩)
   | _ => errorAt kindPos "an item of a dialect's kind has an empty body"
 
+/-- Decodes a field of an aggregate's layout, at its position. -/
+def decodeField : Attr × TextPos → Except ParseError (Field d)
+  | (a, p) => match Field.decode a with
+    | some f => pure f
+    | none => errorAt p ("not a field of an aggregate's layout, which is written " ++
+        "field(offset, type) or field(offset, type, count), each number at most 2^64 - 1")
+
+/-- Decodes an aggregate's layout (ADR-2026-11-16-1546): it has no
+parameters or results and an empty body, and its attributes are its memory,
+size and alignment, then its fields. -/
+def decodeAggregate (kindPos : TextPos) (name : String) : List SDef → List (Attr × TextPos) →
+    List (Attr × TextPos) → SBody → Except ParseError (Item d)
+  | x :: _, _, _, _ => errorAt x.pos "an aggregate has no parameters"
+  | [], (_, p) :: _, _, _ => errorAt p "an aggregate has no results"
+  | [], [], (m, pm) :: (s, ps) :: (a, pa) :: fs, .blocks [] =>
+    match Aggregate.decodeNumber "memory" m, Aggregate.decodeNumber "size" s,
+        Aggregate.decodeNumber "align" a with
+    | some mem, some size, some align => do
+      pure (.aggregate ⟨name, mem, size, align, ← fs.mapM decodeField⟩)
+    | none, _, _ => errorAt pm "an aggregate's layout writes memory(N) first, N at most 2^64 - 1"
+    | _, none, _ => errorAt ps "an aggregate's layout writes size(S) second, S at most 2^64 - 1"
+    | _, _, none => errorAt pa "an aggregate's layout writes align(A) third, A at most 2^64 - 1"
+  | [], [], _ :: _ :: _ :: _, _ => errorAt kindPos "an aggregate has an empty body"
+  | [], [], _, _ => errorAt kindPos
+    "an aggregate's layout writes memory(N), size(S) and align(A), then its fields"
+
 mutual
 /-- Decodes an item: a `func`, a `module`, whose body is its dialect set
 and its items (ADR-2026-11-10-1510), or an item of a dialect's kind
@@ -190,9 +221,10 @@ def decodeItem : SItem → Except ParseError (Item d)
       | .blocks [] => pure (.module name [] [])
       | .blocks (_ :: _) => errorAt kindPos "a module's body holds items, not blocks"
       | .items ds is => do pure (.module name ds (← decodeItems is))
+    else if kind = "aggregate" then decodeAggregate kindPos name params results attrs body
     else if isDialectWord kind then decodeDialectItem kind kindPos name params results attrs body
     else errorAt kindPos ("unknown item kind " ++ kind ++
-      ": the kinds are func, module and the words of dialects")
+      ": the kinds are func, module, aggregate and the words of dialects")
 
 /-- Decodes items, in order. -/
 def decodeItems : List SItem → Except ParseError (List (Item d))

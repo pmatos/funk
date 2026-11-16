@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Writable tokens: readable blocks" =>
 
-:::moduleDocs (fingerprint := "17122408520215146808")
+:::moduleDocs (fingerprint := "1942924921461273043")
 :::
 
 :::readable Fir.forall_mem_intercalate_of Fir.comma_writable (fingerprint := "15438348163069253873")
@@ -40,6 +40,10 @@ since an application holds a list of attributes.
 :::readable Fir.Attr.AllWritable.mem (fingerprint := "7578950284979742545")
 *Lemma: each attribute of a list that can be written can be written.* It
 turns the condition on a list into one on each of its elements.
+:::
+
+:::readable Fir.Attr.AllWritable.of_mem (fingerprint := "15356391788914094031")
+*Theorem: a list of attributes that can each be written can be written.*
 :::
 
 :::readable Fir.Attr.IsType.writable (pin := Fir.Attr.IsType) (fingerprint := "9361101271589670088")
@@ -141,6 +145,21 @@ well-formed function can be written: `func`, its symbol, its parameters,
 its result types, which are written as types, and its blocks.
 :::
 
+:::readable Fir.DialectItem.tokens_writable (pin := Fir.DialectItem.tokens) (fingerprint := "16205382713216671566")
+*Theorem: the tokens of an item with an empty body can be written.* Every
+token of an item written with the one production and an empty body can be
+written when its kind is a word, its parameters' names are names, each type
+it states is written as a type, and its attributes can be written.
+:::
+
+:::readable Fir.Aggregate.WellFormed.attrs Fir.Aggregate.WellFormed.tokens (pin := Fir.Aggregate.WellFormed) (pin := Fir.Aggregate.attrs) (fingerprint := "6405679261455024271")
+*Theorems: a well-formed aggregate's layout can be written.* The attributes
+of a well-formed layout can be written: `memory`, `size`, `align` and
+`field` are words, and each field's type is written as a type. So every
+token of the item that writes it can be written: its kind `aggregate` is a
+word, and it has no parameters or results.
+:::
+
 :::readable Fir.DialectItem.WellFormed.tokens (pin := Fir.DialectItem.WellFormed) (pin := Fir.DialectItem.tokens) (fingerprint := "17143999542065976434")
 *Theorem: a well-formed item of a dialect's kind has tokens that can be
 written.* For every dialect with a text format, every token of a
@@ -158,8 +177,8 @@ For every dialect with signatures and a text format:
 * every token of every data layout can be written: `layout` is a word, and
   each entry writes a type;
 * every token of a well-formed item can be written, and so can every token
-  of a list of well-formed items: a function and an item of a dialect's
-  kind by the theorems above, and a nested module since its dialect set names words and its items are well
+  of a list of well-formed items: a function, an item of a dialect's kind
+  and an aggregate's layout by the theorems above, and a nested module since its dialect set names words and its items are well
   formed, at any depth;
 * every token of every well-formed module can be written. A well-formed
   module names its dialects by words, has a data layout whose tokens can

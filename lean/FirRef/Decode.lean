@@ -8,7 +8,8 @@ import FirRef.Decode.Tree
 or op, and with the copies of `decodeType`, `decodeDef` and `define`
 compiled after `print_eq_printAttr`. `decodeFuncItem` is the
 spec's, calling `decodeFunc`, and `decodeDialectItem` is the spec's, with
-those copies. `decodeLoop` decodes items with an explicit
+those copies, and an aggregate's layout is decoded by the spec's
+`decodeAggregate`, which prints no attribute. `decodeLoop` decodes items with an explicit
 stack of frames, so it takes no stack per level of nested modules, and
 `decodeLoop_eq` proves that it computes what the spec's `decodeItems` does,
 errors included. The theorem
@@ -122,12 +123,16 @@ def decodeLoop : List (DFrame d) → Except ParseError (List (Item d))
         | .blocks [] => decodeLoop (.items (.module name [] [] :: done) sis :: fs)
         | .blocks (_ :: _) => errorAt kindPos "a module's body holds items, not blocks"
         | .items ds is => decodeLoop (.items [] is :: .module name ds :: .items done sis :: fs)
+    else if kind = "aggregate" then
+      match Text.decodeAggregate kindPos name params results attrs body with
+      | .ok i => decodeLoop (.items (i :: done) sis :: fs)
+      | .error e => .error e
     else if isDialectWord kind then
       match decodeDialectItem kind kindPos name params results attrs body with
       | .ok i => decodeLoop (.items (i :: done) sis :: fs)
       | .error e => .error e
     else errorAt kindPos ("unknown item kind " ++ kind ++
-      ": the kinds are func, module and the words of dialects")
+      ": the kinds are func, module, aggregate and the words of dialects")
   | _ => .ok []
 termination_by fs => dWeight fs
 decreasing_by
@@ -168,10 +173,11 @@ theorem decodeItem_mk (kind : String) (kindPos : TextPos) (name : String) (param
         | .blocks [] => pure (.module name [] [])
         | .blocks (_ :: _) => errorAt kindPos "a module's body holds items, not blocks"
         | .items ds is => do pure (.module name ds (← Text.decodeItems is))
+      else if kind = "aggregate" then Text.decodeAggregate kindPos name params results attrs body
       else if isDialectWord kind then
         Text.decodeDialectItem kind kindPos name params results attrs body
       else errorAt kindPos ("unknown item kind " ++ kind ++
-        ": the kinds are func, module and the words of dialects") := by
+        ": the kinds are func, module, aggregate and the words of dialects") := by
   rw [Text.decodeItem.eq_def]
   rfl
 

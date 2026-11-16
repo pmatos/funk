@@ -180,6 +180,21 @@ A layout is a size, an alignment and a list of fields. Each field is an offset
 and a scalar type: an integer, a float or a pointer. An array is a repeated
 field. Sizes and offsets count the units of the memory the layout describes.
 
+A layout is an item of the core's kind `aggregate` (ADR-2026-11-16-1546):
+`aggregate @pair() memory(0) size(16) align(8) field(0, i64) field(8, ptr) {`
+and `}`, with `field(O, T, C)` for a repeated field of `C` elements. A field
+takes the units of its type in the layout's memory, aligned as `alloca` aligns
+it; a repeated field's elements are rounded up to that alignment, so four `i24`
+in memory 0 take 16 units. A valid layout names a declared memory and a
+power-of-two alignment, and places each field of an integer or pointer type at
+a multiple of its alignment, no larger than the layout's, within the size and
+apart from every other field. Float fields wait for their units (#264). The
+human ruled on 2026-11-16, on #236: repeated elements are rounded up to their
+alignment (Q2 B); the run passes the module's layouts to every op's rule
+(Q1 A); and an element index out of range behaves as `ptradd` (Q3 A).
+Rejected: elements spaced by the type's units alone, which misaligns arrays of
+`i24` and C's `long double`.
+
 One op computes the address of a field or element from a pointer and a layout.
 Data moves through the scalar loads and stores. No op makes an aggregate value,
 or extracts from or inserts into one. Each unit of an aggregate in memory may be

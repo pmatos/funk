@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "The module read back: readable blocks" =>
 
-:::moduleDocs (fingerprint := "4358358668246434247")
+:::moduleDocs (fingerprint := "3741640447614503766")
 :::
 
 :::readable Fir.readDialectName_reads Fir.readDialects_reads (pin := Fir.Text.readDialectName) (pin := Fir.Text.readDialects) (pin := Fir.dialectsTokens) (fingerprint := "2049900563290384102")
@@ -38,19 +38,21 @@ until no comma follows. An entry writes a type, so the reader of types
 reads it back.
 :::
 
-:::readable Fir.Item.kind Fir.Item.tokens_eq Fir.head_items Fir.isDialectWord_not_reserved Fir.Item.TypesWritable Fir.Item.TypesWritableList Fir.Item.typesWritableList_iff Fir.itemsEnd (pin := Fir.Item.tokens) (pin := Fir.Func.types) (pin := Fir.DialectItem.types) (fingerprint := "13581829757735816490")
+:::readable Fir.Item.kind Fir.Item.tokens_eq Fir.head_items Fir.isDialectWord_not_reserved Fir.Item.TypesWritable Fir.Item.TypesWritableList Fir.Item.typesWritableList_iff Fir.itemsEnd (pin := Fir.Item.tokens) (pin := Fir.Func.types) (pin := Fir.DialectItem.types) (fingerprint := "7229669997390953699")
 *Definitions: an item's kind, and the types it writes.* The kind of an
-item is `func` for a function, `module` for a nested module, and its own
-kind for an item of a dialect's kind, and the tokens of an item start with
-$`\mathsf{word}` of its kind. So the tokens of a list of items, then more
-tokens, start with the word `func`, the word `module` or a word of a
-dialect, or, when the list is empty, as the tokens after it do. An item
+item is `func` for a function, `module` for a nested module, `aggregate`
+for an aggregate's layout, and its own kind for an item of a dialect's
+kind, and the tokens of an item start with $`\mathsf{word}` of its kind.
+So the tokens of a list of items, then more tokens, start with the word
+`func`, the word `module`, the word `aggregate` or a word of a dialect, or,
+when the list is empty, as the tokens after it do. An item
 writes its types as types when, for a function $`f`, $`\mathrm{tyattr}(t)`
 is written as a type for each type $`t` of $`\mathrm{types}(f)`, every type
 that the text of $`f` states; for a nested module, when each of its items
 does, at any depth; and, for an item $`i` of a dialect's kind, when its
 kind is a word of a dialect and $`\mathrm{tyattr}(t)` is written as a type
-for each $`t` of $`\mathrm{types}(i)`. A word of a dialect holds a `.`, so
+for each $`t` of $`\mathrm{types}(i)`; an aggregate's layout always does,
+since its types are written inside its attributes. A word of a dialect holds a `.`, so
 it is neither `dialects`, `locs` nor `layout`, and an item of a dialect's
 kind is never read as a dialect set, a data layout or the location table. A list of items ends at the word `locs` at the top of a
 module, and at `}` in the body of an item.
@@ -69,7 +71,8 @@ with a {ref "The-fir-specification--Text-format--Grammar"}[text format]:
   before `}` in the body of an item.
 
 A function, and an item of a dialect's kind, read back by the theorems of
-the previous section. A nested
+the previous section, and so does an aggregate's layout, as the item of
+kind `aggregate` that writes it. A nested
 module reads back as its symbol, `(`, no parameters since `)` follows, `)`,
 no results and no attributes since `{` follows, `{`, then its body: no
 blocks when `}` follows, which is the tree of a module with no dialect set
@@ -134,7 +137,7 @@ gives the tokens of $`m`, then $`\mathsf{eof}`, and the theorem above
 reads them.
 :::
 
-:::readable Fir.Module.Valid.read_print (pin := Fir.Module.Valid) (fingerprint := "17627420019290519979")
+:::readable Fir.Module.Valid.read_print (pin := Fir.Module.Valid) (fingerprint := "2616906568867358469")
 *Theorem: the first two steps read a valid module's text as its tree.* For
 every dialect with signatures, validation rules and a text format whose
 text is {ref "The-fir-specification--Text-format--Grammar"}[lawful], and

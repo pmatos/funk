@@ -101,7 +101,7 @@ holds its label, the trees of its arguments and the trees of its ops. The
 tree of a list is the tree of each element.
 :::
 
-:::readable Fir.Func.tree Fir.moduleBody Fir.DialectItem.tree Fir.Item.tree Fir.Item.treeList Fir.Item.treeList_eq_map (pin := Fir.Func) (pin := Fir.Item) (pin := Fir.DialectText) (fingerprint := "3422487333582060718")
+:::readable Fir.Func.tree Fir.moduleBody Fir.DialectItem.tree Fir.Item.tree Fir.Item.treeList Fir.Item.treeList_eq_map (pin := Fir.Func) (pin := Fir.Item) (pin := Fir.DialectText) (fingerprint := "11325945977966372699")
 *Definitions: the tree of a function, and of an item.* The tree of a
 function $`f` is the item of kind `func`, at $`p_0`, with:
 
@@ -116,8 +116,11 @@ $`i`, at $`p_0`, with the symbol of $`i`, the trees of its parameters, each
 result type $`t` as $`\mathrm{tyattr}(t)` at $`p_0`, each attribute of
 $`i` at $`p_0`, and an empty body of blocks.
 
-The tree of an item that is a function is the tree of its function, and
-the tree of an item of a dialect's kind is the tree of that item. The
+The tree of an item that is a function is the tree of its function, the
+tree of an item of a dialect's kind is the tree of that item, and the tree
+of an aggregate's layout is the tree of the item that writes it: of kind
+`aggregate`, with its symbol, no parameters or results, its attributes and
+an empty body. The
 tree of a nested module with the symbol $`s`, the dialect set $`x^*` and
 the items $`i^*` is the item of kind `module`, at $`p_0`, with the symbol
 $`s`, no parameters, results or attributes, and as its body the dialect set

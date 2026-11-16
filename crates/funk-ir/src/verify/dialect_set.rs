@@ -75,6 +75,18 @@ pub(super) fn check_words(t: Table<'_>, reg: &Registry, out: &mut Vec<Diagnostic
             ));
         }
     }
+    for a in t.aggregates() {
+        let outside = |w| word_dialect(w).filter(|x| !t.dialects.iter().any(|d| d == x));
+        if let Some(x) = in_types(a.types(), &outside) {
+            out.push(Diagnostic::at_block(
+                &a.name,
+                None,
+                format!(
+                    "the layout writes a word of the dialect {x}, which the module's dialect set does not name"
+                ),
+            ));
+        }
+    }
 }
 
 /// The first dialect, outside `declared`, that a word of the item `i`

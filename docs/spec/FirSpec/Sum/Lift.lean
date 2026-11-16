@@ -14,7 +14,7 @@ changes under it.
 
 #doc (Manual) "Lifting an extension: readable blocks" =>
 
-:::moduleDocs (fingerprint := "13045597018531439577")
+:::moduleDocs (fingerprint := "9402312115790363065")
 :::
 
 :::readable Fir.Dialect.lift Fir.Dialect.lift.instDialectName Fir.Dialect.lift.instTyDenote Fir.Dialect.lift.instTyPoison Fir.Dialect.lift.instTyRefinement Fir.Dialect.lift.instDecidableEqOp Fir.Dialect.lift.instDecidableEqTy (fingerprint := "11332194699468969674")
@@ -60,15 +60,16 @@ This is the rule for a base op in a sum (ADR-2026-11-09-2353), with $`e` in
 place of the base. It can be decided when $`e`'s rule can.
 :::
 
-:::readable Fir.Dialect.lift.instDialectSignature Fir.Dialect.lift.instDialectValidation Fir.Dialect.lift.instDecidableDialectValidation (fingerprint := "16774356745864721196")
+:::readable Fir.Dialect.lift.instDialectSignature Fir.Dialect.lift.instDialectValidation Fir.Dialect.lift.instDecidableDialectValidation (fingerprint := "2942837901758744076")
 *Definition: the signature and the rules of the lift.* An op of the lift
 has $`e`'s signature, with its types included by $`\hat\iota`:
 
 $$`\mathrm{sig}(q) = \hat\iota(t)^* \text{ where } \mathrm{sig}_{d.\mathrm{over}(e)}(q) = t^*`
 
 and the same for its result types; it ends a block, has successors and
-owns regions of kinds as in $`e`. A type of $`B` is valid, and names a
-memory, as $`B` says, and an own type of $`e` as $`e` says. An op refers to the symbols that $`e`
+owns regions of kinds as in $`e`. A type of $`B` is valid, names a
+memory and takes its units as a field, as $`B` says, and an own type of
+$`e` as $`e` says. An op refers to the symbols that $`e`
 says, carries the types that $`e` says, included by $`\hat\iota`, and
 obeys its rule as above. A function obeys $`e`'s function rule
 through the lift's view. The lift registers $`e`'s region kinds, and a

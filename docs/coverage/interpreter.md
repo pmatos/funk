@@ -7,7 +7,7 @@ says how to read it.
 
 | op | flags or predicate | `i1` | `i7` | `i8` | `i16` | `i32` | `i33` | `i64` | `i128` |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `const` |  | 288 | 475 | 340 | 215 | 291 | 466 | 209 | 134 |
+| `const` |  | 288 | 475 | 340 | 215 | 291 | 466 | 210 | 134 |
 | `add` |  | 12 | 228 | 33 | 28 | 37 | 228 | 28 | 63 |
 | `add` | `nuw` | 4 | 29 | 6 | 6 | 8 | 29 | 6 | 5 |
 | `add` | `nsw` | 173 | 347 | 211 | 204 | 203 | 319 | 197 | 99 |
@@ -217,14 +217,14 @@ says how to read it.
 | `cond_br` | a successor passes nothing | 438 |  |  |  |  |  |  |  |  |  |  |  |  |  |
 | `cond_br` | a successor passes values |  | 13 | 138 | 16 | 14 | 14 | 136 | 13 | 11 | 5 | 5 | 7 | 5 | 5 |
 | `ret` | returns no value | 26 |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| `ret` | returns one value |  | 2570 | 1583 | 828 | 824 | 953 | 1609 | 820 | 1081 | 825 | 777 | 689 | 588 | 530 |
+| `ret` | returns one value |  | 2570 | 1583 | 828 | 824 | 953 | 1609 | 821 | 1081 | 825 | 777 | 689 | 588 | 530 |
 | `ret` | returns several values |  | 56 | 189 | 42 | 28 | 33 | 189 | 51 | 50 | 5 | 6 | 5 | 7 | 5 |
 | `unreachable` | ends a block | 16 |  |  |  |  |  |  |  |  |  |  |  |  |  |
 | `call` | gives no result | 14 |  |  |  |  |  |  |  |  |  |  |  |  |  |
 | `call` | gives one result |  | 74 | 92 | 28 | 23 | 24 | 92 | 23 | 19 | 2 | 2 | 2 | 2 | 2 |
 | `call` | gives several results |  | 41 | 92 | 17 | 11 | 11 | 92 | 25 | 27 | 2 | 3 | 2 | 3 | 2 |
 | `func` | returns no value | 23 |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| `func` | returns one value |  | 2569 | 1583 | 829 | 824 | 953 | 1609 | 820 | 1081 | 823 | 775 | 687 | 586 | 528 |
+| `func` | returns one value |  | 2569 | 1583 | 829 | 824 | 953 | 1609 | 821 | 1081 | 823 | 775 | 687 | 586 | 528 |
 | `func` | returns several values |  | 56 | 189 | 42 | 28 | 33 | 189 | 51 | 48 | 5 | 6 | 5 | 7 | 5 |
 
 ## Ops of the gpu dialect in a dimension

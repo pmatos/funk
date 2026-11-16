@@ -17,7 +17,8 @@ whether a function is a kernel is where it lives, in a device module whose
 dialect set names `gpu`, and the dialect-set rule already keeps every word
 of `gpu` out of a module whose set does not name it.
 
-The dialect accepts the core's valid types, since its types are the core's.
+The dialect accepts the core's valid types, since its types are the core's,
+and they are fields of an aggregate's layout as the core's are.
 -/
 
 namespace Fir.Gpu
@@ -54,6 +55,9 @@ instance instDialectValidation : DialectValidation GpuDialect where
   validOp _ := Op.Valid
   validFunc _ _ _ := True
   opTypes := Op.attrTypes
+  fieldShape lay n
+    | .inl t => t.fieldShape lay n
+    | .inr e => e.elim
 
 instance instDecidableDialectValidation : DecidableDialectValidation GpuDialect where
   decValidTy t := inferInstanceAs (Decidable (ValidTy t))

@@ -31,7 +31,8 @@ parameters, results or attributes, and its body is its dialect set and its
 items, or no blocks when it has neither, since its tokens after its `{` are
 then its `}`. An item of a dialect's kind is an item of its kind with its
 symbol, its parameters, its result types and its attributes, and its body
-is no blocks. Each op is its results, its name and attributes as the
+is no blocks, and an aggregate's layout is the item of kind `aggregate`
+that writes it. Each op is its results, its name and attributes as the
 dialect writes them, its operands, its successors, its regions and its
 location reference. Each type is the attribute that writes it, and so is
 each entry of the data layout. The dialect set and the location table are
@@ -180,6 +181,7 @@ def Item.tree : Item d → SItem
   | .func f => f.tree
   | .module name ds is => ⟨"module", .zero, name, [], [], [], moduleBody ds (Item.treeList is)⟩
   | .dialect i => i.tree
+  | .aggregate a => a.item.tree
 
 /-- The trees of items. -/
 def Item.treeList : List (Item d) → List SItem

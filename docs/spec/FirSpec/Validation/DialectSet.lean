@@ -14,10 +14,10 @@ when the Lean changes under it.
 
 #doc (Manual) "A module's dialect set: readable blocks" =>
 
-:::moduleDocs (fingerprint := "16852685827601510971")
+:::moduleDocs (fingerprint := "10902274516247895084")
 :::
 
-:::readable Fir.opDialects Fir.Operation.wordDialects Fir.Func.wordDialects Fir.DialectItem.wordDialects (fingerprint := "3941356209079654968")
+:::readable Fir.opDialects Fir.Operation.wordDialects Fir.Func.wordDialects Fir.DialectItem.wordDialects Fir.Aggregate.wordDialects (fingerprint := "8204107113261555020")
 *Definition: the dialects that a function's words name.* The dialects of an
 op instance $`p` are those of its name and then those of its attributes:
 
@@ -32,10 +32,12 @@ of each value it defines, and then those of each op of its blocks, at any
 depth. The dialects of an item $`i` of a dialect's kind are, in order, the
 dialect of its kind, those of the words of each type that $`i` states, and
 those of its attributes: a kind of item's word joins the dialect set too
-(ADR-2026-11-09-1543).
+(ADR-2026-11-09-1543). The dialects of an aggregate's layout are those of
+the words of the type of each of its fields, in order
+(ADR-2026-11-16-1546).
 :::
 
-:::readable Fir.SymbolTable.InDialectSet Fir.Module.InDialectSet (fingerprint := "10087329034650690103")
+:::readable Fir.SymbolTable.InDialectSet Fir.Module.InDialectSet (fingerprint := "9815255778888153311")
 *Definition: a module keeps to its dialect sets.* A
 {ref "The-fir-specification--Validation--Scope-and-symbols"}[symbol table]
 $`T` of a module of the dialect $`d` keeps to its dialect set
@@ -47,7 +49,9 @@ $`\mathrm{dialects}(T)` when
 * for every function $`f` of $`T`, every dialect that the words of $`f`
   name is in $`\mathrm{dialects}(T)`;
 * for every item $`i` of a dialect's kind of $`T`, every dialect that the
-  words of $`i` name is in $`\mathrm{dialects}(T)`.
+  words of $`i` name is in $`\mathrm{dialects}(T)`;
+* for every aggregate's layout $`A` of $`T`, every dialect that the words
+  of $`A` name is in $`\mathrm{dialects}(T)`.
 
 A module $`m` keeps to its dialect sets when each of its tables does: its
 own, and that of each nested module, at any depth. A nested module's set is
@@ -56,7 +60,7 @@ dialect writes only the core's words, whatever its parent names, and a
 parent's set does not name the dialects of a nested module's set.
 :::
 
-:::readable Fir.Func.setProblems Fir.DialectItem.setProblems Fir.SymbolTable.setProblems Fir.Module.setProblems (fingerprint := "939208534111367518")
+:::readable Fir.Func.setProblems Fir.DialectItem.setProblems Fir.Aggregate.setProblems Fir.SymbolTable.setProblems Fir.Module.setProblems (fingerprint := "265519786336909545")
 *Definition: the check of a module's dialect sets.* The check of a table
 gives, in order: "the dialect set names $`x`, which is not a known dialect"
 for each dialect $`x` of its set that $`d` does not hold; then, for each of
@@ -65,8 +69,10 @@ its functions, one problem when its words name a dialect outside the set:
 set does not name", for the first such dialect $`x` in the order of the
 function's words; then, for each of its items of a dialect's kind, in the
 same way, "the item writes a word of the dialect $`x`, which the module's
-dialect set does not name". The check of a module gives the problems of
-each of its tables, in order.
+dialect set does not name"; then, for each of its aggregates' layouts, in
+the same way, "the layout writes a word of the dialect $`x`, which the
+module's dialect set does not name". The check of a module gives the
+problems of each of its tables, in order.
 :::
 
 :::readable Fir.find?_not_mem_eq_none Fir.SymbolTable.setProblems_eq_nil_iff Fir.Module.setProblems_eq_nil_iff (fingerprint := "7731780434844951569")

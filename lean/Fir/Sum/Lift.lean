@@ -160,6 +160,9 @@ instance instDialectValidation [DialectValidation big] [DialectValidation (dep.o
     | .inl t => tyMemory t
     | .inr t => tyMemory (d := dep.over e) (.inr t)
   opTypes o := (opTypes (d := dep.over e) o).map (incl e ι μ).incl
+  fieldShape lay n
+    | .inl t => fieldShape lay n t
+    | .inr t => fieldShape (d := dep.over e) lay n (.inr t)
 
 /-- The lift's rules can be decided when `big`'s and `e`'s can. -/
 instance instDecidableDialectValidation [DialectValidation big] [DialectValidation (dep.over e)]

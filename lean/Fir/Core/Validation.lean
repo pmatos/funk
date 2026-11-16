@@ -11,7 +11,8 @@ human's ruling of 2026-11-12 on #354), the rule that no float op
 carries a reserved word, `contract` or `reassoc` (ADR-2026-11-09-1549),
 the rule that a float op that rounds rounds with the mode `rne`
 (ADR-2026-11-11-1801), the rules of `alloca` (ADR-2026-11-14-0915), and
-the rules of `load` and `store` (ADR-2026-11-14-2316).
+the rules of `load` and `store` (ADR-2026-11-14-2316), and the units and
+alignment of a field of an aggregate's layout (ADR-2026-11-16-1546).
 The general rules of the previous sections already
 check every op's operand and result types against its signature, so these
 are all the rules of the core dialect. It has no rule over a whole function.
@@ -53,6 +54,60 @@ def Ty.IsElem : Ty → Prop
 
 instance : DecidablePred Ty.IsElem := fun t => by
   cases t <;> unfold Ty.IsElem <;> infer_instance
+
+/-- The least power of two that is at least `n`, `Nat.nextPowerOfTwo`
+written as a loop of at most `n` doublings, by structural recursion, so that
+the rules of validation that use it rest on no axiom. -/
+def pow2AtLeast (n : Nat) : Nat := go n 1
+where
+  /-- Doubles `p` while it is below `n`, at most `k` times. -/
+  go : Nat → Nat → Nat
+    | 0, p => p
+    | k + 1, p => if p < n then go k (p * 2) else p
+
+theorem pow2AtLeast.two_mul_le {p q : Nat} (hp : p.isPowerOfTwo) (hq : q.isPowerOfTwo)
+    (h : p < q) : p * 2 ≤ q := by
+  obtain ⟨a, rfl⟩ := hp
+  obtain ⟨b, rfl⟩ := hq
+  have hab : a < b := (Nat.pow_lt_pow_iff_right (by decide)).mp h
+  rw [← Nat.pow_succ]
+  exact Nat.pow_le_pow_right (by decide) hab
+
+theorem pow2AtLeast.go_spec (n : Nat) : ∀ (k p : Nat), p.isPowerOfTwo →
+    (∀ q, n ≤ q → q.isPowerOfTwo → p ≤ q) → n - p ≤ k →
+      n ≤ pow2AtLeast.go n k p ∧ (pow2AtLeast.go n k p).isPowerOfTwo ∧
+        ∀ q, n ≤ q → q.isPowerOfTwo → pow2AtLeast.go n k p ≤ q
+  | 0, p, hp, hm, h => by
+    rw [pow2AtLeast.go]
+    exact ⟨by omega, hp, hm⟩
+  | k + 1, p, hp, hm, h => by
+    rw [pow2AtLeast.go]
+    split
+    · rename_i hlt
+      have hpos := Nat.pos_of_isPowerOfTwo hp
+      exact pow2AtLeast.go_spec n k (p * 2) (Nat.isPowerOfTwo_mul_two_of_isPowerOfTwo hp)
+        (fun q hq hq2 => pow2AtLeast.two_mul_le hp hq2 (by omega)) (by omega)
+    · exact ⟨by omega, hp, hm⟩
+
+/-- The loop is `Nat.nextPowerOfTwo`. -/
+theorem pow2AtLeast_eq (n : Nat) : pow2AtLeast n = n.nextPowerOfTwo := by
+  have h := pow2AtLeast.go_spec n n 1 Nat.isPowerOfTwo_one
+    (fun q _ hq => Nat.pos_of_isPowerOfTwo hq) (by omega)
+  exact (Nat.nextPowerOfTwo_eq_iff.mpr h).symm
+
+/-- The units that a field of the type takes in the memory `n` of a module
+whose memories have the entries `lay`, and its alignment there, in units
+(ADR-2026-11-16-1546): an integer or a pointer takes the units of its bits,
+as `alloca` counts them, aligned to the least power of two that is at least
+those units, but a pointer of the memory `n` itself to the alignment that
+its entry gives its pointers. A float type may not be a field until it has
+an encoding in units (#264). -/
+def Ty.fieldShape (lay : Nat → MemLayout) (n : Nat) : Ty → Option (Nat × Nat)
+  | .int w => some ((lay n).bitsUnits w, pow2AtLeast ((lay n).bitsUnits w))
+  | .ptr m =>
+    let u := (lay n).bitsUnits (lay m).pointer
+    some (u, if m = n then (lay n).align.getD (pow2AtLeast u) else pow2AtLeast u)
+  | .float _ _ => none
 
 /-- The type that `alloca` allocates values of, which it carries in its
 attributes, so that the data layout checks the memory a pointer type there
@@ -171,5 +226,6 @@ instance : DialectValidation CoreDialect where
   validFunc _ _ _ := True
   tyMemory := Core.Ty.memory
   opTypes := Core.Op.attrTypes
+  fieldShape := Core.Ty.fieldShape
 
 end Fir

@@ -9,6 +9,7 @@
 //! types too. It reports every broken rule it finds, each as a [`Diagnostic`]
 //! that names where the rule broke and carries the IR location of the op.
 
+mod aggregate;
 mod cfg;
 mod dialect_set;
 mod func;
@@ -119,7 +120,8 @@ impl fmt::Display for Diagnostic {
 /// layout. The diagnostics come in the spec's order: the location table,
 /// each table's problems (`SymbolTable.problems`), the layout's entries
 /// (`DataLayout.problems`), the memories that each table's types name
-/// (`SymbolTable.memoryProblems`), then each table's dialect set
+/// (`SymbolTable.memoryProblems`), each table's aggregates' layouts
+/// (`Aggregate.problems`), then each table's dialect set
 /// (`SymbolTable.setProblems`). A problem in a nested module names its
 /// function, as one at the top level does.
 pub fn verify(m: &Module, reg: &Registry) -> Vec<Diagnostic> {
@@ -135,6 +137,9 @@ pub fn verify(m: &Module, reg: &Registry) -> Vec<Diagnostic> {
     layout::check_entries(&m.layout, &mut out);
     for &t in &tables {
         layout::check_memories(t, &m.layout, reg, &mut out);
+    }
+    for &t in &tables {
+        aggregate::check(t, &m.layout, reg, &mut out);
     }
     for &t in &tables {
         dialect_set::check_words(t, reg, &mut out);

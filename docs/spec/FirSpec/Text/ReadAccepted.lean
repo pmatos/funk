@@ -84,8 +84,8 @@ and every number of its
 each key and each number of each location, is below $`2^{32}`.
 
 Nothing is asked of an item's kind or symbol: decoding accepts only a
-`func` and a `module` without attributes, and an item of a dialect's kind,
-whatever their symbol.
+`func` and a `module` without attributes, an `aggregate`, and an item of a
+dialect's kind, whatever their symbol.
 :::
 
 :::readable Fir.Text.TokensWritable.tail Fir.Text.TokensWritable.value Fir.Text.TokensWritable.label Fir.Text.TokensWritable.word Fir.Text.TokensWritable.locRef Fir.Text.TokensWritable.float (pin := Fir.Text.TokensWritable) (pin := Fir.Text.Tok.Writable) (pin := Fir.Location.limit) (fingerprint := "7548386678348029364")

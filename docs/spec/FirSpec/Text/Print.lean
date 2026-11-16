@@ -119,8 +119,10 @@ $`x_1, \dots, x_k` at the indentation $`n` is written as $`n` spaces,
 `dialects x₁, …, xₖ`, a line feed and an empty line, and as nothing when
 $`k = 0`.
 
-An item that is a function is written as that function, and an item of a
-dialect's kind as that item. A nested module
+An item that is a function is written as that function, an item of a
+dialect's kind as that item, and an aggregate's layout as the item of kind
+`aggregate` that writes it, with no parameters or results and its
+attributes. A nested module
 with the symbol $`s`, the dialect set $`x^*` and the items $`i^*`, at the
 indentation $`n`, is written as $`n` spaces, `module `,
 $`\mathrm{printsym}(s)`, `() {` and a line feed; then its dialect set and

@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Replacing a callee: readable blocks" =>
 
-:::moduleDocs (fingerprint := "13513591641772786714")
+:::moduleDocs (fingerprint := "10890584114818772246")
 :::
 
 :::readable Fir.Func.replaceBody Fir.Item.replaceBody Fir.Module.replaceBody (fingerprint := "10617108302315699159")
@@ -65,14 +65,15 @@ with $`g`'s body replaced by $`b`, $`s` finds $`g` with the body $`b`, and
 every other symbol finds what it finds in $`M`.
 :::
 
-:::readable Fir.Module.symbols_replaceBody Fir.Module.context_replaceBody Fir.Module.dialectItems_replaceBody (pin := Fir.Module.symbols) (pin := Fir.Module.context) (fingerprint := "5476321169022967364")
+:::readable Fir.Module.symbols_replaceBody Fir.Module.context_replaceBody Fir.Module.dialectItems_replaceBody Fir.Module.aggregates_replaceBody (pin := Fir.Module.symbols) (pin := Fir.Module.context) (fingerprint := "2621460965151490828")
 *Theorems: a replacement keeps the symbol table and the context of
 validation.* For every module $`M`, symbol $`s` and region $`b`, the
 {ref "The-fir-specification--Validation--Scope-and-symbols"}[symbol table]
 of $`M[s \leftarrow b]` is that of $`M`, since every function keeps its
 symbol and its type; so is the context in which validation checks its
 functions, which is the symbol table and the keys of the location table.
-The items of a dialect's kind of its own table are those of $`M`.
+The items of a dialect's kind of its own table, and its aggregates'
+layouts, are those of $`M`.
 :::
 
 :::readable Fir.Item.name_replaceBody Fir.Item.tablesIn_replaceBody (fingerprint := "3259367735023084775")
@@ -84,7 +85,7 @@ the body replaced hold the same
 a function holds none, and a nested module is unchanged.
 :::
 
-:::readable Fir.Module.valid_replaceBody (pin := Fir.Module.Valid) (fingerprint := "6591664031815088025")
+:::readable Fir.Module.valid_replaceBody (pin := Fir.Module.Valid) (fingerprint := "17845541104556441495")
 *Theorem: a valid module stays valid when the new function is valid.* For
 every dialect with its validation rules, let $`M` be a
 {ref "The-fir-specification--Validation--The-general-rules"}[valid module],
@@ -95,8 +96,9 @@ naming a memory that the layout of $`M` declares. Then
 $`M[s \leftarrow b]` is valid: the symbols of its own table are those of
 $`M`, so still unique; its location table, its dialect set and its layout
 are those of $`M`; each of its functions is valid in its context, which is
-that of $`M`, and its types name memories of the layout; and its nested
-modules, and so the tables they hold, are those of $`M`.
+that of $`M`, and its types name memories of the layout; its aggregates'
+layouts are those of $`M`, so still valid; and its nested modules, and so
+the tables they hold, are those of $`M`.
 
 So the new body needs to be checked alone, against the old module's
 symbol table; every other function was already valid there.
