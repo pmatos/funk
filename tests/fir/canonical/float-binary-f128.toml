@@ -7,7 +7,7 @@
 # f128, so fir-ref alone runs it and must give what it expects.
 # A NaN result is any NaN: its test is interpreter-only and names
 # the NaN by a choice of the sign and the mantissa, as signed
-# i113. Native code is not compared on a NaN result yet (#219).
+# i113.
 tests = [
   { func = "@fadd", args = ["1.0", "1.0"], expect = ["2.0"] },
   { func = "@fadd", args = ["1.0", "9.629649721936179265279889712924637e-35"], expect = ["1.0"] },

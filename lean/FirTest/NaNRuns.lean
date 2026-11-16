@@ -53,6 +53,10 @@ def inf32 : List String := ["0x7f800000", "0x7f800000"]
 #guard nanRun (floatOp "fadd" " round(rne)" "f32" 2) ["1.0", "2.0"] [0x7fc00000] ==
   nanOutcomes [["3.0"]] 0 true
 #guard nanRun (frozen "i1") ["true"] [] == nanOutcomes [["false"], ["true"]] 1 true
+-- A choice past the budget lists none of its values: `freeze` of an `i64`
+-- would have 2^64.
+#guard nanRun (frozen "i64") ["9223372036854775807"] [] ==
+  { out := "{\"kind\":\"choice-budget-exceeded\",\"budget\":16}", status := 0 }
 
 /-- `inf - inf` at `f32`, as the integer of its bits. -/
 def infSubBits : String :=

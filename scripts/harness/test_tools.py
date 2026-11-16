@@ -152,6 +152,16 @@ class Exhaustive(unittest.TestCase):
         ret = '{"kind":"outcomes","choices":0,"outcomes":[{"kind":"return","values":[]}]}\n'
         self.assertIsInstance(outcomes(Ran(1, ret, "")), str)
 
+    def test_complete_says_whether_the_nans_were_cut_short(self):
+        out = (
+            '{"kind":"outcomes","choices":1,"complete":%s,"outcomes":'
+            '[{"kind":"return","values":["0x7fc00000"]}]}\n'
+        )
+        some = Outcomes(1, (Outcome(RETURN, ("0x7fc00000",)),), False)
+        self.assertEqual(outcomes(Ran(0, out % "false", "")), some)
+        self.assertTrue(outcomes(Ran(0, out % "true", "")).complete)
+        self.assertIsInstance(outcomes(Ran(0, out % '"no"', "")), str)
+
     def test_the_budget(self):
         out = '{"kind":"choice-budget-exceeded","budget":16}\n'
         self.assertEqual(outcomes(Ran(0, out, "")), BudgetExceeded(16))

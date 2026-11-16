@@ -74,8 +74,8 @@ class Tests(unittest.TestCase):
         self.assertTrue(nans)
         for t in tests:
             bits = [decode(8, 23, a) for a in t["args"] if a != "poison"]
-            if "expect" in t and "choices" not in t and "poison" not in t["args"]:
-                plain = {k: v for k, v in t.items() if k != "expect"}
+            if "expect" in t and "poison" not in t["args"]:
+                plain = {k: v for k, v in t.items() if k not in ("expect", "choices")}
                 self.assertIn(plain, differential)
             if "choices" in t:
                 self.assertTrue(cases.is_nan(f, cases.result(f, t["func"][1:], bits)))
