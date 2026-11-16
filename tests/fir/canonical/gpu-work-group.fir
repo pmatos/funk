@@ -47,6 +47,29 @@ module @dev() {
     ret %p, %q @3
   }
 
+  func @both() -> ptr(3), ptr(3) {
+  ^entry:
+    %w: ptr(3) = gpu.work_group_alloca i32 @3
+    %s: ptr(3) = alloca stack i32 @3
+    ret %w, %s @3
+  }
+
+  func @kept(%v: i32) -> i32 {
+  ^entry:
+    %w: ptr(3), %s: ptr(3) = call @both @3
+    store nonatomic %v, %w @3
+    %r: i32 = load nonatomic %w @3
+    ret %r @3
+  }
+
+  func @dropped(%v: i32) -> i32 {
+  ^entry:
+    %w: ptr(3), %s: ptr(3) = call @both @3
+    store nonatomic %v, %s @3
+    %r: i32 = load nonatomic %s @3
+    ret %r @3
+  }
+
   func @misaligned() -> ptr(3) {
   ^entry:
     %pp: ptr(5) = gpu.work_group_alloca ptr(3) align(2) @3

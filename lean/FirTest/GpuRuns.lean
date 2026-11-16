@@ -177,6 +177,29 @@ module @dev() {
     ret %w @0
   }
 
+  func @both() -> ptr(3), ptr(3) {
+  ^e:
+    %w: ptr(3) = gpu.work_group_alloca i32 @0
+    %s: ptr(3) = alloca stack i32 @0
+    ret %w, %s @0
+  }
+
+  func @kept(%v: i32) -> i32 {
+  ^e:
+    %w: ptr(3), %s: ptr(3) = call @both @0
+    store nonatomic %v, %w @0
+    %r: i32 = load nonatomic %w @0
+    ret %r @0
+  }
+
+  func @dropped(%v: i32) -> i32 {
+  ^e:
+    %w: ptr(3), %s: ptr(3) = call @both @0
+    store nonatomic %v, %s @0
+    %r: i32 = load nonatomic %s @0
+    ret %r @0
+  }
+
   func @twice() -> ptr(3), ptr(3) {
   ^e:
     %p: ptr(3) = call @buffer @0
@@ -208,6 +231,12 @@ def runWorkGroup (func : String) (args : List String := []) (w : Gpu.WorkItem :=
   "{\"kind\":\"ub\",\"reason\":\"an access out of bounds\",\"choices\":0}"
 -- A stack allocation does not: its call's frame frees it.
 #guard (runWorkGroup "@dev::@lose" ["1"]).out ==
+  "{\"kind\":\"ub\",\"reason\":\"an access to a freed allocation\",\"choices\":0}"
+-- In one memory, a work-group allocation and a stack allocation made by
+-- the same call: the first outlives the call, the second does not.
+#guard runWorkGroup "@dev::@both" == returns ["ptr(0, 0)", "ptr(1, 0)"]
+#guard runWorkGroup "@dev::@kept" ["9"] == returns ["9"]
+#guard (runWorkGroup "@dev::@dropped" ["9"]).out ==
   "{\"kind\":\"ub\",\"reason\":\"an access to a freed allocation\",\"choices\":0}"
 -- Each run of the op makes a new allocation.
 #guard runWorkGroup "@dev::@twice" == returns ["ptr(0, 0)", "ptr(1, 0)"]

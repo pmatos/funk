@@ -5,4 +5,7 @@ tests = [
   { func = "@dev::@freed", args = ["1"], expect = "ub" },
   { func = "@dev::@twice", expect = ["ptr(0, 0)", "ptr(1, 0)"] },
   { func = "@dev::@misaligned", expect = "ub" },
+  { func = "@dev::@both", expect = ["ptr(0, 0)", "ptr(1, 0)"] },
+  { func = "@dev::@kept", args = ["9"], expect = ["9"] },
+  { func = "@dev::@dropped", args = ["9"], expect = "ub" },
 ]
