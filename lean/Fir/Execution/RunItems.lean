@@ -65,9 +65,11 @@ def Aggregate.place (l : DataLayout) (a : Aggregate d) : LayoutPlace :=
 
 /-- The items that a run of a function of the symbol table `t`, in a module
 whose data layout is `l`, gives each op: the first aggregate's layout of
-`t` with each symbol, placed. -/
-def RunItems.ofTable (l : DataLayout) (t : SymbolTable d) : RunItems where
-  layout? s := (t.aggregates.find? (·.name == s)).map (Aggregate.place l)
+`t` with each symbol, placed. The layouts are placed once, not at each
+lookup. -/
+def RunItems.ofTable (l : DataLayout) (t : SymbolTable d) : RunItems :=
+  let placed := t.aggregates.map fun a => (a.name, a.place l)
+  ⟨fun s => placed.lookup s⟩
 
 /-- The items that a run of a function of a module's own table gives each
 op. -/

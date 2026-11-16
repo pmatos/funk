@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "The items a run gives each op: readable blocks" =>
 
-:::moduleDocs (fingerprint := "4763134780955823066")
+:::moduleDocs (fingerprint := "4475197527233375913")
 :::
 
 :::readable Fir.FieldPlace Fir.LayoutPlace Fir.RunItems Fir.RunItems.empty (fingerprint := "3632280138649651812")
@@ -39,7 +39,7 @@ field of this record, and the statements of those obligations and
 guarantees stay as they are.
 :::
 
-:::readable Fir.Field.place Fir.Aggregate.place Fir.RunItems.ofTable Fir.Module.runItems (pin := Fir.Field.shape) (pin := Fir.roundUp) (fingerprint := "12777083880426998264")
+:::readable Fir.Field.place Fir.Aggregate.place Fir.RunItems.ofTable Fir.Module.runItems (pin := Fir.Field.shape) (pin := Fir.roundUp) (fingerprint := "16227008318984617599")
 *Definition: the items of a table.* In the memory $`n` of a module whose
 data layout is $`l`, a field of the type $`t` is placed at its offset,
 with its count, and with the step $`\mathrm{roundUp}(u, a)`, where one
