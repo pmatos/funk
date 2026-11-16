@@ -14,7 +14,7 @@ build fails when the Lean changes under it.
 
 #doc (Manual) "The steps of a call, with memory: readable blocks" =>
 
-:::moduleDocs (fingerprint := "4537118789184848239")
+:::moduleDocs (fingerprint := "6967255561436857100")
 :::
 
 :::readable Fir.liftExcept_ok_bind Fir.NoStuck.map Fir.HasPath.map (fingerprint := "59618637625475726")
@@ -73,7 +73,7 @@ op $`o` of every block of $`f`:
 Here $`\mathrm{exit}_o` is the exit of $`o` in the state layer.
 :::
 
-:::readable Fir.Func.InModuleAt Fir.Func.InModule.inModuleAt_of_tied Fir.Func.InModule.inModuleAt (pin := Fir.OpLiftsSetM) (fingerprint := "4932291070246676421")
+:::readable Fir.Func.InModuleAt Fir.Func.InModule.inModuleAt_of_tied Fir.Func.InModule.inModuleAt (pin := Fir.OpLiftsSetM) (fingerprint := "12955099331783691999")
 *Definition and theorems: running within a module, at a naming.* The ops of
 $`f` run within $`M` with memory _at the naming_ $`\rho`, with layout
 entries $`\ell`, when they run within it by the dialect's semantics with
@@ -87,7 +87,7 @@ them. So, in a dialect that lifts the set monad, where every op is tied,
 every function that runs within its module runs within it with memory.
 :::
 
-:::readable Fir.Func.memRuns_enter (pin := Fir.Func.memRuns) (fingerprint := "13549213396792715278")
+:::readable Fir.Func.memRuns_enter (pin := Fir.Func.memRuns) (fingerprint := "6096654413172247586")
 *Theorem: a run with memory that starts.* When a function $`f` starts on
 its arguments, at its entry block's ops $`o^*` with the environment $`E`,
 its runs with memory at a naming, at the budget $`n`, are

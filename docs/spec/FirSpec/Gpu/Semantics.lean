@@ -14,7 +14,7 @@ changes under it.
 
 #doc (Manual) "The GPU dialect's rules: readable blocks" =>
 
-:::moduleDocs (fingerprint := "7813035853161236826")
+:::moduleDocs (fingerprint := "18103069713784038514")
 :::
 
 :::readable Fir.Gpu.WorkItem Fir.Gpu.WorkItem.answer (fingerprint := "18027391566621417795")
@@ -61,7 +61,7 @@ outcome, as `alloca` has none. No op of
 written as a return.
 :::
 
-:::readable Fir.Gpu.allocRule Fir.Gpu.memDenoteIn Fir.Gpu.instDialectMemDenote Fir.Gpu.instDialectCall (pin := Fir.Core.allocaShape) (fingerprint := "717220899470973356")
+:::readable Fir.Gpu.allocRule Fir.Gpu.memDenoteIn Fir.Gpu.instDialectMemDenote Fir.Gpu.instDialectCall (pin := Fir.Core.allocaShape) (fingerprint := "16848098315572391940")
 *Definition: the rules of `gpu` with memory, and its calls.* Where a run's
 memories have the layout entries $`\mathit{lay}` and the run names `gpu`'s
 memory $`x` as $`\rho(x)`, a question gives its results and keeps the

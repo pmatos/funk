@@ -244,7 +244,8 @@ end
 
 variable [TyDenote d.Ty] [DecidableEq d.Ty] [TyPoison d.Ty] [DialectEffects d]
   [DialectValidation d] [DialectMemDenote d] [LawfulDialectEffects d] {N : Type} [DecidableEq N]
-  (lay : N → MemLayout) (ρ : DialectEffects.Mem d → N) {ctx : ModuleContext d} {M : Module d}
+  (lay : N → MemLayout) (ρ : DialectEffects.Mem d → N) (L : RunItems) {ctx : ModuleContext d} {M :
+      Module d}
 
 /-- No run with memory of a function of `M` ends in UB when its summary
 leaves out may-UB, at any budget of fuel, wherever a run names the dialect's
@@ -253,19 +254,19 @@ its effects. -/
 theorem Module.summary_neverUB (hv : ∀ g ∈ M.funcs, g.Valid ctx) {s : Name} {f : Func d}
     (hf : M.func? s = some f) (hs : (M.table.summary s).mayUB = false)
     (args : HVector toType (f.params.map (·.2))) (fuel : Nat) (r : String) :
-    ¬ f.memRuns lay ρ M args fuel (.ub r) := by
-  letI := DialectMemDenote.denoteAt (d := d) lay ρ
+    ¬ f.memRuns lay ρ L M args fuel (.ub r) := by
+  letI := DialectMemDenote.denoteAt (d := d) lay ρ L
   intro h
   obtain ⟨e, he, hep⟩ := (hv f (List.mem_of_find?_eq_some hf)).entry
   have hen := Func.enter_entry he hep args
-  rw [Func.memRuns_enter lay ρ M f args fuel hen] at h
+  rw [Func.memRuns_enter lay ρ L M f args fuel hen] at h
   unfold Result.finish at h
   rcases (run_bind _ _ _).1 h with ⟨x, _, h⟩ | ⟨_, _, he⟩ | ⟨_, hr, he⟩
   · rcases x with ⟨_, _⟩ | _ <;> cases (run_pure _ _).1 h
   · cases he
   · cases he
     exact Module.memOps_notUB hv
-      (fun op hv' hc hown => LawfulDialectEffects.neverUB op hv' hc hown lay ρ)
+      (fun op hv' hc hown => LawfulDialectEffects.neverUB op hv' hc hown lay ρ L)
       fuel s f _ _ _ _ hf hs (Func.enter_ops hen).1 hr
 
 /-- A run with memory of a function of `M` on arguments with no poison
@@ -276,19 +277,19 @@ theorem Module.summary_noPoison (hv : ∀ g ∈ M.funcs, g.Valid ctx) {s : Name}
     (hf : M.func? s = some f) (hs : (M.table.summary s).mayPoison = false)
     (args : HVector toType (f.params.map (·.2))) (hargs : ¬ args.Any TyPoison.IsPoison)
     (fuel : Nat) (vs : List (DVal d)) :
-    f.memRuns lay ρ M args fuel (.ok (.ok (.ret vs))) → DVals.Clean vs := by
-  letI := DialectMemDenote.denoteAt (d := d) lay ρ
+    f.memRuns lay ρ L M args fuel (.ok (.ok (.ret vs))) → DVals.Clean vs := by
+  letI := DialectMemDenote.denoteAt (d := d) lay ρ L
   intro h
   obtain ⟨e, he, hep⟩ := (hv f (List.mem_of_find?_eq_some hf)).entry
   have hen := Func.enter_entry he hep args
-  rw [Func.memRuns_enter lay ρ M f args fuel hen] at h
+  rw [Func.memRuns_enter lay ρ L M f args fuel hen] at h
   unfold Result.finish at h
   obtain ⟨hops, -⟩ := Func.enter_ops hen
   have henv := Env.Clean.params (f.params.map (·.1)) args hargs
   rcases (run_bind _ _ _).1 h with ⟨x, hx, h⟩ | ⟨_, _, he⟩ | ⟨_, _, he⟩
   · rcases x with ⟨⟨vs', S'⟩, k⟩ | _ <;> cases (run_pure _ _).1 h
     exact Module.memOps_clean hv
-      (fun op hv' hT hc hown => LawfulDialectEffects.makesNoPoison op hv' (.inr hc) hown hT lay ρ)
+      (fun op hv' hT hc hown => LawfulDialectEffects.makesNoPoison op hv' (.inr hc) hown hT lay ρ L)
       fuel s f _ e.body _ vs' S' k hf hs henv hops hx
   · cases he
   · cases he
@@ -301,9 +302,9 @@ theorem Module.summary_neverUB_from (hv : ∀ g ∈ M.funcs, g.Valid ctx) {s : N
     (hf : M.func? s = some f) (hs : (M.table.summary s).mayUB = false)
     (args : HVector toType (f.params.map (·.2))) (S : Memories N (unitsOf lay)) (fuel : Nat)
     (r : String) :
-    letI := DialectMemDenote.denoteAt (d := d) lay ρ
+    letI := DialectMemDenote.denoteAt (d := d) lay ρ L
     ¬ f.memRunsFrom M (args, S) fuel (.ub r) := by
-  letI := DialectMemDenote.denoteAt (d := d) lay ρ
+  letI := DialectMemDenote.denoteAt (d := d) lay ρ L
   intro h
   obtain ⟨⟨body, env⟩, hen, e, he, hx⟩ :=
     (Func.memRunsFrom_run (x := .ub r) (fun _ h => nomatch h)).1 h
@@ -313,7 +314,7 @@ theorem Module.summary_neverUB_from (hv : ∀ g ∈ M.funcs, g.Valid ctx) {s : N
     | .ok (.ok (.ret _)), hx | .ok (.ok .fuelExhausted), hx | .ok (.error _), hx => cases hx
   subst hub
   exact Module.memOps_notUB hv
-    (fun op hv' hc hown => LawfulDialectEffects.neverUB op hv' hc hown lay ρ)
+    (fun op hv' hc hown => LawfulDialectEffects.neverUB op hv' hc hown lay ρ L)
     fuel s f _ _ _ _ hf hs (Func.enter_ops hen).1 (Func.memCall_ub he)
 
 /-- A run with memory of a function of `M` from given memories, on arguments
@@ -325,9 +326,9 @@ theorem Module.summary_noPoison_from (hv : ∀ g ∈ M.funcs, g.Valid ctx) {s : 
     (args : HVector toType (f.params.map (·.2))) (hargs : ¬ args.Any TyPoison.IsPoison)
     (S : Memories N (unitsOf lay)) (fuel : Nat) (vs : List (DVal d))
     (S' : Memories N (unitsOf lay)) :
-    letI := DialectMemDenote.denoteAt (d := d) lay ρ
+    letI := DialectMemDenote.denoteAt (d := d) lay ρ L
     f.memRunsFrom M (args, S) fuel (.ok (.ok (.ret (vs, S')))) → DVals.Clean vs := by
-  letI := DialectMemDenote.denoteAt (d := d) lay ρ
+  letI := DialectMemDenote.denoteAt (d := d) lay ρ L
   intro h
   obtain ⟨⟨body, env⟩, hen, e, he, hx⟩ :=
     (Func.memRunsFrom_run (x := .ok (.ok (.ret (vs, S')))) (fun _ h => nomatch h)).1 h
@@ -339,7 +340,7 @@ theorem Module.summary_noPoison_from (hv : ∀ g ∈ M.funcs, g.Valid ctx) {s : 
   obtain ⟨hops, rfl⟩ := Func.enter_ops hen
   obtain ⟨T, hT⟩ := Func.memCall_ret he
   exact Module.memOps_clean hv
-    (fun op hv' hT hc hown => LawfulDialectEffects.makesNoPoison op hv' (.inr hc) hown hT lay ρ)
+    (fun op hv' hT hc hown => LawfulDialectEffects.makesNoPoison op hv' (.inr hc) hown hT lay ρ L)
     fuel s f _ _ _ _ T _ hf hs (Env.Clean.params _ args hargs) hops hT
 
 end Fir

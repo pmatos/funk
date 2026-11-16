@@ -138,8 +138,8 @@ example {ctx : ModuleContext CoreDialect} {M : Module CoreDialect}
     (hv : ∀ g ∈ M.funcs, g.Valid ctx) {s : Name} {f : Func CoreDialect}
     (hf : M.func? s = some f) (hs : (M.table.summary s).mayUB = false)
     (args : HVector toType (f.params.map (·.2))) (fuel : Nat) (r : String) :
-    ¬ f.memRuns M.layout.entry id M args fuel (.ub r) :=
-  Module.summary_neverUB _ _ hv hf hs args fuel r
+    ¬ f.memRuns M.layout.entry id M.runItems M args fuel (.ub r) :=
+  Module.summary_neverUB _ _ _ hv hf hs args fuel r
 
 /-! # The theorems' axioms -/
 

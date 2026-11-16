@@ -31,16 +31,18 @@ open Fir Core Example
 
 /-- `@fact` on a poison argument is refined by `@fact` on `5`, with memory. -/
 theorem fact_args :
-    observable (factFn.memRuns recModule.layout.entry id recModule (.cons .poison .nil)) ⊑
-      observable (factFn.memRuns recModule.layout.entry id recModule (.cons (.value 5) .nil)) :=
-  Core.args_isRefinedBy _ _ recModule factFn ⟨trivial, trivial⟩
+    observable (factFn.memRuns recModule.layout.entry id recModule.runItems recModule (.cons
+        .poison .nil)) ⊑
+      observable (factFn.memRuns recModule.layout.entry id recModule.runItems recModule (.cons
+          (.value 5) .nil)) :=
+  Core.args_isRefinedBy _ _ _ recModule factFn ⟨trivial, trivial⟩
 
 /-- `@even` on any argument refines itself on a refined one, with memory. -/
 theorem even_args {a a' : HVector toType (evenFn.params.map (·.2))}
     (h : a.Forall₂ TyRefinement.IsRefinedBy a') :
-    observable (evenFn.memRuns recModule.layout.entry id recModule a) ⊑
-      observable (evenFn.memRuns recModule.layout.entry id recModule a') :=
-  Core.args_isRefinedBy _ _ recModule evenFn h
+    observable (evenFn.memRuns recModule.layout.entry id recModule.runItems recModule a) ⊑
+      observable (evenFn.memRuns recModule.layout.entry id recModule.runItems recModule a') :=
+  Core.args_isRefinedBy _ _ _ recModule evenFn h
 
 /-! # A callee that always hits UB -/
 
@@ -79,18 +81,18 @@ def gFn : Func CoreDialect where
 def ubModule : Module CoreDialect := ⟨[], [], [.func countFn, .func gFn], [(0, .unknown)]⟩
 
 variable {N : Type} [DecidableEq N] (lay : N → MemLayout)
-  (ρ : DialectEffects.Mem CoreDialect → N)
+  (ρ : DialectEffects.Mem CoreDialect → N) (L : RunItems)
 
 /-- A core op that ends a way in the set monad ends that way with memory,
 from any memories, which it keeps. -/
 theorem memDenote_of {op : CoreDialect.Op} {args : HVector toType (sig (d := CoreDialect) op)}
     {S : Memory.Memories N (unitsOf lay)} {a : HVector toType (returnTypes (d := CoreDialect) op)}
     (h : DialectDenote.denote (m := SetM) (d := CoreDialect) op args (.ok a)) :
-    letI := DialectMemDenote.denoteAt (d := CoreDialect) lay ρ
+    letI := DialectMemDenote.denoteAt (d := CoreDialect) lay ρ L
     DialectDenote.denote (m := StateT (Memory.Memories N (unitsOf lay)) SetM) op args S
       (.ok (a, S)) := by
-  letI := DialectMemDenote.denoteAt (d := CoreDialect) lay ρ
-  rw [((Op.liftsSetM op (Op.touchesMemory_false_of_denote h)) lay ρ args).1]
+  letI := DialectMemDenote.denoteAt (d := CoreDialect) lay ρ L
+  rw [((Op.liftsSetM op (Op.touchesMemory_false_of_denote h)) lay ρ L args).1]
   exact (SetM.lift_apply _ _ _).2 (.inl ⟨a, h, rfl⟩)
 
 /-- A core op that hits UB in the set monad hits it with memory, from any
@@ -98,31 +100,32 @@ memories. -/
 theorem memDenote_ub {op : CoreDialect.Op} {args : HVector toType (sig (d := CoreDialect) op)}
     {S : Memory.Memories N (unitsOf lay)} {r : String}
     (h : DialectDenote.denote (m := SetM) (d := CoreDialect) op args (.ub r)) :
-    letI := DialectMemDenote.denoteAt (d := CoreDialect) lay ρ
+    letI := DialectMemDenote.denoteAt (d := CoreDialect) lay ρ L
     DialectDenote.denote (m := StateT (Memory.Memories N (unitsOf lay)) SetM) op args S
       (.ub r) := by
-  letI := DialectMemDenote.denoteAt (d := CoreDialect) lay ρ
-  rw [((Op.liftsSetM op (Op.touchesMemory_false_of_denote h)) lay ρ args).1]
+  letI := DialectMemDenote.denoteAt (d := CoreDialect) lay ρ L
+  rw [((Op.liftsSetM op (Op.touchesMemory_false_of_denote h)) lay ρ L args).1]
   exact (SetM.lift_apply _ _ _).2 (.inr ⟨r, h, rfl⟩)
 
 /-- `@g` hits UB on every argument with memory, at two steps, wherever a
 run names the core's memories. -/
 theorem g_ub (a : HVector toType (gFn.params.map (·.2))) :
-    ∃ r, (gFn.memRuns lay ρ ubModule a 2).outcomes (.ub r) := by
-  letI := DialectMemDenote.denoteAt (d := CoreDialect) lay ρ
+    ∃ r, (gFn.memRuns lay ρ L ubModule a 2).outcomes (.ub r) := by
+  letI := DialectMemDenote.denoteAt (d := CoreDialect) lay ρ L
   match a with
   | .cons v .nil =>
   have hdiv : ∃ r, DialectDenote.denote (m := SetM) (d := CoreDialect) (.udiv 32 false)
       (.cons v (.cons (.value 0) .nil)) (.ub r) := by
     cases v <;> exact ⟨_, rfl⟩
   obtain ⟨r, hr⟩ := hdiv
-  refine ⟨r, (Func.memRuns_ub_iff lay ρ).2 ((Func.memRunsFrom_run (Ev.notStuck_ub r)).2
+  refine ⟨r, (Func.memRuns_ub_iff lay ρ L).2 ((Func.memRunsFrom_run (Ev.notStuck_ub r)).2
     ⟨_, Func.enter_ok (f := gFn) rfl rfl (HVector.toDVals_types _), .ub r, ?_, rfl⟩)⟩
   rw [Func.memCall_eq]
   refine (SetM.run_map _ _ _).2 (.inr (.inr ⟨r, ?_, rfl⟩))
   refine (Func.memStepPath_iff (Ev.notStuck_ub r)).2
-    (.denote rfl rfl rfl rfl (memDenote_of lay ρ rfl) rfl ?_)
-  exact (Func.memStepPath_iff (Ev.notStuck_ub r)).2 (.denoteUB rfl rfl rfl rfl (memDenote_ub lay ρ hr))
+    (.denote rfl rfl rfl rfl (memDenote_of lay ρ L rfl) rfl ?_)
+  exact (Func.memStepPath_iff (Ev.notStuck_ub r)).2 (.denoteUB rfl rfl rfl rfl (memDenote_ub lay ρ
+      L hr))
 
 /-- `@count` is valid in its module. -/
 theorem countFn_valid : countFn.Valid ubModule.context where
@@ -250,25 +253,25 @@ theorem ubModule'_valid : ubModule'.Valid :=
 /-- `@g` with its new body refines `@g` with memory: `@g` hits UB on every
 argument. -/
 theorem g_isRefinedBy :
-    gFn.memRuns lay ρ ubModule ⊑ (gFn.replaceBody gFn.name gBody).memRuns lay ρ ubModule' :=
+    gFn.memRuns lay ρ L ubModule ⊑ (gFn.replaceBody gFn.name gBody).memRuns lay ρ L ubModule' :=
   fun a =>
-    let ⟨_, h⟩ := g_ub lay ρ a
+    let ⟨_, h⟩ := g_ub lay ρ L a
     Behaviour.ub_isRefinedBy ⟨2, h⟩ _
 
 /-- So `@count`, which calls `@g` and itself, is refined with memory by
 itself in the module with `@g`'s new body, which calls `@count` back. -/
-theorem count_isRefinedBy : countFn.memRuns lay ρ ubModule ⊑ countFn.memRuns lay ρ ubModule' :=
-  Core.caller_isRefinedBy lay ρ ubModule_valid (by simp [ubModule, Module.funcs])
+theorem count_isRefinedBy : countFn.memRuns lay ρ L ubModule ⊑ countFn.memRuns lay ρ L ubModule' :=
+  Core.caller_isRefinedBy lay ρ L ubModule_valid (by simp [ubModule, Module.funcs])
     gBody (reachesNoMemory_of_all _ (by decide +kernel)) (reachesNoMemory_of_all _ (by decide +kernel))
-    (g_isRefinedBy lay ρ) (by simp [ubModule, Module.funcs]) (by decide)
+    (g_isRefinedBy lay ρ L) (by simp [ubModule, Module.funcs]) (by decide)
 
 /-- Every function of the module is refined with memory by its counterpart
 with `@g`'s new body. -/
 theorem ubModule_isRefinedBy {f : Func CoreDialect} (hf : f ∈ ubModule.funcs) :
-    f.memRuns lay ρ ubModule ⊑ (f.replaceBody gFn.name gBody).memRuns lay ρ ubModule' :=
-  Core.replaceBody_isRefinedBy lay ρ ubModule_valid (by simp [ubModule, Module.funcs])
+    f.memRuns lay ρ L ubModule ⊑ (f.replaceBody gFn.name gBody).memRuns lay ρ L ubModule' :=
+  Core.replaceBody_isRefinedBy lay ρ L ubModule_valid (by simp [ubModule, Module.funcs])
     gBody (reachesNoMemory_of_all _ (by decide +kernel)) (reachesNoMemory_of_all _ (by decide +kernel))
-    (g_isRefinedBy lay ρ) hf
+    (g_isRefinedBy lay ρ L) hf
 
 /-! # A callee replaced by itself, in mutual recursion -/
 
@@ -279,12 +282,12 @@ theorem recModule_replace_odd : recModule.replaceBody oddFn.name oddFn.body = re
 
 /-- `@odd` with its own body refines `@odd` with memory. -/
 theorem odd_self_isRefinedBy :
-    oddFn.memRuns lay ρ recModule ⊑
-      (oddFn.replaceBody oddFn.name oddFn.body).memRuns lay ρ
+    oddFn.memRuns lay ρ L recModule ⊑
+      (oddFn.replaceBody oddFn.name oddFn.body).memRuns lay ρ L
         (recModule.replaceBody oddFn.name oddFn.body) := by
   rw [recModule_replace_odd]
-  show oddFn.memRuns lay ρ recModule ⊑
-    Func.memRuns lay ρ recModule
+  show oddFn.memRuns lay ρ L recModule ⊑
+    Func.memRuns lay ρ L recModule
       { oddFn with body := if oddFn.name = oddFn.name then oddFn.body else oddFn.body }
   rw [ite_self]
   exact Core.funcRuns_isRefinedBy_refl _
@@ -292,11 +295,11 @@ theorem odd_self_isRefinedBy :
 /-- So `@even`, which calls `@odd`, which calls it back, is refined with
 memory by itself. -/
 theorem even_replace_isRefinedBy :
-    evenFn.memRuns lay ρ recModule ⊑
-      evenFn.memRuns lay ρ (recModule.replaceBody oddFn.name oddFn.body) :=
-  Core.caller_isRefinedBy lay ρ recModule_valid (by simp [recModule, Module.funcs])
+    evenFn.memRuns lay ρ L recModule ⊑
+      evenFn.memRuns lay ρ L (recModule.replaceBody oddFn.name oddFn.body) :=
+  Core.caller_isRefinedBy lay ρ L recModule_valid (by simp [recModule, Module.funcs])
     oddFn.body (reachesNoMemory_of_all _ (by decide +kernel)) (reachesNoMemory_of_all _ (by decide +kernel))
-    (odd_self_isRefinedBy lay ρ)
+    (odd_self_isRefinedBy lay ρ L)
     (by simp [recModule, Module.funcs]) (by decide)
 
 /-! # Axioms

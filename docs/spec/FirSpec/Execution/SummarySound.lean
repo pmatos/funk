@@ -14,7 +14,7 @@ fails when the Lean changes under it.
 
 #doc (Manual) "Function summaries are sound: readable blocks" =>
 
-:::moduleDocs (fingerprint := "8781497813757664818")
+:::moduleDocs (fingerprint := "1102954085674822917")
 :::
 
 :::readable Fir.Effects.Le.mayUB_false Fir.Effects.Le.mayPoison_false (pin := Fir.Effects.Le) (fingerprint := "3284232413199481622")
@@ -57,7 +57,7 @@ callee's run, recursion included. For poison, the run keeps its
 environment clean.
 :::
 
-:::readable Fir.Module.summary_neverUB Fir.Module.summary_noPoison (pin := Fir.LawfulDialectEffects) (pin := Fir.Func.memRuns) (fingerprint := "5030757686762725077")
+:::readable Fir.Module.summary_neverUB Fir.Module.summary_noPoison (pin := Fir.LawfulDialectEffects) (pin := Fir.Func.memRuns) (fingerprint := "1481588206354085020")
 *Theorems: function summaries are sound.* Let the dialect be lawful in
 its effects, every function of the module $`M` valid, and $`s` name the
 function $`f` of $`M`. Wherever a run names the dialect's memories, with
@@ -77,7 +77,7 @@ touches memory is covered too. A pass may rely on a summary as it relies
 on an op's effects (ADR-2026-11-09-1541).
 :::
 
-:::readable Fir.Module.summary_neverUB_from Fir.Module.summary_noPoison_from (pin := Fir.Func.memRunsFrom) (fingerprint := "5508738324192612352")
+:::readable Fir.Module.summary_neverUB_from Fir.Module.summary_noPoison_from (pin := Fir.Func.memRunsFrom) (fingerprint := "11954185409221334898")
 *Theorems: function summaries are sound from given memories.* Under the
 hypotheses of the previous theorems, the same holds of the
 {ref "The-fir-specification--Memory--Runs-from-given-memories"}[runs of $`f` from given memories],

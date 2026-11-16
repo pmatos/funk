@@ -156,7 +156,7 @@ instance : DialectEffects AllocDialect :=
 /-- Wherever a run names the memory `()` as `ρ ()`, `alloc` allocates one
 unit on its stack, and `ret` returns. -/
 instance : DialectMemDenote AllocDialect where
-  denoteAt _ ρ :=
+  denoteAt _ ρ _ :=
     { denote := fun
         | .alloc, _ => (fun _ => .nil) <$> MonadMemory.alloc (ρ ()) .stack 1 1
         | .ret, _ => MonadUB.ub "ret is a terminator"
@@ -166,19 +166,20 @@ instance : DialectMemDenote AllocDialect where
 
 /-- A run with memory of the alloc dialect runs its semantics with memory at
 the naming it is given. -/
-example {N : Type} [DecidableEq N] (lay : N → MemLayout) (ρ : Unit → N) (M : Module AllocDialect)
+example {N : Type} [DecidableEq N] (lay : N → MemLayout) (ρ : Unit → N) (L : RunItems) (M : Module
+    AllocDialect)
     (f : Func AllocDialect) (args : HVector toType (f.params.map (·.2))) (n : Nat) :
-    letI := DialectMemDenote.denoteAt (d := AllocDialect) lay ρ
-    f.memRuns lay ρ M args n = Functor.map (f := SetM) Prod.fst
+    letI := DialectMemDenote.denoteAt (d := AllocDialect) lay ρ L
+    f.memRuns lay ρ L M args n = Functor.map (f := SetM) Prod.fst
       ((f.run M (m := StateT (Memories N (unitsOf lay)) SetM) args n).run Memories.empty) :=
   rfl
 
 /-- The runs with memory of the alloc dialect, whose op allocates, are
 fuel-monotone. -/
-example (M : Module AllocDialect) (f : Func AllocDialect)
+example (M : Module AllocDialect) (f : Func AllocDialect) (L : RunItems)
     (args : HVector toType (f.params.map (·.2))) :
-    FuelMonotone (f.memRuns (fun _ : Unit => MemLayout.default) id M args) :=
-  Func.memRuns_fuelMonotone _ _ M f args
+    FuelMonotone (f.memRuns (fun _ : Unit => MemLayout.default) id L M args) :=
+  Func.memRuns_fuelMonotone _ _ L M f args
 
 /-- info: 'Fir.Func.memRuns_fuelMonotone' depends on axioms: [propext, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Func.memRuns_fuelMonotone
@@ -201,8 +202,8 @@ instance : DecidableDialectValidation AllocDialect where
 /-- Each alloc op has an outcome from any memories, wherever a run names
 the dialect's memory: an allocation always succeeds, and `ret` returns. -/
 theorem alloc_memTotal : ∀ op : AllocOp, MemTotal (d := AllocDialect) op
-  | .alloc => fun _ _ _ => ⟨fun _ => HasOutcome.map _ fun _ => ⟨_, rfl⟩, fun h => nomatch h⟩
-  | .ret => fun _ _ _ => ⟨fun h => (nomatch h), fun _ _ => ⟨_, rfl⟩⟩
+  | .alloc => fun _ _ _ _ => ⟨fun _ => HasOutcome.map _ fun _ => ⟨_, rfl⟩, fun h => nomatch h⟩
+  | .ret => fun _ _ _ _ => ⟨fun h => (nomatch h), fun _ _ => ⟨_, rfl⟩⟩
 
 /-- The alloc dialect is lawful in its totality, with no semantics in the
 set monad. -/
@@ -211,10 +212,11 @@ instance : LawfulDialectTotal AllocDialect := ⟨fun op _ _ => alloc_memTotal op
 /-- Every valid function of the alloc dialect runs within its module with
 memory, at every naming: no op calls a function, `alloc` never exits, and
 `ret` returns from a function with no results, by its validation rule. -/
-theorem alloc_inModuleAt {N : Type} [DecidableEq N] (lay : N → MemLayout) (ρ : Unit → N)
+theorem alloc_inModuleAt {N : Type} [DecidableEq N] (lay : N → MemLayout) (ρ : Unit → N) (L :
+    RunItems)
     {ctx : ModuleContext AllocDialect} (M : Module AllocDialect) {f : Func AllocDialect}
-    (hv : f.Valid ctx) : f.InModuleAt lay ρ M := by
-  letI := DialectMemDenote.denoteAt (d := AllocDialect) lay ρ
+    (hv : f.Valid ctx) : f.InModuleAt lay ρ L M := by
+  letI := DialectMemDenote.denoteAt (d := AllocDialect) lay ρ L
   show f.MemInModule (unitsOf lay) M
   refine ⟨fun _ _ _ _ _ _ h => (nomatch h), fun _ _ o _ _ _ _ _ _ h => ?_,
     fun b hb o ho _ _ _ _ h => ?_⟩
@@ -292,12 +294,13 @@ theorem allocModule_valid : allocModule.Valid := Module.valid_of_flat
 allocates, is never stuck and has an outcome at every budget. -/
 theorem allocModule_runsWell {f : Func AllocDialect} (hf : f ∈ allocModule.funcs)
     (args : HVector toType (f.params.map (·.2))) :
-    NeverStuck (f.memRuns (fun _ : Unit => MemLayout.default) id allocModule args) ∧
-      Progress (f.memRuns (fun _ : Unit => MemLayout.default) id allocModule args) :=
+    NeverStuck (f.memRuns (fun _ : Unit => MemLayout.default) id RunItems.empty allocModule args) ∧
+      Progress (f.memRuns (fun _ : Unit => MemLayout.default) id RunItems.empty allocModule args) :=
   have hv := allocModule_valid.funcs
-  have hm := fun g hg => alloc_inModuleAt (fun _ : Unit => MemLayout.default) id allocModule (hv g
+  have hm := fun g hg => alloc_inModuleAt (fun _ : Unit => MemLayout.default) id RunItems.empty
+      allocModule (hv g
       hg)
-  ⟨Func.memNeverStuck _ _ hv hm hf args, Func.memProgress _ _ hv hm hf args⟩
+  ⟨Func.memNeverStuck _ _ _ hv hm hf args, Func.memProgress _ _ _ hv hm hf args⟩
 
 /-- `allocMain` is a function of the module, so the theorem holds of it. -/
 example : allocMain ∈ allocModule.funcs := by simp [allocModule, Module.funcs]
@@ -321,11 +324,13 @@ example (M : Module CoreDialect) {s : Name} {f : Func CoreDialect} (hf : M.func?
     (S S' : Memories Unit (unitsOf fun _ : Unit => MemLayout.default)) (n : Nat)
     (vs : List (DVal CoreDialect)) :
     letI := DialectMemDenote.denoteAt (d := CoreDialect) (fun _ : Unit => MemLayout.default)
-      fun _ => ()
+      (fun _ => ()) RunItems.empty
     (f.memRunsFrom M (args, S) n).outcomes (.ret (vs, S')) ↔
-      S' = S ∧ (f.memRuns (fun _ : Unit => MemLayout.default) (fun _ => ()) M args n).outcomes
+      S' = S ∧ (f.memRuns (fun _ : Unit => MemLayout.default) (fun _ => ()) RunItems.empty M args
+          n).outcomes
         (.ret vs) :=
-  Func.memRunsFrom_ret_iff _ _ (Core.opsIgnoreMemory _ _) hf (Core.reachesNoMemory_of_all s hno)
+  Func.memRunsFrom_ret_iff _ _ RunItems.empty (Core.opsIgnoreMemory _ _ _) hf
+      (Core.reachesNoMemory_of_all s hno)
     args S n
 
 end FirTest.MemoryRuns

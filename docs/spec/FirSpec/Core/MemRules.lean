@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "The core's rules with memory: readable blocks" =>
 
-:::moduleDocs (fingerprint := "6346048874939618761")
+:::moduleDocs (fingerprint := "731582312111899465")
 :::
 
 :::readable Fir.Core.freezeValue_map Fir.Core.ruleOfEv_map Fir.Core.exitOfEv_map (pin := Fir.MonadMorphism.KeepsChoiceUB) (pin := Fir.Core.freezeValue) (pin := Fir.Core.ruleOfEv) (pin := Fir.Core.exitOfEv) (fingerprint := "17793630269427369314")
@@ -103,7 +103,7 @@ gives no result in both. The
 keeps allocation, loads and stores.
 :::
 
-:::readable Fir.Core.memDenoteAt Fir.Core.instDialectMemDenote (pin := Fir.DialectMemDenote) (fingerprint := "718340430128983195")
+:::readable Fir.Core.memDenoteAt Fir.Core.instDialectMemDenote (pin := Fir.DialectMemDenote) (fingerprint := "1738503314275530218")
 *Definition: the core's semantics with memory.* At the layout entries
 $`\ell` and the naming $`\rho`, the core's
 {ref "The-fir-specification--Memory--Memory-obligations"}[semantics with memory]
@@ -115,7 +115,7 @@ monad, so an op that touches memory joins it with its own rule, as
 $`\mathsf{alloca}`, $`\mathsf{load}` and $`\mathsf{store}` do.
 :::
 
-:::readable Fir.Core.Op.liftsSetM (pin := Fir.OpLiftsSetM) (fingerprint := "5082191809985086959")
+:::readable Fir.Core.Op.liftsSetM (pin := Fir.OpLiftsSetM) (fingerprint := "4896862432120104633")
 *Theorem: every core op that touches no memory is tied.* For every core op
 $`p` but $`\mathsf{alloca}`, $`\mathsf{load}` and $`\mathsf{store}`, at
 every layout

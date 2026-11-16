@@ -213,10 +213,10 @@ theorem coreProbe_not_monotone :
 memories, by the class of monotonicity with memory alone. -/
 theorem coreProbe_args {ctx : ModuleContext CoreProbe} {M : Module CoreProbe}
     (hv : ∀ g ∈ M.funcs, g.Valid ctx) {f : Func CoreProbe} (hf : f ∈ M.funcs) {N : Type}
-    [DecidableEq N] (lay : N → MemLayout) (ρ : DialectEffects.Mem CoreProbe → N)
+    [DecidableEq N] (lay : N → MemLayout) (ρ : DialectEffects.Mem CoreProbe → N) (L : RunItems)
     {a a' : HVector toType (f.params.map (·.2))} (ha : a.Forall₂ TyRefinement.IsRefinedBy a') :
-    observable (f.memRuns lay ρ M a) ⊑ observable (f.memRuns lay ρ M a') :=
-  Func.memRuns_args_isRefinedBy_of_lawful lay ρ hv hf ha
+    observable (f.memRuns lay ρ L M a) ⊑ observable (f.memRuns lay ρ L M a') :=
+  Func.memRuns_args_isRefinedBy_of_lawful lay ρ L hv hf ha
 
 /-- A type of the sum, a core type, with finitely many values. -/
 def Finite : CoreProbe.Ty → Prop
@@ -256,14 +256,14 @@ theorem core_touchesMemory_false {o : Core.Op}
 naming: a core op and a probe op each run by their rule in the set monad and
 keep the memories. -/
 theorem coreProbe_opsIgnoreMemory {N : Type} [DecidableEq N] (lay : N → MemLayout)
-    (ρ : DialectEffects.Mem CoreProbe → N) :
-    letI := DialectMemDenote.denoteAt (d := CoreProbe) lay ρ
+    (ρ : DialectEffects.Mem CoreProbe → N) (L : RunItems) :
+    letI := DialectMemDenote.denoteAt (d := CoreProbe) lay ρ L
     OpsIgnoreMemory CoreProbe N (unitsOf lay)
-  | .inl o, _, h => Dialect.sum.ownRuleHas_inl lay ρ (fun f _ h => IgnoresMemory.map f h)
+  | .inl o, _, h => Dialect.sum.ownRuleHas_inl lay ρ L (fun f _ h => IgnoresMemory.map f h)
       (OwnRuleHas.ofLifts (Core.Op.liftsSetM o (core_touchesMemory_false h)) lay _
-        IgnoresMemory.lift)
+        L IgnoresMemory.lift)
   | .inr o, _, _ => Dialect.sum.ownRuleHas_inr lay ρ
-      (OwnRuleHas.ofLifts (LiftsSetM.opLifts (d := ProbeDialect) o) lay ρ IgnoresMemory.lift)
+      L (OwnRuleHas.ofLifts (LiftsSetM.opLifts (d := ProbeDialect) o) lay ρ L IgnoresMemory.lift)
 
 /-- Congruence in the callee, with memory, for every valid module of
 `CoreProbe` and a callee with no pointer parameter that reaches no memory
@@ -272,19 +272,19 @@ lawful class alone, with no bound, whatever the new body. The core's
 congruence kept this form, by the human's ruling on #373, until #214 gave
 it one that asks no finitely many argument vectors. -/
 theorem coreProbe_replaceBody {N : Type} [DecidableEq N] (lay : N → MemLayout)
-    (ρ : DialectEffects.Mem CoreProbe → N) {M : Module CoreProbe} (hM : M.Valid)
+    (ρ : DialectEffects.Mem CoreProbe → N) (L : RunItems) {M : Module CoreProbe} (hM : M.Valid)
     {g : Func CoreProbe} (hg : g ∈ M.funcs) (hfin : ∀ t ∈ g.params.map (·.2), Finite t)
     (b : Region CoreProbe) (hold : M.table.ReachesNoMemory g.name)
     (hmem : (M.replaceBody g.name b).table.ReachesNoMemory g.name)
-    (h : g.memRuns lay ρ M ⊑ (g.replaceBody g.name b).memRuns lay ρ (M.replaceBody g.name b))
+    (h : g.memRuns lay ρ L M ⊑ (g.replaceBody g.name b).memRuns lay ρ L (M.replaceBody g.name b))
     {f : Func CoreProbe} (hf : f ∈ M.funcs) :
-    f.memRuns lay ρ M ⊑ (f.replaceBody g.name b).memRuns lay ρ (M.replaceBody g.name b) :=
+    f.memRuns lay ρ L M ⊑ (f.replaceBody g.name b).memRuns lay ρ L (M.replaceBody g.name b) :=
   Func.memRuns_replaceBody_isRefinedBy_of_memRuns lay ρ
-    (Dialect.sum.isRefinedBy_refl (e := Ext Probe.Op) Core.Ty.isRefinedBy_refl
+    L (Dialect.sum.isRefinedBy_refl (e := Ext Probe.Op) Core.Ty.isRefinedBy_refl
       fun {t} => Empty.elim t)
     (Dialect.sum.isRefinedBy_trans (e := Ext Probe.Op) Core.Ty.isRefinedBy_trans
       fun {t} => Empty.elim t)
-    (coreProbe_opsIgnoreMemory lay ρ) hM hg b ⟨argVectors _ hfin, mem_argVectors hfin⟩ hold hmem
+    (coreProbe_opsIgnoreMemory lay ρ L) hM hg b ⟨argVectors _ hfin, mem_argVectors hfin⟩ hold hmem
     h hf
 
 /-- Congruence in the callee, with memory, for every valid module of
@@ -292,19 +292,19 @@ theorem coreProbe_replaceBody {N : Type} [DecidableEq N] (lay : N → MemLayout)
 monotonicity with memory alone, when the new callee's runs from given
 memories refine the old one's and are bounded. -/
 theorem coreProbe_memReplaceBody {N : Type} [DecidableEq N] (lay : N → MemLayout)
-    (ρ : DialectEffects.Mem CoreProbe → N) {M : Module CoreProbe} (hM : M.Valid)
+    (ρ : DialectEffects.Mem CoreProbe → N) (L : RunItems) {M : Module CoreProbe} (hM : M.Valid)
     {g : Func CoreProbe} (hg : g ∈ M.funcs) (b : Region CoreProbe)
-    (hbound : letI := DialectMemDenote.denoteAt (d := CoreProbe) lay ρ
+    (hbound : letI := DialectMemDenote.denoteAt (d := CoreProbe) lay ρ L
       ∃ B, ((g.replaceBody g.name b).memRunsFrom (Mem := N) (unit := unitsOf lay)
         (M.replaceBody g.name b)).BoundedBy B)
-    (h : letI := DialectMemDenote.denoteAt (d := CoreProbe) lay ρ;
+    (h : letI := DialectMemDenote.denoteAt (d := CoreProbe) lay ρ L;
       g.memRunsFrom (Mem := N) (unit := unitsOf lay) M ⊑
         (g.replaceBody g.name b).memRunsFrom (Mem := N) (unit := unitsOf lay)
           (M.replaceBody g.name b))
     {f : Func CoreProbe} (hf : f ∈ M.funcs) :
-    f.memRuns lay ρ M ⊑ (f.replaceBody g.name b).memRuns lay ρ (M.replaceBody g.name b) :=
+    f.memRuns lay ρ L M ⊑ (f.replaceBody g.name b).memRuns lay ρ L (M.replaceBody g.name b) :=
   (Func.memRuns_replaceBody_isRefinedBy_of_bound lay ρ
-    (Dialect.sum.isRefinedBy_refl (e := Ext Probe.Op) Core.Ty.isRefinedBy_refl
+    L (Dialect.sum.isRefinedBy_refl (e := Ext Probe.Op) Core.Ty.isRefinedBy_refl
       fun {t} => Empty.elim t)
     (Dialect.sum.isRefinedBy_trans (e := Ext Probe.Op) Core.Ty.isRefinedBy_trans
       fun {t} => Empty.elim t)

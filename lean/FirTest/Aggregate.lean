@@ -1,12 +1,14 @@
 import FirTest.Layout
+import Fir.Execution.RunItems
 
 /-!
 Tests of aggregates' layouts (ADR-2026-11-16-1546): their text, which reads
 back and prints as itself, and the attributes that do not decode; and the
 rules of a valid layout, in memory 0 and in a memory of 16-bit units, among
 them the spacing of a repeated field's elements (the human's ruling of
-2026-11-16 on #236). `crates/funk-ir/tests/aggregate.rs` checks the same
-texts, so the two parsers and the two validators agree on each.
+2026-11-16 on #236); and the layouts as a run gives them to each op.
+`crates/funk-ir/tests/aggregate.rs` checks the same texts, so the two
+parsers and the two validators agree on each.
 -/
 
 namespace FirTest
@@ -134,5 +136,29 @@ example : roundUp 3 4 = 4 := by decide
 example : Core.Ty.fieldShape (DataLayout.entry []) 0 (.ptr 0) =
     some (Core.allocaShape (DataLayout.entry []) id (.ptr 0) 1 none 0) :=
   Core.Ty.fieldShape_eq_allocaShape _ _ trivial
+
+/-! # The layouts a run gives each op -/
+
+/-- The placed fields of the layout `@s` that a run of the module of the
+text `t` gives each op, if it parses and has one. -/
+def placed (t : String) : Option (List (Nat × Nat × Option Nat)) :=
+  match parseCore t with
+  | .ok m => (m.runItems.layout? "s").map fun l =>
+    l.fields.map fun f => (f.offset, f.stride, f.count)
+  | .error _ => none
+
+-- Each element of four `i24` in memory 0 starts 4 units after the one
+-- before; in a memory of 16-bit units, 2 after.
+#guard placed (agg "memory(0) size(16) align(4) field(0, i24, 4)") == some [(0, 4, some 4)]
+#guard placed (aggIn mem16 "memory(1) size(4) align(2) field(0, i24, 2)") ==
+  some [(0, 2, some 2)]
+#guard placed (agg pair) == some [(0, 8, none), (8, 8, none)]
+-- A run gives no layout for a symbol that names none, and a nested
+-- module's layouts are its own table's, not its parent's.
+#guard (match parseCore (agg pair) with
+  | .ok m => (m.runItems.layout? "t").isNone
+  | .error _ => false)
+#guard placed (oneFunc ("module @dev() {\n  aggregate @s() " ++ pair ++ " {\n  }\n\n}\n")) ==
+  none
 
 end FirTest

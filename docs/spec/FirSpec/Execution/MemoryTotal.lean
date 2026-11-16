@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Totality with memory: readable blocks" =>
 
-:::moduleDocs (fingerprint := "1072439918142219991")
+:::moduleDocs (fingerprint := "18047597228810332284")
 :::
 
 :::readable Fir.HasOutcome Fir.HasOutcome.map Fir.hasOutcome_lift Fir.HasOutcome.of_lift Fir.OpHasOutcome (fingerprint := "7856571833701684355")
@@ -36,11 +36,11 @@ what it runs by its own rule has one, on every operand vector: its meaning
 when it is not a terminator, its exit when it is.
 :::
 
-:::readable Fir.MemTotal Fir.LawfulDialectTotal (pin := Fir.OwnRuleHas) (fingerprint := "10655181270058211737")
+:::readable Fir.MemTotal Fir.LawfulDialectTotal (pin := Fir.OwnRuleHas) (fingerprint := "345140493077933825")
 *Definitions: total with memory, and a dialect lawful in its totality.* An
 op $`o` is _total with memory_ when, wherever a run names the dialect's
-memories, by any names $`N`, layout entries and map $`\rho` from the
-dialect's memories to $`N`, what $`o` runs by its own rule has an outcome
+memories, by any names $`N`, layout entries, map $`\rho` from the
+dialect's memories to $`N` and items $`L` that the run gives, what $`o` runs by its own rule has an outcome
 from any memories, on every operand vector: its meaning when it is not a
 terminator, its exit when it is.
 
@@ -53,7 +53,7 @@ as {ref "The-fir-specification--Execution--Poison-classes"}[totality] in
 the set monad is what progress asks of runs in the set monad.
 :::
 
-:::readable Fir.MemTotal.ofLifts Fir.MemTotal.setM Fir.LawfulDialectTotal.ofLawful (pin := Fir.OpTotal) (pin := Fir.OpLiftsSetM) (fingerprint := "9589096651207859662")
+:::readable Fir.MemTotal.ofLifts Fir.MemTotal.setM Fir.LawfulDialectTotal.ofLawful (pin := Fir.OpTotal) (pin := Fir.OpLiftsSetM) (fingerprint := "16163433957462768560")
 *Theorems: totality with memory, for an op that touches no memory.* An op
 that is
 {ref "The-fir-specification--Memory--Runs-with-memory"}[tied] and total

@@ -40,22 +40,23 @@ theorem notControl (op : CoreGpu.Op) (h : (effects op).control = false) :
     isTerminator op = false :=
   G0.notControl CoreGpu op h
 
-variable {N : Type} [DecidableEq N] (lay : N → MemLayout) (ρ : DialectEffects.Mem CoreGpu → N)
+variable {N : Type} [DecidableEq N] (lay : N → MemLayout) (ρ : DialectEffects.Mem CoreGpu → N) (L :
+    RunItems)
 
 /-- In the sum, a valid op that runs by its own rule and does not declare a
 write to a memory of a run writes no unit of it, wherever the run names the
 sum's memories. -/
 theorem writesNot (op : CoreGpu.Op) (hv : TypesValid op)
     (hc : isTerminator op = true ∨ callee? op = none) (x : N)
-    (h : ¬ ((effects op).writes.map ρ).Has x) : OwnRuleHas lay ρ (WritesNot x) op :=
-  G0.writesNot CoreGpu op hv hc lay ρ x h
+    (h : ¬ ((effects op).writes.map ρ).Has x) : OwnRuleHas lay ρ L (WritesNot x) op :=
+  G0.writesNot CoreGpu op hv hc lay ρ L x h
 
 /-- In the sum, a valid op that runs by its own rule and does not declare a
 read of a memory of a run does not depend on its units. -/
 theorem readsNot (op : CoreGpu.Op) (hv : TypesValid op)
     (hc : isTerminator op = true ∨ callee? op = none) (x : N)
-    (h : ¬ ((effects op).reads.map ρ).Has x) : OwnRuleHas lay ρ (ReadsNot x) op :=
-  G0.readsNot CoreGpu op hv hc lay ρ x h
+    (h : ¬ ((effects op).reads.map ρ).Has x) : OwnRuleHas lay ρ L (ReadsNot x) op :=
+  G0.readsNot CoreGpu op hv hc lay ρ L x h
 
 /-- In the sum, a valid op that runs by its own rule and does not declare
 allocation in a memory of a run leaves its allocations as they were; so a
@@ -63,14 +64,14 @@ question of `gpu` allocates in no memory, and `gpu.work_group_alloca` only
 in the memory of its result. -/
 theorem allocatesNot (op : CoreGpu.Op) (hv : TypesValid op)
     (hc : isTerminator op = true ∨ callee? op = none) (x : N)
-    (h : ¬ ((effects op).allocates.map ρ).Has x) : OwnRuleHas lay ρ (AllocatesNot x) op :=
-  G0.allocatesNot CoreGpu op hv hc lay ρ x h
+    (h : ¬ ((effects op).allocates.map ρ).Has x) : OwnRuleHas lay ρ L (AllocatesNot x) op :=
+  G0.allocatesNot CoreGpu op hv hc lay ρ L x h
 
 /-- In the sum, a valid op that runs by its own rule has an outcome from
 any memories. -/
 theorem memTotal (op : CoreGpu.Op) (hv : TypesValid op)
-    (hc : isTerminator op = true ∨ callee? op = none) : OwnRuleHas lay ρ HasOutcome op :=
-  G0.memTotal CoreGpu op hv hc lay ρ
+    (hc : isTerminator op = true ∨ callee? op = none) : OwnRuleHas lay ρ L HasOutcome op :=
+  G0.memTotal CoreGpu op hv hc lay ρ L
 
 /-- The sum of the core and `gpu` is lawful in its totality, by the theorem
 for every sum. -/
@@ -106,8 +107,8 @@ memory, in the module of its table. -/
 theorem summary_neverUB (hM : M.Valid) (ht : t ∈ M.tables) {s : Name} {f : Func CoreGpu}
     (hf : (M.nest t).func? s = some f) (hs : ((M.nest t).table.summary s).mayUB = false)
     (args : HVector toType (f.params.map (·.2))) (fuel : Nat) (r : String) :
-    ¬ f.memRuns lay ρ (M.nest t) args fuel (.ub r) :=
-  G0.summary_neverUB CoreGpu lay ρ (hM.nest ht).funcs hf hs args fuel r
+    ¬ f.memRuns lay ρ L (M.nest t) args fuel (.ub r) :=
+  G0.summary_neverUB CoreGpu lay ρ L (hM.nest ht).funcs hf hs args fuel r
 
 /-- A function of each table of a valid module of the sum whose summary
 leaves out may produce poison returns no poison on arguments with none, in
@@ -116,7 +117,7 @@ theorem summary_noPoison (hM : M.Valid) (ht : t ∈ M.tables) {s : Name} {f : Fu
     (hf : (M.nest t).func? s = some f) (hs : ((M.nest t).table.summary s).mayPoison = false)
     (args : HVector toType (f.params.map (·.2))) (hargs : ¬ args.Any TyPoison.IsPoison)
     (fuel : Nat) (vs : List (DVal CoreGpu)) :
-    f.memRuns lay ρ (M.nest t) args fuel (.ok (.ok (.ret vs))) → DVals.Clean vs :=
-  G0.summary_noPoison CoreGpu lay ρ (hM.nest ht).funcs hf hs args hargs fuel vs
+    f.memRuns lay ρ L (M.nest t) args fuel (.ok (.ok (.ret vs))) → DVals.Clean vs :=
+  G0.summary_noPoison CoreGpu lay ρ L (hM.nest ht).funcs hf hs args hargs fuel vs
 
 end FirTest.GpuG0

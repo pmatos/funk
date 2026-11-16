@@ -14,7 +14,7 @@ fails when the Lean changes under it.
 
 #doc (Manual) "Runs from given memories: readable blocks" =>
 
-:::moduleDocs (fingerprint := "2623547510243343845")
+:::moduleDocs (fingerprint := "11400334038239187599")
 :::
 
 :::readable Fir.Result.withMem Fir.Result.finish_id_run (pin := Fir.Result.finish) (pin := Fir.Ev.dropLeft) (fingerprint := "9590645358696005234")
@@ -57,7 +57,7 @@ are ({ref "The-fir-specification--Memory--Runs-with-memory-at-every-budget"}[run
 and one that runs out of fuel runs out of fuel with fewer steps.
 :::
 
-:::readable Fir.Func.memRuns_eq_fromState Fir.Func.memRuns_ret_iff Fir.Func.memRuns_ub_iff Fir.Func.memRuns_exhausted_iff (pin := Fir.Func.memRuns) (fingerprint := "6064621989558609577")
+:::readable Fir.Func.memRuns_eq_fromState Fir.Func.memRuns_ret_iff Fir.Func.memRuns_ub_iff Fir.Func.memRuns_exhausted_iff (pin := Fir.Func.memRuns) (fingerprint := "15186826435223613203")
 *Theorems: runs with memory are the runs from the empty memories.* The
 {ref "The-fir-specification--Memory--Runs-with-memory"}[runs with memory]
 of a function are its runs from the empty memories, with the memories they
@@ -67,7 +67,7 @@ $`(\vec{w}, T)` for some memories $`T`, and hits UB, or runs out of fuel,
 exactly when the run from the empty memories does.
 :::
 
-:::readable Fir.Func.memRuns_isRefinedBy_of_from (pin := Fir.Func.memRuns) (fingerprint := "9889055531088484673")
+:::readable Fir.Func.memRuns_isRefinedBy_of_from (pin := Fir.Func.memRuns) (fingerprint := "8080633394760038605")
 *Theorem: runs with memory refine when runs from the empty memories do.*
 The {ref "The-fir-specification--Memory--Runs-with-memory"}[runs with memory]
 of a function are its runs from the empty memories, with the memories they

@@ -240,7 +240,7 @@ namespace Fir
 /-- The core dialect's semantics with memory, at each layout and naming of
 its memories. -/
 instance Core.instDialectMemDenote : DialectMemDenote CoreDialect :=
-  ⟨Core.memDenoteAt⟩
+  ⟨fun lay ρ _ => Core.memDenoteAt lay ρ⟩
 
 namespace Core
 
@@ -251,7 +251,7 @@ layout and naming. Lifting into the layer keeps choice and UB, and maps an
 op with no rule to one with no outcome. -/
 theorem Op.liftsSetM (op : Op) (hm : op.touchesMemory = false) :
     OpLiftsSetM (d := CoreDialect) op := by
-  intro N _ lay ρ args
+  intro N _ lay ρ L args
   have h := denoteIn_mapsDenote (MonadMorphism.liftState SetM (Memory.Memories N (unitsOf lay)))
     (MonadMorphism.liftState_keeps _ fun r f => SetM.ub_bind r f) (fun _ _ => False)
     (fun _ _ _ => False) fun _ => by

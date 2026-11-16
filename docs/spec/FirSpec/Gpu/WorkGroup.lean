@@ -14,10 +14,10 @@ when the Lean changes under it.
 
 #doc (Manual) "Work-group allocation: readable blocks" =>
 
-:::moduleDocs (fingerprint := "6087259994308976275")
+:::moduleDocs (fingerprint := "2251322982091883283")
 :::
 
-:::readable Fir.Gpu.Op.memCases Fir.Gpu.allocResult Fir.Gpu.allocAlloc Fir.Gpu.alloc_denote (fingerprint := "360775185013883384")
+:::readable Fir.Gpu.Op.memCases Fir.Gpu.allocResult Fir.Gpu.allocAlloc Fir.Gpu.alloc_denote (fingerprint := "3215944786657077571")
 *Lemmas: the two kinds of op, and an allocation's run.* A property holds of
 every op of `gpu` when it holds of each question and of each allocation. In
 the state layer over the set monad, $`\mathsf{alloc}_n~t~c~a` runs as its
@@ -25,14 +25,14 @@ allocation in the memory $`\rho(n)`, of the kind $`\mathsf{global}`, with
 the pointer it gives as its one result.
 :::
 
-:::readable Fir.Gpu.Op.alloc_neverUB Fir.Gpu.Op.alloc_makesNoPoison Fir.Gpu.Op.alloc_writesNot Fir.Gpu.Op.alloc_readsNot Fir.Gpu.Op.alloc_allocatesNot (fingerprint := "8403198853707202378")
+:::readable Fir.Gpu.Op.alloc_neverUB Fir.Gpu.Op.alloc_makesNoPoison Fir.Gpu.Op.alloc_writesNot Fir.Gpu.Op.alloc_readsNot Fir.Gpu.Op.alloc_allocatesNot (fingerprint := "9053582269106366143")
 *Theorems: an allocation's effects are sound.* At every layout and naming
 of `gpu`'s memories, an allocation never ends in UB, gives a pointer, never
 poison, writes no unit of any memory, reads none, and allocates in no
 memory but $`\rho(n)`, the one it declares.
 :::
 
-:::readable Fir.Gpu.Op.alloc_memTotal Fir.Gpu.Op.alloc_memMonotone Fir.Gpu.Op.alloc_memPropagates Fir.Gpu.Op.alloc_memReturnsOnDefined Fir.Gpu.Op.alloc_finitelyMany (fingerprint := "5712855453947191471")
+:::readable Fir.Gpu.Op.alloc_memTotal Fir.Gpu.Op.alloc_memMonotone Fir.Gpu.Op.alloc_memPropagates Fir.Gpu.Op.alloc_memReturnsOnDefined Fir.Gpu.Op.alloc_finitelyMany (fingerprint := "8909698007378109209")
 *Theorems: an allocation meets the obligations with memory.* An allocation
 has an outcome from any memories. From memories that refine others, it
 allocates at the same place, so it gives the same pointer and memories that

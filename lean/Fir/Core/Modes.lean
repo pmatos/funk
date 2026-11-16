@@ -82,11 +82,12 @@ theorem exhaustive_memOutcomes (M : Module CoreDialect) (f : Func CoreDialect)
     (args : HVector toType (f.params.map (·.2))) (fuel budget : Nat)
     {ls : List (ChoiceTree.Leaf Op (Except Stuck (Result Obs)) × Nat)}
     (hx : exhaustive M f args fuel budget = some ls) (o : Outcome Obs) :
-    Run.outcomes (f.memRuns M.layout.entry id M args fuel) o ↔
+    Run.outcomes (f.memRuns M.layout.entry id M.runItems M args fuel) o ↔
       ∃ p ∈ ls, p.1.pathEnd = .outcome o := by
   -- Elaborated apart from the goal: checked against it, the run unfolds.
   have h := (letI := memTreeDenote M.layout.entry id
-    Func.memExplore_outcomes M.layout.entry id (memMapsDenote M.layout.entry id) M f args fuel
+    Func.memExplore_outcomes M.layout.entry id M.runItems (memMapsDenote M.layout.entry id
+        M.runItems) M f args fuel
       budget hx o)
   exact h
 
@@ -96,11 +97,12 @@ theorem exhaustive_memStuck (M : Module CoreDialect) (f : Func CoreDialect)
     (args : HVector toType (f.params.map (·.2))) (fuel budget : Nat)
     {ls : List (ChoiceTree.Leaf Op (Except Stuck (Result Obs)) × Nat)}
     (hx : exhaustive M f args fuel budget = some ls) :
-    Run.IsStuck (f.memRuns M.layout.entry id M args fuel) ↔
+    Run.IsStuck (f.memRuns M.layout.entry id M.runItems M args fuel) ↔
       ∃ p ∈ ls, ∃ st, p.1.pathEnd = .stuck st := by
   -- Elaborated apart from the goal: checked against it, the run unfolds.
   have h := (letI := memTreeDenote M.layout.entry id
-    Func.memExplore_stuck M.layout.entry id (memMapsDenote M.layout.entry id) M f args fuel budget
+    Func.memExplore_stuck M.layout.entry id M.runItems (memMapsDenote M.layout.entry id M.runItems)
+        M f args fuel budget
       hx)
   exact h
 
@@ -110,10 +112,12 @@ theorem scripted_memOutcomes {σ : Type} (read : (w : Nat) → σ → Option (Bi
     (M : Module CoreDialect) (f : Func CoreDialect) (args : HVector toType (f.params.map (·.2)))
     (fuel : Nat) (cs : List σ) {l : ChoiceTree.Leaf Op (Except Stuck (Result Obs))} {c : Nat}
     (hs : scripted read M f args fuel cs = .ok (l, c)) {o : Outcome Obs}
-    (ho : l.pathEnd = .outcome o) : Run.outcomes (f.memRuns M.layout.entry id M args fuel) o := by
+    (ho : l.pathEnd = .outcome o) : Run.outcomes (f.memRuns M.layout.entry id M.runItems M args
+        fuel) o := by
   -- Elaborated apart from the goal: checked against it, the run unfolds.
   have h := (letI := memTreeDenote M.layout.entry id
-    Func.memScript_outcomes M.layout.entry id (memMapsDenote M.layout.entry id) read M f args fuel
+    Func.memScript_outcomes M.layout.entry id M.runItems (memMapsDenote M.layout.entry id
+        M.runItems) read M f args fuel
       cs hs ho)
   exact h
 
@@ -123,10 +127,12 @@ theorem scripted_memStuck {σ : Type} (read : (w : Nat) → σ → Option (BitVe
     (M : Module CoreDialect) (f : Func CoreDialect) (args : HVector toType (f.params.map (·.2)))
     (fuel : Nat) (cs : List σ) {l : ChoiceTree.Leaf Op (Except Stuck (Result Obs))} {c : Nat}
     (hs : scripted read M f args fuel cs = .ok (l, c)) {st : Stuck}
-    (hst : l.pathEnd = .stuck st) : Run.IsStuck (f.memRuns M.layout.entry id M args fuel) := by
+    (hst : l.pathEnd = .stuck st) : Run.IsStuck (f.memRuns M.layout.entry id M.runItems M args
+        fuel) := by
   -- Elaborated apart from the goal: checked against it, the run unfolds.
   have h := (letI := memTreeDenote M.layout.entry id
-    Func.memScript_stuck M.layout.entry id (memMapsDenote M.layout.entry id) read M f args fuel cs
+    Func.memScript_stuck M.layout.entry id M.runItems (memMapsDenote M.layout.entry id M.runItems)
+        read M f args fuel cs
       hs hst)
   exact h
 
@@ -148,7 +154,7 @@ theorem sampled_memOutcomes {γ : Type} (draw : (w : Nat) → γ → BitVec w ×
     (M : Module CoreDialect) (f : Func CoreDialect) (args : HVector toType (f.params.map (·.2)))
     (fuel : Nat) (g : γ) {o : Outcome Obs}
     (ho : (sampled draw M f args fuel g).1.pathEnd = .outcome o) :
-    Run.outcomes (f.memRuns M.layout.entry id M args fuel) o :=
+    Run.outcomes (f.memRuns M.layout.entry id M.runItems M args fuel) o :=
   scripted_memOutcomes _ M f args fuel _ (sampled_fits draw M f args fuel g) ho
 
 /-- Sampled mode reports a stuck path only when the run with memory has
@@ -157,7 +163,7 @@ theorem sampled_memStuck {γ : Type} (draw : (w : Nat) → γ → BitVec w × γ
     (M : Module CoreDialect) (f : Func CoreDialect) (args : HVector toType (f.params.map (·.2)))
     (fuel : Nat) (g : γ) {st : Stuck}
     (hst : (sampled draw M f args fuel g).1.pathEnd = .stuck st) :
-    Run.IsStuck (f.memRuns M.layout.entry id M args fuel) :=
+    Run.IsStuck (f.memRuns M.layout.entry id M.runItems M args fuel) :=
   scripted_memStuck _ M f args fuel _ (sampled_fits draw M f args fuel g) hst
 
 end Fir.Core

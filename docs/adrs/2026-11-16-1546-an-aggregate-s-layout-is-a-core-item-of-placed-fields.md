@@ -24,6 +24,12 @@ Tier: direction; area: semantics
   offset is a multiple of its alignment, which is at most `A`, and it ends
   within `S`; no two fields share a unit, so a field of no units, a C
   flexible array member, overlaps nothing.
+- **Reading.** A run gives every op's rule a record of its module's items,
+  beside each memory's layout entry: each layout of the function's table,
+  with each field's offset and the step between its elements (the human's
+  ruling of 2026-11-16 on #236, Q1 A). Every law over the semantics with
+  memory holds for every record, so a function's (#235) or a global's
+  (#237) address is a new field of it.
 
 ## Why
 

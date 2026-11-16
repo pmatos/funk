@@ -267,33 +267,35 @@ theorem Core.lawfulDialectEffects : LawfulDialectEffects CoreDialect where
     (fun o w a n _ => Core.store_makesNoPoison o w a n) (fun _ _ _ _ h => nomatch h)
     (fun o mp a n _ => Core.storePtr_makesNoPoison o mp a n) h
   notControl := Core.Op.notControl_all
-  writesNot op _ _ _ _ lay ρ x hx := Core.Op.memCases (P := fun op =>
+  writesNot op _ _ _ _ lay ρ L x hx := Core.Op.memCases (P := fun op =>
       ¬ ((Fir.effects (d := CoreDialect) op).writes.map ρ).Has x →
-        OwnRuleHas lay ρ (WritesNot x) (d := CoreDialect) op) op
-    (fun op hm _ => OwnRuleHas.ofLifts (Core.Op.liftsSetM op hm) lay ρ fun c => writesNot_lift x c)
-    (fun k t c a n _ => Core.alloca_writesNot k t c a n lay ρ x)
-    (fun o w a n _ => Core.load_writesNot o w a n lay ρ x)
-    (fun o w a n hx => Core.store_writesNot o w a n lay ρ x hx)
-    (fun o mp a n _ => Core.loadPtr_writesNot o mp a n lay ρ x)
-    (fun o mp a n hx => Core.storePtr_writesNot o mp a n lay ρ x hx) hx
-  readsNot op _ _ _ _ lay ρ x hx := Core.Op.memCases (P := fun op =>
+        OwnRuleHas lay ρ L (WritesNot x) (d := CoreDialect) op) op
+    (fun op hm _ => OwnRuleHas.ofLifts (Core.Op.liftsSetM op hm) lay ρ L fun c => writesNot_lift x
+        c)
+    (fun k t c a n _ => Core.alloca_writesNot k t c a n lay ρ L x)
+    (fun o w a n _ => Core.load_writesNot o w a n lay ρ L x)
+    (fun o w a n hx => Core.store_writesNot o w a n lay ρ L x hx)
+    (fun o mp a n _ => Core.loadPtr_writesNot o mp a n lay ρ L x)
+    (fun o mp a n hx => Core.storePtr_writesNot o mp a n lay ρ L x hx) hx
+  readsNot op _ _ _ _ lay ρ L x hx := Core.Op.memCases (P := fun op =>
       ¬ ((Fir.effects (d := CoreDialect) op).reads.map ρ).Has x →
-        OwnRuleHas lay ρ (ReadsNot x) (d := CoreDialect) op) op
-    (fun op hm _ => OwnRuleHas.ofLifts (Core.Op.liftsSetM op hm) lay ρ fun c => readsNot_lift x c)
-    (fun k t c a n _ => Core.alloca_readsNot k t c a n lay ρ x)
-    (fun o w a n hx => Core.load_readsNot o w a n lay ρ x hx)
-    (fun o w a n _ => Core.store_readsNot o w a n lay ρ x)
-    (fun o mp a n hx => Core.loadPtr_readsNot o mp a n lay ρ x hx)
-    (fun o mp a n _ => Core.storePtr_readsNot o mp a n lay ρ x) hx
-  allocatesNot op _ _ _ _ lay ρ x hx := Core.Op.memCases (P := fun op =>
+        OwnRuleHas lay ρ L (ReadsNot x) (d := CoreDialect) op) op
+    (fun op hm _ => OwnRuleHas.ofLifts (Core.Op.liftsSetM op hm) lay ρ L fun c => readsNot_lift x c)
+    (fun k t c a n _ => Core.alloca_readsNot k t c a n lay ρ L x)
+    (fun o w a n hx => Core.load_readsNot o w a n lay ρ L x hx)
+    (fun o w a n _ => Core.store_readsNot o w a n lay ρ L x)
+    (fun o mp a n hx => Core.loadPtr_readsNot o mp a n lay ρ L x hx)
+    (fun o mp a n _ => Core.storePtr_readsNot o mp a n lay ρ L x) hx
+  allocatesNot op _ _ _ _ lay ρ L x hx := Core.Op.memCases (P := fun op =>
       ¬ ((Fir.effects (d := CoreDialect) op).allocates.map ρ).Has x →
-        OwnRuleHas lay ρ (AllocatesNot x) (d := CoreDialect) op) op
-    (fun op hm _ => OwnRuleHas.ofLifts (Core.Op.liftsSetM op hm) lay ρ fun c => allocatesNot_lift x c)
-    (fun k t c a n hx => Core.alloca_allocatesNot k t c a n lay ρ x hx)
-    (fun o w a n _ => Core.load_allocatesNot o w a n lay ρ x)
-    (fun o w a n _ => Core.store_allocatesNot o w a n lay ρ x)
-    (fun o mp a n _ => Core.loadPtr_allocatesNot o mp a n lay ρ x)
-    (fun o mp a n _ => Core.storePtr_allocatesNot o mp a n lay ρ x) hx
+        OwnRuleHas lay ρ L (AllocatesNot x) (d := CoreDialect) op) op
+    (fun op hm _ => OwnRuleHas.ofLifts (Core.Op.liftsSetM op hm) lay ρ L fun c => allocatesNot_lift
+        x c)
+    (fun k t c a n hx => Core.alloca_allocatesNot k t c a n lay ρ L x hx)
+    (fun o w a n _ => Core.load_allocatesNot o w a n lay ρ L x)
+    (fun o w a n _ => Core.store_allocatesNot o w a n lay ρ L x)
+    (fun o mp a n _ => Core.loadPtr_allocatesNot o mp a n lay ρ L x)
+    (fun o mp a n _ => Core.storePtr_allocatesNot o mp a n lay ρ L x) hx
 
 instance : LawfulDialectEffects CoreDialect := Core.lawfulDialectEffects
 
@@ -314,13 +316,13 @@ the core's own semantics with memory: an op left without may-UB must never
 end in UB. -/
 theorem sdivNoUB_unlawful :
     ¬ @LawfulDialectEffects CoreDialect _ _ _ sdivNoUB _ _
-      (@DialectMemDenote.mk CoreDialect _ _ sdivNoUB fun lay ρ => Core.memDenoteAt lay ρ) := by
+      (@DialectMemDenote.mk CoreDialect _ _ sdivNoUB fun lay ρ _ => Core.memDenoteAt lay ρ) := by
   intro h
   have hnever := @LawfulDialectEffects.neverUB CoreDialect _ _ _ sdivNoUB _ _ _ h
     (.sdiv 8 false) sdiv_typesValid (.inr rfl) rfl
   have hl := (Core.Op.liftsSetM (.sdiv 8 false) rfl (fun _ : Unit => MemLayout.default) (fun _ => ())
-    (.cons (.value 1) (.cons (.value 0) .nil))).1
-  have hub := (hnever (N := Unit) (fun _ => MemLayout.default) (fun _ => ())
+    RunItems.empty (.cons (.value 1) (.cons (.value 0) .nil))).1
+  have hub := (hnever (N := Unit) (fun _ => MemLayout.default) (fun _ => ()) RunItems.empty
     (.cons (.value 1) (.cons (.value 0) .nil))).1 rfl
   rw [hl] at hub
   exact NoUB.of_lift hub Memory.Memories.empty _ ((ruleOfEv_iff _ _ _ _).2 (.inr ⟨_, rfl, rfl⟩))
