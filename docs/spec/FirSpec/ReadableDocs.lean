@@ -218,6 +218,7 @@ import FirSpec.Execution.Trace
 import FirSpec.Execution.TraceMonad
 import FirSpec.Execution.TraceRuns
 import FirSpec.Execution.MemoryModes
+import FirSpec.Execution.NaNModes
 import FirSpec.Core.MemoryRuns
 import FirSpec.Core.MemoryCallRefine
 import FirSpec.Sum.Names

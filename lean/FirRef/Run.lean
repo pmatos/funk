@@ -5,6 +5,7 @@ import FirRef.Report
 import FirRef.Sample
 import FirRef.RunModes
 import FirRef.HVectorSum
+import FirRef.RunNaN
 import FirRef.RunText
 
 /-!
@@ -17,9 +18,10 @@ line (`docs/decisions/fir-ref-command-line.md#fir-ref-run`).
 `freeze` of poison makes a choice, so a run may end in many ways.
 `fir-ref` runs the interpreter in the state layer over the spec's tree of
 choices, from the empty memories, with the rules of the core and `gpu`, and
-walks the tree in one of three modes, the spec's `Gpu.scripted`,
-`Gpu.exhaustive` and `Gpu.sampled`, which Lean proves sound for the runs
-with memory (`Gpu.scripted_memOutcomes`, `Gpu.exhaustive_memOutcomes` and
+walks the tree in one of the modes below, the spec's `Gpu.scripted`,
+`Gpu.exhaustive`, `Gpu.exhaustiveNaN` and `Gpu.sampled`, which Lean proves
+sound for the runs with memory (`Gpu.scripted_memOutcomes`,
+`Gpu.exhaustive_memOutcomes`, `Gpu.exhaustiveNaN_memOutcomes` and
 `Gpu.sampled_memOutcomes`):
 
 * scripted mode, the default, follows the one path that a choice sequence
@@ -29,6 +31,11 @@ with memory (`Gpu.scripted_memOutcomes`, `Gpu.exhaustive_memOutcomes` and
   a choice is an error;
 * exhaustive mode, `--exhaustive`, reports every outcome of the run, when
   no path chooses more bits in all than its budget, `--choice-bits`;
+* with `--nans`, exhaustive mode tries, at each NaN choice of a float op,
+  only the positive quiet NaN and the NaNs it is given, the spec's
+  `Gpu.exhaustiveNaN`: each outcome it reports is one of the run's
+  (`Gpu.exhaustiveNaN_memOutcomes`), and all of them when no path made a NaN
+  choice (`Gpu.exhaustiveNaN_exact`);
 * sampled mode, `--seed`, follows the path on which a generator seeded
   with its number draws each choice, the spec's `Gpu.sampled`, and
   reports its one outcome and the values it drew, a sequence that
@@ -53,46 +60,6 @@ poison, as the runs of `Core.FuncRuns` do (#123). A choice may not:
 namespace FirRef
 
 open Fir
-
-/-- A type as text writes it, such as `i8`. -/
-def tyText (t : Core.Ty) : String := t.attr.print
-
-/-- An op as text writes its name and attributes, such as `add nsw`. -/
-def opText (op : Core.Op) : String := " ".intercalate (op.name :: op.attrs.map Attr.print)
-
-/-- A value as `fir-ref run` spells it: as a constant of its type in text,
-or `poison`. A float is written as the one float literal of its bits
-(ADR-2026-11-11-1438). A pointer is written `ptr(A, O)`, for the
-allocation `A` it has provenance for and its offset `O`, and
-`ptr(none, O)` when it has no provenance. It names no address, which a
-pointer has only once it is exposed (ADR-2026-11-09-1542). So the
-pointer that the first `alloca` of a run in a memory gives is
-`ptr(0, 0)` (#231). -/
-def valueText : DVal CoreDialect → String
-  | ⟨.int w, v⟩ => match (v : PoisonOr (BitVec w)) with
-    | .poison => "poison"
-    | .value b => (Core.constAttr w b).print
-  | ⟨.float e m, v⟩ => match (v : PoisonOr (BitVec (Core.floatWidth e m))) with
-    | .poison => "poison"
-    | .value b => (Attr.float (Core.floatLit e m b)).print
-  | ⟨.ptr _, v⟩ => match (v : PoisonOr Memory.Pointer) with
-    | .poison => "poison"
-    | .value p =>
-      let a := match p.prov with | some a => toString a | none => "none"
-      s!"ptr({a}, {(Attr.int p.offset).print})"
-
-/-- The values that `fir-ref run` reports, spelled as `valueText` spells
-them: the core's, and those of the sum of the core and `gpu`, whose types
-are the core's. -/
-class RunValue (V : Type) where
-  text : V → String
-
-instance : RunValue (DVal CoreDialect) := ⟨valueText⟩
-
-instance : RunValue (DVal CoreGpu) where
-  text
-    | ⟨.inl t, v⟩ => valueText ⟨t, v⟩
-    | ⟨.inr e, _⟩ => e.elim
 
 /-- The `const` op that the text `s` spells at the type `t`: the spec's
 lexer reads `s` as one token (`argAttr`, which `fir-ref` runs as
@@ -163,89 +130,11 @@ where
     | .inr e :: _, _ :: _, _, _ => e.elim
     | rest, as, _, _ => .error s!"{as.length} arguments are given for {rest.length} parameters"
 
-/-- The JSON object that reports a result of `kind`, with more fields. Its
-strings are escaped as `fir-ref validate`'s are. -/
-def resultJson (kind : String) (more : List (String × String) := []) : String :=
-  jsonObject (("kind", jsonString kind) :: more)
-
-/-- A leaf of a run's tree, as `fir-ref run` sees it, with the values of
-type `V` that a path returns. -/
-abbrev RunLeaf (V : Type := DVal CoreDialect) :=
-  ChoiceTree.Leaf Core.Op (Except Stuck (Result (List V)))
-
-variable {V : Type} [RunValue V]
-
-/-- The fields of the JSON object that reports how a path ends, other than
-the choices it made, and whether it is stuck; or the op without rules that
-the path reaches. -/
-def pathFields : PathEnd (List V) Core.Op → Except Core.Op (List (String × String) × Bool)
-  | .outcome (.ret vs) =>
-    .ok ([("kind", jsonString "return"),
-      ("values", jsonArray (vs.map (jsonString ∘ RunValue.text)))],
-      false)
-  | .outcome .fuelExhausted => .ok ([("kind", jsonString "fuel-exhausted")], false)
-  | .outcome (.ub r) => .ok ([("kind", jsonString "ub"), ("reason", jsonString r)], false)
-  | .stuck st => .ok ([("kind", jsonString "stuck"), ("reason", jsonString st.reason)], true)
-  | .noOutcome op => .error op
-
-/-- The error of a run that reaches an op without rules
-(`docs/decisions/fir-ref.md#an-op-without-rules`). -/
-def noRules (name : String) (op : Core.Op) : RunReport :=
-  { err := s!"fir-ref: {name}: {opText op} has no execution rules yet", status := 2 }
-
-/-- Why a choice sequence does not fit the run, in words. -/
-def misfitText : ChoiceTree.Misfit String → String
-  | .short made w =>
-    s!"the run makes choice {made + 1}, of type {tyText (.int w)}, and --choices gives " ++
-      count made "choice"
-  | .unread made w s => s!"choice {made + 1}, {shown s}, is not a value of type {tyText (.int w)}"
-  | .long made n => s!"the run makes {count made "choice"}, and --choices gives {n}"
-
-/-- The report of scripted mode on a run of the function whose symbol is
-written `name`: the one path that the choices name, or why they do not fit
-the run. -/
-def scriptedReport (name : String) :
-    Except (ChoiceTree.Misfit String) (RunLeaf V × Nat) → RunReport
-  | .error m => { err := s!"fir-ref: {name}: the choices do not fit the run: {misfitText m}",
-                  status := 2 }
-  | .ok (l, c) => match pathFields (V := V) l.pathEnd with
-    | .error op => noRules name op
-    | .ok (fields, stuck) =>
-      { out := jsonObject (fields ++ [("choices", toString c)]), status := if stuck then 1 else 0 }
-
-/-- A value that a path chose, spelled as `--choices` takes it: as a
-constant of its type. -/
-def chosenText : ChoiceTree.Chosen → String
-  | ⟨w, b⟩ => (Core.constAttr w b).print
-
-/-- The report of sampled mode on a run of the function whose symbol is
-written `name`: the one path that the generator draws, and the values it
-drew on it. -/
-def sampledReport (name : String) : RunLeaf V × List ChoiceTree.Chosen → RunReport
-  | (l, cs) => match pathFields (V := V) l.pathEnd with
-    | .error op => noRules name op
-    | .ok (fields, stuck) =>
-      { out := jsonObject (fields ++ [("choices", toString cs.length),
-          ("sequence", jsonArray (cs.map (jsonString ∘ chosenText)))]),
-        status := if stuck then 1 else 0 }
-
-/-- The report of exhaustive mode on a run of the function whose symbol is
-written `name`, with a choice budget of `budget` bits: every way its paths
-end, each once, or that some path chooses more than the budget. -/
-def exhaustiveReport (name : String) (budget : Nat) : Option (List (RunLeaf V × Nat)) → RunReport
-  | none => { out := resultJson "choice-budget-exceeded" [("budget", toString budget)], status := 0 }
-  | some ls => match ls.mapM (fun (l, c) => (pathFields (V := V) l.pathEnd).map (·, c)) with
-    | .error op => noRules name op
-    | .ok ps =>
-      let choices := ps.foldl (fun m p => max m p.2) 0
-      { out := resultJson "outcomes" [("choices", toString choices),
-          ("outcomes", jsonArray (distinct (ps.map (jsonObject ·.1.1))))],
-        status := if ps.any (·.1.2) then 1 else 0 }
-
 /-! # The modes, by the machine
 
-`runBytes` below calls the spec's `Gpu.scripted`, `Gpu.exhaustive` and
-`Gpu.sampled`, the modes of the sum of the core and `gpu` at a work-item;
+`runBytes` below calls the spec's `Gpu.scripted`, `Gpu.exhaustive`,
+`Gpu.exhaustiveNaN` and `Gpu.sampled`, the modes of the sum of the core and
+`gpu` at a work-item;
 the core's own modes, `Core.scripted`, `Core.exhaustive` and
 `Core.sampled`, are what it called before #212. The theorems here make Lean
 compile calls of either as calls of
@@ -345,12 +234,27 @@ def runGpuSampled [Gpu.WorkItem] {γ : Type} (draw : (w : Nat) → γ → BitVec
   letI := Gpu.memTreeDenote M.layout.entry Gpu.memName
   exact (Machine.sampled_eq M draw f args fuel g).symm
 
+/-- `Gpu.exhaustiveNaN`, by the machine. -/
+def runGpuExhaustiveNaN [Gpu.WorkItem] (M : Module CoreGpu) (f : Func CoreGpu)
+    (args : HVector toType (f.params.map (·.2))) (fuel budget : Nat) (nans : List Nat) :
+    Option (List (Gpu.Leaf × Nat × Nat)) :=
+  letI := gpuTreeDenote M.layout.entry Gpu.memName
+  Machine.exhaustiveNaN (unit := unitsOf M.layout.entry) M f args fuel budget nans
+
+@[csimp] theorem gpuExhaustiveNaN_eq_runGpuExhaustiveNaN :
+    @Gpu.exhaustiveNaN = @runGpuExhaustiveNaN := by
+  funext w M f args fuel budget nans
+  letI := Gpu.memTreeDenote M.layout.entry Gpu.memName
+  exact (Machine.exhaustiveNaN_eq M f args fuel budget nans).symm
+
 /-- How `fir-ref run` walks a run: scripted mode, with a choice sequence,
-exhaustive mode, with a choice budget in bits, or sampled mode, with the
-seed of its generator. -/
+exhaustive mode, with a choice budget in bits, and, when it tries a few
+NaNs, the NaNs it is given as bit patterns, or sampled mode, with the seed
+of its generator. -/
 inductive Mode where
   | scripted (choices : List String)
   | exhaustive (budget : Nat)
+  | exhaustiveNaN (budget : Nat) (nans : List Nat)
   | sampled (seed : Nat)
   deriving DecidableEq, Repr
 
@@ -380,6 +284,8 @@ def runBytes (file : String) (bytes : ByteArray) (fuel : Nat) (func : String)
           scriptedReport name (Gpu.scripted constOf n f vs fuel cs)
         | .ok vs, .exhaustive b =>
           exhaustiveReport name b (Gpu.exhaustive n f vs fuel b)
+        | .ok vs, .exhaustiveNaN b nans =>
+          exhaustiveNaNReport name b (Gpu.exhaustiveNaN n f vs fuel b nans)
         | .ok vs, .sampled s =>
           sampledReport name (Gpu.sampled draw n f vs fuel ⟨s.toUInt64⟩)
 

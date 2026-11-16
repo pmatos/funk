@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Monad morphisms: readable blocks" =>
 
-:::moduleDocs (fingerprint := "5533159398206923746")
+:::moduleDocs (fingerprint := "15913667091825901869")
 :::
 
 :::readable Fir.MonadMorphism (fingerprint := "12632748386210839733")
@@ -70,13 +70,14 @@ ends with $`g` of its result to the computation that runs $`y` and ends
 with $`g` of its result.
 :::
 
-:::readable Fir.MonadMorphism.KeepsChoiceUB (fingerprint := "9918212152727544985")
+:::readable Fir.MonadMorphism.KeepsChoiceUB (fingerprint := "11819831808804441146")
 *Definition: a translation that keeps choice and UB.* For monads $`m` and
 $`n` with the
 {ref "The-fir-specification--Execution--Effects-and-op-semantics"}[choice and UB effects],
 a monad morphism $`\varphi` from $`m` to $`n` _keeps choice and UB_ when,
-for every width $`w` and reason $`r`,
-$`\varphi(\mathrm{choose}^m~w) = \mathrm{choose}^n~w` and
+for every width $`w`, format $`(e, m')` and reason $`r`,
+$`\varphi(\mathrm{choose}^m~w) = \mathrm{choose}^n~w`,
+$`\varphi(\mathrm{choose}_{\mathrm{nan}}^m~(e, m')) = \mathrm{choose}_{\mathrm{nan}}^n~(e, m')` and
 $`\varphi(\mathsf{ub}^m~r) = \mathsf{ub}^n~r`. An op rule written once for
 any monad with these effects then means in $`n` what $`\varphi` makes of
 it in $`m`.

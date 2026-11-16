@@ -2,9 +2,10 @@ import FirTest.Run
 
 /-!
 Tests of `fir-ref run` on long runs and deep calls (#47). `FirRef.runBytes`
-calls the spec's `Gpu.scripted`, `Gpu.exhaustive` and `Gpu.sampled`,
-and the `@[csimp]` theorems before it in `FirRef.Run` make it run
-`FirRef.runGpuScripted`, `FirRef.runGpuExhaustive` and `FirRef.runGpuSampled`, which
+calls the spec's `Gpu.scripted`, `Gpu.exhaustive`, `Gpu.exhaustiveNaN` and
+`Gpu.sampled`, and the `@[csimp]` theorems before it in `FirRef.Run` make it
+run `FirRef.runGpuScripted`, `FirRef.runGpuExhaustive`,
+`FirRef.runGpuExhaustiveNaN` and `FirRef.runGpuSampled`, which
 walk the states of `FirRef.Machine` and take no stack per step, per level
 of calls or per choice. Below, each mode runs a loop that never ends and a
 recursion that never ends for 1,000,000 steps, and a recursion 100,000
@@ -74,6 +75,10 @@ def exhaustedAll : RunReport :=
 #guard runText endless "@rec" ["1"] (fuel := 1000000) == exhausted
 #guard runText endless "@spin" (fuel := 1000000) (mode := .exhaustive 16) == exhaustedAll
 #guard runText endless "@rec" ["1"] (fuel := 1000000) (mode := .exhaustive 16) == exhaustedAll
+#guard runText endless "@spin" (fuel := 1000000) (mode := .exhaustiveNaN 16 []) ==
+  { exhaustedAll with out := exhaustedAll.out.replace "\"choices\":0," "\"choices\":0,\"complete\":true," }
+#guard runText endless "@rec" ["1"] (fuel := 1000000) (mode := .exhaustiveNaN 16 []) ==
+  { exhaustedAll with out := exhaustedAll.out.replace "\"choices\":0," "\"choices\":0,\"complete\":true," }
 #guard runText endless "@spin" (fuel := 1000000) (mode := .sampled 7) == exhaustedSampled
 #guard runText endless "@rec" ["1"] (fuel := 1000000) (mode := .sampled 7) == exhaustedSampled
 
@@ -84,6 +89,10 @@ above the bottom, and nine at the bottom, `@flip`'s four included. -/
 
 #guard runText endless "@deep" ["100000"] (mode := .exhaustive 1) ==
   { out := "{\"kind\":\"outcomes\",\"choices\":1,\"outcomes\":[" ++
+      "{\"kind\":\"return\",\"values\":[\"false\"]},{\"kind\":\"return\",\"values\":[\"true\"]}]}",
+    status := 0 }
+#guard runText endless "@deep" ["100000"] (mode := .exhaustiveNaN 1 []) ==
+  { out := "{\"kind\":\"outcomes\",\"choices\":1,\"complete\":true,\"outcomes\":[" ++
       "{\"kind\":\"return\",\"values\":[\"false\"]},{\"kind\":\"return\",\"values\":[\"true\"]}]}",
     status := 0 }
 #guard runText endless "@deep" ["100000"] (mode := .exhaustive 0) ==
