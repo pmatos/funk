@@ -92,10 +92,12 @@ kernel runs on `fir-ref` alone, so no differential test can fill a `gpu` cell.
 A new op of `gpu`, such as the work-group allocation of #212's stage 3, fails
 the unit test that reads `lean/Fir/Gpu/` until it has its rows, and then the
 hook until a kernel test runs it. `tests/fir/canonical/gpu-dims.fir` fills
-every row with ids and sizes that differ in each dimension. The human allowed
-#404 to skip kernel tests for a while on 2026-11-16 (#212, Q3) and asked for
-these cells; rejected: leaving kernel tests out, which leaves the ops that
-kernels run, and every op of `gpu`, with no gate (ADR-2026-11-03-0557).
+every row with ids and sizes that differ in each dimension. The human ruled on
+2026-11-16 (#212, Q3) that #404 could skip kernel tests for a while and that
+#406 counts kernel tests and `gpu` ops. That the cells are on the
+interpreter-only side alone, at `i32` alone, is #406's choice, not a ruling.
+Rejected: leaving kernel tests out, which leaves the ops that kernels run, and
+every op of `gpu`, with no gate (ADR-2026-11-03-0557).
 
 The pointer ops have a table of their own (`cells.POINTER_OPS`, the
 catalog's `pointers` table): `ptradd` has a cell at each width of its integer,
@@ -130,7 +132,8 @@ module is for, not what its tests run (ADR-2026-11-03-0557).
 
 `scripts/harness/coverage.py` writes the matrix to `docs/coverage/README.md`, an
 index, and to a page for each side beside it, `differential.md` and
-`interpreter.md`, since one file would pass the file-size budget (#406).
+`interpreter.md`: one file came within about 100 bytes of the file-size
+budget, which the next `gpu` row would pass (#406).
 `coverage.py --write` rewrites them. A pull request that changes the corpus
 regenerates it, after merging `main` when `main` changed the corpus too. A new
 op, flag or predicate fails the unit tests until `cells.py` has its cells. The

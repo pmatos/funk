@@ -56,9 +56,10 @@ more, past the file-size budget. Integer ops have four flag sets at most, so
 their sets stay cells.
 
 On 2026-11-16 the human allowed #404 to leave kernel tests out of the count
-for a while, and asked #406 to count them and give the `gpu` ops cells of
-their own (#212, Q3). A kernel's id or size is an `i32` by `gpu`'s rule, so
-one cell per op and dimension checks every instance that validates.
+for a while, and ruled that #406 counts them and the `gpu` ops (#212, Q3). A
+kernel's id or size is an `i32` by `gpu`'s rule, so one cell per op and
+dimension checks every instance that validates; that choice, and the
+interpreter-only side, are #406's, not the human's.
 
 ## Rejected alternatives
 
