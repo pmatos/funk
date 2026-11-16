@@ -34,10 +34,10 @@ computes, apart from Lean.
   and from `f64` to `f32` its case is a differential test, and an interpreter-only test
   too, which checks `fir-ref` against the reference. Every other case is
   interpreter-only.
-- A NaN operand gives any NaN of the target, so each such case is
-  interpreter-only, with a choice that names the NaN, as in the arithmetic
-  corpus. Native code is not compared on a NaN result until #219 decides
-  how a NaN result is judged.
+- A NaN operand gives any NaN of the target, so each such case has an
+  interpreter-only test with a choice that names the NaN, as in the
+  arithmetic corpus, and from `f32` to `f64` and from `f64` to `f32` a
+  differential test too (ADR-2026-11-16-1630).
 - A poison operand gives poison, in each conversion.
 """
 
@@ -46,7 +46,14 @@ from fractions import Fraction
 
 import cells
 import float_ref as ref
-from float_arith_cases import DIFFERENTIAL, FORMATS, NAN_CHOICES, nan_bits, write_corpus
+from float_arith_cases import (
+    DIFFERENTIAL,
+    FORMATS,
+    NAN_CHOICES,
+    nan_bits,
+    nan_head,
+    write_corpus,
+)
 from float_ref import TWO, Format
 from float_text import spell
 
@@ -133,6 +140,7 @@ def module_text(module: str) -> str:
 def tests_text(module: str) -> str:
     native = is_native(module)
     s, t = pair(module)
+    f, g = Format(*FORMATS[s]), Format(*FORMATS[t])
     head = [
         f"# Tests of {module}.fir: {cells.conversion(s, t)} from {s} to {t}",
         "# (ADR-2026-11-09-1549) on the edges of the source and of the target:",
@@ -145,9 +153,9 @@ def tests_text(module: str) -> str:
     if native:
         head += [
             "# A test without expect is differential: fir-ref and native code",
-            "# run it, and the native result must equal fir-ref's. Each",
-            "# result that is not a NaN is also checked by an interpreter-only",
-            "# test with expect.",
+            "# run it, and the native result must be one that fir-ref gives.",
+            "# Each result that is not a NaN is also checked by an",
+            "# interpreter-only test with expect.",
         ]
     else:
         head += [
@@ -155,13 +163,8 @@ def tests_text(module: str) -> str:
             f"# {s} and {t} both, so fir-ref alone runs it and must give what it",
             "# expects.",
         ]
-    head += [
-        "# A NaN operand gives any NaN of the target: its test is",
-        "# interpreter-only and names the NaN by a choice of the sign and the",
-        "# mantissa. Native code is not compared on a NaN result yet (#219).",
-    ]
+    head += nan_head(native, f"i{g.m + 1}")
     lines = []
-    f, g = Format(*FORMATS[s]), Format(*FORMATS[t])
     name = f"@{s}_{t}"
     nans = 0
     for b in values(f, g):
@@ -171,6 +174,8 @@ def tests_text(module: str) -> str:
             c = NAN_CHOICES[nans % len(NAN_CHOICES)]
             nans += 1
             want = spell(g.e, g.m, nan_bits(g, c))
+            if native:
+                lines.append(f'  {{ func = "{name}", args = ["{arg}"] }},')
             lines.append(
                 f'  {{ func = "{name}", args = ["{arg}"], choices = ["{c}"], '
                 f'expect = ["{want}"] }},'

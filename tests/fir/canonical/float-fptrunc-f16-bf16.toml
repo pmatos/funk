@@ -8,9 +8,9 @@
 # Each test is interpreter-only: the backend does not lower
 # f16 and bf16 both, so fir-ref alone runs it and must give what it
 # expects.
-# A NaN operand gives any NaN of the target: its test is
-# interpreter-only and names the NaN by a choice of the sign and the
-# mantissa. Native code is not compared on a NaN result yet (#219).
+# A NaN result is any NaN: its test is interpreter-only and names
+# the NaN by a choice of the sign and the mantissa, as signed
+# i8.
 tests = [
   { func = "@f16_bf16", args = ["0.0"], expect = ["0.0"] },
   { func = "@f16_bf16", args = ["6.0e-8"], expect = ["5.96e-8"] },

@@ -17,9 +17,9 @@ NaN operands, `fsub` and `fdiv` in both operand orders, and a poison
 operand. `scripts/harness/float_arith_cases.py` writes them, with each
 expected result that `scripts/harness/float_ref.py` computes
 ([testing-and-harness-floats.md](../decisions/testing-and-harness-floats.md#the-arithmetic-corpus)).
-A result that is not a NaN is differential at `f32` and `f64` and
-interpreter-only at every format; a NaN result is interpreter-only, with
-a choice that names the NaN, until #219. `reject/float-arith.toml` holds
+Each case is interpreter-only at every format, a NaN result with a choice
+that names the NaN, and differential at `f32` and `f64`, a NaN result
+included (#219). `reject/float-arith.toml` holds
 the texts of these ops that do not decode, such as `fadd` without a mode
 or with `round(up)`, the texts with a mode other than `rne`, such as
 `fsub round(rtz)`, which decode and fail validation (the human's ruling of
@@ -79,7 +79,7 @@ target's largest finite value and smallest subnormal where the source holds
 them, the values halfway past them and between two values of the target with
 their neighbours, three NaNs and poison. A NaN gives any NaN, so its case is
 interpreter-only with a choice; every other case is interpreter-only with its
-expected result, and differential too in `float-fpext-f32-f64` and
+expected result. Every case is differential too in `float-fpext-f32-f64` and
 `float-fptrunc-f64-f32`. `scripts/harness/float_convert_cases.py` writes them
 ([testing-and-harness-floats.md](../decisions/testing-and-harness-floats.md#the-format-conversion-corpus)).
 `reject/float-convert.toml` holds the conversions that do not decode, such as
@@ -125,3 +125,10 @@ writes them
 flag out of order, written twice, after `round(rne)` or `fcmp`'s predicate, or
 on an integer op, a bit cast or a conversion, and those that validation
 rejects, a float op with `contract` or `reassoc`.
+
+The texts of #219's second stage judge native code's NaNs
+([testing-and-harness-floats.md](../decisions/testing-and-harness-floats.md#a-nan-through-memory)).
+`float-nan-memory` computes a NaN at `f32` and `f64`, casts it to the
+integer of its width with `bitcast`, stores it and loads it back whole, a
+differential test of native code's NaN, or loads back the byte that holds
+its sign, whose tests declare both bytes, each with a witness.

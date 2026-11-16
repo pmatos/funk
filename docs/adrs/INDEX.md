@@ -94,6 +94,7 @@ The last column is what holds now: the ADR and every ADR that its
 | [ADR-2026-11-14-0915](2026-11-14-0915-alloca-allocates-values-of-a-type-on-the-stack.md) | [semantics](../decisions/semantics.md) | alloca allocates a constant count of values of a type on the stack of its memory | this ADR |
 | [ADR-2026-11-14-2316](2026-11-14-2316-loads-and-stores-are-spelled-with-a-written-ordering.md) | [semantics](../decisions/semantics.md) | Loads and stores write their ordering, then their alignment when given | this ADR |
 | [ADR-2026-11-16-0855](2026-11-16-0855-fir-ref-tries-a-few-nans-at-each-nan-choice.md) | [fir-ref](../decisions/fir-ref.md) | fir-ref tries a few NaNs at each NaN choice and lists a proved subset of the outcomes | this ADR |
+| [ADR-2026-11-16-1630](2026-11-16-1630-the-harness-judges-native-nans-on-the-nans-fir-ref-tries.md) | [testing-and-harness](../decisions/testing-and-harness.md) | The harness judges a native NaN on the part of the set that fir-ref lists when it tries native code's NaNs | this ADR |
 
 ## Implementation
 
