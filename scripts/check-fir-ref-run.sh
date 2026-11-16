@@ -171,7 +171,8 @@ runs "$tmp/call.fir" 0 "$exhausted" --fuel 100 @f 1 || status=1
 runs "$tmp/call.fir" 0 "${ret}[\"42\"]$none" '@"1"' 21 || status=1
 # fir-ref run takes no stack per step or per level of calls (#47): on a
 # 256 KiB stack, @spin and @f above, a loop and a recursion that never
-# end, run out of a budget of a million steps in each mode, never abort.
+# end, run out of a budget of a million steps in each mode, --nans
+# included, never abort.
 while read -r want mode; do
     for run in "loops.fir @spin" "call.fir @f 1"; do
         # shellcheck disable=SC2086 # MODE and RUN are lists of words.
@@ -181,6 +182,7 @@ while read -r want mode; do
 done <<END
 $exhausted
 {"kind":"outcomes","choices":0,"outcomes":[{"kind":"fuel-exhausted"}]} --exhaustive
+{"kind":"outcomes","choices":0,"complete":true,"outcomes":[{"kind":"fuel-exhausted"}]} --exhaustive --nans 0x7fc00000
 {"kind":"fuel-exhausted","choices":0,"sequence":[]} --seed 7
 END
 # fir-ref run takes no stack per value (#405): on a 256 KiB stack, a ret
