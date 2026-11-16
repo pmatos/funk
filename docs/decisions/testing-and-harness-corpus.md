@@ -31,9 +31,9 @@ device module runs as, and `func` names such a kernel by the path of its
 modules, `@dev::@k`, as `fir-ref run` does; a test of either kind is
 interpreter-only, since `funk build` builds no nested module's functions
 (#212, stage 2; fir-ref-command-line.md#kernels-and-the-work-item). The
-coverage matrix does not count a kernel's test. This key was added without
-a ruling, as an implementation choice of #212, and the human may rule on
-it.
+coverage matrix counts a kernel's test as any other (#406). This key was
+added without a ruling, as an implementation choice of #212, and the human
+may rule on it.
 
 A module with a differential test builds whole, since `funk build` is all or
 nothing. A function that the backend does not lower goes in a module whose tests
@@ -60,8 +60,8 @@ since #16 had no `cond_br`.
 A generated matrix counts the corpus's tests of each cell (ADR-2026-11-03-0557).
 A hook fails when the matrix is stale or a cell has no test.
 
-A cell is an op instance of the core dialect at a width, on one side. An op
-instance is the op with its flag set, `exact` choice or `icmp` predicate; a float
+A cell is an op instance of the core dialect at a width, on one side, or an
+op of the `gpu` dialect in a dimension (below). An op instance is the op with its flag set, `exact` choice or `icmp` predicate; a float
 op's fast-math flags are cells one by one, by the human's ruling of 2026-11-13
 on #355
 ([testing-and-harness-floats.md](testing-and-harness-floats.md#the-coverage-matrix)).
@@ -84,6 +84,19 @@ The float ops have a table of their own, at each float format of a side;
 [testing-and-harness-floats.md](testing-and-harness-floats.md#the-coverage-matrix)
 says which (ADR-2026-11-03-0557).
 
+The ops of the `gpu` dialect have a table of their own, on the
+interpreter-only side alone (`gpu_cells.py`, the catalog's `gpu` table, #406):
+one row for each op and dimension, `gpu.work_item_id gpu.x` to
+`gpu.num_work_groups gpu.z`, at `i32`, the one width its validation allows. A
+kernel runs on `fir-ref` alone, so no differential test can fill a `gpu` cell.
+A new op of `gpu`, such as the work-group allocation of #212's stage 3, fails
+the unit test that reads `lean/Fir/Gpu/` until it has its rows, and then the
+hook until a kernel test runs it. `tests/fir/canonical/gpu-dims.fir` fills
+every row with ids and sizes that differ in each dimension. The human allowed
+#404 to skip kernel tests for a while on 2026-11-16 (#212, Q3) and asked for
+these cells; rejected: leaving kernel tests out, which leaves the ops that
+kernels run, and every op of `gpu`, with no gate (ADR-2026-11-03-0557).
+
 The pointer ops have a table of their own (`cells.POINTER_OPS`, the
 catalog's `pointers` table): `ptradd` has a cell at each width of its integer,
 the stack allocation `alloca` a cell at each width of the integer type it
@@ -104,9 +117,10 @@ through it; its rule on pointers is checked in Lean too, in
 `lean/Fir/Core/Pointer.lean` (#231).
 
 A test exercises each op of the function it runs and of every function it calls,
-directly or through others. It also exercises the `func` cell of its results. The
-count is static, so a block that the arguments skip still
-counts. No check reads the outcome. So whoever fills a cell writes a test whose
+directly or through others. A function of a nested module, such as a kernel
+`@dev::@k`, counts too, and its calls go to its own module's functions (#406).
+It also exercises the `func` cell of its results. The count is static, so a
+block that the arguments skip still counts. No check reads the outcome. So whoever fills a cell writes a test whose
 path runs the op and whose outcome depends on what the op computes. A test that
 only passes poison into the op checks how poison goes through it, not the op.
 
@@ -114,14 +128,14 @@ Rejected: a trace mode in `fir-ref` to count only the ops a run takes, a change
 to its command line of its own, and cells by file name, since a name says what a
 module is for, not what its tests run (ADR-2026-11-03-0557).
 
-`scripts/harness/coverage.py` writes the matrix to `docs/coverage/README.md`, and
-`coverage.py --write` rewrites it. A pull request that changes the corpus
+`scripts/harness/coverage.py` writes the matrix to `docs/coverage/README.md`, an
+index, and to a page for each side beside it, `differential.md` and
+`interpreter.md`, since one file would pass the file-size budget (#406).
+`coverage.py --write` rewrites them. A pull request that changes the corpus
 regenerates it, after merging `main` when `main` changed the corpus too. A new
 op, flag or predicate fails the unit tests until `cells.py` has its cells. The
 `coverage-matrix` hook then fails until the corpus tests them. A new side or
-width is a change to ADR-2026-11-03-0557 and to `cells.py`. One that would take
-the matrix past the file-size budget splits it by side into files of
-`docs/coverage/`.
+width is a change to ADR-2026-11-03-0557 and to `cells.py`.
 
 ### The cells of poison
 

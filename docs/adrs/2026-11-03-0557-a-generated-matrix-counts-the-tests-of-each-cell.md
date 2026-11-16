@@ -5,12 +5,17 @@ Tier: direction; area: testing-and-harness
 
 ## Decision
 
-- **A cell** is an op instance of the core dialect at a width, on one side,
-  differential or interpreter-only. An op instance is the op with its flag set,
-  `exact` choice or `icmp` predicate. Width changes are cells for each pair of
+- **A cell** is an op instance of the core dialect, or of `gpu` (below), at a
+  width, on one side, differential or interpreter-only. An op instance is the
+  op with its flag set, `exact` choice or `icmp` predicate. Width changes are cells for each pair of
   widths, `zext` and `sext` to a wider one and `trunc` to a narrower one, and
   passed and returned values (`br`, `cond_br`, `ret`, `call`, `func`) for none,
   one or several values.
+- **The `gpu` dialect's cells.** Each op of `gpu` is a cell in each
+  dimension, `gpu.x`, `gpu.y` and `gpu.z`, at `i32`, on the interpreter-only
+  side alone (#406). An op of `gpu` at another width fails validation, so it
+  is not a cell, and a kernel runs on `fir-ref` alone, so no differential
+  test can run one. A new op, question or dimension of `gpu` is a new row.
 - **Float flags count one by one.** A float op's fast-math flags are not part
   of its instance. Each float op but the constant has a cell for each of
   `nnan`, `ninf` and `nsz`, and a test fills the cell of each flag it sets; an
@@ -22,15 +27,18 @@ Tier: direction; area: testing-and-harness
   differential, and `f16`, `bf16`, `f32`, `f64` and `f128` interpreter-only.
   Other widths and formats count towards no cell.
 - **The count is static.** A test exercises each op of the function it runs and
-  of every function that one calls, and the `func` cell of its results. Whoever
+  of every function that one calls, and the `func` cell of its results. A
+  function of a nested module, such as a kernel `@dev::@k`, counts as one at the
+  top level does, its calls going to its own module's functions (#406). Whoever
   fills a cell writes a test whose path runs the op and whose outcome depends on
   what it computes. `poison` is the exception: native code cannot tell it from
   `const 0`, so a differential test fills its cell by running it natively, and
   an interpreter-only test by observing the poison.
 - **The check.** `scripts/harness/coverage.py` writes the matrix to
-  `docs/coverage/README.md`. The `coverage-matrix` hook fails when it is stale
-  or a cell has no test, and a unit test fails when `scripts/harness/cells.py`
-  no longer follows the Lean op set. A new side or width edits this ADR and
+  `docs/coverage/README.md`, an index, and a page for each side beside it. The
+  `coverage-matrix` hook fails when a page is stale or a cell has no test, and
+  a unit test fails when `scripts/harness/cells.py` or `gpu_cells.py` no
+  longer follows the Lean op set. A new side or width edits this ADR and
   `cells.py`.
 
 ## Why
@@ -47,6 +55,11 @@ float op would have eight cells, and `fcmp` eight per predicate: about 1,200
 more, past the file-size budget. Integer ops have four flag sets at most, so
 their sets stay cells.
 
+On 2026-11-16 the human allowed #404 to leave kernel tests out of the count
+for a while, and asked #406 to count them and give the `gpu` ops cells of
+their own (#212, Q3). A kernel's id or size is an `i32` by `gpu`'s rule, so
+one cell per op and dimension checks every instance that validates.
+
 ## Rejected alternatives
 
 - **Cells by file name.** A name says what a module is for, not what its tests
@@ -59,3 +72,5 @@ their sets stay cells.
   on a page of their own.
 - **Float flags not cells**, a flagged test counting towards the op without
   flags: nothing would check that each flag's rule is tested.
+- **Kernel tests left out of the count**, as #404 did for a while: the ops
+  that kernels run, and every op of `gpu`, would have no gate.
