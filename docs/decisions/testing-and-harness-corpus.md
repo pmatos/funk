@@ -32,8 +32,7 @@ modules, `@dev::@k`, as `fir-ref run` does; a test of either kind is
 interpreter-only, since `funk build` builds no nested module's functions
 (#212, stage 2; fir-ref-command-line.md#kernels-and-the-work-item). The
 coverage matrix counts a kernel's test as any other (#406). This key was
-added without a ruling, as an implementation choice of #212, and the human
-may rule on it.
+proposed by #212, and the human accepted it on 2026-11-16 (Q4 on #212).
 
 A module with a differential test builds whole, since `funk build` is all or
 nothing. A function that the backend does not lower goes in a module whose tests

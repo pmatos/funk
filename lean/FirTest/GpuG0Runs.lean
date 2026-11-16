@@ -17,7 +17,9 @@ memories. The sum meets each hypothesis with no assumption of its own:
   (`Gpu.inModule_of_valid`, `Gpu.inModuleAt_of_valid`);
 * each of its ops that runs by its own rule is monotone with memory, has
   finitely many outcomes, and ignores the memories where it touches none
-  (`Gpu.memMonotone_all`, `Gpu.opsFinite`, `Gpu.opsIgnoreMemory`).
+  (`Gpu.memOpsMonotone`, `Gpu.opsFinite`, `Gpu.opsIgnoreMemory`), and
+  refinement of its values is reflexive and transitive
+  (`Gpu.isRefinedBy_refl`, `Gpu.isRefinedBy_trans`).
 
 A result about the functions of a module holds for the functions of each
 symbol table of a valid module, nested at any depth, run in the module of
@@ -83,9 +85,8 @@ theorem memRunsFrom_args_isRefinedBy (M : Module CoreGpu) (f : Func CoreGpu)
     letI := DialectMemDenote.denoteAt (d := CoreGpu) lay ρ
     observable (f.memRunsFrom M (a, S)) ⊑ observable (f.memRunsFrom M (a', S')) :=
   letI := DialectMemDenote.denoteAt (d := CoreGpu) lay ρ
-  have hm : ∀ g : Func CoreGpu, g.MemOpsMonotone N (unitsOf lay) :=
-    fun _ _ _ o _ hc => memMonotone_all o.op hc lay ρ
-  G0.memRunsFrom_args_isRefinedBy CoreGpu M (fun g _ => hm g) f (hm f) ha hS
+  G0.memRunsFrom_args_isRefinedBy CoreGpu M (fun g _ => memOpsMonotone lay ρ g) f
+    (memOpsMonotone lay ρ f) ha hS
 
 /-- Refined arguments, with memory, for every function of each table of a
 valid module of the sum, in the module of its table. -/
@@ -93,18 +94,6 @@ theorem memRuns_args_isRefinedBy (hM : M.Valid) (ht : t ∈ M.tables) (hf : f �
     {a a' : HVector toType (f.params.map (·.2))} (ha : a.Forall₂ TyRefinement.IsRefinedBy a') :
     observable (f.memRuns lay ρ (M.nest t) a) ⊑ observable (f.memRuns lay ρ (M.nest t) a') :=
   G0.memRuns_args_isRefinedBy CoreGpu lay ρ (hM.nest ht).funcs hf ha
-
-omit [WorkItem] in
-/-- Refinement of values of the sum is reflexive. -/
-theorem isRefinedBy_refl {u : CoreGpu.Ty} (v : ⟦u⟧) : TyRefinement.IsRefinedBy v v :=
-  Dialect.sum.isRefinedBy_refl (e := GpuExt) Core.Ty.isRefinedBy_refl (fun {t} => Empty.elim t) v
-
-omit [WorkItem] in
-/-- Refinement of values of the sum is transitive. -/
-theorem isRefinedBy_trans {u : CoreGpu.Ty} {x y z : ⟦u⟧} (h₁ : TyRefinement.IsRefinedBy x y)
-    (h₂ : TyRefinement.IsRefinedBy y z) : TyRefinement.IsRefinedBy x z :=
-  Dialect.sum.isRefinedBy_trans (e := GpuExt) Core.Ty.isRefinedBy_trans (fun {t} => Empty.elim t)
-    h₁ h₂
 
 /-- Congruence in the callee, with memory, in the module of each table of a
 valid module of the sum, when the new body, run from given memories,
@@ -167,10 +156,8 @@ theorem memRunsFrom_isRefinedBy_of_opsFinite {M M' : Module CoreGpu}
     letI := DialectMemDenote.denoteAt (d := CoreGpu) lay ρ
     observable (f.memRunsFrom M (a, S)) ⊑ observable (f.memRunsFrom M' (a', S')) :=
   letI := DialectMemDenote.denoteAt (d := CoreGpu) lay ρ
-  have hm : ∀ g : Func CoreGpu, g.MemOpsMonotone N (unitsOf lay) :=
-    fun _ _ _ o _ hc => memMonotone_all o.op hc lay ρ
-  G0.memRunsFrom_isRefinedBy_of_opsFinite CoreGpu (fun g _ => hm g) (opsFinite lay ρ) hcalls f
-    (hm f) ha hS
+  G0.memRunsFrom_isRefinedBy_of_opsFinite CoreGpu (fun g _ => memOpsMonotone lay ρ g)
+    (opsFinite lay ρ) hcalls f (memOpsMonotone lay ρ f) ha hS
 
 /-! # The obligations -/
 

@@ -1,5 +1,4 @@
 import FirTest.G0Effects
-import FirTest.G0
 
 /-!
 G0's results on effects and function summaries restated for a dialect set

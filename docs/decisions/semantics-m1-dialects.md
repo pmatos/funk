@@ -107,7 +107,7 @@ of one work-item, work-group memory, and the generic results restated
   (`lean/Fir/Gpu/Semantics.lean`). A kernel runs in its own table, the
   module of that table (`Module.nest`): its calls name functions of the
   device module, and its memories are its host's.
-- **Its guarantees** (stages 2 and 3). The effect set of each op of `gpu`
+- **Its guarantees** (stages 2 to 4). The effect set of each op of `gpu`
   is proved sound at every work-item (`Gpu.lawfulDialectEffects`), and
   `gpu` is lawful with memory in its totality, monotonicity and poison
   (`lean/Fir/Gpu/WorkGroup.lean`): a question by its tie to the set monad,
@@ -122,7 +122,10 @@ of one work-item, work-group memory, and the generic results restated
   `coreGpu_lawfulMemPoison`), progress and no stuck path
   (`Gpu.progress`, `Gpu.neverStuck`), refined arguments for every function
   of every module (`Gpu.args_isRefinedBy`) and congruence in the callee
-  from given memories with no budget (`Gpu.replaceBody_isRefinedBy_of_from`).
+  from given memories with no budget (`Gpu.replaceBody_isRefinedBy_of_from`,
+  and `Gpu.caller_isRefinedBy_of_from` for the other functions), and, for a
+  callee that reaches no memory, with memory (`Gpu.replaceBody_isRefinedBy`,
+  `Gpu.caller_isRefinedBy`; stage 4).
   Every module of a valid module's tables is valid (`Module.Valid.nest`).
   No core statement changed. `tests/dialects/effects.cases` pins the
   effects of each op of `gpu`, on the Lean and the Rust side. Each op of
@@ -146,7 +149,9 @@ of one work-item, work-group memory, and the generic results restated
   (testing-and-harness-corpus.md). `funk build` compiles the host's functions and none of a
   device module's, as for any nested module (#211), and reports a `gpu` op
   in a top-level function as unsupported: the x86-64 backend lowers no op
-  of a dialect other than the core, and `gpu` is terminal.
+  of a dialect other than the core, and `gpu` is terminal. The human ruled
+  on 2026-11-16 to keep this (Q2 on #212). Rejected: reporting a module
+  that holds a device module as unsupported, which changes #211's rule.
 - **The G0 checks.** Generic code changed only to register it: the
   dialect's own files, `funk`'s registry and `fir-ref`'s command line name
   it. `scripts/check_g0.py` and `crates/funk-ir/tests/g0.rs` fail on a word

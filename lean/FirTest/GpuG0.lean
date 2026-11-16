@@ -1,5 +1,4 @@
 import FirTest.G0
-import FirTest.G0Effects
 
 /-!
 G0's generic results restated for a dialect set that includes `gpu`

@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Runs of a sum, op by op: readable blocks" =>
 
-:::moduleDocs (fingerprint := "7172749819183214281")
+:::moduleDocs (fingerprint := "17807739098335587352")
 :::
 
 :::readable Fir.Dialect.sum.mapsDenote (fingerprint := "2955957549720364140")
@@ -42,13 +42,12 @@ base's memories as the sum does, and each op of the extension does, each op
 of the sum that runs by its own rule does.
 :::
 
-:::readable Fir.MemSet.has_map Fir.Effects.TouchesNoMemory.of_map Fir.Dialect.sum.opsIgnoreMemory (fingerprint := "3896705368860678614")
-*Theorems: a sum's ops ignore the memories where they touch none.* A set of
-memories holds the new name of each memory it holds once its memories are
-renamed, so a set of effects that touches no memory once renamed touches
-none before. A base op's effects in the sum are its own, with each memory
-renamed to the sum's name for it, and mapping the results keeps a
-computation that ignores the memories. So when each op of the base ignores
+:::readable Fir.Dialect.sum.opsIgnoreMemory (fingerprint := "2912114382560669015")
+*Theorem: a sum's ops ignore the memories where they touch none.* A base
+op's effects in the sum are its own, with each memory renamed to the sum's
+name for it, so a base op that declares no memory effect in the sum
+declares none in the base; and mapping the results keeps a computation that
+ignores the memories. So when each op of the base ignores
 the memories where it declares no memory effect, where the run names the
 base's memories as the sum does, and each op of the extension does, each
 op of the sum that runs by its own rule does.

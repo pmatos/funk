@@ -36,11 +36,12 @@ memories are those of the host's data layout.
   with memory, at every width.
 * _Congruence in the callee_, from given memories, with no budget, for every
   callee of the module of each table of a valid module: every op of the sum
-  has finitely many outcomes, an op of `gpu` one.
-* _The sum's ops ignore the memories where they touch none_: a question of
-  `gpu` touches none and keeps them, and an allocation declares its
-  memory. So the congruence for a callee that reaches no memory, with
-  memory, holds for the sum too.
+  has finitely many outcomes, an op of `gpu` one. Every other function of
+  the table, a caller or not, is refined by itself.
+* _Congruence for a callee that reaches no memory_, with memory, with no
+  budget: the sum's ops also ignore the memories where they touch none, a
+  question of `gpu` since it touches none and keeps them, while an
+  allocation declares its memory.
 -/
 
 namespace Fir.Gpu
@@ -124,7 +125,28 @@ theorem inModule_of_valid {M : Module CoreGpu} {f : Func CoreGpu} (hv : f.Valid 
       · exact hvalid.elim
     · cases op <;> cases hT
 
+omit [WorkItem] in
+/-- Refinement of values of the sum is reflexive, since the core's is and
+`gpu` has no type of its own. -/
+theorem isRefinedBy_refl {u : CoreGpu.Ty} (v : ⟦u⟧) : TyRefinement.IsRefinedBy v v :=
+  Dialect.sum.isRefinedBy_refl (e := GpuExt) Core.Ty.isRefinedBy_refl (fun {t} => Empty.elim t) v
+
+omit [WorkItem] in
+/-- Refinement of values of the sum is transitive, since the core's is and
+`gpu` has no type of its own. -/
+theorem isRefinedBy_trans {u : CoreGpu.Ty} {x y z : ⟦u⟧} (h₁ : TyRefinement.IsRefinedBy x y)
+    (h₂ : TyRefinement.IsRefinedBy y z) : TyRefinement.IsRefinedBy x z :=
+  Dialect.sum.isRefinedBy_trans (e := GpuExt) Core.Ty.isRefinedBy_trans (fun {t} => Empty.elim t)
+    h₁ h₂
+
 variable {N : Type} [DecidableEq N] (lay : N → MemLayout) (ρ : DialectEffects.Mem CoreGpu → N)
+
+/-- Each op of every function of the sum that runs by its own rule is
+monotone with memory, at every layout and naming. -/
+theorem memOpsMonotone (g : Func CoreGpu) :
+    letI := DialectMemDenote.denoteAt (d := CoreGpu) lay ρ
+    g.MemOpsMonotone N (unitsOf lay) :=
+  fun _ _ o _ hc => memMonotone_all o.op hc lay ρ
 
 /-- A valid function of the sum runs within its module with memory, wherever
 a run names the sum's memories: each of its terminators is the core's, and
@@ -171,10 +193,9 @@ theorem args_isRefinedBy (M : Module CoreGpu) (f : Func CoreGpu)
     {a a' : HVector toType (f.params.map (·.2))} (h : a.Forall₂ TyRefinement.IsRefinedBy a') :
     observable (f.memRuns lay ρ M a) ⊑ observable (f.memRuns lay ρ M a') :=
   letI := DialectMemDenote.denoteAt (d := CoreGpu) lay ρ
-  have hm : ∀ g : Func CoreGpu, g.MemOpsMonotone N (unitsOf lay) :=
-    fun _ _ _ o _ hc => memMonotone_all o.op hc lay ρ
-  Func.memRuns_isRefinedBy_of_from lay ρ (Func.memRunsFrom_args_isRefinedBy M (fun g _ => hm g) f
-    (hm f) h (Memory.Memories.isRefinedBy_refl _))
+  Func.memRuns_isRefinedBy_of_from lay ρ (Func.memRunsFrom_args_isRefinedBy M
+    (fun g _ => memOpsMonotone lay ρ g) f (memOpsMonotone lay ρ f) h
+    (Memory.Memories.isRefinedBy_refl _))
 
 /-- Each op of `gpu` has one outcome with memory, at every layout and naming:
 a question its results, and an allocation its one allocation. -/
@@ -228,9 +249,59 @@ theorem replaceBody_isRefinedBy_of_from (hM : M.Valid) (ht : t ∈ M.tables) {g 
     (hf : f ∈ t.funcs) :
     f.memRuns lay ρ (M.nest t) ⊑
       (f.replaceBody g.name b).memRuns lay ρ ((M.nest t).replaceBody g.name b) :=
-  (Func.memRuns_replaceBody_isRefinedBy_of_opsFinite lay ρ
-    (Dialect.sum.isRefinedBy_refl (e := GpuExt) Core.Ty.isRefinedBy_refl fun {t} => Empty.elim t)
-    (Dialect.sum.isRefinedBy_trans (e := GpuExt) Core.Ty.isRefinedBy_trans fun {t} => Empty.elim t)
+  (Func.memRuns_replaceBody_isRefinedBy_of_opsFinite lay ρ isRefinedBy_refl isRefinedBy_trans
     (opsFinite lay ρ) (hM.nest ht) hg b h hf).2
+
+/-- Every function of the table other than `@g`, a caller of it or not, is
+refined with memory by itself in the module with `@g`'s new body, under the
+hypotheses of congruence in the callee from given memories. -/
+theorem caller_isRefinedBy_of_from (hM : M.Valid) (ht : t ∈ M.tables) {g : Func CoreGpu}
+    (hg : g ∈ t.funcs) (b : Region CoreGpu)
+    (h : letI := DialectMemDenote.denoteAt (d := CoreGpu) lay ρ;
+      g.memRunsFrom (Mem := N) (unit := unitsOf lay) (M.nest t) ⊑
+        (g.replaceBody g.name b).memRunsFrom (Mem := N) (unit := unitsOf lay)
+          ((M.nest t).replaceBody g.name b))
+    (hf : f ∈ t.funcs) (hfg : f.name ≠ g.name) :
+    f.memRuns lay ρ (M.nest t) ⊑ f.memRuns lay ρ ((M.nest t).replaceBody g.name b) := by
+  have := replaceBody_isRefinedBy_of_from lay ρ hM ht hg b h hf
+  change f.memRuns lay ρ (M.nest t) ⊑
+    Func.memRuns lay ρ _ { f with body := if f.name = g.name then b else f.body } at this
+  rwa [ite_eq_right hfg] at this
+
+/-- Congruence in the callee, with memory, for a callee that reaches no
+memory: in the module of each table of a valid module of the sum, replacing
+the body of a function `@g`, which reaches no memory, with one under which
+`@g`, run with memory in the new module, refines `@g` in the old, and under
+which it reaches no memory in the new module, refines every function of the
+table with memory, calls and recursion included, wherever a run names the
+sum's memories. It asks for no budget and nothing of the parameter types of
+`@g`: every op of the sum has finitely many outcomes and ignores the
+memories where it touches none. -/
+theorem replaceBody_isRefinedBy (hM : M.Valid) (ht : t ∈ M.tables) {g : Func CoreGpu}
+    (hg : g ∈ t.funcs) (b : Region CoreGpu) (hold : (M.nest t).table.ReachesNoMemory g.name)
+    (hmem : ((M.nest t).replaceBody g.name b).table.ReachesNoMemory g.name)
+    (h : g.memRuns lay ρ (M.nest t) ⊑
+      (g.replaceBody g.name b).memRuns lay ρ ((M.nest t).replaceBody g.name b))
+    (hf : f ∈ t.funcs) :
+    f.memRuns lay ρ (M.nest t) ⊑
+      (f.replaceBody g.name b).memRuns lay ρ ((M.nest t).replaceBody g.name b) :=
+  Func.memRuns_replaceBody_isRefinedBy_of_opsFinite_memRuns lay ρ isRefinedBy_refl
+    isRefinedBy_trans (opsIgnoreMemory lay ρ) (opsFinite lay ρ) (hM.nest ht) hg b hold hmem h hf
+
+/-- Every function of the table other than `@g`, a caller of it or not, is
+refined with memory by itself in the module with `@g`'s new body, under the
+hypotheses of congruence in the callee for a callee that reaches no
+memory. -/
+theorem caller_isRefinedBy (hM : M.Valid) (ht : t ∈ M.tables) {g : Func CoreGpu}
+    (hg : g ∈ t.funcs) (b : Region CoreGpu) (hold : (M.nest t).table.ReachesNoMemory g.name)
+    (hmem : ((M.nest t).replaceBody g.name b).table.ReachesNoMemory g.name)
+    (h : g.memRuns lay ρ (M.nest t) ⊑
+      (g.replaceBody g.name b).memRuns lay ρ ((M.nest t).replaceBody g.name b))
+    (hf : f ∈ t.funcs) (hfg : f.name ≠ g.name) :
+    f.memRuns lay ρ (M.nest t) ⊑ f.memRuns lay ρ ((M.nest t).replaceBody g.name b) := by
+  have := replaceBody_isRefinedBy lay ρ hM ht hg b hold hmem h hf
+  change f.memRuns lay ρ (M.nest t) ⊑
+    Func.memRuns lay ρ _ { f with body := if f.name = g.name then b else f.body } at this
+  rwa [ite_eq_right hfg] at this
 
 end Fir.Gpu

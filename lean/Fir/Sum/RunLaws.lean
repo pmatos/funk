@@ -86,20 +86,6 @@ theorem opsFinite
       (h₁ o hc (HVector.ofSum args)).2⟩
   | .inr o, hc, args => h₂ o hc args
 
-/-- A set of memories holds the new name of each memory it holds, once its
-memories are renamed. -/
-theorem _root_.Fir.MemSet.has_map {A B : Type} (f : A → B) {x : A} :
-    ∀ {s : MemSet A}, s.Has x → (s.map f).Has (f x)
-  | .these _, h => List.mem_map_of_mem h
-  | .every, _ => trivial
-
-/-- A set of effects that touches no memory once its memories are renamed
-touches none before. -/
-theorem _root_.Fir.Effects.TouchesNoMemory.of_map {A B : Type} {f : A → B} {a : Effects A}
-    (h : (a.map f).TouchesNoMemory) : a.TouchesNoMemory := fun x =>
-  ⟨fun hr => (h (f x)).1 (MemSet.has_map f hr), fun hw => (h (f x)).2.1 (MemSet.has_map f hw),
-    fun ha => (h (f x)).2.2 (MemSet.has_map f ha)⟩
-
 /-- The sum's ops ignore the memories where they touch none when the base's
 do, where the run names each memory of the base as the sum does, and `e`'s
 do. -/
@@ -111,8 +97,8 @@ theorem opsIgnoreMemory
     letI := DialectMemDenote.denoteAt (d := base ⊞ e) lay ρ
     OpsIgnoreMemory (base ⊞ e) N (unitsOf lay)
   | .inl o, hc, ht, args =>
-    ⟨fun hn => IgnoresMemory.map _ ((h₁ o hc ht.of_map (HVector.ofSum args)).1 hn),
-      (h₁ o hc ht.of_map (HVector.ofSum args)).2⟩
+    have h := h₁ o hc ht.of_map (HVector.ofSum args)
+    ⟨fun hn => IgnoresMemory.map _ (h.1 hn), h.2⟩
   | .inr o, hc, ht, args => h₂ o hc ht args
 
 end Dialect.sum

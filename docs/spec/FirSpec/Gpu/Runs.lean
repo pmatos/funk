@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Runs of the core and gpu: readable blocks" =>
 
-:::moduleDocs (fingerprint := "2567123991008577154")
+:::moduleDocs (fingerprint := "17313037030010505992")
 :::
 
 :::readable Fir.Gpu.coreGpu_lawfulEffects Fir.Gpu.coreGpu_lawfulTotal Fir.Gpu.coreGpu_lawfulMonotone Fir.Gpu.coreGpu_lawfulMemPoison (fingerprint := "2096482798007682310")
@@ -30,6 +30,14 @@ is monotone with memory at every width (the section on work-group
 allocation). So each op of the sum that runs by its own rule, a terminator or an op with no
 callee, is monotone with memory at every width, valid or not: a core op by
 the core's guarantee, and an op of `gpu` by its own.
+:::
+
+:::readable Fir.Gpu.isRefinedBy_refl Fir.Gpu.isRefinedBy_trans Fir.Gpu.memOpsMonotone (fingerprint := "4963033560987553732")
+*Theorems: refinement in the sum, and monotone functions.* Refinement of
+values of the sum is reflexive and transitive, since the core's is and
+`gpu` has no type of its own. At every work-item, layout and naming of the
+memories, each op of every function of the sum that runs by its own rule
+is monotone with memory, by the theorem above.
 :::
 
 :::readable Fir.Gpu.inModule_of_valid Fir.Gpu.inModuleAt_of_valid (fingerprint := "10589849443278182106")
@@ -91,4 +99,24 @@ refines $`g` in the old. Then every function of $`t` is refined with memory
 in the new module, calls and recursion included. It asks for no budget,
 whatever the parameter types of $`g` and whatever its new body does to the
 memories.
+:::
+
+:::readable Fir.Gpu.caller_isRefinedBy_of_from (fingerprint := "14827038118109970806")
+*Theorem: the callers.* Under the hypotheses of congruence in the callee
+from given memories, every function of $`t` other than $`g`, a caller of
+$`g` or not, is refined with memory by itself in the module with $`g`'s new
+body.
+:::
+
+:::readable Fir.Gpu.replaceBody_isRefinedBy Fir.Gpu.caller_isRefinedBy (fingerprint := "4609871783831191071")
+*Theorems: congruence for a callee that reaches no memory.* At every
+work-item, wherever a run names the sum's memories, let $`t` be a table of
+a valid module $`M` and $`g` a function of $`t` that reaches no memory in
+$`M.\mathrm{nest}(t)`. Replace its body with one under which $`g` reaches
+no memory in the new module and, run with memory there, refines $`g` in the
+old. Then every function of $`t` is refined with memory in the new module,
+calls and recursion included, and every function other than $`g` is
+refined by itself. It asks for no budget and nothing of the parameter types
+of $`g`: every op of the sum has finitely many outcomes and ignores the
+memories where it touches none.
 :::
