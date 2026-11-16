@@ -103,6 +103,10 @@ Rejected: one stand-in, such as 0, which `poison` lowers to. Bugs gather at the
 boundary bit patterns. Also rejected: random stand-ins, whose failures would not
 reproduce.
 
+A pointer has no stand-in, so native code does not run on a poison pointer
+argument, and a test with one is interpreter-only
+([x86-64-backend-executable.md](x86-64-backend-executable.md#running-one-function)).
+
 ### Where the judgement lives
 
 `scripts/harness/differential.py` owns the complete judgement of a differential
