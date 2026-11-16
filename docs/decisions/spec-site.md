@@ -110,8 +110,9 @@ the document is elaborated:
   case splits (`f._sparseCasesOn_N`) and its pattern matchers
   (`f.match_N`), followed transitively. So a recursive definition of a
   mutual block covers the bodies of the whole block. Theorems are never
-  followed, so proofs stay out. The human ruled on 2026-11-16 (#418) to port this from
-  pmatos/mojo-grimoire#62, so both repositories share one implementation.
+  followed, so proofs stay out. The human ruled on 2026-11-16 (#418) to
+  port this from pmatos/mojo-grimoire#62, so both repositories share one
+  implementation.
   Rejected: hashing only the stored value, which names the helpers without
   their bodies, so a block could drift from its Lean while the build passed.
 - Any other definition that these only refer to counts by its name. A block

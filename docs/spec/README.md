@@ -37,9 +37,8 @@ change, or a pinned definition's body, printing the new signatures and
 fingerprint. A body includes the helpers that Lean generates for it, such
 as the body of a recursive definition and its pattern matchers: read the
 block again against the Lean, correct it, then pin the new fingerprint. It
-also fails
-when a declaration of the module has no block, and when a ```` ```grammar ````
-box misses a constructor or shows one twice. To move a section, write its
+also fails when a declaration of the module has no block, and when a
+```` ```grammar ```` box misses a constructor or shows one twice. To move a section, write its
 document, import it in `FirSpec/ReadableDocs.lean`, pin each block with the
 fingerprint the first build prints, and switch its `{includeLiterate}` to
 `{includeReadable}`.
