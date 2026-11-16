@@ -133,13 +133,13 @@ exhaustive modes would still take stack for every choice.
 
 A run takes no stack per value either: per operand of an op, per value that
 a `ret` or a call returns, per argument of a call or a `br`, or per parameter
-of the function that it starts in (#405). `Bindings.lookOperands` reads an
-op's operands in a loop of tail calls, keeping the values found so far in a
-list, the last first, and `FirRef.ofRev` builds the vector from its end. A
-proof that the list has the vector's types travels with the loop and is
-erased when compiled. `lookOperands` also gives the error `Env.operands`
-gives, so `Bindings.args` no longer runs a second, recursive reading after a
-failed one. `readArgs` and `readGpuArgs` read `fir-ref run`'s arguments the
+of the function that it starts in (#405). `Bindings.args` reads an op's
+operands in a loop of tail calls, `args.go`, keeping the values found so
+far in a list, the last first, and `FirRef.ofRev` builds the vector from
+its end. A proof that the list has the vector's types travels with the loop
+and is erased when compiled. The loop also gives the error `Env.operands`
+gives, so `Bindings.args` runs no second, recursive reading after a failed
+one. `readArgs` and `readGpuArgs` read `fir-ref run`'s arguments the
 same way.
 
 Four spec functions on the path take stack per value, and `fir-ref` runs a
@@ -157,17 +157,37 @@ proved equal by `rfl`, and the three walks of the core and `gpu` run over
 `HVector.toDVals`, `toSum`, `ofSum` or `List.zip`.
 
 `scripts/check-fir-ref-run.sh` checks it on a 256 KiB stack: a `ret` of
-100,000 values in each mode, a call that returns 10,000 values, a call of
+100,000 values in each mode, a call that returns 100,000 values, a call of
 100,000 arguments, a `br` of 100,000 block arguments and a function of
-100,000 parameters. A `ret` of 1,000,000 values ran in a second. Time is
-another matter: an op that reads many values bound long before passes them
-all in `young` for each operand, since `lookOperands` pays its debt only
-after the op, so a call that returns 100,000 values took 30 seconds, and
-200,000 took 294. `main` takes the same time where it does not overflow.
-The loops cost ordinary runs too: each value now takes a list cell and a
-pair besides its place in the vector, and the sum moves every core op's
-operands and results. The loop of `@sum` to 3,000,000 took about 7.5
-seconds against 6.9 on `main`.
+100,000 parameters. A `ret` of 1,000,000 values ran in a second.
+
+Each lookup of `args.go` pays its debt before the next, as `value`
+does, so an op that reads many values bound long before moves `young` into
+`old` once the lookups have passed about `rent` times its length, and reads
+the rest from `old` (#413). Paid only after the op, as #405 left it, every
+operand passed all the values bound since, and the time grew with the
+square of their number. A call that returns `n` values, then a `ret` of
+them all (the issue's reproducer), took these times, one run each, on one
+machine:
+
+| n | before #413 | after |
+| --- | --- | --- |
+| 20,000 | 0.75 s | 0.13 s |
+| 40,000 | 3.1 s | 0.28 s |
+| 100,000 | 33 s | 0.78 s |
+| 200,000 | 325 s | 1.9 s |
+| 1,000,000 | not run | 10 s |
+
+The run of 1,000,000 also runs on a 256 KiB stack. A `br` of those values
+already paid per value, through `Bindings.values`, and took 0.78 s at
+100,000 before.
+
+The loops of #405 cost ordinary runs too: each value takes a list cell and
+a pair besides its place in the vector, and the sum moves every core op's
+operands and results. Measured for #405, before #413, the loop of `@sum` to
+3,000,000 took about 7.5 seconds against 6.9 before #405. Paying per
+operand, #413 adds a comparison to each lookup; ordinary runs were not timed
+again.
 
 Rejected: a `@[csimp]` theorem on `Dialect.sum.instDialectDenote`. An
 instance's code is compiled where it is declared, so `fir-ref` would still
@@ -179,10 +199,11 @@ The machine keeps its values in `FirRef.Bindings`. `young` is a list of the
 latest values, in front of `old`, a `Std.TreeMap` that binds each name once.
 A bind puts values in front of `young`, as the spec does. A lookup searches
 `young`, then `old`. A lookup that passes more than `deep` = 128 entries adds
-every entry it passed to a debt. When the debt exceeds `rent` = 32 times the
-length of `young`, `young` moves into `old` (`settle`), the latest value of
-each name winning. `rent` and `deep` are not rules of fir or thresholds of a
-check, and any values give the same results.
+every entry it passed to a debt, before the next lookup, of the same op or
+not. When the debt exceeds `rent` = 32 times the length of `young`, `young`
+moves into `old` (`settle`), the latest value of each name winning. `rent`
+and `deep` are not rules of fir or thresholds of a check, and any values
+give the same results.
 
 `Bindings.args`, `bind`, `bindResults`, `jump` and `enter` are proved to fit
 `Env.operands`, `Env.bind`, `Func.jump` and `Func.enter`, with the same errors
@@ -242,7 +263,7 @@ The modules of `lean/FirRef/` fall in the same classes:
 - **Depth:** the loops of `Bindings` (`zipRev`, `zipRevH`, `zipParams`, `values`), since
   the spec's `Env.bind` and `Func.enter` use `List.zip`; `Machine`,
   `MachineTree`, `RunAt`, `Steps`, `RunModes` and `Run`; `HVector` and
-  `HVectorSum`, and the loops of `lookOperands`, `readArgs` and
+  `HVectorSum`, and the loops of `args`, `readArgs` and
   `readGpuArgs`, for wide values (#405); `RunText`, whose
   `findFunc` finds a kernel through its modules in a loop (#212); `Read/*` but
   `Read/Eof`; `Decode` and `Decode/*`; `PrintAttr`, `PrintModule`, `LocTable`,

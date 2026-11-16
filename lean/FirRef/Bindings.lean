@@ -23,9 +23,11 @@ move a value into `old` only after lookups have passed it about `rent`
 times on average, the time that all lookups spend in `young` is linear in
 the number of values bound and lookups made, whoever defined what, and
 each value moves into `old` once, where an insert or a lookup takes time
-logarithmic in its size. The lookups of one op's operands pay together,
-after the op, so an op that reads `n` values bound long before passes
-about `n²` entries (`docs/decisions/fir-ref-fast-paths.md#wide-values`).
+logarithmic in its size. Each lookup pays before the next, the lookups of
+one op's operands too, so an op that reads many values bound long before
+moves `young` into `old` once its lookups have passed about `rent` times
+the length of `young`, and reads the rest from `old`
+(`docs/decisions/fir-ref-fast-paths.md#wide-values`, #413).
 `rent` and `deep` are how `fir-ref` spends its time, not rules of fir: any
 values give the same results.
 
@@ -148,37 +150,27 @@ def zipRevH : List (Name × d.Ty) → {ts : List d.Ty} → HVector toType ts →
 
 variable [DecidableEq d.Ty]
 
-/-- What `lookOperands` gives: values, with what their lookups add to the
-debt, or why the op is stuck. -/
-inductive Looked (d : Dialect) [TyDenote d.Ty] (ts : List d.Ty) where
-  | ok (vs : HVector toType ts) (c : Nat)
-  | fail (e : Stuck)
-
-/-- The values of the names `xs`, one for each type of `ts`, with `c` plus
-what their lookups add to the debt, or why `Env.operands` is stuck on them.
-It walks the names in a loop of tail calls, with the values found so far in
-`acc`, the last first, and builds the vector at the end (`ofRev`), so it
-takes no stack per operand (#405). -/
-def lookOperands (b : @& Bindings d) (ts : List d.Ty) (xs : List Name) (c : Nat) : Looked d ts :=
-  go ts xs c [] rfl
-where
-  go : (rest : List d.Ty) → List Name → Nat → (acc : List (DVal d)) →
-      (acc.map (·.1)).reverse ++ rest = ts → Looked d ts
-    | [], [], c, acc, h => .ok (ofRev acc (by simpa using h)) c
-    | t :: rest, x :: xs, c, acc, h => match look b x with
-      | .hit ⟨t', v⟩ k =>
-        if ht : t' = t then go rest xs (c + cost k) (⟨t', v⟩ :: acc) (by subst ht; simpa using h)
-        else .fail ⟨s!"%{x} does not have the operand's type"⟩
-      | .miss => .fail ⟨s!"%{x} is not defined"⟩
-    | _, _, _, _, _ => .fail ⟨"an op has a number of operands other than its op instance takes"⟩
-
-/-- `Env.operands`, on bindings: it looks each name up once and pays for all
-the lookups at once. -/
-@[inline] def args (b : Bindings d) (ts : List d.Ty) (xs : List Name) :
+/-- `Env.operands`, on bindings: the values of the names `xs`, one for each
+type of `ts`, with `b` after their lookups, or why `Env.operands` is stuck
+on them. It walks the names in a loop of tail calls, with the values found
+so far in `acc`, the last first, and builds the vector at the end
+(`ofRev`), so it takes no stack per operand (#405). Each lookup pays before
+the next, so an op that reads many values bound long before moves `young`
+into `old` once and reads the rest there (#413). -/
+def args (b : Bindings d) (ts : List d.Ty) (xs : List Name) :
     Except Stuck (HVector toType ts × Bindings d) :=
-  match lookOperands b ts xs 0 with
-  | .ok vs c => pure (vs, b.pay c)
-  | .fail e => .error e
+  go b ts xs [] rfl
+where
+  go : Bindings d → (rest : List d.Ty) → List Name → (acc : List (DVal d)) →
+      (acc.map (·.1)).reverse ++ rest = ts → Except Stuck (HVector toType ts × Bindings d)
+    | b, [], [], acc, h => .ok (ofRev acc (by simpa using h), b)
+    | b, t :: rest, x :: xs, acc, h => match look b x with
+      | .hit ⟨t', v⟩ k =>
+        if ht : t' = t then
+          go (b.pay (cost k)) rest xs (⟨t', v⟩ :: acc) (by subst ht; simpa using h)
+        else .error ⟨s!"%{x} does not have the operand's type"⟩
+      | .miss => .error ⟨s!"%{x} is not defined"⟩
+    | _, _, _, _, _ => .error ⟨"an op has a number of operands other than its op instance takes"⟩
 
 /-- The values of the names `xs`, after `acc`, the last first. -/
 def values (b : Bindings d) : List Name → List (DVal d) → Except Stuck (List (DVal d) × Bindings d)
