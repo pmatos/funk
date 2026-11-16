@@ -16,7 +16,7 @@ not a cell: a width change that the spec does not allow, a
 conversion from a format to itself, or a width for a row that
 passes no value.
 
-1565 cells, 1565 with a test:
+1574 cells, 1574 with a test:
 
 - [Differential tests](differential.md): 540 cells, 540 with a test.
-- [Interpreter-only tests](interpreter.md): 1025 cells, 1025 with a test.
+- [Interpreter-only tests](interpreter.md): 1034 cells, 1034 with a test.

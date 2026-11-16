@@ -8,4 +8,5 @@ tests = [
   { func = "@dev::@both", expect = ["ptr(0, 0)", "ptr(1, 0)"] },
   { func = "@dev::@kept", args = ["9"], expect = ["9"] },
   { func = "@dev::@dropped", args = ["9"], expect = "ub" },
+  { func = "@dev::@elements", expect = ["-1"] },
 ]

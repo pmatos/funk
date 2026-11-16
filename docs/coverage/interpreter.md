@@ -7,7 +7,7 @@ says how to read it.
 
 | op | flags or predicate | `i1` | `i7` | `i8` | `i16` | `i32` | `i33` | `i64` | `i128` |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `const` |  | 288 | 475 | 340 | 215 | 288 | 465 | 209 | 134 |
+| `const` |  | 288 | 475 | 340 | 215 | 291 | 466 | 209 | 134 |
 | `add` |  | 12 | 228 | 33 | 28 | 37 | 228 | 28 | 63 |
 | `add` | `nuw` | 4 | 29 | 6 | 6 | 8 | 29 | 6 | 5 |
 | `add` | `nsw` | 173 | 347 | 211 | 204 | 203 | 319 | 197 | 99 |
@@ -16,7 +16,7 @@ says how to read it.
 | `sub` | `nuw` | 6 | 29 | 6 | 6 | 6 | 29 | 6 | 5 |
 | `sub` | `nsw` | 6 | 29 | 8 | 6 | 17 | 29 | 6 | 5 |
 | `sub` | `nuw nsw` | 6 | 29 | 6 | 6 | 11 | 29 | 6 | 5 |
-| `mul` |  | 9 | 64 | 27 | 22 | 31 | 62 | 22 | 17 |
+| `mul` |  | 9 | 64 | 27 | 22 | 34 | 62 | 22 | 17 |
 | `mul` | `nuw` | 6 | 29 | 13 | 6 | 10 | 29 | 6 | 6 |
 | `mul` | `nsw` | 10 | 35 | 15 | 12 | 14 | 35 | 12 | 6 |
 | `mul` | `nuw nsw` | 8 | 29 | 6 | 6 | 6 | 29 | 6 | 6 |
@@ -134,7 +134,7 @@ says how to read it.
 | `trunc` | `i8` | 4 | 7 |  |  |  |  |  |  |
 | `trunc` | `i16` | 3 | 7 | 2 |  |  |  |  |  |
 | `trunc` | `i32` | 3 | 7 | 2 | 2 |  |  |  |  |
-| `trunc` | `i33` | 8 | 7 | 7 | 7 | 7 |  |  |  |
+| `trunc` | `i33` | 8 | 7 | 7 | 7 | 8 |  |  |  |
 | `trunc` | `i64` | 3 | 7 | 2 | 2 | 2 | 7 |  |  |
 | `trunc` | `i128` | 7 | 7 | 6 | 6 | 6 | 7 | 14 |  |
 
@@ -203,10 +203,10 @@ says how to read it.
 
 | op | `i1` | `i7` | `i8` | `i16` | `i32` | `i33` | `i64` | `i128` | `ptr` |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `ptradd` | 1 | 1 | 34 | 2 | 9 | 1 | 20 | 1 |  |
-| `alloca` | 4 | 4 | 37 | 21 | 21 | 5 | 5 | 7 | 38 |
-| `load` | 3 | 3 | 17 | 8 | 31 | 3 | 7 | 3 | 37 |
-| `store` | 2 | 2 | 12 | 5 | 24 | 2 | 4 | 2 | 37 |
+| `ptradd` | 1 | 1 | 34 | 2 | 12 | 1 | 20 | 1 |  |
+| `alloca` | 4 | 4 | 37 | 21 | 25 | 5 | 5 | 7 | 38 |
+| `load` | 3 | 3 | 17 | 8 | 37 | 4 | 7 | 3 | 40 |
+| `store` | 2 | 2 | 12 | 5 | 30 | 3 | 4 | 2 | 41 |
 
 ## Passed and returned values
 
@@ -217,21 +217,21 @@ says how to read it.
 | `cond_br` | a successor passes nothing | 438 |  |  |  |  |  |  |  |  |  |  |  |  |  |
 | `cond_br` | a successor passes values |  | 13 | 138 | 16 | 14 | 14 | 136 | 13 | 11 | 5 | 5 | 7 | 5 | 5 |
 | `ret` | returns no value | 26 |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| `ret` | returns one value |  | 2570 | 1583 | 828 | 824 | 946 | 1609 | 820 | 1081 | 825 | 777 | 689 | 588 | 530 |
+| `ret` | returns one value |  | 2570 | 1583 | 828 | 824 | 953 | 1609 | 820 | 1081 | 825 | 777 | 689 | 588 | 530 |
 | `ret` | returns several values |  | 56 | 189 | 42 | 28 | 33 | 189 | 51 | 50 | 5 | 6 | 5 | 7 | 5 |
 | `unreachable` | ends a block | 16 |  |  |  |  |  |  |  |  |  |  |  |  |  |
 | `call` | gives no result | 14 |  |  |  |  |  |  |  |  |  |  |  |  |  |
 | `call` | gives one result |  | 74 | 92 | 28 | 23 | 24 | 92 | 23 | 19 | 2 | 2 | 2 | 2 | 2 |
 | `call` | gives several results |  | 41 | 92 | 17 | 11 | 11 | 92 | 25 | 27 | 2 | 3 | 2 | 3 | 2 |
 | `func` | returns no value | 23 |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| `func` | returns one value |  | 2569 | 1583 | 829 | 824 | 946 | 1609 | 820 | 1081 | 823 | 775 | 687 | 586 | 528 |
+| `func` | returns one value |  | 2569 | 1583 | 829 | 824 | 953 | 1609 | 820 | 1081 | 823 | 775 | 687 | 586 | 528 |
 | `func` | returns several values |  | 56 | 189 | 42 | 28 | 33 | 189 | 51 | 48 | 5 | 6 | 5 | 7 | 5 |
 
 ## Ops of the gpu dialect in a dimension
 
 | op | dimension | `i32` |
 | --- | --- | --- |
-| `gpu.work_item_id` | `gpu.x` | 8 |
+| `gpu.work_item_id` | `gpu.x` | 11 |
 | `gpu.work_item_id` | `gpu.y` | 4 |
 | `gpu.work_item_id` | `gpu.z` | 2 |
 | `gpu.work_group_id` | `gpu.x` | 5 |
@@ -243,3 +243,9 @@ says how to read it.
 | `gpu.num_work_groups` | `gpu.x` | 2 |
 | `gpu.num_work_groups` | `gpu.y` | 4 |
 | `gpu.num_work_groups` | `gpu.z` | 3 |
+
+## Work-group allocation of the gpu dialect, of one or of a pointer
+
+| op | `i1` | `i7` | `i8` | `i16` | `i32` | `i33` | `i64` | `i128` | `ptr` |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `gpu.work_group_alloca` | 1 | 1 | 1 | 1 | 9 | 1 | 1 | 1 | 5 |

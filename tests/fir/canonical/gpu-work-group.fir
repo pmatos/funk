@@ -70,6 +70,24 @@ module @dev() {
     ret %r @3
   }
 
+  func @elements() -> i32 {
+  ^entry:
+    %a: ptr(3) = gpu.work_group_alloca i1 @3
+    %b: ptr(3) = gpu.work_group_alloca i7 @3
+    %c: ptr(3) = gpu.work_group_alloca i8 @3
+    %d: ptr(3) = gpu.work_group_alloca i16 @3
+    %e: ptr(3) = gpu.work_group_alloca i32 @3
+    %f: ptr(3) = gpu.work_group_alloca i33 @3
+    %g: ptr(5) = gpu.work_group_alloca i64 @3
+    %h: ptr(5) = gpu.work_group_alloca i128 @3
+    %i: ptr(5) = gpu.work_group_alloca ptr(3) @3
+    %v: i33 = const -1 @3
+    store nonatomic %v, %f @3
+    %w: i33 = load nonatomic %f @3
+    %r: i32 = trunc %w @3
+    ret %r @3
+  }
+
   func @misaligned() -> ptr(3) {
   ^entry:
     %pp: ptr(5) = gpu.work_group_alloca ptr(3) align(2) @3
