@@ -156,6 +156,7 @@ import Fir.Execution.MemoryFreeReplace
 import Fir.Execution.Trace
 import Fir.Execution.TraceMonad
 import Fir.Execution.TraceRuns
+import Fir.Execution.TraceDialect
 import Fir.Memory.Model
 import Fir.Memory.Ordering
 import Fir.Memory.Laws

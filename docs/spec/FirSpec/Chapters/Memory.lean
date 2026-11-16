@@ -152,3 +152,5 @@ traced runs of functions for every world (ADR-2026-11-09-1540).
 {includeReadable "." Fir.Execution.TraceMonad "The traced layer" FirSpec.Execution.TraceMonad (level := 1)}
 
 {includeReadable "." Fir.Execution.TraceRuns "Traced runs" FirSpec.Execution.TraceRuns (level := 1)}
+
+{includeReadable "." Fir.Execution.TraceDialect "A dialect's traced runs" FirSpec.Execution.TraceDialect (level := 1)}

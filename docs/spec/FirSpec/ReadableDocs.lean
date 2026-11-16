@@ -217,6 +217,7 @@ import FirSpec.Execution.MemoryFreeReplace
 import FirSpec.Execution.Trace
 import FirSpec.Execution.TraceMonad
 import FirSpec.Execution.TraceRuns
+import FirSpec.Execution.TraceDialect
 import FirSpec.Execution.MemoryModes
 import FirSpec.Execution.NaNModes
 import FirSpec.Core.MemoryRuns
