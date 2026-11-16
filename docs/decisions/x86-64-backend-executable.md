@@ -150,11 +150,11 @@ never outgrows its stack.
 ### A recursive run
 
 A function from which a cycle is reachable is recursive. An `alloca` on a
-cycle of its function's branches, whose run's stack grows with its input as a
-recursion's does, gives its function the recursive run's stack, which the
-ruling of 2026-11-02 below gives a recursion: the human ruled on 2026-11-15
-(#399). So a function from which such an `alloca` is reachable is recursive
-for its stack too, as one from which a cycle is reachable is. Its figure is
+cycle of its function's branches grows the run's stack with its input, as a
+recursion does, and the human ruled on 2026-11-15 (#399) that it gives its
+function the recursive run's stack of the 2026-11-02 ruling below. So, for
+its stack, a function from which such an `alloca` is reachable is recursive
+too. Its figure is
 then the most a run uses when it makes no call within a cycle and runs no
 `alloca` more than once, and the least the runtime reserves for it. The
 runtime reads the soft `RLIMIT_STACK` with `getrlimit`, rounded down to a
