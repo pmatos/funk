@@ -229,6 +229,7 @@ impl TypeSpec for CoreTypes {
         entry: &dyn Fn(u64) -> MemLayout,
         n: u64,
     ) -> Option<(u128, u128)> {
+        let ty = decode(ty)?.ok()?;
         let e = entry(n);
         let units = |w: u32| {
             if e.unit == 0 {
@@ -237,16 +238,19 @@ impl TypeSpec for CoreTypes {
                 u128::from(w.div_ceil(e.unit))
             }
         };
-        match decode(ty)?.ok()? {
-            CoreType::Int(w) => Some((units(w), units(w).next_power_of_two())),
+        match ty {
+            CoreType::Int(w) => {
+                let u = units(w);
+                Some((u, u.next_power_of_two()))
+            }
+            // In its own memory a pointer is aligned as the entry aligns its
+            // pointers, whose units are then these.
+            CoreType::Ptr(m) if u64::from(m) == n => {
+                Some((units(e.pointer), u128::from(e.alignment())))
+            }
             CoreType::Ptr(m) => {
                 let u = units(entry(u64::from(m)).pointer);
-                let natural = u.next_power_of_two();
-                let align = match e.align {
-                    Some(a) if u64::from(m) == n => u128::from(a),
-                    _ => natural,
-                };
-                Some((u, align))
+                Some((u, u.next_power_of_two()))
             }
             CoreType::Float { .. } => None,
         }

@@ -40,7 +40,7 @@ fn check_one(a: &Aggregate, layout: &[MemLayout], reg: &Registry, out: &mut Vec<
             a.memory
         ));
     }
-    if !(a.align.is_power_of_two() && a.align <= u64::from(MemLayout::LIMIT)) {
+    if !u32::try_from(a.align).is_ok_and(MemLayout::valid_align) {
         at(format!(
             "the layout is aligned to {} units: an alignment is a power of two no larger than {}",
             a.align,
@@ -70,12 +70,7 @@ fn check_one(a: &Aggregate, layout: &[MemLayout], reg: &Registry, out: &mut Vec<
         };
         let offset = u128::from(f.offset);
         let units = f.extent(u, align);
-        let divides = if align == 0 {
-            offset == 0
-        } else {
-            offset % align == 0
-        };
-        if !divides {
+        if !offset.checked_rem(align).map_or(offset == 0, |r| r == 0) {
             at(format!(
                 "{field} is not a multiple of its type's alignment, {align}"
             ));

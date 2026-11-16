@@ -65,10 +65,15 @@ impl Aggregate {
         self.fields.iter().map(|f| &f.ty)
     }
 
-    /// The layout's attributes as the text writes them
-    /// (`Aggregate.decode` reads them back): its memory, size and
-    /// alignment, then its fields.
-    pub fn decode(attrs: &[Attr]) -> Result<Aggregate, AggregateFault> {
+    /// The layout `name` that the attributes write (`decodeAggregate`):
+    /// its memory, size and alignment, then its fields, each checked whole,
+    /// its type by `type_ok`, before the next, so the first field that does
+    /// not decode is the one reported, as `fs.mapM decodeField` reports it.
+    pub fn decode(
+        name: impl Into<String>,
+        attrs: &[Attr],
+        type_ok: impl Fn(&Type) -> bool,
+    ) -> Result<Aggregate, AggregateFault> {
         let [m, s, a, fields @ ..] = attrs else {
             return Err(AggregateFault::Header);
         };
@@ -78,10 +83,14 @@ impl Aggregate {
         let fields = fields
             .iter()
             .enumerate()
-            .map(|(i, f)| decode_field(f).ok_or(AggregateFault::Field(i)))
+            .map(|(i, f)| {
+                decode_field(f)
+                    .filter(|f| type_ok(&f.ty))
+                    .ok_or(AggregateFault::Field(i))
+            })
             .collect::<Result<Vec<_>, _>>()?;
         Ok(Aggregate {
-            name: String::new(),
+            name: name.into(),
             memory,
             size,
             align,
@@ -153,7 +162,7 @@ fn decode_field(a: &Attr) -> Option<Field> {
 /// `u` rounded up to a multiple of `a`, and 0 when `a` is 0, as in Lean
 /// (`roundUp`): the units of one element of a repeated field.
 fn round_up(u: u128, a: u128) -> u128 {
-    if a == 0 { 0 } else { u.div_ceil(a) * a }
+    u.checked_next_multiple_of(a).unwrap_or(0)
 }
 
 impl Field {
@@ -189,27 +198,39 @@ mod tests {
     fn attributes_decode_as_the_spec_says() {
         let n = |h: &str, v: i128| Attr::App(h.into(), vec![Attr::int(v)]);
         let field = Attr::App("field".into(), vec![Attr::int(8), Attr::word("ptr")]);
-        let a = Aggregate::decode(&[n("memory", 0), n("size", 16), n("align", 8), field]);
+        let any = |_: &Type| true;
+        let decode = |attrs: &[Attr]| Aggregate::decode("s", attrs, any);
+        let a = decode(&[n("memory", 0), n("size", 16), n("align", 8), field]);
         assert_eq!(
             a,
-            Ok(Aggregate::new("", 0, 16, 8).field(8, Type::word("ptr"), None))
+            Ok(Aggregate::new("s", 0, 16, 8).field(8, Type::word("ptr"), None))
         );
         assert_eq!(
-            Aggregate::decode(&[n("size", 0), n("memory", 0), n("align", 1)]),
+            decode(&[n("size", 0), n("memory", 0), n("align", 1)]),
             Err(AggregateFault::Memory)
         );
         assert_eq!(
-            Aggregate::decode(&[n("memory", 0), n("size", -1), n("align", 1)]),
+            decode(&[n("memory", 0), n("size", -1), n("align", 1)]),
             Err(AggregateFault::Size)
         );
         let bad = Attr::App("field".into(), vec![Attr::int(0), Attr::int(5)]);
         assert_eq!(
-            Aggregate::decode(&[n("memory", 0), n("size", 0), n("align", 1), bad]),
+            decode(&[n("memory", 0), n("size", 0), n("align", 1), bad]),
             Err(AggregateFault::Field(0))
         );
+        assert_eq!(decode(&[n("memory", 0)]), Err(AggregateFault::Header));
+        // A field whose type does not decode is reported before a later
+        // field that is not a field at all.
+        let wide = Attr::App("field".into(), vec![Attr::int(0), Attr::word("i0x")]);
+        let neg = Attr::App("field".into(), vec![Attr::int(-1), Attr::word("i8")]);
+        let typed = |t: &Type| t != &Type::word("i0x");
         assert_eq!(
-            Aggregate::decode(&[n("memory", 0)]),
-            Err(AggregateFault::Header)
+            Aggregate::decode(
+                "s",
+                &[n("memory", 0), n("size", 4), n("align", 4), wide, neg],
+                typed
+            ),
+            Err(AggregateFault::Field(0))
         );
     }
 }

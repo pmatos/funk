@@ -58,6 +58,9 @@ def fieldAt (o : Nat) (s : String) : String := "the field at offset " ++ toStrin
 #guard rejectedAt (agg "memory(0) size(16) align(8) field(0, i0x)") 1 44 "not a field"
 #guard rejectedAt (agg "memory(0) size(16) align(8) field(-1, i8)") 1 44 "not a field"
 #guard rejectedAt (agg "memory(0) size(16) align(8) fields(0, i8)") 1 44 "not a field"
+-- The first field that does not decode is reported, its type included.
+#guard rejectedAt (agg "memory(0) size(16) align(8) field(0, i16777216) field(-1, i8)") 1 44
+  "not a field"
 #guard rejectedAt (oneFunc "aggregate @s(%x: i8) memory(0) size(1) align(1) {\n}\n") 1 14
   "an aggregate has no parameters"
 #guard rejectedAt (oneFunc "aggregate @s() -> i8 memory(0) size(1) align(1) {\n}\n") 1 19

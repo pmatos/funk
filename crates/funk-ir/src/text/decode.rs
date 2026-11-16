@@ -151,7 +151,8 @@ fn aggregate_item(mut s: SItem, reg: &Registry) -> Result<Item, ParseError> {
         std::mem::take(&mut s.attrs).into_iter().unzip();
     let kind_pos = s.kind_pos;
     let at = |i: usize| positions.get(i).copied().unwrap_or(kind_pos);
-    let mut a = match Aggregate::decode(&attrs) {
+    let type_ok = |t: &Type| !matches!(reg.check_type(t), TypeCheck::Malformed(_));
+    let a = match Aggregate::decode(std::mem::take(&mut s.name), &attrs, type_ok) {
         Ok(a) => a,
         Err(AggregateFault::Header) => {
             return err(
@@ -179,12 +180,6 @@ fn aggregate_item(mut s: SItem, reg: &Registry) -> Result<Item, ParseError> {
         }
         Err(AggregateFault::Field(i)) => return err(at(i + 3), NOT_A_FIELD),
     };
-    for (i, f) in a.fields.iter().enumerate() {
-        if let TypeCheck::Malformed(_) = reg.check_type(&f.ty) {
-            return err(at(i + 3), NOT_A_FIELD);
-        }
-    }
-    a.name = std::mem::take(&mut s.name);
     Ok(Item::Aggregate(a))
 }
 

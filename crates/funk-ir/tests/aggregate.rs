@@ -108,6 +108,13 @@ fn attributes_that_do_not_decode_fail_where_the_spec_says() {
             "not a field",
         );
     }
+    // The first field that does not decode is reported, its type included,
+    // before a later field that is not a field at all.
+    rejected_at(
+        &agg("memory(0) size(16) align(8) field(0, i16777216) field(-1, i8)"),
+        44,
+        "not a field",
+    );
     rejected_at(
         &one_func("aggregate @s(%x: i8) memory(0) size(1) align(1) {\n}\n"),
         14,
