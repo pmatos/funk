@@ -144,9 +144,11 @@ pub(crate) fn shape_decodes(attrs: &[Attr]) -> bool {
 /// (`Core.Op.Valid`, `Gpu.Op.Valid`). Attributes that do not decode break
 /// no rule here: decoding reports them.
 pub(crate) fn check_shape(op: &str, attrs: &[Attr]) -> Result<(), String> {
-    let Some(p) = shape(attrs) else {
-        return Ok(());
-    };
+    shape(attrs).map_or(Ok(()), |p| check_shape_of(op, &p))
+}
+
+/// The rules of an allocation beyond its kind, on its decoded shape.
+fn check_shape_of(op: &str, p: &Shape<'_>) -> Result<(), String> {
     if p.count.is_some_and(|c| c.as_str() == "0") {
         return Err(format!("{op} allocates at least one value, not 0"));
     }
@@ -182,8 +184,14 @@ pub(crate) fn check_shape(op: &str, attrs: &[Attr]) -> Result<(), String> {
 /// `Gpu.Op.attrTypes`). An integer type names no memory, and a type that
 /// is not valid breaks the op's own rule.
 pub(crate) fn shape_attr_types(attrs: &[Attr]) -> Vec<Type> {
-    match shape(attrs).map(|p| p.ty) {
-        Some(AnyType::Ptr(n)) => valid_memory(&n).map(ptr_type).into_iter().collect(),
+    shape(attrs).map(|p| shape_types(&p)).unwrap_or_default()
+}
+
+/// The type that a decoded shape allocates values of, when that is a valid
+/// pointer type.
+fn shape_types(p: &Shape<'_>) -> Vec<Type> {
+    match &p.ty {
+        AnyType::Ptr(n) => valid_memory(n).map(ptr_type).into_iter().collect(),
         _ => Vec::new(),
     }
 }
@@ -290,7 +298,7 @@ impl OpSpec for Alloca {
                 p.kind
             ));
         }
-        check_shape("alloca", &op.attrs[1..])
+        check_shape_of("alloca", &p.shape)
     }
 
     /// The type it allocates values of, when that is a valid pointer type,
@@ -298,10 +306,9 @@ impl OpSpec for Alloca {
     /// integer type names no memory, and a type that is not valid breaks
     /// the op's own rule.
     fn attr_types(&self, attrs: &[Attr]) -> Vec<Type> {
-        match parts(attrs) {
-            Some(_) => shape_attr_types(&attrs[1..]),
-            None => Vec::new(),
-        }
+        parts(attrs)
+            .map(|p| shape_types(&p.shape))
+            .unwrap_or_default()
     }
 
     /// Allocates in its memory (`Core.Op.effects`).
