@@ -15,7 +15,8 @@
 # named as @dev::@k, with the work-item's ids and sizes as options, through
 # modules nested 3,000 deep on a 256 KiB stack, and rejects a work-item that
 # is not one of its grid (#212). It runs a kernel whose work-group
-# allocation outlives the call that made it (#212, stage 3).
+# allocation outlives the call that made it (#212, stage 3). With --nans,
+# exhaustive mode tries a few NaNs at each NaN choice (#219).
 set -euo pipefail
 
 if [[ $# -ne 1 ]]; then
@@ -196,6 +197,15 @@ for v in 0 1 -2 -1; do outcomes+="${ret}[\"$v\"]},"; done
 runs "$tmp/freeze.fir" 0 "${outcomes%,}]}" --exhaustive @f 1 || status=1
 runs "$tmp/freeze.fir" 0 '{"kind":"choice-budget-exceeded","budget":1}' \
     --exhaustive --choice-bits 1 @f 1 || status=1
+# With --nans, exhaustive mode tries at a NaN choice the quiet NaNs and the
+# NaNs it is given, and says whether the outcomes are complete (#219).
+all="${outcomes%,}]}"
+runs "$tmp/freeze.fir" 0 "${all/\"choices\":1,/\"choices\":1,\"complete\":true,}" \
+    --exhaustive --nans 0x7fc00000 @f 1 || status=1
+nans='{"kind":"outcomes","choices":1,"complete":false,"outcomes":['
+for v in 0x7fc00000 0xffc00000 0x7f800001; do nans+="${ret}[\"$v\"]},"; done
+runs $c/float-binary-f32.fir 0 "${nans%,}]}" --exhaustive --nans 0x7f800001,0x3f800000 \
+    @fsub 0x7f800000 0x7f800000 || status=1
 runs $c/add.fir 2 'fir-ref: 9223372036854775808 is not a value of type i64' \
     @double 9223372036854775808 || status=1
 # An argument is lexed over positions, with no stack per character: a

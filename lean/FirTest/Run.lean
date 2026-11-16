@@ -236,6 +236,7 @@ def freezeArg : String := body "func @f(%a: i2) -> i2" ["^e:", "  %f: i2 = freez
 def modeText : Mode → String
   | .scripted cs => s!"scripted {cs}"
   | .exhaustive b => s!"exhaustive {b}"
+  | .exhaustiveNaN b ns => s!"exhaustive {b} nans {ns}"
   | .sampled s => s!"sampled {s}"
 
 /-- The fuel, file, function and arguments that `run`'s command line gives,

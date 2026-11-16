@@ -1,5 +1,6 @@
 import Fir.Gpu.Runs
 import Fir.Core.Modes
+import Fir.Execution.NaNModes
 import Fir.Sum.RunLaws
 
 /-!
@@ -20,11 +21,11 @@ allocation's result names.
 A core op runs by its rule in the tree, and an op without rules ends its
 path with no outcome, naming the core op; a question of `gpu` gives the
 work-item's answer, and `gpu.work_group_alloca` allocates for the whole
-run. Each side's semantics in the tree denotes its semantics
-with memory, so the sum's does (`Dialect.sum.mapsDenote`), and the theorems
-of exhaustive, scripted and sampled modes hold of the runs with memory of
-every function of the sum, at every work-item, on every argument vector, at
-every fuel budget.
+run. Each side's semantics in the tree denotes its semantics with memory,
+so the sum's does (`Dialect.sum.mapsDenote`), and the theorems of
+exhaustive, scripted and sampled modes, and of the walk that tries a few
+NaNs, hold of the runs with memory of every function of the sum, at every
+work-item, on every argument vector, at every fuel budget.
 -/
 
 namespace Fir.Gpu
@@ -113,6 +114,16 @@ def exhaustive (M : Module CoreGpu) (f : Func CoreGpu) (args : HVector toType (f
     (fuel budget : Nat) : Option (List (Leaf × Nat)) :=
   (modeTree M f args fuel).explore budget
 
+/-- Exhaustive mode that tries a few NaNs, `fir-ref run --exhaustive --nans`,
+on the function `f` of the module `M` at the work-item: the paths of its run
+with memory on which each NaN choice is the quiet NaN of either sign or a NaN
+of `nans`, each with its choices and its NaN choices, when no path charges
+more than `budget` bits in all (ADR-2026-11-16-0855). -/
+def exhaustiveNaN (M : Module CoreGpu) (f : Func CoreGpu)
+    (args : HVector toType (f.params.map (·.2))) (fuel budget : Nat) (nans : List Nat) :
+    Option (List (Leaf × Nat × Nat)) :=
+  (modeTree M f args fuel).exploreNaN nans budget
+
 /-- Scripted mode on the function `f` of the module `M` at the work-item:
 the path of its run with memory that the choice sequence `cs` names, each
 value read by `read`, or why `cs` does not fit the run. -/
@@ -153,6 +164,44 @@ theorem exhaustive_memStuck (M : Module CoreGpu) (f : Func CoreGpu)
   have h := (letI := memTreeDenote M.layout.entry memName
     Func.memExplore_stuck M.layout.entry memName (memMapsDenote M.layout.entry memName) M f args
       fuel budget hx)
+  exact h
+
+/-- Each outcome that exhaustive mode lists when it tries a few NaNs is an
+outcome of the run with memory at the fuel budget it runs with. -/
+theorem exhaustiveNaN_memOutcomes (M : Module CoreGpu) (f : Func CoreGpu)
+    (args : HVector toType (f.params.map (·.2))) (fuel budget : Nat) (nans : List Nat)
+    {ls : List (Leaf × Nat × Nat)} (hx : exhaustiveNaN M f args fuel budget nans = some ls)
+    {p : Leaf × Nat × Nat} (hp : p ∈ ls) {o : Outcome (List (DVal CoreGpu))}
+    (ho : p.1.pathEnd = .outcome o) :
+    Run.outcomes (f.memRuns M.layout.entry memName M args fuel) o := by
+  have h := (letI := memTreeDenote M.layout.entry memName
+    Func.memExploreNaN_outcomes M.layout.entry memName (memMapsDenote M.layout.entry memName) M f
+      args fuel budget nans hx hp ho)
+  exact h
+
+/-- A stuck path that exhaustive mode lists when it tries a few NaNs is a
+stuck path of the run with memory. -/
+theorem exhaustiveNaN_memStuck (M : Module CoreGpu) (f : Func CoreGpu)
+    (args : HVector toType (f.params.map (·.2))) (fuel budget : Nat) (nans : List Nat)
+    {ls : List (Leaf × Nat × Nat)} (hx : exhaustiveNaN M f args fuel budget nans = some ls)
+    {p : Leaf × Nat × Nat} (hp : p ∈ ls) {st : Stuck} (hst : p.1.pathEnd = .stuck st) :
+    Run.IsStuck (f.memRuns M.layout.entry memName M args fuel) := by
+  have h := (letI := memTreeDenote M.layout.entry memName
+    Func.memExploreNaN_stuck M.layout.entry memName (memMapsDenote M.layout.entry memName) M f
+      args fuel budget nans hx hp hst)
+  exact h
+
+/-- When no path that it lists made a NaN choice, exhaustive mode that tries
+a few NaNs lists exactly the outcomes of the run with memory. -/
+theorem exhaustiveNaN_exact (M : Module CoreGpu) (f : Func CoreGpu)
+    (args : HVector toType (f.params.map (·.2))) (fuel budget : Nat) (nans : List Nat)
+    {ls : List (Leaf × Nat × Nat)} (hx : exhaustiveNaN M f args fuel budget nans = some ls)
+    (h0 : ∀ p ∈ ls, p.2.2 = 0) (o : Outcome (List (DVal CoreGpu))) :
+    Run.outcomes (f.memRuns M.layout.entry memName M args fuel) o ↔
+      ∃ p ∈ ls, p.1.pathEnd = .outcome o := by
+  have h := (letI := memTreeDenote M.layout.entry memName
+    Func.memExploreNaN_exact M.layout.entry memName (memMapsDenote M.layout.entry memName) M f
+      args fuel budget nans hx h0 o)
   exact h
 
 /-- Scripted mode, on a choice sequence that fits, gives an outcome of the

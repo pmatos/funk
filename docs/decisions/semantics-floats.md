@@ -19,8 +19,11 @@ dialects, so NPU and TPU formats need no change to the core
 
 The semantics is strict IEEE 754. Denormals are honoured. Flush-to-zero is an
 explicit target attribute. When an op's IEEE result is a NaN, fir chooses any
-NaN bit pattern of the format, so payload and sign are nondeterministic. #219
-decides how `fir-ref` and the harness handle that choice (ADR-2026-11-09-1549).
+NaN bit pattern of the format, so payload and sign are nondeterministic
+(ADR-2026-11-09-1549). The rule makes that choice with `MonadChoice.chooseNaN`,
+which labels it in the tree of choices, so that `fir-ref run --exhaustive
+--nans` can try a few NaNs in place of all of them
+([fir-ref.md](fir-ref.md#trying-a-few-nans), ADR-2026-11-16-0855).
 
 Every rounding op carries a rounding mode (`RoundingMode`), and round to
 nearest even, `rne`, is the only mode M1 accepts (ADR-2026-11-09-1549). The
@@ -232,8 +235,11 @@ payload and sign included, has one spelling (ADR-2026-11-11-1438). It is pure.
 and takes `poison` at a float type. It gives one result, with no choice, for
 every result that is not a NaN, so `funk` and `fir-ref` compare those
 differentially. A NaN result makes a choice, so scripted mode needs `--choices`
-for it, and exhaustive mode at `f32` and `f64` passes its 16-bit budget; #219
-decides how `fir-ref` and the harness judge a NaN result. `fcmp`'s result is
+for it, and exhaustive mode at `f32` and `f64` passes its 16-bit budget. With
+`--nans`, exhaustive mode tries the quiet NaN of each sign and the NaNs it is
+given, and lists a part of the run's outcomes, proved to be outcomes of the
+run ([fir-ref-command-line.md](fir-ref-command-line.md#trying-a-few-nans)).
+The harness does not yet judge native NaN results with it (#219). `fcmp`'s result is
 never a NaN, so it is differential already. The naive backend lowers `f32` and
 `f64`: it passes and returns them in SSE registers as System V does
 ([x86-64-backend-abi.md](x86-64-backend-abi.md#floats-in-sse-registers)), and

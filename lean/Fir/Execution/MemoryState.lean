@@ -39,8 +39,9 @@ open Memory
 variable {σ : Type} {m n : Type → Type}
 
 /-- A choice in the state layer chooses bits, and keeps the state. -/
-instance instMonadChoiceStateT [Monad m] [MonadChoice m] : MonadChoice (StateT σ m) :=
-  ⟨fun w s => (fun b => (b, s)) <$> MonadChoice.choose w⟩
+instance instMonadChoiceStateT [Monad m] [MonadChoice m] : MonadChoice (StateT σ m) where
+  choose w s := (fun b => (b, s)) <$> MonadChoice.choose w
+  chooseNaN e mb s := (fun b => (b, s)) <$> MonadChoice.chooseNaN e mb
 
 /-- UB in the state layer is the UB of the monad below: it ends the path. -/
 instance instMonadUBStateT [MonadUB m] : MonadUB (StateT σ m) := ⟨fun r _ => MonadUB.ub r⟩
@@ -110,6 +111,15 @@ theorem MonadMorphism.state_choose [MonadChoice m] [MonadChoice n]
     (fun b => (b, s)) <$> MonadChoice.choose w
   rw [φ.map_map, h]
 
+/-- A morphism that keeps the choice of a NaN keeps it through the layer. -/
+theorem MonadMorphism.state_chooseNaN [MonadChoice m] [MonadChoice n]
+    (h : ∀ e mb, φ.map (MonadChoice.chooseNaN e mb) = MonadChoice.chooseNaN e mb) (e mb : Nat) :
+    (φ.state σ).map (MonadChoice.chooseNaN e mb) = MonadChoice.chooseNaN e mb := by
+  funext s
+  show φ.map ((fun b => (b, s)) <$> MonadChoice.chooseNaN e mb) =
+    (fun b => (b, s)) <$> MonadChoice.chooseNaN e mb
+  rw [φ.map_map, h]
+
 /-- A morphism that keeps UB keeps it through the layer. -/
 theorem MonadMorphism.state_ub [MonadUB m] [MonadUB n]
     (h : ∀ {α : Type} (r : String), φ.map (MonadUB.ub r : m α) = MonadUB.ub r) {α : Type}
@@ -120,7 +130,7 @@ theorem MonadMorphism.state_ub [MonadUB m] [MonadUB n]
 /-- A morphism that keeps choice and UB keeps both through the layer. -/
 theorem MonadMorphism.state_keeps [MonadChoice m] [MonadChoice n] [MonadUB m] [MonadUB n]
     (h : φ.KeepsChoiceUB) : (φ.state σ).KeepsChoiceUB :=
-  ⟨φ.state_choose h.choose, fun r => φ.state_ub h.ub r⟩
+  ⟨φ.state_choose h.choose, φ.state_chooseNaN h.chooseNaN, fun r => φ.state_ub h.ub r⟩
 
 variable [MonadUB m] [MonadUB n]
 

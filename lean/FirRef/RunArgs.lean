@@ -4,7 +4,8 @@ import FirRef.Run
 The command line of `fir-ref run`
 (`docs/decisions/fir-ref-command-line.md#fir-ref-run`):
 
-`fir-ref run [--fuel N] [--choices C,C,... | --exhaustive [--choice-bits B] | --seed S]
+`fir-ref run [--fuel N] [--choices C,C,... | --exhaustive [--choice-bits B] [--nans V,V,...]
+| --seed S]
 [--work-item-id X,Y,Z] [--work-group-id X,Y,Z] [--work-group-size X,Y,Z]
 [--num-work-groups X,Y,Z] FILE @FUNC [ARG...]`
 
@@ -20,6 +21,10 @@ next argument as its value. An argument such as `-5` is not an option.
 * `--exhaustive`: exhaustive mode instead of scripted mode.
 * `--choice-bits B`: exhaustive mode's choice budget, B bits in all on one
   path; 16 by default.
+* `--nans V,V,...`: with `--exhaustive`, try at each NaN choice only the
+  quiet NaN of each sign and each `V` that is a NaN of its format
+  (`Gpu.exhaustiveNaN`). Each `V` is a bit pattern, `0x` and hexadecimal
+  digits, separated by commas, with no spaces; the empty text gives none.
 * `--seed S`: sampled mode instead of scripted mode: each choice is drawn
   from a generator seeded with S, from 0 to 2^64 - 1.
 * `--work-item-id X,Y,Z`, `--work-group-id X,Y,Z`, `--work-group-size X,Y,Z`
@@ -29,7 +34,7 @@ next argument as its value. An argument such as `-5` is not an option.
   every size 1. The work-item must be one of its grid (`Gpu.WorkItem.Valid`).
 
 N, B, S, X, Y and Z are ASCII decimal digits. `--choices`, `--exhaustive` and
-`--seed` go one at a time, and `--choice-bits` needs `--exhaustive`.
+`--seed` go one at a time, and `--choice-bits` and `--nans` need `--exhaustive`.
 -/
 
 namespace FirRef
@@ -53,6 +58,7 @@ structure RunOptions where
   exhaustive : Bool := false
   budget : Option Nat := none
   seed : Option Nat := none
+  nans : Option (List Nat) := none
   workItem : Gpu.WorkItem := .single
 
 /-- The number that the value `n` of the option `opt` spells: ASCII decimal
@@ -65,6 +71,25 @@ def optionNat (opt what n : String) : Except String Nat :=
 /-- The choices that `--choices` spells: none for the empty text, and
 otherwise the texts between its commas. -/
 def choiceList (s : String) : List String := if s.isEmpty then [] else s.splitOn ","
+
+/-- The bit pattern that `v` spells: `0x` and one or more hexadecimal
+digits. -/
+def hexBits (v : String) : Option Nat :=
+  let ds := v.toList.drop 2
+  if v.startsWith "0x" && !ds.isEmpty then
+    ds.foldlM (fun n c =>
+      if c.isDigit then some (16 * n + (c.toNat - '0'.toNat))
+      else if 'a' ≤ c && c ≤ 'f' then some (16 * n + (c.toNat - 'a'.toNat + 10))
+      else if 'A' ≤ c && c ≤ 'F' then some (16 * n + (c.toNat - 'A'.toNat + 10))
+      else none) 0
+  else none
+
+/-- The NaNs that `--nans` spells: none for the empty text, and otherwise
+the bit pattern between each pair of commas. -/
+def nanList (v : String) : Except String (List Nat) :=
+  if v.isEmpty then .ok [] else match (v.splitOn ",").mapM hexBits with
+    | some ns => .ok ns
+    | none => .error s!"--nans takes bit patterns, as 0x7fc00000,0xffc00000, not {shown v}"
 
 /-- The three numbers that the value `v` of the work-item option `opt`
 spells, one per dimension: ASCII decimal digits below 2^32, joined by
@@ -106,9 +131,13 @@ where
         | _, true, _, some _ => .error "--seed does not go with --exhaustive"
         | some _, false, _, some _ => .error "--seed does not go with --choices"
         | _, false, some _, _ => .error "--choice-bits needs --exhaustive"
-        | none, false, none, some s => .ok (.sampled s)
-        | cs, false, none, none => .ok (.scripted (choiceList (cs.getD "")))
-        | none, true, b, none => .ok (.exhaustive (b.getD defaultChoiceBits))
+        | _, false, _, _ => if o.nans.isSome then .error "--nans needs --exhaustive" else
+          match o.choices, o.seed with
+          | none, some s => .ok (.sampled s)
+          | cs, _ => .ok (.scripted (choiceList (cs.getD "")))
+        | none, true, b, none => .ok (match o.nans with
+          | some ns => .exhaustiveNaN (b.getD defaultChoiceBits) ns
+          | none => .exhaustive (b.getD defaultChoiceBits))
       if let some why := workItemProblem o.workItem then .error why
       match pos.reverse with
       | file :: func :: rest => .ok ⟨o.fuel, mode, file, func, rest, o.workItem⟩
@@ -122,7 +151,7 @@ where
         | v :: rest' => do go options { o with workItem := set o.workItem (← dims a v) } pos rest'
         | [] => .error s!"{a} takes three numbers below 2^32, as X,Y,Z"
       else if options && (a == "--fuel" || a == "--choices" || a == "--choice-bits" ||
-          a == "--seed") then
+          a == "--seed" || a == "--nans") then
         match rest with
         | v :: rest' => do
           let o' ← match a with
@@ -132,12 +161,14 @@ where
               let s ← optionNat a "a number below 2^64" v
               if s < 2 ^ 64 then pure { o with seed := some s }
               else .error s!"--seed takes a number below 2^64, not {shown v}"
+            | "--nans" => do pure { o with nans := some (← nanList v) }
             | _ => pure { o with choices := some v }
           go options o' pos rest'
         | [] => .error (match a with
           | "--fuel" => "--fuel takes a number of steps"
           | "--choice-bits" => "--choice-bits takes a number of bits"
           | "--seed" => "--seed takes a number below 2^64"
+          | "--nans" => "--nans takes a list of bit patterns"
           | _ => "--choices takes a list of choices")
       else if options && a.startsWith "--" then .error s!"unknown option {shown a}"
       else go options o (a :: pos) rest

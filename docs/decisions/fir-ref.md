@@ -100,6 +100,35 @@ Rejected: every outcome, which looks lawful for `br`, `select`, `freeze` and
 such op and makes the harness call the test invalid; and stuck, which means
 invalid, while these modules are valid.
 
+### Trying a few NaNs
+
+A float op whose result is a NaN chooses its sign and mantissa, `m + 1` bits
+of `float<e,m>` (ADR-2026-11-09-1549): 24 at `f32` and 53 at `f64`, past any
+choice budget that exhaustive mode can walk. The spec labels that choice:
+the rule calls `MonadChoice.chooseNaN e m`, which in the set monad is the
+choice of `m + 1` bits, so the semantics is unchanged, and in the tree of
+choices is a node of the kind `ChoiceKind.nan e`. Every other choice has the
+kind `bits` (ADR-2026-11-16-0855).
+
+`ChoiceTree.exploreNaN` walks the tree as exhaustive mode does, but at a NaN
+choice it tries only the quiet NaN of each sign and the NaNs it is given that
+are NaNs of the format, and charges the budget the bits that count them
+(`lean/Fir/Execution/NaNModes.lean`). Each leaf it lists is a way the tree
+may end (`ChoiceTree.exploreNaN_sub`), so its list is a subset of the set,
+and each leaf counts its path's NaN choices; when no path made one, the list
+is exactly the set (`ChoiceTree.exploreNaN_toSet`). `Gpu.exhaustiveNaN_memOutcomes`
+and `Gpu.exhaustiveNaN_exact` state both for the runs with memory of the core
+and `gpu`, which `fir-ref run --exhaustive --nans` computes
+([the command line](fir-ref-command-line.md#trying-a-few-nans)).
+
+The subset misses a NaN whose bits integer ops change before they reach a
+result, and UB or a stuck path that only an untried payload reaches. The
+harness gives `fir-ref` native code's own result bits as the NaNs to try, so
+a pass is a proof that the native result is in the set
+(ADR-2026-11-16-0855). Rejected: a symbolic "any NaN" outcome, which is
+exact only while no op reads a NaN's bits, and `bitcast` and memory read
+them.
+
 ## What the harness takes from a run
 
 The harness judges a native result by refinement against the set of outcomes

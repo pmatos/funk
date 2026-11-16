@@ -72,6 +72,11 @@ theorem MonadMorphism.liftState_keeps [MonadChoice m] [MonadUB m] (σ : Type)
     show MonadChoice.choose w >>= (fun b => pure (b, s)) =
       (fun b => (b, s)) <$> MonadChoice.choose w
     rw [map_eq_pure_bind]
+  chooseNaN e mb := by
+    funext s
+    show MonadChoice.chooseNaN e mb >>= (fun b => pure (b, s)) =
+      (fun b => (b, s)) <$> MonadChoice.chooseNaN e mb
+    rw [map_eq_pure_bind]
   ub r := by
     funext s
     exact hub r _

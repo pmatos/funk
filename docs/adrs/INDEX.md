@@ -93,6 +93,7 @@ The last column is what holds now: the ADR and every ADR that its
 | [ADR-2026-11-13-0906](2026-11-13-0906-an-op-reads-the-layout-entry-of-the-memory-it-accesses.md) | [semantics](../decisions/semantics.md) | An op reads the layout entry of the memory it accesses | this ADR |
 | [ADR-2026-11-14-0915](2026-11-14-0915-alloca-allocates-values-of-a-type-on-the-stack.md) | [semantics](../decisions/semantics.md) | alloca allocates a constant count of values of a type on the stack of its memory | this ADR |
 | [ADR-2026-11-14-2316](2026-11-14-2316-loads-and-stores-are-spelled-with-a-written-ordering.md) | [semantics](../decisions/semantics.md) | Loads and stores write their ordering, then their alignment when given | this ADR |
+| [ADR-2026-11-16-0855](2026-11-16-0855-fir-ref-tries-a-few-nans-and-the-harness-gives-it-native-ones.md) | [fir-ref](../decisions/fir-ref.md) | fir-ref tries a few NaNs at each NaN choice, and the harness gives it native code's | this ADR |
 
 ## Implementation
 
