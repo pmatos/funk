@@ -114,6 +114,8 @@ again, at every byte order.
 
 {includeReadable "." Fir.Execution.MemoryModes "Modes with memory" FirSpec.Execution.MemoryModes (level := 1)}
 
+{includeReadable "." Fir.Execution.NaNModes "Exhaustive runs that try a few NaNs" FirSpec.Execution.NaNModes (level := 1)}
+
 {includeReadable "." Fir.Execution.MemoryAllocLaws "Allocation in the state layer" FirSpec.Execution.MemoryAllocLaws (level := 1)}
 
 {includeReadable "." Fir.Execution.MemoryLoadLaws "Loads in the state layer" FirSpec.Execution.MemoryLoadLaws (level := 1)}

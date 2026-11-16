@@ -79,7 +79,7 @@ modules (#211) and memory (#231) have landed.
 
 #212 builds the dialect in four stages: its text and validation, the runs
 of one work-item, work-group memory, and the generic results restated
-(the stage plan on #212). Stages 1 to 3 hold:
+(the stage plan on #212). All four hold:
 
 - **Its ops.** The dialect is named `gpu`, and extends the core with no
   types of its own (`lean/Fir/Gpu/`, `crates/funk-ir/src/dialects/gpu.rs`).
@@ -107,7 +107,7 @@ of one work-item, work-group memory, and the generic results restated
   (`lean/Fir/Gpu/Semantics.lean`). A kernel runs in its own table, the
   module of that table (`Module.nest`): its calls name functions of the
   device module, and its memories are its host's.
-- **Its guarantees** (stages 2 and 3). The effect set of each op of `gpu`
+- **Its guarantees** (stages 2 to 4). The effect set of each op of `gpu`
   is proved sound at every work-item (`Gpu.lawfulDialectEffects`), and
   `gpu` is lawful with memory in its totality, monotonicity and poison
   (`lean/Fir/Gpu/WorkGroup.lean`): a question by its tie to the set monad,
@@ -122,10 +122,17 @@ of one work-item, work-group memory, and the generic results restated
   `coreGpu_lawfulMemPoison`), progress and no stuck path
   (`Gpu.progress`, `Gpu.neverStuck`), refined arguments for every function
   of every module (`Gpu.args_isRefinedBy`) and congruence in the callee
-  from given memories with no budget (`Gpu.replaceBody_isRefinedBy_of_from`).
+  from given memories with no budget (`Gpu.replaceBody_isRefinedBy_of_from`,
+  and `Gpu.caller_isRefinedBy_of_from` for the other functions), and, for a
+  callee that reaches no memory, with memory (`Gpu.replaceBody_isRefinedBy`,
+  `Gpu.caller_isRefinedBy`; stage 4).
   Every module of a valid module's tables is valid (`Module.Valid.nest`).
   No core statement changed. `tests/dialects/effects.cases` pins the
-  effects of each op of `gpu`, on the Lean and the Rust side.
+  effects of each op of `gpu`, on the Lean and the Rust side. Each op of
+  the sum that runs by its own rule also ignores the memories where it
+  declares no memory effect (`Gpu.opsIgnoreMemory`, from
+  `Dialect.sum.opsIgnoreMemory` for every sum), as the congruence for a
+  callee that reaches no memory asks.
 - **The #231 check at run time** (stage 2, the Ordering comment on #212).
   `alloca`, `load`, `store` and `ptradd`, of integers and of pointers, run
   unchanged in a kernel on memories that its host's layout declares, other
@@ -142,8 +149,10 @@ of one work-item, work-group memory, and the generic results restated
   (testing-and-harness-corpus.md). `funk build` compiles the host's functions and none of a
   device module's, as for any nested module (#211), and reports a `gpu` op
   in a top-level function as unsupported: the x86-64 backend lowers no op
-  of a dialect other than the core, and `gpu` is terminal.
-- **The G0 checks so far.** Generic code changed only to register it: the
+  of a dialect other than the core, and `gpu` is terminal. The human ruled
+  on 2026-11-16 to keep this (Q2 on #212). Rejected: reporting a module
+  that holds a device module as unsupported, which changes #211's rule.
+- **The G0 checks.** Generic code changed only to register it: the
   dialect's own files, `funk`'s registry and `fir-ref`'s command line name
   it. `scripts/check_g0.py` and `crates/funk-ir/tests/g0.rs` fail on a word
   of `gpu` in generic code, as on a core word (ADR-2026-11-03-0600). Its text
@@ -189,9 +198,11 @@ memory its meaning (ADR-2026-11-09-1542;
   run is the run of one work-item of a kernel, the allocation lives from
   the op until the run ends, whichever function of the device module ran
   the op. Each run of the op makes a new allocation, so an op in a loop or
-  in a function called twice gives distinct blocks; this is an
-  implementation choice of stage 3 that the human may rule on, against one
-  block per op of the program, as a GPU's static work-group buffer is. A stack allocation of
+  in a function called twice gives distinct blocks. The human ruled this
+  on 2026-11-16 (the rulings comment on #177), to be revisited with
+  several work-items (#414). Rejected: one block per op of the program, as
+  a GPU's static work-group buffer is, which needs the op's identity in the
+  run's state and matters only once work-items share it. A stack allocation of
   the same function is freed when its call returns. Rejected: a new kind of
   allocation, which changes the core's memory model and lets `alloca`
   decode it; and `alloca stack`, which a callee's return frees.
@@ -215,3 +226,45 @@ memory its meaning (ADR-2026-11-09-1542;
   (`Gpu.query_denote_eq` and its siblings). Every guarantee with memory of
   `gpu` and of the sum `CoreGpu` holds as before, and now covers the
   allocation too.
+
+### The generic results restated
+
+Stage 4 of #212. G0's generic results, which `FirTest.G0`,
+`FirTest.G0Effects` and `lean/FirTest/G0/` state for every dialect, are
+restated for the sum `CoreGpu`, and for the core as a base with `gpu`'s
+extension, in tests of the dialect's own: `FirTest.GpuG0` (the round trip,
+validation and region kinds), `FirTest.GpuG0Effects` (effects, totality
+and summaries) and `FirTest.GpuG0Runs` (runs, refinement with memory,
+congruence in the callee and the lawful classes of sums). Each applies the
+generic theorem itself, so it builds only while that theorem stays generic
+and the sum meets its hypotheses with no assumption of its own; the
+`fir-spec` hook builds them, and `#check_axioms` checks them. A result
+about the functions of a module holds for those of each symbol table of a
+valid module, nested at any depth, run in the module of that table, so a
+device module's kernels are covered, at every work-item and wherever a run
+names the sum's memories. `scripts/check_g0.py` keeps `CoreGpu` out of the
+generic tests (stage 1), which is why the restatements live beside them.
+
+Every generic theorem of those files is restated but these, and the toy
+behaviour models' own lemmas (`Dist.*`, `WeightedTree.*`):
+
+- Those whose hypothesis is a dialect lawful in the set monad
+  (`LawfulDialectPoison`) or one that lifts it (`LiftsSetM`). The core
+  meets neither, since `alloca` has no rule in the set monad, and the sum
+  fails for the same reason through `gpu.work_group_alloca`. Each has a
+  statement with memory that is restated: `memProgress` for `progress`;
+  `Gpu.inModuleAt_of_valid`, which `memProgress` and `memNeverStuck` use,
+  for `inModuleAt`; `neverUB` and `makesNoPoison` for `neverUB_setM` and
+  `makesNoPoison_setM`; the lawful classes with memory of sums for
+  `lawfulTotal_ofLawful`, `lawfulMonotone_ofLawful`,
+  `lawfulMemPoison_ofLawful` and `propagates`.
+- `memRuns_eq` and `lawfulPoison_iff_mem`, which say that the runs with
+  memory and the set monad agree. They have no counterpart: for a function
+  that allocates, the set monad gives no outcome where the run with memory
+  gives one, for the core alone too.
+- `weightedRun`, which needs a semantics in the toy behaviour models of
+  `FirTest.G0`. No dialect has one, the core included; it shows the seam,
+  not a guarantee of a dialect.
+
+The runs in the set monad that need no lawful class, `fuelMonotone` and
+`neverStuck`, are restated. No proven statement was removed or narrowed.

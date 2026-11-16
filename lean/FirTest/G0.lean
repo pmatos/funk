@@ -325,7 +325,7 @@ def Dist.support (d : Dist α) : SetM α
 one bit. -/
 def WeightedTree.forget : WeightedTree α → ChoiceTree ε α
   | .pure a => .pure a
-  | .flip _ h t => .choose 1 fun b => if b = 1 then h.forget else t.forget
+  | .flip _ h t => .choose 1 .bits fun b => if b = 1 then h.forget else t.forget
 
 /-- What a distribution gives with a weight other than zero is an outcome of
 the tree with its weights forgotten, in the set instance. So results about

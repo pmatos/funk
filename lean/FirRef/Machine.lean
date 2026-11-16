@@ -87,7 +87,7 @@ abbrev Leaf (d : Dialect) [TyDenote d.Ty] (ε : Type) :=
 bits, with the state that the run goes on from for each value. -/
 inductive Stop (d : Dialect) [TyDenote d.Ty] [DialectSignature d] (ε σ : Type) where
   | leaf (l : Leaf d ε)
-  | choose (w : Nat) (k : BitVec w → Cur d ε σ × List (Frame d))
+  | choose (w : Nat) (c : ChoiceKind) (k : BitVec w → Cur d ε σ × List (Frame d))
 
 /-- A measure of a state that each step of `advance` lowers. -/
 def Cur.rank : Cur d ε σ → Nat
@@ -134,7 +134,7 @@ def advance (M : Module d) :
       | .error e => .leaf (.ok (.error e))
     | .ub r => .leaf (.ub r)
     | .noOutcome e => .leaf (.noOutcome e)
-    | .choose w k => .choose w fun b => (.den n f env o os (k b), st)
+    | .choose w c k => .choose w c fun b => (.den n f env o os (k b), st)
   | .ex n f env o args t, st => match t with
     | .pure (.ret, S) =>
       if sig o.op = f.results then advance M (.ret args.toDVals n S) st
@@ -144,7 +144,7 @@ def advance (M : Module d) :
       | .error e => .leaf (.ok (.error e))
     | .ub r => .leaf (.ub r)
     | .noOutcome e => .leaf (.noOutcome e)
-    | .choose w k => .choose w fun b => (.ex n f env o args (k b), st)
+    | .choose w c k => .choose w c fun b => (.ex n f env o args (k b), st)
   | .ret vs _ _, [] => .leaf (.ok (.ok (.ret vs)))
   | .ret vs k S, fr :: st =>
     if vs.map (·.1) = returnTypes fr.o.op then
@@ -210,7 +210,7 @@ def leafTree {α : Type} : ChoiceTree.Leaf ε α → ChoiceTree ε α
 def Stop.tree (M : Module d) :
     Stop d ε (Memories N unit) → ChoiceTree ε (Except Stuck (Result (List (DVal d))))
   | .leaf l => leafTree l
-  | .choose w k => .choose w fun b => Machine.tree M (k b).1 (k b).2
+  | .choose w c k => .choose w c fun b => Machine.tree M (k b).1 (k b).2
 
 /-! # The callers' rest of a run that ends or chooses
 
@@ -240,11 +240,11 @@ theorem kont_noOutcome (e : ε) : ∀ st : List (Frame d),
   | [] => rfl
   | _ :: st => kont_noOutcome e st
 
-theorem kont_choose (w : Nat) : ∀ (st : List (Frame d))
+theorem kont_choose (w : Nat) (c : ChoiceKind) : ∀ (st : List (Frame d))
     (k : BitVec w → Paths d ε (Memories N unit)),
-    kont M st (.choose w k) = .choose w fun b => kont M st (k b)
+    kont M st (.choose w c k) = .choose w c fun b => kont M st (k b)
   | [], _ => rfl
-  | _ :: st, _ => kont_choose w st _
+  | _ :: st, _ => kont_choose w c st _
 
 end Proofs
 

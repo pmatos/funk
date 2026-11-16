@@ -17,7 +17,7 @@ fails when the Lean changes under it.
 :::moduleDocs (fingerprint := "12171358981833708055")
 :::
 
-:::readable Fir.Core.anyNaN_iff Fir.Core.anySign_iff Fir.Core.flipSign_zero (pin := Fir.Core.anyNaN) (pin := Fir.Core.anySign) (fingerprint := "8297353477926480975")
+:::readable Fir.Core.anyNaN_iff Fir.Core.anySign_iff Fir.Core.flipSign_zero (pin := Fir.Core.anyNaN) (pin := Fir.Core.anySign) (fingerprint := "7127345117997965086")
 *Theorem: the choices of a NaN and of a sign.* In the set monad,
 $`\mathrm{anynan}_{e,m}` ends with a value $`v` exactly when
 $`v = \mathrm{nan}_{e,m}(c)` for some $`c \in \mathbb{B}^{m+1}`, and
@@ -67,7 +67,7 @@ well, and a value that $`\phi'` keeps is the choice $`c = 0` of
 $`\mathrm{anysign}` when $`\phi` sets $`\mathsf{nsz}`.
 :::
 
-:::readable Fir.Core.anyNaN_map Fir.Core.anySign_map Fir.Core.flagResult_map Fir.Core.floatResult_map (pin := Fir.MonadMorphism.KeepsChoiceUB) (fingerprint := "16245639884445466971")
+:::readable Fir.Core.anyNaN_map Fir.Core.anySign_map Fir.Core.flagResult_map Fir.Core.floatResult_map (pin := Fir.MonadMorphism.KeepsChoiceUB) (fingerprint := "7745946259917925032")
 *Theorem: a float result in another monad.* For every monad morphism
 $`\varphi` that
 {ref "The-fir-specification--Execution--Monad-morphisms"}[keeps choice and UB],

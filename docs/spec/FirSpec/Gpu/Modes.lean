@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Modes of the core and gpu: readable blocks" =>
 
-:::moduleDocs (fingerprint := "15896224889737347525")
+:::moduleDocs (fingerprint := "3094716320826079862")
 :::
 
 :::readable Fir.Gpu.memName (fingerprint := "10519120774356071085")
@@ -58,6 +58,21 @@ its table, and nothing else.
 work-item, within its choice budget, exhaustive mode on a function of the
 sum lists exactly the outcomes of its run with memory at the fuel it runs
 with, and lists a stuck path exactly when the run has one.
+:::
+
+:::readable Fir.Gpu.exhaustiveNaN (pin := Fir.ChoiceTree.exploreNaN) (fingerprint := "17601642808324285943")
+*Definition: the walk that tries a few NaNs on a function of the sum.* At a
+work-item, with the numbers $`\vec{n}`, it walks the tree of the run as
+the {ref "The-fir-specification--Memory--Exhaustive-runs-that-try-a-few-NaNs"}[walk that tries a few NaNs]
+does. `fir-ref run --exhaustive --nans` computes it (ADR-2026-11-16-0855).
+:::
+
+:::readable Fir.Gpu.exhaustiveNaN_memOutcomes Fir.Gpu.exhaustiveNaN_memStuck Fir.Gpu.exhaustiveNaN_exact (pin := Fir.Run.outcomes) (pin := Fir.Run.IsStuck) (pin := Fir.ChoiceTree.Leaf.pathEnd) (fingerprint := "13396834938509485934")
+*Theorems: the walk that tries a few NaNs gives outcomes, and all of them
+without a NaN choice.* At every work-item, each outcome that it lists on a
+function of the sum, and each stuck path, is one of its run with memory at
+the fuel it runs with. When no path that it lists made a NaN choice, it
+lists exactly the outcomes of the run.
 :::
 
 :::readable Fir.Gpu.scripted_memOutcomes Fir.Gpu.scripted_memStuck (pin := Fir.Run.outcomes) (pin := Fir.Run.IsStuck) (pin := Fir.ChoiceTree.Leaf.pathEnd) (fingerprint := "2546031466005703844")

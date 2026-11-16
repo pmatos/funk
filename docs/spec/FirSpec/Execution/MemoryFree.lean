@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Touching no memory: readable blocks" =>
 
-:::moduleDocs (fingerprint := "12564574086854445638")
+:::moduleDocs (fingerprint := "1695218655043167899")
 :::
 
 :::readable Fir.Effects.TouchesNoMemory Fir.Effects.TouchesNoMemory.of_le (pin := Fir.Effects) (pin := Fir.Effects.Le) (fingerprint := "10653422458642567564")
@@ -22,6 +22,12 @@ when the Lean changes under it.
 {ref "The-fir-specification--Execution--Effect-sets"}[effects] $`E` touches
 no memory when, for every memory $`x`, $`E` reads, writes and allocates in
 no $`x`. A set of effects below one that touches no memory touches none.
+:::
+
+:::readable Fir.MemSet.has_map Fir.Effects.TouchesNoMemory.of_map (pin := Fir.MemSet.map) (pin := Fir.Effects.map) (fingerprint := "10444200579652637058")
+*Theorems: renaming memories.* Rename the memories of a set of memories by
+$`f`: it holds $`f(x)` for each memory $`x` it held. So a set of effects
+that touches no memory once its memories are renamed touched none before.
 :::
 
 :::readable Fir.SymbolTable.ReachesNoMemory Fir.SymbolTable.ReachesNoMemory.of_summary Fir.SymbolTable.ReachesNoMemory.own Fir.SymbolTable.ReachesNoMemory.callee (pin := Fir.SymbolTable.reach) (pin := Fir.SymbolTable.summary) (fingerprint := "14307947686334129542")

@@ -127,6 +127,7 @@ import Fir.Execution.MemoryFinite
 import Fir.Execution.MemoryFiniteDown
 import Fir.Execution.MemoryFiniteReplace
 import Fir.Execution.MemoryModes
+import Fir.Execution.NaNModes
 import Fir.Core.Lawful
 import Fir.Core.MemRules
 import Fir.Execution.MemoryAllocLaws
