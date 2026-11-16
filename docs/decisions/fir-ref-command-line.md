@@ -113,8 +113,8 @@ and the work-group's id below the count (`Gpu.WorkItem.Valid`); anything
 else is a usage error. The options go with any function, a host function
 included; they change only what the questions of `gpu` give.
 
-This spelling is an implementation choice of #212's second stage, taken
-without a ruling, and the human may rule on it. `@M::@FUNC` follows MLIR's
+This spelling was proposed by #212's second stage, and the human accepted
+it on 2026-11-16 (Q4 on #212). `@M::@FUNC` follows MLIR's
 nested symbol references. Rejected: one option per dimension of each
 number, which takes twelve options for one work-item; the work-item as
 extra arguments after the function's, which a tool could not tell from

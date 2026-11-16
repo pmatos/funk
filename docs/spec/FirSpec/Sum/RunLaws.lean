@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Runs of a sum, op by op: readable blocks" =>
 
-:::moduleDocs (fingerprint := "15587820001483955588")
+:::moduleDocs (fingerprint := "17807739098335587352")
 :::
 
 :::readable Fir.Dialect.sum.mapsDenote (fingerprint := "2955957549720364140")
@@ -40,4 +40,15 @@ a computation with memory keeps finitely many outcomes. So when each op of
 the base has finitely many outcomes with memory, where the run names the
 base's memories as the sum does, and each op of the extension does, each op
 of the sum that runs by its own rule does.
+:::
+
+:::readable Fir.Dialect.sum.opsIgnoreMemory (fingerprint := "2912114382560669015")
+*Theorem: a sum's ops ignore the memories where they touch none.* A base
+op's effects in the sum are its own, with each memory renamed to the sum's
+name for it, so a base op that declares no memory effect in the sum
+declares none in the base; and mapping the results keeps a computation that
+ignores the memories. So when each op of the base ignores
+the memories where it declares no memory effect, where the run names the
+base's memories as the sum does, and each op of the extension does, each
+op of the sum that runs by its own rule does.
 :::
