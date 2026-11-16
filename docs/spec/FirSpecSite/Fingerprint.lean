@@ -19,10 +19,12 @@ A definition's body includes the helpers that Lean generates to hold part
 of it, since its stored value only names them. These are the body of a
 recursive definition (`f._f`, `f._unary`, or `f._mutual`, which holds the
 whole mutual block), its case splits (`f._sparseCasesOn_1`), and its
-pattern matchers (`f.match_1`), followed transitively. Any other definition
-that the declaration only refers to counts by its name: a change to that
-definition's body does not change the fingerprint. A readable block that
-restates such a definition pins it as well, with `(pin := …)`.
+pattern matchers (`f.match_1`), followed transitively, so a recursive
+definition of a mutual block covers the bodies of the whole block. Any
+other definition that the declaration only refers to counts by its name: a
+change to that definition's body does not change the fingerprint. A
+readable block that restates such a definition pins it as well, with
+`(pin := …)`.
 
 A section's module docs pin the fingerprint of all the declarations of their
 module, so that a change to what the module says fails the build until

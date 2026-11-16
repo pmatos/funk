@@ -108,8 +108,9 @@ the document is elaborated:
   of it, since its stored value only names them: the body of a recursive
   definition (`f._f`, `f._unary`, or `f._mutual` for a mutual block), its
   case splits (`f._sparseCasesOn_N`) and its pattern matchers
-  (`f.match_N`), followed transitively. Theorems are never followed, so
-  proofs stay out. The human ruled on 2026-11-16 (#418) to port this from
+  (`f.match_N`), followed transitively. So a recursive definition of a
+  mutual block covers the bodies of the whole block. Theorems are never
+  followed, so proofs stay out. The human ruled on 2026-11-16 (#418) to port this from
   pmatos/mojo-grimoire#62, so both repositories share one implementation.
   Rejected: hashing only the stored value, which names the helpers without
   their bodies, so a block could drift from its Lean while the build passed.

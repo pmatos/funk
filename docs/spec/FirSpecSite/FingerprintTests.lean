@@ -100,6 +100,17 @@ def expectSame (what : String) (n : Name) (old new : String) : CommandElabM Unit
        | [] => 0
        | y :: ys => y + fpSum ys"
 
+/-! A change to the proof that a well-founded definition terminates does not count. -/
+
+#eval show CommandElabM Unit from
+  expectSame "the proof that it terminates" `fpHalve
+    "def fpHalve (m n : Nat) : Nat := if m ≤ 1 then n else fpHalve (m / 2) (n + 1)
+     termination_by m
+     decreasing_by omega"
+    "def fpHalve (m n : Nat) : Nat := if m ≤ 1 then n else fpHalve (m / 2) (n + 1)
+     termination_by m
+     decreasing_by have _h : True := trivial; omega"
+
 /-! A definition that the declaration only refers to still counts by its name. -/
 
 #eval show CommandElabM Unit from
