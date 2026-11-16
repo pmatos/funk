@@ -1,5 +1,5 @@
 import Std.Data.TreeMap
-import Fir.Execution.Interpreter
+import FirRef.HVector
 
 /-!
 The values that `fir-ref run` has defined, by name
@@ -145,44 +145,37 @@ def zipRevH : List (Name × d.Ty) → {ts : List d.Ty} → HVector toType ts →
 
 variable [DecidableEq d.Ty]
 
-/-- The values of the names `xs`, one for each type of `ts`. -/
-def operands (b : Bindings d) : (ts : List d.Ty) → List Name →
-    Except Stuck (HVector toType ts × Bindings d)
-  | [], [] => pure (.nil, b)
-  | t :: ts, x :: xs => do
-    let (⟨t', v⟩, b) ← b.value x
-    if h : t' = t then
-      let (vs, b) ← b.operands ts xs
-      pure (.cons (h ▸ v) vs, b)
-    else stuck s!"%{x} does not have the operand's type"
-  | _, _ => stuck "an op has a number of operands other than its op instance takes"
-
 /-- What `lookOperands` gives: values, with what their lookups add to the
-debt, or nothing. -/
+debt, or why the op is stuck. -/
 inductive Looked (d : Dialect) [TyDenote d.Ty] (ts : List d.Ty) where
   | ok (vs : HVector toType ts) (c : Nat)
-  | fail
+  | fail (e : Stuck)
 
 /-- The values of the names `xs`, one for each type of `ts`, with `c` plus
-what their lookups add to the debt, if each name has a value of its type. -/
-def lookOperands (b : @& Bindings d) : (ts : List d.Ty) → List Name → Nat → Looked d ts
-  | [], [], c => .ok .nil c
-  | t :: ts, x :: xs, c => match look b x with
-    | .hit ⟨t', v⟩ k =>
-      if h : t' = t then match lookOperands b ts xs (c + cost k) with
-        | .ok vs c => .ok (.cons (h ▸ v) vs) c
-        | .fail => .fail
-      else .fail
-    | .miss => .fail
-  | _, _, _ => .fail
+what their lookups add to the debt, or why `Env.operands` is stuck on them.
+It walks the names in a loop of tail calls, with the values found so far in
+`acc`, the last first, and builds the vector at the end (`ofRev`), so it
+takes no stack per operand (#405). -/
+def lookOperands (b : @& Bindings d) (ts : List d.Ty) (xs : List Name) (c : Nat) : Looked d ts :=
+  go ts xs c [] rfl
+where
+  go : (rest : List d.Ty) → List Name → Nat → (acc : List (DVal d)) →
+      (acc.map (·.1)).reverse ++ rest = ts → Looked d ts
+    | [], [], c, acc, h => .ok (ofRev acc (by simpa using h)) c
+    | t :: rest, x :: xs, c, acc, h => match look b x with
+      | .hit ⟨t', v⟩ k =>
+        if ht : t' = t then go rest xs (c + cost k) (⟨t', v⟩ :: acc) (by subst ht; simpa using h)
+        else .fail ⟨s!"%{x} does not have the operand's type"⟩
+      | .miss => .fail ⟨s!"%{x} is not defined"⟩
+    | _, _, _, _, _ => .fail ⟨"an op has a number of operands other than its op instance takes"⟩
 
-/-- `operands`, which looks each name up once and pays for all the lookups
-at once; on an error, `operands` gives the error. -/
+/-- `Env.operands`, on bindings: it looks each name up once and pays for all
+the lookups at once. -/
 @[inline] def args (b : Bindings d) (ts : List d.Ty) (xs : List Name) :
     Except Stuck (HVector toType ts × Bindings d) :=
   match lookOperands b ts xs 0 with
   | .ok vs c => pure (vs, b.pay c)
-  | .fail => b.operands ts xs
+  | .fail e => .error e
 
 /-- The values of the names `xs`, after `acc`, the last first. -/
 def values (b : Bindings d) : List Name → List (DVal d) → Except Stuck (List (DVal d) × Bindings d)
@@ -221,6 +214,20 @@ def zipParams : List (Name × d.Ty) → {ts : List d.Ty} → HVector toType ts �
     else match zipParams f.params args [] with
       | some acc => pure (entry.body, ⟨acc.reverse, f.params.length, 0, ∅⟩)
       | none => stuck s!"a call passes @{f.name} arguments of types other than its parameter types"
+
+/-- `Func.enter`, with the parameters bound by `List.zipWith`, which Lean
+compiles as a loop (`List.zipWith_eq_zipWithTR`). The spec's `List.zip` is
+compiled before that theorem, and takes stack for each parameter (#405).
+The walks of `FirRef.RunModes` enter the function that a run starts in
+with it. -/
+def enterFast (f : Func d) (args : List (DVal d)) : Except Stuck (List (Operation d) × Env d) := do
+  let some entry := f.blocks.head? | stuck "the function has no blocks"
+  if !entry.params.isEmpty then stuck s!"the entry block ^{entry.label} declares arguments"
+  if args.map (·.1) = f.params.map (·.2) then
+    pure (entry.body, List.zipWith Prod.mk (f.params.map (·.1)) args)
+  else stuck s!"a call passes @{f.name} arguments of types other than its parameter types"
+
+@[csimp] theorem enter_eq_enterFast : @Func.enter = @enterFast := rfl
 
 /-! # Bindings stand for a spec environment -/
 

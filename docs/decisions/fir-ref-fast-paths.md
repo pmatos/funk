@@ -126,6 +126,46 @@ compiled in the spec, would still call the spec's interpreter. Also rejected:
 a machine that builds the spec's tree lazily for the spec's walks. Sampled and
 exhaustive modes would still take stack for every choice.
 
+### Wide values
+
+A run takes no stack per value either: per operand of an op, per value that
+a `ret` or a call returns, per argument of a call or a `br`, or per parameter
+of the function that it starts in (#405). `Bindings.lookOperands` reads an
+op's operands in a loop of tail calls, keeping the values found so far in a
+list, the last first, and `FirRef.ofRev` builds the vector from its end. A
+proof that the list has the vector's types travels with the loop and is
+erased when compiled. `lookOperands` also gives the error `Env.operands`
+gives, so `Bindings.args` no longer runs a second, recursive reading after a
+failed one. `readArgs` and `readGpuArgs` read `fir-ref run`'s arguments the
+same way.
+
+Four spec functions on the path take stack per value, and `fir-ref` runs a
+loop in place of each: `HVector.toDVals` (`toDVals_eq_toDValsFast`, in
+`FirRef.HVector`), the sum's moves of a vector between the base's types and
+its own, `HVector.toSum` and `HVector.ofSum` (`toSum_eq_toSumFast` and
+`ofSum_eq_ofSumFast`, in `FirRef.HVectorSum`), and `Func.enter`, whose
+`List.zip` core compiles before its `zipWith_eq_zipWithTR`
+(`enter_eq_enterFast`, `rfl`, in `FirRef.Bindings`). The sum's rules,
+`Dialect.sum.instDialectDenote`, are compiled in the spec and call the
+spec's moves, so `FirRef.sumDenote` copies them after the swaps, and
+`FirRef.gpuTreeDenote` builds `Gpu.memTreeDenote` from that copy; each is
+proved equal by `rfl`, and the three walks of the core and `gpu` run over
+`gpuTreeDenote`. `lean/.lake/build/ir/FirRef/Run.c` calls no
+`HVector.toDVals`, `toSum`, `ofSum` or `List.zip`.
+
+`scripts/check-fir-ref-run.sh` checks it on a 256 KiB stack: a `ret` of
+100,000 values in each mode, a call that returns 10,000 values, a call of
+100,000 arguments, a `br` of 100,000 block arguments and a function of
+100,000 parameters. A `ret` of 1,000,000 values ran in a second. Time is
+another matter: an op that reads many values bound long before passes them
+all in `young` for each operand, since `lookOperands` pays its debt only
+after the op, so a call that returns 100,000 values took 30 seconds, and
+200,000 took 294. `main` takes the same time where it does not overflow.
+
+Rejected: a `@[csimp]` theorem on `Dialect.sum.instDialectDenote`. An
+instance's code is compiled where it is declared, so `fir-ref` would still
+run the spec's moves; the walks have to name the copy.
+
 ### The bindings map
 
 The machine keeps its values in `FirRef.Bindings`. `young` is a list of the
@@ -181,6 +221,9 @@ for #169, with the swaps added since.
 | `wordDialects_eq_wordDialects`, `wordDialects_eq_itemWordDialects` and the four `setProblems_eq_*` | `Validate` | ordering device | The dialect-set check, compiled after the depth swaps |
 | `scripted_eq_runScripted`, `exhaustive_eq_runExhaustive`, `sampled_eq_runSampled` | `Run` | depth | The machine of [Running](#running), for the core's modes |
 | `gpuScripted_eq_runGpuScripted`, `gpuExhaustive_eq_runGpuExhaustive`, `gpuSampled_eq_runGpuSampled` | `Run` | depth | The machine, for the modes of the core and `gpu` that `fir-ref run` calls (#212) |
+| `toDVals_eq_toDValsFast` | `HVector` | depth | The spec recurses per value (#405) |
+| `toSum_eq_toSumFast`, `ofSum_eq_ofSumFast` | `HVectorSum` | depth | Per value; reached through the copies `sumDenote` and `gpuTreeDenote` (#405) |
+| `enter_eq_enterFast` | `Bindings` | depth | `List.zip` recurses per parameter (#405) |
 
 The modules of `lean/FirRef/` fall in the same classes:
 
@@ -190,7 +233,9 @@ The modules of `lean/FirRef/` fall in the same classes:
   no swap of its own.
 - **Depth:** the loops of `Bindings` (`zipRev`, `zipRevH`, `zipParams`, `values`), since
   the spec's `Env.bind` and `Func.enter` use `List.zip`; `Machine`,
-  `MachineTree`, `RunAt`, `Steps`, `RunModes` and `Run`; `RunText`, whose
+  `MachineTree`, `RunAt`, `Steps`, `RunModes` and `Run`; `HVector` and
+  `HVectorSum`, and the loops of `lookOperands`, `readArgs` and
+  `readGpuArgs`, for wide values (#405); `RunText`, whose
   `findFunc` finds a kernel through its modules in a loop (#212); `Read/*` but
   `Read/Eof`; `Decode` and `Decode/*`; `PrintAttr`, `PrintModule`, `LocTable`,
   `Validate`, `Tables`, `AttrWalk` and `Parse`; `Lex/*` but `Lex/Cursor` and

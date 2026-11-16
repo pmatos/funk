@@ -4,6 +4,7 @@ import FirRef.Utf8
 import FirRef.Report
 import FirRef.Sample
 import FirRef.RunModes
+import FirRef.HVectorSum
 import FirRef.RunText
 
 /-!
@@ -132,19 +133,34 @@ def readArg : (t : Core.Ty) → String → Except String ⟦t⟧
   | .ptr _, "poison" => pure (.poison : PoisonOr Memory.Pointer)
   | .ptr n, s => .error s!"{shown s} is not a value of type {tyText (.ptr n)}"
 
-/-- One argument for each type of `ts`. -/
-def readArgs : (ts : List Core.Ty) → List String → Except String (HVector toType ts)
-  | [], [] => pure .nil
-  | t :: ts, a :: as => return .cons (← readArg t a) (← readArgs ts as)
-  | ts, as => .error s!"{as.length} arguments are given for {ts.length} parameters"
+/-- One argument for each type of `ts`. It reads them in a loop of tail
+calls, with the values read so far in `acc`, the last first, so it takes no
+stack per argument (#405). -/
+def readArgs (ts : List Core.Ty) (as : List String) : Except String (HVector toType ts) :=
+  go ts as [] rfl
+where
+  go : (rest : List Core.Ty) → List String → (acc : List ((t : Core.Ty) × ⟦t⟧)) →
+      (acc.map (·.1)).reverse ++ rest = ts → Except String (HVector toType ts)
+    | [], [], acc, h => pure (ofRev acc (by simpa using h))
+    | t :: rest, a :: as, acc, h => match readArg t a with
+      | .ok v => go rest as (⟨t, v⟩ :: acc) (by simpa using h)
+      | .error why => .error why
+    | rest, as, _, _ => .error s!"{as.length} arguments are given for {rest.length} parameters"
 
 /-- One argument for each type of `ts`, types of the sum of the core and
-`gpu`, which are the core's. -/
-def readGpuArgs : (ts : List CoreGpu.Ty) → List String → Except String (HVector toType ts)
-  | [], [] => pure .nil
-  | .inl t :: ts, a :: as => return .cons (← readArg t a) (← readGpuArgs ts as)
-  | .inr e :: _, _ :: _ => e.elim
-  | ts, as => .error s!"{as.length} arguments are given for {ts.length} parameters"
+`gpu`, which are the core's, read as `readArgs` reads them. -/
+def readGpuArgs (ts : List CoreGpu.Ty) (as : List String) : Except String (HVector toType ts) :=
+  go ts as [] rfl
+where
+  go : (rest : List CoreGpu.Ty) → List String → (acc : List ((t : CoreGpu.Ty) × ⟦t⟧)) →
+      (acc.map (·.1)).reverse ++ rest = ts → Except String (HVector toType ts)
+    | [], [], acc, h => pure (ofRev acc (by simpa using h))
+    | .inl t :: rest, a :: as, acc, h => match readArg t a with
+      | .ok v => go rest as (⟨.inl t, v⟩ :: acc)
+        (by rw [← h, List.map_cons, List.reverse_cons, List.append_assoc]; rfl)
+      | .error why => .error why
+    | .inr e :: _, _ :: _, _, _ => e.elim
+    | rest, as, _, _ => .error s!"{as.length} arguments are given for {rest.length} parameters"
 
 /-- The JSON object that reports a result of `kind`, with more fields. Its
 strings are escaped as `fir-ref validate`'s are. -/
@@ -277,6 +293,18 @@ def runSampled {γ : Type} (draw : (w : Nat) → γ → BitVec w × γ) (M : Mod
   letI := Core.memTreeDenote M.layout.entry id
   exact (Machine.sampled_eq M draw f args fuel g).symm
 
+/-- `Gpu.memTreeDenote`, with the sum's rules from `sumDenote`, whose moves of
+vectors take no stack per value (#405). -/
+@[instance_reducible] def gpuTreeDenote [Gpu.WorkItem] {N : Type} [DecidableEq N]
+    (lay : N → MemLayout) (ρ : DialectEffects.Mem CoreGpu → N) :
+    DialectDenote CoreGpu (StateT (Memory.Memories N (unitsOf lay)) (ChoiceTree Core.Op)) :=
+  letI := Core.memTreeDenote lay (ρ ∘ DialectMemOver.ofBase (base := CoreDialect) (e := GpuExt))
+  letI := Gpu.treeDenote (Memory.Memories N (unitsOf lay))
+  sumDenote
+
+theorem gpuTreeDenote_eq [Gpu.WorkItem] {N : Type} [DecidableEq N] (lay : N → MemLayout)
+    (ρ : DialectEffects.Mem CoreGpu → N) : gpuTreeDenote lay ρ = Gpu.memTreeDenote lay ρ := rfl
+
 /-- `Gpu.scripted`, by the machine, with
 the semantics of the core and `gpu` at the work-item in the layer over the
 tree: each memory with its entry in `M`'s data layout, named by its
@@ -284,7 +312,7 @@ number. -/
 def runGpuScripted [Gpu.WorkItem] {σ : Type} (read : (w : Nat) → σ → Option (BitVec w))
     (M : Module CoreGpu) (f : Func CoreGpu) (args : HVector toType (f.params.map (·.2)))
     (fuel : Nat) (cs : List σ) : Except (ChoiceTree.Misfit σ) (Gpu.Leaf × Nat) :=
-  letI := Gpu.memTreeDenote M.layout.entry Gpu.memName
+  letI := gpuTreeDenote M.layout.entry Gpu.memName
   Machine.scripted (unit := unitsOf M.layout.entry) M read f args fuel cs
 
 @[csimp] theorem gpuScripted_eq_runGpuScripted : @Gpu.scripted = @runGpuScripted := by
@@ -296,7 +324,7 @@ def runGpuScripted [Gpu.WorkItem] {σ : Type} (read : (w : Nat) → σ → Optio
 def runGpuExhaustive [Gpu.WorkItem] (M : Module CoreGpu) (f : Func CoreGpu)
     (args : HVector toType (f.params.map (·.2))) (fuel budget : Nat) :
     Option (List (Gpu.Leaf × Nat)) :=
-  letI := Gpu.memTreeDenote M.layout.entry Gpu.memName
+  letI := gpuTreeDenote M.layout.entry Gpu.memName
   Machine.exhaustive (unit := unitsOf M.layout.entry) M f args fuel budget
 
 @[csimp] theorem gpuExhaustive_eq_runGpuExhaustive : @Gpu.exhaustive = @runGpuExhaustive := by
@@ -308,7 +336,7 @@ def runGpuExhaustive [Gpu.WorkItem] (M : Module CoreGpu) (f : Func CoreGpu)
 def runGpuSampled [Gpu.WorkItem] {γ : Type} (draw : (w : Nat) → γ → BitVec w × γ)
     (M : Module CoreGpu) (f : Func CoreGpu) (args : HVector toType (f.params.map (·.2)))
     (fuel : Nat) (g : γ) : Gpu.Leaf × List ChoiceTree.Chosen :=
-  letI := Gpu.memTreeDenote M.layout.entry Gpu.memName
+  letI := gpuTreeDenote M.layout.entry Gpu.memName
   Machine.sampled (unit := unitsOf M.layout.entry) M draw f args fuel g
 
 @[csimp] theorem gpuSampled_eq_runGpuSampled : @Gpu.sampled = @runGpuSampled := by

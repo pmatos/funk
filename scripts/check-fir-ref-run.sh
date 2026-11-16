@@ -14,7 +14,9 @@
 # KiB stack (#135). It runs the kernels of a device module as one work-item,
 # named as @dev::@k, with the work-item's ids and sizes as options, through
 # modules nested 3,000 deep on a 256 KiB stack, and rejects a work-item that
-# is not one of its grid (#212).
+# is not one of its grid (#212). On a 256 KiB stack, it runs a ret of 100,000
+# values, calls with 10,000 results and 100,000 arguments, a br of 100,000
+# block arguments and a function of 100,000 parameters (#405).
 set -euo pipefail
 
 if [[ $# -ne 1 ]]; then
@@ -177,6 +179,46 @@ done <<END
 $exhausted
 {"kind":"outcomes","choices":0,"outcomes":[{"kind":"fuel-exhausted"}]} --exhaustive
 {"kind":"fuel-exhausted","choices":0,"sequence":[]} --seed 7
+END
+# fir-ref run takes no stack per value (#405): on a 256 KiB stack, a ret
+# of 100,000 values runs in each mode, and so do a call that returns
+# 10,000 values, a call of 100,000 arguments, a br of 100,000 block
+# arguments and a function of 100,000 parameters, given on the command line.
+n=100000
+ones=$(printf ',"1"%.0s' $(seq 2 $n))
+ps=$(printf ', %%p%d: i8' $(seq 2 $n))
+{
+    printf 'func @f() -> i8%s {\n^e:\n  %%c: i8 = const 1 @0\n' "$(printf ', i8%.0s' $(seq 2 $n))"
+    printf '  ret %%c%s @0\n}\n' "$(printf ', %%c%.0s' $(seq 2 $n))"
+    printf '\nfunc @g(%%p1: i8%s) -> i8 {\n^e:\n  ret %%p%d @0\n}\n' "$ps" "$n"
+    printf '\nfunc @args() -> i8 {\n^e:\n  %%c: i8 = const 1 @0\n'
+    printf '  %%r: i8 = call @g %%c%s @0\n  ret %%r @0\n}\n' "$(printf ', %%c%.0s' $(seq 2 $n))"
+    printf '\nfunc @br() -> i8 {\n^e:\n  %%c: i8 = const 1 @0\n'
+    printf '  br ^b(%%c%s) @0\n^b(%%p1: i8%s):\n  ret %%p%d @0\n}\n' \
+        "$(printf ', %%c%.0s' $(seq 2 $n))" "$ps" "$n"
+    printf '\nfunc @h() -> i8%s {\n^e:\n  %%c: i8 = const 1 @0\n' "$(printf ', i8%.0s' $(seq 2 10000))"
+    printf '  ret %%c%s @0\n}\n' "$(printf ', %%c%.0s' $(seq 2 10000))"
+    printf '\nfunc @call() -> i8%s {\n^e:\n' "$(printf ', i8%.0s' $(seq 2 10000))"
+    printf '  %%r1: i8%s = call @h @0\n' "$(printf ', %%r%d: i8' $(seq 2 10000))"
+    printf '  ret %%r1%s @0\n}\n' "$(printf ', %%r%d' $(seq 2 10000))"
+    printf '\nlocs {\n  @0 = unknown\n}\n'
+} >"$tmp/wide.fir"
+while read -r want mode; do
+    # shellcheck disable=SC2086 # MODE is a list of words.
+    (ulimit -c 0 && LEAN_STACK_SIZE_KB=256 runs "$tmp/wide.fir" 0 "$want" $mode @f) || status=1
+done <<END
+${ret}["1"$ones]$none
+{"kind":"outcomes","choices":0,"outcomes":[${ret}["1"$ones]}]} --exhaustive
+${ret}["1"$ones],"choices":0,"sequence":[]} --seed 7
+END
+while read -r want run; do
+    # shellcheck disable=SC2086 # RUN is a list of words.
+    (ulimit -c 0 && LEAN_STACK_SIZE_KB=256 runs "$tmp/wide.fir" 0 "$want" $run) || status=1
+done <<END
+${ret}["1"${ones:0:4*9999}]$none @call
+${ret}["1"]$none @args
+${ret}["1"]$none @br
+${ret}["1"]$none @g $(printf '1 %.0s' $(seq $n))
 END
 # freeze of poison makes a choice: %a + 1 overflows i2 at 1
 # (docs/decisions/fir-ref-command-line.md#scripted-and-exhaustive-modes).
