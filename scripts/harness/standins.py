@@ -41,9 +41,9 @@ def spell(bits: int, width: int) -> str:
 def standins(ty: str) -> tuple[str, ...] | None:
     """The stand-ins of the type `ty` in order, or None when it has none,
     as `ptr` has none: its values are pointers, not bits. Native code
-    takes a pointer as an address, but which address stands in for a
-    poison pointer is a rule of the harness that waits on the human
-    (stage 5 of #231)."""
+    takes a pointer as an address, but no address stands in for a poison
+    pointer: the human ruled on 2026-11-15 (#399) that poison-pointer
+    tests stay interpreter-only."""
     b = bits_of(ty)
     if b is None:
         return None
