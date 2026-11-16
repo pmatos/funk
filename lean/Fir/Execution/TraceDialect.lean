@@ -1,4 +1,5 @@
 import Fir.Execution.TraceRuns
+import Fir.Execution.MemoryRuns
 
 /-!
 # A dialect's traced runs

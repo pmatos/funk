@@ -1,5 +1,4 @@
 import Fir.Execution.TraceMonad
-import Fir.Execution.MemoryRuns
 
 /-!
 # Traced runs
@@ -43,8 +42,6 @@ A dialect's events, and the traced runs of its functions, are in
 -/
 
 namespace Fir
-
-open Memory
 
 /-! # Marked traces -/
 
