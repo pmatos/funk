@@ -25,7 +25,9 @@
 
 use super::Rng;
 use super::program::{FUEL, Run};
-use crate::dialects::core::{FLOAT_PREDICATES, float_format, float_type, int_type, spell_float};
+use crate::dialects::core::{
+    FLOAT_ARITH_OPS, FLOAT_PREDICATES, float_format, float_type, int_type, spell_float,
+};
 use crate::ir::{Attr, Block, Func, LocRef, Op, Type};
 use crate::text::print_symbol;
 
@@ -40,21 +42,6 @@ pub const FLOAT_PREFIX: &str = "float.";
 
 /// The formats that the backend lowers, as `(e, m)`.
 const FORMATS: [(u32, u32); 2] = [(8, 23), (11, 52)];
-
-/// The arithmetic ops: each name, its number of operands, and whether it
-/// rounds.
-const ARITH: [(&str, usize, bool); 10] = [
-    ("fadd", 2, true),
-    ("fsub", 2, true),
-    ("fmul", 2, true),
-    ("fdiv", 2, true),
-    ("frem", 2, false),
-    ("fmod", 2, false),
-    ("sqrt", 1, true),
-    ("fma", 3, true),
-    ("fneg", 1, false),
-    ("fabs", 1, false),
-];
 
 fn round() -> Attr {
     Attr::App("round".into(), vec![Attr::word("rne")])
@@ -153,7 +140,7 @@ impl Chain {
             };
             return (self.push(op.operand(last), &u), u);
         }
-        let (name, n, rounds) = *rng.pick(&ARITH);
+        let (name, n, rounds) = *rng.pick(&FLOAT_ARITH_OPS);
         let mut op = Op::new(name, self.loc);
         if rounds {
             op = op.attr(round());
@@ -192,8 +179,11 @@ pub(super) fn function(rng: &mut Rng, name: String, loc: LocRef) -> (Func, Vec<R
         floats.push((last.clone(), ty.clone()));
     }
     let mut results = vec![(last.clone(), ty.clone())];
-    if floats.len() > 1 && rng.one_in(3) {
-        results.push(rng.pick(&floats[..floats.len() - 1]).clone());
+    let earlier = &floats[..floats.len() - 1];
+    for _ in 1..MAX_FLOAT_RESULTS {
+        if !earlier.is_empty() && rng.one_in(3) {
+            results.push(rng.pick(earlier).clone());
+        }
     }
     if rng.one_in(3) {
         let c = chain.compare(rng, &last, &ty);

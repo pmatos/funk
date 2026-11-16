@@ -34,12 +34,12 @@ fn programs_are_valid_and_deterministic() {
     }
 }
 
-/// Whether the backend lowers `t`: an integer of one of its widths, `f32`
-/// or `f64`.
-fn lowered(t: &funk_ir::Type) -> bool {
+/// Whether the backend lowers `t`, a type of the function `func`: an
+/// integer of one of its widths, or `f32` or `f64` in a float function.
+fn lowered(t: &funk_ir::Type, func: &str) -> bool {
     match (int_width(t), float_format(t)) {
         (Some(w), _) => BACKEND_WIDTHS.contains(&w),
-        (_, Some(f)) => f == (8, 23) || f == (11, 52),
+        (_, Some(f)) => func.starts_with(program::FLOAT_PREFIX) && [(8, 23), (11, 52)].contains(&f),
         _ => false,
     }
 }
@@ -50,12 +50,12 @@ fn programs_take_only_the_types_that_the_backend_lowers() {
         for f in p.module.funcs() {
             let types = f.params.iter().map(|d| &d.ty).chain(&f.results);
             for t in types {
-                assert!(lowered(t), "seed {seed}: {t}");
+                assert!(lowered(t, &f.name), "seed {seed}: {t}");
             }
         }
-        for (_, o) in ops(&p.module) {
+        for (caller, o) in ops(&p.module) {
             for d in &o.results {
-                assert!(lowered(&d.ty), "seed {seed}: {}", d.ty);
+                assert!(lowered(&d.ty, caller), "seed {seed}: {}", d.ty);
             }
         }
     }

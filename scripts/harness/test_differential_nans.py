@@ -161,9 +161,9 @@ class Generated(unittest.TestCase):
     judged as a differential test of the corpus is (#219)."""
 
     def judge(self, *responses):
-        runs = RecordedRuns(*responses)
-        result = evaluate_generated(NAN_TEST, F32, F32_PAIR, runs)
-        self.assertFalse(runs.responses, "every supplied response must be consumed")
+        self.runs = RecordedRuns(*responses)
+        result = evaluate_generated(NAN_TEST, F32, F32_PAIR, self.runs)
+        self.assertFalse(self.runs.responses, "every response must be consumed")
         return result
 
     def test_an_allowed_native_nan_is_compared_and_passes(self):
@@ -171,6 +171,14 @@ class Generated(unittest.TestCase):
         self.assertEqual(result.judgement.status, PASSED)
         self.assertIsNone(result.interpreter_only)
         self.assertIn(f"with native code's NaNs {X86}", result.detail)
+        self.assertEqual(
+            self.runs.calls,
+            [
+                ("exhaustive", NAN_TEST.args),
+                ("native", ("2139095040", "2139095040")),
+                ("exhaustive", NAN_TEST.args, (X86,)),
+            ],
+        )
 
     def test_a_wrong_result_that_is_no_nan_fails(self):
         j = self.judge(QUIET_ONLY, ("1065353216",)).judgement

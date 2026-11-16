@@ -2,7 +2,9 @@
 
 use std::collections::HashSet;
 
-use funk_ir::dialects::core::{float_format, read_float};
+use funk_ir::dialects::core::{
+    FAST_MATH_FLAGS, FLOAT_ARITH_OPS, FLOAT_CONVERSIONS, float_format, read_float,
+};
 use funk_ir::generate::Rng;
 use funk_ir::generate::program::{self, FLOAT_PREFIX, MAX_FLOAT_RESULTS, MAX_NAN_OPS, Program};
 use funk_ir::text::print_symbol;
@@ -10,11 +12,24 @@ use funk_ir::{Func, Op};
 
 const SEEDS: u64 = 400;
 
-/// The ops of a float function that may make a NaN choice.
-const NAN_OPS: [&str; 12] = [
-    "fadd", "fsub", "fmul", "fdiv", "frem", "fmod", "sqrt", "fma", "fneg", "fabs", "fpext",
-    "fptrunc",
-];
+/// Whether `name` is an op of a float function that may make a NaN choice:
+/// an arithmetic op or a conversion between float formats.
+fn nan_op(name: &str) -> bool {
+    FLOAT_ARITH_OPS.iter().any(|o| o.0 == name) || FLOAT_CONVERSIONS.contains(&name)
+}
+
+/// The budget of a generated run, `CHOICE_BITS` in
+/// `scripts/harness/programs.py`.
+fn choice_bits() -> usize {
+    let path = concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../scripts/harness/programs.py"
+    );
+    let text = std::fs::read_to_string(path).expect("programs.py");
+    let line = text.lines().find_map(|l| l.strip_prefix("CHOICE_BITS = "));
+    line.and_then(|v| v.trim().parse().ok())
+        .expect("CHOICE_BITS in programs.py")
+}
 
 fn programs() -> impl Iterator<Item = (u64, Program)> {
     (0..SEEDS).map(|seed| (seed, program::program(&mut Rng::new(seed))))
@@ -30,17 +45,16 @@ fn ops(f: &Func) -> impl Iterator<Item = &Op> {
     f.body.blocks.iter().flat_map(|b| &b.ops)
 }
 
-/// The budget of a generated run is 10 bits (`CHOICE_BITS` in
-/// `scripts/harness/programs.py`). A NaN choice costs `bitsFor(1 + k)` bits
-/// on the run that tries native code's `k` NaNs, one per float result.
+/// A NaN choice costs `bitsFor(1 + k)` bits on the run that tries native
+/// code's `k` NaNs, at most one per float result.
 #[test]
 fn a_float_function_stays_within_the_budget_of_a_generated_run() {
     let bits_for = |n: usize| (2 * n - 1).ilog2() as usize;
-    assert!(MAX_NAN_OPS * bits_for(1 + MAX_FLOAT_RESULTS) <= 10);
+    assert!(MAX_NAN_OPS * bits_for(1 + MAX_FLOAT_RESULTS) <= choice_bits());
     for (seed, p) in programs() {
         for f in float_funcs(&p) {
             assert_eq!(f.body.blocks.len(), 1, "seed {seed}: {}", f.name);
-            let nan_ops = ops(f).filter(|o| NAN_OPS.contains(&o.name.as_str()));
+            let nan_ops = ops(f).filter(|o| nan_op(&o.name));
             assert!(nan_ops.count() <= MAX_NAN_OPS, "seed {seed}: {}", f.name);
             let floats = f.results.iter().filter(|t| float_format(t).is_some());
             assert!(
@@ -56,13 +70,13 @@ fn a_float_function_stays_within_the_budget_of_a_generated_run() {
 /// and every value an op defines reaches `ret`.
 #[test]
 fn a_float_function_holds_only_float_ops_and_uses_every_value() {
-    let allowed = |n: &str| NAN_OPS.contains(&n) || ["const", "fcmp", "ret"].contains(&n);
+    let allowed = |n: &str| nan_op(n) || ["const", "fcmp", "ret"].contains(&n);
     for (seed, p) in programs() {
         for f in float_funcs(&p) {
             let mut used = HashSet::new();
             for o in ops(f) {
                 assert!(allowed(&o.name), "seed {seed}: {}: {}", f.name, o.name);
-                for flag in ["nnan", "ninf", "nsz"] {
+                for flag in FAST_MATH_FLAGS {
                     let word = funk_ir::Attr::word(flag);
                     assert!(!o.attrs.contains(&word), "seed {seed}: {}", f.name);
                 }
@@ -102,8 +116,10 @@ fn every_program_has_float_functions_at_both_formats_with_their_runs() {
         }
     }
     assert_eq!(formats, HashSet::from([(8, 23), (11, 52)]));
-    for name in NAN_OPS.iter().chain(&["const", "fcmp"]) {
-        let n = counts.get(*name).copied().unwrap_or(0);
+    let arith = FLOAT_ARITH_OPS.iter().map(|o| o.0);
+    let every = arith.chain(FLOAT_CONVERSIONS).chain(["const", "fcmp"]);
+    for name in every {
+        let n = counts.get(name).copied().unwrap_or(0);
         assert!(n >= 20, "{n} of {name}");
     }
 }
