@@ -20,19 +20,17 @@ integer, read and printed as an `i32` or `i64` is: a spelling internal to the
 harness, which converts it to and from the float literals of fir text
 (ADR-2026-11-11-1438). A pointer is its address, read and printed as an
 `i64` is (stage 5 of #231). A run starts with no allocation, so an address
-given on the command line points at nothing that the run made. Whether the
-harness passes one in place of a poison pointer is a rule of the harness
-that waits on the human; until then it passes none, and a test with a
-poison pointer argument is interpreter-only. A pointer result is the
-address, which says nothing of the spec's allocation and offset, so the
-harness compares no pointer result
+given on the command line points at nothing that the run made. The harness
+passes no address in place of a poison pointer, so a test with a poison
+pointer argument is interpreter-only. A pointer result is the address, which
+says nothing of the spec's allocation and offset, so the harness compares no
+pointer result
 ([x86-64-backend-lowering-memory.md](x86-64-backend-lowering-memory.md#pointers)).
-This contract is the agents' choice and waits on a ruling of the human
-(#399). The alternatives they set aside: refusing to build a module with a
-pointer parameter or result, since a module builds whole and a function
-that takes a pointer may be called by one that the harness runs; and a run
-that refuses such a function, which hides an address that is useful when
-reading a run.
+This contract is as the human ruled on 2026-11-15 (#399). Rejected: refusing
+to build a module with a pointer parameter or result, since a module builds
+whole and a function that takes a pointer may be called by one that the
+harness runs; and a run that refuses such a function, which hides an address
+that is useful when reading a run.
 
 On success it writes one line to standard output, `{"values":["V1","V2"]}`, a
 JSON list of the returned values in order, each a string with the same
@@ -151,14 +149,16 @@ never outgrows its stack.
 
 ### A recursive run
 
-A function from which a cycle is reachable is recursive. So is, for its stack,
-a function from which an `alloca` on a cycle of branches is reachable, whose
-run's stack grows with its input as a recursion's does (stage 5 of #231). That it takes the
-recursive run's stack is the agents' reading of the human's ruling below,
-which spoke of recursion; it waits on a ruling of the human. Its figure is then the
-most a run uses when it makes no call within a cycle and runs no `alloca` more
-than once, and the least the runtime reserves for it. The runtime reads the soft `RLIMIT_STACK` with `getrlimit`,
-rounded down to a page, and reserves the smaller of it and the machine's memory
+A function from which a cycle is reachable is recursive. An `alloca` on a
+cycle of its function's branches grows the run's stack with its input, as a
+recursion does, and the human ruled on 2026-11-15 (#399) that it gives its
+function the recursive run's stack of the 2026-11-02 ruling below. So, for
+its stack, a function from which such an `alloca` is reachable is recursive
+too. Its figure is
+then the most a run uses when it makes no call within a cycle and runs no
+`alloca` more than once, and the least the runtime reserves for it. The
+runtime reads the soft `RLIMIT_STACK` with `getrlimit`, rounded down to a
+page, and reserves the smaller of it and the machine's memory
 and swap, from `sysinfo`, never less than the figure. `RLIM_INFINITY` (`ulimit
 -s unlimited`) leaves memory and swap as the bound, as does a failed
 `getrlimit`. So by default a recursive run gets 8 MiB, as a C or Rust program
