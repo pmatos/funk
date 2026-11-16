@@ -14,10 +14,10 @@ when the Lean changes under it.
 
 #doc (Manual) "The location table's rule: readable blocks" =>
 
-:::moduleDocs (fingerprint := "9577522543187242690")
+:::moduleDocs (fingerprint := "912449242568827340")
 :::
 
-:::readable Fir.Location.WellFormed Fir.LocTable.Valid (pin := Fir.LocTable.InLimits) (pin := Fir.Location.numbers) (pin := Fir.Location.limit) (pin := Fir.Location.refs) (fingerprint := "11508244414306764901")
+:::readable Fir.Location.WellFormed Fir.LocTable.Valid (pin := Fir.LocTable.InLimits) (pin := Fir.Location.numbers) (pin := Fir.Location.limit) (pin := Fir.Location.refs) (fingerprint := "9219407297867808915")
 *Definition: a well-formed location and a valid location table.* A
 {ref "The-fir-specification--Abstract-syntax--Locations"}[location] is
 _well formed_ when:

@@ -14,10 +14,10 @@ changes under it.
 
 #doc (Manual) "Lifting an extension: readable blocks" =>
 
-:::moduleDocs (fingerprint := "13045597018531439577")
+:::moduleDocs (fingerprint := "2435596867883482875")
 :::
 
-:::readable Fir.Dialect.lift Fir.Dialect.lift.instDialectName Fir.Dialect.lift.instTyDenote Fir.Dialect.lift.instTyPoison Fir.Dialect.lift.instTyRefinement Fir.Dialect.lift.instDecidableEqOp Fir.Dialect.lift.instDecidableEqTy (fingerprint := "11332194699468969674")
+:::readable Fir.Dialect.lift Fir.Dialect.lift.instDialectName Fir.Dialect.lift.instTyDenote Fir.Dialect.lift.instTyPoison Fir.Dialect.lift.instTyRefinement Fir.Dialect.lift.instDecidableEqOp Fir.Dialect.lift.instDecidableEqTy (fingerprint := "6665268587926334873")
 *Definition: the lift of an extension.* Let $`e` be an extension written
 over $`d`, the dialects it depends on, $`\iota` an inclusion of $`d`'s
 types in those of a larger base $`B`, and $`\mu` a _memory map_, which
@@ -49,7 +49,7 @@ and has no context otherwise. Its view of a host keeps the host's ops that
 are $`e`'s, and the host's types that project.
 :::
 
-:::readable Fir.Dialect.lift.ValidOp Fir.Dialect.lift.instDecidableValidOp (fingerprint := "5179808654070511145")
+:::readable Fir.Dialect.lift.ValidOp Fir.Dialect.lift.instDecidableValidOp (fingerprint := "17332581582629913939")
 *Definition: an op of the lift in a context.* An op $`q` of $`e` obeys its
 rule in the context $`C` of the lift when the lift can see $`C` and $`q`
 obeys $`e`'s rule there:
@@ -60,7 +60,7 @@ This is the rule for a base op in a sum (ADR-2026-11-09-2353), with $`e` in
 place of the base. It can be decided when $`e`'s rule can.
 :::
 
-:::readable Fir.Dialect.lift.instDialectSignature Fir.Dialect.lift.instDialectValidation Fir.Dialect.lift.instDecidableDialectValidation (fingerprint := "16774356745864721196")
+:::readable Fir.Dialect.lift.instDialectSignature Fir.Dialect.lift.instDialectValidation Fir.Dialect.lift.instDecidableDialectValidation (fingerprint := "12209873103215282029")
 *Definition: the signature and the rules of the lift.* An op of the lift
 has $`e`'s signature, with its types included by $`\hat\iota`:
 
@@ -77,7 +77,7 @@ so do $`e`'s kinds of item and an item of one of them.
 Each rule can be decided when $`B`'s and $`e`'s can.
 :::
 
-:::readable Fir.Dialect.lift.liftMem Fir.Dialect.lift.liftMem_ofBase Fir.Dialect.lift.instDialectEffects Fir.Dialect.lift.instDialectMemOver (fingerprint := "9787371898634028682")
+:::readable Fir.Dialect.lift.liftMem Fir.Dialect.lift.liftMem_ofBase Fir.Dialect.lift.instDialectEffects Fir.Dialect.lift.instDialectMemOver (fingerprint := "7474008779890298085")
 *Definition: the memories of the lift.* The memories of the lift over
 $`B` are $`B`'s and $`e`'s own, $`M_B + O_e`. The lift's memory map sends
 $`e`'s name for a memory $`x` of $`d` to $`\mu(x)`, and keeps $`e`'s own:
@@ -102,7 +102,7 @@ $$`[\![q]\!](v^*) = \uparrow_{\hat\iota} [\![q]\!]_{d.\mathrm{over}(e)}(\downarr
 A terminator's exit is $`e`'s on the operands moved down.
 :::
 
-:::readable Fir.Dialect.lift.decodeOp Fir.Dialect.lift.tyAttr Fir.Dialect.lift.decodeTy Fir.Dialect.lift.instDialectText (fingerprint := "18348881999016279676")
+:::readable Fir.Dialect.lift.decodeOp Fir.Dialect.lift.tyAttr Fir.Dialect.lift.decodeTy Fir.Dialect.lift.instDialectText (fingerprint := "15614547729827706109")
 *Definition: the text of the lift.* The lift writes each op as $`e` does.
 It writes a type of $`B` as $`B` does, and an own type of $`e` as $`e`
 does. It reads an op by projecting its operand and result types by

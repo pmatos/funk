@@ -14,7 +14,7 @@ changes under it.
 
 #doc (Manual) "Words and dialect sets: readable blocks" =>
 
-:::moduleDocs (fingerprint := "17666849479822341420")
+:::moduleDocs (fingerprint := "13080679550556278040")
 :::
 
 :::readable Fir.wordDialect Fir.wordDialect_dot (fingerprint := "1656636787730505960")
@@ -30,7 +30,7 @@ no dialect. The theorem states the equation: a dialect's name, a $`.` and
 any word make a word of that dialect.
 :::
 
-:::readable Fir.Attr.head? Fir.Attr.dialect? Fir.Attr.dialects Fir.Attr.dialectsAll Fir.Attr.dialect?_mem Fir.Attr.mem_dialectsAll (pin := Fir.Attr) (fingerprint := "5878379765441588316")
+:::readable Fir.Attr.head? Fir.Attr.dialect? Fir.Attr.dialects Fir.Attr.dialectsAll Fir.Attr.dialect?_mem Fir.Attr.mem_dialectsAll (pin := Fir.Attr) (fingerprint := "3473012019107326304")
 *Definition: the dialects of a type or an attribute.* The head of an
 attribute is its word, or the word that an applied attribute applies; a
 number, a float literal, a string and a symbol have none. A type belongs to the dialect of

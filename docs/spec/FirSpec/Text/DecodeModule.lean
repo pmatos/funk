@@ -23,7 +23,7 @@ by $`k` is $`k` run on $`a`. The proofs below follow the decoder one step
 at a time with it.
 :::
 
-:::readable Fir.mapM_decodeType (pin := Fir.Text.decodeType) (fingerprint := "10737967661857746415")
+:::readable Fir.mapM_decodeType (pin := Fir.Text.decodeType) (fingerprint := "10718087776537962991")
 *Theorem: result types decode back.* For every dialect with a
 {ref "The-fir-specification--Text-format--Grammar"}[text format], all
 types as written $`(a_1, q_1), \dots, (a_n, q_n)` and types
@@ -34,7 +34,7 @@ decoding each $`(a_i, q_i)` with the
 order, gives $`t_1, \dots, t_n`.
 :::
 
-:::readable Fir.Func.WellFormed.decodeFunc_eq (pin := Fir.Text.decodeFunc) (pin := Fir.Func.WellFormed) (fingerprint := "9625755100788047290")
+:::readable Fir.Func.WellFormed.decodeFunc_eq (pin := Fir.Text.decodeFunc) (pin := Fir.Func.WellFormed) (fingerprint := "1470720099245077143")
 *Theorem: a well-formed function decodes back.* For every dialect with
 signatures, validation rules and a text format whose text is lawful, every
 {ref "The-fir-specification--Text-format--Round-trips"}[well-formed]
@@ -54,7 +54,7 @@ a body of the core's kind, which is the kind of a well-formed function's
 body.
 :::
 
-:::readable Fir.isDialectWord_ne Fir.DialectItem.WellFormed.decodeItem_eq (pin := Fir.Text.decodeDialectItem) (pin := Fir.DialectItem.WellFormed) (fingerprint := "3870543999219301537")
+:::readable Fir.isDialectWord_ne Fir.DialectItem.WellFormed.decodeItem_eq (pin := Fir.Text.decodeDialectItem) (pin := Fir.DialectItem.WellFormed) (fingerprint := "2519922189377776560")
 *Theorems: an item of a dialect's kind decodes back.* A word of a dialect
 holds a `.`, so it is neither `func` nor `module`. For every dialect with
 a text format and every well-formed item $`i` of a dialect's kind, an item
@@ -64,7 +64,7 @@ result types and its parameters decode back, and its attributes are kept
 as they were read.
 :::
 
-:::readable Fir.Func.WellFormed.decodeItem_eq Fir.Item.WellFormed.decodeItem_eq Fir.Item.WellFormed.decodeItems_eq (pin := Fir.Text.decodeItem) (pin := Fir.Text.decodeItems) (fingerprint := "1750046234271386164")
+:::readable Fir.Func.WellFormed.decodeItem_eq Fir.Item.WellFormed.decodeItem_eq Fir.Item.WellFormed.decodeItems_eq (pin := Fir.Text.decodeItem) (pin := Fir.Text.decodeItems) (fingerprint := "13677868610136160431")
 *Theorems: items decode back.* For every dialect with signatures,
 validation rules and a lawful text:
 
@@ -86,7 +86,7 @@ an item of a dialect's kind decodes back by the theorem above. The last two theo
 another, and are proved together by induction on the items.
 :::
 
-:::readable Fir.decodeLayout_eq (pin := Fir.Text.decodeMemLayout) (fingerprint := "18149788252979388033")
+:::readable Fir.decodeLayout_eq (pin := Fir.Text.decodeMemLayout) (fingerprint := "10099140561503703068")
 *Theorem: a data layout decodes back.* For every data layout whose entries
 are within the limit, and all entries as written that are, positions
 aside, what its entries write, decoding them, in order, gives the layout

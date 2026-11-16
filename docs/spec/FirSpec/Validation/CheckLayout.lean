@@ -14,7 +14,7 @@ fails when the Lean changes under it.
 
 #doc (Manual) "Checking the data layout: readable blocks" =>
 
-:::moduleDocs (fingerprint := "15259949326640597717")
+:::moduleDocs (fingerprint := "14003057497258053306")
 :::
 
 :::readable Fir.need Fir.need_eq_nil (fingerprint := "7722159485140472772")
@@ -47,7 +47,7 @@ the types name and $`L` does not declare. There are none exactly when $`L`
 has the memory of each type.
 :::
 
-:::readable Fir.memoryProblem Fir.memoryProblem_eq_none Fir.SymbolTable.memoryProblems Fir.SymbolTable.memoryProblems_eq_nil (fingerprint := "12703735416319205326")
+:::readable Fir.memoryProblem Fir.memoryProblem_eq_none Fir.SymbolTable.memoryProblems Fir.SymbolTable.memoryProblems_eq_nil (fingerprint := "15954637914171883189")
 *Definition: the check of a table's memories.* The check of the memories of
 the symbol table $`T` in the layout $`L` gives one problem for each function
 of $`T`, and then for each item of a dialect's kind, whose types name a

@@ -87,7 +87,7 @@ checks the types of the values before it returns them, so this holds
 whatever the ops do, in every dialect.
 :::
 
-:::readable Fir.Func.enter_ok (pin := Fir.Func.enter) (fingerprint := "15860882159951368467")
+:::readable Fir.Func.enter_ok (pin := Fir.Func.enter) (fingerprint := "8533336508243875407")
 *Theorem: the callee starts.* Let the entry block $`e` of a function $`f`
 declare no arguments, and let the values $`v_1, \dots, v_n` have the types
 of the parameters $`p_1, \dots, p_n` of $`f`. Then entering $`f` with them

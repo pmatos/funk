@@ -14,10 +14,10 @@ when the Lean changes under it.
 
 #doc (Manual) "Refined environments: readable blocks" =>
 
-:::moduleDocs (fingerprint := "13860081481177104000")
+:::moduleDocs (fingerprint := "8267850524279378980")
 :::
 
-:::readable Fir.DVal.type_eq_of_isRefinedBy Fir.DVals.types_eq_of_isRefinedBy Fir.DVals.length_eq_of_isRefinedBy (pin := Fir.instHRefinementDVal) (pin := Fir.List.IsRefinedBy) (fingerprint := "12804861348215119863")
+:::readable Fir.DVal.type_eq_of_isRefinedBy Fir.DVals.types_eq_of_isRefinedBy Fir.DVals.length_eq_of_isRefinedBy (pin := Fir.instHRefinementDVal) (pin := Fir.List.IsRefinedBy) (fingerprint := "5241261430219300834")
 *Theorems: refinement keeps types and lengths.* In every dialect, with
 its refinement of values:
 
@@ -34,7 +34,7 @@ a block's arguments, decides alike on a list and on a list that refines
 it.
 :::
 
-:::readable Fir.HVector.toDVals_isRefinedBy (pin := Fir.HVector.Forall₂) (pin := Fir.HVector.toDVals) (fingerprint := "9266708787873397849")
+:::readable Fir.HVector.toDVals_isRefinedBy (pin := Fir.HVector.Forall₂) (pin := Fir.HVector.toDVals) (fingerprint := "4095886627832354194")
 *Theorem: vectors that refine position by position give lists that
 refine.* For every list of types $`t_1, \dots, t_n` and values
 $`v_i, v'_i \in \llbracket t_i \rrbracket` with $`v_i \sqsubseteq_{t_i} v'_i`
@@ -47,7 +47,7 @@ signature, and an environment holds typed values; this carries the
 refinement of the one to the other.
 :::
 
-:::readable Fir.Env.IsRefinedBy (fingerprint := "9175744602071411945")
+:::readable Fir.Env.IsRefinedBy (fingerprint := "4665086439358089517")
 *Definition: an environment refined by another.* An
 {ref "The-fir-specification--Execution--The-interpreter"}[environment]
 $`E` is refined by $`E'`, written $`E \sqsubseteq E'`, when both bind the
@@ -65,7 +65,7 @@ successors and to callees. This relation is what holds between the source's
 environment and the target's at every step.
 :::
 
-:::readable Fir.Env.IsRefinedBy.zip_append (pin := Fir.List.IsRefinedBy) (fingerprint := "6260386824660073815")
+:::readable Fir.Env.IsRefinedBy.zip_append (pin := Fir.List.IsRefinedBy) (fingerprint := "12817605726423088450")
 *Theorem: binding refined values keeps an environment refined.* If
 $`E \sqsubseteq E'` and the lists of typed values $`u^*` and $`u'^*`
 satisfy $`u^* \sqsubseteq u'^*`, then for every list of names $`x^*`:
@@ -77,7 +77,7 @@ place, up to the end of the shorter list, in front of $`E`. An op's
 results, a block's arguments and a callee's parameters are all bound so.
 :::
 
-:::readable Fir.Env.IsRefinedBy.lookup Fir.Env.IsRefinedBy.value Fir.Env.IsRefinedBy.mapM_value (pin := Fir.Env.value) (fingerprint := "2288385506341218324")
+:::readable Fir.Env.IsRefinedBy.lookup Fir.Env.IsRefinedBy.value Fir.Env.IsRefinedBy.mapM_value (pin := Fir.Env.value) (fingerprint := "10774722497896471288")
 *Theorems: what the refining environment finds, the refined one finds.*
 Let $`E \sqsubseteq E'`.
 
@@ -94,7 +94,7 @@ A name that the target's run finds, the source's run finds too, with a
 value that the target's refines. The last is what a jump looks up.
 :::
 
-:::readable Fir.Env.operands_cons_ok Fir.Env.IsRefinedBy.operands (pin := Fir.Env.operands) (pin := Fir.HVector.Forall₂) (fingerprint := "12120129880752582993")
+:::readable Fir.Env.operands_cons_ok Fir.Env.IsRefinedBy.operands (pin := Fir.Env.operands) (pin := Fir.HVector.Forall₂) (fingerprint := "2735039236071143087")
 *Theorems: the operands that the refining environment finds, the refined
 one finds, refined.* Let $`E \sqsubseteq E'`, in a dialect whose types can
 be compared for equality. If the
@@ -114,7 +114,7 @@ exactly when $`E(x)` is a value $`v` of the type $`t`, and the operands
 of the types $`t^*` named $`x^*` are found as $`v^*`.
 :::
 
-:::readable Fir.Func.jump_eq_ok Fir.Func.jump_of Fir.Env.IsRefinedBy.jump (pin := Fir.Func.jump) (pin := Fir.Func.block?) (fingerprint := "17995951777421580479")
+:::readable Fir.Func.jump_eq_ok Fir.Func.jump_of Fir.Env.IsRefinedBy.jump (pin := Fir.Func.jump) (pin := Fir.Func.block?) (fingerprint := "10401634662752521882")
 *Theorems: a jump from the refining environment goes where the jump from
 the refined one goes.* Let $`E \sqsubseteq E'`, in a dialect whose types
 can be compared for equality. If, for a function $`f`
@@ -138,7 +138,7 @@ jump. Once that is fixed, the target and the source go to the same block
 together.
 :::
 
-:::readable Fir.Func.enter_eq_ok Fir.Func.enter_isRefinedBy (pin := Fir.Func.enter) (fingerprint := "14850641996949605453")
+:::readable Fir.Func.enter_eq_ok Fir.Func.enter_isRefinedBy (pin := Fir.Func.enter) (fingerprint := "7886779511128385297")
 *Theorems: a function entered on refined arguments starts where it starts
 on the others.* Let $`u^* \sqsubseteq u'^*` be lists of typed values, in
 a dialect whose types can be compared for equality. If

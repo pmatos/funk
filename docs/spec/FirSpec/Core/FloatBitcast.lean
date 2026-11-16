@@ -14,10 +14,10 @@ when the Lean changes under it.
 
 #doc (Manual) "Bit cast rules: readable blocks" =>
 
-:::moduleDocs (fingerprint := "11113321670423418225")
+:::moduleDocs (fingerprint := "9204743102599796130")
 :::
 
-:::readable Fir.Core.bitcastValue (fingerprint := "11113321670423418225")
+:::readable Fir.Core.bitcastValue (fingerprint := "9204743102599796130")
 *Definition: the rule of $`\mathsf{bitcast}`.* For every width $`N`, a
 bit cast of a vector of $`N` bits is that vector; of poison, it is poison:
 

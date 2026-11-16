@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Float constants in text: readable blocks" =>
 
-:::moduleDocs (fingerprint := "6332588082455822586")
+:::moduleDocs (fingerprint := "14198019101386972462")
 :::
 
 :::readable Fir.Core.hasDecimals Fir.Core.modelFormat Fir.Core.modelFormat_cond (fingerprint := "10244866007434555026")
@@ -62,10 +62,11 @@ of $`c`, its value is $`d.ddd \cdot 10^E` with $`E = j + n - 1`:
   right, and zeros after the point to fill: `12.5`, `0.0001`.
 :::
 
-:::readable Fir.Core.dropZeros (fingerprint := "10387781642429851192")
-*Definition: dropping trailing zeros.* $`\mathrm{dropzeros}(c, j)` writes
-the same number $`c \cdot 10^j` with every trailing zero of $`c` moved into
-the exponent: $`(1500, 0)` becomes $`(15, 2)`. A count bounds the zeros it
+:::readable Fir.Core.dropZeros (fingerprint := "10264759184242514435")
+*Definition: dropping trailing zeros.* For $`c > 0`,
+$`\mathrm{dropzeros}(c, j)` writes the same number $`c \cdot 10^j` with
+every trailing zero of $`c` moved into the exponent: $`(1500, 0)` becomes
+$`(15, 2)`. It leaves $`(0, j)` as it is. A count bounds the zeros it
 drops, so that it is a structural recursion; the spelling gives a count
 larger than the digits of any candidate.
 :::
@@ -79,7 +80,7 @@ digits of $`\mathit{den}`, the rational times $`10^K` is at least 1, and
 $`E` is the number of digits of its whole part, less one, less $`K`.
 :::
 
-:::readable Fir.Core.around Fir.Core.pickNearest (fingerprint := "2791600958952345411")
+:::readable Fir.Core.around Fir.Core.pickNearest (fingerprint := "5751218576497923777")
 *Definition: the candidates at one length.* $`\mathrm{around}(\mathit{num},
 \mathit{den}, j)` is the multiples $`c` of $`10^j`, written by $`c`, next
 to $`x = \mathit{num} / \mathit{den}`: $`\lfloor x / 10^j \rfloor` alone
@@ -88,7 +89,7 @@ that read back, $`\mathrm{nearest}` takes the only one, or of two the one
 nearer to $`x / 10^j`, and of two equally near the even one.
 :::
 
-:::readable Fir.Core.shortestFrom (fingerprint := "3038407445575817679")
+:::readable Fir.Core.shortestFrom (fingerprint := "10200600422469486499")
 *Definition: the shortest decimal that reads back.* For bits $`b` of the
 format $`f` whose value is $`(-1)^s \cdot \mathit{num} / \mathit{den}`,
 with decimal exponent $`E`, $`\mathrm{shortest}` tries $`n = 1, 2,
@@ -100,7 +101,7 @@ one by $`\mathrm{nearest}`, and stops at the first $`n` that has one. A
 count bounds the search.
 :::
 
-:::readable Fir.Core.decimalLit (fingerprint := "8272231106591551293")
+:::readable Fir.Core.decimalLit (fingerprint := "10505506536399580889")
 *Definition: the decimal of a float.* $`\mathrm{declit}_{e,m}(b)` is the
 decimal literal of the bits $`b` of $`\mathsf{float}\langle e,m \rangle`,
 when the format has decimals and $`b` is a zero or finite. A zero is
@@ -110,7 +111,7 @@ $`m + 4` digits, and its decimal, with trailing zeros dropped, is laid out
 by $`\mathrm{layout}`. Infinities and NaNs have no decimal.
 :::
 
-:::readable Fir.Core.readFloatLit (pin := Fir.Text.hexValue) (pin := Fir.Text.digitsValue) (fingerprint := "3724862749958047350")
+:::readable Fir.Core.readFloatLit (pin := Fir.Text.hexValue) (pin := Fir.Text.digitsValue) (fingerprint := "11515655109855277683")
 *Definition: reading a float literal.* $`\mathrm{readlit}_{e,m}(l)` is the
 bits of $`\mathsf{float}\langle e,m \rangle` that the literal $`l` reads
 as, before the check that it is their spelling:
@@ -128,7 +129,7 @@ Every other literal reads as no bits. The bounds come before any power of
 ten is computed, so reading never computes a huge one.
 :::
 
-:::readable Fir.Core.floatLit Fir.Core.decodeFloatLit (fingerprint := "12079729617817994871")
+:::readable Fir.Core.floatLit Fir.Core.decodeFloatLit (fingerprint := "5791246253075251208")
 *Definition: the spelling of a float, and reading it back.*
 $`\mathrm{floatlit}_{e,m}(b)` is the one spelling of the bits $`b`: its
 decimal, when it has one and that decimal reads back as $`b`, and
@@ -138,7 +139,7 @@ nothing otherwise. So `1.0` at `f32` decodes, and `1.00`, `0x3f800000` and
 `1.0e39`, which reads as an infinity spelled `0x7f800000`, do not.
 :::
 
-:::readable Fir.Core.spellBits (pin := Fir.Core.floatLit) (fingerprint := "9799827423055158480")
+:::readable Fir.Core.spellBits (pin := Fir.Core.floatLit) (fingerprint := "16880542188548857659")
 *Definition: a spelling for tests.* $`\mathrm{spellbits}(e, m, b)` is the
 text of $`\mathrm{floatlit}_{e,m}` of the bits whose value is the natural
 number $`b`. The tests of this section, and the shared cases that

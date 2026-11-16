@@ -104,9 +104,18 @@ the document is elaborated:
   definition's type and body, an inductive type's constructors, or a
   structure's fields and defaults.
 - The fingerprint is a hash of Lean's terms, so a new proof keeps it.
-- A definition that these only refer to counts by its name. A block whose prose
-  restates such a definition, from any module, adds it with `(pin := P)`. The
-  fingerprint then covers its body too.
+- A definition's body includes the helpers that Lean generates to hold part
+  of it, since its stored value only names them: the body of a recursive
+  definition (`f._f`, `f._unary`, or `f._mutual` for a mutual block), its
+  case splits (`f._sparseCasesOn_N`) and its pattern matchers
+  (`f.match_N`), followed transitively. Theorems are never followed, so
+  proofs stay out. The human ruled on 2026-11-16 (#418) to port this from
+  pmatos/mojo-grimoire#62, so both repositories share one implementation.
+  Rejected: hashing only the stored value, which names the helpers without
+  their bodies, so a block could drift from its Lean while the build passed.
+- Any other definition that these only refer to counts by its name. A block
+  whose prose restates such a definition, from any module, adds it with
+  `(pin := P)`. The fingerprint then covers its body too.
 - A `grammar T` box tags each alternative with the constructors it shows. The
   boxes of a block show every constructor of `T` exactly once. The block must
   name `T`.

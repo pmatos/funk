@@ -17,7 +17,7 @@ when the Lean changes under it.
 :::moduleDocs (fingerprint := "14509812814199035746")
 :::
 
-:::readable Fir.Core.decodeStore_loadAttrs Fir.Core.decodeStore_storePtr Fir.Core.decodeStore_eq (pin := Fir.Core.decodeStore) (pin := Fir.Core.loadAttrs) (fingerprint := "11805065037129211207")
+:::readable Fir.Core.decodeStore_loadAttrs Fir.Core.decodeStore_storePtr Fir.Core.decodeStore_eq (pin := Fir.Core.decodeStore) (pin := Fir.Core.loadAttrs) (fingerprint := "6792575262468041391")
 *Theorems: every $`\mathsf{store}` reads back from its spelling, and only
 from it.* For every ordering $`o`, width $`W`, alignment $`a` and memories
 $`N` and $`M`, valid or not:

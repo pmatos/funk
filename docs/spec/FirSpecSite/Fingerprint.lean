@@ -13,8 +13,14 @@ a declaration says, not how it is proved:
 It is a hash of Lean's terms, which does not depend on the names of bound
 variables or on layout, so a change to a proof or to the spelling of a
 binder keeps it. Any change to the declaration's own statement, body,
-constructors or field defaults changes it. A definition that the
-declaration only refers to counts by its name: a change to that
+constructors or field defaults changes it.
+
+A definition's body includes the helpers that Lean generates to hold part
+of it, since its stored value only names them. These are the body of a
+recursive definition (`f._f`, `f._unary`, or `f._mutual`, which holds the
+whole mutual block), its case splits (`f._sparseCasesOn_1`), and its
+pattern matchers (`f.match_1`), followed transitively. Any other definition
+that the declaration only refers to counts by its name: a change to that
 definition's body does not change the fingerprint. A readable block that
 restates such a definition pins it as well, with `(pin := …)`.
 
@@ -27,13 +33,50 @@ open Lean
 
 namespace FirSpecSite
 
+/--
+Whether `c` is a definition that Lean generated to hold part of another: a
+pattern matcher, or a definition whose name ends in a component that starts
+with `_`. A theorem is never one, so that proofs stay out of the fingerprint.
+-/
+def isHelper (env : Environment) (c : Name) : Bool :=
+  match env.find? c with
+  | some (.defnInfo _) =>
+    Meta.isMatcherCore env c || match c with
+      | .str _ s => s.startsWith "_"
+      | _ => false
+  | _ => false
+
+/-- The helpers that the value `e` uses, then those that theirs use, in the order first met. -/
+def helpers (env : Environment) (e : Expr) : Array Name := Id.run do
+  let mut found : Array Name := #[]
+  let mut seen : NameSet := {}
+  let mut next := #[e]
+  while !next.isEmpty do
+    let mut later := #[]
+    for v in next do
+      for c in v.getUsedConstants do
+        if !seen.contains c && isHelper env c then
+          seen := seen.insert c
+          found := found.push c
+          if let some (.defnInfo d) := env.find? c then
+            later := later.push d.value
+    next := later
+  return found
+
+/-- The hash of the definition body `e`, with the type and value of each of its helpers. -/
+def bodyHash (env : Environment) (e : Expr) : UInt64 :=
+  (helpers env e).foldl (init := hash e) fun h c =>
+    match env.find? c with
+    | some ci => mixHash h (mixHash (hash ci.type) (ci.value?.map hash |>.getD 0))
+    | none => h
+
 /-- The hash of what the declaration `n` says, or none when there is no such declaration. -/
 def declHash (env : Environment) (n : Name) : Option UInt64 := do
   let ci ← env.find? n
   let base := hash ci.type
   match ci with
-  | .defnInfo v => return mixHash base (hash v.value)
-  | .opaqueInfo v => return mixHash base (hash v.value)
+  | .defnInfo v => return mixHash base (bodyHash env v.value)
+  | .opaqueInfo v => return mixHash base (bodyHash env v.value)
   | .inductInfo v =>
     let withCtors := v.ctors.foldl (init := base) fun h c =>
       match env.find? c with

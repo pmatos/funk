@@ -14,7 +14,7 @@ fails when the Lean changes under it.
 
 #doc (Manual) "Outcomes and behaviours: readable blocks" =>
 
-:::moduleDocs (fingerprint := "18223517462678380884")
+:::moduleDocs (fingerprint := "12184226116888845603")
 :::
 
 :::readable Fir.Outcome (fingerprint := "2974526082486249930")
@@ -126,7 +126,7 @@ block that uses an undefined value on one path only. This is the set that
 the interpreter computes.
 :::
 
-:::readable Fir.Run.outcomes Fir.Run.IsStuck (fingerprint := "6991509419242234263")
+:::readable Fir.Run.outcomes Fir.Run.IsStuck (fingerprint := "6007793092497529486")
 *Definition: the outcomes of a run, and a stuck run.* The outcomes
 $`\mathrm{out}(R)` of a run $`R` at one budget are the ends of its paths,
 as in the previous definition, with the stuck ends left out: a return, UB
@@ -150,7 +150,7 @@ outcome; $`\mathsf{freeze}` of poison may give it several
 (ADR-2026-10-29-2017).
 :::
 
-:::readable Fir.observable (fingerprint := "443252409836460758")
+:::readable Fir.observable (fingerprint := "1478809244452821528")
 *Definition: the observable behaviour of a run that takes fuel.* Let
 $`R_n` be the run at budget $`n`, for every $`n`. Its observable behaviour
 $`\mathrm{obs}(R)` holds each return and each UB that some budget reaches,

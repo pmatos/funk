@@ -14,10 +14,10 @@ when the Lean changes under it.
 
 #doc (Manual) "Core functions without calls: readable blocks" =>
 
-:::moduleDocs (fingerprint := "16927633626146534009")
+:::moduleDocs (fingerprint := "1596636793235862561")
 :::
 
-:::readable Fir.Core.Op.isCall Fir.Core.CallFree (fingerprint := "7508203294497242104")
+:::readable Fir.Core.Op.isCall Fir.Core.CallFree (fingerprint := "17663142437984628192")
 *Definition: a call, and a function without calls.* A core op _is a
 call_ when it is $`\mathsf{call}~g : t^* \to r^*`, for any symbol $`g`
 and types $`t^*` and $`r^*`. A core function is _without calls_ when no
@@ -42,7 +42,7 @@ and are total with memory by their own rules
 {ref "The-fir-specification--Memory--Store-obligations"}[store obligations]).
 :::
 
-:::readable Fir.Core.Op.exit_goto (pin := Fir.Core.Op.exit?) (pin := Fir.Core.brExit) (pin := Fir.Core.condBrExit) (pin := Fir.Core.Op.returnTypes) (pin := Fir.Core.retExit) (pin := Fir.Core.unreachableExit) (fingerprint := "11013033481529122329")
+:::readable Fir.Core.Op.exit_goto (pin := Fir.Core.Op.exit?) (pin := Fir.Core.brExit) (pin := Fir.Core.condBrExit) (pin := Fir.Core.Op.returnTypes) (pin := Fir.Core.retExit) (pin := Fir.Core.unreachableExit) (fingerprint := "3058091668663374330")
 *Theorem: a core terminator that jumps goes to a successor that it has,
 and gives no results.* For every core op $`o` that is a terminator, every
 operand vector $`v^*` and every $`i`: if $`\mathrm{exit}_o(v^*)`, run in
@@ -53,7 +53,7 @@ successors, and neither has results. $`\mathsf{ret}` returns, and
 $`\mathsf{unreachable}` is UB.
 :::
 
-:::readable Fir.Core.Op.exit_ret (pin := Fir.Core.Op.exit?) (pin := Fir.Core.brExit) (pin := Fir.Core.condBrExit) (pin := Fir.Core.unreachableExit) (fingerprint := "1935509761369488939")
+:::readable Fir.Core.Op.exit_ret (pin := Fir.Core.Op.exit?) (pin := Fir.Core.brExit) (pin := Fir.Core.condBrExit) (pin := Fir.Core.unreachableExit) (fingerprint := "7015180850587715910")
 *Theorem: the only core op whose exit returns is $`\mathsf{ret}`.* For
 every core op $`o` and operand vector $`v^*`: if $`\mathrm{exit}_o(v^*)`,
 run in the set monad, may end with $`\mathsf{ret}`, then $`o` is
@@ -62,13 +62,13 @@ $`\mathsf{cond\_br}` jumps, or hits UB on a poison condition, and
 $`\mathsf{unreachable}` always hits UB.
 :::
 
-:::readable Fir.Core.Op.callee_none (pin := Fir.Core.Op.callTarget?) (fingerprint := "8972171092564716841")
+:::readable Fir.Core.Op.callee_none (pin := Fir.Core.Op.callTarget?) (fingerprint := "17772999434486162398")
 *Theorem: a core op other than $`\mathsf{call}` calls no function.* For
 every core op $`o` that is not a call, $`\mathrm{callee}(o)` is none: in
 the core dialect, only $`\mathsf{call}` calls a function.
 :::
 
-:::readable Fir.Core.local_of_valid (pin := Fir.Func.Local) (pin := Fir.Core.Op.Valid) (pin := Fir.Core.Op.sig) (fingerprint := "5162816047303745714")
+:::readable Fir.Core.local_of_valid (pin := Fir.Func.Local) (pin := Fir.Core.Op.Valid) (pin := Fir.Core.Op.sig) (fingerprint := "1137579442001010995")
 *Theorem: every valid core function without calls runs within itself.*
 Let $`f` be a core function that is
 {ref "The-fir-specification--Validation--The-general-rules"}[valid] in a

@@ -30,7 +30,7 @@ $`x` with the memories $`T` it ends with, or ends where $`x` runs out of
 fuel or hits UB.
 :::
 
-:::readable Fir.runFrom_ret_iff Fir.runFrom_exh_iff Fir.runFrom_ub_iff (pin := Fir.Result.withState) (fingerprint := "14741995060649176328")
+:::readable Fir.runFrom_ret_iff Fir.runFrom_exh_iff Fir.runFrom_ub_iff (pin := Fir.Result.withState) (fingerprint := "16351958917568738586")
 *Theorems: how a run of ops ends, with or without its memories.* A run of
 ops from $`S`, read with the memories its returns end with, returns
 $`((a, T), k)` exactly when, read from $`S`, it ends with the return
@@ -48,7 +48,7 @@ $`\mathrm{call}_M(n, g, E, o^*) \mathbin{@} S` is the same run in a call's
 frame: from $`\mathrm{enter}(S)`, and each return leaves the frame.
 :::
 
-:::readable Fir.Func.MemStepPath Fir.Func.memStepPath_iff (pin := Fir.Func.runOps) (pin := Fir.Ev.NotStuck) (fingerprint := "10893883184050481262")
+:::readable Fir.Func.MemStepPath Fir.Func.memStepPath_iff (pin := Fir.Func.runOps) (pin := Fir.Ev.NotStuck) (fingerprint := "9284193536890829120")
 *Definition and theorem: the ways a step with memory goes on.* A path of
 $`\mathrm{ops}_M(n + 1, f, E, o~o^*) \mathbin{@} S` that is not stuck is
 exactly a path that the op $`o` goes on by, from $`S`. In each, $`o` owns
@@ -76,7 +76,7 @@ in the set monad, each step from the memories that the step before it
 ended with.
 :::
 
-:::readable Fir.Func.run_memOps_zero Fir.Func.run_memOps_nil (pin := Fir.Func.runOps) (pin := Fir.Ev.NotStuck) (fingerprint := "7693370220352180185")
+:::readable Fir.Func.run_memOps_zero Fir.Func.run_memOps_nil (pin := Fir.Func.runOps) (pin := Fir.Ev.NotStuck) (fingerprint := "7602649258232136247")
 *Theorems: no fuel, and no op left.* From any memories, a run with no
 fuel runs out of fuel, and only so; a block with no op left is stuck.
 :::

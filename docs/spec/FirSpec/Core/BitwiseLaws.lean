@@ -17,7 +17,7 @@ when the Lean changes under it.
 :::moduleDocs (fingerprint := "15860657129012602685")
 :::
 
-:::readable Fir.Core.strict_andValues Fir.Core.strict_orValues Fir.Core.strict_xorValues (pin := Fir.Core.Strict) (pin := Fir.Core.andValues) (pin := Fir.Core.orValues) (pin := Fir.Core.xorValues) (fingerprint := "7956797132507196145")
+:::readable Fir.Core.strict_andValues Fir.Core.strict_orValues Fir.Core.strict_xorValues (pin := Fir.Core.Strict) (pin := Fir.Core.andValues) (pin := Fir.Core.orValues) (pin := Fir.Core.xorValues) (fingerprint := "18255660199284096295")
 *Theorem: the rules of $`\mathsf{and}`, $`\mathsf{or}` and $`\mathsf{xor}`
 are strict.* At every width, each of the three
 {ref "The-fir-specification--Execution--Bitwise-and-shift-rules"}[rules]
@@ -27,7 +27,7 @@ poison, so it is
 a poison operand gives poison.
 :::
 
-:::readable Fir.Core.strict_shiftValues Fir.Core.strict_shlValues Fir.Core.strict_lshrValues Fir.Core.strict_ashrValues (pin := Fir.Core.Strict) (pin := Fir.Core.shiftValues) (pin := Fir.Core.shlValues) (pin := Fir.Core.lshrValues) (pin := Fir.Core.ashrValues) (fingerprint := "16823717942633141533")
+:::readable Fir.Core.strict_shiftValues Fir.Core.strict_shlValues Fir.Core.strict_lshrValues Fir.Core.strict_ashrValues (pin := Fir.Core.Strict) (pin := Fir.Core.shiftValues) (pin := Fir.Core.shlValues) (pin := Fir.Core.lshrValues) (pin := Fir.Core.ashrValues) (fingerprint := "11620647084161198580")
 *Theorem: a shift is strict, whatever it shifts by.* For every way $`s` to
 shift a vector of $`N` bits by an amount, the
 {ref "The-fir-specification--Execution--Bitwise-and-shift-rules"}[shift rule]
@@ -42,7 +42,7 @@ stop the rule being strict, which speaks only of poison operands, and a
 defined amount is refined only by itself, so it changes no proof below.
 :::
 
-:::readable Fir.Core.and_propagatesPoison Fir.Core.and_returnsOnDefined Fir.Core.and_total Fir.Core.and_monotone (pin := Fir.PropagatesPoison) (pin := Fir.PoisonOut) (pin := Fir.UBByOwnRules) (pin := Fir.ReturnsOnDefined) (pin := Fir.OpTotal) (pin := Fir.OpMonotone) (pin := Fir.Core.Op.denote?) (pin := Fir.Core.andValues) (fingerprint := "15797936405424893274")
+:::readable Fir.Core.and_propagatesPoison Fir.Core.and_returnsOnDefined Fir.Core.and_total Fir.Core.and_monotone (pin := Fir.PropagatesPoison) (pin := Fir.PoisonOut) (pin := Fir.UBByOwnRules) (pin := Fir.ReturnsOnDefined) (pin := Fir.OpTotal) (pin := Fir.OpMonotone) (pin := Fir.Core.Op.denote?) (pin := Fir.Core.andValues) (fingerprint := "12531539107491357331")
 *Theorem: $`\mathsf{and}` is lawful.* For every width $`w`, under fir's
 execution rules, $`\mathsf{and}_w` meets every obligation of an op that
 {ref "The-fir-specification--Execution--Poison-classes"}[propagates poison]:
@@ -57,7 +57,7 @@ execution rules, $`\mathsf{and}_w` meets every obligation of an op that
   operands, and that result keeps refinement, since its rule is strict.
 :::
 
-:::readable Fir.Core.or_propagatesPoison Fir.Core.or_returnsOnDefined Fir.Core.or_total Fir.Core.or_monotone (pin := Fir.PropagatesPoison) (pin := Fir.PoisonOut) (pin := Fir.UBByOwnRules) (pin := Fir.ReturnsOnDefined) (pin := Fir.OpTotal) (pin := Fir.OpMonotone) (pin := Fir.Core.Op.denote?) (pin := Fir.Core.orValues) (fingerprint := "14444676069144623070")
+:::readable Fir.Core.or_propagatesPoison Fir.Core.or_returnsOnDefined Fir.Core.or_total Fir.Core.or_monotone (pin := Fir.PropagatesPoison) (pin := Fir.PoisonOut) (pin := Fir.UBByOwnRules) (pin := Fir.ReturnsOnDefined) (pin := Fir.OpTotal) (pin := Fir.OpMonotone) (pin := Fir.Core.Op.denote?) (pin := Fir.Core.orValues) (fingerprint := "13730498785815409601")
 *Theorem: $`\mathsf{or}` is lawful.* For every width $`w`, under fir's
 execution rules, $`\mathsf{or}_w` propagates poison, returns a result on
 defined operands, and is total and monotone, for the reasons that
@@ -65,14 +65,14 @@ $`\mathsf{and}` is: its rule is strict, never UB, gives a result on $`0`
 and $`0`, and gives exactly one result on every two operands.
 :::
 
-:::readable Fir.Core.xor_propagatesPoison Fir.Core.xor_returnsOnDefined Fir.Core.xor_total Fir.Core.xor_monotone (pin := Fir.PropagatesPoison) (pin := Fir.PoisonOut) (pin := Fir.UBByOwnRules) (pin := Fir.ReturnsOnDefined) (pin := Fir.OpTotal) (pin := Fir.OpMonotone) (pin := Fir.Core.Op.denote?) (pin := Fir.Core.xorValues) (fingerprint := "3512989150377496055")
+:::readable Fir.Core.xor_propagatesPoison Fir.Core.xor_returnsOnDefined Fir.Core.xor_total Fir.Core.xor_monotone (pin := Fir.PropagatesPoison) (pin := Fir.PoisonOut) (pin := Fir.UBByOwnRules) (pin := Fir.ReturnsOnDefined) (pin := Fir.OpTotal) (pin := Fir.OpMonotone) (pin := Fir.Core.Op.denote?) (pin := Fir.Core.xorValues) (fingerprint := "12851389673829402148")
 *Theorem: $`\mathsf{xor}` is lawful.* For every width $`w`, under fir's
 execution rules, $`\mathsf{xor}_w` propagates poison, returns a result on
 defined operands, and is total and monotone, for the reasons that
 $`\mathsf{and}` is.
 :::
 
-:::readable Fir.Core.shl_propagatesPoison Fir.Core.shl_returnsOnDefined Fir.Core.shl_total Fir.Core.shl_monotone (pin := Fir.PropagatesPoison) (pin := Fir.PoisonOut) (pin := Fir.UBByOwnRules) (pin := Fir.ReturnsOnDefined) (pin := Fir.OpTotal) (pin := Fir.OpMonotone) (pin := Fir.Core.Op.denote?) (pin := Fir.Core.shlValues) (fingerprint := "15718676586785593332")
+:::readable Fir.Core.shl_propagatesPoison Fir.Core.shl_returnsOnDefined Fir.Core.shl_total Fir.Core.shl_monotone (pin := Fir.PropagatesPoison) (pin := Fir.PoisonOut) (pin := Fir.UBByOwnRules) (pin := Fir.ReturnsOnDefined) (pin := Fir.OpTotal) (pin := Fir.OpMonotone) (pin := Fir.Core.Op.denote?) (pin := Fir.Core.shlValues) (fingerprint := "11083382952286345071")
 *Theorem: $`\mathsf{shl}` is lawful.* For every width $`w`, under fir's
 execution rules, $`\mathsf{shl}_w` propagates poison, returns a result on
 defined operands, and is total and monotone. A poison value or a poison
@@ -83,14 +83,14 @@ is a result too. It gives exactly one result on every two operands, and
 its rule is strict, so it is monotone.
 :::
 
-:::readable Fir.Core.lshr_propagatesPoison Fir.Core.lshr_returnsOnDefined Fir.Core.lshr_total Fir.Core.lshr_monotone (pin := Fir.PropagatesPoison) (pin := Fir.PoisonOut) (pin := Fir.UBByOwnRules) (pin := Fir.ReturnsOnDefined) (pin := Fir.OpTotal) (pin := Fir.OpMonotone) (pin := Fir.Core.Op.denote?) (pin := Fir.Core.lshrValues) (fingerprint := "12806292294695298646")
+:::readable Fir.Core.lshr_propagatesPoison Fir.Core.lshr_returnsOnDefined Fir.Core.lshr_total Fir.Core.lshr_monotone (pin := Fir.PropagatesPoison) (pin := Fir.PoisonOut) (pin := Fir.UBByOwnRules) (pin := Fir.ReturnsOnDefined) (pin := Fir.OpTotal) (pin := Fir.OpMonotone) (pin := Fir.Core.Op.denote?) (pin := Fir.Core.lshrValues) (fingerprint := "2312879112988387741")
 *Theorem: $`\mathsf{lshr}` is lawful.* For every width $`w`, under fir's
 execution rules, $`\mathsf{lshr}_w` propagates poison, returns a result
 on defined operands, and is total and monotone, for the reasons that
 $`\mathsf{shl}` is.
 :::
 
-:::readable Fir.Core.ashr_propagatesPoison Fir.Core.ashr_returnsOnDefined Fir.Core.ashr_total Fir.Core.ashr_monotone (pin := Fir.PropagatesPoison) (pin := Fir.PoisonOut) (pin := Fir.UBByOwnRules) (pin := Fir.ReturnsOnDefined) (pin := Fir.OpTotal) (pin := Fir.OpMonotone) (pin := Fir.Core.Op.denote?) (pin := Fir.Core.ashrValues) (fingerprint := "2825286882530810109")
+:::readable Fir.Core.ashr_propagatesPoison Fir.Core.ashr_returnsOnDefined Fir.Core.ashr_total Fir.Core.ashr_monotone (pin := Fir.PropagatesPoison) (pin := Fir.PoisonOut) (pin := Fir.UBByOwnRules) (pin := Fir.ReturnsOnDefined) (pin := Fir.OpTotal) (pin := Fir.OpMonotone) (pin := Fir.Core.Op.denote?) (pin := Fir.Core.ashrValues) (fingerprint := "4832806615673409286")
 *Theorem: $`\mathsf{ashr}` is lawful.* For every width $`w`, under fir's
 execution rules, $`\mathsf{ashr}_w` propagates poison, returns a result
 on defined operands, and is total and monotone, for the reasons that

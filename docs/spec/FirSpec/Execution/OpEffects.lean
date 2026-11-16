@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Effect sets: readable blocks" =>
 
-:::moduleDocs (fingerprint := "2807909622879852508")
+:::moduleDocs (fingerprint := "5477438145515818991")
 :::
 
 :::readable Fir.PoisonClass (fingerprint := "2496376182887207449")
@@ -31,7 +31,7 @@ exception    \mathsf{exception}
 * $`\mathsf{exception}`: the op states its own rule for poison operands.
 :::
 
-:::readable Fir.MemSet Fir.MemSet.Has (fingerprint := "7194252162724155757")
+:::readable Fir.MemSet Fir.MemSet.Has (fingerprint := "6556367257398717793")
 *Definition: a set of memories.* The memories that an effect touches,
 named by the dialect's memory names $`m`:
 
@@ -69,7 +69,7 @@ what an op declares when nothing narrower is known of it, as of an
 external call (ADR-2026-11-09-1541).
 :::
 
-:::readable Fir.MemSet.map Fir.Effects.map (fingerprint := "17615428717981311199")
+:::readable Fir.MemSet.map Fir.Effects.map (fingerprint := "7980047692900281820")
 *Definition: renaming memories.* For a map $`f` from one dialect's
 memory names to another's, $`f(\{m_1, \dots, m_n\}) = \{f(m_1), \dots,
 f(m_n)\}` and $`f(\top) = \top`. An effect set is renamed by renaming the

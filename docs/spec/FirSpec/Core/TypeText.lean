@@ -14,10 +14,10 @@ when the Lean changes under it.
 
 #doc (Manual) "The core types in text: readable blocks" =>
 
-:::moduleDocs (fingerprint := "5652973016681635909")
+:::moduleDocs (fingerprint := "9183927375383473699")
 :::
 
-:::readable Fir.Core.floatAlias Fir.Core.aliasFormat (fingerprint := "379769461603123496")
+:::readable Fir.Core.floatAlias Fir.Core.aliasFormat (fingerprint := "4887163029484126784")
 *Definition: the aliases of float formats.* Five float formats have a name
 of their own (ADR-2026-11-09-1549), and $`\mathrm{alias}(e, m)` gives it:
 
@@ -31,7 +31,7 @@ Every other format has no alias. $`\mathrm{format}(n)` reads the table the
 other way: the format that the alias $`n` names, if $`n` is one.
 :::
 
-:::readable Fir.Core.Ty.attr Fir.Core.decodeFloat Fir.Core.decodePtr Fir.Core.Ty.decode (pin := Fir.Core.Ty) (pin := Fir.Core.maxWidth) (pin := Fir.Core.maxMemory) (fingerprint := "17491175145666917792")
+:::readable Fir.Core.Ty.attr Fir.Core.decodeFloat Fir.Core.decodePtr Fir.Core.Ty.decode (pin := Fir.Core.Ty) (pin := Fir.Core.maxWidth) (pin := Fir.Core.maxMemory) (fingerprint := "5971740752925932742")
 *Definition: how a core type is written, and read back.* The
 {ref "The-fir-specification--Abstract-syntax--Core-types"}[integer type]
 $`\mathsf{i}N` is written $`\mathrm{tyattr}(\mathsf{i}N)`, the word `i`
@@ -57,6 +57,7 @@ $`1 + e + m \le 16{,}777{,}215`, and no alias for the format; the Lean
 calls that reading `decodeFloat`. It is undefined otherwise, so `i032`,
 `u8`, `i16777216`, `f8`, `float(8, 23)`, which is written `f32`, and
 `float(-1, 3)` do not decode, and neither do `ptr(0)`, which is written
-`ptr`, and `ptr(-1)`. `i0`, `float(1, 1)` and `ptr(1)` decode, and
-validation rejects them.
+`ptr`, and `ptr(-1)`. `i0` and `float(1, 1)` decode, and validation
+rejects them; `ptr(1)` decodes, and validation accepts it only in a
+module whose data layout declares memory 1.
 :::
