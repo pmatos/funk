@@ -189,7 +189,9 @@ memory its meaning (ADR-2026-11-09-1542;
   run is the run of one work-item of a kernel, the allocation lives from
   the op until the run ends, whichever function of the device module ran
   the op. Each run of the op makes a new allocation, so an op in a loop or
-  in a function called twice gives distinct blocks. A stack allocation of
+  in a function called twice gives distinct blocks; this is an
+  implementation choice of stage 3 that the human may rule on, against one
+  block per op of the program, as a GPU's static work-group buffer is. A stack allocation of
   the same function is freed when its call returns. Rejected: a new kind of
   allocation, which changes the core's memory model and lets `alloca`
   decode it; and `alloca stack`, which a callee's return frees.

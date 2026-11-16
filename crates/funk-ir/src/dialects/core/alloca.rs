@@ -245,6 +245,15 @@ pub(crate) fn memory(op: &OpTypes<'_>) -> Option<u32> {
     }
 }
 
+/// The effects of an allocation: it allocates in the memory of its result
+/// (`Core.Op.effects`, `Gpu.Op.effects`).
+pub(crate) fn allocation_effects(op: &OpTypes<'_>) -> Effects {
+    Effects {
+        allocates: memory(op).map_or(MemSet::NONE, |n| MemSet::These(vec![n.to_string()])),
+        ..Effects::PURE
+    }
+}
+
 /// `%p: ptr = alloca stack i32 4 align(4)`.
 pub(super) struct Alloca;
 
@@ -297,10 +306,7 @@ impl OpSpec for Alloca {
 
     /// Allocates in its memory (`Core.Op.effects`).
     fn effects(&self, op: &OpTypes<'_>) -> Effects {
-        Effects {
-            allocates: memory(op).map_or(MemSet::NONE, |n| MemSet::These(vec![n.to_string()])),
-            ..Effects::PURE
-        }
+        allocation_effects(op)
     }
 }
 

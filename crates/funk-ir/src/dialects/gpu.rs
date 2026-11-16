@@ -28,9 +28,10 @@
 //! (ADR-2026-11-09-1544).
 
 use super::core::{
-    self, allocation_memory, check_shape, int_width, shape_attr_types, shape_decodes,
+    self, allocation_effects, allocation_memory, check_shape, int_width, shape_attr_types,
+    shape_decodes, type_list,
 };
-use crate::effects::{Effects, MemSet};
+use crate::effects::Effects;
 use crate::ir::{Attr, Type};
 use crate::registry::{Dialect, OpContext, OpShape, OpSpec, OpTypes};
 
@@ -47,15 +48,6 @@ pub const QUERIES: [&str; 4] = [
 
 /// The op that allocates in work-group memory (`Gpu.allocName`).
 pub const WORK_GROUP_ALLOCA: &str = "gpu.work_group_alloca";
-
-/// The dialect's ops, by name.
-pub const OPS: [&str; 5] = [
-    QUERIES[0],
-    QUERIES[1],
-    QUERIES[2],
-    QUERIES[3],
-    WORK_GROUP_ALLOCA,
-];
 
 /// The words of the three dimensions.
 pub const DIMENSIONS: [&str; 3] = ["gpu.x", "gpu.y", "gpu.z"];
@@ -108,7 +100,9 @@ impl OpSpec for WorkGroupAlloca {
     fn decode(&self, op: &OpTypes<'_>) -> Result<OpShape, String> {
         if allocation_memory(op).is_none() {
             return Err(format!(
-                "{WORK_GROUP_ALLOCA} takes no operands and defines a pointer"
+                "{WORK_GROUP_ALLOCA} takes no operands and defines a pointer, not {} -> {}",
+                type_list(op.operands),
+                type_list(op.results)
             ));
         }
         if !shape_decodes(op.attrs) {
@@ -132,11 +126,7 @@ impl OpSpec for WorkGroupAlloca {
 
     /// Allocates in its memory (`Gpu.Op.effects`).
     fn effects(&self, op: &OpTypes<'_>) -> Effects {
-        Effects {
-            allocates: allocation_memory(op)
-                .map_or(MemSet::NONE, |n| MemSet::These(vec![n.to_string()])),
-            ..Effects::PURE
-        }
+        allocation_effects(op)
     }
 }
 
@@ -154,6 +144,7 @@ pub fn dialect() -> Dialect {
 mod tests {
     use super::*;
     use crate::dialects::core::{int_type, ptr_type};
+    use crate::effects::MemSet;
 
     fn decode(attrs: &[Attr], operands: &[Type], results: &[Type]) -> Result<OpShape, String> {
         Query("gpu.work_item_id").decode(&OpTypes {

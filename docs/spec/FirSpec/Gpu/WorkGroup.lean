@@ -14,10 +14,10 @@ when the Lean changes under it.
 
 #doc (Manual) "Work-group allocation: readable blocks" =>
 
-:::moduleDocs (fingerprint := "10984089746963893347")
+:::moduleDocs (fingerprint := "6087259994308976275")
 :::
 
-:::readable Fir.Gpu.Op.memCases Fir.Gpu.allocResult Fir.Gpu.allocAlloc Fir.Gpu.alloc_denote (fingerprint := "13756431153752415720")
+:::readable Fir.Gpu.Op.memCases Fir.Gpu.allocResult Fir.Gpu.allocAlloc Fir.Gpu.alloc_denote (fingerprint := "360775185013883384")
 *Lemmas: the two kinds of op, and an allocation's run.* A property holds of
 every op of `gpu` when it holds of each question and of each allocation. In
 the state layer over the set monad, $`\mathsf{alloc}_n~t~c~a` runs as its
@@ -45,8 +45,9 @@ outcome from any memories.
 *Theorem: the effect set of `gpu` is sound.* At every work-item, a
 question, which declares the empty set, is tied, never ends in UB, makes no
 poison on operands with no poison, and, wherever a run names its memories,
-writes, reads and allocates in no memory; an allocation does the same but
-allocate in the memory it declares; and no op is a terminator. So the
+writes, reads and allocates in no memory; an allocation does the same,
+except that it allocates in the memory it declares; and no op is a
+terminator. So the
 dialect's declaration of its effects is proved.
 :::
 

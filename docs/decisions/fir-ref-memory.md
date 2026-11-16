@@ -13,7 +13,8 @@ the ADR is fixed or deleted (ADR-2026-11-09-1610).
 each memory of the sum by its core number (`Gpu.memName`), a question of
 `gpu` gives the work-item's answer and keeps the memories,
 `gpu.work_group_alloca` allocates a global block, which no frame frees,
-in the memory of its result (`Gpu.treeDenote`), and
+in the memory of its result (`Gpu.allocRule`, which `Gpu.treeDenote` runs
+in the tree), and
 `Gpu.memMapsDenote` ties the two layers op by op, from `Core.memMapsDenote`
 and `Dialect.sum.mapsDenote`. `Gpu.exhaustive_memOutcomes`,
 `Gpu.scripted_memOutcomes` and `Gpu.sampled_memOutcomes`, with their

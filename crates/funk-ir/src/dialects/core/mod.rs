@@ -50,7 +50,7 @@ mod width;
 pub use access::ORDERINGS;
 pub use alloca::{Allocation, allocation};
 pub(crate) use alloca::{
-    check_shape, memory as allocation_memory, shape_attr_types, shape_decodes,
+    allocation_effects, check_shape, memory as allocation_memory, shape_attr_types, shape_decodes,
 };
 pub use arith::WRAP_FLAG_SETS;
 pub use bitwise::{BITWISE_OPS, SHIFT_OPS};
@@ -120,6 +120,6 @@ pub fn dialect() -> Dialect {
 }
 
 /// Writes a list of types as `(t1, t2)`, for messages.
-fn type_list(tys: &[crate::Type]) -> String {
+pub(crate) fn type_list(tys: &[crate::Type]) -> String {
     format!("({})", crate::text::Commas(tys))
 }

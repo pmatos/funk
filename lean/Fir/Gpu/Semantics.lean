@@ -81,20 +81,15 @@ def queryResults (q : Query) (d : Dim) (n : Nat) :
     HVector toType (Fir.returnTypes (d := GpuDialect) (Op.query q d n)) :=
   .cons (.value (BitVec.ofNat n (w.answer q d)) : PoisonOr (BitVec n)) .nil
 
-/-- The rules of `gpu` in a monad with no memory: a question gives its
-results, and `gpu.work_group_alloca`, which has no rule there, does `z`. No
-op of `gpu` is a terminator, so the interpreter never asks for an exit; it
-is written as a return. -/
-@[reducible] def denoteIn (m : Type → Type) [Monad m] (z : {α : Type} → m α) :
-    DialectDenote GpuDialect m where
+/-- The rules of `gpu` in the set monad: a question gives its results, and
+`gpu.work_group_alloca`, which needs memory, has no outcome there, as
+`alloca` has none. No op of `gpu` is a terminator, so the interpreter never
+asks for an exit; it is written as a return. -/
+instance instDialectDenote : DialectDenote GpuDialect SetM where
   denote
     | .query q d n, _ => pure (queryResults q d n)
-    | .alloc .., _ => z
+    | .alloc .., _ => fun _ => False
   exit _ _ := pure .ret
-
-/-- The rules of `gpu` in the set monad: an allocation has no outcome
-there. -/
-instance instDialectDenote : DialectDenote GpuDialect SetM := denoteIn SetM fun _ => False
 
 variable {N : Type} {m : Type → Type} [Monad m]
 

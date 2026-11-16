@@ -57,8 +57,7 @@ variable {N : Type} [DecidableEq N] (lay : N → MemLayout) (ρ : DialectEffects
 /-- The allocation that `gpu.work_group_alloca`'s rule makes, in the state
 layer over the set monad. -/
 abbrev allocAlloc : StateT (Memories N (unitsOf lay)) SetM Pointer :=
-  MonadMemory.alloc (ρ (.inl n)) .global (Core.allocaShape lay (fun x => ρ (.inl x)) t c a n).1
-    (Core.allocaShape lay (fun x => ρ (.inl x)) t c a n).2
+  Core.allocaAlloc .global t c a n lay (fun x => ρ (.inl x))
 
 /-- `gpu.work_group_alloca` runs with memory by its rule: its allocation,
 with the pointer as its result. -/

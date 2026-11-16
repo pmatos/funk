@@ -14,7 +14,7 @@ changes under it.
 
 #doc (Manual) "The GPU dialect's rules: readable blocks" =>
 
-:::moduleDocs (fingerprint := "17903078686097201281")
+:::moduleDocs (fingerprint := "7813035853161236826")
 :::
 
 :::readable Fir.Gpu.WorkItem Fir.Gpu.WorkItem.answer (fingerprint := "18027391566621417795")
@@ -46,23 +46,22 @@ are all $`0` and whose sizes and counts are all $`1`. It is one of its grid,
 and it is the one that `fir-ref run` runs when no option gives another.
 :::
 
-:::readable Fir.Gpu.queryResults Fir.Gpu.denoteIn Fir.Gpu.instDialectDenote (fingerprint := "8658076471805830616")
-*Definition: the rules of `gpu` with no memory.* At a work-item $`w`, the op
+:::readable Fir.Gpu.queryResults Fir.Gpu.instDialectDenote (fingerprint := "14237179600902261439")
+*Definition: the rules of `gpu` in the set monad.* At a work-item $`w`, the op
 $`\mathsf{query}_N~q~d` takes no operand and gives one result, the
 answer of $`w` to $`q` in $`d`, as an integer of $`N` bits, modulo
 $`2^N`:
 
 $$`\mathsf{query}_N~q~d \Downarrow (\mathrm{answer}_w(q, d) \bmod 2^N)`
 
-It is never poison and never UB, and it makes no choice: it is the same
-in every monad, where it gives its result at once. An allocation needs
-memory, so in a monad without it it does what the monad gives an op with
-no rule: in the set monad it has no outcome, as `alloca` has none. No op of
+It is never poison and never UB, and it makes no choice: it gives its
+result at once. An allocation needs memory, so in the set monad it has no
+outcome, as `alloca` has none. No op of
 `gpu` is a terminator, so the interpreter never asks where one goes; it is
 written as a return.
 :::
 
-:::readable Fir.Gpu.allocRule Fir.Gpu.memDenoteIn Fir.Gpu.instDialectMemDenote Fir.Gpu.instDialectCall (pin := Fir.Core.allocaShape) (fingerprint := "13996876194564049396")
+:::readable Fir.Gpu.allocRule Fir.Gpu.memDenoteIn Fir.Gpu.instDialectMemDenote Fir.Gpu.instDialectCall (pin := Fir.Core.allocaShape) (fingerprint := "717220899470973356")
 *Definition: the rules of `gpu` with memory, and its calls.* Where a run's
 memories have the layout entries $`\mathit{lay}` and the run names `gpu`'s
 memory $`x` as $`\rho(x)`, a question gives its results and keeps the
