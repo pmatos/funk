@@ -89,13 +89,10 @@ struct Chain {
 }
 
 impl Chain {
-    fn fresh(&mut self) -> String {
-        self.next += 1;
-        format!("v{}", self.next)
-    }
-
+    /// Adds `op` with a new result of type `t`, and returns the result.
     fn push(&mut self, op: Op, t: &Type) -> String {
-        let n = self.fresh();
+        self.next += 1;
+        let n = format!("v{}", self.next);
         self.ops.push(op.result(n.clone(), t.clone()));
         self.values.push((n.clone(), t.clone()));
         n
@@ -131,13 +128,12 @@ impl Chain {
     fn step(&mut self, rng: &mut Rng, last: &str, t: &Type) -> (String, Type) {
         let fmt = float_format(t).expect("a float type");
         if rng.one_in(6) {
-            let (e, m) = FORMATS[usize::from(fmt == FORMATS[0])];
-            let u = float_type(e, m);
-            let op = if fmt == FORMATS[0] {
-                Op::new("fpext", self.loc)
+            let (op, (e, m)) = if fmt == FORMATS[0] {
+                (Op::new("fpext", self.loc), FORMATS[1])
             } else {
-                Op::new("fptrunc", self.loc).attr(round())
+                (Op::new("fptrunc", self.loc).attr(round()), FORMATS[0])
             };
+            let u = float_type(e, m);
             return (self.push(op.operand(last), &u), u);
         }
         let (name, n, rounds) = *rng.pick(&FLOAT_ARITH_OPS);
