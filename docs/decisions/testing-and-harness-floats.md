@@ -81,6 +81,9 @@ choice budget (#219 Q2).
   `fir-ref` runs on the failing vector, with the seeded runs, and UB or
   fuel exhausted there makes the test invalid.
 
+The generated programs' float functions are judged the same way
+([testing-and-harness-generated.md](testing-and-harness-generated.md#float-functions)).
+
 The list misses a NaN whose bits integer ops change, hence the declared
 fallback, and UB or a stuck path that only an untried NaN reaches. A pass
 is still sound: the native result is in the set. Rejected: native code

@@ -8,7 +8,7 @@ from dataclasses import replace
 import native_floats
 import sets
 from corpus import Test
-from differential import evaluate
+from differential import evaluate, evaluate_generated
 from refine import FAILED, INVALID, PASSED, STUCK, UB, Outcome
 from sets import SEEDS, BudgetExceeded, Declared, Outcomes, Path
 from test_differential import RecordedRuns, returned
@@ -154,6 +154,37 @@ class Judged(unittest.TestCase):
         self.assertEqual(self.judge(runs, test).judgement.status, PASSED)
         reruns = [c for c in runs.calls if c[0] == "exhaustive" and len(c) == 3]
         self.assertEqual(reruns, [("exhaustive", test.args, (X86,))])
+
+
+class Generated(unittest.TestCase):
+    """A run of a generated float function, which declares no results, is
+    judged as a differential test of the corpus is (#219)."""
+
+    def judge(self, *responses):
+        runs = RecordedRuns(*responses)
+        result = evaluate_generated(NAN_TEST, F32, F32_PAIR, runs)
+        self.assertFalse(runs.responses, "every supplied response must be consumed")
+        return result
+
+    def test_an_allowed_native_nan_is_compared_and_passes(self):
+        result = self.judge(QUIET_ONLY, (X86_NATIVE,), WITH_X86)
+        self.assertEqual(result.judgement.status, PASSED)
+        self.assertIsNone(result.interpreter_only)
+        self.assertIn(f"with native code's NaNs {X86}", result.detail)
+
+    def test_a_wrong_result_that_is_no_nan_fails(self):
+        j = self.judge(QUIET_ONLY, ("1065353216",)).judgement
+        self.assertEqual(j.status, FAILED)
+        self.assertIn("cut the NaN choices short", j.why)
+
+    def test_a_nan_where_none_is_allowed_fails(self):
+        j = self.judge(Outcomes(0, (returned("1.0"),)), (X86_NATIVE,)).judgement
+        self.assertEqual(j.status, FAILED)
+
+    def test_trying_native_nans_past_the_budget_is_invalid(self):
+        result = self.judge(QUIET_ONLY, (X86_NATIVE,), BudgetExceeded(10))
+        self.assertEqual(result.judgement.status, INVALID)
+        self.assertIsNone(result.interpreter_only)
 
 
 class DeclaredOnAPart(unittest.TestCase):

@@ -29,6 +29,26 @@ A generated run is judged differently from a corpus test:
 - Otherwise the run is a differential test by the corpus's rules.
 - A stuck path fails in every case.
 
+### Float functions
+
+Each program also has one or two float functions (`floats.rs`, #219), at
+`f32` or `f64`. A float function is one block: a chain of one to five ops
+that may give a NaN (the arithmetic ops, `fpext` and `fptrunc`), each on the
+value before it, so every value reaches `ret`. It may also return an earlier
+float and an `fcmp` result. Its arguments are often zeros, infinities, quiet
+and signalling NaNs with payloads, and boundary values. It has no fast-math
+flag, no integer op on a NaN's bits and no UB, so its runs are compared with
+native code by the rules of
+[testing-and-harness-floats.md](testing-and-harness-floats.md#how-a-nan-result-is-judged).
+
+A second run of `fir-ref` that tries native code's NaNs charges every NaN
+choice. A float function has at most two float results and five ops that
+may choose a NaN, so it charges at most 2 bits for each, 10 in all, within
+the budget of a generated run, since the human ruled on 2026-11-16 that NaN
+tries count against the budget (#219 Q2). Rejected: making a run past the
+budget interpreter-only, which would hide a native NaN that no NaN choice
+gives.
+
 Ordinary runs have 20,000 steps of fuel. Runs of the functions that stay
 defined have 1,000,000, and planted fuel runs have 1,000 (ADR-2026-11-08-2115).
 The hook also guards against an empty check. In

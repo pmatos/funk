@@ -22,7 +22,7 @@
 //! modules. The generator is deterministic: one seed gives one module.
 //!
 //! [`program`] builds on it the programs that the differential harness runs
-//! (#165).
+//! (#165), and adds to them float functions (`floats.rs`, #219).
 //!
 //! [`wellformed`] builds on it a generator of well-formed modules that are
 //! not all valid, for the round trips over that larger set (#146).
@@ -36,6 +36,7 @@ use crate::ir::{Attr, Func, Int, LocRef, LocTable, Location, Module, Nat, Op, Ty
 mod blocks;
 mod bounded;
 mod calls;
+mod floats;
 mod planted;
 pub mod program;
 pub mod soup;
