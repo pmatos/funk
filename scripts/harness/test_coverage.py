@@ -76,17 +76,42 @@ class Tests(unittest.TestCase):
             },
         )
 
-    def test_a_kernel_s_test_is_not_counted(self):
+    def test_a_kernel_s_test_counts_its_table_s_ops(self):
         kernel = MODULE.replace(
             "locs {",
-            "module @dev() {\n  dialects gpu\n\n  func @k() -> i32 {\n  ^e:\n"
-            "    %i: i32 = gpu.work_item_id gpu.x @0\n    ret %i @0\n  }\n}\n\nlocs {",
+            "module @dev() {\n  dialects gpu\n\n"
+            "  func @k() -> i32 {\n  ^e:\n"
+            "    %i: i32 = gpu.work_item_id gpu.x @0\n"
+            "    %j: i32 = call @g %i @0\n    ret %j @0\n  }\n\n"
+            "  func @g(%a: i32) -> i32 {\n  ^e:\n"
+            "    %b: i32 = mul %a, %a @0\n    ret %b @0\n  }\n\n"
+            "  module @in() {\n    dialects gpu\n\n"
+            "    func @k() -> i32 {\n    ^e:\n"
+            "      %i: i32 = gpu.num_work_groups gpu.z @0\n      ret %i @0\n    }\n\n"
+            "  }\n\n}\n\nlocs {",
         )
-        tests = TESTS.replace("]\n", '  { func = "@dev::@k", expect = ["0"] },\n]\n')
+        tests = TESTS.replace(
+            "]\n",
+            '  { func = "@dev::@k", expect = ["0"] },\n'
+            '  { func = "@dev::@in::@k", expect = ["1"] },\n]\n',
+        )
         with tempfile.TemporaryDirectory() as d:
             with_kernel = coverage.count(corpus(Path(d), kernel, tests))
         with tempfile.TemporaryDirectory() as d:
-            self.assertEqual(with_kernel, coverage.count(corpus(Path(d))))
+            without = coverage.count(corpus(Path(d)))
+        self.assertEqual(with_kernel["differential"], without["differential"])
+        added = with_kernel["interpreter"] - without["interpreter"]
+        self.assertEqual(
+            dict(added),
+            {
+                Cell("gpu", "gpu.work_item_id", "gpu.x", "i32"): 1,
+                Cell("gpu", "gpu.num_work_groups", "gpu.z", "i32"): 1,
+                Cell("ops", "mul", "", "i32"): 1,
+                Cell("values", "call", "one", "i32"): 1,
+                Cell("values", "ret", "one", "i32"): 2,
+                Cell("values", "func", "one", "i32"): 2,
+            },
+        )
 
     def test_recursion_is_read_once(self):
         functions = {
@@ -97,20 +122,43 @@ class Tests(unittest.TestCase):
     def test_the_matrix_and_its_check(self):
         with tempfile.TemporaryDirectory() as d:
             root = corpus(Path(d) / "corpus")
-            matrix = Path(d) / "out" / "README.md"
+            out = Path(d) / "out"
+            matrix = out / "README.md"
             err = io.StringIO()
             self.assertEqual(coverage.run(root, matrix, True, err), 1)
-            text = matrix.read_text()
-            self.assertIn("| `add` | `nuw` | **0** | 1 | **0** |", text)
+            self.assertEqual(
+                sorted(p.name for p in out.iterdir()),
+                ["README.md", "differential.md", "interpreter.md"],
+            )
+            self.assertIn(
+                "(differential.md): 540 cells, 6 with a test", matrix.read_text()
+            )
+            diff = (out / "differential.md").read_text()
+            self.assertIn("| `add` | `nuw` | **0** | 1 | **0** |", diff)
+            self.assertNotIn("gpu", diff)
+            text = (out / "interpreter.md").read_text()
+            self.assertIn("| `add` | `nuw` | **0** | **0** | 2 | **0** |", text)
+            self.assertIn("| `gpu.work_item_id` | `gpu.x` | **0** |", text)
             self.assertIn(
                 "no test exercises the cell differential: add i1", err.getvalue()
             )
             self.assertIn("the cell interpreter: zext from i7 to i128", err.getvalue())
+            self.assertIn(
+                "the cell interpreter: gpu.num_work_groups gpu.z i32", err.getvalue()
+            )
             self.assertNotIn("stale", err.getvalue())
-            matrix.write_text(text.replace("| 1 |", "| 2 |", 1))
+            for name in ("README.md", "interpreter.md"):
+                page = out / name
+                fresh = page.read_text()
+                page.write_text(fresh + "\n")
+                err = io.StringIO()
+                self.assertEqual(coverage.run(root, matrix, False, err), 1)
+                self.assertIn(f"{name} is stale", err.getvalue())
+                page.write_text(fresh)
+            (out / "differential.md").unlink()
             err = io.StringIO()
             self.assertEqual(coverage.run(root, matrix, False, err), 1)
-            self.assertIn("is stale", err.getvalue())
+            self.assertIn("differential.md is stale", err.getvalue())
 
     def test_a_corpus_it_cannot_read(self):
         for module, tests, needle in [
@@ -118,6 +166,16 @@ class Tests(unittest.TestCase):
             (MODULE.replace("call @g", "call @k"), TESTS, "there is no function @k"),
             (MODULE.replace("add nuw", "and nuw"), TESTS, "and nuw is not a cell"),
             (MODULE.replace("^entry:\n  %one", "^entry:\n  %one %"), TESTS, "m.fir"),
+            (
+                MODULE,
+                'tests = [{ func = "@h::@f", expect = [] }]\n',
+                "no function @h::@f",
+            ),
+            (
+                MODULE.replace("add nuw", "gpu.work_item_id gpu.w"),
+                TESTS,
+                "gpu.work_item_id gpu.w of ('i8', 'i8') to ('i8',) is not a cell",
+            ),
         ]:
             with self.subTest(needle=needle):
                 with tempfile.TemporaryDirectory() as d:
