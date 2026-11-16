@@ -24,9 +24,10 @@ its runs with memory, branches and loops included, on every argument
 vector of its parameter types, poison included (the section on core
 functions with memory):
 
-* _every core op but `call`, `alloca`, `load` and `store` is total_, by
-  the obligations that each family proves of its ops, and `alloca`, `load`
-  and `store` are total with memory, each by its own rule;
+* _every core op but `call`, `alloca` and the loads and stores is
+  total_, by the obligations that each family proves of its ops, and
+  `alloca` and the loads and stores, of an integer or a pointer, are total
+  with memory, each by its own rule;
 * _every valid core function without calls runs within itself_: none of
   its ops calls a function; `br` and `cond_br` go only to successors they
   have and give no results; and `ret`, the only core op whose exit
@@ -55,10 +56,11 @@ def CallFree (f : Func CoreDialect) : Prop :=
 instance (f : Func CoreDialect) : Decidable (CallFree f) :=
   inferInstanceAs (Decidable (∀ b ∈ f.blocks, ∀ o ∈ b.body, o.op.isCall = false))
 
-/-- Every core op but `call`, `alloca`, `load` and `store` is total in the
-set monad. `alloca`, `load` and `store` have no rule there: each is total
-with memory, by its own rule (the sections on the stack allocation, load
-and store obligations). -/
+/-- Every core op but `call`, `alloca` and the loads and stores is total in
+the set monad. `alloca` and the loads and stores, of an integer or a
+pointer, have no rule there: each is total with memory, by its own rule
+(the sections on the stack allocation, load, store, pointer load and
+pointer store obligations). -/
 theorem Op.total : (op : Op) → op.isCall = false → op.touchesMemory = false →
     OpTotal (d := CoreDialect) op
   | .const w v, _, _ => const_total w v

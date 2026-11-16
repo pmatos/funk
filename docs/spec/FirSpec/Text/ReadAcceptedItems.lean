@@ -18,7 +18,7 @@ when the Lean changes under it.
 :::moduleDocs (fingerprint := "1031541180037873395")
 :::
 
-:::readable Fir.Text.readDialectName_writable Fir.Text.readDialects_writable (pin := Fir.Text.readDialectName) (pin := Fir.Text.readDialects) (fingerprint := "620551015558347730")
+:::readable Fir.Text.readDialectName_writable Fir.Text.readDialects_writable (pin := Fir.Text.readDialectName) (pin := Fir.Text.readDialects) (fingerprint := "12397764985525691727")
 *Theorems: the names of a dialect set as read are words.* For every list
 of tokens that can be written, the reader of a dialect's name gives a
 word, since it reads a word token, and the reader of a dialect set gives
@@ -27,20 +27,21 @@ start of a module or of a body of items. Each leaves tokens that can be
 written.
 :::
 
-:::readable Fir.Text.readLayout_writable (pin := Fir.Text.readLayout) (fingerprint := "12524413370669765468")
+:::readable Fir.Text.readLayout_writable (pin := Fir.Text.readLayout) (fingerprint := "390839528149057092")
 *Theorem: the entries of a layout as read are types.* For every list of
 tokens that can be written, the reader of a data layout gives entries
 written as types, and leaves tokens that can be written.
 :::
 
-:::readable Fir.Text.readItems_writable (pin := Fir.Text.readItems) (pin := Fir.Text.readItem) (pin := Fir.Text.ReadsWritable) (pin := Fir.Text.SItem.Writable) (pin := Fir.Text.SBody.Writable) (pin := Fir.Text.decodeItem) (fingerprint := "18280148590814923405")
+:::readable Fir.Text.readItems_writable (pin := Fir.Text.readItems) (pin := Fir.Text.readItem) (pin := Fir.Text.ReadsWritable) (pin := Fir.Text.SItem.Writable) (pin := Fir.Text.SBody.Writable) (pin := Fir.Text.decodeItem) (fingerprint := "14465691199773920056")
 *Theorem: items as read can be written.* For every list of tokens
 $`\mathit{ts}`, at the top of the module or inside the body of an item,
 the {ref "The-fir-specification--Text-format--Reading-the-grammar"}[reader of items]
 {ref "The-fir-specification--Text-format--What-the-grammar-accepts"}[gives],
 on $`\mathit{ts}`, that each item it reads can be written: each of its
 parameters can be written, each of its result types is written as a
-type, and its body can be written, at any depth.
+type, each of its attributes can be written, and its body can be written,
+at any depth.
 
 The reader of items and the reader of one item call one another, for the
 items inside a body, so the proof shows what each gives, together, by
@@ -56,14 +57,16 @@ induction that follows their own recursion, as for blocks. Case by case:
   reads nothing;
 * the reader of one item reads its symbol, `(`, its parameters with the
   reader of definitions, or none, `)`, its result types after `->` with
-  the reader of types, or none, its attributes, `{`, its body and `}`; a
+  the reader of types, or none, its attributes with the reader of
+  attributes, which gives that each can be written, `{`, its body and `}`; a
   body that starts with a word holds a dialect set, whose names are words,
   and items, which the case of the reader of items gives can be written;
   any other body holds blocks that can be written, by the theorem of the
   previous section;
 * an item without its symbol is an error.
 
-Nothing is asked of an item's kind, its symbol or its attributes: decoding
-accepts only a `func` and a `module` without attributes, whatever their
-symbol.
+Nothing is asked of an item's kind or its symbol: decoding accepts only a
+`func`, a `module` and an item of a dialect's kind, whatever their symbol.
+An item of a dialect's kind keeps its attributes, so they are asked to be
+written.
 :::

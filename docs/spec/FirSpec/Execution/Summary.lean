@@ -14,10 +14,10 @@ when the Lean changes under it.
 
 #doc (Manual) "Function summaries: readable blocks" =>
 
-:::moduleDocs (fingerprint := "6840252830234289169")
+:::moduleDocs (fingerprint := "11516418220879018485")
 :::
 
-:::readable Fir.MemSet.Sub Fir.Effects.Le (pin := Fir.MemSet.Has) (pin := Fir.instLEEffects) (fingerprint := "16971465220419375714")
+:::readable Fir.MemSet.Sub Fir.Effects.Le (pin := Fir.MemSet.Has) (pin := Fir.instLEEffects) (fingerprint := "7773137334041496094")
 *Definition: one effect set below another.* A set of memories $`M` is
 _below_ $`N`, $`M \subseteq N`, when $`N` holds every memory that $`M`
 holds. An effect set $`e` is below $`e'`, $`e \le e'`, when
@@ -32,7 +32,7 @@ $`\mathsf{control}`. A terminator of a callee ends a block of the callee,
 so a call of it is not a terminator for its caller.
 :::
 
-:::readable Fir.MemSet.join Fir.Effects.join Fir.Effects.joinAll (fingerprint := "1628758086418682847")
+:::readable Fir.MemSet.join Fir.Effects.join Fir.Effects.joinAll (fingerprint := "12472399780392707147")
 *Definition: the join of effect sets.* The join of two sets of memories
 is $`\top` when either is, and otherwise lists the memories of both. The
 join $`e \sqcup e'` of two effect sets joins their sets of memories for
@@ -65,7 +65,7 @@ elements of the list. So adding to $`S` a symbol not in it that names a
 function of $`t` leaves fewer unseen.
 :::
 
-:::readable Fir.SymbolTable.reach (fingerprint := "3096077643177783369")
+:::readable Fir.SymbolTable.reach (fingerprint := "3237602285703539206")
 *Definition: the functions that a call may reach.* From a list of work
 $`W` and a list of seen symbols $`S`, the walk $`\mathrm{reach}_t(W, S)`
 takes the first symbol $`s` of $`W`:
@@ -82,7 +82,7 @@ functions that a call of $`s` may run: $`s`, and every function that a
 function it reaches calls.
 :::
 
-:::readable Fir.SymbolTable.opOwn Fir.SymbolTable.funcOwn (fingerprint := "15048537052711931646")
+:::readable Fir.SymbolTable.opOwn Fir.SymbolTable.funcOwn (fingerprint := "6237991737053208994")
 *Definition: what a caller sees of an op and of a function's ops.* For an
 op $`o` of a function of $`t`, $`\mathrm{own}_t(o)` is
 $`\mathrm{caller}(\mathrm{eff}(o))`, or
@@ -104,7 +104,7 @@ A symbol that names no function has the empty summary. Recursion adds
 nothing: a function that a walk has seen is not seen again.
 :::
 
-:::readable Fir.SymbolTable.opEffects (fingerprint := "14975733603493052991")
+:::readable Fir.SymbolTable.opEffects (fingerprint := "4322810384086717236")
 *Definition: the effects of an op in place.* An op $`o` of a function of
 $`t` has $`\mathrm{eff}_t(o) = \mathrm{eff}(o)` when it calls nothing,
 $`\mathrm{eff}(o) \sqcup \mathrm{sum}_t(s)` when it calls a function

@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Float arithmetic rules: readable blocks" =>
 
-:::moduleDocs (fingerprint := "11143779710128051822")
+:::moduleDocs (fingerprint := "5966511511236297498")
 :::
 
 :::readable Fir.Core.nanBits (fingerprint := "1042529435153672994")
@@ -55,7 +55,7 @@ rejects, gives $`\mathrm{anynan}_{e,m}` on every operand and under every
 flag, so that the rule is total.
 :::
 
-:::readable Fir.Core.FBin.model Fir.Core.FUnary.model (pin := Fir.Core.FBin) (pin := Fir.Core.FUnary) (pin := Fir.Core.remainder) (fingerprint := "6204914280336798625")
+:::readable Fir.Core.FBin.model Fir.Core.FUnary.model (pin := Fir.Core.FBin) (pin := Fir.Core.FUnary) (pin := Fir.Core.remainder) (fingerprint := "16173394553773264156")
 *Definition: what each float op computes in the model.* Each op is an
 operation of Lean's float model on the format $`F`, or, for
 $`\mathsf{frem}` and $`\mathsf{fmod}`, fir's
@@ -75,7 +75,7 @@ the sign of a number, an infinity or a zero, and give the model's one NaN
 on a NaN.
 :::
 
-:::readable Fir.Core.fbinValues Fir.Core.funaryValue Fir.Core.fmaValues (fingerprint := "15894590815141335479")
+:::readable Fir.Core.fbinValues Fir.Core.funaryValue Fir.Core.fmaValues (fingerprint := "4643478249441263784")
 *Definition: the rules of the float arithmetic.* For every format
 $`\mathsf{float}\langle e,m \rangle`, flags $`\phi` and values $`a`,
 $`b`, $`c` of it:

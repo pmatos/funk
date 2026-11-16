@@ -14,7 +14,7 @@ the Lean changes under it.
 
 #doc (Manual) "The GPU dialect's abstract syntax: readable blocks" =>
 
-:::moduleDocs (fingerprint := "17999411893607134800")
+:::moduleDocs (fingerprint := "1748150013391161613")
 :::
 
 :::readable Fir.Gpu.Dim Fir.Gpu.Query Fir.Gpu.Op (fingerprint := "2806191881920580656")
@@ -48,7 +48,7 @@ and is the dialect that `funk`, `fir-ref fmt`, `fir-ref validate` and
 `gpu` in its dialect set may use its ops, and every other module may not.
 :::
 
-:::readable Fir.Gpu.Op.sig Fir.Gpu.Op.returnTypes Fir.Gpu.instDialectSignature (fingerprint := "5043009942651367281")
+:::readable Fir.Gpu.Op.sig Fir.Gpu.Op.returnTypes Fir.Gpu.instDialectSignature (fingerprint := "4105133338697398508")
 *Definition: the signature of each op of `gpu`.* Every op of `gpu` takes no
 operand. A question gives one integer of its width, and an allocation the
 core's pointer of its memory:

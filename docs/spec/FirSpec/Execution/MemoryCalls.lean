@@ -14,10 +14,10 @@ fails when the Lean changes under it.
 
 #doc (Manual) "Runs from given memories: readable blocks" =>
 
-:::moduleDocs (fingerprint := "2623547510243343845")
+:::moduleDocs (fingerprint := "16846439289439400517")
 :::
 
-:::readable Fir.Result.withMem Fir.Result.finish_id_run (pin := Fir.Result.finish) (pin := Fir.Ev.dropLeft) (fingerprint := "9590645358696005234")
+:::readable Fir.Result.withMem Fir.Result.finish_id_run (pin := Fir.Result.finish) (pin := Fir.Ev.dropLeft) (fingerprint := "8987210541298503114")
 *Definition and theorem: a run's end, with its memories.* A way a
 function's run ends, read with the memories it ends with, carries them on a
 return, and shows none when it runs out of fuel. A path of a run of ops,
@@ -35,7 +35,7 @@ $`j` more steps runs out of fuel with fewer, from the same memories: it
 takes the same path, and runs out sooner.
 :::
 
-:::readable Fir.Func.memRunsFrom Fir.Func.memRunsFrom_enter Fir.Func.memRunsFrom_run (pin := Fir.Func.run) (fingerprint := "11164435814742632482")
+:::readable Fir.Func.memRunsFrom Fir.Func.memRunsFrom_enter Fir.Func.memRunsFrom_run (pin := Fir.Func.run) (fingerprint := "17545350692010923942")
 *Definition and theorems: the runs of a function from given memories.* The
 runs of $`f` of $`M` from given memories are its runs with memory, on each
 argument vector $`\vec{v}` and from each memories $`S`, at each budget, each

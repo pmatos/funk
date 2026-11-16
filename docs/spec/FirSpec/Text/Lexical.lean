@@ -16,10 +16,10 @@ changes under it.
 
 #doc (Manual) "Tokens: readable blocks" =>
 
-:::moduleDocs (fingerprint := "14499131429193190193")
+:::moduleDocs (fingerprint := "17298026766705179500")
 :::
 
-:::readable Fir.Text.hex Fir.Text.formatChars Fir.Text.isEscaped Fir.Text.allowedOutsideStrings (pin := Fir.Text.lexFrom) (pin := Fir.Text.lexToken) (fingerprint := "6181810885127377459")
+:::readable Fir.Text.hex Fir.Text.formatChars Fir.Text.isEscaped Fir.Text.allowedOutsideStrings (pin := Fir.Text.lexFrom) (pin := Fir.Text.lexToken) (fingerprint := "2587700728773301541")
 *Definition: the characters that a string escapes, and the characters that
 a text may hold outside strings.* A character $`c` is _escaped_ when it is
 one of these:
@@ -55,7 +55,7 @@ reader an order of characters other than the one a parser reads, as the
 Trojan Source attack does with bidirectional controls in comments.
 :::
 
-:::readable Fir.Text.escapeChar Fir.Text.quote (pin := Fir.Text.unicodeEscape) (pin := Fir.Text.lexEscape) (pin := Fir.Text.hex) (fingerprint := "475873319601185174")
+:::readable Fir.Text.escapeChar Fir.Text.quote (pin := Fir.Text.unicodeEscape) (pin := Fir.Text.lexEscape) (pin := Fir.Text.hex) (fingerprint := "12145217103895940566")
 *Definition: the one spelling of a string.* A string is written between
 double quotes, and holds any Unicode text:
 
@@ -88,7 +88,7 @@ errors, and each string has exactly one spelling, as the canonical text
 needs.
 :::
 
-:::readable Fir.Text.printInt Fir.Text.printSymbol (pin := Fir.isName) (pin := Fir.isWord) (pin := Fir.isNameChar) (pin := Fir.isWordStart) (pin := Fir.isLetter) (pin := Fir.Location.limit) (pin := Fir.Text.lexAt) (pin := Fir.Text.lexDigits) (pin := Fir.Text.readNat) (fingerprint := "10414318569984400172")
+:::readable Fir.Text.printInt Fir.Text.printSymbol (pin := Fir.isName) (pin := Fir.isWord) (pin := Fir.isNameChar) (pin := Fir.isWordStart) (pin := Fir.isLetter) (pin := Fir.Location.limit) (pin := Fir.Text.lexAt) (pin := Fir.Text.lexDigits) (pin := Fir.Text.readNat) (fingerprint := "2105513011451805764")
 *Definition: the tokens, and the one spelling of an integer and of a
 symbol.* The tokens of a text are these:
 
@@ -117,7 +117,8 @@ digit other than 0.
   contains one.
 * An integer is written in decimal with no leading zeros and no `+`, and
   with `-` when it is negative: $`\mathrm{printint}(i)`. `-0` is not an
-  integer, and the only other token with `-` is `->`.
+  integer, and the only other tokens with `-` are `->` and float
+  literals, such as `-0.5` and `1.5e-7`.
 
 Numbers have limits, so that every implementation can hold them in integers
 of a fixed width, as MLIR does (ADR-2026-10-29-2007). The numbers that give
@@ -130,7 +131,7 @@ number, and a number that runs into a name character, such as `007`,
 `1.5x` or `1.e5`.
 :::
 
-:::readable Fir.Text.expText Fir.FloatLit.print (pin := Fir.FloatLit) (fingerprint := "869767723309194699")
+:::readable Fir.Text.expText Fir.FloatLit.print (pin := Fir.FloatLit) (fingerprint := "9136912049280236952")
 *Definition: the spelling of a float literal.* A float literal is a token
 of its own (ADR-2026-11-11-1438):
 

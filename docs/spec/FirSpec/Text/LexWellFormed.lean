@@ -26,12 +26,14 @@ $`P`; and the token $`\texttt{,}`
 a list written with commas can be written when its elements can.
 :::
 
-:::readable Fir.Attr.Writable.tokens Fir.Attr.AllWritable.tokens (pin := Fir.Attr.Writable) (pin := Fir.Attr.AllWritable) (fingerprint := "10076048675647629738")
+:::readable Fir.Attr.Writable.tokens Fir.Attr.AllWritable.tokens (pin := Fir.Attr.Writable) (pin := Fir.Attr.AllWritable) (fingerprint := "2842475737533523099")
 *Theorems: an attribute that can be written has tokens that can be
 written.* An
 {ref "The-fir-specification--Text-format--Grammar"}[attribute can be written]
 when each word it holds, its own or an application's head, at any depth,
-is a word. For every attribute that can be written, every one of its
+is a word, and each float literal it holds can be written: a decimal's
+fraction is one or more decimal digits, and hexadecimal bits are one or
+more lowercase hexadecimal digits. For every attribute that can be written, every one of its
 tokens can be written; and for every list of attributes that can each be
 written, every token of each can be written. The two are proved together,
 since an application holds a list of attributes.
@@ -42,7 +44,7 @@ since an application holds a list of attributes.
 turns the condition on a list into one on each of its elements.
 :::
 
-:::readable Fir.Attr.IsType.writable (pin := Fir.Attr.IsType) (fingerprint := "9361101271589670088")
+:::readable Fir.Attr.IsType.writable (pin := Fir.Attr.IsType) (fingerprint := "13149683016674199934")
 *Theorem: a type is an attribute that can be written.* An attribute is
 written as a type when it is a word, or a word applied to attributes, and
 it can be written. So every attribute written as a type can be written:
@@ -50,7 +52,7 @@ the theorem only unfolds that definition, so that the proofs can use the
 condition on a type where they need the one on an attribute.
 :::
 
-:::readable Fir.Location.tokens_writable (pin := Fir.Location.numbers) (pin := Fir.Location.refs) (pin := Fir.Location.limit) (fingerprint := "7629404678764208315")
+:::readable Fir.Location.tokens_writable (pin := Fir.Location.numbers) (pin := Fir.Location.refs) (pin := Fir.Location.limit) (fingerprint := "18066471416399668887")
 *Theorem: a location whose numbers are in range has tokens that can be
 written.* For every
 {ref "The-fir-specification--Abstract-syntax--Locations"}[location]
@@ -67,7 +69,7 @@ locations, are all below $`2^{32}`, every token of the table can be
 written.
 :::
 
-:::readable Fir.regionBlocks_of_mem (pin := Fir.Operation.regionBlocks) (pin := Fir.Region.allBlocks) (fingerprint := "15394122174651925032")
+:::readable Fir.regionBlocks_of_mem (pin := Fir.Operation.regionBlocks) (pin := Fir.Region.allBlocks) (fingerprint := "15663991457277891795")
 *Lemma: an op's regions hold blocks below its list.* For every dialect,
 op $`o` of a list of ops, and block $`b` of the regions of $`o` at any
 depth, $`b` is among the blocks of the regions of the list's ops, at any
@@ -113,7 +115,7 @@ and every well-formed function $`f`:
   is empty.
 :::
 
-:::readable Fir.Func.WellFormed.blocks_tokens Fir.Func.WellFormed.ops_tokens Fir.Func.WellFormed.op_tokens Fir.Func.WellFormed.regions_tokens (pin := Fir.Block.allBlocks) (pin := Fir.Func.allBlocks) (pin := Fir.Func.allOps) (pin := Fir.Operation.regionBlocks) (pin := Fir.Region.allBlocks) (pin := Fir.Func.OpWellFormed) (pin := Fir.Location.limit) (fingerprint := "3303971550985368086")
+:::readable Fir.Func.WellFormed.blocks_tokens Fir.Func.WellFormed.ops_tokens Fir.Func.WellFormed.op_tokens Fir.Func.WellFormed.regions_tokens (pin := Fir.Block.allBlocks) (pin := Fir.Func.allBlocks) (pin := Fir.Func.allOps) (pin := Fir.Operation.regionBlocks) (pin := Fir.Region.allBlocks) (pin := Fir.Func.OpWellFormed) (pin := Fir.Location.limit) (fingerprint := "5018003644780287841")
 *Theorems: the blocks, ops and regions of a well-formed function have
 tokens that can be written.* For every dialect with signatures and a text
 format, and every well-formed function $`f`:
@@ -150,7 +152,7 @@ written, its result types are written as types, and its attributes can be
 written.
 :::
 
-:::readable Fir.dialectsTokens_writable Fir.layoutTokens_writable Fir.Item.WellFormed.tokens Fir.Item.WellFormed.tokensList Fir.Module.WellFormed.tokens_writable (pin := Fir.Module.WellFormed) (pin := Fir.Item.WellFormed) (fingerprint := "8813155993780373862")
+:::readable Fir.dialectsTokens_writable Fir.layoutTokens_writable Fir.Item.WellFormed.tokens Fir.Item.WellFormed.tokensList Fir.Module.WellFormed.tokens_writable (pin := Fir.Module.WellFormed) (pin := Fir.Item.WellFormed) (fingerprint := "18123705168161440894")
 *Theorems: well-formed items and modules have tokens that can be written.*
 For every dialect with signatures and a text format:
 

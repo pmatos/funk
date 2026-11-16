@@ -55,9 +55,10 @@ for a valid module.
 namespace Fir.Core
 
 /-- Every core terminator and every core op with no callee is monotone, at
-every width: every core op but `call`. `alloca`, `load` and `store` have no
-rule in the set monad, so no outcome there, and are monotone in it at once;
-each is monotone with memory by its own rule. -/
+every width: every core op but `call`. `alloca` and the loads and stores,
+of an integer or a pointer, have no rule in the set monad, so no outcome
+there, and are monotone in it at once; each is monotone with memory by its
+own rule. -/
 theorem Op.monotone_all : (op : Op) →
     Fir.isTerminator (d := CoreDialect) op = true ∨ callee? (d := CoreDialect) op = none →
     OpMonotone (d := CoreDialect) op

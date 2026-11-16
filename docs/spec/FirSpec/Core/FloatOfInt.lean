@@ -14,7 +14,7 @@ pins their fingerprint; the build fails when the Lean changes under it.
 
 #doc (Manual) "Conversion rules: readable blocks" =>
 
-:::moduleDocs (fingerprint := "15129204928942578814")
+:::moduleDocs (fingerprint := "13896572142278695210")
 :::
 
 :::readable Fir.Core.intOfBits (fingerprint := "9829352279126429626")
@@ -25,7 +25,7 @@ is $`a` read as a binary number, from $`0` to $`2^N - 1`. So the $`\mathsf{i8}`
 value with every bit set is $`-1` signed and $`255` unsigned.
 :::
 
-:::readable Fir.Core.intToFloat (pin := Fir.Core.floatResult) (fingerprint := "9086376024549251221")
+:::readable Fir.Core.intToFloat (pin := Fir.Core.floatResult) (fingerprint := "9519632643969871489")
 *Definition: the rules of $`\mathsf{sitofp}` and $`\mathsf{uitofp}`.* For
 every width $`N`, every format $`\mathsf{float}\langle e,m \rangle`, whose
 format in Lean's model is $`F`, and $`a \in \mathbb{B}^N`:
@@ -36,14 +36,15 @@ $$`\mathsf{uitofp}_{N,e,m}(a) = \mathrm{result}^{\emptyset}_{e,m}([\,], \mathrm{
 
 and both give $`\mathsf{poison}` on $`\mathsf{poison}`.
 $`\mathrm{ofInt}_F(k)` is the model's number nearest the integer $`k`, a
-tie to the one whose mantissa is even, an infinity of $`k`'s sign when
-that number is too large for the format, and $`+0` when $`k = 0`; the
+tie to the one whose mantissa is even, which once packed is an infinity
+of $`k`'s sign when it is too large for the format, and $`+0` when
+$`k = 0`; the
 {ref "The-fir-specification--Execution--Float-arithmetic-rules"}[float result]
 packs it as bits, with no fast-math flags, which the conversions do not
 carry. Neither rule is ever UB.
 :::
 
-:::readable Fir.Core.roundWithAccuracy_isNaN Fir.Core.ofInt_isNaN Fir.Core.intToFloat_valid (pin := Fir.Core.intToFloat) (fingerprint := "2360592073741922987")
+:::readable Fir.Core.roundWithAccuracy_isNaN Fir.Core.ofInt_isNaN Fir.Core.intToFloat_valid (pin := Fir.Core.intToFloat) (fingerprint := "11280292950635350671")
 *Theorems: a conversion chooses nothing.* The model's rounding of a
 finite number gives a zero or a finite number, never a NaN, so
 $`\mathrm{ofInt}_F(k)` is never a NaN. So at every format that the model

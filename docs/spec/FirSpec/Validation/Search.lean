@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Searching a graph: readable blocks" =>
 
-:::moduleDocs (fingerprint := "12081133205208568887")
+:::moduleDocs (fingerprint := "4103383506194683305")
 :::
 
 :::readable Fir.length_filter_lt (fingerprint := "13639080189621108566")
@@ -64,7 +64,7 @@ $$`\mathrm{unseen}(g, \mathit{seen} \cup \{x\}) < \mathrm{unseen}(g, \mathit{see
 This is the measure that shows the search ends.
 :::
 
-:::readable Fir.search (fingerprint := "1329295632825354045")
+:::readable Fir.search (fingerprint := "4324756175998958195")
 *Definition: the search.* $`\mathrm{search}(g, \mathrm{ok}, \mathit{seen}, \mathit{work})`
 takes a graph $`g` as a hash table, a test $`\mathrm{ok}`, a set
 $`\mathit{seen}` of nodes and a list $`\mathit{work}` of nodes to visit. It

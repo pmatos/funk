@@ -17,7 +17,7 @@ fails when the Lean changes under it.
 :::moduleDocs (fingerprint := "5207053525379043121")
 :::
 
-:::readable Fir.Func.memOps_allowedBelow (pin := Fir.MemAllowedBelow) (pin := Fir.MemCallsRefined) (pin := Fir.MemCallsBounded) (pin := Fir.MemMonotoneOps) (pin := Fir.Func.MemOpsMonotone) (fingerprint := "6446781191699385464")
+:::readable Fir.Func.memOps_allowedBelow (pin := Fir.MemAllowedBelow) (pin := Fir.MemCallsRefined) (pin := Fir.MemCallsBounded) (pin := Fir.MemMonotoneOps) (pin := Fir.Func.MemOpsMonotone) (fingerprint := "12494720882911295375")
 *Theorem: every path of the target with memory that runs out of fuel or
 returns, allowed below a budget.* Let the target module $`M'` run each
 call with memory as the source $`M` does, with its calls bounded by
@@ -32,7 +32,7 @@ strong induction on $`n`, from every memories, as for runs in the set
 monad.
 :::
 
-:::readable Fir.Func.memRunsFrom_retUB_allowed (pin := Fir.MemCallsRefined) (pin := Fir.Func.MemOpsMonotone) (pin := Fir.Func.memRunsFrom) (pin := Fir.observable) (fingerprint := "11921490865856683547")
+:::readable Fir.Func.memRunsFrom_retUB_allowed (pin := Fir.MemCallsRefined) (pin := Fir.Func.MemOpsMonotone) (pin := Fir.Func.memRunsFrom) (pin := Fir.observable) (fingerprint := "17485948474966789469")
 *Theorem: every return and UB of the target from given memories, allowed.*
 Let the target module $`M'` run each call with memory as the source $`M`
 does, and every op of $`M`'s functions and of $`f` that runs by its own
@@ -44,7 +44,7 @@ the target's refine. It is the theorem on returns and UB with memory, for
 the entry block's ops in a frame. No black box needs a budget.
 :::
 
-:::readable Fir.Func.memRunsFrom_isRefinedBy_of_calls (pin := Fir.MemCallsRefined) (pin := Fir.MemCallsBounded) (pin := Fir.Func.MemOpsMonotone) (pin := Fir.Func.memRunsFrom) (pin := Fir.observable) (fingerprint := "17947935108510817891")
+:::readable Fir.Func.memRunsFrom_isRefinedBy_of_calls (pin := Fir.MemCallsRefined) (pin := Fir.MemCallsBounded) (pin := Fir.Func.MemOpsMonotone) (pin := Fir.Func.memRunsFrom) (pin := Fir.observable) (fingerprint := "11250009065847745573")
 *Theorem: two modules with memory, compared call by call.* Let the target
 module $`M'` run each call with memory as the source $`M` does, with its
 calls bounded by $`\mathit{bound}`, and every

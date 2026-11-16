@@ -17,7 +17,7 @@ when the Lean changes under it.
 :::moduleDocs (fingerprint := "9928131537140790139")
 :::
 
-:::readable Fir.head_blocks (pin := Fir.Block.tokensList) (fingerprint := "17423821835765405823")
+:::readable Fir.head_blocks (pin := Fir.Block.tokensList) (fingerprint := "17360288594611748644")
 *Lemma: blocks start with a label.* For every dialect with a
 {ref "The-fir-specification--Text-format--Grammar"}[text format], list of
 blocks $`b^*`, tokens $`v` and test $`P` on tokens: if $`P` holds of every
@@ -26,7 +26,7 @@ the first token of the tokens of $`b^*` followed by $`v`, if there is one.
 The proofs use it to show that the token after a block's ops ends them.
 :::
 
-:::readable Fir.readBlocks_nil_reads Fir.readBlocks_cons_reads (pin := Fir.Text.readBlocks) (pin := Fir.Block.tokensList) (fingerprint := "2349298822128858794")
+:::readable Fir.readBlocks_nil_reads Fir.readBlocks_cons_reads (pin := Fir.Text.readBlocks) (pin := Fir.Block.tokensList) (fingerprint := "8199559803847251634")
 *Theorems: blocks read back, one at a time.* For every dialect with a text
 format, the reader of blocks
 {ref "The-fir-specification--Text-format--The-grammar-step"}[reads] tokens
@@ -47,7 +47,7 @@ parentheses when it has any, then `:`, then its ops. Its ops end at the
 label of the next block, or at the `}` after the last.
 :::
 
-:::readable Fir.readKind_reads Fir.readRegions_nil_reads Fir.readRegions_cons_reads (pin := Fir.Text.readRegions) (pin := Fir.Region.tokensList) (fingerprint := "3849686805577609084")
+:::readable Fir.readKind_reads Fir.readRegions_nil_reads Fir.readRegions_cons_reads (pin := Fir.Text.readRegions) (pin := Fir.Region.tokensList) (fingerprint := "13489490461048716197")
 *Theorems: regions read back, one at a time.* For every dialect with a text
 format, the reader of regions reads tokens of regions as their trees before
 any location reference, up to positions:
@@ -66,7 +66,7 @@ reader of a region's kind reads the region's own kind. The regions of an
 op end at its location reference.
 :::
 
-:::readable Fir.Block.readsList Fir.Operation.readsList Fir.Operation.readsBody Fir.Region.readsList (pin := Fir.Block.allBlocks) (pin := Fir.Operation.regionBlocks) (pin := Fir.Region.allBlocks) (pin := Fir.Block.defs) (fingerprint := "12896156741841929050")
+:::readable Fir.Block.readsList Fir.Operation.readsList Fir.Operation.readsBody Fir.Region.readsList (pin := Fir.Block.allBlocks) (pin := Fir.Operation.regionBlocks) (pin := Fir.Region.allBlocks) (pin := Fir.Block.defs) (fingerprint := "8355835310937997601")
 *Theorems: blocks, ops and regions read back, at any depth.* For every
 dialect with a text format, write $`\mathrm{typed}(b)` when
 $`\mathrm{tyattr}(T)` is written as a type for each value $`x : T` that the

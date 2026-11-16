@@ -14,7 +14,7 @@ fails when the Lean changes under it.
 
 #doc (Manual) "How a run with memory ends: readable blocks" =>
 
-:::moduleDocs (fingerprint := "13135433263183756339")
+:::moduleDocs (fingerprint := "7082937691715187137")
 :::
 
 :::readable Fir.fromState (fingerprint := "6678452520667726865")
@@ -46,7 +46,7 @@ counterpart for a run with memory, each step from the memories that the
 step before it ended with.
 :::
 
-:::readable Fir.Result.withState Fir.runFrom (fingerprint := "14228160234549358341")
+:::readable Fir.Result.withState Fir.runFrom (fingerprint := "14074619691667775727")
 *Definition: a run of ops from given memories.* A run of ops returns
 values and the steps of fuel it leaves. Read from the memories $`S`, each
 return $`\mathsf{ret}~(\vec{v}, k)` that ends with the memories $`S'`

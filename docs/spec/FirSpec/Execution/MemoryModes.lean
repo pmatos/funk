@@ -54,7 +54,7 @@ through the layer, at the empty memories, and the set of a tree keeps
 mapping a function over its results.
 :::
 
-:::readable Fir.Func.memExplore_outcomes Fir.Func.memExplore_stuck (pin := Fir.Run.outcomes) (pin := Fir.Run.IsStuck) (pin := Fir.ChoiceTree.Leaf.pathEnd) (fingerprint := "13184506138306841384")
+:::readable Fir.Func.memExplore_outcomes Fir.Func.memExplore_stuck (pin := Fir.Run.outcomes) (pin := Fir.Run.IsStuck) (pin := Fir.ChoiceTree.Leaf.pathEnd) (fingerprint := "14752219628900424889")
 *Theorem: exhaustive mode gives exactly the outcomes of a run with
 memory.* When the semantics in the tree denotes the semantics with memory
 at $`\rho`, for every module $`M`, function $`f`, arguments $`\vec{v}`,
@@ -71,7 +71,7 @@ path end $`\mathsf{stuck}~s`, for some $`s`. Both follow from the theorem
 above and exhaustive mode's theorem on any tree.
 :::
 
-:::readable Fir.Func.memScript_outcomes Fir.Func.memScript_stuck (pin := Fir.Run.outcomes) (pin := Fir.Run.IsStuck) (pin := Fir.ChoiceTree.Leaf.pathEnd) (fingerprint := "10940631355007043643")
+:::readable Fir.Func.memScript_outcomes Fir.Func.memScript_stuck (pin := Fir.Run.outcomes) (pin := Fir.Run.IsStuck) (pin := Fir.ChoiceTree.Leaf.pathEnd) (fingerprint := "1861750335101265450")
 *Theorem: on a sequence that fits, scripted mode gives an outcome of a run
 with memory.* With the same hypotheses, for every $`\mathrm{read}` and
 choice sequence $`\mathit{cs}`, if scripted mode on

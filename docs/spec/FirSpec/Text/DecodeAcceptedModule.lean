@@ -17,7 +17,7 @@ when the Lean changes under it.
 :::moduleDocs (fingerprint := "6111608245691226456")
 :::
 
-:::readable Fir.mapM_decodeType_writable (pin := Fir.Text.decodeType) (fingerprint := "7523009022168863131")
+:::readable Fir.mapM_decodeType_writable (pin := Fir.Text.decodeType) (fingerprint := "13728904447647436187")
 *Lemma: result types as read decode back to themselves.* Let $`d` be a
 dialect with a signature, validation rules and a text, whose text is
 {ref "The-fir-specification--Text-format--Grammar"}[lawful]. For every
@@ -33,7 +33,7 @@ which is the same decoder written another way, so that the decoder of a
 function can pass its own.
 :::
 
-:::readable Fir.decodeFunc_wellFormed (pin := Fir.Text.decodeFunc) (pin := Fir.Func.WellFormed) (pin := Fir.Func.typeOf) (pin := Fir.Func.defs) (pin := Fir.Func.types) (fingerprint := "13525234788551827041")
+:::readable Fir.decodeFunc_wellFormed (pin := Fir.Text.decodeFunc) (pin := Fir.Func.WellFormed) (pin := Fir.Func.typeOf) (pin := Fir.Func.defs) (pin := Fir.Func.types) (fingerprint := "3592434745829390512")
 *Theorem: a function decoded from a tree that can be written is well
 formed.* Let $`d` be a dialect with a signature, validation rules and a
 text, whose text is lawful. For every symbol, list of parameters as read,
@@ -66,7 +66,7 @@ proof joins the two:
 These are the seven conditions of a well-formed function.
 :::
 
-:::readable Fir.Attr.allWritable_of_mem Fir.decodeDialectItem_wellFormed (pin := Fir.Text.decodeDialectItem) (pin := Fir.DialectItem.WellFormed) (fingerprint := "4958433398132762956")
+:::readable Fir.Attr.allWritable_of_mem Fir.decodeDialectItem_wellFormed (pin := Fir.Text.decodeDialectItem) (pin := Fir.DialectItem.WellFormed) (fingerprint := "2960477687707163277")
 *Theorems: an item of a dialect's kind decoded from a tree that can be
 written is well formed.* Attributes that can each be written can all be
 written. For every dialect with a text format, whose text is lawful, and
@@ -77,7 +77,7 @@ is well formed. Its body is then empty, its types decoded from attributes
 written as types, and its attributes kept as they were read.
 :::
 
-:::readable Fir.decodeFuncItem_wellFormed Fir.decodeItem_wellFormed Fir.decodeItems_wellFormed (pin := Fir.Text.decodeFuncItem) (pin := Fir.Text.decodeItem) (pin := Fir.Text.decodeItems) (pin := Fir.Text.SItem.Writable) (fingerprint := "3781362611811854818")
+:::readable Fir.decodeFuncItem_wellFormed Fir.decodeItem_wellFormed Fir.decodeItems_wellFormed (pin := Fir.Text.decodeFuncItem) (pin := Fir.Text.decodeItem) (pin := Fir.Text.decodeItems) (pin := Fir.Text.SItem.Writable) (fingerprint := "12714080273814053242")
 *Theorems: items decoded from a tree that can be written are well formed.*
 Let $`d` be a dialect with a signature, validation rules and a text, whose
 text is lawful:
@@ -100,7 +100,7 @@ above. The last two theorems call one another, and are proved together by
 induction on the items.
 :::
 
-:::readable Fir.decodeLayout_inLimits (pin := Fir.Text.decodeMemLayout) (fingerprint := "3187506564852275340")
+:::readable Fir.decodeLayout_inLimits (pin := Fir.Text.decodeMemLayout) (fingerprint := "9574340244746265937")
 *Theorem: decoded entries are within the limit.* When the entries of a data
 layout as written decode, each entry they decode to is within the limit.
 :::

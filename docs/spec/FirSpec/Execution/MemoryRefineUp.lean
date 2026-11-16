@@ -37,7 +37,7 @@ induction, which covers its ops from $`\mathrm{enter}(S) \sqsubseteq \mathrm{ent
 or a black box.
 :::
 
-:::readable Fir.Func.memOps_allowed (pin := Fir.MemAllowed) (pin := Fir.MemCallsRefined) (pin := Fir.MemMonotoneOps) (pin := Fir.Func.MemOpsMonotone) (fingerprint := "13806622018855904798")
+:::readable Fir.Func.memOps_allowed (pin := Fir.MemAllowed) (pin := Fir.MemCallsRefined) (pin := Fir.MemMonotoneOps) (pin := Fir.Func.MemOpsMonotone) (fingerprint := "13237707094412634067")
 *Theorem: every return and UB of the target with memory, allowed.* Let
 the target module $`M'` run each call with memory as the source $`M`
 does, and every op of $`M`'s functions, of $`f` and of $`o^*` that runs by

@@ -14,10 +14,10 @@ when the Lean changes under it.
 
 #doc (Manual) "The decoding step: readable blocks" =>
 
-:::moduleDocs (fingerprint := "10408754279736529092")
+:::moduleDocs (fingerprint := "9093224125621306410")
 :::
 
-:::readable Fir.Block.scopeDefs Fir.Operation.scopeDefs Fir.Region.scopeDefs (fingerprint := "14018173596716500762")
+:::readable Fir.Block.scopeDefs Fir.Operation.scopeDefs Fir.Region.scopeDefs (fingerprint := "12648013602233686120")
 *Definitions: the definitions of blocks, ops and regions, in the order of
 the first pass.* The
 {ref "The-fir-specification--Text-format--Decoding"}[first pass] of
@@ -31,7 +31,7 @@ decoding reads definitions in the order of the text:
   those of the other regions.
 :::
 
-:::readable Fir.Block.scopeDefs_perm Fir.Operation.scopeDefs_perm Fir.Region.scopeDefs_perm Fir.Func.scopeDefs_perm (pin := Fir.Block.defs) (pin := Fir.Func.defs) (pin := Fir.Block.allBlocks) (pin := Fir.Operation.regionBlocks) (pin := Fir.Region.allBlocks) (fingerprint := "7002586193701472433")
+:::readable Fir.Block.scopeDefs_perm Fir.Operation.scopeDefs_perm Fir.Region.scopeDefs_perm Fir.Func.scopeDefs_perm (pin := Fir.Block.defs) (pin := Fir.Func.defs) (pin := Fir.Block.allBlocks) (pin := Fir.Operation.regionBlocks) (pin := Fir.Region.allBlocks) (fingerprint := "4643541391408180206")
 *Theorems: the first pass reads the same definitions, in another order.*
 For every dialect, each of these lists is a permutation of the other:
 
@@ -92,7 +92,7 @@ The first pass starts from the empty scope and adds one value at a time.
 distinct, so are the names of $`L`.
 :::
 
-:::readable Fir.Text.decodeDef_eq Fir.Text.mapM_decodeDef (pin := Fir.Text.decodeDef) (pin := Fir.Text.decodeType) (fingerprint := "6210408333815912073")
+:::readable Fir.Text.decodeDef_eq Fir.Text.mapM_decodeDef (pin := Fir.Text.decodeDef) (pin := Fir.Text.decodeType) (fingerprint := "17114192597758093961")
 *Theorems: definitions decode back.* For every dialect with a
 {ref "The-fir-specification--Text-format--Grammar"}[text format]:
 
@@ -122,7 +122,7 @@ The condition on names is what keeps the pass from finding a value twice;
 a well-formed function meets it.
 :::
 
-:::readable Fir.Text.define_defines (pin := Fir.Text.define) (fingerprint := "2850858440387593569")
+:::readable Fir.Text.define_defines (pin := Fir.Text.define) (fingerprint := "2054614932227937519")
 *Theorem: adding definitions as written adds them.* For every dialect with a text
 format and every list of definitions $`y_1 : T_1, \dots, y_n : T_n` such
 that $`\mathrm{decodety}(\mathrm{tyattr}(T_i)) = T_i` for each $`i`, the
@@ -130,7 +130,7 @@ reader that adds definitions to a scope adds $`y_1 : T_1, \dots, y_n : T_n`
 for their trees, in order.
 :::
 
-:::readable Fir.Text.defineBlocks_nil Fir.Text.defineBlocks_cons Fir.Text.defineOps_nil Fir.Text.defineOps_cons Fir.Text.defineRegions_nil Fir.Text.defineRegions_cons (pin := Fir.Text.defineBlocks) (pin := Fir.Text.defineOps) (pin := Fir.Text.defineRegions) (fingerprint := "16706359931980544307")
+:::readable Fir.Text.defineBlocks_nil Fir.Text.defineBlocks_cons Fir.Text.defineOps_nil Fir.Text.defineOps_cons Fir.Text.defineRegions_nil Fir.Text.defineRegions_cons (pin := Fir.Text.defineBlocks) (pin := Fir.Text.defineOps) (pin := Fir.Text.defineRegions) (fingerprint := "7338922549173637337")
 *Theorems: the first pass adds definitions, one element at a time.* For
 every dialect with a text format, the first pass on blocks, on ops and on
 regions adds, for their trees, their definitions in the order of the first
@@ -169,7 +169,7 @@ every value that $`f` defines at any depth with its type:
 $`\mathrm{decodety}(\mathrm{tyattr}(T)) = T`.
 :::
 
-:::readable Fir.Func.WellFormed.scope (pin := Fir.Func.typeOf) (pin := Fir.Func.WellFormed) (pin := Fir.Text.define) (pin := Fir.Text.defineBlocks) (fingerprint := "15451524792393144736")
+:::readable Fir.Func.WellFormed.scope (pin := Fir.Func.typeOf) (pin := Fir.Func.WellFormed) (pin := Fir.Text.define) (pin := Fir.Text.defineBlocks) (fingerprint := "14489303943484056531")
 *Theorem: the first pass on a well-formed function gives each value its
 type.* For every dialect with
 signatures and a text format, every well-formed function $`f`, parameters

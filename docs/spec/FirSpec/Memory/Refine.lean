@@ -14,10 +14,10 @@ when the Lean changes under it.
 
 #doc (Manual) "Refining memories: readable blocks" =>
 
-:::moduleDocs (fingerprint := "1668304709391469210")
+:::moduleDocs (fingerprint := "12420755195892133100")
 :::
 
-:::readable Fir.Memory.MemUnit.IsRefinedBy Fir.Memory.Block.IsRefinedBy Fir.Memory.Memory.IsRefinedBy (fingerprint := "17844605018342700448")
+:::readable Fir.Memory.MemUnit.IsRefinedBy Fir.Memory.Block.IsRefinedBy Fir.Memory.Memory.IsRefinedBy (fingerprint := "2915498007534642534")
 *Definitions: refining units, blocks and memories.* A unit is refined by
 itself, and a poison unit by any unit:
 
@@ -55,7 +55,7 @@ $`M \sqsubseteq M'` again: the new block has the alignment $`\alpha` and
 holds $`n` poisons in both.
 :::
 
-:::readable Fir.Memory.Memory.IsRefinedBy.locate Fir.Memory.Memory.IsRefinedBy.load Fir.Memory.Memory.IsRefinedBy.store (pin := Fir.Memory.Memory.locate) (pin := Fir.Memory.Memory.load) (pin := Fir.Memory.Memory.store) (fingerprint := "270640476684629114")
+:::readable Fir.Memory.Memory.IsRefinedBy.locate Fir.Memory.Memory.IsRefinedBy.load Fir.Memory.Memory.IsRefinedBy.store (pin := Fir.Memory.Memory.locate) (pin := Fir.Memory.Memory.load) (pin := Fir.Memory.Memory.store) (fingerprint := "3062208598611118350")
 *Theorems: accesses to memories that refine others.* Let $`M \sqsubseteq M'`.
 An access of $`n` units through the pointer $`p` lands, in both, at the
 same fault, or in the same allocation at the same offset, in live blocks
@@ -69,7 +69,7 @@ only on the allocations, which are the same. So:
   memories $`N \sqsubseteq N'`.
 :::
 
-:::readable Fir.Memory.Memory.IsRefinedBy.aligned Fir.Memory.Memory.IsRefinedBy.loadAligned Fir.Memory.Memory.IsRefinedBy.storeAligned (pin := Fir.Memory.Memory.aligned) (pin := Fir.Memory.Memory.loadAligned) (pin := Fir.Memory.Memory.storeAligned) (fingerprint := "7288793297711536045")
+:::readable Fir.Memory.Memory.IsRefinedBy.aligned Fir.Memory.Memory.IsRefinedBy.loadAligned Fir.Memory.Memory.IsRefinedBy.storeAligned (pin := Fir.Memory.Memory.aligned) (pin := Fir.Memory.Memory.loadAligned) (pin := Fir.Memory.Memory.storeAligned) (fingerprint := "15822786688168251767")
 *Theorems: aligned accesses keep refinement.* Let $`M \sqsubseteq M'`.
 Their blocks have the same alignments, so an access is
 {ref "The-fir-specification--Memory--The-memory-model"}[aligned] in $`M`
@@ -90,7 +90,7 @@ $$`S \sqsubseteq S' \iff \mathit{frames}(S) = \mathit{frames}(S') \land \forall 
 It is reflexive and transitive.
 :::
 
-:::readable Fir.Memory.Memories.IsRefinedBy.enter Fir.Memory.Memories.IsRefinedBy.set Fir.Memory.Memories.IsRefinedBy.free Fir.Memory.Memories.IsRefinedBy.freeAll Fir.Memory.Memories.IsRefinedBy.exit Fir.Memory.Memories.IsRefinedBy.record (pin := Fir.Memory.Memories.exit) (fingerprint := "6860965911325026168")
+:::readable Fir.Memory.Memories.IsRefinedBy.enter Fir.Memory.Memories.IsRefinedBy.set Fir.Memory.Memories.IsRefinedBy.free Fir.Memory.Memories.IsRefinedBy.freeAll Fir.Memory.Memories.IsRefinedBy.exit Fir.Memory.Memories.IsRefinedBy.record (pin := Fir.Memory.Memories.exit) (fingerprint := "16507926405396771119")
 *Theorems: frames keep refinement.* Let $`S \sqsubseteq S'`. Entering a
 call keeps refinement. Replacing the memory $`x` by $`m` in $`S` and by
 $`m'` in $`S'`, with $`m \sqsubseteq m'`, keeps it, and so does freeing an
