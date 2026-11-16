@@ -143,26 +143,26 @@ theorem bindResults_error {b : Bindings d} {env : Env d} {rs : List (Name × d.T
 
 variable [DecidableEq d.Ty]
 
-/-- What `lookOperands.go` gives fits what `Env.operands` gives on the
-operands it has left: the same error, or the values found so far, then the
-spec's. -/
-def LookedFits {ts rest : List d.Ty} (acc : List (DVal d)) :
-    Looked d ts → Except Stuck (HVector toType rest) → Prop
-  | .ok vs _, .ok ws => vs.toDVals = acc.reverse ++ ws.toDVals
-  | .fail e, .error e' => e = e'
+/-- What `args.go` gives fits what `Env.operands` gives on the operands it
+has left: the same error, or the values found so far, then the spec's, with
+bindings that agree with `env`. -/
+def ArgsFits {ts rest : List d.Ty} (env : Env d) (acc : List (DVal d)) :
+    Except Stuck (HVector toType ts × Bindings d) → Except Stuck (HVector toType rest) → Prop
+  | .ok (vs, b), .ok ws => vs.toDVals = acc.reverse ++ ws.toDVals ∧ Agrees b env
+  | .error e, .error e' => e = e'
   | _, _ => False
 
-theorem lookOperands_go {b : Bindings d} {env : Env d} (h : Agrees b env) {ts : List d.Ty} :
-    ∀ (rest : List d.Ty) (xs : List Name) (c : Nat) (acc : List (DVal d))
-      (hr : (acc.map (·.1)).reverse ++ rest = ts),
-      LookedFits acc (lookOperands.go b ts rest xs c acc hr) (env.operands rest xs)
-  | [], [], _, acc, _ => by
-    simp [lookOperands.go, Env.operands, LookedFits, toDVals_ofRev, pure_ok, HVector.toDVals]
-  | [], _ :: _, _, _, _ => rfl
-  | _ :: _, [], _, _, _ => rfl
-  | t :: rest, x :: xs, c, acc, hr => by
+theorem args_go {env : Env d} {ts : List d.Ty} :
+    ∀ (b : Bindings d) (_ : Agrees b env) (rest : List d.Ty) (xs : List Name)
+      (acc : List (DVal d)) (hr : (acc.map (·.1)).reverse ++ rest = ts),
+      ArgsFits env acc (args.go ts b rest xs acc hr) (env.operands rest xs)
+  | _, h, [], [], acc, _ => by
+    simp [args.go, Env.operands, ArgsFits, toDVals_ofRev, pure_ok, HVector.toDVals, h]
+  | _, _, [], _ :: _, _, _ => rfl
+  | _, _, _ :: _, [], _, _ => rfl
+  | b, h, t :: rest, x :: xs, acc, hr => by
     have hg := (look_val b x).trans (h x)
-    simp only [lookOperands.go]
+    simp only [args.go]
     revert hg
     cases look b x with
     | miss =>
@@ -184,19 +184,21 @@ theorem lookOperands_go {b : Bindings d} {env : Env d} (h : Agrees b env) {ts : 
       by_cases ht : t' = t
       · subst ht
         simp only [dite_true]
-        have ih := lookOperands_go h rest xs (c + cost k) (⟨t', v⟩ :: acc)
-          (by simpa using hr)
+        have ih := args_go (b.pay (cost k)) (fun y => (get_pay b _ y).trans (h y))
+          rest xs (⟨t', v⟩ :: acc) (by simpa using hr)
         revert ih
-        cases lookOperands.go b ts rest xs (c + cost k) (⟨t', v⟩ :: acc) (by simpa using hr) with
-        | ok vs c' =>
+        cases args.go ts (b.pay (cost k)) rest xs (⟨t', v⟩ :: acc) (by simpa using hr) with
+        | ok r =>
+          obtain ⟨vs, b'⟩ := r
           cases env.operands rest xs with
           | ok ws =>
             intro ih
+            refine ⟨?_, ih.2⟩
             show vs.toDVals = acc.reverse ++ (HVector.cons v ws).toDVals
-            rw [show vs.toDVals = _ from ih]
+            rw [ih.1]
             simp [HVector.toDVals]
           | error e => intro ih; exact ih.elim
-        | fail e =>
+        | error e =>
           cases env.operands rest xs with
           | ok ws => intro ih; exact ih.elim
           | error e' => intro ih; exact ih
@@ -205,19 +207,19 @@ theorem lookOperands_go {b : Bindings d} {env : Env d} (h : Agrees b env) {ts : 
 
 theorem args_fits {b : Bindings d} {env : Env d} (h : Agrees b env) (ts : List d.Ty)
     (xs : List Name) : Fits (b.args ts xs) ((env.operands ts xs).map (·, env)) := by
-  have hg : LookedFits [] (lookOperands b ts xs 0) (env.operands ts xs) :=
-    lookOperands_go (ts := ts) h ts xs 0 [] rfl
-  unfold args
+  have hg : ArgsFits env [] (b.args ts xs) (env.operands ts xs) :=
+    args_go (ts := ts) b h ts xs [] rfl
   revert hg
-  cases lookOperands b ts xs 0 with
-  | ok vs c =>
+  cases b.args ts xs with
+  | ok r =>
+    obtain ⟨vs, b'⟩ := r
     cases env.operands ts xs with
     | ok ws =>
       intro hg
-      have hv : vs.toDVals = ws.toDVals := by simpa [LookedFits] using hg
-      exact ⟨toDVals_inj hv, fun y => (get_pay b c y).trans (h y)⟩
+      have hv : vs.toDVals = ws.toDVals := by simpa [ArgsFits] using hg.1
+      exact ⟨toDVals_inj hv, hg.2⟩
     | error e => intro hg; cases hg
-  | fail e =>
+  | error e =>
     cases env.operands ts xs with
     | ok ws => intro hg; cases hg
     | error e' => intro hg; exact hg
