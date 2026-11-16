@@ -16,9 +16,10 @@
 # modules nested 3,000 deep on a 256 KiB stack, and rejects a work-item that
 # is not one of its grid (#212). It runs a kernel whose work-group
 # allocation outlives the call that made it (#212, stage 3). On a 256 KiB
-# stack, it runs a ret of 100,000 values, calls with 10,000 results and
+# stack, it runs a ret of 100,000 values, calls with 100,000 results and
 # 100,000 arguments, a br of 100,000 block arguments and a function of
-# 100,000 parameters (#405).
+# 100,000 parameters (#405); the call whose ret reads its 100,000 results
+# takes time near linear in them (#413).
 set -euo pipefail
 
 if [[ $# -ne 1 ]]; then
@@ -184,8 +185,10 @@ $exhausted
 END
 # fir-ref run takes no stack per value (#405): on a 256 KiB stack, a ret
 # of 100,000 values runs in each mode, and so do a call that returns
-# 10,000 values, a call of 100,000 arguments, a br of 100,000 block
+# 100,000 values, a call of 100,000 arguments, a br of 100,000 block
 # arguments and a function of 100,000 parameters, given on the command line.
+# The ret after that call reads values bound long before, each lookup
+# paying before the next (#413).
 n=100000
 ones=$(printf ',"1"%.0s' $(seq 2 $n))
 ps=$(printf ', %%p%d: i8' $(seq 2 $n))
@@ -198,11 +201,11 @@ ps=$(printf ', %%p%d: i8' $(seq 2 $n))
     printf '\nfunc @br() -> i8 {\n^e:\n  %%c: i8 = const 1 @0\n'
     printf '  br ^b(%%c%s) @0\n^b(%%p1: i8%s):\n  ret %%p%d @0\n}\n' \
         "$(printf ', %%c%.0s' $(seq 2 $n))" "$ps" "$n"
-    printf '\nfunc @h() -> i8%s {\n^e:\n  %%c: i8 = const 1 @0\n' "$(printf ', i8%.0s' $(seq 2 10000))"
-    printf '  ret %%c%s @0\n}\n' "$(printf ', %%c%.0s' $(seq 2 10000))"
-    printf '\nfunc @call() -> i8%s {\n^e:\n' "$(printf ', i8%.0s' $(seq 2 10000))"
-    printf '  %%r1: i8%s = call @h @0\n' "$(printf ', %%r%d: i8' $(seq 2 10000))"
-    printf '  ret %%r1%s @0\n}\n' "$(printf ', %%r%d' $(seq 2 10000))"
+    printf '\nfunc @h() -> i8%s {\n^e:\n  %%c: i8 = const 1 @0\n' "$(printf ', i8%.0s' $(seq 2 $n))"
+    printf '  ret %%c%s @0\n}\n' "$(printf ', %%c%.0s' $(seq 2 $n))"
+    printf '\nfunc @call() -> i8%s {\n^e:\n' "$(printf ', i8%.0s' $(seq 2 $n))"
+    printf '  %%r1: i8%s = call @h @0\n' "$(printf ', %%r%d: i8' $(seq 2 $n))"
+    printf '  ret %%r1%s @0\n}\n' "$(printf ', %%r%d' $(seq 2 $n))"
     printf '\nlocs {\n  @0 = unknown\n}\n'
 } >"$tmp/wide.fir"
 while read -r want mode; do
@@ -225,7 +228,7 @@ while read -r values run; do
             status=1
     done
 done <<END
-["1"${ones:0:4*9999}] @call
+["1"$ones] @call
 ["1"] @args
 ["1"] @br
 ["1"] @g $(printf '1 %.0s' $(seq $n))
