@@ -2,7 +2,7 @@ import Fir.Execution.Interpreter
 
 /-!
 Vectors of values built and read in loops of tail calls
-(`docs/decisions/fir-ref-fast-paths.md#running`). The spec's
+(`docs/decisions/fir-ref-fast-paths.md#wide-values`). The spec's
 `HVector.toDVals`, and a vector built by consing each value onto the vector of
 the values after it, take stack for each value, so a `ret` of thousands of
 values overflowed a 256 KiB stack (#405).
