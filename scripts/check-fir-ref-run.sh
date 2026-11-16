@@ -194,21 +194,22 @@ END
 n=100000
 ones=$(printf ',"1"%.0s' $(seq 2 $n))
 ps=$(printf ', %%p%d: i8' $(seq 2 $n))
+i8s=$(printf ', i8%.0s' $(seq 2 $n))
+cs=$(printf ', %%c%.0s' $(seq 2 $n))
 {
-    printf 'func @f() -> i8%s {\n^e:\n  %%c: i8 = const 1 @0\n' "$(printf ', i8%.0s' $(seq 2 $n))"
-    printf '  ret %%c%s @0\n}\n' "$(printf ', %%c%.0s' $(seq 2 $n))"
+    printf 'func @f() -> i8%s {\n^e:\n  %%c: i8 = const 1 @0\n' "$i8s"
+    printf '  ret %%c%s @0\n}\n' "$cs"
     printf '\nfunc @g(%%p1: i8%s) -> i8 {\n^e:\n  ret %%p%d @0\n}\n' "$ps" "$n"
     printf '\nfunc @args() -> i8 {\n^e:\n  %%c: i8 = const 1 @0\n'
-    printf '  %%r: i8 = call @g %%c%s @0\n  ret %%r @0\n}\n' "$(printf ', %%c%.0s' $(seq 2 $n))"
+    printf '  %%r: i8 = call @g %%c%s @0\n  ret %%r @0\n}\n' "$cs"
     printf '\nfunc @br() -> i8 {\n^e:\n  %%c: i8 = const 1 @0\n'
-    printf '  br ^b(%%c%s) @0\n^b(%%p1: i8%s):\n  ret %%p%d @0\n}\n' \
-        "$(printf ', %%c%.0s' $(seq 2 $n))" "$ps" "$n"
+    printf '  br ^b(%%c%s) @0\n^b(%%p1: i8%s):\n  ret %%p%d @0\n}\n' "$cs" "$ps" "$n"
     printf '\nlocs {\n  @0 = unknown\n}\n'
 } >"$tmp/wide.fir"
 {
-    printf 'func @h() -> i8%s {\n^e:\n  %%c: i8 = const 1 @0\n' "$(printf ', i8%.0s' $(seq 2 $n))"
-    printf '  ret %%c%s @0\n}\n' "$(printf ', %%c%.0s' $(seq 2 $n))"
-    printf '\nfunc @call() -> i8%s {\n^e:\n' "$(printf ', i8%.0s' $(seq 2 $n))"
+    printf 'func @h() -> i8%s {\n^e:\n  %%c: i8 = const 1 @0\n' "$i8s"
+    printf '  ret %%c%s @0\n}\n' "$cs"
+    printf '\nfunc @call() -> i8%s {\n^e:\n' "$i8s"
     printf '  %%r1: i8%s = call @h @0\n' "$(printf ', %%r%d: i8' $(seq 2 $n))"
     printf '  ret %%r1%s @0\n}\n' "$(printf ', %%r%d' $(seq 2 $n))"
     printf '\nlocs {\n  @0 = unknown\n}\n'
