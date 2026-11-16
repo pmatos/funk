@@ -28,8 +28,11 @@ runs from memories with the same allocations, and say nothing of the frames
 or of memories with other allocations. So the theorems on runs ask the
 dialect for it, of each op that runs by its own rule, a terminator or an op
 with no callee, and declares no memory effect: its ops _ignore the memories
-where they touch none_. The core dialect meets it, since none of its ops
-touches memory.
+where they touch none_. The core dialect meets it, since each of its ops
+that declares no memory effect runs by its rule in the set monad and keeps
+the memories, and a sum meets it when both its sides do. A set of effects
+whose memories are renamed, as a base op's are in a sum, touches no memory
+only if it touched none before.
 
 A path of a run is compared with the path of another run that returns the
 same values with other memories, so a path can have the memories it returns
@@ -56,6 +59,20 @@ theorem Effects.TouchesNoMemory.of_le {a b : Effects Mem} (h : a ≤ b)
     (hb : b.TouchesNoMemory) : a.TouchesNoMemory := fun x =>
   ⟨fun hr => (hb x).1 (h.reads x hr), fun hw => (hb x).2.1 (h.writes x hw),
     fun ha => (hb x).2.2 (h.allocates x ha)⟩
+
+/-- A set of memories holds the new name of each memory it holds, once its
+memories are renamed. -/
+theorem MemSet.has_map {Mem' : Type} (f : Mem → Mem') {x : Mem} :
+    ∀ {s : MemSet Mem}, s.Has x → (s.map f).Has (f x)
+  | .these _, h => List.mem_map_of_mem h
+  | .every, _ => trivial
+
+/-- A set of effects that touches no memory once its memories are renamed
+touches none before. -/
+theorem Effects.TouchesNoMemory.of_map {Mem' : Type} {f : Mem → Mem'} {a : Effects Mem}
+    (h : (a.map f).TouchesNoMemory) : a.TouchesNoMemory := fun x =>
+  ⟨fun hr => (h (f x)).1 (MemSet.has_map f hr), fun hw => (h (f x)).2.1 (MemSet.has_map f hw),
+    fun ha => (h (f x)).2.2 (MemSet.has_map f ha)⟩
 
 end
 

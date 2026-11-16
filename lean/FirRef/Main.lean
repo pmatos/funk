@@ -35,7 +35,7 @@ open Fir
 def usage : String := "usage: fir-ref fmt [--check] FILE...
        fir-ref validate FILE...
        fir-ref run [--fuel N] [--choices C,... | --exhaustive [--choice-bits B]
-                   | --seed S] [--work-item-id X,Y,Z] [--work-group-id X,Y,Z]
+                   [--nans V,...] | --seed S] [--work-item-id X,Y,Z] [--work-group-id X,Y,Z]
                    [--work-group-size X,Y,Z] [--num-work-groups X,Y,Z]
                    FILE @FUNC [ARG...]
 
@@ -69,6 +69,11 @@ def usage : String := "usage: fir-ref fmt [--check] FILE...
               --exhaustive      try every choice, and print every outcome
               --choice-bits B   with --exhaustive, choose at most B bits
                                 in all on one path (default 16)
+              --nans V,...      with --exhaustive, try at each NaN choice
+                                only the quiet NaN and each bit pattern
+                                V, such as 0x7fc00000, that is a NaN of
+                                its format, and print whether the
+                                outcomes are complete
               --seed S          draw each choice from a generator seeded
                                 with S, below 2^64, and print the choices
                                 drawn

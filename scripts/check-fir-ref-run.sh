@@ -20,7 +20,8 @@
 # 100,000 arguments, a br of 100,000 block arguments and a function of
 # 100,000 parameters (#405). The ret after that call reads 100,000 values
 # bound long before, which took 33 seconds per mode before #413; the check
-# compares results and sets no limit on time.
+# compares results and sets no limit on time. With --nans, exhaustive mode
+# tries a few NaNs at each NaN choice (#219).
 set -euo pipefail
 
 if [[ $# -ne 1 ]]; then
@@ -172,7 +173,8 @@ runs "$tmp/call.fir" 0 "$exhausted" --fuel 100 @f 1 || status=1
 runs "$tmp/call.fir" 0 "${ret}[\"42\"]$none" '@"1"' 21 || status=1
 # fir-ref run takes no stack per step or per level of calls (#47): on a
 # 256 KiB stack, @spin and @f above, a loop and a recursion that never
-# end, run out of a budget of a million steps in each mode, never abort.
+# end, run out of a budget of a million steps in each mode, --nans
+# included, never abort.
 while read -r want mode; do
     for run in "loops.fir @spin" "call.fir @f 1"; do
         # shellcheck disable=SC2086 # MODE and RUN are lists of words.
@@ -182,6 +184,7 @@ while read -r want mode; do
 done <<END
 $exhausted
 {"kind":"outcomes","choices":0,"outcomes":[{"kind":"fuel-exhausted"}]} --exhaustive
+{"kind":"outcomes","choices":0,"complete":true,"outcomes":[{"kind":"fuel-exhausted"}]} --exhaustive --nans 0x7fc00000
 {"kind":"fuel-exhausted","choices":0,"sequence":[]} --seed 7
 END
 # fir-ref run takes no stack per value (#405): on a 256 KiB stack, a ret
@@ -256,6 +259,15 @@ for v in 0 1 -2 -1; do outcomes+="${ret}[\"$v\"]},"; done
 runs "$tmp/freeze.fir" 0 "${outcomes%,}]}" --exhaustive @f 1 || status=1
 runs "$tmp/freeze.fir" 0 '{"kind":"choice-budget-exceeded","budget":1}' \
     --exhaustive --choice-bits 1 @f 1 || status=1
+# With --nans, exhaustive mode tries at a NaN choice the quiet NaN and the
+# NaNs it is given, and says whether the outcomes are complete (#219).
+all="${outcomes%,}]}"
+runs "$tmp/freeze.fir" 0 "${all/\"choices\":1,/\"choices\":1,\"complete\":true,}" \
+    --exhaustive --nans 0x7fc00000 @f 1 || status=1
+nans='{"kind":"outcomes","choices":1,"complete":false,"outcomes":['
+for v in 0x7fc00000 0x7f800001; do nans+="${ret}[\"$v\"]},"; done
+runs $c/float-binary-f32.fir 0 "${nans%,}]}" --exhaustive --nans 0x7f800001,0x3f800000 \
+    @fsub 0x7f800000 0x7f800000 || status=1
 runs $c/add.fir 2 'fir-ref: 9223372036854775808 is not a value of type i64' \
     @double 9223372036854775808 || status=1
 # An argument is lexed over positions, with no stack per character: a

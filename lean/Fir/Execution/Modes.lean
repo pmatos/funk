@@ -117,7 +117,7 @@ def explore : ChoiceTree ε α → Nat → Option (List (Leaf ε α × Nat))
   | .pure a, _ => some [(.ok a, 0)]
   | .ub r, _ => some [(.ub r, 0)]
   | .noOutcome e, _ => some [(.noOutcome e, 0)]
-  | .choose w k, budget =>
+  | .choose w _ k, budget =>
     if w ≤ budget then
       collect (fun b => ((k b).explore (budget - w)).map (List.map fun p => (p.1, p.2 + 1)))
         (allBits w) []
@@ -139,7 +139,7 @@ theorem explore_toSet : ∀ {t : ChoiceTree ε α} {budget : Nat} {ls : List (Le
   | .noOutcome _, _, ls, h, e => by
     cases h
     exact ⟨False.elim, fun ⟨_, hp, he⟩ => by rw [List.mem_singleton.1 hp] at he; cases he⟩
-  | .choose w k, budget, ls, h, e => by
+  | .choose w _ k, budget, ls, h, e => by
     simp only [explore] at h
     split at h
     · constructor
@@ -159,7 +159,7 @@ theorem explore_toSet : ∀ {t : ChoiceTree ε α} {budget : Nat} {ls : List (Le
 
 /-- No path of the tree chooses more than `budget` bits in all. -/
 def Within : ChoiceTree ε α → Nat → Prop
-  | .choose w k, budget => w ≤ budget ∧ ∀ b, (k b).Within (budget - w)
+  | .choose w _ k, budget => w ≤ budget ∧ ∀ b, (k b).Within (budget - w)
   | _, _ => True
 
 theorem collect_isSome {g : β → Option (List γ)} :
@@ -179,7 +179,7 @@ more than its budget. -/
 theorem explore_isSome_iff : ∀ {t : ChoiceTree ε α} {budget : Nat},
     (t.explore budget).isSome ↔ t.Within budget
   | .pure _, _ | .ub _, _ | .noOutcome _, _ => by simp [explore, Within]
-  | .choose w k, budget => by
+  | .choose w _ k, budget => by
     simp only [explore, Within]
     split
     · rename_i hw
@@ -215,8 +215,8 @@ def script (read : (w : Nat) → σ → Option (BitVec w)) :
   | .pure a, [], made => .ok (.ok a, made)
   | .ub r, [], made => .ok (.ub r, made)
   | .pure _, cs@(_ :: _), made | .ub _, cs@(_ :: _), made => .error (.long made (made + cs.length))
-  | .choose w _, [], made => .error (.short made w)
-  | .choose w k, s :: cs, made => match read w s with
+  | .choose w _ _, [], made => .error (.short made w)
+  | .choose w _ k, s :: cs, made => match read w s with
     | some b => (k b).script read cs (made + 1)
     | none => .error (.unread made w s)
 
@@ -229,8 +229,8 @@ theorem script_toSet {read : (w : Nat) → σ → Option (BitVec w)} :
   | .pure _, [], _, _, _, _, h, he => by cases h; cases he; rfl
   | .ub _, [], _, _, _, _, h, he => by cases h; cases he; rfl
   | .pure _, _ :: _, _, _, _, _, h, _ | .ub _, _ :: _, _, _, _, _, h, _
-  | .choose _ _, [], _, _, _, _, h, _ => by cases h
-  | .choose w k, s :: cs, made, l, c, e, h, he => by
+  | .choose _ _ _, [], _, _, _, _, h, _ => by cases h
+  | .choose w _ k, s :: cs, made, l, c, e, h, he => by
     simp only [script] at h
     split at h
     · rename_i b _
@@ -251,7 +251,7 @@ def sample (draw : (w : Nat) → γ → BitVec w × γ) : ChoiceTree ε α → �
   | .pure a, _ => (.ok a, [])
   | .ub r, _ => (.ub r, [])
   | .noOutcome e, _ => (.noOutcome e, [])
-  | .choose w k, g =>
+  | .choose w _ k, g =>
     let d := draw w g
     let p := (k d.1).sample draw d.2
     (p.1, ⟨w, d.1⟩ :: p.2)
@@ -264,7 +264,7 @@ theorem sample_script {draw : (w : Nat) → γ → BitVec w × γ} :
       t.script readChosen (t.sample draw g).2 made =
         .ok ((t.sample draw g).1, made + (t.sample draw g).2.length)
   | .pure _, _, _ | .ub _, _, _ | .noOutcome _, _, _ => rfl
-  | .choose w k, g, made => by
+  | .choose w _ k, g, made => by
     simp only [sample, script, readChosen, dite_true, List.length_cons]
     rw [sample_script (k (draw w g).1) (draw w g).2 (made + 1), Nat.add_assoc, Nat.add_comm 1]
 
