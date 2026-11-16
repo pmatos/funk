@@ -245,16 +245,26 @@ device module's kernels are covered, at every work-item and wherever a run
 names the sum's memories. `scripts/check_g0.py` keeps `CoreGpu` out of the
 generic tests (stage 1), which is why the restatements live beside them.
 
-The generic statements whose hypothesis is the set monad are not
-restated: those over a dialect that lifts the set monad (`memRuns_eq`,
-`inModuleAt`, `neverUB_setM`, `makesNoPoison_setM`, and the classes from
-`LawfulDialectPoison`: `lawfulTotal_ofLawful`, `lawfulMonotone_ofLawful`,
-`lawfulMemPoison_ofLawful`, `lawfulPoison_iff_mem`), `progress` and
-`propagates`, which ask for `LawfulDialectPoison`, and `weightedRun`,
-which asks for a semantics in the toy behaviour models. The core meets
-none of these hypotheses either, since `alloca` has no rule in the set
-monad, and `gpu.work_group_alloca` has none for the same reason; each has
-a statement with memory, restated here: `memProgress`, the lawful classes
-with memory and the obligations of `LawfulDialectEffects`. The runs in the
-set monad that need no lawful class, `fuelMonotone` and `neverStuck`, are
-restated. No proven statement was removed or narrowed.
+Every generic theorem of those files is restated but these, and the toy
+behaviour models' own lemmas (`Dist.*`, `WeightedTree.*`):
+
+- Those whose hypothesis is a dialect lawful in the set monad
+  (`LawfulDialectPoison`) or one that lifts it (`LiftsSetM`). The core
+  meets neither, since `alloca` has no rule in the set monad, and the sum
+  fails for the same reason through `gpu.work_group_alloca`. Each has a
+  statement with memory that is restated: `memProgress` for `progress`;
+  `Gpu.inModuleAt_of_valid`, which `memProgress` and `memNeverStuck` use,
+  for `inModuleAt`; `neverUB` and `makesNoPoison` for `neverUB_setM` and
+  `makesNoPoison_setM`; the lawful classes with memory of sums for
+  `lawfulTotal_ofLawful`, `lawfulMonotone_ofLawful`,
+  `lawfulMemPoison_ofLawful` and `propagates`.
+- `memRuns_eq` and `lawfulPoison_iff_mem`, which say that the runs with
+  memory and the set monad agree. They have no counterpart: for a function
+  that allocates, the set monad gives no outcome where the run with memory
+  gives one, for the core alone too.
+- `weightedRun`, which needs a semantics in the toy behaviour models of
+  `FirTest.G0`. No dialect has one, the core included; it shows the seam,
+  not a guarantee of a dialect.
+
+The runs in the set monad that need no lawful class, `fuelMonotone` and
+`neverStuck`, are restated. No proven statement was removed or narrowed.
