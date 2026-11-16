@@ -72,6 +72,7 @@ import FirTest.MemoryEncode
 import FirTest.Alloca
 import FirTest.Load
 import FirTest.Store
+import FirTest.MemoryCopy
 import FirTest.PointerAccess
 import FirTest.PrintParse
 import FirTest.ParseWellFormed
