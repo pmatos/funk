@@ -196,11 +196,6 @@ theorem actsOf_upTo_emits : ∀ (k n : Nat),
     rw [this, Nat.add_min_add_right]
     simp [List.replicate_succ]
 
-/-- A marked trace that shows no act shows none in its first steps either. -/
-theorem upTo_noActs {mt : List (Step A)} (h : Step.actsOf mt = []) (N : Nat) :
-    Step.actsOf (Step.upTo N mt) = [] :=
-  Step.actsOf_upTo_eq_nil h N
-
 /-! # Divergence -/
 
 /-- A loop that falls silent at once: one step at each budget. -/
@@ -225,17 +220,17 @@ theorem silent_iff (t : TOutcome A O) : traceObservable silent t ↔ t = .diverg
     · rintro ⟨N, h⟩
       obtain ⟨_, he, _, hN⟩ := h N
       cases he
-      rw [← hN (Nat.le_refl N), upTo_noActs (actsOf_ticks N)]
+      rw [← hN (Nat.le_refl N), Step.actsOf_upTo_eq_nil (actsOf_ticks N)]
     · rintro ⟨⟩
       exact ⟨0, fun n => ⟨_, rfl, by rw [actsOf_ticks]; exact List.prefix_refl [],
-        fun _ => upTo_noActs (actsOf_ticks n) 0⟩⟩
+        fun _ => Step.actsOf_upTo_eq_nil (actsOf_ticks n) 0⟩⟩
   | reacts T =>
     constructor
     · rintro ⟨K, hK⟩
       obtain ⟨_, he, _, hk⟩ := hK (K 1)
       cases he
       have := hk 1 (Nat.le_refl _)
-      rw [upTo_noActs (actsOf_ticks _)] at this
+      rw [Step.actsOf_upTo_eq_nil (actsOf_ticks _)] at this
       simp at this
     · rintro ⟨⟩
 
@@ -319,7 +314,7 @@ theorem late_not_diverge : ¬ traceObservable late (.diverge [act₁]) := by
   obtain ⟨_, he, _, h⟩ := hN (N + 1)
   rcases he with he | he <;> cases he
   · have := h (by omega)
-    rw [upTo_noActs (actsOf_ticks _)] at this
+    rw [Step.actsOf_upTo_eq_nil (actsOf_ticks _)] at this
     cases this
   · have := h (by omega)
     rw [upTo_ticks_append N (N + 1) _ (by omega), actsOf_ticks] at this
@@ -339,7 +334,7 @@ theorem counted_not_reacts : ¬ traceObservable counted (.reacts fun _ => act₁
   obtain ⟨_, he, _, hk⟩ := hK (2 * K 1 + 2)
   have h1 := hk 1 (by omega)
   rcases he with he | ⟨m, _, hm, he⟩ <;> cases he
-  · rw [upTo_noActs (actsOf_ticks _)] at h1
+  · rw [Step.actsOf_upTo_eq_nil (actsOf_ticks _)] at h1
     cases h1
   · rw [upTo_ticks_append (K 1) m _ (by omega), actsOf_ticks] at h1
     cases h1
