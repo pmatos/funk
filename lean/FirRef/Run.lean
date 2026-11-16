@@ -116,11 +116,12 @@ def floatConstOf (e m : Nat) (s : String) : Option (BitVec (Core.floatWidth e m)
   | some (.fconst e' m' v) => if h : e' = e ∧ m' = m then some (h.1 ▸ h.2 ▸ v) else none
   | _ => none
 
-/-- An argument of type `t`: a constant of `t`, or `poison` at any `iN` and
-any float type, spelled as `valueText` spells it. A pointer argument is
-`poison`: a run starts with no allocation, so no pointer has provenance
-for one. So a pointer that `valueText` writes, `ptr(A, O)`, is the one
-value of the output that is no argument. -/
+/-- An argument of type `t`: `poison` at any `iN`, any float type and any
+`ptr<N>`, or a constant of an `iN` or a float type, spelled as `valueText`
+spells it. At `ptr<N>`, `poison` is the only argument: a run starts with no
+allocation, so no pointer has provenance for one. A pointer that
+`valueText` writes, `ptr(A, O)` or `ptr(none, O)`, is the one value of the
+output that is no argument. -/
 def readArg : (t : Core.Ty) → String → Except String ⟦t⟧
   | .int w, "poison" => pure (.poison : PoisonOr (BitVec w))
   | .int w, s => match constOf w s with
@@ -299,7 +300,7 @@ vectors take no stack per value (#405). -/
     (lay : N → MemLayout) (ρ : DialectEffects.Mem CoreGpu → N) :
     DialectDenote CoreGpu (StateT (Memory.Memories N (unitsOf lay)) (ChoiceTree Core.Op)) :=
   letI := Core.memTreeDenote lay (ρ ∘ DialectMemOver.ofBase (base := CoreDialect) (e := GpuExt))
-  letI := Gpu.treeDenote (Memory.Memories N (unitsOf lay))
+  letI := Gpu.treeDenote lay ρ
   sumDenote
 
 theorem gpuTreeDenote_eq [Gpu.WorkItem] {N : Type} [DecidableEq N] (lay : N → MemLayout)

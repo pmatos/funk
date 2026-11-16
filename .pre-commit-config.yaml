@@ -199,8 +199,8 @@ repos:
         pass_filenames: false
         files: ^scripts/(harness/|run_unittests\.py$)
       # The corpus's coverage matrix (ADR-2026-11-03-0557): the committed
-      # docs/coverage/README.md is the one that coverage.py makes, and
-      # every cell has a test.
+      # docs/coverage/README.md and its side pages are the ones that
+      # coverage.py makes, and every cell has a test.
       - id: coverage-matrix
         name: The corpus's coverage matrix is current, and every cell has a test
         entry: python scripts/harness/coverage.py

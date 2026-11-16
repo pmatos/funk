@@ -173,9 +173,11 @@ applied form, such as `ptr(1)`. `ptr(0)` does not decode, so each pointer type
 has one spelling, and neither does a negative memory, one above 16,777,215
 (LLVM's bound on address spaces), `ptr()` or another argument list. Whether
 the module has memory `N` is validation's rule: its data layout must declare
-`N` ([text-format-layout.md](text-format-layout.md#valid-layouts)). A dialect that adds memories
-names their pointers in its own types; `ptr(N)` is the core's
-(ADR-2026-11-11-1709). Rejected: `ptr<N>` in text, for the reason
+`N` ([text-format-layout.md](text-format-layout.md#valid-layouts)).
+`ptr(N)` is the core's, and points into every memory the layout declares: a
+dialect gives a declared memory its meaning and uses `ptr(N)` for it, as
+`gpu` does for work-group memory (ADR-2026-11-11-1709; the human's ruling
+of 2026-11-16 on #212). Rejected: `ptr<N>` in text, for the reason
 `float<e,m>` was; `ptr(0)` as a second spelling of `ptr`; and rejecting an
 undeclared memory at parse time, since a builder or a pass can change the
 data layout without text.

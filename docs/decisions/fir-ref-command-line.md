@@ -111,7 +111,7 @@ and every size 1, a grid of one work-item, so a run that gives none runs a
 host function as before. In each dimension the id must be below the size
 and the work-group's id below the count (`Gpu.WorkItem.Valid`); anything
 else is a usage error. The options go with any function, a host function
-included; they change only what the ops of `gpu` give.
+included; they change only what the questions of `gpu` give.
 
 This spelling is an implementation choice of #212's second stage, taken
 without a ruling, and the human may rule on it. `@M::@FUNC` follows MLIR's
@@ -149,9 +149,14 @@ budget; it was taken without a ruling, as #10's text has no fuel option.
 The result is one JSON object on one line of standard output, with a `kind`.
 Its `choices` field counts the choices the path made, `0` when it made none:
 
-- `{"kind":"return","values":["V1","V2"],"choices":N}`: each value is spelled
-  as the arguments are, or is `"poison"`. A function with no result prints
-  `"values":[]`.
+- `{"kind":"return","values":["V1","V2"],"choices":N}`: each value is
+  `"poison"` or, at an `iN` or a float type, spelled as the arguments are. At a
+  `ptr<N>` it is `"ptr(A, O)"`, for the allocation `A` it has provenance for
+  and its offset `O`, both in decimal, such as `"ptr(0, -3)"`, or
+  `"ptr(none, O)"` when it has no provenance (`FirRef.valueText`). It names no
+  address, so the harness compares no pointer result with native code's
+  ([x86-64-backend-executable.md](x86-64-backend-executable.md#running-one-function)).
+  A function with no result prints `"values":[]`.
 - `{"kind":"ub","reason":"...","choices":N}`: immediate UB.
 - `{"kind":"fuel-exhausted","choices":N}`: the run used all its fuel.
 - `{"kind":"stuck","reason":"...","choices":N}`: the run reached a case that

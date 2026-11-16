@@ -9,7 +9,8 @@ the harness in
 and how it judges a test, a run that makes choices included, in
 [ADR-2026-10-30-2135](../../docs/adrs/2026-10-30-2135-harness-judges-tests-by-refinement.md).
 The [coverage matrix](../../docs/coverage/README.md) counts the tests
-that exercise each op instance at each width, on each side
+that exercise each op instance at each width, on each side, and each op
+of the `gpu` dialect in each dimension, kernel tests included
 ([ADR-2026-11-03-0557](../../docs/adrs/2026-11-03-0557-a-generated-matrix-counts-the-tests-of-each-cell.md)).
 
 ## Layout
@@ -156,8 +157,8 @@ locs {
   once the bug is fixed
   ([testing-and-harness-generated.md](../../docs/decisions/testing-and-harness-generated.md#fuzzing)).
 - `scripts/harness/coverage.py`, the `coverage-matrix` hook, writes the
-  coverage matrix from the tests and fails when the committed one is
-  stale or a cell has no test. Run it with `--write` after changing a
+  coverage matrix from the tests, an index and a page for each side, and
+  fails when a committed page is stale or a cell has no test. Run it with `--write` after changing a
   test.
 - `crates/funk-ir/tests/corpus.rs` checks the canonical and non-canonical
   texts in Rust, those of `llvm/` among the canonical ones.

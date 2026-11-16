@@ -14,18 +14,27 @@ changes under it.
 
 #doc (Manual) "The GPU dialect's effects: readable blocks" =>
 
-:::moduleDocs (fingerprint := "13115067901382636711")
+:::moduleDocs (fingerprint := "13551929512044564446")
 :::
 
-:::readable Fir.Gpu.instDialectEffects (fingerprint := "875869409922791238")
-*Definition: the effects of `gpu`.* Every op of `gpu` declares the empty
-effect set: it reads, writes, allocates and frees no memory, is never UB,
-makes no poison and is not control. Its poison class is
+:::readable Fir.Gpu.Op.effects Fir.Gpu.instDialectEffects (fingerprint := "6357192794568751211")
+*Definition: the effects of `gpu`.* Every question of `gpu` declares the
+empty effect set: it reads, writes, allocates and frees no memory, is never
+UB, makes no poison and is not control. An allocation declares one effect,
+as `alloca` does: it allocates in the memory of its result,
+
+$$`\mathrm{effects}(\mathsf{alloc}_n~t~c~a) = \{\mathsf{allocates}~n\}`
+
+It is never UB, makes no poison, is not control, and frees nothing: its
+allocation lives for the whole run. The poison class of every op is
 $`\mathsf{propagates}`, which holds trivially of an op with no operand.
-The memories it may name are the core's.
+The memories it may name are the core's, so the memory of an allocation is
+named by its number.
 :::
 
 :::readable Fir.Gpu.instDialectMemOver (fingerprint := "658585008972803282")
 *Definition: the memories of `gpu`.* `gpu` names each memory of the core
-as the core does, and has no memory of its own yet.
+as the core does, and has no memory of its own: it gives a declared memory
+its meaning, work-group memory, through the op that allocates there (the
+human's ruling of 2026-11-16 on #212).
 :::

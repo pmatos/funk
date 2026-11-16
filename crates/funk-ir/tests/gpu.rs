@@ -35,9 +35,9 @@ fn cases() -> Vec<Case> {
 #[test]
 fn the_shared_cases_are_all_read() {
     let cases = cases();
-    assert_eq!(cases.len(), 8);
-    assert_eq!(cases.iter().filter(|c| c.verdict == "accept").count(), 2);
-    assert_eq!(cases.iter().filter(|c| c.verdict == "malformed").count(), 3);
+    assert_eq!(cases.len(), 11);
+    assert_eq!(cases.iter().filter(|c| c.verdict == "accept").count(), 3);
+    assert_eq!(cases.iter().filter(|c| c.verdict == "malformed").count(), 4);
 }
 
 #[test]
@@ -63,6 +63,7 @@ fn each_rejection_names_its_rule() {
         ("an-i64-id", "gives an i32"),
         ("device-module-without-gpu", "the dialect gpu"),
         ("device-memory-not-declared", "memory 3"),
+        ("work-group-alloca-of-nothing", "at least one value"),
     ] {
         let c = cases().into_iter().find(|c| c.name == name).unwrap();
         let ds = verify(&parse(c.text, &reg).unwrap(), &reg);

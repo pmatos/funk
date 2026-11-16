@@ -14,9 +14,11 @@
 # KiB stack (#135). It runs the kernels of a device module as one work-item,
 # named as @dev::@k, with the work-item's ids and sizes as options, through
 # modules nested 3,000 deep on a 256 KiB stack, and rejects a work-item that
-# is not one of its grid (#212). On a 256 KiB stack, it runs a ret of 100,000
-# values, calls with 10,000 results and 100,000 arguments, a br of 100,000
-# block arguments and a function of 100,000 parameters (#405).
+# is not one of its grid (#212). It runs a kernel whose work-group
+# allocation outlives the call that made it (#212, stage 3). On a 256 KiB
+# stack, it runs a ret of 100,000 values, calls with 10,000 results and
+# 100,000 arguments, a br of 100,000 block arguments and a function of
+# 100,000 parameters (#405).
 set -euo pipefail
 
 if [[ $# -ne 1 ]]; then
@@ -255,8 +257,9 @@ for arg in "$long" "1 $long"; do
     LEAN_STACK_SIZE_KB=256 runs $c/add.fir 2 "fir-ref: $arg is not a value of type i64" \
         @double "$arg" || status=1
 done
-# poison is an argument of any iN (#123) and of ptr, the only one of ptr
-# since a run starts with no allocation, but not a choice.
+# poison is an argument of any iN (#123), of any float type and of any
+# ptr<N>, where it is the only one since a run starts with no allocation.
+# It is not a choice.
 runs $c/add.fir 0 "${ret}[\"poison\"]$none" @double poison || status=1
 runs $c/add.fir 0 "${ret}[\"poison\"]$none" @add3 1 poison 3 || status=1
 runs $c/add.fir 2 'fir-ref: Poison is not a value of type i64' @double Poison || status=1
@@ -281,6 +284,8 @@ runs $k 0 "${ret}[\"42\"]$none" --work-item-id 0,4,0 --work-group-size 1,8,1 \
 runs $k 0 '{"kind":"outcomes","choices":0,"outcomes":[{"kind":"return","values":["1"]}]}' \
     --exhaustive --work-item-id 1,0,0 --work-group-size 2,1,1 @dev::@global_id || status=1
 runs $k 0 "${ret}[\"10\"]$none" @host 5 || status=1
+# gpu.work_group_alloca's block outlives the call that made it (#212).
+runs $c/gpu-work-group.fir 0 "${ret}[\"9\"]$none" @dev::@kept 9 || status=1
 runs $k 2 "fir-ref: $k has no function @dev::@nope" @dev::@nope || status=1
 runs $k 2 "fir-ref: $k has no function @dev" @dev || status=1
 runs $k 2 "fir-ref: $k has no function @global_id" @global_id || status=1

@@ -5,9 +5,11 @@ It reads the grammar of the text-format chapter, `lean/Fir/Text/Grammar.lean`
 and `lean/Fir/Text/Lexical.lean`: one production for every op, so the reader
 knows no op by name. It keeps what the matrix needs of each op: its name, its
 attributes, and the types of its operands, results and successor arguments;
-`Function.callees` takes the callee of each `call`. It reads the corpus's
-canonical modules, which both tools accept, and so checks no rule of
-validation; a text it cannot read is an error.
+`Function.callees` takes the callee of each `call`. It reads the functions
+of every nested module too, each named by the path of its modules as a
+test's `func` writes it, `@dev::@k` (#406). It reads the corpus's canonical
+modules, which both tools accept, and so checks no rule of validation; a
+text it cannot read is an error.
 """
 
 import re
@@ -45,13 +47,22 @@ class Op:
 
 @dataclass(frozen=True)
 class Function:
+    """`symbol` is the function's path: the symbols of the modules that
+    hold it, then its own, joined by `::`, and `scope` that path up to its
+    own symbol, `@dev::` for `@dev::@k` and empty at the top level."""
+
     symbol: str
     params: tuple[str, ...]
     results: tuple[str, ...]
     ops: tuple[Op, ...]
+    scope: str = ""
 
     def callees(self) -> set[str]:
-        return {o.attrs[0] for o in self.ops if o.name == "call" and o.attrs}
+        """The paths of the functions it calls: a call refers to an item of
+        its own symbol table (ADR-2026-11-10-1510)."""
+        return {
+            self.scope + o.attrs[0] for o in self.ops if o.name == "call" and o.attrs
+        }
 
 
 def tokens(text: str) -> list[Token]:
@@ -160,12 +171,13 @@ class Reader:
             raise TextError(f"line {self.peek().line}: text after the location table")
         return found
 
-    def items(self) -> list[Function]:
-        """The functions of a symbol table: its dialect set, if it has one,
-        its data layout, if it has one, then its items. A nested module's
-        functions are in its own table, which no call of this one reaches
-        (ADR-2026-11-10-1510), so its body is skipped. The layout says
-        nothing that the matrix counts, so its entries are skipped
+    def items(self, scope: str = "") -> list[Function]:
+        """The functions of a symbol table whose path is `scope`, and of
+        each module nested in it: its dialect set, if it has one, its data
+        layout, if it has one, then its items. A nested module's functions
+        are in its own table, which no call of this one reaches
+        (ADR-2026-11-10-1510), so they are named by their path. The layout
+        says nothing that the matrix counts, so its entries are skipped
         (ADR-2026-11-12-1821)."""
         if self.at("word") and self.peek().text == "dialects":
             self.take("word")
@@ -182,9 +194,9 @@ class Reader:
         found = []
         while self.at("word") and self.peek().text != "locs":
             if self.peek().text == "module":
-                self.nested()
+                found += self.nested(scope)
             else:
-                found.append(self.item())
+                found.append(self.item(scope))
         return found
 
     def entry(self) -> None:
@@ -199,25 +211,22 @@ class Reader:
             depth += {"(": 1, ")": -1}.get(t.kind, 0)
             self.i += 1
 
-    def nested(self) -> None:
+    def nested(self, scope: str) -> list[Function]:
+        """The functions of a nested module, in the table `scope`."""
         self.take("word")
-        self.take("symbol")
+        symbol = self.take("symbol").text
         self.take("(")
         self.take(")")
         self.take("{")
-        depth = 1
-        while depth:
-            t = self.peek()
-            if t is None:
-                raise TextError("a nested module does not end")
-            depth += {"{": 1, "}": -1}.get(t.kind, 0)
-            self.i += 1
+        found = self.items(f"{scope}{symbol}::")
+        self.take("}")
+        return found
 
-    def item(self) -> Function:
+    def item(self, scope: str = "") -> Function:
         kind = self.take("word")
         if kind.text != "func":
             raise TextError(f"line {kind.line}: an item of kind {kind.text}")
-        symbol = self.take("symbol").text
+        symbol = scope + self.take("symbol").text
         self.take("(")
         params = () if self.at(")") else self.defs()
         self.take(")")
@@ -247,6 +256,7 @@ class Reader:
             tuple(t for _, t in params),
             results,
             tuple(typed(o, env, symbol) for o in ops),
+            scope,
         )
 
     def defs(self) -> tuple[tuple[str, str], ...]:
@@ -350,5 +360,6 @@ def typed(op: Op, env: dict[str, str], symbol: str) -> Op:
 
 
 def read(text: str) -> dict[str, Function]:
-    """The functions of a module's text, by symbol as text writes it."""
+    """The functions of a module's text and of its nested modules, by path
+    as text writes it."""
     return {f.symbol: f for f in Reader(text).module()}

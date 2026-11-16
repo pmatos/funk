@@ -74,7 +74,7 @@ fn effects_of(reg: &Registry, c: &Case) -> Effects {
 fn each_op_has_the_effects_of_its_lean_declaration() {
     let reg = in_tree();
     let cs = cases();
-    assert_eq!(cs.len(), 97);
+    assert_eq!(cs.len(), 98);
     for c in &cs {
         assert_eq!(effects_of(&reg, c).to_string(), c.effects, "{}", c.name);
     }
@@ -93,10 +93,16 @@ fn words(attrs: &[Attr]) -> Vec<String> {
 /// The cases pin every core op, and every attribute that changes a set: each
 /// flag set of `add`, `sub` and `mul`, `exact` on `sdiv` and `udiv`, and
 /// `nnan` and `ninf` on each float op, with `nsz`, which keeps it pure, on
-/// two of them; and every op of `gpu`, whose dimension changes no set.
+/// two of them; and every op of `gpu`: a question's dimension changes no
+/// set, and `gpu.work_group_alloca` allocates in its result's memory.
 #[test]
 fn the_cases_pin_every_op_and_every_flag() {
     let reg = in_tree();
+    let gpu_ops: Vec<String> = gpu::dialect()
+        .ops
+        .iter()
+        .map(|op| op.name().to_string())
+        .collect();
     let pinned: BTreeSet<(String, Vec<String>)> = cases()
         .iter()
         .map(|c| {
@@ -105,12 +111,11 @@ fn the_cases_pin_every_op_and_every_flag() {
             if op.name == "icmp" || op.name == "fcmp" {
                 flags.pop();
             }
-            // alloca's words are its kind and its type, and load's and
-            // store's their ordering, which change no set: alloca allocates
-            // in its result's memory, load reads its pointer's and store
-            // writes it.
-            if ["alloca", "load", "store"].contains(&op.name.as_str())
-                || gpu::OPS.contains(&op.name.as_str())
+            // alloca's words are its kind and its type, gpu's a dimension or
+            // the type of gpu.work_group_alloca, and load's and store's their
+            // ordering, which change no set: an allocation allocates in its
+            // result's memory, load reads its pointer's and store writes it.
+            if ["alloca", "load", "store"].contains(&op.name.as_str()) || gpu_ops.contains(&op.name)
             {
                 flags.clear();
             }
@@ -121,8 +126,8 @@ fn the_cases_pin_every_op_and_every_flag() {
     for op in &core::dialect().ops {
         want.insert((op.name().to_string(), vec![]));
     }
-    for name in gpu::OPS {
-        want.insert((name.to_string(), vec![]));
+    for name in &gpu_ops {
+        want.insert((name.clone(), vec![]));
     }
     for name in ["add", "sub", "mul"] {
         for flags in WRAP_FLAG_SETS {

@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Runs of the core and gpu: readable blocks" =>
 
-:::moduleDocs (fingerprint := "14617850952440040194")
+:::moduleDocs (fingerprint := "6556637306803068017")
 :::
 
 :::readable Fir.Gpu.coreGpu_lawfulEffects Fir.Gpu.coreGpu_lawfulTotal Fir.Gpu.coreGpu_lawfulMonotone Fir.Gpu.coreGpu_lawfulMemPoison (fingerprint := "2096482798007682310")
@@ -24,10 +24,10 @@ poison with memory, since both sides are and `gpu` accepts each type that
 the core accepts.
 :::
 
-:::readable Fir.Gpu.Op.memMonotone Fir.Gpu.memMonotone_all (fingerprint := "16143225815820676195")
-*Theorems: every op of the sum is monotone with memory.* Each op of `gpu`
-is monotone with memory at every width, since it is monotone and tied. So
-each op of the sum that runs by its own rule, a terminator or an op with no
+:::readable Fir.Gpu.memMonotone_all (fingerprint := "3037100186864541020")
+*Theorem: every op of the sum is monotone with memory.* Each op of `gpu`
+is monotone with memory at every width (the section on work-group
+allocation). So each op of the sum that runs by its own rule, a terminator or an op with no
 callee, is monotone with memory at every width, valid or not: a core op by
 the core's guarantee, and an op of `gpu` by its own.
 :::
@@ -65,7 +65,8 @@ recursion included.
 
 :::readable Fir.Gpu.opsFinite_gpu Fir.Gpu.opsFinite (fingerprint := "4862271034210431619")
 *Theorems: the sum's ops have finitely many outcomes.* Each op of `gpu` has
-one outcome with memory, at every layout and naming. So each op of the sum
+one outcome with memory, at every layout and naming: a question its
+results, and an allocation its one allocation. So each op of the sum
 that runs by its own rule has finitely many outcomes with memory, a core
 op by the core's own count.
 :::

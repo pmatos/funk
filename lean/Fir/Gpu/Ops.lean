@@ -22,6 +22,17 @@ one question in one dimension and gives the answer as an `i32`:
   work-group;
 * `%n: i32 = gpu.num_work_groups gpu.x` is the number of work-groups.
 
+One more op allocates in work-group memory. Work-group memory is an
+ordinary memory of the host's data layout, any memory that it declares,
+with no number fixed (the human's ruling of 2026-11-16 on #212):
+
+* `%p: ptr(3) = gpu.work_group_alloca i32 64` allocates room for 64 `i32` in
+  the memory of its result, here memory 3, as `alloca` does, and gives the
+  pointer to it. What makes the memory work-group memory is this op: its
+  allocation lives for the whole run of the kernel, not only until the call
+  that made it returns. The core's `ptr(N)`, `alloca`, `load`, `store` and
+  `ptradd` work on the memory unchanged.
+
 This section gives the dialect's abstract syntax and signature; its text,
 its rules, its effects and its execution rules, by which one work-item runs,
 follow in sections of their own.
@@ -52,6 +63,11 @@ inductive Query where
 the dimension `d`, and gives the answer as an `iN` with `N = w`. -/
 inductive Op where
   | query (q : Query) (d : Dim) (w : Nat)
+  /-- `alloc t c a n` allocates room for `c` values of the core type `t` in
+  the memory `n`, aligned to `a` units, or to the type's default alignment
+  there when `a` is `none`, for the whole run of the kernel, and gives the
+  pointer to the allocation, a `ptr<n>`. -/
+  | alloc (t : Core.Ty) (c : Nat) (a : Option Nat) (n : Nat)
   deriving Repr, DecidableEq
 
 end Fir.Gpu
@@ -75,11 +91,13 @@ namespace Gpu
 
 /-- An op of `gpu` takes no operand. -/
 def Op.sig : Op → List (Core.Ty ⊕ Empty)
-  | .query .. => []
+  | .query .. | .alloc .. => []
 
-/-- An op of `gpu` gives one integer, of the width of its instance. -/
+/-- A question gives one integer, of the width of its instance, and an
+allocation the core's pointer of its memory. -/
 def Op.returnTypes : Op → List (Core.Ty ⊕ Empty)
   | .query _ _ w => [.inl (.int w)]
+  | .alloc _ _ _ n => [.inl (.ptr n)]
 
 /-- No op of `gpu` ends a block, has a successor or owns a region. -/
 instance instDialectSignature : DialectSignature GpuDialect where

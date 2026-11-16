@@ -28,7 +28,7 @@ class Presentation(unittest.TestCase):
             }
         )
         with patch.object(coverage, "SIDES", (side,)):
-            text = coverage.render({"sample": counts})
+            text = coverage.render({"sample": counts})["sample.md"]
             gaps = coverage.empty({"sample": counts})
         for row in (
             "| `add` | `nuw` | 2 | **0** |",
@@ -56,7 +56,7 @@ class Presentation(unittest.TestCase):
     def test_sides_without_pointer_widths_have_no_pointer_section(self):
         side = coverage.Side("sample", "Sample", (8,), (), ())
         with patch.object(coverage, "SIDES", (side,)):
-            text = coverage.render({"sample": Counter()})
+            text = coverage.render({"sample": Counter()})["sample.md"]
         self.assertNotIn("Pointer offsets", text)
         self.assertIn("| `trunc` | `i8` |  |", text)
 

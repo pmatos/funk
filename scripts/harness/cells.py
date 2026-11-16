@@ -52,12 +52,26 @@ has neither operands nor attributes, is a cell at each width of its result
   runs, `func`. One value or several are cells at each width and float
   format of the side (ADR-2026-11-03-0557). `unreachable` passes nothing,
   so it is one cell.
+- The ops of the `gpu` dialect are a cell for each dimension, at `i32`,
+  on a side that has them, the interpreter-only one (`gpu_cells.py`, #406),
+  and `gpu.work_group_alloca` a cell for each type it allocates, as
+  `alloca` (stage 3 of #212).
 """
 
 from typing import NamedTuple
 
 from cell_types import Cell, CellError
 from firtext import Op
+from gpu_cells import (
+    GPU,
+    GPU_MEMORY,
+    GPU_OPS,
+    GPU_WIDTH,
+    WORK_GROUP_ALLOCA,
+    gpu_cell,
+    gpu_cells,
+    work_group_cell,
+)
 from pointer_cells import POINTER, POINTER_OPS, pointer_cell
 from refine import bits_of, float_format
 
@@ -208,6 +222,7 @@ def catalog(
     widths: tuple[int, ...],
     formats: tuple[str, ...] = (),
     offsets: tuple[int, ...] = (),
+    gpu: bool = False,
 ) -> tuple[Table, ...]:
     """One side's taxonomy, expanded once for enumeration and display.
 
@@ -340,6 +355,16 @@ def catalog(
             ),
         )
     )
+    if gpu:
+        rows = tuple(Row(op, d, (cell,)) for op, d, cell in gpu_cells())
+        tables.append(Table(GPU, (GPU_WIDTH,), rows))
+        columns = (*map(ty, offsets), POINTER)
+        row = Row(
+            WORK_GROUP_ALLOCA,
+            "",
+            tuple(Cell(GPU_MEMORY, WORK_GROUP_ALLOCA, "", t) for t in columns),
+        )
+        tables.append(Table(GPU_MEMORY, columns, (row,)))
     return tuple(tables)
 
 
@@ -347,11 +372,12 @@ def cells(
     widths: tuple[int, ...],
     formats: tuple[str, ...] = (),
     offsets: tuple[int, ...] = (),
+    gpu: bool = False,
 ) -> list[Cell]:
     """Every actual cell of one side, in catalog order."""
     return [
         cell
-        for table in catalog(widths, formats, offsets)
+        for table in catalog(widths, formats, offsets, gpu)
         for row in table.rows
         for cell in row.entries
         if cell is not None
@@ -462,9 +488,9 @@ def results(op: str, types: tuple[str, ...]) -> set[Cell]:
 
 
 def of_op(op: Op) -> set[Cell]:
-    """The cells that an op exercises, at any width. An op that the core
-    dialect does not have, or an attribute that is not a cell, is an
-    error."""
+    """The cells that an op exercises, at any width. An op that neither
+    the core dialect nor `gpu` has, or an attribute that is not a cell, is
+    an error."""
     if op.name == "bitcast":
         return {bitcast(op)}
     if op.name in INT_TO_FLOAT:
@@ -475,6 +501,10 @@ def of_op(op: Op) -> set[Cell]:
         return {float_to_int(op)}
     if op.name in POINTER_OPS:
         return {pointer_cell(op)}
+    if op.name in GPU_OPS:
+        return {gpu_cell(op)}
+    if op.name == WORK_GROUP_ALLOCA:
+        return {work_group_cell(op)}
     if op.name in AT_FORMAT and (op.name != "const" or is_float(op.results[0])):
         flags, attr = float_flags(op) if op.name in FLAGGED else ((), "")
         if attr not in AT_FORMAT[op.name]:
@@ -497,4 +527,4 @@ def of_op(op: Op) -> set[Cell]:
         return results(op.name, op.operands)
     if op.name == "call":
         return results("call", op.results)
-    raise CellError(f"{op.name} is not an op of the core dialect")
+    raise CellError(f"{op.name} is not an op of the core dialect or gpu")
