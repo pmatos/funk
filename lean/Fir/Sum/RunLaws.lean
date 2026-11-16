@@ -1,11 +1,12 @@
 import Fir.Sum.EffectLaws
 import Fir.Execution.MemoryFinite
+import Fir.Execution.MemoryFree
 import Fir.Execution.Morphism
 
 /-!
 # Runs of a sum, op by op
 
-Three facts that a run of a sum needs of its ops, each from the same fact of
+Four facts that a run of a sum needs of its ops, each from the same fact of
 its two sides, where a run names each memory of the base as the sum does:
 
 * a base op tied to the set monad, which runs by its rule in the set monad
@@ -14,6 +15,10 @@ its two sides, where a run names each memory of the base as the sum does:
 * the sum's ops have finitely many outcomes with memory when each side's do
   (`Dialect.sum.opsFinite`), since mapping the results keeps how many there
   are;
+* the sum's ops ignore the memories where they touch none when each side's
+  do (`Dialect.sum.opsIgnoreMemory`), since a base op's effects in the sum
+  are its own with its memories renamed, and mapping the results keeps a
+  computation that ignores the memories;
 * a monad morphism that maps each side's semantics in one monad to its
   semantics in another maps the sum's (`Dialect.sum.mapsDenote`), since a
   morphism keeps `map`. So the tree of a run of the sum, which the modes
@@ -80,6 +85,35 @@ theorem opsFinite
     ⟨fun ht => FinitelyMany.map _ ((h₁ o hc (HVector.ofSum args)).1 ht),
       (h₁ o hc (HVector.ofSum args)).2⟩
   | .inr o, hc, args => h₂ o hc args
+
+/-- A set of memories holds the new name of each memory it holds, once its
+memories are renamed. -/
+theorem _root_.Fir.MemSet.has_map {A B : Type} (f : A → B) {x : A} :
+    ∀ {s : MemSet A}, s.Has x → (s.map f).Has (f x)
+  | .these _, h => List.mem_map_of_mem h
+  | .every, _ => trivial
+
+/-- A set of effects that touches no memory once its memories are renamed
+touches none before. -/
+theorem _root_.Fir.Effects.TouchesNoMemory.of_map {A B : Type} {f : A → B} {a : Effects A}
+    (h : (a.map f).TouchesNoMemory) : a.TouchesNoMemory := fun x =>
+  ⟨fun hr => (h (f x)).1 (MemSet.has_map f hr), fun hw => (h (f x)).2.1 (MemSet.has_map f hw),
+    fun ha => (h (f x)).2.2 (MemSet.has_map f ha)⟩
+
+/-- The sum's ops ignore the memories where they touch none when the base's
+do, where the run names each memory of the base as the sum does, and `e`'s
+do. -/
+theorem opsIgnoreMemory
+    (h₁ : letI := DialectMemDenote.denoteAt (d := base) lay (ρ ∘ DialectMemOver.ofBase)
+      OpsIgnoreMemory base N (unitsOf lay))
+    (h₂ : letI := DialectMemDenote.denoteAt (d := base.over e) lay ρ
+      OpsIgnoreMemory (base.over e) N (unitsOf lay)) :
+    letI := DialectMemDenote.denoteAt (d := base ⊞ e) lay ρ
+    OpsIgnoreMemory (base ⊞ e) N (unitsOf lay)
+  | .inl o, hc, ht, args =>
+    ⟨fun hn => IgnoresMemory.map _ ((h₁ o hc ht.of_map (HVector.ofSum args)).1 hn),
+      (h₁ o hc ht.of_map (HVector.ofSum args)).2⟩
+  | .inr o, hc, ht, args => h₂ o hc ht args
 
 end Dialect.sum
 

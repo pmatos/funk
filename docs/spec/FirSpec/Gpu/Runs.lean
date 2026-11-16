@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Runs of the core and gpu: readable blocks" =>
 
-:::moduleDocs (fingerprint := "6556637306803068017")
+:::moduleDocs (fingerprint := "2567123991008577154")
 :::
 
 :::readable Fir.Gpu.coreGpu_lawfulEffects Fir.Gpu.coreGpu_lawfulTotal Fir.Gpu.coreGpu_lawfulMonotone Fir.Gpu.coreGpu_lawfulMemPoison (fingerprint := "2096482798007682310")
@@ -69,6 +69,17 @@ one outcome with memory, at every layout and naming: a question its
 results, and an allocation its one allocation. So each op of the sum
 that runs by its own rule has finitely many outcomes with memory, a core
 op by the core's own count.
+:::
+
+:::readable Fir.Gpu.opsIgnoreMemory_gpu Fir.Gpu.opsIgnoreMemory (fingerprint := "11680516443012203440")
+*Theorems: the sum's ops ignore the memories where they touch none.* At
+every layout and naming, a question of `gpu` declares no memory effect,
+runs by its rule in the set monad and keeps the memories, so it ignores
+them; `gpu.work_group_alloca` declares an allocation in the memory of its
+result, so it is not asked to. So each op of the sum that runs by its own
+rule and declares no memory effect ignores the memories, a core op by the
+core's own guarantee. This is what the congruence for a callee that
+reaches no memory asks of the ops (`FirTest.GpuG0Runs`).
 :::
 
 :::readable Fir.Gpu.replaceBody_isRefinedBy_of_from (fingerprint := "12042385926450760296")

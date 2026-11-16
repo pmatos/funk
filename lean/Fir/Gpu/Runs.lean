@@ -37,6 +37,10 @@ memories are those of the host's data layout.
 * _Congruence in the callee_, from given memories, with no budget, for every
   callee of the module of each table of a valid module: every op of the sum
   has finitely many outcomes, an op of `gpu` one.
+* _The sum's ops ignore the memories where they touch none_: a question of
+  `gpu` touches none and keeps them, and an allocation declares its
+  memory. So the congruence for a callee that reaches no memory, with
+  memory, holds for the sum too.
 -/
 
 namespace Fir.Gpu
@@ -190,6 +194,23 @@ theorem opsFinite :
     letI := DialectMemDenote.denoteAt (d := CoreGpu) lay ρ
     OpsFinite CoreGpu N (unitsOf lay) :=
   Dialect.sum.opsFinite lay ρ (Core.opsFinite lay _) (opsFinite_gpu lay ρ)
+
+/-- Each op of `gpu` ignores the memories where it declares no memory
+effect, at every layout and naming: a question runs by its rule in the set
+monad and keeps the memories, and an allocation declares one. -/
+theorem opsIgnoreMemory_gpu (ρ : DialectEffects.Mem GpuDialect → N) :
+    letI := DialectMemDenote.denoteAt (d := GpuDialect) lay ρ
+    OpsIgnoreMemory GpuDialect N (unitsOf lay)
+  | .query q d w, _, _ =>
+    OwnRuleHas.ofLifts (query_liftsSetM q d w) lay ρ (P := IgnoresMemory) IgnoresMemory.lift
+  | .alloc _ _ _ n, _, h => absurd (List.mem_singleton_self _) ((h (.inl n)).2.2)
+
+/-- Every op of the sum that runs by its own rule ignores the memories where
+it declares no memory effect, at every layout and naming. -/
+theorem opsIgnoreMemory :
+    letI := DialectMemDenote.denoteAt (d := CoreGpu) lay ρ
+    OpsIgnoreMemory CoreGpu N (unitsOf lay) :=
+  Dialect.sum.opsIgnoreMemory lay ρ (Core.opsIgnoreMemory lay _) (opsIgnoreMemory_gpu lay ρ)
 
 /-- Congruence in the callee, with memory: in the module of each table of a
 valid module of the sum, replacing the body of a function `@g` with one under
