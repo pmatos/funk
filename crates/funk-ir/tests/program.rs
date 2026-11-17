@@ -2,7 +2,7 @@
 
 use std::collections::HashSet;
 
-use funk_ir::dialects::core::int_width;
+use funk_ir::dialects::core::{float_format, int_width, read_float, spell_float};
 use funk_ir::generate::program::{self, Expect, Program};
 use funk_ir::generate::{BACKEND_WIDTHS, Rng};
 use funk_ir::text::print_symbol;
@@ -34,20 +34,28 @@ fn programs_are_valid_and_deterministic() {
     }
 }
 
+/// Whether the backend lowers `t`, a type of the function `func`: an
+/// integer of one of its widths, or `f32` or `f64` in a float function.
+fn lowered(t: &funk_ir::Type, func: &str) -> bool {
+    match (int_width(t), float_format(t)) {
+        (Some(w), _) => BACKEND_WIDTHS.contains(&w),
+        (_, Some(f)) => func.starts_with(program::FLOAT_PREFIX) && [(8, 23), (11, 52)].contains(&f),
+        _ => false,
+    }
+}
+
 #[test]
-fn programs_take_only_the_widths_that_the_backend_lowers() {
+fn programs_take_only_the_types_that_the_backend_lowers() {
     for (seed, p) in programs() {
         for f in p.module.funcs() {
             let types = f.params.iter().map(|d| &d.ty).chain(&f.results);
             for t in types {
-                let w = int_width(t).expect("an integer type");
-                assert!(BACKEND_WIDTHS.contains(&w), "seed {seed}: i{w}");
+                assert!(lowered(t, &f.name), "seed {seed}: {t}");
             }
         }
-        for (_, o) in ops(&p.module) {
+        for (caller, o) in ops(&p.module) {
             for d in &o.results {
-                let w = int_width(&d.ty).expect("an integer type");
-                assert!(BACKEND_WIDTHS.contains(&w), "seed {seed}: i{w}");
+                assert!(lowered(&d.ty, caller), "seed {seed}: {}", d.ty);
             }
         }
     }
@@ -66,6 +74,12 @@ fn every_function_runs_on_arguments_of_its_types() {
                 .unwrap_or_else(|| panic!("seed {seed}: no function {}", r.func));
             assert_eq!(r.args.len(), f.params.len(), "seed {seed}: {}", r.func);
             for (a, d) in r.args.iter().zip(&f.params) {
+                if let Some((e, m)) = float_format(&d.ty) {
+                    let bits = read_float(e, m, a);
+                    let canonical = bits.map(|b| spell_float(e, m, b));
+                    assert_eq!(canonical.as_deref(), Some(a.as_str()), "seed {seed}: {a}");
+                    continue;
+                }
                 let w = int_width(&d.ty).expect("an integer type");
                 if w == 1 {
                     assert!(a == "true" || a == "false", "seed {seed}: {a}");
