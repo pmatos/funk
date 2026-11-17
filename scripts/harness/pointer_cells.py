@@ -17,8 +17,8 @@ ADR-2026-11-03-0557).
 Each is a cell at the side's pointer widths, `cells.POINTER_DIFFERENTIAL`
 and `cells.POINTER_INTERPRETER`, the pointer cells with them, and at the
 side's float formats in memory, `MEMORY_FLOAT_DIFFERENTIAL` and
-`MEMORY_FLOAT_INTERPRETER`. The backend does not lower a float in memory
-yet, so the differential side has none (stage 1 of #264).
+`MEMORY_FLOAT_INTERPRETER`. The backend does not load or store a
+float yet, so the differential side has none (stage 1 of #264).
 """
 
 from cell_types import Cell, CellError, is_pointer
