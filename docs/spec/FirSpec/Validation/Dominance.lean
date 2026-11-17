@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Dominance: readable blocks" =>
 
-:::moduleDocs (fingerprint := "17314137804290771650")
+:::moduleDocs (fingerprint := "16980173102699329161")
 :::
 
 :::readable Fir.Block.succLabels Fir.Func.Edge Fir.Func.entryLabel? (fingerprint := "14653745792150054030")
@@ -88,7 +88,7 @@ result   \mathsf{result}~l~j
 ```
 :::
 
-:::readable Fir.Func.Defines (fingerprint := "1299138112129809087")
+:::readable Fir.Func.Defines (fingerprint := "6178960907858180558")
 *Definition: where a function defines a value.* $`\mathrm{defines}_f(x, \mathit{site})`
 holds when the function $`f` defines a value named $`x` at the site:
 
@@ -103,7 +103,7 @@ top-level blocks count: a value defined in a nested region has no
 site here, so it is never in scope at a top-level op.
 :::
 
-:::readable Fir.Func.DominatesUse (fingerprint := "17419357972219174636")
+:::readable Fir.Func.DominatesUse (fingerprint := "16815827826297653722")
 *Definition: a definition dominates a use.* Let the op at index $`i` of the
 block labelled $`l` use a value. A definition of it at the site $`s`
 dominates that use, written $`s \mathrel{\mathrm{dom}_f} (l, i)`, when:

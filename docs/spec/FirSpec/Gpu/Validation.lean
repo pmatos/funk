@@ -14,16 +14,16 @@ when the Lean changes under it.
 
 #doc (Manual) "The GPU dialect's rules: readable blocks" =>
 
-:::moduleDocs (fingerprint := "13028207720024866707")
+:::moduleDocs (fingerprint := "13928833768383133596")
 :::
 
-:::readable Fir.Gpu.ValidTy Fir.Gpu.instDecidableValidTy (fingerprint := "4189508138758385399")
+:::readable Fir.Gpu.ValidTy Fir.Gpu.instDecidableValidTy (fingerprint := "4133016473030974221")
 *Definition: the valid types of `gpu`.* A type is valid in `gpu` exactly
 when it is a valid core type, since its types are the core's. Whether it
 is valid is decided.
 :::
 
-:::readable Fir.Gpu.Op.Valid Fir.Gpu.Op.attrTypes Fir.Gpu.instDecidableOpValid (fingerprint := "1064520712639969876")
+:::readable Fir.Gpu.Op.Valid Fir.Gpu.Op.attrTypes Fir.Gpu.instDecidableOpValid (fingerprint := "6095714268801176293")
 *Definition: the rule of an op of `gpu`.* A question of `gpu` is valid
 when it gives an $`\mathsf{i32}`, the width of every id and size of a
 work-item. An allocation has the rules of `alloca` but its kind: it
@@ -41,7 +41,7 @@ it checks every type. So work-group memory is any memory that the host's
 data layout declares. Whether the rule holds is decided.
 :::
 
-:::readable Fir.Gpu.instDialectValidation Fir.Gpu.instDecidableDialectValidation (fingerprint := "8008813578695678140")
+:::readable Fir.Gpu.instDialectValidation Fir.Gpu.instDecidableDialectValidation (fingerprint := "6830372403999317208")
 *Definition: the rules of `gpu`, and their check.* `gpu` accepts the
 core's valid types, its ops refer to no symbol, an allocation carries its
 type, and it adds no rule for a

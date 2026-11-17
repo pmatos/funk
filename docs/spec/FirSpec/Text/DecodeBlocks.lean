@@ -26,7 +26,7 @@ $`\tau`_ when it succeeds with $`x` on every part that
 to $`\tau`, whatever its positions.
 :::
 
-:::readable Fir.Text.operandTypes_eq (pin := Fir.Text.operandTypes) (fingerprint := "11943811892251266912")
+:::readable Fir.Text.operandTypes_eq (pin := Fir.Text.operandTypes) (fingerprint := "8028822509512174183")
 *Theorem: the operands' types are found in the scope.* For every dialect,
 scope $`\mathit{sc}`, every function symbol (it names the function only
 in error messages), operands $`x_1, \dots, x_n` at any positions and
@@ -36,7 +36,7 @@ $`x_i` the type $`t_i`, then finding the
 gives $`t_1, \dots, t_n`.
 :::
 
-:::readable Fir.decodeOps_nil Fir.decodeBlocks_nil Fir.decodeBlocks_cons Fir.decodeRegions_nil Fir.decodeRegions_cons (pin := Fir.Text.decodeOps) (pin := Fir.Text.decodeBlocks) (pin := Fir.Text.decodeRegions) (fingerprint := "4327499180448194707")
+:::readable Fir.decodeOps_nil Fir.decodeBlocks_nil Fir.decodeBlocks_cons Fir.decodeRegions_nil Fir.decodeRegions_cons (pin := Fir.Text.decodeOps) (pin := Fir.Text.decodeBlocks) (pin := Fir.Text.decodeRegions) (fingerprint := "10126568170513854401")
 *Theorems: the second pass gives back no ops, and blocks and regions one
 at a time.*
 For every dialect with a
@@ -95,7 +95,7 @@ signature, gives its results the types it returns, and states only types
 that decode back to themselves, so each condition holds.
 :::
 
-:::readable Fir.decodeOps_cons (pin := Fir.LawfulDialectText) (pin := Fir.Text.decodeOps) (fingerprint := "5965914291365676264")
+:::readable Fir.decodeOps_cons (pin := Fir.LawfulDialectText) (pin := Fir.Text.decodeOps) (fingerprint := "3706732858518273105")
 *Theorem: the second pass gives an op back.* For every dialect with
 signatures, validation rules and a text format whose text is
 {ref "The-fir-specification--Text-format--Grammar"}[lawful], every scope
@@ -113,7 +113,7 @@ is what gives the op instance back. Here $`\mathrm{decodeop}` is the
 dialect's decoder of ops.
 :::
 
-:::readable Fir.Block.decodesList Fir.Operation.decodesList Fir.Region.decodesList (pin := Fir.Block.allBlocks) (pin := Fir.Operation.regionBlocks) (pin := Fir.Region.allBlocks) (fingerprint := "4519125950715833119")
+:::readable Fir.Block.decodesList Fir.Operation.decodesList Fir.Region.decodesList (pin := Fir.Block.allBlocks) (pin := Fir.Operation.regionBlocks) (pin := Fir.Region.allBlocks) (fingerprint := "13767977231808270528")
 *Theorems: the second pass gives blocks, ops and regions back, at any
 depth.* For every dialect with signatures, validation rules and a lawful
 text, every scope $`\mathit{sc}` and any function symbol:

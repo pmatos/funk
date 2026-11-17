@@ -17,7 +17,7 @@ changes under it.
 :::moduleDocs (fingerprint := "17935804110535287159")
 :::
 
-:::readable Fir.Core.loadAccess Fir.Core.load_denote Fir.Core.loadRule_poison Fir.Core.loadRule_value Fir.Core.load_ownRuleHas (pin := Fir.Core.loadRule) (pin := Fir.Core.memDenoteAt) (pin := Fir.OwnRuleHas) (fingerprint := "10665175133308959977")
+:::readable Fir.Core.loadAccess Fir.Core.load_denote Fir.Core.loadRule_poison Fir.Core.loadRule_value Fir.Core.load_ownRuleHas (pin := Fir.Core.loadRule) (pin := Fir.Core.memDenoteAt) (pin := Fir.OwnRuleHas) (fingerprint := "16366753097556754820")
 *Definitions and theorems: $`\mathsf{load}` with memory.* In the
 {ref "The-fir-specification--Memory--The-state-layer"}[state layer] over
 the set monad, at the layout entries $`\ell` and naming $`\rho`, the

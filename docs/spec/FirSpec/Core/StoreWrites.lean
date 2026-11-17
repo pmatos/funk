@@ -14,16 +14,17 @@ fails when the Lean changes under it.
 
 #doc (Manual) "A store declared without a write: readable blocks" =>
 
-:::moduleDocs (fingerprint := "17716127817895413801")
+:::moduleDocs (fingerprint := "4598611704743576790")
 :::
 
-:::readable Fir.Core.Unlawful.storeNoWrite Fir.Core.Unlawful.store_typesValid (pin := Fir.Core.Op.effects) (fingerprint := "1898334460989131878")
+:::readable Fir.Core.Unlawful.storeNoWrite Fir.Core.Unlawful.store_typesValid (pin := Fir.Core.Op.effects) (fingerprint := "8581234678086715186")
 *Definition: a declaration without a write.* The declaration gives every
 core op its
 {ref "The-fir-specification--Execution--Core-effects"}[effects],
-but $`\mathsf{store}` only $`\mathsf{may\text{-}ub}`: it leaves out
-$`\mathsf{writes}(N)`. A store of an $`\mathsf{i8}` through a pointer of
-memory 0 is a valid op instance.
+but the store of an integer, $`\mathsf{store}_N~o~W~a`, only
+$`\mathsf{may\text{-}ub}`: it leaves out $`\mathsf{writes}(N)`. The store
+of a pointer keeps its write. A store of an $`\mathsf{i8}` through a
+pointer of memory 0 is a valid op instance.
 :::
 
 :::readable Fir.Core.Unlawful.storeAlign_i8 Fir.Core.Unlawful.oneUnit_store (pin := Fir.Memory.Memories.store) (pin := Fir.Core.Unlawful.oneUnit) (fingerprint := "9529801639186522702")

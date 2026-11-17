@@ -14,10 +14,10 @@ when the Lean changes under it.
 
 #doc (Manual) "Stack allocation rules: readable blocks" =>
 
-:::moduleDocs (fingerprint := "3838780851211029518")
+:::moduleDocs (fingerprint := "4219967333830966776")
 :::
 
-:::readable Fir.Core.Ty.units Fir.Core.Ty.units?_int (pin := Fir.MemLayout.bitsUnits) (pin := Fir.Core.Ty.units?) (fingerprint := "15487003486979289830")
+:::readable Fir.Core.Ty.units Fir.Core.Ty.units?_int (pin := Fir.MemLayout.bitsUnits) (pin := Fir.Core.Ty.units?) (fingerprint := "13411731717869048678")
 *Definition: the units of a type.* In a memory whose
 {ref "The-fir-specification--Abstract-syntax--Data-layouts"}[entry] is
 $`e`, where the pointers of memory $`M` are $`p(M)` bits wide, a value of
@@ -79,7 +79,7 @@ The count $`c`, and so $`n`, has no bound, as the human ruled on
 error of the run, as a deep recursion is, and not a rule of the spec.
 :::
 
-:::readable Fir.Core.Ty.fieldShape_eq_allocaShape (pin := Fir.Core.Ty.fieldShape) (fingerprint := "7083193104209601831")
+:::readable Fir.Core.Ty.fieldShape_eq_allocaShape (pin := Fir.Core.Ty.fieldShape) (fingerprint := "13421257978643998545")
 *Theorem: a field takes what one allocated value takes.* For every map
 $`\ell` from memories to their layout entries, every memory $`n` and every
 integer or pointer type $`t`, the units and the alignment that a field of

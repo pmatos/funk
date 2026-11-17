@@ -10,13 +10,15 @@ its regions and its location reference, in that order. An item is always
 its kind, its symbol, its parameters, its results, its attributes and its
 body. Types and attributes are written as generic terms. So a new dialect
 adds words, and needs no change to this grammar or to the parser, and so
-does a kind of item that a dialect registers (ADR-2026-11-09-1543). A float
-or a nested symbol reference needs new tokens: a change to the tokens of
-the previous section.
+does a kind of item that a dialect registers (ADR-2026-11-09-1543). A
+float is an attribute already, written as a float literal token. A nested
+symbol reference needs a new token: a change to the tokens of the previous
+section.
 
-* An item's kind says what it is. The core's kinds are `func` and
-  `module`, so a function is written as `func @sum(%n: i32) -> i32 { ... }`
-  and a nested module as `module @dev() { ... }`. A `func` has no
+* An item's kind says what it is. The core's kinds are `func`, `module`
+  and `aggregate`, an aggregate's layout (below), so a function is written
+  as `func @sum(%n: i32) -> i32 { ... }` and a nested module as
+  `module @dev() { ... }`. A `func` has no
   attributes, and its body is its blocks. A `module` has no parameters,
   results or attributes, and its body is its items, which may start with
   its own dialect set (ADR-2026-11-10-1510). Any other kind is a word of a

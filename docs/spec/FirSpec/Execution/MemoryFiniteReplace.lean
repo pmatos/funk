@@ -17,7 +17,7 @@ pins their fingerprint; the build fails when the Lean changes under it.
 :::moduleDocs (fingerprint := "1685433652560901497")
 :::
 
-:::readable Fir.Func.memRunsFrom_isRefinedBy_of_opsFinite (pin := Fir.OpsFinite) (pin := Fir.MemCallsRefined) (pin := Fir.Func.MemOpsMonotone) (pin := Fir.Func.memRunsFrom) (pin := Fir.observable) (fingerprint := "5738740363365443155")
+:::readable Fir.Func.memRunsFrom_isRefinedBy_of_opsFinite (pin := Fir.OpsFinite) (pin := Fir.MemCallsRefined) (pin := Fir.Func.MemOpsMonotone) (pin := Fir.Func.memRunsFrom) (pin := Fir.observable) (fingerprint := "15926170119725273493")
 *Theorem: two modules with memory, compared call by call, with no budget.*
 Let the target module $`M'` run each call with memory as the source $`M`
 does, the ops of the dialect have finitely many outcomes, and every op of

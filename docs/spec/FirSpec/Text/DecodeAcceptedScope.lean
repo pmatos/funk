@@ -30,7 +30,7 @@ theorem add a value that the scope does not contain without naming a value
 twice.
 :::
 
-:::readable Fir.Text.define_holds (pin := Fir.Text.define) (pin := Fir.Text.decodeDef) (pin := Fir.Text.Scope.Holds) (fingerprint := "17944236463424358563")
+:::readable Fir.Text.define_holds (pin := Fir.Text.define) (pin := Fir.Text.decodeDef) (pin := Fir.Text.Scope.Holds) (fingerprint := "14017484953843903565")
 *Theorem: adding definitions names each value once.* Let $`d` be a
 dialect with a {ref "The-fir-specification--Text-format--Grammar"}[text].
 For every list $`\mathit{xs}` of definitions as read, scopes
@@ -71,7 +71,7 @@ to any scope that holds $`L`, with distinct names, the values that
 $`\mathrm{defs}` lists, and finds no value twice.
 :::
 
-:::readable Fir.Text.adds_blocks_nil Fir.Text.adds_blocks_cons Fir.Text.adds_ops_nil Fir.Text.adds_ops_cons Fir.Text.adds_regions_nil Fir.Text.adds_regions_cons (pin := Fir.Text.defineBlocks) (pin := Fir.Text.defineOps) (pin := Fir.Text.defineRegions) (pin := Fir.Text.decodeBlocks) (pin := Fir.Text.decodeOps) (pin := Fir.Text.decodeRegions) (pin := Fir.Block.scopeDefs) (pin := Fir.Operation.scopeDefs) (pin := Fir.Region.scopeDefs) (fingerprint := "15688411651180599518")
+:::readable Fir.Text.adds_blocks_nil Fir.Text.adds_blocks_cons Fir.Text.adds_ops_nil Fir.Text.adds_ops_cons Fir.Text.adds_regions_nil Fir.Text.adds_regions_cons (pin := Fir.Text.defineBlocks) (pin := Fir.Text.defineOps) (pin := Fir.Text.defineRegions) (pin := Fir.Text.decodeBlocks) (pin := Fir.Text.decodeOps) (pin := Fir.Text.decodeRegions) (pin := Fir.Block.scopeDefs) (pin := Fir.Operation.scopeDefs) (pin := Fir.Region.scopeDefs) (fingerprint := "14915592684829274012")
 *Theorems: the first pass, part by part.* Let $`d` be a dialect with a
 text. The first pass over blocks
 {ref "The-fir-specification--Text-format--What-the-first-pass-accepts"}[adds]
@@ -101,7 +101,7 @@ holds as hypotheses, as the round trip's lemmas do
 (`docs/decisions/text-format-proofs.md`).
 :::
 
-:::readable Fir.Text.SBlock.adds Fir.Text.SOp.adds Fir.Text.SRegion.adds (pin := Fir.Text.Adds) (pin := Fir.Block.scopeDefs) (pin := Fir.Operation.scopeDefs) (pin := Fir.Region.scopeDefs) (fingerprint := "16051247237858677610")
+:::readable Fir.Text.SBlock.adds Fir.Text.SOp.adds Fir.Text.SRegion.adds (pin := Fir.Text.Adds) (pin := Fir.Block.scopeDefs) (pin := Fir.Operation.scopeDefs) (pin := Fir.Region.scopeDefs) (fingerprint := "5551675746299430520")
 *Theorems: the first pass, at any depth.* Let $`d` be a dialect with a
 text. For every list of blocks as read, the first pass over blocks adds
 it, against the second pass over blocks, with the definitions of the

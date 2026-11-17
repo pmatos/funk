@@ -14,10 +14,10 @@ when the Lean changes under it.
 
 #doc (Manual) "Checking ops: readable blocks" =>
 
-:::moduleDocs (fingerprint := "16073740907722661856")
+:::moduleDocs (fingerprint := "6625648111168534096")
 :::
 
-:::readable Fir.FuncTables Fir.Func.defSites Fir.Func.tables (fingerprint := "10369497456229509283")
+:::readable Fir.FuncTables Fir.Func.defSites Fir.Func.tables (fingerprint := "7308601972997214691")
 *Definition: the tables of a function.* Before it checks the ops of a
 function $`f`, the check builds five tables, once, from $`f` and a list
 $`\mathit{all}` of its blocks at any depth:
@@ -59,7 +59,7 @@ So each later check can look a fact up in a table and still be read as the
 rule that speaks of it.
 :::
 
-:::readable Fir.siteDominates Fir.siteDominates_iff (pin := Fir.Func.DominatesUse) (fingerprint := "5706251795073232108")
+:::readable Fir.siteDominates Fir.siteDominates_iff (pin := Fir.Func.DominatesUse) (fingerprint := "16083016050146883062")
 *Definition and theorem: whether a definition dominates a use, by search.*
 $`\mathrm{sitedom}(g, S, s, l, i)` is
 {ref "The-fir-specification--Validation--Dominance"}[dominance of a use]
@@ -76,7 +76,7 @@ of a block of $`\mathrm{blocks}(f)`:
 $$`\begin{aligned} & \mathrm{sitedom}(\mathrm{graph}(f), \mathrm{start}(f), s, l, i) \\ \iff\ & s \mathrel{\mathrm{dom}_f} (l, i) \end{aligned}`
 :::
 
-:::readable Fir.DefSite.why (fingerprint := "6121637131070496736")
+:::readable Fir.DefSite.why (fingerprint := "4514436066772604484")
 *Definition: why a definition does not dominate a use.* When the
 definition of $`x` at a site does not dominate its use in the block
 labelled $`l`, the problem says why, writing values and labels as the text
@@ -93,7 +93,7 @@ A parameter dominates every use, so its message, "`%x` is a parameter", is
 never given.
 :::
 
-:::readable Fir.useProblems Fir.useProblems_eq_nil (fingerprint := "14704668241507228120")
+:::readable Fir.useProblems Fir.useProblems_eq_nil (fingerprint := "8213222863609986861")
 *Definition and theorem: the check of a use.* The check of a use of $`x` by
 the op at index $`i` of the block labelled $`l` looks $`x` up in the sites
 table:
@@ -117,17 +117,20 @@ the check of the use gives no problem exactly when the use is
 $$`\begin{aligned} & \mathrm{useproblems}(x, l, i) = \epsilon \\ \iff\ & \mathrm{inscope}_f(x, l, i) \end{aligned}`
 :::
 
-:::readable Fir.succProblems Fir.succProblems_eq_nil (fingerprint := "14498177447669405208")
+:::readable Fir.succProblems Fir.succProblems_eq_nil (fingerprint := "1110267483566974852")
 *Definition and theorem: the check of a successor.* The check of a
-successor $`l(x_1, \dots, x_n)` gives:
+successor $`l(x_1, \dots, x_n)` gives, in this order:
 
 * "no branch may go to the entry block `^l`" when $`l` is the first label
   of the start;
-* "successor `^l` is not a block of the function" when the blocks table has
-  no $`l`;
-* otherwise, "successor `^l` does not pass one value of the right type for
-  each argument of the block" unless the scope gives
-  $`x_1, \dots, x_n` exactly the types of the arguments of that block.
+* then, "successor `^l` is not a block of the function" when the blocks
+  table has no $`l`, and when it has $`l`, "successor `^l` does not pass
+  one value of the right type for each argument of the block" unless the
+  scope gives $`x_1, \dots, x_n` exactly the types of the arguments of
+  that block.
+
+So a successor to the entry block gets the first problem and may get one
+of the others too.
 
 Like the check of a use, it takes a way of placing a problem at the op,
 and the theorem holds for every one.
@@ -151,7 +154,7 @@ proofs of this chapter use them to read each
 line of a check as the premise it tests.
 :::
 
-:::readable Fir.kindRef Fir.regionProblems Fir.regionProblems_eq_nil (pin := Fir.Func.RegionsValid) (fingerprint := "13354933883942441113")
+:::readable Fir.kindRef Fir.regionProblems Fir.regionProblems_eq_nil (pin := Fir.Func.RegionsValid) (fingerprint := "1629452706077881221")
 *Definition and theorem: the check of an op's regions.* The check of the
 regions of an op $`o` of $`f` gives "the op's regions are not of the kinds
 that its op instance states" unless the kinds of its regions are those of
@@ -202,7 +205,7 @@ is valid:
 $$`\begin{aligned} & \mathrm{opproblems}(o) = \epsilon \\ \iff\ & C, f, b, i \vdash o~\text{valid} \end{aligned}`
 :::
 
-:::readable Fir.innerOpProblems Fir.Operation.innerProblems Fir.Func.scope_contains Fir.innerOpProblems_eq_nil Fir.Operation.innerProblems_eq_nil (pin := Fir.Func.InnerOpValid) (fingerprint := "3277755168616031235")
+:::readable Fir.innerOpProblems Fir.Operation.innerProblems Fir.Func.scope_contains Fir.innerOpProblems_eq_nil Fir.Operation.innerProblems_eq_nil (pin := Fir.Func.InnerOpValid) (fingerprint := "7972177632447782566")
 *Definitions and theorems: the check of the ops inside a region.* The check
 of an op inside a region tests the premises of the rule of a
 {ref "The-fir-specification--Validation--The-general-rules"}[valid op inside a region]

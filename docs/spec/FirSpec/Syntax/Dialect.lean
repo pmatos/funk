@@ -60,7 +60,7 @@ ADR-2026-10-29-2017); its semantics asks for them in the
 {ref "The-fir-specification--Execution--Effects-and-op-semantics"}[execution chapter].
 :::
 
-:::readable Fir.TyDenote (pin := Fir.Core.Ty.toType) (pin := Fir.DVal) (pin := Fir.Env) (fingerprint := "2513080047759211022")
+:::readable Fir.TyDenote (pin := Fir.Core.Ty.toType) (pin := Fir.DVal) (pin := Fir.Env) (fingerprint := "645854370421297299")
 *Definition: the values of a type.* A dialect $`D` gives each of its types
 $`t \in \mathrm{Ty}_D` the set of its values, written
 $`\llbracket t \rrbracket`. The Lean calls this map `toType`.

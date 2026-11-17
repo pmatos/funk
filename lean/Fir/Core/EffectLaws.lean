@@ -11,8 +11,10 @@ The core dialect's effect declarations are sound: it is lawful in its
 effects. Each effect that a core op leaves out, it does not have:
 
 * _No may-UB._ Every core op but the four divisions, `cond_br`,
-  `unreachable`, `load` and `store` never ends in UB. Each rule that gives a result gives it at once, `freeze`
-  and the float arithmetic after choosing bits, and `br` and `ret` go to their successor or return.
+  `unreachable`, and the loads and stores of an integer or a pointer never
+  ends in UB. Each rule that gives a result gives it at once, `freeze`, the
+  float arithmetic and the conversions from integers and between formats
+  after choosing bits, and `br` and `ret` go to their successor or return.
 * _No may produce poison._ On operands with no poison, every op that does
   not declare it gives a defined result: `add`, `sub` and `mul` without
   flags, the divisions without `exact` when they give a result, the bitwise
@@ -20,26 +22,28 @@ effects. Each effect that a core op leaves out, it does not have:
   and at a float type, `freeze`, `fcmp` and the float arithmetic without
   `nnan` and `ninf`, whose NaN results are defined bits, the bit casts,
   the conversions from integers, the conversions between formats and the
-  pointer offset. `store` gives no result, so none is poison.
+  pointer offset. A store gives no result, so none is poison.
 * _No control._ Every core op that does not declare control is not a
   terminator.
-* _No write, read or allocation._ Every core op but `alloca`, `load` and
-  `store` touches no memory: it runs with memory by its rule in the set
-  monad and keeps the memories, at every layout and naming of them (the
-  section on the core's rules with memory). `alloca` writes and reads no
-  memory, and allocates only in the memory it declares, by its own rule
-  (the section on the stack allocation obligations). `load` writes no
-  memory, allocates in none, and reads only the memory it declares, by its
-  own rule (the section on the load obligations). `store` writes only the
-  memory it declares, reads none, its own included, and allocates in none,
-  by its own rule (the section on the store obligations).
+* _No write, read or allocation._ Every core op but `alloca` and the
+  loads and stores touches no memory: it runs with memory by its rule in
+  the set monad and keeps the memories, at every layout and naming of them
+  (the section on the core's rules with memory). `alloca` writes and reads
+  no memory, and allocates only in the memory it declares, by its own rule
+  (the section on the stack allocation obligations). A load, `load` or
+  `loadPtr`, writes no memory, allocates in none, and reads only the
+  memory it declares, by its own rule (the sections on the load and
+  pointer load obligations). A store, `store` or `storePtr`, writes only
+  the memory it declares, reads none, its own included, and allocates in
+  none, by its own rule (the sections on the store and pointer store
+  obligations).
 
-So each op but `alloca`, `load` and `store` is tied, and the first two
-obligations, stated over the semantics with memory, follow from what its
-rule does in the set monad; `alloca` meets them by its rule with memory,
-`load` declares both may-UB and may produce poison, so neither asks
-anything of it, and `store` declares may-UB and makes no poison, since it
-gives no result.
+So each op but `alloca` and the loads and stores is tied, and the first
+two obligations, stated over the semantics with memory, follow from what
+its rule does in the set monad; `alloca` meets them by its rule with
+memory, a load declares both may-UB and may produce poison, so neither
+asks anything of it, and a store declares may-UB and makes no poison,
+since it gives no result.
 
 `call` has no rule of its own, so the obligations leave it out: its meaning
 is its callee's run, and its effects are its callee's

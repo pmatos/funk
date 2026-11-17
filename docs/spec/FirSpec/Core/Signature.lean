@@ -15,7 +15,7 @@ changes under it.
 
 #doc (Manual) "Core signatures: readable blocks" =>
 
-:::moduleDocs (fingerprint := "11843693870656826004")
+:::moduleDocs (fingerprint := "968451243568378597")
 :::
 
 :::readable Fir.CoreDialect Fir.Core.i (fingerprint := "6975174900697461964")
@@ -30,7 +30,7 @@ specification is written in. The Lean writes $`\mathsf{i}N` as `i N`, a
 shorthand for the type `int N`.
 :::
 
-:::readable Fir.Core.Op.sig Fir.Core.Op.returnTypes (pin := Fir.Core.Op) (pin := Fir.Func.OpValid) (fingerprint := "3307132512898266246")
+:::readable Fir.Core.Op.sig Fir.Core.Op.returnTypes (pin := Fir.Core.Op) (pin := Fir.Func.OpValid) (fingerprint := "18147534233413131882")
 *Definition: the types of each core op's operands and results.* Each core op
 takes operands and gives results of fixed types, which follow from the op
 instance. As in the WebAssembly specification, $`[t_1^*] \to [t_2^*]`
@@ -67,7 +67,7 @@ checks every op against: each operand must be a value of the operand's
 type, and each result is declared with the result's type.
 :::
 
-:::readable Fir.Core.Op.isTerminator Fir.Core.Op.succCount (pin := Fir.instDialectSignatureCoreDialect) (fingerprint := "11134669087793284921")
+:::readable Fir.Core.Op.isTerminator Fir.Core.Op.succCount (pin := Fir.instDialectSignatureCoreDialect) (fingerprint := "11993528075541462880")
 *Definition: the core terminators and their successors.* $`\mathsf{br}`,
 $`\mathsf{cond\_br}`, $`\mathsf{ret}~t^*` and $`\mathsf{unreachable}` are
 the terminators of the core dialect, the ops that end a block.

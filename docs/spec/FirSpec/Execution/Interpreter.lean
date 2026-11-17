@@ -15,10 +15,10 @@ when the Lean changes under it.
 
 #doc (Manual) "The interpreter: readable blocks" =>
 
-:::moduleDocs (fingerprint := "1488414278265628941")
+:::moduleDocs (fingerprint := "488132164712787263")
 :::
 
-:::readable Fir.HVector.toDVals (pin := Fir.DVal) (fingerprint := "11457153560144753281")
+:::readable Fir.HVector.toDVals (pin := Fir.DVal) (fingerprint := "14469442716427576677")
 *Definition: the typed values of a vector.* For values $`v_1, \dots, v_n`
 of the types $`t_1, \dots, t_n`, the list of pairs
 $`(t_1, v_1), \dots, (t_n, v_n)`: each value with its type. An op's
@@ -28,7 +28,7 @@ while an environment and a return hold typed values; this turns the one
 into the other.
 :::
 
-:::readable Fir.Env Fir.stuck Fir.Env.value Fir.Env.bind (pin := Fir.Stuck) (pin := Fir.DVal) (pin := Fir.Func.Valid) (fingerprint := "13118793556506930591")
+:::readable Fir.Env Fir.stuck Fir.Env.value Fir.Env.bind (pin := Fir.Stuck) (pin := Fir.DVal) (pin := Fir.Func.Valid) (fingerprint := "10919094858235561139")
 *Definition: environments, being stuck, looking a name up and binding
 names.* An _environment_ $`E` is a list of the values a run has defined,
 each a name with a typed value, $`x \mapsto (t, v)`, the latest first.
@@ -54,7 +54,7 @@ the old ones. Being
 is how the interpreter ends a path that validation rules out.
 :::
 
-:::readable Fir.Env.operands (pin := Fir.Env.value) (fingerprint := "4784251075266048821")
+:::readable Fir.Env.operands (pin := Fir.Env.value) (fingerprint := "2733503811027247948")
 *Definition: the operands of an op.* For the operand types
 $`t_1, \dots, t_n` of an op and the names $`x_1, \dots, x_k` of its
 operands, the values of the operands in an environment $`E` are
@@ -71,7 +71,7 @@ So an op's semantics only ever sees values of the types that its signature
 promises.
 :::
 
-:::readable Fir.Func.jump (pin := Fir.Func.block?) (pin := Fir.Succ) (pin := Fir.Env.value) (pin := Fir.Env.bind) (fingerprint := "7857999587418638399")
+:::readable Fir.Func.jump (pin := Fir.Func.block?) (pin := Fir.Succ) (pin := Fir.Env.value) (pin := Fir.Env.bind) (fingerprint := "12807102263392759738")
 *Definition: jumping to a successor.* Let a terminator of the function
 $`f` have the
 {ref "The-fir-specification--Abstract-syntax--Modules___-functions___-blocks-and-ops"}[successors]
@@ -108,7 +108,7 @@ Validation gives each function of a
 its own symbol, so there the first is the only one.
 :::
 
-:::readable Fir.Func.enter (pin := Fir.Func.blocks) (fingerprint := "7467722205350593985")
+:::readable Fir.Func.enter (pin := Fir.Func.blocks) (fingerprint := "12156648136745858445")
 *Definition: entering a function.* $`\mathrm{enter}_f(w_1, \dots, w_n)`,
 for typed values $`w_1, \dots, w_n` and a function $`f` with the
 parameters $`(p_1 : t_1), \dots, (p_m : t_m)`, finds where a run of $`f`
@@ -126,7 +126,7 @@ $`[p_1 \mapsto w_1, \dots, p_m \mapsto w_m]`, which holds the parameters
 and nothing else.
 :::
 
-:::readable Fir.Func.runOps (pin := Fir.Result) (pin := Fir.Exit) (pin := Fir.Stuck) (pin := Fir.Env.operands) (pin := Fir.Env.bind) (pin := Fir.Func.jump) (pin := Fir.Module.func?) (pin := Fir.Func.enter) (fingerprint := "11832946902684810477")
+:::readable Fir.Func.runOps (pin := Fir.Result) (pin := Fir.Exit) (pin := Fir.Stuck) (pin := Fir.Env.operands) (pin := Fir.Env.bind) (pin := Fir.Func.jump) (pin := Fir.Module.func?) (pin := Fir.Func.enter) (fingerprint := "491372861820482639")
 *Definition: running the ops of a block.* For every dialect, for every way
 of computing in which the dialect's ops have their
 {ref "The-fir-specification--Execution--Effects-and-op-semantics"}[semantics],
@@ -187,7 +187,7 @@ budget shrinks at every step, so that every run ends, however deep its
 calls go. When the callee is stuck or ends with UB, so does the caller.
 :::
 
-:::readable Fir.Func.run (pin := Fir.Run) (pin := Fir.Func.enter) (pin := Fir.Func.runOps) (fingerprint := "12851099653111767763")
+:::readable Fir.Func.run (pin := Fir.Run) (pin := Fir.Func.enter) (pin := Fir.Func.runOps) (fingerprint := "9096451483860429517")
 *Definition: the run of a function.* For a function $`f` of the module
 $`M`, values $`v^*` of its parameter types and $`\mathit{fuel}` steps of
 fuel, the run enters $`f` with $`v^*`, and runs its entry block with

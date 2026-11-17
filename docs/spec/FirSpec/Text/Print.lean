@@ -14,25 +14,27 @@ changes under it.
 
 #doc (Manual) "The canonical printer: readable blocks" =>
 
-:::moduleDocs (fingerprint := "16568702145132850578")
+:::moduleDocs (fingerprint := "9803841250079739534")
 :::
 
-:::readable Fir.Attr.print (pin := Fir.Text.quote) (pin := Fir.Text.printInt) (pin := Fir.Text.printSymbol) (fingerprint := "17301581164338892305")
+:::readable Fir.Attr.print (pin := Fir.Text.quote) (pin := Fir.Text.printInt) (pin := Fir.Text.printSymbol) (fingerprint := "470254955115097083")
 *Definition: an attribute in text.* The text of an
 {ref "The-fir-specification--Text-format--Grammar"}[attribute] $`a`,
 $`\mathrm{print}(a)`, is:
 
-$$`\begin{aligned} \mathrm{print}(\mathsf{word}~w) &= w \\ \mathrm{print}(\mathsf{int}~i) &= \mathrm{printint}(i) \\ \mathrm{print}(\mathsf{str}~s) &= \mathrm{quote}(s) \\ \mathrm{print}(\mathsf{sym}~s) &= \mathrm{printsym}(s) \\ \mathrm{print}(\mathsf{app}~h~a_1 \dots a_n) &= h\,\texttt{(}\,\mathrm{print}(a_1)\texttt{,} \\ &\quad \dots\texttt{,}~\mathrm{print}(a_n)\,\texttt{)} \end{aligned}`
+$$`\begin{aligned} \mathrm{print}(\mathsf{word}~w) &= w \\ \mathrm{print}(\mathsf{int}~i) &= \mathrm{printint}(i) \\ \mathrm{print}(\mathsf{str}~s) &= \mathrm{quote}(s) \\ \mathrm{print}(\mathsf{sym}~s) &= \mathrm{printsym}(s) \\ \mathrm{print}(\mathsf{app}~h~a_1 \dots a_n) &= h\,\texttt{(}\,\mathrm{print}(a_1)\texttt{,} \\ &\quad \dots\texttt{,}~\mathrm{print}(a_n)\,\texttt{)} \\ \mathrm{print}(\mathsf{float}~l) &= l \end{aligned}`
 
 where $`\mathrm{printint}(i)`, $`\mathrm{quote}(s)` and $`\mathrm{printsym}(s)` are
 the one spelling of an integer, a string and a symbol, from the
-{ref "The-fir-specification--Text-format--Tokens"}[tokens section]. The
+{ref "The-fir-specification--Text-format--Tokens"}[tokens section], and a
+float literal $`l` is written as that section writes it, such as `-1.5e-7`
+or `0x7fc00000`. The
 arguments of an applied attribute are separated by a comma and a space, and
 `h()` is printed for $`n = 0`. A type is printed the same way, as the
 attribute that its dialect writes it as.
 :::
 
-:::readable Fir.printLocRef Fir.Location.print (pin := Fir.Location) (pin := Fir.Text.quote) (fingerprint := "7699129085592594488")
+:::readable Fir.printLocRef Fir.Location.print (pin := Fir.Location) (pin := Fir.Text.quote) (fingerprint := "5987085474027999097")
 *Definition: a location reference and a location in text.* The
 {ref "The-fir-specification--Abstract-syntax--Locations"}[location reference]
 $`r` is written `@` followed by $`r` in decimal. Each location is written
@@ -61,7 +63,7 @@ to the block $`\ell` that passes $`x_1, \dots, x_n` is written
 `^ℓ(%x₁, …, %xₙ)`, and `^ℓ` when $`n = 0`.
 :::
 
-:::readable Fir.printKind Fir.Operation.print Fir.Region.printList Fir.Block.printList Fir.Operation.printList (pin := Fir.Operation) (pin := Fir.Block) (fingerprint := "10544776060343288224")
+:::readable Fir.printKind Fir.Operation.print Fir.Region.printList Fir.Block.printList Fir.Operation.printList (pin := Fir.Operation) (pin := Fir.Block) (fingerprint := "6419673843248603316")
 *Definition: an op, with its regions and their blocks, in text.* An op at
 the indentation $`n` is one line, made of, in order:
 
@@ -101,15 +103,15 @@ So `toy.cell @c() -> toy.flag 1 {`, then `}` on the next line, is an item
 of the kind `toy.cell` (ADR-2026-11-09-1543).
 :::
 
-:::readable Fir.Func.print Fir.printDialects Fir.Item.print Fir.Item.printList (pin := Fir.Text.printSymbol) (fingerprint := "13951144100222046326")
+:::readable Fir.Func.print Fir.printDialects Fir.Item.print Fir.Item.printList (pin := Fir.Text.printSymbol) (fingerprint := "15197532613295899672")
 *Definition: a function, a dialect set, and items, in text.* A function at
 the indentation $`n`, with the symbol $`s`, the parameters $`p^*`, the
-result types $`t_1, \dots, t_n` and the body $`b^*`, is written:
+result types $`t_1, \dots, t_m` and the body $`b^*`, is written:
 
 * $`n` spaces, `func`, a space, $`\mathrm{printsym}(s)`, then its
   parameters' definitions in parentheses, with no space before them:
   `func @sum(%n: i32)`;
-* when $`n > 0`, ` -> ` and the result types, separated by a comma and a
+* when $`m > 0`, ` -> ` and the result types, separated by a comma and a
   space;
 * ` {`, a line feed, its blocks at the indentation $`n`, then $`n` spaces,
   `}` and a line feed.
@@ -139,7 +141,7 @@ separated by `, `, then a line feed and an empty line. So
 memory 1.
 :::
 
-:::readable Fir.LocTable.print Fir.Module.print (fingerprint := "6873696991008772264")
+:::readable Fir.LocTable.print Fir.Module.print (fingerprint := "1506697349741948061")
 *Definition: the location table, and a module, in text.* The
 {ref "The-fir-specification--Abstract-syntax--Locations"}[location table]
 is written `locs {` and a line feed, then each entry $`r = \mathit{loc}`

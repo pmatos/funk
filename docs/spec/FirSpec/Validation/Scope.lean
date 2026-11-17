@@ -14,10 +14,10 @@ when the Lean changes under it.
 
 #doc (Manual) "Scope and symbols: readable blocks" =>
 
-:::moduleDocs (fingerprint := "10751651846977695783")
+:::moduleDocs (fingerprint := "532347281641330505")
 :::
 
-:::readable Fir.Func.blocks Fir.Region.allBlocks Fir.Block.allBlocks Fir.Operation.regionBlocks Fir.Func.allBlocks (fingerprint := "1386367292862605520")
+:::readable Fir.Func.blocks Fir.Region.allBlocks Fir.Block.allBlocks Fir.Operation.regionBlocks Fir.Func.allBlocks (fingerprint := "9127946111391752751")
 *Definition: the blocks of a function, at the top level and at any depth.*
 The body of a
 {ref "The-fir-specification--Abstract-syntax--Modules___-functions___-blocks-and-ops"}[function]
@@ -130,7 +130,7 @@ an aggregate's layout names no function, so no op refers to it as a
 callee.
 :::
 
-:::readable Fir.Item.tables Fir.Item.tablesIn Fir.Module.table Fir.Module.tables (fingerprint := "9662001617122106345")
+:::readable Fir.Item.tables Fir.Item.tablesIn Fir.Module.table Fir.Module.tables (fingerprint := "18417648986635413284")
 *Definition: the symbol tables of a module.* The tables that an item
 holds, at any depth, are none for a function, an item of a dialect's kind
 or an aggregate's layout, and for a nested module with
@@ -138,7 +138,7 @@ the dialect set $`D` and the items $`I`, its own table $`(D, I)`, then the
 tables that $`I` holds. The tables that a list of items holds are those of
 each item, in order:
 
-$$`\begin{aligned} \mathrm{tables}(\mathsf{func}~f) &= \epsilon \\ \mathrm{tables}(\mathsf{module}~s~D~I) &= (D, I) \cdot \mathrm{tables}^*(I) \\ \mathrm{tables}^*(i_1 \dots i_n) &= \mathrm{tables}(i_1) \dots \mathrm{tables}(i_n) \end{aligned}`
+$$`\begin{aligned} \mathrm{tables}(\mathsf{func}~f) &= \epsilon \\ \mathrm{tables}(\mathsf{dialect}~i) &= \epsilon \\ \mathrm{tables}(\mathsf{aggregate}~a) &= \epsilon \\ \mathrm{tables}(\mathsf{module}~s~D~I) &= (D, I) \cdot \mathrm{tables}^*(I) \\ \mathrm{tables}^*(i_1 \dots i_n) &= \mathrm{tables}(i_1) \dots \mathrm{tables}(i_n) \end{aligned}`
 
 A module's own table, $`\mathrm{table}(M)`, is its dialect set and its
 items, and its tables are its own, then those that its items hold:

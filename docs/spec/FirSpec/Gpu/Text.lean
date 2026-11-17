@@ -14,10 +14,10 @@ changes under it.
 
 #doc (Manual) "The GPU dialect in text: readable blocks" =>
 
-:::moduleDocs (fingerprint := "17107465643293711732")
+:::moduleDocs (fingerprint := "6819589793602496287")
 :::
 
-:::readable Fir.Gpu.Dim.word Fir.Gpu.Dim.decode Fir.Gpu.Query.name Fir.Gpu.Query.decode (fingerprint := "16323960579810849510")
+:::readable Fir.Gpu.Dim.word Fir.Gpu.Dim.decode Fir.Gpu.Query.name Fir.Gpu.Query.decode (fingerprint := "10132642262867413315")
 *Definition: the words of the dimensions and of the ops.* Each dimension
 is written as a word of `gpu`, and each question as the name of its op:
 
@@ -27,7 +27,7 @@ Reading goes the other way: a word in the table gives its dimension or
 question, and every other word gives none.
 :::
 
-:::readable Fir.Gpu.allocName Fir.Gpu.Op.name Fir.Gpu.Op.attrs Fir.Gpu.decodeAlloc Fir.Gpu.Op.decode (fingerprint := "16870728750848640350")
+:::readable Fir.Gpu.allocName Fir.Gpu.Op.name Fir.Gpu.Op.attrs Fir.Gpu.decodeAlloc Fir.Gpu.Op.decode (fingerprint := "8223671616329982471")
 *Definition: the text of an op of `gpu`.* $`\mathsf{query}_N~q~d` is
 written as the name of $`q`, then the word of $`d` as its one attribute,
 with its result type $`\mathsf{i}N`:
@@ -51,7 +51,7 @@ count of 1, a negative count or alignment, an operand or an integer result
 does not decode.
 :::
 
-:::readable Fir.Gpu.tyAttr Fir.Gpu.decodeTy Fir.Gpu.instDialectText (fingerprint := "16315305427099094252")
+:::readable Fir.Gpu.tyAttr Fir.Gpu.decodeTy Fir.Gpu.instDialectText (fingerprint := "274796703068110979")
 *Definition: the types of `gpu` in text.* `gpu` has no type of its own,
 so it writes and reads the core's types as the core does. With the op
 text above, this is the text of `gpu` over the core.

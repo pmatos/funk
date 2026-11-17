@@ -14,10 +14,10 @@ when the Lean changes under it.
 
 #doc (Manual) "Checking modules: readable blocks" =>
 
-:::moduleDocs (fingerprint := "13567375135648662235")
+:::moduleDocs (fingerprint := "6330129897388176380")
 :::
 
-:::readable Fir.Location.malformed (pin := Fir.Location.WellFormed) (fingerprint := "313359748682067478")
+:::readable Fir.Location.malformed (pin := Fir.Location.WellFormed) (fingerprint := "1748085792573784321")
 *Definition: whether a location is well formed, and why not.* Whether a
 location is
 {ref "The-fir-specification--Validation--The-general-rules"}[well formed]
@@ -28,7 +28,7 @@ least two" for a $`\mathsf{fused}` location. Every other kind is well
 formed, so its message, "the location is not well formed", is never given.
 :::
 
-:::readable Fir.locProblem Fir.LocTable.problems (fingerprint := "11296170998202653587")
+:::readable Fir.locProblem Fir.LocTable.problems (fingerprint := "1027737757807816924")
 *Definition: the check of a location table.* Each problem of the table
 starts "location table: `@r`", for the reference $`r` of the entry it is
 about. The check gives, in this order:
@@ -64,14 +64,14 @@ is a
 {ref "The-fir-specification--Validation--The-general-rules"}[valid location table].
 :::
 
-:::readable Fir.Attr.writable Fir.Attr.allWritable Fir.Attr.writable_iff Fir.Attr.allWritable_iff Fir.instDecidableAllWritable (fingerprint := "9863646700279018290")
+:::readable Fir.Attr.writable Fir.Attr.allWritable Fir.Attr.writable_iff Fir.Attr.allWritable_iff Fir.instDecidableAllWritable (fingerprint := "3733944330885058779")
 *Definition and theorems: whether attributes can be written.* Whether an
 attribute can be
 {ref "The-fir-specification--Abstract-syntax--Modules___-functions___-blocks-and-ops"}[written] is
 decided term by term: a word when it is a word, an integer, a string or a
-symbol always, and an applied attribute when its head is a word and each of
-its arguments can be written. A list can be written when each of its
-attributes can.
+symbol always, an applied attribute when its head is a word and each of
+its arguments can be written, and a float literal when the literal can be
+written. A list can be written when each of its attributes can.
 
 *Theorems:* the test of an attribute holds exactly when it can be written,
 and the test of a list exactly when each of its attributes can be. So
@@ -131,7 +131,7 @@ check of a function apply to every function of $`T`, checked with the
 lookup of $`T`.
 :::
 
-:::readable Fir.SymbolTable.problems (pin := Fir.Text.printSymbol) (pin := Fir.isWord) (fingerprint := "8597968925950264726")
+:::readable Fir.SymbolTable.problems (pin := Fir.Text.printSymbol) (pin := Fir.isWord) (fingerprint := "14719092477157320935")
 *Definition: the check of a symbol table.* The check of the table $`T`,
 given a hash set of the references of the module's location table, builds
 the lookup of $`T` once, and gives, in this order:
@@ -144,8 +144,8 @@ the lookup of $`T` once, and gives, in this order:
   of $`T`, in order, checked with the lookup of $`T`;
 * the problems of each item of a dialect's kind of $`T`, in order, checked
   in the function context of the symbols of $`T`;
-* "the dialect set names $`x`, which is not a word", for each name $`x` of
-  the dialect set of $`T` that is not a word;
+* "the dialect set names "$`x`", which is not a word", with $`x` between
+  quotes, for each name $`x` of the dialect set of $`T` that is not a word;
 * "the dialect set names $`x` more than once", for each name that repeats
   one before it.
 
