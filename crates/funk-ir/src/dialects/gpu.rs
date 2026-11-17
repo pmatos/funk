@@ -208,6 +208,7 @@ mod tests {
             vec![Attr::word("i32")],
             vec![Attr::word("i32"), Attr::int(64)],
             vec![Attr::word("ptr"), align(8)],
+            vec![Attr::word("f32"), Attr::int(16)],
         ] {
             assert_eq!(alloc(&attrs, &[], &p3), Ok(()), "{attrs:?}");
         }
@@ -223,7 +224,11 @@ mod tests {
             (vec![Attr::word("i32")], vec![], vec![int_type(32)]),
             (vec![Attr::word("i32"), Attr::int(0)], vec![], p3.to_vec()),
             (vec![Attr::word("i32"), align(3)], vec![], p3.to_vec()),
-            (vec![Attr::word("f32")], vec![], p3.to_vec()),
+            (
+                vec![Attr::App("float".into(), vec![Attr::int(1), Attr::int(7)])],
+                vec![],
+                p3.to_vec(),
+            ),
         ] {
             assert!(alloc(&attrs, &operands, &results).is_err(), "{attrs:?}");
         }

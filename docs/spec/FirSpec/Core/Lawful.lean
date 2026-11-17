@@ -14,10 +14,10 @@ build fails when the Lean changes under it.
 
 #doc (Manual) "The core dialect's poison obligations: readable blocks" =>
 
-:::moduleDocs (fingerprint := "15518506438951342135")
+:::moduleDocs (fingerprint := "15225164647630741550")
 :::
 
-:::readable Fir.Core.Op.propagates_all Fir.Core.load_propagatesPoison Fir.Core.store_propagatesPoison Fir.Core.loadPtr_propagatesPoison Fir.Core.storePtr_propagatesPoison (pin := Fir.Core.Op.poisonClass) (pin := Fir.PropagatesPoison) (pin := Fir.PoisonOut) (pin := Fir.UBByOwnRules) (pin := Fir.HVector.IsFilledBy) (fingerprint := "6424185351904332322")
+:::readable Fir.Core.Op.propagates_all Fir.Core.load_propagatesPoison Fir.Core.store_propagatesPoison Fir.Core.loadPtr_propagatesPoison Fir.Core.storePtr_propagatesPoison Fir.Core.loadFloat_propagatesPoison Fir.Core.storeFloat_propagatesPoison (pin := Fir.Core.Op.poisonClass) (pin := Fir.PropagatesPoison) (pin := Fir.PoisonOut) (pin := Fir.UBByOwnRules) (pin := Fir.HVector.IsFilledBy) (fingerprint := "3161636360929585015")
 *Theorem: each core op that propagates poison does.* For every
 {ref "The-fir-specification--Abstract-syntax--Core-ops"}[core op] $`o`
 whose
@@ -28,9 +28,10 @@ on operands of which one is poison, every result it returns is poison,
 and it may hit UB only if it may hit UB on some operands that put a
 defined value in place of each poison.
 
-These are 38 ops: $`\mathsf{const}` at an integer type and at a float
+These are 40 ops: $`\mathsf{const}` at an integer type and at a float
 type, $`\mathsf{poison}`, $`\mathsf{alloca}`, $`\mathsf{load}` and
-$`\mathsf{store}` of an integer and of a pointer, $`\mathsf{add}`,
+$`\mathsf{store}` of an integer, of a pointer and of a float,
+$`\mathsf{add}`,
 $`\mathsf{sub}`, $`\mathsf{mul}`, the four divisions $`\mathsf{sdiv}`,
 $`\mathsf{udiv}`, $`\mathsf{srem}` and $`\mathsf{urem}`, the bitwise ops
 $`\mathsf{and}`, $`\mathsf{or}` and $`\mathsf{xor}`, the shifts

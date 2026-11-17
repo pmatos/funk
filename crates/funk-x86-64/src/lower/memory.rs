@@ -92,7 +92,7 @@ fn load(cx: &mut Cx<'_>, op: &Op) -> Result<(), Unlowered> {
     };
     let w = cx.width(&v.name)?;
     if cx.class(&v.name)? == Class::Sse {
-        return Err("load reads an integer or a pointer, not a float".into());
+        return Err("the x86-64 backend does not lower a load of a float yet (#264)".into());
     }
     cx.width(p)?;
     cx.load(Reg::Rcx, p)?;
@@ -119,7 +119,7 @@ fn store(cx: &mut Cx<'_>, op: &Op) -> Result<(), Unlowered> {
     };
     let w = cx.width(v)?;
     if cx.class(v)? == Class::Sse {
-        return Err("store writes an integer or a pointer, not a float".into());
+        return Err("the x86-64 backend does not lower a store of a float yet (#264)".into());
     }
     cx.width(p)?;
     cx.load(Reg::Rcx, p)?;

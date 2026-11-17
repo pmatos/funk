@@ -1,6 +1,7 @@
 import Fir.Core.AllocaLaws
 import Fir.Core.LoadLaws
 import Fir.Core.StorePtrLaws
+import Fir.Core.StoreFloatLaws
 import Fir.Execution.MemoryObligationLaws
 import Fir.Core.Unlawful
 
@@ -11,8 +12,8 @@ The core dialect's effect declarations are sound: it is lawful in its
 effects. Each effect that a core op leaves out, it does not have:
 
 * _No may-UB._ Every core op but the four divisions, `cond_br`,
-  `unreachable`, and the loads and stores of an integer or a pointer never
-  ends in UB. Each rule that gives a result gives it at once, `freeze`, the
+  `unreachable`, and the loads and stores of an integer, a pointer or a
+  float never ends in UB. Each rule that gives a result gives it at once, `freeze`, the
   float arithmetic and the conversions from integers and between formats
   after choosing bits, and `br` and `ret` go to their successor or return.
 * _No may produce poison._ On operands with no poison, every op that does
@@ -91,8 +92,8 @@ theorem Op.neverUB_all : (op : Op) → (Fir.effects (d := CoreDialect) op).mayUB
   | .fptrunc r e m e' m', _ => convertFloat_neverUB e m e' m' (some r)
   | .ptradd n w, _ => ptradd_neverUB n w
   | .sdiv .., h | .udiv .., h | .srem _, h | .urem _, h | .condBr, h
-  | .unreachable, h | .load .., h | .store .., h | .loadPtr .., h | .storePtr .., h =>
-    nomatch h
+  | .unreachable, h | .load .., h | .store .., h | .loadPtr .., h | .storePtr .., h
+  | .loadFloat .., h | .storeFloat .., h => nomatch h
 
 /-! # No may produce poison -/
 
@@ -229,7 +230,7 @@ theorem Op.makesNoPoison_all : (op : Op) → (Fir.effects (d := CoreDialect) op)
       obtain ⟨b, he, _⟩ := (freeze_denote w a _).1 hr
       cases he
       exact not_any_of_ne fun h => nomatch h
-  | .call .., _ | .alloca .., _ | .store .., _ | .storePtr .., _ =>
+  | .call .., _ | .alloca .., _ | .store .., _ | .storePtr .., _ | .storeFloat .., _ =>
     fun _ _ _ _ hr => hr.elim
   | .fbin o fl e m, h => fbin_makesNoPoison o fl e m h
   | .funary o fl e m, h => funary_makesNoPoison o fl e m h
@@ -256,20 +257,22 @@ namespace Fir
 /-- The core dialect is lawful in its effects: every effect that a core op
 leaves out, it does not have. Each op that touches no memory runs with
 memory by its rule in the set monad (`Core.Op.liftsSetM`), so each of its
-obligations follows from its own rule there; `alloca`, `load` and `store`
-meet each by their own rules with memory. -/
+obligations follows from its own rule there; `alloca` and the loads and
+stores meet each by their own rules with memory. -/
 theorem Core.lawfulDialectEffects : LawfulDialectEffects CoreDialect where
   neverUB op _ _ h := Core.Op.memCases (P := fun op =>
       (Fir.effects (d := CoreDialect) op).mayUB = false → NeverUB (d := CoreDialect) op) op
     (fun op hm h => NeverUB.ofLifts (Core.Op.liftsSetM op hm) (Core.Op.neverUB_all op h))
     (fun k t c a n _ => Core.alloca_neverUB k t c a n) (fun _ _ _ _ h => nomatch h)
-    (fun _ _ _ _ h => nomatch h) (fun _ _ _ _ h => nomatch h) (fun _ _ _ _ h => nomatch h) h
+    (fun _ _ _ _ h => nomatch h) (fun _ _ _ _ h => nomatch h) (fun _ _ _ _ h => nomatch h)
+    (fun _ _ _ _ _ h => nomatch h) (fun _ _ _ _ _ h => nomatch h) h
   makesNoPoison op _ _ h := Core.Op.memCases (P := fun op =>
       (Fir.effects (d := CoreDialect) op).mayPoison = false → MakesNoPoison (d := CoreDialect) op) op
     (fun op hm h => MakesNoPoison.ofLifts (Core.Op.liftsSetM op hm) (Core.Op.makesNoPoison_all op h))
     (fun k t c a n _ => Core.alloca_makesNoPoison k t c a n) (fun _ _ _ _ h => nomatch h)
     (fun o w a n _ => Core.store_makesNoPoison o w a n) (fun _ _ _ _ h => nomatch h)
-    (fun o mp a n _ => Core.storePtr_makesNoPoison o mp a n) h
+    (fun o mp a n _ => Core.storePtr_makesNoPoison o mp a n) (fun _ _ _ _ _ h => nomatch h)
+    (fun o e m a n _ => Core.storeFloat_makesNoPoison o e m a n) h
   notControl := Core.Op.notControl_all
   writesNot op _ _ _ _ lay ρ x hx := Core.Op.memCases (P := fun op =>
       ¬ ((Fir.effects (d := CoreDialect) op).writes.map ρ).Has x →
@@ -279,7 +282,9 @@ theorem Core.lawfulDialectEffects : LawfulDialectEffects CoreDialect where
     (fun o w a n _ => Core.load_writesNot o w a n lay ρ x)
     (fun o w a n hx => Core.store_writesNot o w a n lay ρ x hx)
     (fun o mp a n _ => Core.loadPtr_writesNot o mp a n lay ρ x)
-    (fun o mp a n hx => Core.storePtr_writesNot o mp a n lay ρ x hx) hx
+    (fun o mp a n hx => Core.storePtr_writesNot o mp a n lay ρ x hx)
+    (fun o e m a n _ => Core.loadFloat_writesNot o e m a n lay ρ x)
+    (fun o e m a n hx => Core.storeFloat_writesNot o e m a n lay ρ x hx) hx
   readsNot op _ _ _ _ lay ρ x hx := Core.Op.memCases (P := fun op =>
       ¬ ((Fir.effects (d := CoreDialect) op).reads.map ρ).Has x →
         OwnRuleHas lay ρ (ReadsNot x) (d := CoreDialect) op) op
@@ -288,7 +293,9 @@ theorem Core.lawfulDialectEffects : LawfulDialectEffects CoreDialect where
     (fun o w a n hx => Core.load_readsNot o w a n lay ρ x hx)
     (fun o w a n _ => Core.store_readsNot o w a n lay ρ x)
     (fun o mp a n hx => Core.loadPtr_readsNot o mp a n lay ρ x hx)
-    (fun o mp a n _ => Core.storePtr_readsNot o mp a n lay ρ x) hx
+    (fun o mp a n _ => Core.storePtr_readsNot o mp a n lay ρ x)
+    (fun o e m a n hx => Core.loadFloat_readsNot o e m a n lay ρ x hx)
+    (fun o e m a n _ => Core.storeFloat_readsNot o e m a n lay ρ x) hx
   allocatesNot op _ _ _ _ lay ρ x hx := Core.Op.memCases (P := fun op =>
       ¬ ((Fir.effects (d := CoreDialect) op).allocates.map ρ).Has x →
         OwnRuleHas lay ρ (AllocatesNot x) (d := CoreDialect) op) op
@@ -297,7 +304,9 @@ theorem Core.lawfulDialectEffects : LawfulDialectEffects CoreDialect where
     (fun o w a n _ => Core.load_allocatesNot o w a n lay ρ x)
     (fun o w a n _ => Core.store_allocatesNot o w a n lay ρ x)
     (fun o mp a n _ => Core.loadPtr_allocatesNot o mp a n lay ρ x)
-    (fun o mp a n _ => Core.storePtr_allocatesNot o mp a n lay ρ x) hx
+    (fun o mp a n _ => Core.storePtr_allocatesNot o mp a n lay ρ x)
+    (fun o e m a n _ => Core.loadFloat_allocatesNot o e m a n lay ρ x)
+    (fun o e m a n _ => Core.storeFloat_allocatesNot o e m a n lay ρ x) hx
 
 instance : LawfulDialectEffects CoreDialect := Core.lawfulDialectEffects
 

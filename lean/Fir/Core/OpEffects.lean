@@ -39,12 +39,12 @@ frees its call's stack allocations when the call returns.
   UB and its result is a defined pointer, so allocating is its only effect.
   The frame of its call frees the allocation when the call returns, so it
   declares no other effect for that.
-* Reads memory `N`, may-UB and may produce poison: `load` and `loadPtr`
-  through a pointer of `ptr<N>`. Each is UB on a poison pointer and on an
+* Reads memory `N`, may-UB and may produce poison: `load`, `loadPtr` and
+  `loadFloat` through a pointer of `ptr<N>`. Each is UB on a poison pointer and on an
   access that faults, misaligned included, and gives poison for units that
   are not an encoding of its type, such as fresh memory.
-* Writes memory `N` and may-UB: `store` and `storePtr` through a pointer of
-  `ptr<N>`. Each is UB on a poison pointer and on an access that faults,
+* Writes memory `N` and may-UB: `store`, `storePtr` and `storeFloat`
+  through a pointer of `ptr<N>`. Each is UB on a poison pointer and on an access that faults,
   misaligned included. Each reads no memory, its own included: whether it
   faults depends on the allocations of its memory, not on what their units
   hold. Each gives no result, so it makes no poison, though it may store a
@@ -84,7 +84,9 @@ def Op.effects : Op → Effects Mem
   | .br | .ret _ => { control := true }
   | .condBr | .unreachable => { mayUB := true, control := true }
   | .alloca _ _ _ _ n => { allocates := .these [n] }
-  | .load _ _ _ n | .loadPtr _ _ _ n => { reads := .these [n], mayUB := true, mayPoison := true }
-  | .store _ _ _ n | .storePtr _ _ _ n => { writes := .these [n], mayUB := true }
+  | .load _ _ _ n | .loadPtr _ _ _ n | .loadFloat _ _ _ _ n =>
+    { reads := .these [n], mayUB := true, mayPoison := true }
+  | .store _ _ _ n | .storePtr _ _ _ n | .storeFloat _ _ _ _ n =>
+    { writes := .these [n], mayUB := true }
 
 end Fir.Core

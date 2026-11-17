@@ -98,7 +98,9 @@ fn sized(cx: &Cx<'_>, op: &Op, n: u32) -> Result<(u64, u64), Unlowered> {
             let bytes = u64::from(e.pointer.div_ceil(own.unit));
             (bytes, (m == n).then(|| e.alignment()))
         }
-        CoreType::Float { .. } => return Err("alloca allocates no float".into()),
+        CoreType::Float { .. } => {
+            return Err("the x86-64 backend does not lower an alloca of floats yet (#264)".into());
+        }
     };
     // A count past 64 bits has no stack to fit in, as one just below has
     // none, so it saturates.

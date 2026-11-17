@@ -47,6 +47,9 @@ def samples : List Op :=
   [.loadPtr .nonatomic 0 none 0, .loadPtr .nonatomic 1 (some 4) 0,
    .loadPtr .seqCst maxMemory (some 3) 1, .storePtr .nonatomic 0 none 0,
    .storePtr .nonatomic 0 (some 2) 1, .storePtr .release maxMemory none maxMemory] ++
+  [.loadFloat .nonatomic 8 23 none 0, .loadFloat .nonatomic 2 1 (some 4) 1,
+   .loadFloat .seqCst 15 112 (some 3) maxMemory, .storeFloat .nonatomic 11 52 none 0,
+   .storeFloat .nonatomic 5 10 (some 2) 1, .storeFloat .release 1 0 none maxMemory] ++
   [.fptosi 8 23 32, .fptoui 11 52 64, .fptosi 5 10 1, .fptoui 15 112 128, .fptosi 2 1 7]
 
 -- Decoding an op's encoding, at its own types, gives the op back.

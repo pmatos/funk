@@ -287,7 +287,11 @@ code refines poison and either zero; each flag of each float op is a cell of
 the coverage matrix, by the human's ruling of 2026-11-13 on #355
 ([testing-and-harness-floats.md](testing-and-harness-floats.md#the-fast-math-flag-corpus)).
 
-`poison`, `select` and `freeze` take no float yet. The lawful and effect
+`load`, `store` and `alloca` take every float format, a float stored as
+its bit pattern in the units of the integer of its width
+([semantics-m1-memory-access.md](semantics-m1-memory-access.md#floats-in-memory),
+#264); the backend lowers none of them yet. `poison`, `select` and
+`freeze` take no float yet. The lawful and effect
 theorems of the core depend on `Classical.choice`, since Lean's
 `UnpackedFloat.unpack` does; the axiom check allows it (ADR-2026-10-30-1452).
 

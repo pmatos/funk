@@ -2,7 +2,7 @@ import Fir.Core.AllocaTextLaws
 import Fir.Core.LoadText
 
 /-!
-`load` and `loadPtr` read back from how they are written, and only from
+`load`, `loadPtr` and `loadFloat` read back from how they are written, and only from
 it, for every instance, valid or not: its ordering is one of seven words, and its
 alignment is written as `align(A)` when it has one. Its attributes are
 written as tokens. The laws of the core dialect's text use these facts.
@@ -46,8 +46,13 @@ theorem decodeLoad_loadPtr (o : Memory.Ordering) (mp : Nat) (a : Option Nat) (n 
     decodeLoad (loadAttrs o a) [.ptr n] [.ptr mp] = some (.loadPtr o mp a n) := by
   simp [decodeLoad, decodeAccess_loadAttrs]
 
-/-- `load` and `loadPtr` decode only from their name, their attributes, a
-pointer operand and an integer or pointer result. -/
+/-- Each `loadFloat` reads back from how it is written. -/
+theorem decodeLoad_loadFloat (o : Memory.Ordering) (e m : Nat) (a : Option Nat) (n : Nat) :
+    decodeLoad (loadAttrs o a) [.ptr n] [.float e m] = some (.loadFloat o e m a n) := by
+  simp [decodeLoad, decodeAccess_loadAttrs]
+
+/-- `load`, `loadPtr` and `loadFloat` decode only from their name, their
+attributes, a pointer operand and an integer, pointer or float result. -/
 theorem decodeLoad_eq {as : List Attr} {ts rs : List Ty} {op : Op}
     (h : decodeLoad as ts rs = some op) :
     op.name = "load" ∧ op.attrs = as ∧ op.sig = ts ∧ op.returnTypes = rs := by

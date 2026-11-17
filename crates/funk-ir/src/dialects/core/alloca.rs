@@ -6,17 +6,17 @@
 //! `%p: ptr<N> = alloca KIND TYPE [COUNT] [align(A)]` allocates room for
 //! `COUNT` values of `TYPE` in memory `N`, the memory of its result, and
 //! defines the pointer to the allocation. It has no operands. Its attributes
-//! are, in order: the kind, `stack`, `global` or `heap`; the type, written as
-//! a type is and read with no bound on its width or memory; the count, an
-//! integer that is not negative and not 1, written only when it is not 1;
-//! and `align(A)`, with `A` not negative, written only when the op gives an
-//! alignment. Any other shape does not decode.
+//! are, in order: the kind, `stack`, `global` or `heap`; then the shape of
+//! the allocation (`alloc_shape.rs`): the type, the count when it is not 1,
+//! and `align(A)` when the op gives an alignment. Any other shape does not
+//! decode.
 //!
 //! Validation accepts only the kind `stack`, a count of at least 1, an
 //! alignment that is a power of two no larger than [`MemLayout::LIMIT`], as
-//! the data layout's own alignments are, and a valid integer or pointer
-//! type; a pointer type names a memory that the data layout must declare
-//! ([`OpSpec::attr_types`]). A float type has no encoding in units. The count
+//! the data layout's own alignments are, and a valid integer, pointer or
+//! float type; a pointer type names a memory that the data layout must
+//! declare ([`OpSpec::attr_types`]). A float takes the units of its bits, as
+//! the integer of its width does (#264). The count
 //! has no bound: an allocation larger than a machine holds is a resource
 //! error at run time. The op is never UB and never gives poison: it
 //! allocates in its memory, and the frame of its call frees the allocation
@@ -25,8 +25,8 @@
 //! [`MemLayout::LIMIT`]: crate::ir::MemLayout::LIMIT
 //! [`OpSpec::attr_types`]: crate::registry::OpSpec::attr_types
 
-use super::align::{check_align, decode_align};
-use super::types::{CoreType, FLOAT_ALIASES, MAX_MEMORY, MAX_WIDTH, alias, core_type, ptr_type};
+use super::alloc_shape::{Shape, check_shape_of, shape, shape_types};
+use super::types::{CoreType, core_type};
 use crate::effects::{Effects, MemSet};
 use crate::ir::MemLayout;
 use crate::registry::{OpContext, OpShape, OpSpec, OpTypes};
@@ -35,88 +35,10 @@ use crate::{Attr, Int, Type};
 /// The kinds of an allocation, as words (`AllocKind.word`).
 const ALLOC_KINDS: [&str; 3] = ["stack", "global", "heap"];
 
-/// The type `alloca` carries, read with no bound (`Ty.decodeAny`): `iN`
-/// with its digits, a float format, or a pointer of a memory, with the
-/// memory's digits.
-#[derive(Clone, Debug, PartialEq, Eq)]
-enum AnyType {
-    Int(Int),
-    Float,
-    Ptr(Int),
-}
-
-/// The memory of a pointer type, when it is at most [`MAX_MEMORY`].
-fn valid_memory(n: &Int) -> Option<u32> {
-    n.as_str().parse::<u32>().ok().filter(|&n| n <= MAX_MEMORY)
-}
-
-/// An integer not negative, from its canonical spelling.
-fn nonneg(i: &Int) -> bool {
-    !i.is_negative()
-}
-
-/// Reads a core type as the spec writes it, with no bound on a width or a
-/// memory, or `None` when the attribute is not one.
-fn decode_any(a: &Attr) -> Option<AnyType> {
-    match a {
-        Attr::Word(w) if w == "ptr" => Some(AnyType::Ptr(Int::from(0i128))),
-        Attr::Word(w) => match w.strip_prefix('i') {
-            Some(digits) => {
-                let i = Int::parse(digits)?;
-                nonneg(&i).then_some(AnyType::Int(i))
-            }
-            None => FLOAT_ALIASES
-                .iter()
-                .any(|f| f.0 == w)
-                .then_some(AnyType::Float),
-        },
-        Attr::App(h, args) if h == "float" => match args.as_slice() {
-            [Attr::Int(e), Attr::Int(m)] if nonneg(e) && nonneg(m) => {
-                let format = e.as_str().parse().ok().zip(m.as_str().parse().ok());
-                format
-                    .and_then(|(e, m)| alias(e, m))
-                    .is_none()
-                    .then_some(AnyType::Float)
-            }
-            _ => None,
-        },
-        Attr::App(h, args) if h == "ptr" => match args.as_slice() {
-            [Attr::Int(n)] if nonneg(n) && n.as_str() != "0" => Some(AnyType::Ptr(n.clone())),
-            _ => None,
-        },
-        _ => None,
-    }
-}
-
-/// The attributes of an allocation after its kind: its type, its count and
-/// its alignment. `gpu.work_group_alloca` writes them as `alloca` does,
-/// with no kind (`decodeAlloc` in `lean/Fir/Gpu/Text.lean`).
-struct Shape<'a> {
-    ty: AnyType,
-    count: Option<&'a Int>,
-    align: Option<&'a Int>,
-}
-
 /// The parts of a decoded `alloca`: its kind, and the shape that follows.
 struct Parts<'a> {
     kind: &'a str,
     shape: Shape<'a>,
-}
-
-/// Reads the attributes of an allocation after its kind, or `None` when
-/// they do not decode.
-fn shape(attrs: &[Attr]) -> Option<Shape<'_>> {
-    let [ty, rest @ ..] = attrs else {
-        return None;
-    };
-    let ty = decode_any(ty)?;
-    let (count, rest) = match rest {
-        [Attr::Int(c), rest @ ..] if nonneg(c) && c.as_str() != "1" => (Some(c), rest),
-        [Attr::Int(_), ..] => return None,
-        rest => (None, rest),
-    };
-    let align = decode_align(rest)?;
-    Some(Shape { ty, count, align })
 }
 
 /// Reads the attributes of `alloca`, or `None` when they do not decode.
@@ -133,76 +55,13 @@ fn parts(attrs: &[Attr]) -> Option<Parts<'_>> {
     })
 }
 
-/// Whether the attributes of an allocation after its kind decode.
-pub(crate) fn shape_decodes(attrs: &[Attr]) -> bool {
-    shape(attrs).is_some()
-}
-
-/// The rules of an allocation beyond its kind, for the op `op` whose
-/// attributes after its kind are `attrs`: at least one value, an alignment
-/// that `check_align` accepts, and a valid integer or pointer type
-/// (`Core.Op.Valid`, `Gpu.Op.Valid`). Attributes that do not decode break
-/// no rule here: decoding reports them.
-pub(crate) fn check_shape(op: &str, attrs: &[Attr]) -> Result<(), String> {
-    shape(attrs).map_or(Ok(()), |p| check_shape_of(op, &p))
-}
-
-/// The rules of an allocation beyond its kind, on its decoded shape.
-fn check_shape_of(op: &str, p: &Shape<'_>) -> Result<(), String> {
-    if p.count.is_some_and(|c| c.as_str() == "0") {
-        return Err(format!("{op} allocates at least one value, not 0"));
-    }
-    if let Some(a) = p.align {
-        check_align(op, a.as_str())?;
-    }
-    let valid_width = |w: &Int| {
-        w.as_str()
-            .parse::<u32>()
-            .is_ok_and(|w| (1..=MAX_WIDTH).contains(&w))
-    };
-    match &p.ty {
-        AnyType::Int(w) if valid_width(w) => Ok(()),
-        AnyType::Int(w) => Err(format!(
-            "{op} allocates a valid integer type, not i{}",
-            w.as_str()
-        )),
-        AnyType::Ptr(n) if valid_memory(n).is_some() => Ok(()),
-        AnyType::Ptr(n) => Err(format!(
-            "{op} allocates a valid pointer type, not ptr({})",
-            n.as_str()
-        )),
-        AnyType::Float => Err(format!(
-            "{op} allocates an integer or a pointer type in M1, not a float: \
-             a float has no encoding in units"
-        )),
-    }
-}
-
-/// The type that an allocation whose attributes after its kind are
-/// `attrs` allocates values of, when that is a valid pointer type, whose
-/// memory the data layout must declare (`Core.Op.attrTypes`,
-/// `Gpu.Op.attrTypes`). An integer type names no memory, and a type that
-/// is not valid breaks the op's own rule.
-pub(crate) fn shape_attr_types(attrs: &[Attr]) -> Vec<Type> {
-    shape(attrs).map(|p| shape_types(&p)).unwrap_or_default()
-}
-
-/// The type that a decoded shape allocates values of, when that is a valid
-/// pointer type.
-fn shape_types(p: &Shape<'_>) -> Vec<Type> {
-    match &p.ty {
-        AnyType::Ptr(n) => valid_memory(n).map(ptr_type).into_iter().collect(),
-        _ => Vec::new(),
-    }
-}
-
 /// What a valid `alloca` allocates, read from its attributes: the type of
-/// its values, an integer or a pointer type; its count, written when it is
+/// its values, an integer, a pointer or a float type; its count, written when it is
 /// not 1; and its alignment, written when the op gives one. A backend sizes
 /// the allocation from them with its memory's layout entry.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Allocation<'a> {
-    /// The type of the values it has room for: `Int` or `Ptr`.
+    /// The type of the values it has room for.
     pub element: CoreType,
     /// The count of values, when it is not 1.
     pub count: Option<&'a Int>,
@@ -215,16 +74,7 @@ pub struct Allocation<'a> {
 /// element and an alignment that validation accepts.
 pub fn allocation(attrs: &[Attr]) -> Option<Allocation<'_>> {
     let p = parts(attrs).filter(|p| p.kind == "stack")?.shape;
-    let element = match &p.ty {
-        AnyType::Int(w) => CoreType::Int(
-            w.as_str()
-                .parse::<u32>()
-                .ok()
-                .filter(|w| (1..=MAX_WIDTH).contains(w))?,
-        ),
-        AnyType::Ptr(n) => CoreType::Ptr(valid_memory(n)?),
-        AnyType::Float => return None,
-    };
+    let element = p.element()?;
     let align = match p.align {
         Some(a) => Some(
             a.as_str()
@@ -320,7 +170,8 @@ impl OpSpec for Alloca {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::dialects::core::{float_type, int_type, ptr_type};
+    use crate::dialects::core::align::check_align;
+    use crate::dialects::core::{MAX_MEMORY, int_type, ptr_type};
     use crate::{SymbolTable, Type};
 
     fn types<'a>(attrs: &'a [Attr], results: &'a [Type]) -> OpTypes<'a> {
@@ -341,6 +192,10 @@ mod tests {
 
     fn ptr_attr(n: i128) -> Attr {
         Attr::App("ptr".into(), vec![Attr::int(n)])
+    }
+
+    fn float_attr(e: i128, m: i128) -> Attr {
+        Attr::App("float".into(), vec![Attr::int(e), Attr::int(m)])
     }
 
     fn check(attrs: &[Attr]) -> Result<(), String> {
@@ -371,8 +226,14 @@ mod tests {
         );
         let attrs = [word("stack"), word("ptr")];
         assert_eq!(allocation(&attrs).unwrap().element, CoreType::Ptr(0));
+        let attrs = [word("stack"), word("f64"), Attr::int(2)];
+        let f = allocation(&attrs).unwrap();
+        assert_eq!(
+            (f.element, f.count.map(Int::as_str)),
+            (CoreType::Float { e: 11, m: 52 }, Some("2"))
+        );
         for bad in [
-            vec![word("stack"), word("f32")],
+            vec![word("stack"), float_attr(1, 3)],
             vec![word("stack"), word("i0")],
             vec![word("stack")],
             vec![word("heap"), word("i32")],
@@ -457,18 +318,16 @@ mod tests {
             vec![word("stack"), word("i32"), align(1 << 24)],
             vec![word("stack"), word("i0")],
             vec![word("stack"), word("i16777216")],
-            vec![word("stack"), word("f32")],
-            vec![
-                word("stack"),
-                Attr::App("float".into(), vec![Attr::int(8), Attr::int(7)]),
-            ],
+            vec![word("stack"), float_attr(1, 23)],
+            vec![word("stack"), float_attr(2, 0)],
             vec![word("stack"), ptr_attr(1 << 24)],
         ] {
             assert!(check(&attrs).is_err(), "{attrs:?}");
         }
-        let f = float_type(5, 10);
-        assert_eq!(f.name, "f16");
         for attrs in [
+            vec![word("stack"), word("f32")],
+            vec![word("stack"), word("bf16"), Attr::int(3), align(8)],
+            vec![word("stack"), float_attr(2, 1)],
             vec![word("stack"), word("i32"), Attr::int(1 << 40)],
             vec![word("stack"), word("i32"), Attr::int(1 << 100)],
             vec![word("stack"), word("i32"), align(1 << 23)],

@@ -4,16 +4,18 @@
 //!
 //! `store ORDERING [align(A)] %v, %p` stores the `iW` `%v` through the
 //! pointer `%p` of `ptr<N>`, to memory `N`, and gives no result; a value of
-//! `ptr<M>` is stored as its fragments (`storePtr`; stage 4d-2b of #231). Its
-//! attributes are those of a load (`access.rs`): the ordering, then
-//! `align(A)` when the op gives an alignment (ADR-2026-11-14-2316). It has
-//! two operands, the integer or pointer value and then the pointer, and no
-//! result. Any other shape does not decode.
+//! `ptr<M>` is stored as its fragments (`storePtr`; stage 4d-2b of #231),
+//! and a value of `float<e,m>` as the integer of its `1 + e + m` bits
+//! (`storeFloat`, in `lean/Fir/Core/FloatAccess.lean`; #264). Its attributes
+//! are those of a load (`access.rs`): the ordering, then `align(A)` when the
+//! op gives an alignment (ADR-2026-11-14-2316). It has two operands, the
+//! integer, pointer or float value and then the pointer, and no result. Any
+//! other shape does not decode.
 //!
 //! Validation accepts what it accepts of a load: the ordering `nonatomic`
 //! and an alignment that is a power of two no larger than the data layout's
 //! limit. With no `align(A)` the access is aligned to the natural alignment
-//! of `iW` in memory `N`. The op writes memory `N` and may be UB (on a poison
+//! of the value's type in memory `N`, as a load's. The op writes memory `N` and may be UB (on a poison
 //! pointer, or an access out of bounds, to a freed allocation, without
 //! provenance or misaligned). It reads no memory: whether it faults depends
 //! on the allocations, not on what their units hold. It gives no result, so
@@ -24,12 +26,12 @@ use super::types::{CoreType, core_type};
 use crate::effects::{Effects, MemSet};
 use crate::registry::OpTypes;
 
-/// The memory of the pointer `store` stores through, when it has an integer
-/// or pointer operand, then a pointer operand, and no result.
+/// The memory of the pointer `store` stores through, when it has an operand
+/// of any core type, then a pointer operand, and no result.
 fn memory(op: &OpTypes<'_>) -> Option<u32> {
     match (op.operands, op.results) {
         ([v, p], []) => match (core_type(v)?, core_type(p)?) {
-            (CoreType::Int(_) | CoreType::Ptr(_), CoreType::Ptr(n)) => Some(n),
+            (_, CoreType::Ptr(n)) => Some(n),
             _ => None,
         },
         _ => None,
@@ -48,7 +50,7 @@ fn effects(writes: MemSet) -> Effects {
 /// `store nonatomic align(4) %v, %p`.
 pub(super) const STORE: Access = Access {
     name: "store",
-    shape: "an integer or a pointer and then a pointer, and defines nothing",
+    shape: "an integer, a pointer or a float and then a pointer, and defines nothing",
     memory,
     effects,
 };
@@ -91,13 +93,28 @@ mod tests {
     }
 
     #[test]
+    fn a_float_of_any_format_stores_through_a_pointer_of_any_memory() {
+        for (n, e, m) in [(0, 8, 23), (1, 11, 52), (MAX_MEMORY, 2, 1), (3, 5, 10)] {
+            let attrs = [Attr::word("nonatomic"), align(8)];
+            let operands = [float_type(e, m), ptr_type(n)];
+            let op = types(&attrs, &operands, &[]);
+            assert_eq!(STORE.decode(&op), Ok(OpShape::default()), "{n} {e} {m}");
+            assert_eq!(
+                STORE.effects(&op),
+                effects(MemSet::These(vec![n.to_string()])),
+                "{n} {e} {m}"
+            );
+        }
+    }
+
+    #[test]
     fn other_shapes_do_not_decode() {
         let (p, i32, f32) = (ptr_type(0), int_type(32), float_type(8, 23));
         let ok = [Attr::word("nonatomic")];
         for (attrs, operands, results) in [
             (vec![], vec![i32.clone(), p.clone()], vec![]),
             (ok.to_vec(), vec![p.clone(), i32.clone()], vec![]),
-            (ok.to_vec(), vec![f32.clone(), p.clone()], vec![]),
+            (ok.to_vec(), vec![p.clone(), f32.clone()], vec![]),
             (ok.to_vec(), vec![i32.clone(), i32.clone()], vec![]),
             (ok.to_vec(), vec![p.clone()], vec![]),
             (ok.to_vec(), vec![i32.clone(), p.clone(), p.clone()], vec![]),

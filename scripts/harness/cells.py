@@ -45,7 +45,8 @@ has neither operands nor attributes, is a cell at each width of its result
   their ordering and alignment, at the side's pointer widths: every width
   of the side, since the backend lowers pointers (stage 5 of #231). `alloca`,
   `load` and `store` of a pointer, of any memory, are one cell more each,
-  `ptr`, on the sides that have pointer cells (`pointer_cells.py`).
+  `ptr`, on the sides that have pointer cells, and of each float format
+  of the side's formats in memory (`pointer_cells.py`, #264).
 - `br`, and each successor of `cond_br`, passes nothing, or values of a
   width or float format. `ret` returns no value, one, or several; a `call`
   gives no result, one, or several; and so does the function that a test
@@ -223,6 +224,7 @@ def catalog(
     formats: tuple[str, ...] = (),
     offsets: tuple[int, ...] = (),
     gpu: bool = False,
+    memory: tuple[str, ...] = (),
 ) -> tuple[Table, ...]:
     """One side's taxonomy, expanded once for enumeration and display.
 
@@ -314,7 +316,7 @@ def catalog(
         ]
     )
     if offsets:
-        columns = (*map(ty, offsets), POINTER)
+        columns = (*map(ty, offsets), POINTER, *memory)
         tables.append(
             Table(
                 "pointers",
@@ -325,7 +327,7 @@ def catalog(
                         "",
                         tuple(
                             None
-                            if op == "ptradd" and t == POINTER
+                            if op == "ptradd" and not t.startswith("i")
                             else Cell("pointers", op, "", t)
                             for t in columns
                         ),
@@ -373,11 +375,12 @@ def cells(
     formats: tuple[str, ...] = (),
     offsets: tuple[int, ...] = (),
     gpu: bool = False,
+    memory: tuple[str, ...] = (),
 ) -> list[Cell]:
     """Every actual cell of one side, in catalog order."""
     return [
         cell
-        for table in catalog(widths, formats, offsets, gpu)
+        for table in catalog(widths, formats, offsets, gpu, memory)
         for row in table.rows
         for cell in row.entries
         if cell is not None

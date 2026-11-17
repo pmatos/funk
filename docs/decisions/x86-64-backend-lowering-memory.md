@@ -52,6 +52,11 @@ since the bits of a value above its width are unspecified
 ([x86-64-backend.md](x86-64-backend.md#values-and-widths)). A load of an `i1`
 reads its byte, and its bits above bit 0 are such bits.
 
+A load or a store of a float, and an `alloca` of floats, are reported as
+unsupported where they are: stage 2 of #264 lowers `f32` and `f64` ones
+with SSE moves
+([semantics-m1-memory-access.md](semantics-m1-memory-access.md#floats-in-memory)).
+
 `align(A)` and the ordering need no code. x86-64 accesses any address, a
 misaligned access is UB in the spec (the human's ruling of 2026-11-14 on
 #388), and M1's one ordering is `nonatomic`. A punned load, which the spec

@@ -210,7 +210,8 @@ class Tests(unittest.TestCase):
         self.assertEqual(flagged["[.sym f]"], {"call"})
         self.assertEqual(flagged["allocaAttrs k t c a"], {"alloca"})
         self.assertEqual(
-            flagged["loadAttrs o a"], {"load", "store", "loadPtr", "storePtr"}
+            flagged["loadAttrs o a"],
+            {"load", "store", "loadPtr", "storePtr", "loadFloat", "storeFloat"},
         )
         self.assertEqual(flagged["[]"], set())
 

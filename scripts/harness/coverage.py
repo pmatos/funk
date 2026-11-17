@@ -24,6 +24,7 @@ import cells
 import corpus
 import firtext
 from cells import Cell
+from pointer_cells import MEMORY_FLOAT_DIFFERENTIAL, MEMORY_FLOAT_INTERPRETER
 
 ROOT = Path(__file__).resolve().parents[2]
 CORPUS = ROOT / "tests" / "fir"
@@ -32,8 +33,9 @@ MATRIX = ROOT / "docs" / "coverage" / "README.md"
 
 class Side(NamedTuple):
     """One side of the matrix: its key, its title, the widths, float
-    formats and widths of a pointer op's integer that it has cells at, and
-    whether it has the cells of the `gpu` dialect."""
+    formats and widths of a pointer op's integer that it has cells at,
+    whether it has the cells of the `gpu` dialect, and the float formats of
+    its loads, stores and allocations."""
 
     name: str
     title: str
@@ -41,12 +43,17 @@ class Side(NamedTuple):
     formats: tuple[str, ...]
     offsets: tuple[int, ...]
     gpu: bool = False
+    memory: tuple[str, ...] = ()
 
     def catalog(self) -> tuple[cells.Table, ...]:
-        return cells.catalog(self.widths, self.formats, self.offsets, self.gpu)
+        return cells.catalog(
+            self.widths, self.formats, self.offsets, self.gpu, self.memory
+        )
 
     def cells(self) -> list[Cell]:
-        return cells.cells(self.widths, self.formats, self.offsets, self.gpu)
+        return cells.cells(
+            self.widths, self.formats, self.offsets, self.gpu, self.memory
+        )
 
 
 SIDES = (
@@ -56,6 +63,7 @@ SIDES = (
         cells.DIFFERENTIAL,
         cells.FLOAT_DIFFERENTIAL,
         cells.POINTER_DIFFERENTIAL,
+        memory=MEMORY_FLOAT_DIFFERENTIAL,
     ),
     Side(
         "interpreter",
@@ -64,6 +72,7 @@ SIDES = (
         cells.FLOAT_INTERPRETER,
         cells.POINTER_INTERPRETER,
         gpu=True,
+        memory=MEMORY_FLOAT_INTERPRETER,
     ),
 )
 

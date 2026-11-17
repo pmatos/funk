@@ -14,19 +14,22 @@ changes under it.
 
 #doc (Manual) "Loads read back: readable blocks" =>
 
-:::moduleDocs (fingerprint := "18385148284732735519")
+:::moduleDocs (fingerprint := "11398232006067935648")
 :::
 
-:::readable Fir.Core.word_of_decodeOrdering Fir.Core.decodeAccess_loadAttrs Fir.Core.loadAttrs_of_decodeAccess Fir.Core.decodeLoad_loadAttrs Fir.Core.decodeLoad_loadPtr Fir.Core.decodeLoad_eq (pin := Fir.Core.decodeLoad) (pin := Fir.Core.loadAttrs) (fingerprint := "5137815037668318916")
+:::readable Fir.Core.word_of_decodeOrdering Fir.Core.decodeAccess_loadAttrs Fir.Core.loadAttrs_of_decodeAccess Fir.Core.decodeLoad_loadAttrs Fir.Core.decodeLoad_loadPtr Fir.Core.decodeLoad_loadFloat Fir.Core.decodeLoad_eq (pin := Fir.Core.decodeLoad) (pin := Fir.Core.loadAttrs) (fingerprint := "18152000539696960310")
 *Theorems: every $`\mathsf{load}` reads back from its spelling, and only
 from it.* The word that names an ordering is that ordering's word, and the
 attributes of a load read back as its ordering and its alignment, and are
-theirs only. For every ordering $`o`, width $`W`, alignment $`a` and
-memories $`N` and $`M`, valid or not:
+theirs only. For every ordering $`o`, width $`W`, alignment $`a`,
+memories $`N` and $`M` and format $`\mathsf{float}\langle e,m \rangle`,
+valid or not:
 
 $$`\mathrm{decodeload}(\mathrm{loadattrs}(o, a), \mathsf{ptr}\langle N \rangle, \mathsf{i}W) = \mathsf{load}_N~o~W~a`
 
 $$`\mathrm{decodeload}(\mathrm{loadattrs}(o, a), \mathsf{ptr}\langle N \rangle, \mathsf{ptr}\langle M \rangle) = \mathsf{load}_N~o~\mathsf{ptr}\langle M \rangle~a`
+
+$$`\mathrm{decodeload}(\mathrm{loadattrs}(o, a), \mathsf{ptr}\langle N \rangle, \mathsf{float}\langle e,m \rangle) = \mathsf{load}_N~o~\mathsf{float}\langle e,m \rangle~a`
 
 And if $`\mathrm{decodeload}(a^*, t^*, r^*) = op`, then $`op` is named
 `load`, its attributes are $`a^*`, it has the operand types $`t^*` and the

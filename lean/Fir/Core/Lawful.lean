@@ -9,14 +9,15 @@ set monad, at every core op instance whose types validation accepts, from
 the obligations that each op family proves, in the sections from the
 constant obligations to the branch obligations:
 
-* _Propagation._ Each of the 38 ops that propagate poison does, at every
+* _Propagation._ Each of the 40 ops that propagate poison does, at every
   width and float format: `const` at an integer and at a float type,
   `poison`, the arithmetic, the four divisions, the bitwise ops and
   shifts, `icmp`, `fcmp`, the width changes, the float arithmetic, the
   bit casts, the conversions from integers, the conversions between
   formats, the pointer offset, the conversions to integers, `alloca`,
   which has no operands, and the loads and stores, `load`, `store`,
-  `loadPtr` and `storePtr`, which have no outcome in the set monad.
+  `loadPtr`, `storePtr`, `loadFloat` and `storeFloat`, which have no
+  outcome in the set monad.
 * _A result on defined operands._ Each of them but `alloca` and the loads
   and stores returns a result on some operand vector with no poison. `poison` does on the empty
   vector, where its result is poison: the obligation asks for a result, not
@@ -40,7 +41,8 @@ section proves covers the ops that touch no memory. The core's guarantees
 are those of the semantics with memory, which each op meets: an op that
 touches no memory from its tie and what it meets here, and `alloca` and
 the loads and stores by their own rules (the sections on the stack
-allocation, load, store, pointer load and pointer store obligations and on
+allocation, load, store, pointer load, pointer store, float load and
+float store obligations and on
 every valid core function, with memory).
 -/
 
@@ -67,6 +69,18 @@ theorem loadPtr_propagatesPoison (o : Memory.Ordering) (mp : Nat) (a : Option Na
 /-- `storePtr` propagates poison in the set monad, where it has no outcome. -/
 theorem storePtr_propagatesPoison (o : Memory.Ordering) (mp : Nat) (a : Option Nat) (n : Nat) :
     PropagatesPoison (d := CoreDialect) (.storePtr o mp a n) where
+  poisonOut | .cons _ (.cons _ .nil), _, _, hrs => hrs.elim
+  ubByOwnRules | .cons _ (.cons _ .nil), _, _, hub => hub.elim
+
+/-- `loadFloat` propagates poison in the set monad, where it has no outcome. -/
+theorem loadFloat_propagatesPoison (o : Memory.Ordering) (e m : Nat) (a : Option Nat) (n : Nat) :
+    PropagatesPoison (d := CoreDialect) (.loadFloat o e m a n) where
+  poisonOut | .cons _ .nil, _, _, hrs => hrs.elim
+  ubByOwnRules | .cons _ .nil, _, _, hub => hub.elim
+
+/-- `storeFloat` propagates poison in the set monad, where it has no outcome. -/
+theorem storeFloat_propagatesPoison (o : Memory.Ordering) (e m : Nat) (a : Option Nat) (n : Nat) :
+    PropagatesPoison (d := CoreDialect) (.storeFloat o e m a n) where
   poisonOut | .cons _ (.cons _ .nil), _, _, hrs => hrs.elim
   ubByOwnRules | .cons _ (.cons _ .nil), _, _, hub => hub.elim
 
@@ -108,6 +122,8 @@ theorem Op.propagates_all : (op : Op) → Fir.poisonClass (d := CoreDialect) op 
   | .store o w a n, _ => store_propagatesPoison o w a n
   | .loadPtr o mp a n, _ => loadPtr_propagatesPoison o mp a n
   | .storePtr o mp a n, _ => storePtr_propagatesPoison o mp a n
+  | .loadFloat o e m a n, _ => loadFloat_propagatesPoison o e m a n
+  | .storeFloat o e m a n, _ => storeFloat_propagatesPoison o e m a n
   | .fptosi e m n, _ => floatToInt_propagatesPoison e m n true
   | .fptoui e m n, _ => floatToInt_propagatesPoison e m n false
   | .poison w, _ => poison_propagatesPoison w
@@ -163,6 +179,6 @@ theorem Op.returnsOnDefined_valid : (op : Op) → op.touchesMemory = false →
   | .select _, _, _, h | .freeze _, _, _, h | .br, _, _, h | .condBr, _, _, h | .ret _, _, _, h
   | .unreachable, _, _, h | .call .., _, _, h => nomatch h
   | .alloca .., h, _, _ | .load .., h, _, _ | .store .., h, _, _ | .loadPtr .., h, _, _
-  | .storePtr .., h, _, _ => nomatch h
+  | .storePtr .., h, _, _ | .loadFloat .., h, _, _ | .storeFloat .., h, _, _ => nomatch h
 
 end Fir.Core

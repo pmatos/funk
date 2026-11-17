@@ -4,8 +4,8 @@
 # align(A), in that order, separated by spaces. A kind, a type, a count of 0
 # and an alignment decode when they are well formed, and validation says
 # which M1 accepts: the kind stack, a count of at least 1, a power of two no
-# larger than 16777215, the data layout's bound, and a valid integer or
-# pointer type (stage 4d-2b of #231). The count has no bound. A result of a
+# larger than 16777215, the data layout's bound, and a valid integer,
+# pointer (stage 4d-2b of #231) or float type (#264). The count has no bound. A result of a
 # memory that the module does not declare is rejected by validation, as for
 # every pointer type, and so is a pointer type that it allocates values of.
 
@@ -251,11 +251,11 @@ locs {
 
 [[reject]]
 verdict = "validation-error"
-rule = "alloca allocates an integer or a pointer type in M1: f32, which has no encoding in units, is rejected"
+rule = "alloca allocates a valid float type: float(1, 23), with too few exponent bits, is rejected"
 text = '''
 func @f() -> ptr {
 ^e:
-  %p: ptr = alloca stack f32 @0
+  %p: ptr = alloca stack float(1, 23) @0
   ret %p @0
 }
 
@@ -341,11 +341,11 @@ locs {
 
 [[reject]]
 verdict = "validation-error"
-rule = "alloca allocates no float type in M1: bf16 has no encoding in units and is rejected"
+rule = "alloca allocates a valid float type: float(3, 0), with no mantissa bit, is rejected"
 text = '''
 func @f() -> ptr {
 ^e:
-  %p: ptr = alloca stack bf16 2 @0
+  %p: ptr = alloca stack float(3, 0) 2 @0
   ret %p @0
 }
 
