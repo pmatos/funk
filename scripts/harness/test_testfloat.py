@@ -9,8 +9,7 @@ import unittest
 import float_ref as ref
 import testfloat_cases as tc
 
-F32 = ref.Format(8, 23)
-BF16 = ref.Format(*tc.BF16)
+F16, F32, BF16 = tc.FORMATS["f16"], tc.F32, tc.BF16
 
 # A line of `testfloat_gen f32_mulAdd` and the same vector under `-rodd`.
 # Its operands are `bf16` values, and rounding the first result to `bf16`
@@ -41,8 +40,8 @@ class Bf16Test(unittest.TestCase):
         for bits in samples:
             want = ref.convert(F32, BF16, bits)
             got = tc.round_to_bf16(bits)
-            if tc.is_nan(8, 23, bits):
-                self.assertTrue(tc.is_nan(8, 7, got), hex(bits))
+            if tc.is_nan(F32, bits):
+                self.assertTrue(tc.is_nan(BF16, got), hex(bits))
             else:
                 self.assertEqual(got, want, hex(bits))
 
@@ -64,7 +63,7 @@ class Bf16Test(unittest.TestCase):
 class ModuleTest(unittest.TestCase):
     def test_arithmetic_module(self):
         v = tc.Vector((0x3C00, 0xBC00, 0x8000), 0x8000)
-        text = tc.module("f16", 5, 10, "mulAdd", [v])
+        text = tc.module("f16", "mulAdd", [v])
         self.assertIn("func @v() -> i16 {", text)
         self.assertIn("%x0_1: i16 = const -17408 @0", text)
         self.assertIn("%r0: f16 = fma round(rne) %a0_0, %a0_1, %a0_2 @0", text)
@@ -72,7 +71,7 @@ class ModuleTest(unittest.TestCase):
 
     def test_comparison_module_swaps_and_counts(self):
         vs = [tc.Vector((1, 2), 1), tc.Vector((3, 4), 0)]
-        text = tc.module("f32", 8, 23, "le", vs)
+        text = tc.module("f32", "le", vs)
         self.assertIn("%oge0: i1 = fcmp oge %a0_1, %a0_0 @0", text)
         self.assertIn("%ugt1: i1 = fcmp ugt %a1_0, %a1_1 @0", text)
         cs = tc.checks("le", vs)
@@ -83,22 +82,22 @@ class ModuleTest(unittest.TestCase):
 class PassesTest(unittest.TestCase):
     def test_a_nan_passes_on_any_nan(self):
         c = tc.Check(tc.Vector((0x7C00, 0xFC00), 0xFE00), None, 0xFE00)
-        self.assertTrue(tc.passes(5, 10, c, "32256"))
-        self.assertTrue(tc.passes(5, 10, c, "-1"))
-        self.assertFalse(tc.passes(5, 10, c, "31744"))
+        self.assertTrue(tc.passes(F16, c, "32256"))
+        self.assertTrue(tc.passes(F16, c, "-1"))
+        self.assertFalse(tc.passes(F16, c, "31744"))
 
     def test_other_results_pass_on_their_bits(self):
         c = tc.Check(tc.Vector((0x3C00, 0x3C00), 0x4000), None, 0x4000)
-        self.assertTrue(tc.passes(5, 10, c, "16384"))
-        self.assertFalse(tc.passes(5, 10, c, "16385"))
+        self.assertTrue(tc.passes(F16, c, "16384"))
+        self.assertFalse(tc.passes(F16, c, "16385"))
         neg = tc.Check(tc.Vector((0xBC00,), 0xBC00), None, 0xBC00)
-        self.assertTrue(tc.passes(5, 10, neg, "-17408"))
-        self.assertFalse(tc.passes(5, 10, neg, "poison"))
+        self.assertTrue(tc.passes(F16, neg, "-17408"))
+        self.assertFalse(tc.passes(F16, neg, "poison"))
 
     def test_comparisons(self):
         c = tc.Check(tc.Vector((1, 2), 1), "olt", True)
-        self.assertTrue(tc.passes(5, 10, c, "true"))
-        self.assertFalse(tc.passes(5, 10, c, "false"))
+        self.assertTrue(tc.passes(F16, c, "true"))
+        self.assertFalse(tc.passes(F16, c, "false"))
 
 
 class StrideTest(unittest.TestCase):

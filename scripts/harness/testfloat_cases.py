@@ -40,14 +40,20 @@ infinity, as the exact result does. A comparison needs no rounding.
 
 from dataclasses import dataclass
 
-# Each format TestFloat generates: its exponent and mantissa bits.
+from float_bitcast_cases import signed
+from float_ref import Format
+
+# Each format TestFloat generates.
 FORMATS = {
-    "f16": (5, 10),
-    "f32": (8, 23),
-    "f64": (11, 52),
-    "f128": (15, 112),
+    "f16": Format(5, 10),
+    "f32": Format(8, 23),
+    "f64": Format(11, 52),
+    "f128": Format(15, 112),
 }
-BF16 = (8, 7)
+F32 = FORMATS["f32"]
+BF16 = Format(8, 7)
+# Every format the check runs at: TestFloat's, and `bf16` from `f32`'s.
+CHECKED = {**FORMATS, "bf16": BF16}
 
 # Each arithmetic function of `testfloat_gen`: its fir op and operand count.
 ARITHMETIC = {
@@ -111,8 +117,10 @@ def parse(function: str, line: str) -> Vector:
     return Vector(tuple(values[:n]), values[n])
 
 
-def is_nan(e: int, m: int, bits: int) -> bool:
-    return (bits >> m) & ((1 << e) - 1) == (1 << e) - 1 and bits & ((1 << m) - 1) != 0
+def is_nan(f: Format, bits: int) -> bool:
+    # Bit tests, not `Format.decode`, which builds a fraction for every
+    # finite value: this runs on each of about 1.5 million results.
+    return (bits >> f.m) & f.top == f.top and bits & ((1 << f.m) - 1) != 0
 
 
 def is_bf16(bits: int) -> bool:
@@ -123,7 +131,7 @@ def is_bf16(bits: int) -> bool:
 def round_to_bf16(bits: int) -> int:
     """Rounds an `f32` to `bf16`, to nearest even. A NaN stays a NaN: its
     top 16 bits keep the all-ones exponent, and a quiet bit is set."""
-    if is_nan(8, 23, bits):
+    if is_nan(F32, bits):
         return (bits >> 16) | 0x40
     upper, lower = bits >> 16, bits & 0xFFFF
     if lower > 0x8000 or (lower == 0x8000 and upper & 1):
@@ -160,21 +168,18 @@ def checks(function: str, vectors: list[Vector]) -> list[Check]:
     ]
 
 
-def signed(width: int, bits: int) -> int:
-    return bits - (1 << width) if bits >> (width - 1) else bits
-
-
-def module(fmt: str, e: int, m: int, function: str, vectors: list[Vector]) -> str:
+def module(fmt: str, function: str, vectors: list[Vector]) -> str:
     """A module whose `@v` returns one value per check of `checks`, in order:
     the bits of each arithmetic result as an integer, or each comparison's
     `i1`."""
-    width = 1 + e + m
+    f = CHECKED[fmt]
+    width = f.nbits
     body: list[str] = []
     results: list[str] = []
     for i, v in enumerate(vectors):
         names = []
         for j, a in enumerate(v.operands):
-            body.append(f"  %x{i}_{j}: i{width} = const {signed(width, a)} @0")
+            body.append(f"  %x{i}_{j}: i{width} = const {signed(f, a)} @0")
             body.append(f"  %a{i}_{j}: {fmt} = bitcast %x{i}_{j} @0")
             names.append(f"%a{i}_{j}")
         if function in ARITHMETIC:
@@ -204,14 +209,14 @@ def module(fmt: str, e: int, m: int, function: str, vectors: list[Vector]) -> st
     )
 
 
-def passes(e: int, m: int, check: Check, value: str) -> bool:
+def passes(f: Format, check: Check, value: str) -> bool:
     """Whether `fir-ref`'s value for one check is what TestFloat gives."""
     if check.predicate is not None:
         return value == ("true" if check.expected else "false")
     try:
-        bits = int(value) % (1 << (1 + e + m))
+        bits = int(value) % (1 << f.nbits)
     except ValueError:
         return False
-    if is_nan(e, m, int(check.expected)):
-        return is_nan(e, m, bits)
+    if is_nan(f, int(check.expected)):
+        return is_nan(f, bits)
     return bits == check.expected

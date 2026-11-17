@@ -10,14 +10,13 @@ nearest even, for each function of `testfloat_cases.functions()` at `f16`,
 `f32`, `f64` and `f128`, and, from `f32`'s vectors, at `bf16`. Every vector
 of level 1 is checked, but only every 131st of `mulAdd`'s at the four formats
 of TestFloat, and at `bf16` every one whose operands are `bf16` values.
-Batches of vectors run
-on `fir-ref run --exhaustive --nans` with no NaN given, so that a NaN result
-is the positive quiet NaN, at no cost to the choice budget. It prints one
-line per format and function, and the first failures of each, and exits
-with 1 when a vector fails, and with 2 when TestFloat cannot be built or
-`fir-ref` gives no result for a batch. Its last line is the totals, as
-`vectors=N failed=N exit=N`, which CI puts in the job's summary. `scripts/check-harness.sh` runs it
-after the harness.
+Batches of vectors run on `fir-ref run --exhaustive --nans` with no NaN
+given, so that a NaN result is the positive quiet NaN, at no cost to the
+choice budget. It prints one line per format and function, and the first
+failures of each, and exits with 1 when a vector fails, and with 2 when
+TestFloat cannot be built or `fir-ref` gives no result for a batch. Its last
+line is the totals, as `vectors=N failed=N exit=N`, which CI puts in the
+job's summary. `scripts/check-harness.sh` runs it after the harness.
 
 The cache is `$FUNK_TESTFLOAT_CACHE`, or `funk/testfloat` under
 `$XDG_CACHE_HOME` or `~/.cache`. Git checks each fetched commit's hash.
@@ -142,10 +141,9 @@ def vectors(gen: Path, fmt: str, function: str) -> list[tc.Vector]:
 
 def run_batch(fir_ref: str, fmt: str, function: str, batch: list[tc.Vector]):
     """The values `fir-ref` returns for one batch, or why it gave none."""
-    e, m = tc.BF16 if fmt == "bf16" else tc.FORMATS[fmt]
     with tempfile.TemporaryDirectory() as tmp:
         path = Path(tmp) / "testfloat.fir"
-        path.write_text(tc.module(fmt, e, m, function, batch))
+        path.write_text(tc.module(fmt, function, batch))
         valid = tools.run([fir_ref, "validate", str(path)])
         if valid.status != 0:
             return f"fir-ref validate {tools.ending(valid)}: {valid.stdout.strip()}"
@@ -171,7 +169,7 @@ def submit(pool, fir_ref: str, gen: Path, fmt: str, function: str):
 
 def collect(fmt: str, function: str, batches, runs):
     """The vectors, failures and errors of one function at one format."""
-    e, m = tc.BF16 if fmt == "bf16" else tc.FORMATS[fmt]
+    f = tc.CHECKED[fmt]
     failures, errors = [], []
     if not batches:
         errors.append("TestFloat gave no vector")
@@ -187,7 +185,7 @@ def collect(fmt: str, function: str, batches, runs):
         if len(values) != len(cs):
             errors.append(f"{len(values)} values for {len(cs)} checks")
             continue
-        failures += [(c, v) for c, v in zip(cs, values) if not tc.passes(e, m, c, v)]
+        failures += [(c, v) for c, v in zip(cs, values) if not tc.passes(f, c, v)]
     return sum(map(len, batches)), failures, errors
 
 
@@ -219,7 +217,7 @@ def main() -> int:
         print(f"testfloat: cannot build TestFloat: {err}", file=sys.stderr)
         return 2
     status, total, failed = 0, 0, 0
-    pairs = [(fmt, f) for fmt in [*tc.FORMATS, "bf16"] for f in tc.functions()]
+    pairs = [(fmt, f) for fmt in tc.CHECKED for f in tc.functions()]
     with ThreadPoolExecutor(args.jobs) as pool:
         # While one function's batches run, the next one's vectors are read.
         pending = None
