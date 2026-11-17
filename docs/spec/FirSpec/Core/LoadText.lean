@@ -14,10 +14,10 @@ changes under it.
 
 #doc (Manual) "Loads in text: readable blocks" =>
 
-:::moduleDocs (fingerprint := "2736816571920547997")
+:::moduleDocs (fingerprint := "2589712135353759515")
 :::
 
-:::readable Fir.Memory.Ordering.word Fir.Core.decodeOrdering Fir.Core.decodeOrdering_word (pin := Fir.Memory.Ordering) (fingerprint := "8016647151057053803")
+:::readable Fir.Memory.Ordering.word Fir.Core.decodeOrdering Fir.Core.decodeOrdering_word (pin := Fir.Memory.Ordering) (fingerprint := "3761968327788049239")
 *Definition: the words of the orderings.* The
 {ref "The-fir-specification--Memory--The-ordering-of-an-access"}[orderings]
 are written as the words `nonatomic`, `unordered`, `monotonic`,
@@ -25,7 +25,7 @@ are written as the words `nonatomic`, `unordered`, `monotonic`,
 as the ordering it writes. No other word names an ordering.
 :::
 
-:::readable Fir.Core.loadAttrs Fir.Core.decodeAccess Fir.Core.decodeLoad (pin := Fir.Core.decodeAlign) (fingerprint := "3908799011580622421")
+:::readable Fir.Core.loadAttrs Fir.Core.decodeAccess Fir.Core.decodeLoad (pin := Fir.Core.decodeAlign) (fingerprint := "17083752885558893644")
 *Definition: the text of $`\mathsf{load}`.* The attributes of
 $`\mathsf{load}_N~o~W~a`, and of the load of a pointer, are the word of its ordering $`o`, then
 $`\mathtt{align}(a)` when it gives an alignment, separated by spaces:

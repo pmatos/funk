@@ -14,10 +14,10 @@ build fails when the Lean changes under it.
 
 #doc (Manual) "Calls as black boxes, with memory: readable blocks" =>
 
-:::moduleDocs (fingerprint := "3732043504536608591")
+:::moduleDocs (fingerprint := "9522351430640633730")
 :::
 
-:::readable Fir.MemAllowed Fir.MemAllowed.of_someUB Fir.MemAllowed.of_not Fir.MemAllowed.of_step (pin := Fir.SomeUB) (pin := Fir.Ev.addLeft) (fingerprint := "16450805183566433580")
+:::readable Fir.MemAllowed Fir.MemAllowed.of_someUB Fir.MemAllowed.of_not Fir.MemAllowed.of_step (pin := Fir.SomeUB) (pin := Fir.Ev.addLeft) (fingerprint := "5822948128341344290")
 *Definition and theorems: a path allowed by a source.* A source, a run
 $`\mathit{src}_N` at each budget $`N` whose returns carry what refines,
 _allows_ a path of the target when it hits UB at some budget, or, for a
@@ -41,7 +41,7 @@ $`T_0 \sqsubseteq T` leaves the frame with
 $`\mathrm{exit}(T_0) \sqsubseteq \mathrm{exit}(T)`.
 :::
 
-:::readable Fir.Func.memCall_cont (pin := Fir.Ev.addLeft) (fingerprint := "17481982894339671064")
+:::readable Fir.Func.memCall_cont (pin := Fir.Ev.addLeft) (fingerprint := "4996080778106603091")
 *Theorem: a caller's budget is its callee's plus its rest's.* A caller
 whose callee, in its frame, returns $`((\vec{w}, T), k)` at the budget
 $`N_1`, and whose rest of ops from $`T` ends at the budget $`N_2`, ends so

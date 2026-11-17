@@ -14,10 +14,10 @@ when the Lean changes under it.
 
 #doc (Manual) "Stack allocation rules: readable blocks" =>
 
-:::moduleDocs (fingerprint := "12657828243829581902")
+:::moduleDocs (fingerprint := "8819463506409274808")
 :::
 
-:::readable Fir.Core.Ty.units Fir.Core.Ty.units?_int (pin := Fir.MemLayout.bitsUnits) (pin := Fir.Core.Ty.units?) (fingerprint := "15487003486979289830")
+:::readable Fir.Core.Ty.units Fir.Core.Ty.units?_int (pin := Fir.MemLayout.bitsUnits) (pin := Fir.Core.Ty.units?) (fingerprint := "13411731717869048678")
 *Definition: the units of a type.* In a memory whose
 {ref "The-fir-specification--Abstract-syntax--Data-layouts"}[entry] is
 $`e`, where the pointers of memory $`M` are $`p(M)` bits wide, a value of

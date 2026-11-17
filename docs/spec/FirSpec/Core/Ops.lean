@@ -17,7 +17,7 @@ pins their fingerprint; the build fails when the Lean changes under it.
 :::moduleDocs (fingerprint := "635787582131226193")
 :::
 
-:::readable Fir.Core.Op (pin := Fir.Core.Op.Valid) (fingerprint := "851353847269467091")
+:::readable Fir.Core.Op (pin := Fir.Core.Op.Valid) (fingerprint := "503139881940763868")
 *Ops.* An op of the core dialect carries the width $`N` of the integers it
 works on, or the format $`\mathsf{float}\langle e,m \rangle` of the floats
 it works on, so the types of its operands and results follow from it.
@@ -364,6 +364,16 @@ validation ask:
 * $`\mathsf{ret}~t^*` returns the result types $`t^*` of its function;
 * $`\mathsf{call}~f : t^* \to r^*` names a symbol $`f` to which the
   module's symbol table gives the function type $`t^* \to r^*`;
+* $`\mathsf{fpext}_{e,m,e',m'}` converts to another format with
+  $`e \le e'` and $`m \le m'`, and $`\mathsf{fptrunc}_{e,m,e',m'}` to one
+  with $`e' < e` or $`m' < m`;
+* the ops that round, $`\mathsf{fadd}`, $`\mathsf{fsub}`,
+  $`\mathsf{fmul}`, $`\mathsf{fdiv}`, $`\mathsf{sqrt}`, $`\mathsf{fma}`,
+  $`\mathsf{sitofp}`, $`\mathsf{uitofp}` and $`\mathsf{fptrunc}`, carry
+  the rounding mode $`\mathsf{rne}`, and
+  $`\mathsf{fcmp}`, $`\mathit{fbin}`, $`\mathit{funary}` and
+  $`\mathsf{fma}` carry fast-math flags that set neither of the reserved
+  words $`\mathsf{contract}` and $`\mathsf{reassoc}`;
 * $`\mathsf{alloca}`, and $`\mathsf{load}` and $`\mathsf{store}` of an
   integer or a pointer, have the rules given with them above.
 

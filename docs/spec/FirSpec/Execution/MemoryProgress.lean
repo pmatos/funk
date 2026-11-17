@@ -49,7 +49,7 @@ returns values of the call's result types, whatever it did to the
 memories.
 :::
 
-:::readable Fir.NoStuck.finish Fir.HasPath.finish (pin := Fir.Result.finish) (fingerprint := "11051480644896066662")
+:::readable Fir.NoStuck.finish Fir.HasPath.finish (pin := Fir.Result.finish) (fingerprint := "10097690051987089580")
 *Theorems: what a function does with its ops' run.* A function returns
 what its entry block's ops return, or runs out of fuel when they do; it has
 no stuck path when they have none, and a path when they have one.

@@ -14,10 +14,10 @@ pins their fingerprint; the build fails when the Lean changes under it.
 
 #doc (Manual) "The runs of a function, and fuel monotonicity: readable blocks" =>
 
-:::moduleDocs (fingerprint := "15385580192323226087")
+:::moduleDocs (fingerprint := "8846015977654752717")
 :::
 
-:::readable Fir.Func.runs (pin := Fir.Func.run) (fingerprint := "2702186033688374399")
+:::readable Fir.Func.runs (pin := Fir.Func.run) (fingerprint := "5331513339291900323")
 *Definition: the runs of a function.* Let $`f` be a function and $`M` a
 module, of a dialect that the interpreter can run in the set monad: its
 types have values and a test of equality, and its ops have a
@@ -76,7 +76,7 @@ These are the pieces from which the interpreter builds a run of ops, so
 the bound can be followed through a run step by step.
 :::
 
-:::readable Fir.Func.runOps_left_le (pin := Fir.Func.runOps) (fingerprint := "15531259396566572660")
+:::readable Fir.Func.runOps_left_le (pin := Fir.Func.runOps) (fingerprint := "13363505913216247178")
 *Theorem: a run gives back at most the fuel it was given.* For every module
 $`M`, budget $`n`, function $`f`, environment $`E` and list of ops
 $`o^*`, the run $`\mathrm{run}_M(n, f, E, o^*)` leaves at most $`n` steps.
@@ -148,7 +148,7 @@ callee out of fuel ends its caller so, and a return that leaves $`j` more
 steps lets the caller go on with $`j` more.
 :::
 
-:::readable Fir.Func.runOps_ahead (pin := Fir.Func.runOps) (fingerprint := "10316076547955429506")
+:::readable Fir.Func.runOps_ahead (pin := Fir.Func.runOps) (fingerprint := "5891127050001629036")
 *Theorem: a run with $`j` more steps of fuel is ahead by $`j` steps.* For
 every module $`M`, budget $`n`, number $`j`, function $`f`, environment
 $`E` and list of ops $`o^*`, the run $`\mathrm{run}_M(n + j, f, E, o^*)`
@@ -164,7 +164,7 @@ op never sees the fuel. A callee run with $`j` more steps gives back
 $`j` more, so its caller goes on with $`j` more.
 :::
 
-:::readable Fir.Ev.dropLeft (fingerprint := "12592833793426350993")
+:::readable Fir.Ev.dropLeft (fingerprint := "11357797968140544619")
 *Definition: an end without the steps left.* A run of ops ends with
 $`\mathsf{ok}~(\mathsf{ret}~(a, k))`, $`\mathsf{ok}~\mathsf{fuel\_exhausted}`,
 $`\mathsf{stuck}~s` or $`\mathsf{ub}~r`. The run of a function ends the
@@ -176,7 +176,7 @@ $$`\mathrm{drop}(\mathsf{ok}~(\mathsf{ret}~(a, k))) = \mathsf{ok}~(\mathsf{ret}~
 The steps left matter only to a caller.
 :::
 
-:::readable Fir.Func.run_run (pin := Fir.Func.enter) (fingerprint := "11166300857095917995")
+:::readable Fir.Func.run_run (pin := Fir.Func.enter) (fingerprint := "2640622740441748551")
 *Theorem: a function's run ends as its entry block's ops end, or stuck
 where it cannot start.* For every module $`M`, function $`f`, vector
 $`v^*` of values of its parameter types, budget $`n` and end $`e`,

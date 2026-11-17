@@ -17,7 +17,7 @@ when the Lean changes under it.
 :::moduleDocs (fingerprint := "4913524385505399095")
 :::
 
-:::readable Fir.Core.ptraddValue_poison Fir.Core.ptraddValue_isRefinedBy (pin := Fir.Core.ptraddValue) (fingerprint := "5412114453367785822")
+:::readable Fir.Core.ptraddValue_poison Fir.Core.ptraddValue_isRefinedBy (pin := Fir.Core.ptraddValue) (fingerprint := "1265302308871909954")
 *Theorems: the rule of $`\mathsf{ptradd}` is strict, and keeps
 refinement.* For every width $`W`, the
 {ref "The-fir-specification--Execution--Pointer-offset-rules"}[rule] of
@@ -27,7 +27,7 @@ that refines the other's: a poison operand gives poison, which every
 pointer refines, and a pointer or an integer is refined only by itself.
 :::
 
-:::readable Fir.Core.ptradd_propagatesPoison Fir.Core.ptradd_returnsOnDefined Fir.Core.ptradd_total Fir.Core.ptradd_monotone (pin := Fir.PropagatesPoison) (pin := Fir.PoisonOut) (pin := Fir.UBByOwnRules) (pin := Fir.ReturnsOnDefined) (pin := Fir.OpTotal) (pin := Fir.OpMonotone) (pin := Fir.Core.Op.denote?) (pin := Fir.Core.ptraddValue) (fingerprint := "373082270802573842")
+:::readable Fir.Core.ptradd_propagatesPoison Fir.Core.ptradd_returnsOnDefined Fir.Core.ptradd_total Fir.Core.ptradd_monotone (pin := Fir.PropagatesPoison) (pin := Fir.PoisonOut) (pin := Fir.UBByOwnRules) (pin := Fir.ReturnsOnDefined) (pin := Fir.OpTotal) (pin := Fir.OpMonotone) (pin := Fir.Core.Op.denote?) (pin := Fir.Core.ptraddValue) (fingerprint := "4509200998197193365")
 *Theorem: the pointer offset is lawful.* For every memory $`N` and width
 $`W`, under fir's execution rules, $`\mathsf{ptradd}_{N,W}` meets every
 obligation of an op that
@@ -46,7 +46,7 @@ The theorems hold at every memory and every width, even ones that
 validation rejects.
 :::
 
-:::readable Fir.Core.ptradd_neverUB Fir.Core.ptradd_makesNoPoison (pin := Fir.NeverUBSetM) (pin := Fir.MakesNoPoisonSetM) (pin := Fir.Core.Op.denote?) (pin := Fir.Core.ptraddValue) (fingerprint := "3891980492664892314")
+:::readable Fir.Core.ptradd_neverUB Fir.Core.ptradd_makesNoPoison (pin := Fir.NeverUBSetM) (pin := Fir.MakesNoPoisonSetM) (pin := Fir.Core.Op.denote?) (pin := Fir.Core.ptraddValue) (fingerprint := "16206810066012195165")
 *Theorems: the pointer offset is pure.* $`\mathsf{ptradd}_{N,W}` is
 never UB, and on a pointer and an integer, neither poison, it gives a
 pointer, not poison. So it meets the

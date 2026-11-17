@@ -26,7 +26,7 @@ $`K` succeeds with a result that has $`P`. The proof below uses it to take
 the reader of an item one part at a time.
 :::
 
-:::readable Fir.Func.reads (pin := Fir.Text.readItem) (pin := Fir.Func.tokens) (pin := Fir.Func.types) (pin := Fir.Func.defs) (pin := Fir.Func.allBlocks) (fingerprint := "3701847938582390133")
+:::readable Fir.Func.reads (pin := Fir.Text.readItem) (pin := Fir.Func.tokens) (pin := Fir.Func.types) (pin := Fir.Func.defs) (pin := Fir.Func.allBlocks) (fingerprint := "10869540864245073526")
 *Theorem: a function reads back.* For every dialect with a
 {ref "The-fir-specification--Text-format--Grammar"}[text format], every
 function $`f` such that $`\mathrm{tyattr}(t)` is written as a type for

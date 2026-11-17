@@ -17,7 +17,7 @@ changes under it.
 :::moduleDocs (fingerprint := "18385148284732735519")
 :::
 
-:::readable Fir.Core.word_of_decodeOrdering Fir.Core.decodeAccess_loadAttrs Fir.Core.loadAttrs_of_decodeAccess Fir.Core.decodeLoad_loadAttrs Fir.Core.decodeLoad_loadPtr Fir.Core.decodeLoad_eq (pin := Fir.Core.decodeLoad) (pin := Fir.Core.loadAttrs) (fingerprint := "14995298371094568971")
+:::readable Fir.Core.word_of_decodeOrdering Fir.Core.decodeAccess_loadAttrs Fir.Core.loadAttrs_of_decodeAccess Fir.Core.decodeLoad_loadAttrs Fir.Core.decodeLoad_loadPtr Fir.Core.decodeLoad_eq (pin := Fir.Core.decodeLoad) (pin := Fir.Core.loadAttrs) (fingerprint := "5137815037668318916")
 *Theorems: every $`\mathsf{load}` reads back from its spelling, and only
 from it.* The word that names an ordering is that ordering's word, and the
 attributes of a load read back as its ordering and its alignment, and are
@@ -34,7 +34,7 @@ result types $`r^*`. These are the cases of $`\mathsf{load}` in the
 {ref "The-fir-specification--Text-format--The-core-dialect___s-text-is-lawful"}[laws of the core dialect's text].
 :::
 
-:::readable Fir.Core.loadAttrs_writable (pin := Fir.Attr.Writable) (fingerprint := "4202044539923570216")
+:::readable Fir.Core.loadAttrs_writable (pin := Fir.Attr.Writable) (fingerprint := "14332963808673871883")
 *Theorem: the attributes of $`\mathsf{load}` are written as tokens.* The
 word of an ordering is a word, and $`\mathtt{align}(a)` a word applied to
 an integer, which the

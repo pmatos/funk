@@ -41,7 +41,7 @@ attributes with a space between each, then, when $`m + k > 0`, a space,
 and the uses `%`$`x_i` and the printed successors with `, ` between them.
 :::
 
-:::readable Fir.boundary_regions (pin := Fir.Region.printList) (fingerprint := "10175431880597102562")
+:::readable Fir.boundary_regions (pin := Fir.Region.printList) (fingerprint := "8094524736686318803")
 *Theorem: an op's regions, then a space, are at the end of a token.* For
 every dialect with a text format, indentation $`n`, list of regions and
 characters $`c`: the printed regions, then a space, then $`c`, are
@@ -50,7 +50,7 @@ starts with a space; this is what lets an op's last attribute, operand or
 successor be read whole before it.
 :::
 
-:::readable Fir.Operation.spells Fir.Region.spellsList Fir.Block.spellsList Fir.Operation.spellsList (pin := Fir.Operation.print) (pin := Fir.Region.printList) (pin := Fir.Block.printList) (pin := Fir.Operation.printList) (fingerprint := "3306766056893596332")
+:::readable Fir.Operation.spells Fir.Region.spellsList Fir.Block.spellsList Fir.Operation.spellsList (pin := Fir.Operation.print) (pin := Fir.Region.printList) (pin := Fir.Block.printList) (pin := Fir.Operation.printList) (fingerprint := "14828146676244604093")
 *Theorems: printed ops, regions and blocks spell their tokens before any
 characters.* For every dialect with a text format and every indentation
 $`n`:
@@ -65,8 +65,9 @@ The
 {ref "The-fir-specification--Text-format--The-canonical-printer"}[printer]
 writes an op on a line of its own: its indentation, its results and
 ` = `, its name, attributes, operands and successors, its regions, a
-space, its location reference and a line feed. A region is ` {`, a line
-feed, its blocks two spaces deeper, the op's indentation and `}`. A block
+space, its location reference and a line feed. A region is ` {`, a space
+and its kind when it names one, a line feed, its blocks two spaces
+deeper, the op's indentation and `}`. A block
 is its indentation, `^` and its label, its arguments in parentheses when
 it has any, `:`, a line feed and its ops two spaces deeper. Each ends with
 a line feed or a `}`, which is why each spells its tokens before any
@@ -74,7 +75,7 @@ characters. The four are proved together, since ops hold regions, which
 hold blocks of ops.
 :::
 
-:::readable Fir.Func.spells Fir.Item.spells Fir.Item.spellsList (pin := Fir.Func.print) (pin := Fir.Item.print) (pin := Fir.Item.printList) (fingerprint := "7739933725994279128")
+:::readable Fir.Func.spells Fir.Item.spells Fir.Item.spellsList (pin := Fir.Func.print) (pin := Fir.Item.print) (pin := Fir.Item.printList) (fingerprint := "8748115701731094380")
 *Theorems: a printed function, an item, and items, spell their tokens
 before any characters.* For every dialect with a text format and every
 indentation $`n`:
@@ -84,8 +85,9 @@ indentation $`n`:
   `func`, a space, its symbol, its parameters in parentheses, ` -> ` and
   its result types with `, ` between them when it has results, ` {`, a
   line feed, its blocks, $`n` spaces, `}` and a line feed;
-* so does every item whose tokens can all be written: a nested module is
-  printed as $`n` spaces, `module`, a space, its symbol, `()`, ` {`, a line
+* so does every item whose tokens can all be written: a function as
+  above, an item of a dialect's kind by the theorem for such items, and a
+  nested module, printed as $`n` spaces, `module`, a space, its symbol, `()`, ` {`, a line
   feed, its dialect set and its items two spaces deeper, $`n` spaces, `}`
   and a line feed;
 * every list of items whose tokens can all be written, each printed then
@@ -96,7 +98,7 @@ The theorems for an item and for a list of items are proved together, by
 induction on the items, since a nested module holds items.
 :::
 
-:::readable Fir.LocTable.spellsEntries Fir.LocTable.spells (pin := Fir.LocTable.print) (fingerprint := "6259925923906660465")
+:::readable Fir.LocTable.spellsEntries Fir.LocTable.spells (pin := Fir.LocTable.print) (fingerprint := "10742844901172115056")
 *Theorems: the printed location table spells its tokens before any
 characters.* For every location table whose tokens can all be written:
 
@@ -132,7 +134,7 @@ be written, printed as its dialect set, its data layout, its items and then
 its location table, spells $`\mathrm{tokens}(m)` before any characters.
 :::
 
-:::readable Fir.lex_print (pin := Fir.Text.lex) (pin := Fir.Module.tokens) (pin := Fir.Text.Tok.Writable) (fingerprint := "417661429239291392")
+:::readable Fir.lex_print (pin := Fir.Text.lex) (pin := Fir.Module.tokens) (pin := Fir.Text.Tok.Writable) (fingerprint := "18342169326104170006")
 *Theorem: lexing printed text gives its tokens.* For every dialect with a
 text format and every module $`m` whose tokens can all be
 {ref "The-fir-specification--Text-format--Lexing-printed-text"}[written],

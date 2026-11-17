@@ -14,10 +14,10 @@ when the Lean changes under it.
 
 #doc (Manual) "The rounding mode in text: readable blocks" =>
 
-:::moduleDocs (fingerprint := "11489202054206564164")
+:::moduleDocs (fingerprint := "5671842466577061674")
 :::
 
-:::readable Fir.Core.RoundingMode.word Fir.Core.decodeRoundingMode Fir.Core.roundAttr Fir.Core.decodeRound (fingerprint := "6973648837649998569")
+:::readable Fir.Core.RoundingMode.word Fir.Core.decodeRoundingMode Fir.Core.roundAttr Fir.Core.decodeRound (fingerprint := "1700976770174485643")
 *Definition: the rounding mode in text.* Each mode is written as its
 name: $`\mathtt{rne}`, $`\mathtt{rna}`, $`\mathtt{rtp}`, $`\mathtt{rtn}`
 and $`\mathtt{rtz}`, and a word names a mode only when it is one of

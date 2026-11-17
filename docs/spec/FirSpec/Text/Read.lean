@@ -14,7 +14,7 @@ changes under it.
 
 #doc (Manual) "Reading the grammar: readable blocks" =>
 
-:::moduleDocs (fingerprint := "15028945711754093569")
+:::moduleDocs (fingerprint := "1825114608914907934")
 :::
 
 :::readable Fir.Text.SDef (fingerprint := "2461358331634527445")
@@ -115,18 +115,20 @@ for one reader after another. These bounds are what make the readers, which
 call one another, end.
 :::
 
-:::readable Fir.Text.fail Fir.Text.expect Fir.Text.keyword Fir.Text.readMore (fingerprint := "6953060760131638059")
+:::readable Fir.Text.fail Fir.Text.expect Fir.Text.keyword Fir.Text.readMore (fingerprint := "16985387300482755857")
 *Definition: the readers that the others are built from.* A reader that
 expects one thing and finds a token $`t` fails at the position of $`t`,
 with the reason "expected" the thing, "found" $`t`. Every list of tokens
-ends with $`\mathsf{eof}`, so there is always a token to blame. The
+ends with $`\mathsf{eof}`, so there is always a token to blame; on no
+tokens at all, the reader fails at line 1, column 1, having "found the end
+of the text". The
 reader of one token, such as `(`, reads it or fails; the reader of a
 keyword, such as `to`, reads that word. The reader of the rest of a list
 reads a comma and an element with a given reader, as long as a comma
 follows: the elements after the first of a list separated by commas.
 :::
 
-:::readable Fir.Text.readAttr Fir.Text.readAttrArgs Fir.Text.readMoreAttrArgs Fir.Text.readType Fir.Text.Tok.startsAttr Fir.Text.readAttrs (fingerprint := "18173360183907358644")
+:::readable Fir.Text.readAttr Fir.Text.readAttrArgs Fir.Text.readMoreAttrArgs Fir.Text.readType Fir.Text.Tok.startsAttr Fir.Text.readAttrs (fingerprint := "14079719549840315452")
 *Definition: reading attributes and types.* An attribute is a word
 followed by `(`, which is the word applied to the attributes that follow,
 up to `)` and separated by commas; or a word, an integer, a float literal,
@@ -141,13 +143,13 @@ position, as long as the next token is a word, an integer, a float
 literal, a string or a symbol.
 :::
 
-:::readable Fir.Text.readDefType Fir.Text.readDef Fir.Text.readDefs (fingerprint := "627021762845200007")
+:::readable Fir.Text.readDefType Fir.Text.readDef Fir.Text.readDefs (fingerprint := "1027100472526777793")
 *Definition: reading definitions.* A definition is a value token, then
 `:`, then a type, and is read with the positions of the value and of the
 type. A list of definitions is one or more of them, separated by commas.
 :::
 
-:::readable Fir.Text.readSuccArgs Fir.Text.readSucc Fir.Text.readMoreOperands Fir.Text.readOperands Fir.Text.readOpLoc (fingerprint := "7501897801903139219")
+:::readable Fir.Text.readSuccArgs Fir.Text.readSucc Fir.Text.readMoreOperands Fir.Text.readOperands Fir.Text.readOpLoc (fingerprint := "13944746277913763084")
 *Definition: reading operands, successors and the location reference.* A
 successor is a label, followed, when `(` follows it, by one or more values
 that it passes, separated by commas, and `)`. An op's operands
@@ -158,7 +160,7 @@ or neither. Last comes the op's location reference; any other token there
 is an error, "expected the op's location reference".
 :::
 
-:::readable Fir.Text.readKind Fir.Text.readBlocks Fir.Text.readOps Fir.Text.readOpWithResults Fir.Text.readOpBody Fir.Text.readRegions (fingerprint := "18325856566973871954")
+:::readable Fir.Text.readKind Fir.Text.readBlocks Fir.Text.readOps Fir.Text.readOpWithResults Fir.Text.readOpBody Fir.Text.readRegions (fingerprint := "7655503512379460276")
 *Definition: reading blocks, ops and regions.* These readers call one
 another, since an op may own regions:
 
@@ -176,7 +178,7 @@ another, since an op may own regions:
   two never meet.
 :::
 
-:::readable Fir.Text.readDialectName Fir.Text.readDialects (fingerprint := "7135882020144580303")
+:::readable Fir.Text.readDialectName Fir.Text.readDialects (fingerprint := "18181625636344405930")
 *Definition: reading a dialect set.* When the tokens start with the word
 `dialects`, the set is the word after it, then each word after a comma, as
 long as a comma follows; a token after `dialects` or after a comma that is
@@ -186,7 +188,7 @@ is empty, and nothing is read. A set starts a module, and a body of items
 reads nothing of it.
 :::
 
-:::readable Fir.Text.readLayout (pin := Fir.Text.readType) (fingerprint := "17250570661354131244")
+:::readable Fir.Text.readLayout (pin := Fir.Text.readType) (fingerprint := "889149445110897318")
 *Definition: reading a data layout.* When the tokens start with the word
 `layout`, the layout is the type after it, with its position, then each
 type after a comma, as long as a comma follows; each entry is read as a
@@ -195,7 +197,7 @@ is an entry. Otherwise the layout is empty, and nothing is read. A layout
 follows a module's dialect set, and a body of items has none.
 :::
 
-:::readable Fir.Text.readItems Fir.Text.readItem (fingerprint := "8229966294769205176")
+:::readable Fir.Text.readItems Fir.Text.readItem (fingerprint := "13058271859784856739")
 *Definition: reading items.* Items are read as long as a word, the item's
 kind, follows; at the top of the module, the word `locs` starts the
 location table instead. An item is its kind, then its symbol, then its

@@ -17,7 +17,7 @@ when the Lean changes under it.
 :::moduleDocs (fingerprint := "9989576540530304209")
 :::
 
-:::readable Fir.Core.storePtrAccess Fir.Core.storePtr_denote Fir.Core.storePtr_ownRuleHas (pin := Fir.Core.storePtrRule) (pin := Fir.Core.memDenoteAt) (pin := Fir.OwnRuleHas) (fingerprint := "3573063634029520967")
+:::readable Fir.Core.storePtrAccess Fir.Core.storePtr_denote Fir.Core.storePtr_ownRuleHas (pin := Fir.Core.storePtrRule) (pin := Fir.Core.memDenoteAt) (pin := Fir.OwnRuleHas) (fingerprint := "11647514892464414381")
 *Definitions and theorems: the store of a pointer with memory.* In the
 {ref "The-fir-specification--Memory--The-state-layer"}[state layer] over
 the set monad, at the layout entries $`\ell` and naming $`\rho`, the

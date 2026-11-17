@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Float comparison rules: readable blocks" =>
 
-:::moduleDocs (fingerprint := "9065455117763472156")
+:::moduleDocs (fingerprint := "8110138548387175938")
 :::
 
 :::readable Fir.Core.floatCompare (fingerprint := "16383978172134608434")
@@ -35,7 +35,7 @@ sign play no part. Every pair of a format the model does not have, which
 validation rejects, is unordered, so that the rule is total.
 :::
 
-:::readable Fir.Core.FPred.holds (pin := Fir.Core.FPred) (fingerprint := "18208178558884204792")
+:::readable Fir.Core.FPred.holds (pin := Fir.Core.FPred) (fingerprint := "8686374250765204178")
 *Definition: when a float predicate holds.* Each of the fourteen
 {ref "The-fir-specification--Abstract-syntax--Core-ops"}[float predicates]
 holds of a pair that compares as $`c`, or not, as follows, where $`\bot`
@@ -49,7 +49,7 @@ $`\mathsf{uge}` of $`\mathsf{olt}`, and so on, and $`\mathsf{uno}` of
 $`\mathsf{ord}`.
 :::
 
-:::readable Fir.Core.fcmpValues (fingerprint := "10639262800556838397")
+:::readable Fir.Core.fcmpValues (fingerprint := "9797496553587563625")
 *Definition: the rule of $`\mathsf{fcmp}`.* For every format
 $`\mathsf{float}\langle e,m \rangle`, float predicate $`p` and flags
 $`\phi`, $`\mathsf{fcmp}_{e,m}~\phi~p` of two values gives an
@@ -68,7 +68,7 @@ $`\mathsf{fcmp}~\mathsf{oeq}` of a NaN with itself gives 0, and
 $`\mathsf{fcmp}~\mathsf{une}` gives 1.
 :::
 
-:::readable Fir.Core.cmp32 Fir.Core.fpredResults Fir.Core.fcmpsAs (fingerprint := "6261801356151191241")
+:::readable Fir.Core.cmp32 Fir.Core.fpredResults Fir.Core.fcmpsAs (fingerprint := "10040882476145196281")
 *Tests.* $`\mathrm{cmp32}` is $`\mathrm{fcompare}_{8,23}`, the order of
 $`\mathsf{f32}`. $`\mathrm{fpredResults}(c)` lists what the fourteen
 predicates give, in the order of the grammar, on a pair that compares as

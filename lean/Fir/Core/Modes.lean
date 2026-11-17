@@ -11,8 +11,11 @@ has its entry in the module's data layout, which gives its unit, its byte
 order and the width of its pointers, and the run names the core's memories
 by themselves, by their numbers. So the theorems of exhaustive and scripted
 modes hold of the runs with memory of every core function, on every
-argument vector, at every fuel budget. `fir-ref` computes the exhaustive, scripted and sampled
-modes defined below, and nothing else, to report a run. The values that
+argument vector, at every fuel budget. `fir-ref` computes the exhaustive,
+scripted and sampled modes defined below on the sum of the core and `gpu`,
+which runs a core function as the core alone does (the section on the
+modes of the core and `gpu`), and there also the walk that tries a few
+NaNs, to report a run. The values that
 sampled mode chose fit the run, so it inherits scripted mode's theorems.
 
 The theorems hold on every argument vector of the function's parameter types,

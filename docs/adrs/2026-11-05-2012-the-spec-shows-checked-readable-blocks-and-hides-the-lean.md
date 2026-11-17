@@ -19,9 +19,12 @@ Tier: direction; area: spec-site
   click away. Every line of a module is on the page.
 - Drift between a block and its Lean fails the build. A block names the
   declarations it explains and pins a fingerprint of their terms, and of
-  each definition its prose restates. Pins are explicit, with no transitive
-  hashing. A document explains every declaration of its module exactly
-  once.
+  each definition its prose restates. Pins are explicit: a definition that
+  a declaration only refers to counts by its name unless pinned. A
+  definition's own body includes the helpers that Lean generates to hold
+  it, its recursion and its pattern matchers, followed transitively; the
+  human ruled so on 2026-11-16 (#418). A document explains every
+  declaration of its module exactly once.
 
 The human chose literate Lean rendered with Verso on 2026-10-29 (P1 on #5).
 On 2026-11-05, on #161, the human said that "literate" meant a spec written
