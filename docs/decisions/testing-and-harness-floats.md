@@ -101,6 +101,67 @@ binary64 arithmetic. The human ruled on 2026-11-11 (#229) that this generator
 lives under `scripts/harness/`, with its tests under the existing
 `fir-harness-test` hook, and no new hook or CI step.
 
+It was written in the same effort as the `fir-ref` code it checks, so a
+misreading of IEEE 754 shared by both would pass. It is a convenience: it
+does not meet the human's criterion of an independent reference, which
+TestFloat meets ([below](#the-testfloat-check); #177, 2026-11-11).
+
+## The TestFloat check
+
+The human ruled on 2026-11-10 (#229) that `fir-ref` is checked against
+Berkeley TestFloat's vectors at `f16` and `f128`, and that `bf16` has a
+named reference. On 2026-11-11 the human had the M1 review's actions put on
+#229: `float_ref.py` does not meet this, and TestFloat is built or vendored at
+pinned commits for CI (#177).
+
+`scripts/harness/testfloat.py`, which `scripts/check-harness.sh` runs after
+the harness under the `fir-harness` hook, fetches TestFloat 3 and SoftFloat
+3 with git at the commits of `PINS`, builds `testfloat_gen` once into
+`~/.cache/funk/testfloat/`, and runs it at level 1, rounding to nearest
+even, at `f16`, `f32`, `f64` and `f128`. It checks every vector of `add`,
+`sub`, `mul`, `div` and `sqrt`, of `eq`, `le` and `lt`, 46,464 of each
+function of two operands, and every 131st of `mulAdd`'s 6,133,248, 46,819:
+about 1.5 million vectors. The pins are TestFloat's last commit and
+SoftFloat's last before its `bf16` work, both of 2025-03-07.
+
+- A batch of 1,000 vectors is one function that `bitcast`s integer
+  constants to the format, runs the op on them and `bitcast`s each result
+  back, so the check compares bits. `fir-ref validate` must accept it, and
+  `fir-ref run --exhaustive --nans` runs it with no NaN given, so a NaN
+  result is the positive quiet NaN.
+- The exception flags are ignored, since M1 has none. A NaN that TestFloat
+  gives passes on any NaN, since fir's op gives any NaN
+  (ADR-2026-11-09-1549); every other result passes only on its bits.
+- `eq`, `le` and `lt` back ten predicates of `fcmp` by IEEE 754 section
+  5.11: `oeq`, `ole`, `olt`, their negations `une`, `ugt` and `uge`, and
+  with the operands swapped `oge`, `ogt`, `ult` and `ule`. TestFloat has no
+  vectors for `one`, `ueq`, `ord` and `uno`, or for `fneg` and `fabs`, which
+  stay on `float_ref.py`'s corpus, as do the remainders of #310: the check
+  does not run TestFloat's `rem`, IEEE 754's remainder, which is `frem`.
+- At `f32` and `f64` it checks Lean's model apart from the backend; the
+  corpus compares native code with `fir-ref`.
+- It exits with 1 when a vector fails, and with 2 when TestFloat cannot be
+  fetched or built or `fir-ref` gives no result for a batch, so a missing
+  `gcc` or network fails the hook. A fetch is tried five times, 10 s apart.
+
+`bf16`, which TestFloat lacks, is checked against TestFloat's `f32`
+vectors whose operands are all `bf16` values, the `f32` values with 16 low
+zero bits: 589 for each function of two operands, 60 of `sqrt` and 14,165
+of `mulAdd`. The arithmetic is generated rounding to odd, `-rodd`, and its
+result is rounded once more, to nearest even at `bf16`; rounding to odd
+with at least two more bits, then to nearest, is correctly rounded (Boldo
+and Melquiond, IEEE Trans. Computers 57(4), 2008), and `f32` has 16 more
+at every exponent. A comparison needs no rounding. These operands target
+`f32`'s edges, not `bf16`'s ties, which the corpus's hard inputs target.
+Rejected: SoftFloat's own `bf16` routines, new in October 2026, for which
+`testfloat_gen` writes no vectors; and rounding `f32`'s nearest-even
+result again, which `test_testfloat.py` shows wrong on one `mulAdd`.
+
+Rejected: committed vectors, about 700 KB for each function and format at
+level 1, past the file-size budget, or a sample of them; and one corpus
+test, so one `fir-ref` process, per vector. `test_testfloat.py`, under
+`fir-harness-test`, tests the parts that need no TestFloat.
+
 ## The arithmetic corpus
 
 `scripts/harness/float_arith_cases.py` writes the modules and tests
