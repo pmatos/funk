@@ -219,7 +219,7 @@ The conversions of #241, `bitcast`, `sitofp`, `uitofp`, `fpext`, `fptrunc`,
 
 ## What holds today
 
-#229 builds floating point in stages. Today the spec, `fir-ref`, the Rust IR,
+#229 built floating point in five stages. Today the spec, `fir-ref`, the Rust IR,
 parser, printer and verifier have the float types, their values and their
 refinement, and the corpus holds them. They also have the comparison and the
 arithmetic above, the remainders of #310, float constants, `bitcast` between a
@@ -278,6 +278,14 @@ NaNs and the floats on either side of each end of each width's range, each
 case of a width the backend lowers differential at `f32` and `f64`, where
 native code refines poison with any value
 ([testing-and-harness-floats.md](testing-and-harness-floats.md#the-float-to-integer-corpus)).
+
+`fir-ref`'s arithmetic and comparisons are checked against Berkeley
+TestFloat's vectors at `f16`, `f32`, `f64` and `f128`, and at `bf16` against
+TestFloat's `f32` vectors of `bf16` operands, rounded to odd and then to
+`bf16`, as the human's criterion of 2026-11-10 asks
+([testing-and-harness-floats.md](testing-and-harness-floats.md#the-testfloat-check)).
+`float_ref.py` computes the corpus's expected results, and is not that
+independent reference.
 
 The fast-math flags hold in the spec, `fir-ref`, the Rust IR, parser, printer,
 verifier and backend, and `reject/float-flags.toml` holds their must-reject

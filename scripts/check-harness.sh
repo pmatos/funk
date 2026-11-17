@@ -12,6 +12,10 @@
 # (docs/decisions/testing-and-harness.md#the-invalid-verdict-is-itself-tested),
 # and a recursion deeper than native code's stack
 # (docs/decisions/testing-and-harness.md#a-run-that-outgrows-its-stack).
+# Last, scripts/harness/testfloat.py checks fir-ref's float arithmetic and
+# comparisons against Berkeley TestFloat's vectors, which it builds at
+# pinned commits
+# (docs/decisions/testing-and-harness-floats.md#the-testfloat-check).
 set -euo pipefail
 
 if [[ $# -ne 0 ]]; then
@@ -56,6 +60,9 @@ fi
 invalid=0
 python3 scripts/harness/check_invalid.py --funk "$target_dir/debug/funk" \
     --fir-ref "$repo_root/lean/.lake/build/bin/fir-ref" || invalid=$?
+testfloat=0
+python3 scripts/harness/testfloat.py \
+    --fir-ref "$repo_root/lean/.lake/build/bin/fir-ref" || testfloat=$?
 # In CI, the counts also go to the job summary (ADR-2026-11-05-1408).
 if [[ -n "${GITHUB_STEP_SUMMARY:-}" ]] &&
     ! python3 -I scripts/suite_summary.py harness "$tmp/harness.out" "$status" "$invalid"; then
@@ -63,5 +70,8 @@ if [[ -n "${GITHUB_STEP_SUMMARY:-}" ]] &&
 fi
 if [[ $status -eq 0 ]]; then
     status=$invalid
+fi
+if [[ $status -eq 0 ]]; then
+    status=$testfloat
 fi
 exit "$status"
