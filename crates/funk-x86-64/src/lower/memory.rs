@@ -222,6 +222,30 @@ mod tests {
     }
 
     #[test]
+    fn a_load_or_store_of_a_float_is_reported() {
+        for (func, why) in [
+            (
+                "func @f(%p: ptr) -> f32 {\n^entry:\n  %v: f32 = load nonatomic %p @0\n  \
+                 ret %v @0\n}",
+                "load of a float",
+            ),
+            (
+                "func @f(%v: f64, %p: ptr) {\n^entry:\n  store nonatomic %v, %p @0\n  \
+                 ret @0\n}",
+                "store of a float",
+            ),
+        ] {
+            let text = format!("{func}\n\nlocs {{\n  @0 = unknown\n}}\n");
+            let m = parse(&text, &Registry::core()).unwrap();
+            let Err(ds) = super::super::module(&m) else {
+                panic!("a {why} is lowered");
+            };
+            assert_eq!(ds.len(), 1, "{ds:?}");
+            assert!(ds[0].message.contains(why), "{ds:?}");
+        }
+    }
+
+    #[test]
     fn ptradd_adds_its_offset_read_as_signed() {
         let asm = body(
             "func @f(%p: ptr, %k: i1, %l: i128) -> ptr {\n^entry:\n  \

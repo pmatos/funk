@@ -171,6 +171,7 @@ impl OpSpec for Alloca {
 mod tests {
     use super::*;
     use crate::dialects::core::align::check_align;
+    use crate::dialects::core::alloc_shape::float_attr;
     use crate::dialects::core::{MAX_MEMORY, int_type, ptr_type};
     use crate::{SymbolTable, Type};
 
@@ -192,10 +193,6 @@ mod tests {
 
     fn ptr_attr(n: i128) -> Attr {
         Attr::App("ptr".into(), vec![Attr::int(n)])
-    }
-
-    fn float_attr(e: i128, m: i128) -> Attr {
-        Attr::App("float".into(), vec![Attr::int(e), Attr::int(m)])
     }
 
     fn check(attrs: &[Attr]) -> Result<(), String> {

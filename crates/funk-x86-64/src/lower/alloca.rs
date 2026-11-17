@@ -98,9 +98,7 @@ fn sized(cx: &Cx<'_>, op: &Op, n: u32) -> Result<(u64, u64), Unlowered> {
             let bytes = u64::from(e.pointer.div_ceil(own.unit));
             (bytes, (m == n).then(|| e.alignment()))
         }
-        CoreType::Float { .. } => {
-            return Err("the x86-64 backend does not lower an alloca of floats yet (#264)".into());
-        }
+        CoreType::Float { e, m } => (u64::from((1 + e + m).div_ceil(8)), None),
     };
     // A count past 64 bits has no stack to fit in, as one just below has
     // none, so it saturates.
@@ -231,6 +229,19 @@ mod tests {
         assert!(l.text.contains("\tmovabsq\t$32, %rcx\n"), "{}", l.text);
         assert_eq!(l.needs[0].bytes, 16 + 16 + 16 + 16);
         assert_eq!(l.needs[1].bytes, 16 + 16 + 32);
+    }
+
+    #[test]
+    fn a_float_takes_the_bytes_and_alignment_of_the_integer_of_its_width() {
+        let (asm, needs) = module(
+            "func @f() -> ptr {\n^entry:\n  %p: ptr = alloca stack f64 3 @0\n  \
+             %q: ptr = alloca stack float(2, 1) @0\n  %r: ptr = alloca stack f128 @0\n  \
+             ret %q @0\n}",
+        );
+        // 24 bytes round to 32; one byte and 16 bytes to 16 each.
+        assert!(asm.contains("\tmovabsq\t$32, %rcx\n"), "{asm}");
+        assert_eq!(asm.matches("\tmovabsq\t$16, %rcx\n").count(), 2, "{asm}");
+        assert_eq!(needs[0].bytes, 16 + 16 + 16 + 32 + 16 + 16);
     }
 
     #[test]

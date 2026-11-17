@@ -27,11 +27,6 @@ enum AnyType {
     Ptr(Int),
 }
 
-/// The memory of a pointer type, when it is at most [`MAX_MEMORY`].
-fn valid_memory(n: &Int) -> Option<u32> {
-    n.as_str().parse::<u32>().ok().filter(|&n| n <= MAX_MEMORY)
-}
-
 /// An integer not negative, from its canonical spelling.
 fn nonneg(i: &Int) -> bool {
     !i.is_negative()
@@ -40,6 +35,19 @@ fn nonneg(i: &Int) -> bool {
 /// The number that `i` spells, when it fits in 32 bits.
 fn small(i: &Int) -> Option<u32> {
     i.as_str().parse::<u32>().ok()
+}
+
+/// The memory of a pointer type, when it is at most [`MAX_MEMORY`].
+fn valid_memory(n: &Int) -> Option<u32> {
+    small(n).filter(|&n| n <= MAX_MEMORY)
+}
+
+impl AnyType {
+    /// Whether work-group memory holds values of it (`Ty.IsElem`): an
+    /// integer or a pointer type.
+    fn is_elem(&self) -> bool {
+        !matches!(self, AnyType::Float(..))
+    }
 }
 
 /// The core type that `t` is when it is valid (`Ty.Valid`): `iN` with
@@ -136,14 +144,13 @@ pub(crate) fn check_work_group_shape(op: &str, attrs: &[Attr]) -> Result<(), Str
     let Some(p) = shape(attrs) else {
         return Ok(());
     };
-    check_shape_of(op, &p)?;
-    if let AnyType::Float(..) = p.ty {
+    if !p.ty.is_elem() {
         return Err(format!(
             "{op} allocates an integer or a pointer type, not {}",
             written(&p.ty)
         ));
     }
-    Ok(())
+    check_shape_of(op, &p)
 }
 
 /// The type an allocation carries, as it is written.
@@ -201,13 +208,15 @@ pub(super) fn shape_types(p: &Shape<'_>) -> Vec<Type> {
     }
 }
 
+/// The attribute `float(e, m)`, for the tests of the dialect's ops.
+#[cfg(test)]
+pub(super) fn float_attr(e: i128, m: i128) -> Attr {
+    Attr::App("float".into(), vec![Attr::int(e), Attr::int(m)])
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    fn float(e: i128, m: i128) -> Attr {
-        Attr::App("float".into(), vec![Attr::int(e), Attr::int(m)])
-    }
 
     #[test]
     fn every_valid_float_format_is_an_element() {
@@ -217,8 +226,8 @@ mod tests {
             (Attr::word("f32"), 8, 23),
             (Attr::word("f64"), 11, 52),
             (Attr::word("f128"), 15, 112),
-            (float(2, 1), 2, 1),
-            (float(8, 16_777_206), 8, 16_777_206),
+            (float_attr(2, 1), 2, 1),
+            (float_attr(8, 16_777_206), 8, 16_777_206),
         ] {
             let p = shape(std::slice::from_ref(&attr)).unwrap();
             assert_eq!(p.element(), Some(CoreType::Float { e, m }), "{attr:?}");
@@ -230,10 +239,10 @@ mod tests {
     #[test]
     fn an_invalid_float_format_is_not() {
         for (attr, shown) in [
-            (float(1, 1), "float(1, 1)"),
-            (float(2, 0), "float(2, 0)"),
-            (float(8, 16_777_207), "float(8, 16777207)"),
-            (float(1 << 40, 1), "float(1099511627776, 1)"),
+            (float_attr(1, 1), "float(1, 1)"),
+            (float_attr(2, 0), "float(2, 0)"),
+            (float_attr(8, 16_777_207), "float(8, 16777207)"),
+            (float_attr(1 << 40, 1), "float(1099511627776, 1)"),
         ] {
             let p = shape(std::slice::from_ref(&attr)).unwrap();
             assert_eq!(p.element(), None, "{attr:?}");
@@ -243,7 +252,7 @@ mod tests {
                 "{attr:?}"
             );
         }
-        assert!(shape(&[float(8, 23)]).is_none());
-        assert!(shape(&[float(-1, 3)]).is_none());
+        assert!(shape(&[float_attr(8, 23)]).is_none());
+        assert!(shape(&[float_attr(-1, 3)]).is_none());
     }
 }

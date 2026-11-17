@@ -23,14 +23,14 @@ yet, so the differential side has none (stage 1 of #264).
 
 from cell_types import Cell, CellError, is_pointer
 from firtext import Op
-from refine import bits_of
+from refine import FLOAT_ALIASES, bits_of
 
 POINTER_OPS = ("ptradd", "alloca", "load", "store")
 # The column of the pointer cells of `alloca`, `load` and `store`.
 POINTER = "ptr"
 # The float formats of `alloca`, `load` and `store` on each side (#264).
 MEMORY_FLOAT_DIFFERENTIAL: tuple[str, ...] = ()
-MEMORY_FLOAT_INTERPRETER = ("f16", "bf16", "f32", "f64", "f128")
+MEMORY_FLOAT_INTERPRETER = tuple(FLOAT_ALIASES)
 
 
 def is_int(t: str) -> bool:
@@ -46,6 +46,14 @@ def element(t: str) -> str | None:
     if bits_of(t) is not None:
         return t
     return POINTER if is_pointer(t) else None
+
+
+def int_or_pointer(t: str) -> str | None:
+    """The column of a type that work-group memory holds (`Ty.IsElem`): an
+    integer type's own, and `ptr` for a pointer type of any memory; none for
+    a float or any other type."""
+    column = element(t)
+    return column if column == POINTER or is_int(t) else None
 
 
 def pointer_offset(op: Op) -> Cell:

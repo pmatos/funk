@@ -31,7 +31,9 @@ use crate::registry::OpTypes;
 fn memory(op: &OpTypes<'_>) -> Option<u32> {
     match (op.operands, op.results) {
         ([v, p], []) => match (core_type(v)?, core_type(p)?) {
-            (_, CoreType::Ptr(n)) => Some(n),
+            (CoreType::Int(_) | CoreType::Ptr(_) | CoreType::Float { .. }, CoreType::Ptr(n)) => {
+                Some(n)
+            }
             _ => None,
         },
         _ => None,

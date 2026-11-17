@@ -22,7 +22,7 @@ interpreter-only (#212).
 
 from cell_types import Cell, CellError, is_pointer
 from firtext import Op
-from pointer_cells import POINTER, element, is_int
+from pointer_cells import int_or_pointer
 
 GPU = "gpu"
 # The ops, in the order of `Query`, and the dimensions, in that of `Dim`.
@@ -67,11 +67,7 @@ def work_group_cell(op: Op) -> Cell:
     alignment are not part of its cell, as `alloca`'s are not. A float
     element is not valid in work-group memory, so it is not a cell."""
     if op.attrs and not op.operands and len(op.results) == 1:
-        column = element(op.attrs[0])
-        if (
-            column
-            and (is_int(column) or column == POINTER)
-            and is_pointer(op.results[0])
-        ):
+        column = int_or_pointer(op.attrs[0])
+        if column and is_pointer(op.results[0]):
             return Cell(GPU_MEMORY, op.name, "", column)
     raise CellError(f"{op.name} {' '.join(op.attrs)} to {op.results} is not a cell")
