@@ -81,9 +81,9 @@ def stack_allocation(op: Op) -> Cell:
 
 def memory_load(op: Op) -> Cell:
     """The cell of a `load`: at the integer or float type it loads, or at
-    `ptr`. Its ordering and alignment are not part of its cell, as an allocation's
-    count is not. The matrix reads canonical modules, which both tools
-    decode, so the rest of its attributes needs no check here."""
+    `ptr`. Its ordering and alignment are not part of its cell, as an
+    allocation's count is not. The matrix reads canonical modules, which
+    both tools decode, so the rest of its attributes needs no check here."""
     if op.attrs and len(op.operands) == len(op.results) == 1:
         [pointer], [result] = op.operands, op.results
         column = element(result)

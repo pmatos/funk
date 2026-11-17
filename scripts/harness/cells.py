@@ -327,7 +327,7 @@ def catalog(
                         "",
                         tuple(
                             None
-                            if op == "ptradd" and not t.startswith("i")
+                            if op == "ptradd" and (t == POINTER or t in memory)
                             else Cell("pointers", op, "", t)
                             for t in columns
                         ),

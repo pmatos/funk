@@ -15,11 +15,12 @@
 //! Validation accepts what it accepts of a load: the ordering `nonatomic`
 //! and an alignment that is a power of two no larger than the data layout's
 //! limit. With no `align(A)` the access is aligned to the natural alignment
-//! of the value's type in memory `N`, as a load's. The op writes memory `N` and may be UB (on a poison
-//! pointer, or an access out of bounds, to a freed allocation, without
-//! provenance or misaligned). It reads no memory: whether it faults depends
-//! on the allocations, not on what their units hold. It gives no result, so
-//! it makes no poison; a poison value is stored as poison units.
+//! of the value's type in memory `N`, as a load's. The op writes memory `N`
+//! and may be UB (on a poison pointer, or an access out of bounds, to a
+//! freed allocation, without provenance or misaligned). It reads no memory:
+//! whether it faults depends on the allocations, not on what their units
+//! hold. It gives no result, so it makes no poison; a poison value is stored
+//! as poison units.
 
 use super::access::Access;
 use super::types::{CoreType, core_type};

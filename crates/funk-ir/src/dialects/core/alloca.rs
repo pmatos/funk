@@ -16,11 +16,10 @@
 //! the data layout's own alignments are, and a valid integer, pointer or
 //! float type; a pointer type names a memory that the data layout must
 //! declare ([`OpSpec::attr_types`]). A float takes the units of its bits, as
-//! the integer of its width does (#264). The count
-//! has no bound: an allocation larger than a machine holds is a resource
-//! error at run time. The op is never UB and never gives poison: it
-//! allocates in its memory, and the frame of its call frees the allocation
-//! when the call returns.
+//! the integer of its width does (#264). The count has no bound: an
+//! allocation larger than a machine holds is a resource error at run time.
+//! The op is never UB and never gives poison: it allocates in its memory,
+//! and the frame of its call frees the allocation when the call returns.
 //!
 //! [`MemLayout::LIMIT`]: crate::ir::MemLayout::LIMIT
 //! [`OpSpec::attr_types`]: crate::registry::OpSpec::attr_types
@@ -56,9 +55,9 @@ fn parts(attrs: &[Attr]) -> Option<Parts<'_>> {
 }
 
 /// What a valid `alloca` allocates, read from its attributes: the type of
-/// its values, an integer, a pointer or a float type; its count, written when it is
-/// not 1; and its alignment, written when the op gives one. A backend sizes
-/// the allocation from them with its memory's layout entry.
+/// its values, an integer, a pointer or a float type; its count, written
+/// when it is not 1; and its alignment, written when the op gives one. A
+/// backend sizes the allocation from them with its memory's layout entry.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Allocation<'a> {
     /// The type of the values it has room for.

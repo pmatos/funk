@@ -18,10 +18,11 @@
 //! alignment that is a power of two no larger than [`MemLayout::LIMIT`], as
 //! `alloca`'s is. With no `align(A)` the access is aligned to the natural
 //! alignment of `iW` or of the float's size in memory `N`, or to the
-//! default alignment of `ptr<M>` there, as `alloca`'s. The op reads memory `N`, may be UB (on a poison
-//! pointer, or an access out of bounds, to a freed allocation, without
-//! provenance or misaligned) and may give poison (units that are not an
-//! encoding of its type, as fresh memory's, or a punned load).
+//! default alignment of `ptr<M>` there, as `alloca`'s. The op reads memory
+//! `N`, may be UB (on a poison pointer, or an access out of bounds, to a
+//! freed allocation, without provenance or misaligned) and may give poison
+//! (units that are not an encoding of its type, as fresh memory's, or a
+//! punned load).
 //!
 //! [`MemLayout::LIMIT`]: crate::ir::MemLayout::LIMIT
 //! [`ORDERINGS`]: super::ORDERINGS
