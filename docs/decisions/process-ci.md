@@ -25,9 +25,8 @@ four jobs are:
   that saves it.
 - `cross`, "Cross-language suite". It holds `fir-round-trip`, `fir-harness`,
   `fir-random`, `fir-harness-test` and `coverage-matrix`. It installs both
-  toolchains, binutils, a C compiler and make, and builds `lean/` again,
-  beside the `lean` job. `fir-harness` builds Berkeley TestFloat with the
-  compiler ([testing-and-harness-floats.md](testing-and-harness-floats.md#the-testfloat-check)).
+  toolchains, binutils, `gcc` and `make`, and builds `lean/` again,
+  beside the `lean` job. `fir-harness` builds Berkeley TestFloat with them ([testing-and-harness-floats.md](testing-and-harness-floats.md#the-testfloat-check)).
 
 `conventional-pre-commit`, a `commit-msg` hook, runs in `pr-title.yml` instead
 ([process.md](process.md#how-a-change-reaches-main)).

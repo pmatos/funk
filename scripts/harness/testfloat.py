@@ -15,7 +15,8 @@ on `fir-ref run --exhaustive --nans` with no NaN given, so that a NaN result
 is the positive quiet NaN, at no cost to the choice budget. It prints one
 line per format and function, and the first failures of each, and exits
 with 1 when a vector fails, and with 2 when TestFloat cannot be built or
-`fir-ref` gives no result for a batch. `scripts/check-harness.sh` runs it
+`fir-ref` gives no result for a batch. Its last line is the totals, as
+`vectors=N failed=N exit=N`, which CI puts in the job's summary. `scripts/check-harness.sh` runs it
 after the harness.
 
 The cache is `$FUNK_TESTFLOAT_CACHE`, or `funk/testfloat` under
@@ -23,17 +24,20 @@ The cache is `$FUNK_TESTFLOAT_CACHE`, or `funk/testfloat` under
 """
 
 import argparse
-import json
 import os
 import shutil
 import subprocess
 import sys
 import tempfile
+import time
 from collections.abc import Iterator
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 import testfloat_cases as tc
+import tools
+from refine import RETURN
+from sets import Outcomes
 
 PINS = {
     "berkeley-softfloat-3": "a0c6494cdc11865811dec815d5c0049fba9d82a8",
@@ -62,6 +66,8 @@ def fetch(repo: str, commit: str, into: Path):
     run = ["git", "-C", str(into)]
     subprocess.run(["git", "init", "-q", str(into)], check=True, env=git_env())
     for attempt in range(5):
+        if attempt:
+            time.sleep(10)
         fetched = subprocess.run(
             [*run, "fetch", "-q", "--depth", "1", URL.format(repo), commit],
             check=False,
@@ -69,8 +75,8 @@ def fetch(repo: str, commit: str, into: Path):
         )
         if fetched.returncode == 0:
             break
-        if attempt == 4:
-            raise RuntimeError(f"cannot fetch {repo} at {commit}")
+    else:
+        raise RuntimeError(f"cannot fetch {repo} at {commit}")
     subprocess.run([*run, "checkout", "-q", commit], check=True, env=git_env())
 
 
@@ -119,15 +125,17 @@ def vectors(gen: Path, fmt: str, function: str) -> list[tc.Vector]:
     rodd = fmt == "bf16" and function in tc.ARITHMETIC
     # bf16 keeps every vector whose operands are bf16 values.
     sampled = function == "mulAdd" and fmt != "bf16"
+    n = tc.arity(function)
     out = []
     for i, line in enumerate(generate(gen, f"{source}_{function}", rodd)):
         if sampled and i % tc.MULADD_STRIDE:
             continue
+        if fmt == "bf16" and not all(a.endswith("0000") for a in line.split()[:n]):
+            continue
         v = tc.parse(function, line)
         if fmt == "bf16":
             v = tc.to_bf16(function, v)
-            if v is None:
-                continue
+            assert v is not None
         out.append(v)
     return out
 
@@ -138,40 +146,40 @@ def run_batch(fir_ref: str, fmt: str, function: str, batch: list[tc.Vector]):
     with tempfile.TemporaryDirectory() as tmp:
         path = Path(tmp) / "testfloat.fir"
         path.write_text(tc.module(fmt, e, m, function, batch))
-        valid = subprocess.run(
-            [fir_ref, "validate", str(path)],
-            check=False,
-            capture_output=True,
-            text=True,
-        )
-        if valid.returncode != 0:
-            return f"fir-ref validate rejects the module: {valid.stdout}"
-        ran = subprocess.run(
-            [fir_ref, "run", "--exhaustive", "--nans", "", str(path), "@v"],
-            check=False,
-            capture_output=True,
-            text=True,
-        )
-    try:
-        result = json.loads(ran.stdout)
-        (outcome,) = result["outcomes"]
-        if outcome["kind"] == "return":
-            return outcome["values"]
-    except (ValueError, KeyError, TypeError):
-        pass
-    return f"fir-ref exited with {ran.returncode}: {ran.stdout}{ran.stderr}"
+        valid = tools.run([fir_ref, "validate", str(path)])
+        if valid.status != 0:
+            return f"fir-ref validate {tools.ending(valid)}: {valid.stdout.strip()}"
+        ran = tools.run([fir_ref, "run", "--exhaustive", "--nans", "", str(path), "@v"])
+    result = tools.outcomes(ran)
+    if isinstance(result, str):
+        return f"fir-ref run {result}"
+    if not isinstance(result, Outcomes):
+        return "fir-ref run passes the choice budget"
+    outcomes = result.outcomes
+    if len(outcomes) != 1 or outcomes[0].kind != RETURN:
+        return f"fir-ref run gives {', '.join(o.show() for o in outcomes)}"
+    return outcomes[0].values
 
 
-def check(fir_ref: str, pool, gen: Path, fmt: str, function: str):
-    """Runs one function at one format: (vectors, failures, errors)."""
-    e, m = tc.BF16 if fmt == "bf16" else tc.FORMATS[fmt]
+def submit(pool, fir_ref: str, gen: Path, fmt: str, function: str):
+    """Starts one function at one format: its batches and their runs."""
     vs = vectors(gen, fmt, function)
-    if not vs:
-        return 0, [], ["TestFloat gave no vector"]
     batches = [vs[i : i + BATCH] for i in range(0, len(vs), BATCH)]
-    ran = pool.map(lambda b: run_batch(fir_ref, fmt, function, b), batches)
+    runs = [pool.submit(run_batch, fir_ref, fmt, function, b) for b in batches]
+    return batches, runs
+
+
+def collect(fmt: str, function: str, batches, runs):
+    """The vectors, failures and errors of one function at one format."""
+    e, m = tc.BF16 if fmt == "bf16" else tc.FORMATS[fmt]
     failures, errors = [], []
-    for batch, values in zip(batches, ran):
+    if not batches:
+        errors.append("TestFloat gave no vector")
+    for batch, run in zip(batches, runs):
+        try:
+            values = run.result()
+        except OSError as err:
+            values = f"fir-ref cannot be run: {err}"
         if isinstance(values, str):
             errors.append(values)
             continue
@@ -180,7 +188,7 @@ def check(fir_ref: str, pool, gen: Path, fmt: str, function: str):
             errors.append(f"{len(values)} values for {len(cs)} checks")
             continue
         failures += [(c, v) for c, v in zip(cs, values) if not tc.passes(e, m, c, v)]
-    return len(vs), failures, errors
+    return sum(map(len, batches)), failures, errors
 
 
 def describe(c: tc.Check, value: str) -> str:
@@ -188,6 +196,16 @@ def describe(c: tc.Check, value: str) -> str:
     want = c.expected if c.predicate else f"{c.expected:x}"
     op = f"{c.predicate} " if c.predicate else ""
     return f"    {op}{operands}: TestFloat {want}, fir-ref {value}"
+
+
+def report(fmt: str, function: str, n: int, failures, errors) -> int:
+    """Prints one function's line and first failures; its exit status."""
+    print(f"{fmt} {function}: {n} vectors, {len(failures)} failed", flush=True)
+    for c, v in failures[:SHOWN]:
+        print(describe(c, v))
+    for err in errors[:SHOWN]:
+        print(f"    no result: {err}")
+    return 2 if errors else 1 if failures else 0
 
 
 def main() -> int:
@@ -200,23 +218,24 @@ def main() -> int:
     except (OSError, RuntimeError, subprocess.CalledProcessError) as err:
         print(f"testfloat: cannot build TestFloat: {err}", file=sys.stderr)
         return 2
-    status = 0
+    status, total, failed = 0, 0, 0
+    pairs = [(fmt, f) for fmt in [*tc.FORMATS, "bf16"] for f in tc.functions()]
     with ThreadPoolExecutor(args.jobs) as pool:
-        for fmt in [*tc.FORMATS, "bf16"]:
-            for function in tc.functions():
+        # While one function's batches run, the next one's vectors are read.
+        pending = None
+        for pair in [*pairs, None]:
+            started = None
+            if pair is not None:
                 try:
-                    n, failures, errors = check(args.fir_ref, pool, gen, fmt, function)
-                except RuntimeError as err:
-                    n, failures, errors = 0, [], [str(err)]
-                print(f"{fmt} {function}: {n} vectors, {len(failures)} failed")
-                for c, v in failures[:SHOWN]:
-                    print(describe(c, v))
-                for err in errors[:SHOWN]:
-                    print(f"    no result: {err.strip()}")
-                if errors:
-                    status = 2
-                elif failures and status == 0:
-                    status = 1
+                    started = (*pair, *submit(pool, args.fir_ref, gen, *pair))
+                except (OSError, RuntimeError, ValueError) as err:
+                    status = max(status, report(*pair, 0, [], [str(err)]))
+            if pending is not None:
+                n, failures, errors = collect(*pending)
+                status = max(status, report(*pending[:2], n, failures, errors))
+                total, failed = total + n, failed + len(failures)
+            pending = started
+    print(f"vectors={total} failed={failed} exit={status}")
     return status
 
 

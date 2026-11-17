@@ -21,7 +21,8 @@ predicates of `fcmp` by IEEE 754 section 5.11: `ole a, b` is `le`, `ugt a, b`
 its negation, `oge b, a` the same order read the other way, and `ult b, a`
 its negation; likewise `lt` gives `olt`, `uge`, `ogt` and `ule`, and `eq`
 gives `oeq` and `une`. TestFloat has no negation or absolute value, so it
-backs no `fneg` and no `fabs`.
+backs no `fneg` and no `fabs`; its `rem` is `frem`, which #310 built, and
+is not run here.
 
 `bf16` is not one of TestFloat's formats. Its vectors come from TestFloat's
 `f32` vectors whose operands are all `bf16` values, which are the `f32`

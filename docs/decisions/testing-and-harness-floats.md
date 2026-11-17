@@ -135,13 +135,14 @@ SoftFloat's last before its `bf16` work, both of 2025-03-07.
 - `eq`, `le` and `lt` back ten predicates of `fcmp` by IEEE 754 section
   5.11: `oeq`, `ole`, `olt`, their negations `une`, `ugt` and `uge`, and
   with the operands swapped `oge`, `ogt`, `ult` and `ule`. TestFloat has no
-  vectors for `one`, `ueq`, `ord` and `uno`, for `fneg` and `fabs`, or for
-  the remainders, which stay on `float_ref.py`'s corpus.
+  vectors for `one`, `ueq`, `ord` and `uno`, or for `fneg` and `fabs`, which
+  stay on `float_ref.py`'s corpus, as do the remainders of #310: the check
+  does not run TestFloat's `rem`, IEEE 754's remainder, which is `frem`.
 - At `f32` and `f64` it checks Lean's model apart from the backend; the
   corpus compares native code with `fir-ref`.
 - It exits with 1 when a vector fails, and with 2 when TestFloat cannot be
   fetched or built or `fir-ref` gives no result for a batch, so a missing
-  compiler or network fails the hook.
+  `gcc` or network fails the hook. A fetch is tried five times, 10 s apart.
 
 `bf16`, which TestFloat lacks, is checked against TestFloat's `f32`
 vectors whose operands are all `bf16` values, the `f32` values with 16 low
