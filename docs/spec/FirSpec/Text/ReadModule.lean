@@ -102,7 +102,8 @@ $$`\begin{aligned} & \mathrm{toks}(\mathit{ts}) = \mathrm{tokens}(m)~\mathsf{eof
 
 Here $`\mathrm{readmodule}` is the reader of a module. This is the second
 step of the round trip. The reader reads the dialect set first, which the
-word `layout`, an item's kind, `func`, `module` or a word of a dialect, or
+word `layout`, an item's kind, `func`, `module`, `aggregate` or a word of
+a dialect, or
 the table's `locs` ends,
 then the data layout, which an item's kind or `locs` ends. Of all the readers,
 only the readers of types and of lines and columns reject a token of the

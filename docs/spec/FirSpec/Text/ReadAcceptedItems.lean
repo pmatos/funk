@@ -66,7 +66,8 @@ induction that follows their own recursion, as for blocks. Case by case:
 * an item without its symbol is an error.
 
 Nothing is asked of an item's kind or its symbol: decoding accepts only a
-`func`, a `module` and an item of a dialect's kind, whatever their symbol.
-An item of a dialect's kind keeps its attributes, so they are asked to be
+`func`, a `module`, an `aggregate` and an item of a dialect's kind,
+whatever their symbol. An item of a dialect's kind keeps its attributes,
+and an aggregate's layout is decoded from its own, so they are asked to be
 written.
 :::

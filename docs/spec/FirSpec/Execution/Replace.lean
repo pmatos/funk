@@ -23,7 +23,8 @@ symbol $`s` and a region $`b`, $`f[s \leftarrow b]` is the function $`f`
 with the body $`b` when the symbol of $`f` is $`s`, and $`f` unchanged
 otherwise. An item that is a function $`f` becomes $`f[s \leftarrow b]`,
 and a nested module is unchanged, since its functions are in its own
-symbol table. An item of a dialect's kind is unchanged too. For a
+symbol table. An item of a dialect's kind and an aggregate's layout are
+unchanged too. For a
 {ref "The-fir-specification--Abstract-syntax--Modules___-functions___-blocks-and-ops"}[module]
 $`M`, $`M[s \leftarrow b]` replaces each item of $`M` so, in the same
 order, and keeps the dialect set, the data layout and the location table.
