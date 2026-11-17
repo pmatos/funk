@@ -144,8 +144,8 @@ capping the natural alignment at the pointer's.
   A float of `float<e,m>` takes the units of the integer of its
   `1 + e + m` bits, at the natural alignment of the float's size: in
   memory 0, `f16` and `bf16` 2, `f32` 4, `f64` 8 and `f128` 16 (#378 Q3).
-  `gpu.work_group_alloca`, which has `alloca`'s rules but its kind, takes
-  float elements too. Rejected: float and pointer elements before any
+  `gpu.work_group_alloca` keeps integer and pointer elements (`Ty.IsElem`):
+  whether it takes floats as `alloca` now does waits for the human. Rejected: float and pointer elements before any
   access could read or write them.
 - `A` is at most `MemLayout.limit`, 2^24 - 1, the bound of the data layout's
   own alignments, so the largest `A` is 2^23; the count has no bound. An

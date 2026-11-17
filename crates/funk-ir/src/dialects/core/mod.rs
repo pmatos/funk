@@ -50,7 +50,7 @@ mod types;
 mod width;
 
 pub use access::ORDERINGS;
-pub(crate) use alloc_shape::{check_shape, shape_attr_types, shape_decodes};
+pub(crate) use alloc_shape::{check_work_group_shape, shape_attr_types, shape_decodes};
 pub use alloca::{Allocation, allocation};
 pub(crate) use alloca::{allocation_effects, memory as allocation_memory};
 pub use arith::WRAP_FLAG_SETS;

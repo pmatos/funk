@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "The GPU dialect's rules: readable blocks" =>
 
-:::moduleDocs (fingerprint := "2178873433890875077")
+:::moduleDocs (fingerprint := "16268082782151105273")
 :::
 
 :::readable Fir.Gpu.ValidTy Fir.Gpu.instDecidableValidTy (fingerprint := "4133016473030974221")
@@ -23,15 +23,15 @@ when it is a valid core type, since its types are the core's. Whether it
 is valid is decided.
 :::
 
-:::readable Fir.Gpu.Op.Valid Fir.Gpu.Op.attrTypes Fir.Gpu.instDecidableOpValid (fingerprint := "1737443107451698717")
+:::readable Fir.Gpu.Op.Valid Fir.Gpu.Op.attrTypes Fir.Gpu.instDecidableOpValid (fingerprint := "6095714268801176293")
 *Definition: the rule of an op of `gpu`.* A question of `gpu` is valid
 when it gives an $`\mathsf{i32}`, the width of every id and size of a
 work-item. An allocation has the rules of `alloca` but its kind: it
 allocates at least one value, its alignment, when given, is a power of two
-no larger than the data layout's limit, and its type is a valid type, an
-integer, a pointer or a float, as for `alloca` (#264):
+no larger than the data layout's limit, and its type is a valid integer or
+pointer type:
 
-$$`\frac{N = 32}{C \vdash \mathsf{query}_N~q~d~\text{valid}} \qquad \frac{1 \le c \quad (a~\text{absent or a valid alignment}) \quad \vdash t~\text{valid}}{C \vdash \mathsf{alloc}_n~t~c~a~\text{valid}}`
+$$`\frac{N = 32}{C \vdash \mathsf{query}_N~q~d~\text{valid}} \qquad \frac{1 \le c \quad (a~\text{absent or a valid alignment}) \quad t \in \{\mathsf{i}W, \mathsf{ptr}\langle m\rangle\}~\text{valid}}{C \vdash \mathsf{alloc}_n~t~c~a~\text{valid}}`
 
 So `%i: i64 = gpu.work_item_id gpu.x` decodes, and validation rejects it.
 An allocation carries its type $`t` in its attributes, and when $`t` is

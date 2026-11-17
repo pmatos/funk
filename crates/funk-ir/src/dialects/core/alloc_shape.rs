@@ -128,13 +128,22 @@ pub(crate) fn shape_decodes(attrs: &[Attr]) -> bool {
     shape(attrs).is_some()
 }
 
-/// The rules of an allocation beyond its kind, for the op `op` whose
-/// attributes after its kind are `attrs`: at least one value, an alignment
-/// that `check_align` accepts, and a valid type (`Core.Op.Valid`,
-/// `Gpu.Op.Valid`). Attributes that do not decode break no rule here:
-/// decoding reports them.
-pub(crate) fn check_shape(op: &str, attrs: &[Attr]) -> Result<(), String> {
-    shape(attrs).map_or(Ok(()), |p| check_shape_of(op, &p))
+/// The rules of a work-group allocation, the op `op` whose attributes are
+/// `attrs`: those of `alloca`'s shape, and an integer or pointer element
+/// (`Gpu.Op.Valid`, `Ty.IsElem`). `alloca` takes a float too (#264).
+/// Attributes that do not decode break no rule here: decoding reports them.
+pub(crate) fn check_work_group_shape(op: &str, attrs: &[Attr]) -> Result<(), String> {
+    let Some(p) = shape(attrs) else {
+        return Ok(());
+    };
+    check_shape_of(op, &p)?;
+    if let AnyType::Float(..) = p.ty {
+        return Err(format!(
+            "{op} allocates an integer or a pointer type, not {}",
+            written(&p.ty)
+        ));
+    }
+    Ok(())
 }
 
 /// The type an allocation carries, as it is written.
@@ -150,7 +159,9 @@ fn written(t: &AnyType) -> String {
     }
 }
 
-/// The rules of an allocation beyond its kind, on its decoded shape.
+/// The rules of an allocation beyond its kind, on its decoded shape: at
+/// least one value, an alignment that `check_align` accepts, and a valid
+/// type (`Core.Op.Valid`).
 pub(super) fn check_shape_of(op: &str, p: &Shape<'_>) -> Result<(), String> {
     if p.count.is_some_and(|c| c.as_str() == "0") {
         return Err(format!("{op} allocates at least one value, not 0"));

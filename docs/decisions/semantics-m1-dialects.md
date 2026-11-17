@@ -190,7 +190,7 @@ memory its meaning (ADR-2026-11-09-1542;
   `allocates(N)`, as `alloca`'s is. The name and spelling are an
   implementation choice of stage 3, which the human may rule on: the name
   follows `gpu.work_group_*`, and the attributes reuse `alloca`'s reading
-  (`Gpu.decodeAlloc`; `crates/funk-ir/src/dialects/core/alloca.rs`'s shape).
+  (`Gpu.decodeAlloc`; `crates/funk-ir/src/dialects/core/alloc_shape.rs`).
 - **Its lifetime with one work-item.** It allocates with the units and the
   alignment `alloca` would take in that memory, but with the kind `global`,
   the kind of an allocation that lives for the whole run (`Gpu.allocRule`).

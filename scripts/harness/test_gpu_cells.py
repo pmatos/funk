@@ -102,12 +102,11 @@ class Cells(unittest.TestCase):
             (("i7",), "i7"),
             (("ptr(3)",), "ptr"),
             (("ptr",), "ptr"),
-            (("f32",), "f32"),
         ]:
             op = Op(name, attrs, (), ("ptr(3)",), ())
             self.assertEqual(of_op(op), {Cell("gpu_memory", name, "", column)})
         for op in [
-            Op(name, ("word",), (), ("ptr(3)",), ()),
+            Op(name, ("f32",), (), ("ptr(3)",), ()),
             Op(name, ("i32",), (), ("i32",), ()),
             Op(name, (), (), ("ptr(3)",), ()),
         ]:

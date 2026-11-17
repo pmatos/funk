@@ -45,6 +45,16 @@ def Ty.memory : Ty → Option Nat
   | .ptr n => some n
   | _ => none
 
+/-- An integer or a pointer type: the element types of a work-group
+allocation, `gpu.work_group_alloca` (`Gpu.Op.Valid`). The core's `alloca`
+takes every valid type, a float included (#264). -/
+def Ty.IsElem : Ty → Prop
+  | .int _ | .ptr _ => True
+  | .float _ _ => False
+
+instance : DecidablePred Ty.IsElem := fun t => by
+  cases t <;> unfold Ty.IsElem <;> infer_instance
+
 /-- The type that `alloca` allocates values of, which it carries in its
 attributes, so that the data layout checks the memory a pointer type there
 names. A type that is not valid, such as a pointer of a memory above the
