@@ -53,16 +53,25 @@ since the bits of a value above its width are unspecified
 reads its byte, and its bits above bit 0 are such bits.
 
 An `alloca` of floats takes the bytes and the natural alignment of the
-integer of their width, `1 + e + m` bits. A load or a store of a float is
-reported as unsupported where it is: stage 2 of #264 lowers `f32` and `f64`
-ones with SSE moves
-([semantics-m1-memory-access.md](semantics-m1-memory-access.md#floats-in-memory)).
+integer of their width, `1 + e + m` bits. A load or a store of an `f32` or
+`f64` moves its 4 or 8 bytes through `%xmm0` with `movss` or `movsd`, which
+copy the bits as they are, so a NaN keeps its sign and payload and a
+signalling NaN stays signalling
+([semantics-m1-memory-access.md](semantics-m1-memory-access.md#floats-in-memory),
+#264). The value goes to or from its slot as other float ops' do: `movq`
+from `%xmm0` into the slot, whose bits above an `f32`'s 32 are unspecified,
+and `movss` or `movsd` from it. An `f16`, `bf16` or `f128` value is
+reported where it is defined, as at every other float op
+([x86-64-backend-lowering-floats.md](x86-64-backend-lowering-floats.md)).
+Rejected: moving a float's bits through `%rax` with integer moves, which
+gives the same bytes but not the SSE moves that #264 asks for.
 
 `align(A)` and the ordering need no code. x86-64 accesses any address, a
 misaligned access is UB in the spec (the human's ruling of 2026-11-14 on
 #388), and M1's one ordering is `nonatomic`. A punned load, which the spec
 makes poison, reads the bytes that are there. Each access loads the address
-into `%rcx` and the value through `%rax`, and `%rdx` for an `i128`.
+into `%rcx` and the value through `%rax`, and `%rdx` for an `i128`, or
+through `%xmm0` for a float.
 
 ## Stack allocation
 

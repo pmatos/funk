@@ -7,7 +7,7 @@ says how to read it.
 
 | op | flags or predicate | `i1` | `i8` | `i16` | `i32` | `i64` | `i128` |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| `const` |  | 517 | 784 | 445 | 803 | 674 | 639 |
+| `const` |  | 517 | 784 | 445 | 803 | 682 | 639 |
 | `add` |  | 205 | 359 | 311 | 299 | 434 | 534 |
 | `add` | `nuw` | 8 | 29 | 29 | 31 | 29 | 35 |
 | `add` | `nsw` | 211 | 225 | 206 | 218 | 205 | 107 |
@@ -72,7 +72,7 @@ says how to read it.
 | `fadd` | `nnan` | 3 | 3 |
 | `fadd` | `ninf` | 3 | 3 |
 | `fadd` | `nsz` | 3 | 3 |
-| `fsub` | `round(rne)` | 20 | 20 |
+| `fsub` | `round(rne)` | 23 | 23 |
 | `fsub` | `nnan` | 3 | 3 |
 | `fsub` | `ninf` | 3 | 3 |
 | `fsub` | `nsz` | 2 | 2 |
@@ -176,12 +176,12 @@ says how to read it.
 
 ## Pointer ops: ptradd by an integer, alloca, load and store of one, of a float or of a pointer
 
-| op | `i1` | `i8` | `i16` | `i32` | `i64` | `i128` | `ptr` |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| `ptradd` | 2 | 4 | 4 | 4 | 29 | 4 |  |
-| `alloca` | 2 | 12 | 6 | 40 | 10 | 5 | 4 |
-| `load` | 2 | 35 | 7 | 18 | 9 | 5 | 4 |
-| `store` | 4 | 9 | 6 | 42 | 10 | 5 | 4 |
+| op | `i1` | `i8` | `i16` | `i32` | `i64` | `i128` | `ptr` | `f32` | `f64` |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `ptradd` | 2 | 4 | 4 | 4 | 37 | 4 |  |  |  |
+| `alloca` | 2 | 12 | 6 | 46 | 14 | 5 | 4 | 17 | 14 |
+| `load` | 2 | 37 | 7 | 22 | 13 | 5 | 4 | 15 | 16 |
+| `store` | 4 | 9 | 6 | 46 | 14 | 5 | 4 | 17 | 16 |
 
 ## Passed and returned values
 
@@ -192,12 +192,12 @@ says how to read it.
 | `cond_br` | a successor passes nothing | 858 |  |  |  |  |  |  |  |  |
 | `cond_br` | a successor passes values |  | 58 | 140 | 132 | 160 | 132 | 153 | 9 | 7 |
 | `ret` | returns no value | 73 |  |  |  |  |  |  |  |  |
-| `ret` | returns one value |  | 2947 | 1622 | 1276 | 1702 | 1461 | 2490 | 533 | 459 |
-| `ret` | returns several values |  | 282 | 432 | 266 | 249 | 399 | 539 | 9 | 9 |
+| `ret` | returns one value |  | 2947 | 1624 | 1276 | 1706 | 1465 | 2490 | 546 | 473 |
+| `ret` | returns several values |  | 282 | 432 | 266 | 249 | 399 | 539 | 11 | 11 |
 | `unreachable` | ends a block | 38 |  |  |  |  |  |  |  |  |
 | `call` | gives no result | 35 |  |  |  |  |  |  |  |  |
 | `call` | gives one result |  | 89 | 87 | 80 | 87 | 93 | 130 | 2 | 2 |
 | `call` | gives several results |  | 171 | 220 | 126 | 111 | 191 | 279 | 3 | 4 |
 | `func` | returns no value | 41 |  |  |  |  |  |  |  |  |
-| `func` | returns one value |  | 2947 | 1622 | 1276 | 1702 | 1461 | 2490 | 531 | 457 |
-| `func` | returns several values |  | 282 | 432 | 266 | 240 | 399 | 503 | 9 | 9 |
+| `func` | returns one value |  | 2947 | 1624 | 1276 | 1706 | 1465 | 2490 | 544 | 471 |
+| `func` | returns several values |  | 282 | 432 | 266 | 240 | 399 | 503 | 11 | 11 |

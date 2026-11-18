@@ -131,7 +131,7 @@ class Tests(unittest.TestCase):
                 ["README.md", "differential.md", "interpreter.md"],
             )
             self.assertIn(
-                "(differential.md): 540 cells, 6 with a test", matrix.read_text()
+                "(differential.md): 546 cells, 6 with a test", matrix.read_text()
             )
             diff = (out / "differential.md").read_text()
             self.assertIn("| `add` | `nuw` | **0** | 1 | **0** |", diff)

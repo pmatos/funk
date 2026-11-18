@@ -186,7 +186,7 @@ class Tests(unittest.TestCase):
             {Cell("pointers", op, "", "ptr") for op in ("alloca", "load", "store")},
         )
 
-    def test_floats_in_memory_are_cells_on_the_interpreter_side_alone(self):
+    def test_floats_in_memory_are_cells_at_each_side_s_formats(self):
         memory = ("f16", "f32")
         found = cells.cells(cells.INTERPRETER, offsets=(8,), memory=memory)
         self.assertEqual(
@@ -197,7 +197,7 @@ class Tests(unittest.TestCase):
                 for f in memory
             },
         )
-        self.assertEqual(MEMORY_FLOAT_DIFFERENTIAL, ())
+        self.assertEqual(MEMORY_FLOAT_DIFFERENTIAL, cells.FLOAT_DIFFERENTIAL)
         self.assertEqual(MEMORY_FLOAT_INTERPRETER, cells.FLOAT_INTERPRETER)
 
     def test_a_load_is_a_cell_for_each_width_of_its_result(self):
