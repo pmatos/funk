@@ -40,13 +40,14 @@ theorem fuelMonotone (M : Module CoreGpu) (f : Func CoreGpu)
     (args : HVector toType (f.params.map (·.2))) : FuelMonotone (f.runs M args) :=
   G0.fuelMonotone CoreGpu M f args
 
-variable {N : Type} [DecidableEq N] (lay : N → MemLayout) (ρ : DialectEffects.Mem CoreGpu → N)
+variable {N : Type} [DecidableEq N] (lay : N → MemLayout) (ρ : DialectEffects.Mem CoreGpu → N) (L :
+    RunItems)
 
 /-- More fuel never changes how a run with memory of a function of the sum
 ends. -/
 theorem memRuns_fuelMonotone (M : Module CoreGpu) (f : Func CoreGpu)
-    (args : HVector toType (f.params.map (·.2))) : FuelMonotone (f.memRuns lay ρ M args) :=
-  G0.memRuns_fuelMonotone CoreGpu lay ρ M f args
+    (args : HVector toType (f.params.map (·.2))) : FuelMonotone (f.memRuns lay ρ L M args) :=
+  G0.memRuns_fuelMonotone CoreGpu lay ρ L M f args
 
 variable {M : Module CoreGpu} {t : SymbolTable CoreGpu} {f : Func CoreGpu}
 
@@ -62,17 +63,17 @@ theorem neverStuck (hM : M.Valid) (ht : t ∈ M.tables) (hf : f ∈ t.funcs)
 module of the sum, in the module of its table, is stuck. -/
 theorem memNeverStuck (hM : M.Valid) (ht : t ∈ M.tables) (hf : f ∈ t.funcs)
     (args : HVector toType (f.params.map (·.2))) :
-    NeverStuck (f.memRuns lay ρ (M.nest t) args) :=
-  G0.memNeverStuck CoreGpu lay ρ (hM.nest ht).funcs
-    (fun _ hg => inModuleAt_of_valid lay ρ ((hM.nest ht).funcs _ hg)) hf args
+    NeverStuck (f.memRuns lay ρ L (M.nest t) args) :=
+  G0.memNeverStuck CoreGpu lay ρ L (hM.nest ht).funcs
+    (fun _ hg => inModuleAt_of_valid lay ρ L ((hM.nest ht).funcs _ hg)) hf args
 
 /-- A run with memory of a function of each table of a valid module of the
 sum, in the module of its table, has an outcome at every budget. -/
 theorem memProgress (hM : M.Valid) (ht : t ∈ M.tables) (hf : f ∈ t.funcs)
     (args : HVector toType (f.params.map (·.2))) :
-    Progress (f.memRuns lay ρ (M.nest t) args) :=
-  G0.memProgress CoreGpu lay ρ (hM.nest ht).funcs
-    (fun _ hg => inModuleAt_of_valid lay ρ ((hM.nest ht).funcs _ hg)) hf args
+    Progress (f.memRuns lay ρ L (M.nest t) args) :=
+  G0.memProgress CoreGpu lay ρ L (hM.nest ht).funcs
+    (fun _ hg => inModuleAt_of_valid lay ρ L ((hM.nest ht).funcs _ hg)) hf args
 
 /-! # Refinement with memory -/
 
@@ -82,18 +83,18 @@ its behaviour refines its behaviour from those others. -/
 theorem memRunsFrom_args_isRefinedBy (M : Module CoreGpu) (f : Func CoreGpu)
     {a a' : HVector toType (f.params.map (·.2))} (ha : a.Forall₂ TyRefinement.IsRefinedBy a')
     {S S' : Memories N (unitsOf lay)} (hS : S ⊑ S') :
-    letI := DialectMemDenote.denoteAt (d := CoreGpu) lay ρ
+    letI := DialectMemDenote.denoteAt (d := CoreGpu) lay ρ L
     observable (f.memRunsFrom M (a, S)) ⊑ observable (f.memRunsFrom M (a', S')) :=
-  letI := DialectMemDenote.denoteAt (d := CoreGpu) lay ρ
-  G0.memRunsFrom_args_isRefinedBy CoreGpu M (fun g _ => memOpsMonotone lay ρ g) f
-    (memOpsMonotone lay ρ f) ha hS
+  letI := DialectMemDenote.denoteAt (d := CoreGpu) lay ρ L
+  G0.memRunsFrom_args_isRefinedBy CoreGpu M (fun g _ => memOpsMonotone lay ρ L g) f
+    (memOpsMonotone lay ρ L f) ha hS
 
 /-- Refined arguments, with memory, for every function of each table of a
 valid module of the sum, in the module of its table. -/
 theorem memRuns_args_isRefinedBy (hM : M.Valid) (ht : t ∈ M.tables) (hf : f ∈ t.funcs)
     {a a' : HVector toType (f.params.map (·.2))} (ha : a.Forall₂ TyRefinement.IsRefinedBy a') :
-    observable (f.memRuns lay ρ (M.nest t) a) ⊑ observable (f.memRuns lay ρ (M.nest t) a') :=
-  G0.memRuns_args_isRefinedBy CoreGpu lay ρ (hM.nest ht).funcs hf ha
+    observable (f.memRuns lay ρ L (M.nest t) a) ⊑ observable (f.memRuns lay ρ L (M.nest t) a') :=
+  G0.memRuns_args_isRefinedBy CoreGpu lay ρ L (hM.nest ht).funcs hf ha
 
 /-- Congruence in the callee, with memory, in the module of each table of a
 valid module of the sum, when the new body, run from given memories,
@@ -101,17 +102,17 @@ refines the old one and has one budget past which it runs out of fuel only
 if it diverges. -/
 theorem memRuns_replaceBody_isRefinedBy (hM : M.Valid) (ht : t ∈ M.tables) {g : Func CoreGpu}
     (hg : g ∈ t.funcs) (b : Region CoreGpu)
-    (hbound : letI := DialectMemDenote.denoteAt (d := CoreGpu) lay ρ
+    (hbound : letI := DialectMemDenote.denoteAt (d := CoreGpu) lay ρ L
       ∃ B, ((g.replaceBody g.name b).memRunsFrom (Mem := N) (unit := unitsOf lay)
         ((M.nest t).replaceBody g.name b)).BoundedBy B)
-    (h : letI := DialectMemDenote.denoteAt (d := CoreGpu) lay ρ
+    (h : letI := DialectMemDenote.denoteAt (d := CoreGpu) lay ρ L
       g.memRunsFrom (Mem := N) (unit := unitsOf lay) (M.nest t) ⊑
         (g.replaceBody g.name b).memRunsFrom (Mem := N) (unit := unitsOf lay)
           ((M.nest t).replaceBody g.name b))
     (hf : f ∈ t.funcs) :
-    f.memRuns lay ρ (M.nest t) ⊑
-      (f.replaceBody g.name b).memRuns lay ρ ((M.nest t).replaceBody g.name b) :=
-  G0.memRuns_replaceBody_isRefinedBy CoreGpu lay ρ isRefinedBy_refl isRefinedBy_trans (hM.nest ht)
+    f.memRuns lay ρ L (M.nest t) ⊑
+      (f.replaceBody g.name b).memRuns lay ρ L ((M.nest t).replaceBody g.name b) :=
+  G0.memRuns_replaceBody_isRefinedBy CoreGpu lay ρ L isRefinedBy_refl isRefinedBy_trans (hM.nest ht)
     hg b hbound h hf
 
 /-- Congruence in the callee, with memory, with no budget, in the module of
@@ -119,15 +120,15 @@ each table of a valid module of the sum: every op of the sum has finitely
 many outcomes. -/
 theorem memRuns_replaceBody_isRefinedBy_of_opsFinite (hM : M.Valid) (ht : t ∈ M.tables)
     {g : Func CoreGpu} (hg : g ∈ t.funcs) (b : Region CoreGpu)
-    (h : letI := DialectMemDenote.denoteAt (d := CoreGpu) lay ρ
+    (h : letI := DialectMemDenote.denoteAt (d := CoreGpu) lay ρ L
       g.memRunsFrom (Mem := N) (unit := unitsOf lay) (M.nest t) ⊑
         (g.replaceBody g.name b).memRunsFrom (Mem := N) (unit := unitsOf lay)
           ((M.nest t).replaceBody g.name b))
     (hf : f ∈ t.funcs) :
-    f.memRuns lay ρ (M.nest t) ⊑
-      (f.replaceBody g.name b).memRuns lay ρ ((M.nest t).replaceBody g.name b) :=
-  G0.memRuns_replaceBody_isRefinedBy_of_opsFinite CoreGpu lay ρ isRefinedBy_refl isRefinedBy_trans
-    (opsFinite lay ρ) (hM.nest ht) hg b h hf
+    f.memRuns lay ρ L (M.nest t) ⊑
+      (f.replaceBody g.name b).memRuns lay ρ L ((M.nest t).replaceBody g.name b) :=
+  G0.memRuns_replaceBody_isRefinedBy_of_opsFinite CoreGpu lay ρ L isRefinedBy_refl isRefinedBy_trans
+    (opsFinite lay ρ L) (hM.nest ht) hg b h hf
 
 /-- Congruence in the callee, with memory, with no budget, in the module of
 each table of a valid module of the sum, when the callee reaches no memory
@@ -138,26 +139,26 @@ theorem memRuns_replaceBody_isRefinedBy_of_opsFinite_memRuns (hM : M.Valid) (ht 
     {g : Func CoreGpu} (hg : g ∈ t.funcs) (b : Region CoreGpu)
     (hold : (M.nest t).table.ReachesNoMemory g.name)
     (hmem : ((M.nest t).replaceBody g.name b).table.ReachesNoMemory g.name)
-    (h : g.memRuns lay ρ (M.nest t) ⊑
-      (g.replaceBody g.name b).memRuns lay ρ ((M.nest t).replaceBody g.name b))
+    (h : g.memRuns lay ρ L (M.nest t) ⊑
+      (g.replaceBody g.name b).memRuns lay ρ L ((M.nest t).replaceBody g.name b))
     (hf : f ∈ t.funcs) :
-    f.memRuns lay ρ (M.nest t) ⊑
-      (f.replaceBody g.name b).memRuns lay ρ ((M.nest t).replaceBody g.name b) :=
-  G0.memRuns_replaceBody_isRefinedBy_of_opsFinite_memRuns CoreGpu lay ρ isRefinedBy_refl
-    isRefinedBy_trans (opsIgnoreMemory lay ρ) (opsFinite lay ρ) (hM.nest ht) hg b hold hmem h hf
+    f.memRuns lay ρ L (M.nest t) ⊑
+      (f.replaceBody g.name b).memRuns lay ρ L ((M.nest t).replaceBody g.name b) :=
+  G0.memRuns_replaceBody_isRefinedBy_of_opsFinite_memRuns CoreGpu lay ρ L isRefinedBy_refl
+    isRefinedBy_trans (opsIgnoreMemory lay ρ L) (opsFinite lay ρ L) (hM.nest ht) hg b hold hmem h hf
 
 /-- Refinement from given memories with black boxes that need no budget,
 for every function of every module of the sum. -/
 theorem memRunsFrom_isRefinedBy_of_opsFinite {M M' : Module CoreGpu}
-    (hcalls : letI := DialectMemDenote.denoteAt (d := CoreGpu) lay ρ
+    (hcalls : letI := DialectMemDenote.denoteAt (d := CoreGpu) lay ρ L
       MemCallsRefined N (unitsOf lay) M M')
     (f : Func CoreGpu) {a a' : HVector toType (f.params.map (·.2))}
     (ha : a.Forall₂ TyRefinement.IsRefinedBy a') {S S' : Memories N (unitsOf lay)} (hS : S ⊑ S') :
-    letI := DialectMemDenote.denoteAt (d := CoreGpu) lay ρ
+    letI := DialectMemDenote.denoteAt (d := CoreGpu) lay ρ L
     observable (f.memRunsFrom M (a, S)) ⊑ observable (f.memRunsFrom M' (a', S')) :=
-  letI := DialectMemDenote.denoteAt (d := CoreGpu) lay ρ
-  G0.memRunsFrom_isRefinedBy_of_opsFinite CoreGpu (fun g _ => memOpsMonotone lay ρ g)
-    (opsFinite lay ρ) hcalls f (memOpsMonotone lay ρ f) ha hS
+  letI := DialectMemDenote.denoteAt (d := CoreGpu) lay ρ L
+  G0.memRunsFrom_isRefinedBy_of_opsFinite CoreGpu (fun g _ => memOpsMonotone lay ρ L g)
+    (opsFinite lay ρ L) hcalls f (memOpsMonotone lay ρ L f) ha hS
 
 /-! # The obligations -/
 

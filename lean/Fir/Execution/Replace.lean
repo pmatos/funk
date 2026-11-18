@@ -14,7 +14,8 @@ of a module gives the same module with a new body in place of the body of
 types, and every other function keeps its body. A caller reaches a callee
 only by its symbol (ADR-2026-10-29-2012), so this replaces the callee
 `@g` for every caller at once. The symbol table, and so the context of
-validation, stays the same, and so do the dialect set and the data layout:
+validation, stays the same, and so do the dialect set, the data layout and
+the aggregates' layouts:
 the new module is valid when the old one is and the new function is valid
 in that context, with its types, and the types its ops carry in their
 attributes, naming memories that the layout declares.
@@ -187,6 +188,15 @@ theorem Module.dialectItems_replaceBody (M : Module d) (s : Name) (b : Region d)
   funext i
   cases i <;> rfl
 
+/-- Replacing a body keeps the aggregates' layouts of the module's own
+table. -/
+theorem Module.aggregates_replaceBody (M : Module d) (s : Name) (b : Region d) :
+    (M.replaceBody s b).table.aggregates = M.table.aggregates := by
+  simp only [SymbolTable.aggregates, Module.table, Module.replaceBody, List.filterMap_map]
+  congr 1
+  funext i
+  cases i <;> rfl
+
 /-- Replacing a body keeps the tables nested in the module's items: no
 function holds one, and a nested module is unchanged. -/
 theorem Item.tablesIn_replaceBody (s : Name) (b : Region d) :
@@ -209,7 +219,7 @@ theorem Module.valid_replaceBody {M : Module d} (hM : M.Valid) {s : Name} {b : R
     (ha : ∀ g ∈ M.funcs, g.name = s →
       ∀ ty ∈ ({ g with body := b } : Func d).attrTypes, M.layout.HasMemoryOf ty) :
     (M.replaceBody s b).Valid := by
-  refine ⟨hM.locs, fun t ht => ?_, hM.layout, fun t ht => ?_⟩
+  refine ⟨hM.locs, fun t ht => ?_, hM.layout, fun t ht => ?_, fun t ht => ?_⟩
   rotate_left
   · simp only [Module.tables, Module.replaceBody, Item.tablesIn_replaceBody, List.mem_cons] at ht
     rcases ht with rfl | ht
@@ -235,6 +245,13 @@ theorem Module.valid_replaceBody {M : Module d} (hM : M.Valid) {s : Name} {b : R
         rw [Module.dialectItems_replaceBody] at hi'
         exact (hM.memories _ (List.mem_cons_self ..)).dialectItems i hi'
     · exact hM.memories t (List.mem_cons_of_mem _ ht)
+  · simp only [Module.tables, Module.replaceBody, Item.tablesIn_replaceBody, List.mem_cons] at ht
+    rcases ht with rfl | ht
+    · intro a ha
+      have ha' : a ∈ (M.replaceBody s b).table.aggregates := ha
+      rw [Module.aggregates_replaceBody] at ha'
+      exact hM.aggregates _ (List.mem_cons_self ..) a ha'
+    · exact hM.aggregates t (List.mem_cons_of_mem _ ht)
   simp only [Module.tables, Module.replaceBody, Item.tablesIn_replaceBody, List.mem_cons] at ht
   rcases ht with rfl | ht
   · refine ⟨?_, fun f hf => ?_, fun i hi => ?_, hM.dialectNames, hM.dialectsUnique⟩

@@ -94,15 +94,15 @@ theorem reachesNoMemory_of_all {t : SymbolTable CoreDialect} (s : Name)
   reachesNoMemory fun _ _ f hf => h f (List.mem_of_find?_eq_some hf)
 
 variable {N : Type} [DecidableEq N] (lay : N → MemLayout)
-  (ρ : DialectEffects.Mem CoreDialect → N)
+  (ρ : DialectEffects.Mem CoreDialect → N) (L : RunItems)
 
 /-- Each core op ignores the memories where it declares no memory effect,
 at every layout and naming: it runs by its rule in the set monad and keeps
 the memories. -/
 theorem opsIgnoreMemory :
-    letI := DialectMemDenote.denoteAt (d := CoreDialect) lay ρ
+    letI := DialectMemDenote.denoteAt (d := CoreDialect) lay ρ L
     OpsIgnoreMemory CoreDialect N (unitsOf lay) := fun op _ h =>
-  OwnRuleHas.ofLifts (Op.liftsSetM op (Op.touchesMemory_false h)) lay ρ (P := IgnoresMemory)
+  OwnRuleHas.ofLifts (Op.liftsSetM op (Op.touchesMemory_false h)) lay ρ L (P := IgnoresMemory)
     IgnoresMemory.lift
 
 variable {M : Module CoreDialect} {f : Func CoreDialect}
@@ -112,22 +112,22 @@ memory, at every layout and naming: it runs by its rule in the set monad and
 keeps the memories, and its rule in the set monad is the set of its rule in
 the tree of choices, whose choices of bits have finitely many options. -/
 theorem opsFinite :
-    letI := DialectMemDenote.denoteAt (d := CoreDialect) lay ρ
+    letI := DialectMemDenote.denoteAt (d := CoreDialect) lay ρ L
     OpsFinite CoreDialect N (unitsOf lay) := fun op _ args => by
   cases hmem : op.touchesMemory with
   | true =>
     cases op <;> try cases hmem
-    · exact ⟨fun _ => alloca_finitelyMany _ _ _ _ _ lay ρ args, fun h => nomatch h⟩
-    · exact ⟨fun _ => load_finitelyMany _ _ _ _ lay ρ args, fun h => nomatch h⟩
-    · exact ⟨fun _ => store_finitelyMany _ _ _ _ lay ρ args, fun h => nomatch h⟩
-    · exact ⟨fun _ => loadPtr_finitelyMany _ _ _ _ lay ρ args, fun h => nomatch h⟩
-    · exact ⟨fun _ => storePtr_finitelyMany _ _ _ _ lay ρ args, fun h => nomatch h⟩
-    · exact ⟨fun _ => loadFloat_finitelyMany _ _ _ _ _ lay ρ args, fun h => nomatch h⟩
-    · exact ⟨fun _ => storeFloat_finitelyMany _ _ _ _ _ lay ρ args, fun h => nomatch h⟩
+    · exact ⟨fun _ => alloca_finitelyMany _ _ _ _ _ lay ρ L args, fun h => nomatch h⟩
+    · exact ⟨fun _ => load_finitelyMany _ _ _ _ lay ρ L args, fun h => nomatch h⟩
+    · exact ⟨fun _ => store_finitelyMany _ _ _ _ lay ρ L args, fun h => nomatch h⟩
+    · exact ⟨fun _ => loadPtr_finitelyMany _ _ _ _ lay ρ L args, fun h => nomatch h⟩
+    · exact ⟨fun _ => storePtr_finitelyMany _ _ _ _ lay ρ L args, fun h => nomatch h⟩
+    · exact ⟨fun _ => loadFloat_finitelyMany _ _ _ _ _ lay ρ L args, fun h => nomatch h⟩
+    · exact ⟨fun _ => storeFloat_finitelyMany _ _ _ _ _ lay ρ L args, fun h => nomatch h⟩
   | false => ?_
   have hm := denoteIn_mapsDenote (ChoiceTree.toSetMorphism (ε := Op)) ChoiceTree.toSet_keeps
     (fun op => .noOutcome op) (fun _ _ => False) fun _ => rfl
-  rw [(Op.liftsSetM op hmem lay ρ args).1, (Op.liftsSetM op hmem lay ρ args).2]
+  rw [(Op.liftsSetM op hmem lay ρ L args).1, (Op.liftsSetM op hmem lay ρ L args).2]
   refine ⟨fun _ => FinitelyMany.lift ?_, fun _ => FinitelyMany.lift ?_⟩
   · rw [← hm.denote op args]
     exact ChoiceTree.toSet_finitelyMany _
@@ -143,14 +143,14 @@ core's memories. It asks for no budget, whatever the parameter types of
 every core op has finitely many outcomes. -/
 theorem replaceBody_isRefinedBy_of_from (hM : M.Valid) {g : Func CoreDialect}
     (hg : g ∈ M.funcs) (b : Region CoreDialect)
-    (h : letI := DialectMemDenote.denoteAt (d := CoreDialect) lay ρ;
+    (h : letI := DialectMemDenote.denoteAt (d := CoreDialect) lay ρ L;
       g.memRunsFrom (Mem := N) (unit := unitsOf lay) M ⊑
         (g.replaceBody g.name b).memRunsFrom (Mem := N) (unit := unitsOf lay)
           (M.replaceBody g.name b))
     (hf : f ∈ M.funcs) :
-    f.memRuns lay ρ M ⊑ (f.replaceBody g.name b).memRuns lay ρ (M.replaceBody g.name b) :=
-  (Func.memRuns_replaceBody_isRefinedBy_of_opsFinite lay ρ Ty.isRefinedBy_refl
-    Ty.isRefinedBy_trans (opsFinite lay ρ) hM hg b h hf).2
+    f.memRuns lay ρ L M ⊑ (f.replaceBody g.name b).memRuns lay ρ L (M.replaceBody g.name b) :=
+  (Func.memRuns_replaceBody_isRefinedBy_of_opsFinite lay ρ L Ty.isRefinedBy_refl
+    Ty.isRefinedBy_trans (opsFinite lay ρ L) hM hg b h hf).2
 
 /-- Every function of the module other than `@g`, a caller of it or not,
 is refined with memory by itself in the module with `@g`'s new body, under
@@ -159,15 +159,15 @@ whatever the parameter types of `@g` and whatever its new body does to the
 memories. -/
 theorem caller_isRefinedBy_of_from (hM : M.Valid) {g : Func CoreDialect}
     (hg : g ∈ M.funcs) (b : Region CoreDialect)
-    (h : letI := DialectMemDenote.denoteAt (d := CoreDialect) lay ρ;
+    (h : letI := DialectMemDenote.denoteAt (d := CoreDialect) lay ρ L;
       g.memRunsFrom (Mem := N) (unit := unitsOf lay) M ⊑
         (g.replaceBody g.name b).memRunsFrom (Mem := N) (unit := unitsOf lay)
           (M.replaceBody g.name b))
     (hf : f ∈ M.funcs) (hfg : f.name ≠ g.name) :
-    f.memRuns lay ρ M ⊑ f.memRuns lay ρ (M.replaceBody g.name b) := by
-  have := replaceBody_isRefinedBy_of_from lay ρ hM hg b h hf
-  change f.memRuns lay ρ M ⊑
-    Func.memRuns lay ρ _ { f with body := if f.name = g.name then b else f.body } at this
+    f.memRuns lay ρ L M ⊑ f.memRuns lay ρ L (M.replaceBody g.name b) := by
+  have := replaceBody_isRefinedBy_of_from lay ρ L hM hg b h hf
+  change f.memRuns lay ρ L M ⊑
+    Func.memRuns lay ρ L _ { f with body := if f.name = g.name then b else f.body } at this
   rwa [ite_eq_right hfg] at this
 
 /-- Congruence in the callee, with memory: replacing the body of a function
@@ -181,11 +181,11 @@ every core op has finitely many outcomes. -/
 theorem replaceBody_isRefinedBy (hM : M.Valid) {g : Func CoreDialect} (hg : g ∈ M.funcs)
     (b : Region CoreDialect) (hold : M.table.ReachesNoMemory g.name)
     (hmem : (M.replaceBody g.name b).table.ReachesNoMemory g.name)
-    (h : g.memRuns lay ρ M ⊑ (g.replaceBody g.name b).memRuns lay ρ (M.replaceBody g.name b))
+    (h : g.memRuns lay ρ L M ⊑ (g.replaceBody g.name b).memRuns lay ρ L (M.replaceBody g.name b))
     (hf : f ∈ M.funcs) :
-    f.memRuns lay ρ M ⊑ (f.replaceBody g.name b).memRuns lay ρ (M.replaceBody g.name b) :=
-  Func.memRuns_replaceBody_isRefinedBy_of_opsFinite_memRuns lay ρ Ty.isRefinedBy_refl
-    Ty.isRefinedBy_trans (opsIgnoreMemory lay ρ) (opsFinite lay ρ) hM hg b hold hmem h hf
+    f.memRuns lay ρ L M ⊑ (f.replaceBody g.name b).memRuns lay ρ L (M.replaceBody g.name b) :=
+  Func.memRuns_replaceBody_isRefinedBy_of_opsFinite_memRuns lay ρ L Ty.isRefinedBy_refl
+    Ty.isRefinedBy_trans (opsIgnoreMemory lay ρ L) (opsFinite lay ρ L) hM hg b hold hmem h hf
 
 /-- Every function of the module other than `@g`, a caller of it or not,
 is refined with memory by itself in the module with `@g`'s new body, under
@@ -194,12 +194,12 @@ memory. -/
 theorem caller_isRefinedBy (hM : M.Valid) {g : Func CoreDialect} (hg : g ∈ M.funcs)
     (b : Region CoreDialect) (hold : M.table.ReachesNoMemory g.name)
     (hmem : (M.replaceBody g.name b).table.ReachesNoMemory g.name)
-    (h : g.memRuns lay ρ M ⊑ (g.replaceBody g.name b).memRuns lay ρ (M.replaceBody g.name b))
+    (h : g.memRuns lay ρ L M ⊑ (g.replaceBody g.name b).memRuns lay ρ L (M.replaceBody g.name b))
     (hf : f ∈ M.funcs) (hfg : f.name ≠ g.name) :
-    f.memRuns lay ρ M ⊑ f.memRuns lay ρ (M.replaceBody g.name b) := by
-  have := replaceBody_isRefinedBy lay ρ hM hg b hold hmem h hf
-  change f.memRuns lay ρ M ⊑
-    Func.memRuns lay ρ _ { f with body := if f.name = g.name then b else f.body } at this
+    f.memRuns lay ρ L M ⊑ f.memRuns lay ρ L (M.replaceBody g.name b) := by
+  have := replaceBody_isRefinedBy lay ρ L hM hg b hold hmem h hf
+  change f.memRuns lay ρ L M ⊑
+    Func.memRuns lay ρ L _ { f with body := if f.name = g.name then b else f.body } at this
   rwa [ite_eq_right hfg] at this
 
 end Fir.Core

@@ -34,13 +34,13 @@ variable (o : Memory.Ordering) (fe fm : Nat) (a : Option Nat) (n : Nat)
 
 section
 
-variable {N : Type} [DecidableEq N] (lay : N → MemLayout) (ρ : Mem → N)
+variable {N : Type} [DecidableEq N] (lay : N → MemLayout) (ρ : Mem → N) (L : RunItems)
 
 local notation "SM" => StateT (Memories N (unitsOf lay)) SetM
 
 /-- `loadFloat` runs with memory by its rule. -/
 theorem loadFloat_denote (p : PoisonOr Pointer) :
-    letI := DialectMemDenote.denoteAt (d := CoreDialect) lay ρ
+    letI := DialectMemDenote.denoteAt (d := CoreDialect) lay ρ L
     @Eq (SM (HVector toType [Ty.float fe fm]))
       (DialectDenote.denote (d := CoreDialect) (m := SM) (Op.loadFloat o fe fm a n) (.cons p .nil))
       (loadFloatRule lay ρ fe fm a n p) :=
@@ -60,28 +60,28 @@ theorem loadFloatRule_value (p : Pointer) :
 every pointer. -/
 theorem loadFloat_ownRuleHas {P : {α : Type} → SM α → Prop}
     (h : ∀ p, P (loadFloatRule lay ρ fe fm a n p : SM (HVector toType [Ty.float fe fm]))) :
-    OwnRuleHas lay ρ P (d := CoreDialect) (.loadFloat o fe fm a n) := fun
+    OwnRuleHas lay ρ L P (d := CoreDialect) (.loadFloat o fe fm a n) := fun
   | .cons p .nil => ⟨fun _ => h p, fun h => nomatch h⟩
 
 /-- `loadFloat` writes no unit of any memory. -/
 theorem loadFloat_writesNot (x : N) :
-    OwnRuleHas lay ρ (WritesNot x) (d := CoreDialect) (.loadFloat o fe fm a n) :=
-  loadFloat_ownRuleHas o fe fm a n lay ρ fun
+    OwnRuleHas lay ρ L (WritesNot x) (d := CoreDialect) (.loadFloat o fe fm a n) :=
+  loadFloat_ownRuleHas o fe fm a n lay ρ L fun
     | .poison => fun _ _ _ h => nomatch h
     | .value p => (Fir.load_writesNot (unit := unitsOf lay) _ p _ _ x).map _
 
 /-- `loadFloat` neither allocates nor frees in any memory. -/
 theorem loadFloat_allocatesNot (x : N) :
-    OwnRuleHas lay ρ (AllocatesNot x) (d := CoreDialect) (.loadFloat o fe fm a n) :=
-  loadFloat_ownRuleHas o fe fm a n lay ρ fun
+    OwnRuleHas lay ρ L (AllocatesNot x) (d := CoreDialect) (.loadFloat o fe fm a n) :=
+  loadFloat_ownRuleHas o fe fm a n lay ρ L fun
     | .poison => fun _ _ _ h => nomatch h
     | .value p => (Fir.load_allocatesNot (unit := unitsOf lay) _ p _ _ x).map _
 
 /-- `loadFloat` reads no memory but the memory of its pointer. -/
 theorem loadFloat_readsNot (x : N)
     (hx : ¬ ((Fir.effects (d := CoreDialect) (.loadFloat o fe fm a n)).reads.map ρ).Has x) :
-    OwnRuleHas lay ρ (ReadsNot x) (d := CoreDialect) (.loadFloat o fe fm a n) :=
-  loadFloat_ownRuleHas o fe fm a n lay ρ fun
+    OwnRuleHas lay ρ L (ReadsNot x) (d := CoreDialect) (.loadFloat o fe fm a n) :=
+  loadFloat_ownRuleHas o fe fm a n lay ρ L fun
     | .poison => fun _ _ _ e he => by
       subst he
       exact ⟨_, rfl, rfl⟩
@@ -89,15 +89,15 @@ theorem loadFloat_readsNot (x : N)
         fun h => hx (List.mem_singleton.2 h.symm)).map _
 
 /-- `loadFloat` has an outcome from any memories. -/
-theorem loadFloat_memTotal : MemTotal (d := CoreDialect) (.loadFloat o fe fm a n) := fun lay ρ =>
-  loadFloat_ownRuleHas o fe fm a n lay ρ fun
+theorem loadFloat_memTotal : MemTotal (d := CoreDialect) (.loadFloat o fe fm a n) := fun lay ρ L =>
+  loadFloat_ownRuleHas o fe fm a n lay ρ L fun
     | .poison => fun _ => ⟨_, rfl⟩
     | .value p => (Fir.load_hasOutcome (unit := unitsOf lay) _ p _ _).map _
 
 /-- `loadFloat` has at most one outcome that ends, from any memories. -/
 theorem loadFloat_finitelyMany
     (args : HVector toType (Fir.sig (d := CoreDialect) (Op.loadFloat o fe fm a n))) :
-    letI := DialectMemDenote.denoteAt (d := CoreDialect) lay ρ
+    letI := DialectMemDenote.denoteAt (d := CoreDialect) lay ρ L
     FinitelyMany (DialectDenote.denote (d := CoreDialect)
       (m := SM) (Op.loadFloat o fe fm a n) args) := by
   match args with
@@ -119,7 +119,7 @@ end
 another faults for the same reason or gives a value that refines the
 other's; on a poison pointer it is UB, which every outcome refines. -/
 theorem loadFloat_memMonotone : MemMonotone (d := CoreDialect) (.loadFloat o fe fm a n) := by
-  intro N _ lay ρ args args' h
+  intro N _ lay ρ L args args' h
   refine ⟨fun _ => ?_, fun h => nomatch h⟩
   match args, args', h with
   | .cons p .nil, .cons p' .nil, ⟨hp, _⟩ =>
@@ -139,13 +139,13 @@ theorem loadFloat_memMonotone : MemMonotone (d := CoreDialect) (.loadFloat o fe 
 and its UB is the UB of a pointer with no provenance, from the same
 memories. -/
 theorem loadFloat_memPropagates : MemPropagatesPoison (d := CoreDialect) (.loadFloat o fe fm a n) where
-  poisonOut _ _ args hany _ _ _ h := by
+  poisonOut _ _ _ args hany _ _ _ h := by
     match args, hany with
     | .cons p .nil, hany =>
       have hp : p = .poison := hany.elim id False.elim
       subst hp
       exact nomatch h
-  ubByOwnRules lay ρ args S _ hany _ := by
+  ubByOwnRules lay ρ L args S _ hany _ := by
     match args, hany with
     | .cons p .nil, hany =>
       refine ⟨HVector.cons (f := toType) (a := Ty.ptr n) (.value ⟨none, 0⟩ : PoisonOr Pointer) .nil,
@@ -160,7 +160,7 @@ theorem loadFloat_memPropagates : MemPropagatesPoison (d := CoreDialect) (.loadF
 allocation of its units at its alignment, through the pointer to it: the
 value its poison units decode to. -/
 theorem loadFloat_memReturnsOnDefined : MemReturnsOnDefined (d := CoreDialect) (.loadFloat o fe fm a n) :=
-  fun lay ρ => by
+  fun lay ρ L => by
   let sh := loadShape (lay (ρ n)) (floatWidth fe fm) a
   let q := (Memories.empty : Memories _ (unitsOf lay)).enter.alloc (ρ n) .heap sh.1 sh.2
   have hl : q.2.load (ρ n) q.1 sh.1 sh.2 = .ok (List.replicate sh.1 .poison) := by

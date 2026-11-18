@@ -110,6 +110,7 @@ import Fir.Execution.MemoryRuns
 import Fir.Execution.StatePaths
 import Fir.Execution.MemoryMonotone
 import Fir.Execution.MemoryObligations
+import Fir.Execution.RunItems
 import Fir.Execution.MemoryObligationLaws
 import Fir.Execution.MemoryTotal
 import Fir.Execution.MemoryCallSteps

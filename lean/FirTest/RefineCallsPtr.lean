@@ -104,59 +104,62 @@ theorem ptrModule_replace_pid : ptrModule.replaceBody pidFn.name pidFn.body = pt
   simp [Module.replaceBody, Item.replaceBody, ptrModule, Func.replaceBody, pidFn, pcallFn]
 
 variable {N : Type} [DecidableEq N] (lay : N → MemLayout) (ρ : DialectEffects.Mem CoreDialect → N)
+    (L : RunItems)
 
 /-- `@pid` with its own body refines `@pid` from given memories. -/
 theorem pid_self_isRefinedBy :
-    letI := DialectMemDenote.denoteAt (d := CoreDialect) lay ρ
+    letI := DialectMemDenote.denoteAt (d := CoreDialect) lay ρ L
     pidFn.memRunsFrom (Mem := N) (unit := unitsOf lay) ptrModule ⊑
       (pidFn.replaceBody pidFn.name pidFn.body).memRunsFrom (Mem := N) (unit := unitsOf lay)
         (ptrModule.replaceBody pidFn.name pidFn.body) := by
-  letI := DialectMemDenote.denoteAt (d := CoreDialect) lay ρ
+  letI := DialectMemDenote.denoteAt (d := CoreDialect) lay ρ L
   rw [ptrModule_replace_pid]
   show pidFn.memRunsFrom ptrModule ⊑ Func.memRunsFrom ptrModule
     { pidFn with body := if pidFn.name = pidFn.name then pidFn.body else pidFn.body }
   rw [ite_self]
   have hm : ∀ g : Func CoreDialect, g.MemOpsMonotone N (unitsOf lay) :=
-    fun _ _ _ o _ hc => Op.memMonotone_all o.op hc lay ρ
+    fun _ _ _ o _ hc => Op.memMonotone_all o.op hc lay ρ L
   exact fun p => Func.memRunsFrom_args_isRefinedBy ptrModule (fun g _ => hm g) pidFn (hm pidFn)
     (HVector.forall₂_refl (fun v => Ty.isRefinedBy_refl v) p.1) (Memory.Memories.isRefinedBy_refl _)
 
 /-- So `@pcall`, which calls `@pid` on a pointer, is refined with memory in
 the module with `@pid`'s new body, with no budget. -/
 theorem pcall_replace_isRefinedBy :
-    pcallFn.memRuns lay ρ ptrModule ⊑
-      (pcallFn.replaceBody pidFn.name pidFn.body).memRuns lay ρ
+    pcallFn.memRuns lay ρ L ptrModule ⊑
+      (pcallFn.replaceBody pidFn.name pidFn.body).memRuns lay ρ L
         (ptrModule.replaceBody pidFn.name pidFn.body) :=
-  Core.replaceBody_isRefinedBy_of_from lay ρ ptrModule_valid (by simp [ptrModule, Module.funcs])
-    pidFn.body (pid_self_isRefinedBy lay ρ) (by simp [ptrModule, Module.funcs])
+  Core.replaceBody_isRefinedBy_of_from lay ρ L ptrModule_valid (by simp [ptrModule, Module.funcs])
+    pidFn.body (pid_self_isRefinedBy lay ρ L) (by simp [ptrModule, Module.funcs])
 
 /-- And `@pcall` is refined with memory by itself in the module with
 `@pid`'s new body. -/
 theorem pcall_self_isRefinedBy :
-    pcallFn.memRuns lay ρ ptrModule ⊑
-      pcallFn.memRuns lay ρ (ptrModule.replaceBody pidFn.name pidFn.body) :=
-  Core.caller_isRefinedBy_of_from lay ρ ptrModule_valid (by simp [ptrModule, Module.funcs])
-    pidFn.body (pid_self_isRefinedBy lay ρ) (by simp [ptrModule, Module.funcs]) (by decide)
+    pcallFn.memRuns lay ρ L ptrModule ⊑
+      pcallFn.memRuns lay ρ L (ptrModule.replaceBody pidFn.name pidFn.body) :=
+  Core.caller_isRefinedBy_of_from lay ρ L ptrModule_valid (by simp [ptrModule, Module.funcs])
+    pidFn.body (pid_self_isRefinedBy lay ρ L) (by simp [ptrModule, Module.funcs]) (by decide)
 
 /-- So `@pcall` is refined with memory in the module where `@pid` has no
 blocks, by the form whose hypothesis is refinement with memory, which asks
 that `@pid` reach no memory before and after, and nothing of its parameter
 types. -/
 theorem pcall_noBlocks_memIsRefinedBy :
-    pcallFn.memRuns lay ρ ptrModule ⊑
-      (pcallFn.replaceBody pidFn.name noBlocks).memRuns lay ρ
+    pcallFn.memRuns lay ρ L ptrModule ⊑
+      (pcallFn.replaceBody pidFn.name noBlocks).memRuns lay ρ L
         (ptrModule.replaceBody pidFn.name noBlocks) :=
-  Core.replaceBody_isRefinedBy lay ρ ptrModule_valid (by simp [ptrModule, Module.funcs])
-    noBlocks (reachesNoMemory_of_all _ (by decide +kernel)) (reachesNoMemory_of_all _ (by decide +kernel)) (noBlocks_memIsRefinedBy lay ρ _ _)
+  Core.replaceBody_isRefinedBy lay ρ L ptrModule_valid (by simp [ptrModule, Module.funcs])
+    noBlocks (reachesNoMemory_of_all _ (by decide +kernel))
+    (reachesNoMemory_of_all _ (by decide +kernel)) (noBlocks_memIsRefinedBy lay ρ L _ _)
     (by simp [ptrModule, Module.funcs])
 
 /-- And `@pcall` is refined with memory by itself in that module, by the
 caller form. -/
 theorem pcall_noBlocks_callerIsRefinedBy :
-    pcallFn.memRuns lay ρ ptrModule ⊑
-      pcallFn.memRuns lay ρ (ptrModule.replaceBody pidFn.name noBlocks) :=
-  Core.caller_isRefinedBy lay ρ ptrModule_valid (by simp [ptrModule, Module.funcs])
-    noBlocks (reachesNoMemory_of_all _ (by decide +kernel)) (reachesNoMemory_of_all _ (by decide +kernel)) (noBlocks_memIsRefinedBy lay ρ _ _)
+    pcallFn.memRuns lay ρ L ptrModule ⊑
+      pcallFn.memRuns lay ρ L (ptrModule.replaceBody pidFn.name noBlocks) :=
+  Core.caller_isRefinedBy lay ρ L ptrModule_valid (by simp [ptrModule, Module.funcs])
+    noBlocks (reachesNoMemory_of_all _ (by decide +kernel))
+    (reachesNoMemory_of_all _ (by decide +kernel)) (noBlocks_memIsRefinedBy lay ρ L _ _)
     (by simp [ptrModule, Module.funcs]) (by decide)
 
 /-! # Axioms -/

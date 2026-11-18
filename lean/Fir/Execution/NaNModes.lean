@@ -177,42 +177,42 @@ open Memory
 variable {d : Dialect} [TyDenote d.Ty] [DecidableEq d.Ty] [DialectSignature d] [DialectCall d]
   {N : Type} [DecidableEq N] {ε : Type}
   [DialectEffects d] [DialectMemDenote d] (lay : N → MemLayout)
-  (ρ : DialectEffects.Mem d → N) [DialectDenote d (StateT (Memories N (unitsOf lay))
+  (ρ : DialectEffects.Mem d → N) (L : RunItems) [DialectDenote d (StateT (Memories N (unitsOf lay))
       (ChoiceTree ε))]
 
 /-- Each outcome that the walk that tries a few NaNs lists is an outcome of
 the run with memory at the fuel budget it runs with. -/
-theorem Func.memExploreNaN_outcomes (h : MemMapsDenote (d := d) lay (ε := ε) ρ) (M : Module d)
+theorem Func.memExploreNaN_outcomes (h : MemMapsDenote (d := d) lay (ε := ε) ρ L) (M : Module d)
     (f : Func d) (args : HVector toType (f.params.map (·.2))) (fuel budget : Nat) (nans : List Nat)
     {ls : List (ChoiceTree.Leaf ε (Except Stuck (Result (List (DVal d)))) × Nat × Nat)}
     (hx : (f.memTree (unitsOf lay) M args fuel).exploreNaN nans budget = some ls)
     {p : ChoiceTree.Leaf ε (Except Stuck (Result (List (DVal d)))) × Nat × Nat} (hp : p ∈ ls)
     {o : Outcome (List (DVal d))} (ho : p.1.pathEnd = .outcome o) :
-    Run.outcomes (f.memRuns lay ρ M args fuel) o := by
-  rw [Run.outcomes_iff, ← Func.memTree_toSet lay ρ h]
+    Run.outcomes (f.memRuns lay ρ L M args fuel) o := by
+  rw [Run.outcomes_iff, ← Func.memTree_toSet lay ρ L h]
   exact ChoiceTree.exploreNaN_sub hx p hp _ ((ChoiceTree.Leaf.ev?_eq_outcome p.1 o).2 ho)
 
 /-- A stuck path that the walk lists is a stuck path of the run with
 memory. -/
-theorem Func.memExploreNaN_stuck (h : MemMapsDenote (d := d) lay (ε := ε) ρ) (M : Module d)
+theorem Func.memExploreNaN_stuck (h : MemMapsDenote (d := d) lay (ε := ε) ρ L) (M : Module d)
     (f : Func d) (args : HVector toType (f.params.map (·.2))) (fuel budget : Nat) (nans : List Nat)
     {ls : List (ChoiceTree.Leaf ε (Except Stuck (Result (List (DVal d)))) × Nat × Nat)}
     (hx : (f.memTree (unitsOf lay) M args fuel).exploreNaN nans budget = some ls)
     {p : ChoiceTree.Leaf ε (Except Stuck (Result (List (DVal d)))) × Nat × Nat} (hp : p ∈ ls)
     {st : Stuck} (hst : p.1.pathEnd = .stuck st) :
-    Run.IsStuck (f.memRuns lay ρ M args fuel) := by
+    Run.IsStuck (f.memRuns lay ρ L M args fuel) := by
   obtain ⟨st', he⟩ := (ChoiceTree.Leaf.ev?_eq_stuck p.1).2 ⟨st, hst⟩
-  exact ⟨st', by rw [← Func.memTree_toSet lay ρ h]; exact ChoiceTree.exploreNaN_sub hx p hp _ he⟩
+  exact ⟨st', by rw [← Func.memTree_toSet lay ρ L h]; exact ChoiceTree.exploreNaN_sub hx p hp _ he⟩
 
 /-- When no path that the walk lists made a NaN choice, it lists exactly the
 outcomes of the run with memory, as exhaustive mode does. -/
-theorem Func.memExploreNaN_exact (h : MemMapsDenote (d := d) lay (ε := ε) ρ) (M : Module d)
+theorem Func.memExploreNaN_exact (h : MemMapsDenote (d := d) lay (ε := ε) ρ L) (M : Module d)
     (f : Func d) (args : HVector toType (f.params.map (·.2))) (fuel budget : Nat) (nans : List Nat)
     {ls : List (ChoiceTree.Leaf ε (Except Stuck (Result (List (DVal d)))) × Nat × Nat)}
     (hx : (f.memTree (unitsOf lay) M args fuel).exploreNaN nans budget = some ls)
     (h0 : ∀ p ∈ ls, p.2.2 = 0) (o : Outcome (List (DVal d))) :
-    Run.outcomes (f.memRuns lay ρ M args fuel) o ↔ ∃ p ∈ ls, p.1.pathEnd = .outcome o := by
-  rw [Run.outcomes_iff, ← Func.memTree_toSet lay ρ h, ChoiceTree.exploreNaN_toSet hx h0]
+    Run.outcomes (f.memRuns lay ρ L M args fuel) o ↔ ∃ p ∈ ls, p.1.pathEnd = .outcome o := by
+  rw [Run.outcomes_iff, ← Func.memTree_toSet lay ρ L h, ChoiceTree.exploreNaN_toSet hx h0]
   simp only [ChoiceTree.Leaf.ev?_eq_outcome]
 
 end Fir

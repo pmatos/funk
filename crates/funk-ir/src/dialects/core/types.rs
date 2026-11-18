@@ -21,7 +21,7 @@
 //! (ADR-2026-11-09-1549).
 
 use crate::registry::{TypeCheck, TypeSpec};
-use crate::{Attr, Type};
+use crate::{Attr, MemLayout, Type};
 
 /// The widest integer type, `i16777215`: `2^24 - 1` bits, MLIR's limit.
 pub const MAX_WIDTH: u32 = (1 << 24) - 1;
@@ -216,6 +216,43 @@ impl TypeSpec for CoreTypes {
         match decode(ty)? {
             Ok(CoreType::Ptr(n)) => Some(n),
             _ => None,
+        }
+    }
+
+    /// `Core.Ty.fieldShape`: an integer or a pointer takes the units of its
+    /// bits, aligned to the least power of two that is at least those
+    /// units, but a pointer of the memory `n` itself to the alignment that
+    /// its entry gives its pointers. A float may not be a field yet (#264).
+    fn field_shape(
+        &self,
+        ty: &Type,
+        entry: &dyn Fn(u64) -> MemLayout,
+        n: u64,
+    ) -> Option<(u128, u128)> {
+        let ty = decode(ty)?.ok()?;
+        let e = entry(n);
+        let units = |w: u32| {
+            if e.unit == 0 {
+                0
+            } else {
+                u128::from(w.div_ceil(e.unit))
+            }
+        };
+        match ty {
+            CoreType::Int(w) => {
+                let u = units(w);
+                Some((u, u.next_power_of_two()))
+            }
+            // In its own memory a pointer is aligned as the entry aligns its
+            // pointers, whose units are then these.
+            CoreType::Ptr(m) if u64::from(m) == n => {
+                Some((units(e.pointer), u128::from(e.alignment())))
+            }
+            CoreType::Ptr(m) => {
+                let u = units(entry(u64::from(m)).pointer);
+                Some((u, u.next_power_of_two()))
+            }
+            CoreType::Float { .. } => None,
         }
     }
 }

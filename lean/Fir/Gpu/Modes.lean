@@ -65,11 +65,11 @@ variable {N : Type} [DecidableEq N] (lay : N → MemLayout)
 /-- The rules of `gpu` in the layer over the tree denote its semantics with
 memory: `toSet` through the layer keeps a result, the memories and an
 allocation. -/
-theorem treeMapsDenote (ρ : DialectEffects.Mem GpuDialect → N) :
+theorem treeMapsDenote (ρ : DialectEffects.Mem GpuDialect → N) (L : RunItems) :
     letI := treeDenote lay ρ
-    MemMapsDenote (d := GpuDialect) lay (ε := Core.Op) ρ :=
+    MemMapsDenote (d := GpuDialect) lay (ε := Core.Op) ρ L :=
   @MonadMorphism.MapsDenote.mk _ _ _ _ (ChoiceTree.toSetState Core.Op (Memories N (unitsOf lay)))
-    GpuDialect _ _ (treeDenote lay ρ) (DialectMemDenote.denoteAt (d := GpuDialect) lay ρ)
+    GpuDialect _ _ (treeDenote lay ρ) (DialectMemDenote.denoteAt (d := GpuDialect) lay ρ L)
     (fun op _ => by
       cases op with
       | query => exact MonadMorphism.map_pure _ _
@@ -84,16 +84,16 @@ theorem treeMapsDenote (ρ : DialectEffects.Mem GpuDialect → N) :
 
 /-- The sum's semantics in the layer over the tree denotes its semantics with
 memory, wherever a run names the sum's memories, whatever their entries. -/
-theorem memMapsDenote (ρ : DialectEffects.Mem CoreGpu → N) :
+theorem memMapsDenote (ρ : DialectEffects.Mem CoreGpu → N) (L : RunItems) :
     letI := memTreeDenote lay ρ
-    MemMapsDenote (d := CoreGpu) lay (ε := Core.Op) ρ :=
+    MemMapsDenote (d := CoreGpu) lay (ε := Core.Op) ρ L :=
   @Dialect.sum.mapsDenote _ _ _ _ _ _ _ _ _ _ _
     (Core.memTreeDenote lay (ρ ∘ DialectMemOver.ofBase (base := CoreDialect) (e := GpuExt)))
     (DialectMemDenote.denoteAt (d := CoreDialect) lay
-      (ρ ∘ DialectMemOver.ofBase (base := CoreDialect) (e := GpuExt)))
-    (treeDenote lay ρ) (DialectMemDenote.denoteAt (d := GpuDialect) lay ρ)
-    (Core.memMapsDenote lay (ρ ∘ DialectMemOver.ofBase (base := CoreDialect) (e := GpuExt)))
-    (treeMapsDenote lay ρ)
+      (ρ ∘ DialectMemOver.ofBase (base := CoreDialect) (e := GpuExt)) L)
+    (treeDenote lay ρ) (DialectMemDenote.denoteAt (d := GpuDialect) lay ρ L)
+    (Core.memMapsDenote lay (ρ ∘ DialectMemOver.ofBase (base := CoreDialect) (e := GpuExt)) L)
+    (treeMapsDenote lay ρ L)
 
 /-- The tree of a run with memory of the function `f` of the module `M` at
 the work-item, on `args` with `fuel` steps, that the modes walk: from the
@@ -147,10 +147,11 @@ of the run with memory at the fuel budget it runs with. -/
 theorem exhaustive_memOutcomes (M : Module CoreGpu) (f : Func CoreGpu)
     (args : HVector toType (f.params.map (·.2))) (fuel budget : Nat) {ls : List (Leaf × Nat)}
     (hx : exhaustive M f args fuel budget = some ls) (o : Outcome (List (DVal CoreGpu))) :
-    Run.outcomes (f.memRuns M.layout.entry memName M args fuel) o ↔
+    Run.outcomes (f.memRuns M.layout.entry memName M.runItems M args fuel) o ↔
       ∃ p ∈ ls, p.1.pathEnd = .outcome o := by
   have h := (letI := memTreeDenote M.layout.entry memName
-    Func.memExplore_outcomes M.layout.entry memName (memMapsDenote M.layout.entry memName) M f
+    Func.memExplore_outcomes M.layout.entry memName M.runItems (memMapsDenote M.layout.entry
+        memName M.runItems) M f
       args fuel budget hx o)
   exact h
 
@@ -159,10 +160,11 @@ when the run with memory has one. -/
 theorem exhaustive_memStuck (M : Module CoreGpu) (f : Func CoreGpu)
     (args : HVector toType (f.params.map (·.2))) (fuel budget : Nat) {ls : List (Leaf × Nat)}
     (hx : exhaustive M f args fuel budget = some ls) :
-    Run.IsStuck (f.memRuns M.layout.entry memName M args fuel) ↔
+    Run.IsStuck (f.memRuns M.layout.entry memName M.runItems M args fuel) ↔
       ∃ p ∈ ls, ∃ st, p.1.pathEnd = .stuck st := by
   have h := (letI := memTreeDenote M.layout.entry memName
-    Func.memExplore_stuck M.layout.entry memName (memMapsDenote M.layout.entry memName) M f args
+    Func.memExplore_stuck M.layout.entry memName M.runItems (memMapsDenote M.layout.entry memName
+        M.runItems) M f args
       fuel budget hx)
   exact h
 
@@ -173,9 +175,10 @@ theorem exhaustiveNaN_memOutcomes (M : Module CoreGpu) (f : Func CoreGpu)
     {ls : List (Leaf × Nat × Nat)} (hx : exhaustiveNaN M f args fuel budget nans = some ls)
     {p : Leaf × Nat × Nat} (hp : p ∈ ls) {o : Outcome (List (DVal CoreGpu))}
     (ho : p.1.pathEnd = .outcome o) :
-    Run.outcomes (f.memRuns M.layout.entry memName M args fuel) o := by
+    Run.outcomes (f.memRuns M.layout.entry memName M.runItems M args fuel) o := by
   have h := (letI := memTreeDenote M.layout.entry memName
-    Func.memExploreNaN_outcomes M.layout.entry memName (memMapsDenote M.layout.entry memName) M f
+    Func.memExploreNaN_outcomes M.layout.entry memName M.runItems (memMapsDenote M.layout.entry
+        memName M.runItems) M f
       args fuel budget nans hx hp ho)
   exact h
 
@@ -185,9 +188,10 @@ theorem exhaustiveNaN_memStuck (M : Module CoreGpu) (f : Func CoreGpu)
     (args : HVector toType (f.params.map (·.2))) (fuel budget : Nat) (nans : List Nat)
     {ls : List (Leaf × Nat × Nat)} (hx : exhaustiveNaN M f args fuel budget nans = some ls)
     {p : Leaf × Nat × Nat} (hp : p ∈ ls) {st : Stuck} (hst : p.1.pathEnd = .stuck st) :
-    Run.IsStuck (f.memRuns M.layout.entry memName M args fuel) := by
+    Run.IsStuck (f.memRuns M.layout.entry memName M.runItems M args fuel) := by
   have h := (letI := memTreeDenote M.layout.entry memName
-    Func.memExploreNaN_stuck M.layout.entry memName (memMapsDenote M.layout.entry memName) M f
+    Func.memExploreNaN_stuck M.layout.entry memName M.runItems (memMapsDenote M.layout.entry
+        memName M.runItems) M f
       args fuel budget nans hx hp hst)
   exact h
 
@@ -197,10 +201,11 @@ theorem exhaustiveNaN_exact (M : Module CoreGpu) (f : Func CoreGpu)
     (args : HVector toType (f.params.map (·.2))) (fuel budget : Nat) (nans : List Nat)
     {ls : List (Leaf × Nat × Nat)} (hx : exhaustiveNaN M f args fuel budget nans = some ls)
     (h0 : ∀ p ∈ ls, p.2.2 = 0) (o : Outcome (List (DVal CoreGpu))) :
-    Run.outcomes (f.memRuns M.layout.entry memName M args fuel) o ↔
+    Run.outcomes (f.memRuns M.layout.entry memName M.runItems M args fuel) o ↔
       ∃ p ∈ ls, p.1.pathEnd = .outcome o := by
   have h := (letI := memTreeDenote M.layout.entry memName
-    Func.memExploreNaN_exact M.layout.entry memName (memMapsDenote M.layout.entry memName) M f
+    Func.memExploreNaN_exact M.layout.entry memName M.runItems (memMapsDenote M.layout.entry
+        memName M.runItems) M f
       args fuel budget nans hx h0 o)
   exact h
 
@@ -210,9 +215,10 @@ theorem scripted_memOutcomes {σ : Type} (read : (w : Nat) → σ → Option (Bi
     (M : Module CoreGpu) (f : Func CoreGpu) (args : HVector toType (f.params.map (·.2)))
     (fuel : Nat) (cs : List σ) {l : Leaf} {c : Nat} (hs : scripted read M f args fuel cs = .ok (l, c))
     {o : Outcome (List (DVal CoreGpu))} (ho : l.pathEnd = .outcome o) :
-    Run.outcomes (f.memRuns M.layout.entry memName M args fuel) o := by
+    Run.outcomes (f.memRuns M.layout.entry memName M.runItems M args fuel) o := by
   have h := (letI := memTreeDenote M.layout.entry memName
-    Func.memScript_outcomes M.layout.entry memName (memMapsDenote M.layout.entry memName) read M f
+    Func.memScript_outcomes M.layout.entry memName M.runItems (memMapsDenote M.layout.entry memName
+        M.runItems) read M f
       args fuel cs hs ho)
   exact h
 
@@ -222,9 +228,10 @@ theorem scripted_memStuck {σ : Type} (read : (w : Nat) → σ → Option (BitVe
     (M : Module CoreGpu) (f : Func CoreGpu) (args : HVector toType (f.params.map (·.2)))
     (fuel : Nat) (cs : List σ) {l : Leaf} {c : Nat} (hs : scripted read M f args fuel cs = .ok (l, c))
     {st : Stuck} (hst : l.pathEnd = .stuck st) :
-    Run.IsStuck (f.memRuns M.layout.entry memName M args fuel) := by
+    Run.IsStuck (f.memRuns M.layout.entry memName M.runItems M args fuel) := by
   have h := (letI := memTreeDenote M.layout.entry memName
-    Func.memScript_stuck M.layout.entry memName (memMapsDenote M.layout.entry memName) read M f
+    Func.memScript_stuck M.layout.entry memName M.runItems (memMapsDenote M.layout.entry memName
+        M.runItems) read M f
       args fuel cs hs hst)
   exact h
 
@@ -244,7 +251,7 @@ theorem sampled_memOutcomes {γ : Type} (draw : (w : Nat) → γ → BitVec w ×
     (M : Module CoreGpu) (f : Func CoreGpu) (args : HVector toType (f.params.map (·.2)))
     (fuel : Nat) (g : γ) {o : Outcome (List (DVal CoreGpu))}
     (ho : (sampled draw M f args fuel g).1.pathEnd = .outcome o) :
-    Run.outcomes (f.memRuns M.layout.entry memName M args fuel) o :=
+    Run.outcomes (f.memRuns M.layout.entry memName M.runItems M args fuel) o :=
   scripted_memOutcomes _ M f args fuel _ (sampled_fits draw M f args fuel g) ho
 
 /-- Sampled mode reports a stuck path only when the run with memory has
@@ -253,7 +260,7 @@ theorem sampled_memStuck {γ : Type} (draw : (w : Nat) → γ → BitVec w × γ
     (M : Module CoreGpu) (f : Func CoreGpu) (args : HVector toType (f.params.map (·.2)))
     (fuel : Nat) (g : γ) {st : Stuck}
     (hst : (sampled draw M f args fuel g).1.pathEnd = .stuck st) :
-    Run.IsStuck (f.memRuns M.layout.entry memName M args fuel) :=
+    Run.IsStuck (f.memRuns M.layout.entry memName M.runItems M args fuel) :=
   scripted_memStuck _ M f args fuel _ (sampled_fits draw M f args fuel g) hst
 
 end Fir.Gpu

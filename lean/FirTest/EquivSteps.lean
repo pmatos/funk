@@ -93,7 +93,7 @@ section
 
 variable {d : Dialect} [TyDenote d.Ty] [DecidableEq d.Ty] [DialectSignature d] [DialectCall d]
   [DialectEffects d] [DialectMemDenote d] {N : Type} [DecidableEq N] (lay : N → MemLayout)
-  (ρ : DialectEffects.Mem d → N)
+  (ρ : DialectEffects.Mem d → N) (L : RunItems)
 
 /-- A run with memory of a function, once it has entered its entry block,
 whose ops return `vs` with no choice and no UB from the memories of the
@@ -101,13 +101,14 @@ call: the run returns `vs`. -/
 theorem memRuns_of_ret {M : Module d} {f : Func d} {args : HVector toType (f.params.map (·.2))}
     {body : List (Operation d)} {env : Env d} (hen : f.enter args.toDVals = .ok (body, env))
     {n : Nat} {vs : List (DVal d)}
-    (h : letI := DialectMemDenote.denoteAt (d := d) lay ρ
+    (h : letI := DialectMemDenote.denoteAt (d := d) lay ρ L
       ∃ k, Func.runOps (m := StateT (Memories N (unitsOf lay)) SetM) M n f env body =
         pure (.ret (vs, k))) :
-    f.memRuns lay ρ M args n = (pure (.ret vs) : ExceptT Stuck SetM (Result (List (DVal d)))) := by
-  letI := DialectMemDenote.denoteAt (d := d) lay ρ
+    f.memRuns lay ρ L M args n = (pure (.ret vs) : ExceptT Stuck SetM (Result (List (DVal d)))) :=
+        by
+  letI := DialectMemDenote.denoteAt (d := d) lay ρ L
   obtain ⟨k, h⟩ := h
-  rw [Func.memRuns_enter lay ρ M f args n hen, h, runFrom_ret]
+  rw [Func.memRuns_enter lay ρ L M f args n hen, h, runFrom_ret]
   simp [Result.finish]
   rfl
 

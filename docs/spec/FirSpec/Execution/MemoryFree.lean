@@ -63,7 +63,7 @@ since it keeps them, and mapping the results of a computation that ignores
 them keeps it so.
 :::
 
-:::readable Fir.OpsIgnoreMemory (pin := Fir.OwnRuleHas) (fingerprint := "12465036732790656999")
+:::readable Fir.OpsIgnoreMemory (pin := Fir.OwnRuleHas) (fingerprint := "4468460918663472336")
 *Definition: ops that ignore the memories where they touch none.* The ops
 of a dialect ignore the memories where they touch none, in a semantics with
 memory, when each op that is a terminator or has no callee, and that

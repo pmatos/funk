@@ -14,7 +14,7 @@ changes under it.
 
 #doc (Manual) "Decoding: readable blocks" =>
 
-:::moduleDocs (fingerprint := "5710878434703669482")
+:::moduleDocs (fingerprint := "147575948114996756")
 :::
 
 :::readable Fir.Text.Scope Fir.Text.decodeType Fir.Text.decodeDef Fir.Text.define (pin := Fir.DialectText) (fingerprint := "12263311160479661426")
@@ -70,9 +70,10 @@ that scope. So its errors are found in that order. Its body is a region of
 the core's kind.
 :::
 
-:::readable Fir.Text.decodeFuncItem Fir.Text.moduleHeader Fir.Text.decodeDialectItem Fir.Text.decodeItem Fir.Text.decodeItems Fir.Text.decodeItems_eq_mapM Fir.Text.decodeMemLayout Fir.Text.decodeModule (fingerprint := "10026606972380248807")
+:::readable Fir.Text.decodeFuncItem Fir.Text.moduleHeader Fir.Text.decodeDialectItem Fir.Text.decodeItem Fir.Text.decodeItems Fir.Text.decodeItems_eq_mapM Fir.Text.decodeMemLayout Fir.Text.decodeModule (fingerprint := "12619496807394719028")
 *Definition: decoding an item and a module.* An item decodes as a function,
-as a nested module (ADR-2026-11-10-1510) or as an item of a dialect's kind
+as a nested module (ADR-2026-11-10-1510), as an aggregate's layout
+(ADR-2026-11-16-1546) or as an item of a dialect's kind
 (ADR-2026-11-09-1543):
 
 * a `func` with attributes is an error at its first attribute;
@@ -87,6 +88,7 @@ as a nested module (ADR-2026-11-10-1510) or as an item of a dialect's kind
   body is empty decodes as a module with no dialect set and no items;
 * any other `module` decodes its items, in order, and keeps its dialect
   set;
+* an `aggregate` decodes as its layout, as above;
 * an item whose kind is a word of a dialect, a word with a `.`, is an
   error at its kind, "an item of a dialect's kind has an empty body", when
   its body is not empty; otherwise it decodes its result types and its
@@ -102,6 +104,18 @@ entry that
 error at its position, "not an entry of the data layout". Decoding rejects no dialect set: whether a set
 names known dialects, and whether the module's words keep to it, is a rule
 of validation, and so is whether a dialect registers the kind of an item.
+:::
+
+:::readable Fir.Text.decodeField Fir.Text.decodeAggregate (pin := Fir.Field.decode) (pin := Fir.Aggregate.decodeNumber) (fingerprint := "2851346155990452494")
+*Definitions: decoding an aggregate's layout.* A field decodes as
+$`\mathrm{decode}` of its attribute says, or is an error at the attribute.
+An item of kind `aggregate` decodes when it has no parameters, no results,
+an empty body and at least three attributes: `memory(n)`, `size(z)` and
+`align(a)`, then its fields, each decoded in turn
+(ADR-2026-11-16-1546). It is an error at its first parameter or result, at
+its kind when its body is not empty or it has fewer than three attributes,
+at the first of the three that does not decode, and at the first field that
+does not.
 :::
 
 :::readable Fir.parse (pin := Fir.Text.lex) (pin := Fir.Text.readModule) (fingerprint := "11087151413922587211")

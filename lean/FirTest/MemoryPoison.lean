@@ -81,7 +81,7 @@ def peekAt : PoisonOr Pointer →
 /-- Wherever a run names the memory `()` as `ρ ()`, `peek` loads from it,
 by its entry `lay (ρ ())`. -/
 instance : DialectMemDenote PeekDialect where
-  denoteAt lay ρ :=
+  denoteAt lay ρ _ :=
     { denote := fun
         | .peek, .cons p .nil => peekAt lay (ρ ()) p
       exit := fun _ _ => MonadUB.ub "peek is not a terminator" }
@@ -147,14 +147,14 @@ instance : LawfulDialectMemPoison PeekDialect where
   propagates
     | .peek, _, _ => {
         poisonOut := by
-          intro _ _ _ _ args hany S rs S' hden
+          intro _ _ _ _ _ args hany S rs S' hden
           match args with
           | .cons p .nil =>
             cases p with
             | poison => cases hden
             | value _ => rcases hany with h | h <;> cases h
         ubByOwnRules := by
-          intro _ _ lay ρ args S _ hany _
+          intro _ _ lay ρ _ args S _ hany _
           match args with
           | .cons p .nil =>
             cases p with
@@ -165,7 +165,7 @@ instance : LawfulDialectMemPoison PeekDialect where
             | value _ => rcases hany with h | h <;> cases h }
   returnsOnDefined
     | .peek, _, _ => by
-      intro lay ρ
+      intro lay ρ _
       refine ⟨.cons (.value (oneUnit lay (ρ ())).1) .nil, ?_, _, _, _, oneUnit_frames lay (ρ ()),
         peekAt_alloc lay (ρ ())⟩
       rintro (h | h) <;> cases h
@@ -189,7 +189,7 @@ theorem peekLax_value_noUB (p : Pointer) (S : Memories N (unitsOf lay)) (r : Str
 
 /-- The peek dialect's semantics with memory by `peekLax`. -/
 @[instance_reducible] def laxMemDenote : DialectMemDenote PeekDialect where
-  denoteAt lay ρ :=
+  denoteAt lay ρ _ :=
     { denote := fun
         | .peek, .cons p .nil => peekLax lay (ρ ()) p
       exit := fun _ _ => MonadUB.ub "peek is not a terminator" }
@@ -201,7 +201,7 @@ theorem peekLax_unlawful : ¬ @LawfulDialectMemPoison PeekDialect _ _ _ _ _ _ la
   intro h
   obtain ⟨args', ⟨hn, -⟩, r', hub⟩ :=
     (h.propagates .peek ⟨fun _ _ => trivial, fun _ _ => trivial⟩ rfl).ubByOwnRules (N := Unit)
-      (fun _ => MemLayout.default) (fun _ => ())
+      (fun _ => MemLayout.default) (fun _ => ()) RunItems.empty
       (.cons .poison .nil) Memories.empty "peek through a poison pointer" (.inl rfl) rfl
   match args' with
   | .cons p .nil =>

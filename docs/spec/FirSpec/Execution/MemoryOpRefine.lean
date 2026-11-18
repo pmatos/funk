@@ -14,7 +14,7 @@ fails when the Lean changes under it.
 
 #doc (Manual) "Monotonicity with memory: readable blocks" =>
 
-:::moduleDocs (fingerprint := "16656510284723147131")
+:::moduleDocs (fingerprint := "16953589169170558765")
 :::
 
 :::readable Fir.StateRefinedBy (pin := Fir.SetM.IsRefinedBy) (pin := Fir.Ev.IsRefinedBy) (fingerprint := "17236169283130294733")
@@ -40,7 +40,7 @@ results of two computations by a map $`f` that takes results related by
 $`r` to results related by $`r'` keeps refinement.
 :::
 
-:::readable Fir.OpMemMonotone Fir.MemMonotone Fir.LawfulDialectMonotone (pin := Fir.OpMonotone) (fingerprint := "8181747639553358221")
+:::readable Fir.OpMemMonotone Fir.MemMonotone Fir.LawfulDialectMonotone (pin := Fir.OpMonotone) (fingerprint := "8161179232835285475")
 *Definitions: monotone with memory, and a dialect lawful in its
 monotonicity.* In a semantics of a dialect in the state layer, the op $`o`
 is monotone when, on operand vectors $`\vec{v} \sqsubseteq \vec{v}'`
@@ -61,7 +61,7 @@ of a dialect, as
 the set monad is what refinement asks of runs in the set monad.
 :::
 
-:::readable Fir.MemMonotone.ofLifts Fir.MemMonotone.setM Fir.LawfulDialectMonotone.ofLawful (pin := Fir.OpLiftsSetM) (fingerprint := "17237915660719983917")
+:::readable Fir.MemMonotone.ofLifts Fir.MemMonotone.setM Fir.LawfulDialectMonotone.ofLawful (pin := Fir.OpLiftsSetM) (fingerprint := "11525976418448488651")
 *Theorems: monotonicity with memory, for an op that touches no memory.* An
 op that is
 {ref "The-fir-specification--Memory--Runs-with-memory"}[tied] and

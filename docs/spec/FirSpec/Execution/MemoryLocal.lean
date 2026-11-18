@@ -14,7 +14,7 @@ fails when the Lean changes under it.
 
 #doc (Manual) "Progress and no stuck path with memory, without calls: readable blocks" =>
 
-:::moduleDocs (fingerprint := "4393808398232784306")
+:::moduleDocs (fingerprint := "15144980599101436386")
 :::
 
 :::readable Fir.Func.local_memNoStuck Fir.Func.local_memHasPath (pin := Fir.Func.MemInModule) (pin := Fir.HasOutcome) (fingerprint := "13219923234541825755")
@@ -37,7 +37,7 @@ Neither $`M` nor its other functions need be valid. The proof is the one of
 by induction on $`n`, from every memories, with no call to follow.
 :::
 
-:::readable Fir.Func.memNeverStuck_of_local Fir.Func.memProgress_of_local (pin := Fir.Func.InModuleAt) (pin := Fir.NeverStuck) (pin := Fir.Progress) (fingerprint := "8198465358761813026")
+:::readable Fir.Func.memNeverStuck_of_local Fir.Func.memProgress_of_local (pin := Fir.Func.InModuleAt) (pin := Fir.NeverStuck) (pin := Fir.Progress) (fingerprint := "9638871195537561960")
 *Theorem: a valid function without calls has no stuck path with memory,
 and has progress.* Let $`f` be valid in a module context, let no op of
 $`f` call a function, and let $`f` run within the module $`M` with memory

@@ -126,8 +126,8 @@ variable [DialectEffects d] [DialectMemDenote d]
 /-- Monotone with memory: wherever a run names the dialect's memories, the
 op is monotone in its semantics with memory at that naming. -/
 def MemMonotone (op : d.Op) : Prop :=
-  ∀ {N : Type} [DecidableEq N] (lay : N → MemLayout) (ρ : DialectEffects.Mem d → N),
-    letI := DialectMemDenote.denoteAt (d := d) lay ρ
+  ∀ {N : Type} [DecidableEq N] (lay : N → MemLayout) (ρ : DialectEffects.Mem d → N) (L : RunItems),
+    letI := DialectMemDenote.denoteAt (d := d) lay ρ L
     OpMemMonotone (σ := Memories N (unitsOf lay)) op
 
 /-- A dialect lawful in its monotonicity: every valid instance that runs by
@@ -149,8 +149,8 @@ variable {d : Dialect} [TyDenote d.Ty] [DialectSignature d] [TyRefinement d.Ty] 
 monotone with memory. -/
 theorem MemMonotone.ofLifts {op : d.Op} (hl : OpLiftsSetM op) (h : OpMonotone op) :
     MemMonotone op :=
-  fun lay ρ args args' hr => by
-    rw [(hl lay ρ args).1, (hl lay ρ args).2, (hl lay ρ args').1, (hl lay ρ args').2]
+  fun lay ρ L args args' hr => by
+    rw [(hl lay ρ L args).1, (hl lay ρ L args).2, (hl lay ρ L args').1, (hl lay ρ L args').2]
     exact ⟨fun ht => StateRefinedBy.lift ((h args args' hr).1 ht),
       fun ht => StateRefinedBy.lift ((h args args' hr).2 ht)⟩
 
@@ -160,7 +160,7 @@ variable [LiftsSetM d]
 monotone in the set monad. -/
 theorem MemMonotone.setM {op : d.Op} (h : MemMonotone op) : OpMonotone op := by
   intro args args' hr
-  have hu := h (N := Unit) (fun _ => MemLayout.default) (fun _ => ())
+  have hu := h (N := Unit) (fun _ => MemLayout.default) (fun _ => ()) RunItems.empty
   unfold OpMemMonotone at hu
   rw [LiftsSetM.lifts] at hu
   have hS := Memories.isRefinedBy_refl

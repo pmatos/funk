@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "A sum's effect obligations: readable blocks" =>
 
-:::moduleDocs (fingerprint := "5037813725983784098")
+:::moduleDocs (fingerprint := "13910479980993536564")
 :::
 
 :::readable Fir.HVector.any_toSum (fingerprint := "8356120504750222703")
@@ -38,7 +38,7 @@ set monad, so does the sum's: each side's op runs by its rule in the set
 monad, with its results mapped, and keeps the memories.
 :::
 
-:::readable Fir.Dialect.sum.instDialectMemDenote Fir.Dialect.sum.ownRuleHas_inl Fir.Dialect.sum.ownRuleHas_inr (fingerprint := "7104880686665236027")
+:::readable Fir.Dialect.sum.instDialectMemDenote Fir.Dialect.sum.ownRuleHas_inl Fir.Dialect.sum.ownRuleHas_inr (fingerprint := "15631017260229459125")
 *Definition: a sum's semantics with memory.* Where a run names the sum's
 memories by $`\rho`, an op of $`e` runs by $`e`'s
 {ref "The-fir-specification--Memory--Memory-obligations"}[semantics with memory]

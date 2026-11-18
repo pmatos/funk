@@ -14,10 +14,10 @@ when the Lean changes under it.
 
 #doc (Manual) "Float load obligations: readable blocks" =>
 
-:::moduleDocs (fingerprint := "12514035702483441544")
+:::moduleDocs (fingerprint := "3358301174367549831")
 :::
 
-:::readable Fir.Core.loadFloat_denote Fir.Core.loadFloatRule_poison Fir.Core.loadFloatRule_value Fir.Core.loadFloat_ownRuleHas (pin := Fir.Core.loadFloatRule) (pin := Fir.Core.loadAccess) (pin := Fir.Core.memDenoteAt) (pin := Fir.OwnRuleHas) (fingerprint := "16831908559009087537")
+:::readable Fir.Core.loadFloat_denote Fir.Core.loadFloatRule_poison Fir.Core.loadFloatRule_value Fir.Core.loadFloat_ownRuleHas (pin := Fir.Core.loadFloatRule) (pin := Fir.Core.loadAccess) (pin := Fir.Core.memDenoteAt) (pin := Fir.OwnRuleHas) (fingerprint := "13402394669751527305")
 *Theorems: the load of a float with memory.* In the
 {ref "The-fir-specification--Memory--The-state-layer"}[state layer] over
 the set monad, at the layout entries $`\ell` and naming $`\rho`, the
@@ -29,7 +29,7 @@ units of $`\mathsf{i}W`, $`W = 1 + e + m`, decoded. So what it runs by its
 own rule has a property when its rule has it on every pointer.
 :::
 
-:::readable Fir.Core.loadFloat_writesNot Fir.Core.loadFloat_allocatesNot Fir.Core.loadFloat_readsNot (pin := Fir.WritesNot) (pin := Fir.ReadsNot) (pin := Fir.AllocatesNot) (fingerprint := "16835920285773769471")
+:::readable Fir.Core.loadFloat_writesNot Fir.Core.loadFloat_allocatesNot Fir.Core.loadFloat_readsNot (pin := Fir.WritesNot) (pin := Fir.ReadsNot) (pin := Fir.AllocatesNot) (fingerprint := "872194356433768512")
 *Theorems: the load of a float touches memory only by reading where it
 declares.* At every layout $`\ell` and naming $`\rho`, it writes no unit
 of any memory, allocates and frees in none, and reads no memory but
@@ -40,7 +40,7 @@ $`\mathsf{reads}(N)`, names. Each follows from the
 own laws.
 :::
 
-:::readable Fir.Core.loadFloat_memTotal Fir.Core.loadFloat_finitelyMany (pin := Fir.MemTotal) (pin := Fir.FinitelyMany) (fingerprint := "11406047690292280557")
+:::readable Fir.Core.loadFloat_memTotal Fir.Core.loadFloat_finitelyMany (pin := Fir.MemTotal) (pin := Fir.FinitelyMany) (fingerprint := "5385834950168520505")
 *Theorems: the load of a float has an outcome, and at most one that
 ends.* From any memories it ends in UB or gives a value, a float or
 poison: it is
@@ -49,7 +49,7 @@ and it has
 {ref "The-fir-specification--Memory--Ops-of-finitely-many-outcomes"}[finitely many outcomes].
 :::
 
-:::readable Fir.Core.loadFloat_memMonotone (pin := Fir.MemMonotone) (fingerprint := "8605894488197379817")
+:::readable Fir.Core.loadFloat_memMonotone (pin := Fir.MemMonotone) (fingerprint := "5774228941786999919")
 *Theorem: the load of a float is monotone with memory.* A poison pointer
 is UB, which every outcome refines. On the same pointer, from memories
 that refine others, the load faults for the same reason or loads units
@@ -58,7 +58,7 @@ bits {ref "The-fir-specification--Memory--Laws-of-values-in-units"}[refines]
 the others' value.
 :::
 
-:::readable Fir.Core.loadFloat_memPropagates Fir.Core.loadFloat_memReturnsOnDefined (pin := Fir.MemPropagatesPoison) (pin := Fir.MemReturnsOnDefined) (fingerprint := "18102742894188822739")
+:::readable Fir.Core.loadFloat_memPropagates Fir.Core.loadFloat_memReturnsOnDefined (pin := Fir.MemPropagatesPoison) (pin := Fir.MemReturnsOnDefined) (fingerprint := "13640110920788482543")
 *Theorems: the load of a float propagates poison with memory, and returns
 on defined operands.* A poison pointer gives no result, and the UB it
 gives from memories $`S` is the UB of a pointer with no provenance in its

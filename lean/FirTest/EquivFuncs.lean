@@ -82,15 +82,15 @@ def pairsText (w : Nat) : String := (pairs w).print
 /-! # The run of each function -/
 
 variable {M : Module CoreDialect} {w : Nat} {name : Name} {N : Type} [DecidableEq N]
-  (lay : N → MemLayout) (ρ : DialectEffects.Mem CoreDialect → N)
+  (lay : N → MemLayout) (ρ : DialectEffects.Mem CoreDialect → N) (L : RunItems)
 
 /-- `add %x, %x`, with any flags, returns after two steps, with memory. -/
 theorem addSelfWith_runs (f : WrapFlags) (x : ⟦i w⟧) :
-    (addSelfWith name f w).memRuns lay ρ M (.cons x .nil) 2 =
+    (addSelfWith name f w).memRuns lay ρ L M (.cons x .nil) 2 =
       (pure (.ret [⟨i w, addWith f x x⟩]) : ExceptT Stuck SetM (Result Core.Obs)) := by
-  letI := DialectMemDenote.denoteAt (d := CoreDialect) lay ρ
+  letI := DialectMemDenote.denoteAt (d := CoreDialect) lay ρ L
   refine memRuns_of_ret lay ρ (f := addSelfWith name f w) (args := .cons x .nil)
-    (Func.enter_ok rfl rfl (HVector.toDVals_types _)) ⟨0, ?_⟩
+    L (Func.enter_ok rfl rfl (HVector.toDVals_types _)) ⟨0, ?_⟩
   rw [runOps_denote (args := .cons x (.cons x .nil)) (rs := .cons (addWith f x x) .nil)
     rfl (operands_cons rfl (operands_cons rfl rfl)) rfl rfl rfl rfl,
     runOps_ret (args := .cons (addWith f x x) .nil) rfl (operands_cons rfl rfl) rfl rfl rfl]
@@ -98,11 +98,11 @@ theorem addSelfWith_runs (f : WrapFlags) (x : ⟦i w⟧) :
 
 /-- `mul %x, 2`, with any flags, returns after three steps, with memory. -/
 theorem mulTwoWith_runs (f : WrapFlags) (x : ⟦i w⟧) :
-    (mulTwoWith name f w).memRuns lay ρ M (.cons x .nil) 3 =
+    (mulTwoWith name f w).memRuns lay ρ L M (.cons x .nil) 3 =
       (pure (.ret [⟨i w, mulWith f x (.value 2)⟩]) : ExceptT Stuck SetM (Result Core.Obs)) := by
-  letI := DialectMemDenote.denoteAt (d := CoreDialect) lay ρ
+  letI := DialectMemDenote.denoteAt (d := CoreDialect) lay ρ L
   refine memRuns_of_ret lay ρ (f := mulTwoWith name f w) (args := .cons x .nil)
-    (Func.enter_ok rfl rfl (HVector.toDVals_types _)) ⟨0, ?_⟩
+    L (Func.enter_ok rfl rfl (HVector.toDVals_types _)) ⟨0, ?_⟩
   rw [runOps_denote (args := .nil) (rs := .cons (constValue w 2) .nil) rfl rfl rfl rfl rfl rfl,
     runOps_denote (args := .cons x (.cons (PoisonOr.value 2) .nil))
       (rs := .cons (mulWith f x (.value 2)) .nil)
@@ -112,11 +112,11 @@ theorem mulTwoWith_runs (f : WrapFlags) (x : ⟦i w⟧) :
 
 /-- `@shl_one` returns `shl %x, 1` after three steps, with memory. -/
 theorem shlOne_runs (x : ⟦i w⟧) :
-    (shlOne w).memRuns lay ρ M (.cons x .nil) 3 =
+    (shlOne w).memRuns lay ρ L M (.cons x .nil) 3 =
       (pure (.ret [⟨i w, shlValues x (.value 1)⟩]) : ExceptT Stuck SetM (Result Core.Obs)) := by
-  letI := DialectMemDenote.denoteAt (d := CoreDialect) lay ρ
+  letI := DialectMemDenote.denoteAt (d := CoreDialect) lay ρ L
   refine memRuns_of_ret lay ρ (f := shlOne w) (args := .cons x .nil)
-    (Func.enter_ok rfl rfl (HVector.toDVals_types _)) ⟨0, ?_⟩
+    L (Func.enter_ok rfl rfl (HVector.toDVals_types _)) ⟨0, ?_⟩
   rw [runOps_denote (args := .nil) (rs := .cons (constValue w 1) .nil) rfl rfl rfl rfl rfl rfl,
     runOps_denote (args := .cons x (.cons (PoisonOr.value 1) .nil))
       (rs := .cons (shlValues x (.value 1)) .nil)
@@ -133,13 +133,13 @@ included. -/
 theorem unary_isRefinedBy_iff {M M' : Module CoreDialect} {n n' : Name}
     {os os' : List (Operation CoreDialect)} {Nf Ng : Nat}
     {vf vg : PoisonOr (BitVec w) → PoisonOr (BitVec w)}
-    (hf : ∀ x, (unary n w os).memRuns lay ρ M (.cons x .nil) Nf =
+    (hf : ∀ x, (unary n w os).memRuns lay ρ L M (.cons x .nil) Nf =
       (pure (.ret [⟨i w, vf x⟩]) : ExceptT Stuck SetM (Result Core.Obs)))
-    (hg : ∀ x, (unary n' w os').memRuns lay ρ M' (.cons x .nil) Ng =
+    (hg : ∀ x, (unary n' w os').memRuns lay ρ L M' (.cons x .nil) Ng =
       (pure (.ret [⟨i w, vg x⟩]) : ExceptT Stuck SetM (Result Core.Obs))) :
-    (unary n w os).memRuns lay ρ M ⊑ (unary n' w os').memRuns lay ρ M' ↔ ∀ x, vf x ⊑ vg x := by
-  have h := FuncRuns.isRefinedBy_iff_of_returns (Core.fuelMonotone lay ρ M (unary n w os))
-    (Core.fuelMonotone lay ρ M' (unary n' w os'))
+    (unary n w os).memRuns lay ρ L M ⊑ (unary n' w os').memRuns lay ρ L M' ↔ ∀ x, vf x ⊑ vg x := by
+  have h := FuncRuns.isRefinedBy_iff_of_returns (Core.fuelMonotone lay ρ L M (unary n w os))
+    (Core.fuelMonotone lay ρ L M' (unary n' w os'))
     (vs := fun a => match a with | .cons x .nil => [⟨i w, vf x⟩])
     (vt := fun a => match a with | .cons x .nil => [⟨i w, vg x⟩])
     (fun a => match a with | .cons x .nil => ⟨Nf, hf x⟩)
@@ -155,18 +155,18 @@ theorem unary_isRefinedBy_transfer {M M' : Module CoreDialect} {n n' : Name}
     {os os' : List (Operation CoreDialect)} {Nf Ng : Nat}
     {vf vg : PoisonOr (BitVec w) → PoisonOr (BitVec w)}
     (hf : ∀ {N : Type} [DecidableEq N] (lay : N → MemLayout)
-      (ρ : DialectEffects.Mem CoreDialect → N) (x : ⟦i w⟧),
-      (unary n w os).memRuns lay ρ M (.cons x .nil) Nf =
+      (ρ : DialectEffects.Mem CoreDialect → N) (L : RunItems) (x : ⟦i w⟧),
+      (unary n w os).memRuns lay ρ L M (.cons x .nil) Nf =
         (pure (.ret [⟨i w, vf x⟩]) : ExceptT Stuck SetM (Result Core.Obs)))
     (hg : ∀ {N : Type} [DecidableEq N] (lay : N → MemLayout)
-      (ρ : DialectEffects.Mem CoreDialect → N) (x : ⟦i w⟧),
-      (unary n' w os').memRuns lay ρ M' (.cons x .nil) Ng =
+      (ρ : DialectEffects.Mem CoreDialect → N) (L : RunItems) (x : ⟦i w⟧),
+      (unary n' w os').memRuns lay ρ L M' (.cons x .nil) Ng =
         (pure (.ret [⟨i w, vg x⟩]) : ExceptT Stuck SetM (Result Core.Obs)))
     {N₀ : Type} [DecidableEq N₀] {lay₀ : N₀ → MemLayout}
     {ρ₀ : DialectEffects.Mem CoreDialect → N₀}
-    (h : (unary n w os).memRuns lay₀ ρ₀ M ⊑ (unary n' w os').memRuns lay₀ ρ₀ M') :
-    (unary n w os).memRuns lay ρ M ⊑ (unary n' w os').memRuns lay ρ M' :=
-  (unary_isRefinedBy_iff lay ρ (hf lay ρ) (hg lay ρ)).2
-    ((unary_isRefinedBy_iff lay₀ ρ₀ (hf lay₀ ρ₀) (hg lay₀ ρ₀)).1 h)
+    (h : (unary n w os).memRuns lay₀ ρ₀ L M ⊑ (unary n' w os').memRuns lay₀ ρ₀ L M') :
+    (unary n w os).memRuns lay ρ L M ⊑ (unary n' w os').memRuns lay ρ L M' :=
+  (unary_isRefinedBy_iff lay ρ L (hf lay ρ L) (hg lay ρ L)).2
+    ((unary_isRefinedBy_iff lay₀ ρ₀ L (hf lay₀ ρ₀ L) (hg lay₀ ρ₀ L)).1 h)
 
 end FirTest.Equiv

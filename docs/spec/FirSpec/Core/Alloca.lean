@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Stack allocation rules: readable blocks" =>
 
-:::moduleDocs (fingerprint := "9191405538203229090")
+:::moduleDocs (fingerprint := "6084653289318863074")
 :::
 
 :::readable Fir.Core.Ty.units Fir.Core.Ty.units?_int Fir.Core.Ty.units?_float (pin := Fir.MemLayout.bitsUnits) (pin := Fir.Core.Ty.units?) (fingerprint := "8017750107794323725")
@@ -83,4 +83,16 @@ which frees it when its call returns
 The count $`c`, and so $`n`, has no bound, as the human ruled on
 2026-11-14 (#382): an allocation larger than a machine holds is a resource
 error of the run, as a deep recursion is, and not a rule of the spec.
+:::
+
+:::readable Fir.Core.Ty.fieldShape_eq_allocaShape (pin := Fir.Core.Ty.fieldShape) (fingerprint := "13421257978643998545")
+*Theorem: a field takes what one allocated value takes.* For every map
+$`\ell` from memories to their layout entries, every memory $`n` and every
+integer or pointer type $`t`, the units and the alignment that a field of
+type $`t` takes in an aggregate's layout of memory $`n`
+({ref "The-fir-specification--Validation--Core-rules"}[the core's field shape])
+are those of $`\mathsf{alloca}_n~k~t~1` with no alignment, in a run that
+names each memory by itself: the units of one value of $`t` and its
+default alignment. So a layout and an allocation of memory $`n` count the
+same units (ADR-2026-11-16-1546).
 :::

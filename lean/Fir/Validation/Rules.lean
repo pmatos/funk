@@ -9,7 +9,8 @@ and that of each nested module, is valid: its symbols are unique, each of
 its functions is valid, each of its items of a dialect's kind is valid, and
 its dialect set names each dialect once, by a word, and its data layout is
 valid and declares each memory that a type of the module names, the types
-that its ops carry in their attributes included (ADR-2026-11-12-1821). A function is valid
+that its ops carry in their attributes included (ADR-2026-11-12-1821), and
+each of its aggregates' layouts is valid in it (ADR-2026-11-16-1546). A function is valid
 when its blocks, its ops and its successors obey the rules below, and each
 op obeys its dialect's rule.
 
@@ -305,7 +306,8 @@ structure SymbolTable.Valid (keys : List LocRef) (t : SymbolTable d) : Prop wher
 A module is valid when its location table is well formed, each of its
 symbol tables is valid, its own and that of each module nested in it, at
 any depth (ADR-2026-11-10-1510), its data layout is valid, and the layout
-declares each memory that its types name (ADR-2026-11-12-1821). One
+declares each memory that its types name (ADR-2026-11-12-1821), and each
+aggregate's layout of each table is valid in it (ADR-2026-11-16-1546). One
 location table and one layout serve every table.
 -/
 structure Module.Valid (m : Module d) : Prop where
@@ -313,6 +315,7 @@ structure Module.Valid (m : Module d) : Prop where
   tables : ∀ t ∈ m.tables, t.Valid (m.locs.map (·.1))
   layout : m.layout.Valid
   memories : m.MemoriesDeclared
+  aggregates : m.AggregatesValid
 
 /-- A valid module's own table is valid. -/
 theorem Module.Valid.table {m : Module d} (h : m.Valid) : m.table.Valid (m.locs.map (·.1)) :=
@@ -355,13 +358,19 @@ theorem Module.valid_of_flat {m : Module d} (flat : ∀ i ∈ m.items, i.func?.i
       decide +kernel) :
     m.Valid := by
   have hd := Module.dialectItems_of_flat flat
-  refine ⟨locs, fun t ht => ?_, layout, fun t ht => ?_⟩
+  have ha : m.table.aggregates = [] := List.filterMap_eq_nil_iff.mpr fun j hj => by
+    have := flat j hj
+    cases j <;> simp_all [Item.func?, Item.aggregate?]
+  refine ⟨locs, fun t ht => ?_, layout, fun t ht => ?_, fun t ht => ?_⟩
   · simp only [Module.tables, Item.tablesIn_eq_nil flat, List.mem_singleton] at ht
     subst ht
     exact ⟨symbolsUnique, funcs, fun i hi => by simp [hd] at hi, dialectNames, dialectsUnique⟩
   · simp only [Module.tables, Item.tablesIn_eq_nil flat, List.mem_singleton] at ht
     subst ht
     exact ⟨memories, fun i hi => by simp [hd] at hi, attrMemories⟩
+  · simp only [Module.tables, Item.tablesIn_eq_nil flat, List.mem_singleton] at ht
+    subst ht
+    exact fun a h => by simp [ha] at h
 
 /-!
 # Valid op instances

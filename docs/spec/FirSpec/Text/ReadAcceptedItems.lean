@@ -33,7 +33,7 @@ tokens that can be written, the reader of a data layout gives entries
 written as types, and leaves tokens that can be written.
 :::
 
-:::readable Fir.Text.readItems_writable (pin := Fir.Text.readItems) (pin := Fir.Text.readItem) (pin := Fir.Text.ReadsWritable) (pin := Fir.Text.SItem.Writable) (pin := Fir.Text.SBody.Writable) (pin := Fir.Text.decodeItem) (fingerprint := "14465691199773920056")
+:::readable Fir.Text.readItems_writable (pin := Fir.Text.readItems) (pin := Fir.Text.readItem) (pin := Fir.Text.ReadsWritable) (pin := Fir.Text.SItem.Writable) (pin := Fir.Text.SBody.Writable) (pin := Fir.Text.decodeItem) (fingerprint := "2270189611404307631")
 *Theorem: items as read can be written.* For every list of tokens
 $`\mathit{ts}`, at the top of the module or inside the body of an item,
 the {ref "The-fir-specification--Text-format--Reading-the-grammar"}[reader of items]
@@ -66,7 +66,8 @@ induction that follows their own recursion, as for blocks. Case by case:
 * an item without its symbol is an error.
 
 Nothing is asked of an item's kind or its symbol: decoding accepts only a
-`func`, a `module` and an item of a dialect's kind, whatever their symbol.
-An item of a dialect's kind keeps its attributes, so they are asked to be
+`func`, a `module`, an `aggregate` and an item of a dialect's kind,
+whatever their symbol. An item of a dialect's kind keeps its attributes,
+and an aggregate's layout is decoded from its own, so they are asked to be
 written.
 :::
