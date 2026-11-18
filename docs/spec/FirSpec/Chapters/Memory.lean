@@ -27,11 +27,13 @@ the obligations that an op's declaration of its effects on memory puts on
 its semantics, progress with memory, which asks each op to be total from
 any memories, and refinement with memory, which refines memories unit by
 unit and asks each op to be monotone from memories that refine others.
-Between the model and the effect, it says how a value of an integer, a
-float or a pointer type becomes units of a memory, and units a value again,
-at every byte order. It ends with traces: the events that a run shows to the
-world outside it, the layer in which a run shows them, and refinement of the
-traced runs of functions for every world (ADR-2026-11-09-1540).
+Between the model and the effect, it says which addresses an exposed
+allocation may be given and which one `fir-ref` gives, and how a value of
+an integer, a float or a pointer type becomes units of a memory, and units
+a value again, at every byte order. It ends with traces: the events that a
+run shows to the world outside it, the layer in which a run shows them, and
+refinement of the traced runs of functions for every world
+(ADR-2026-11-09-1540).
 
 {includeReadable "." Fir.Memory.Model "The memory model" FirSpec.Memory.Model (level := 1)}
 
@@ -46,6 +48,14 @@ traced runs of functions for every world (ADR-2026-11-09-1540).
 {includeReadable "." Fir.Memory.FrameLaws "Frame laws" FirSpec.Memory.FrameLaws (level := 1)}
 
 {includeReadable "." Fir.Memory.Refine "Refining memories" FirSpec.Memory.Refine (level := 1)}
+
+{includeReadable "." Fir.Memory.Address "Addresses" FirSpec.Memory.Address (level := 1)}
+
+{includeReadable "." Fir.Memory.AddressLaws "Address laws" FirSpec.Memory.AddressLaws (level := 1)}
+
+{includeReadable "." Fir.Memory.CanonicalLaws "Canonical layout laws" FirSpec.Memory.CanonicalLaws (level := 1)}
+
+{includeReadable "." Fir.Memory.ExposeLaws "Exposure laws" FirSpec.Memory.ExposeLaws (level := 1)}
 
 {includeReadable "." Fir.Memory.Encode "Values in units" FirSpec.Memory.Encode (level := 1)}
 
