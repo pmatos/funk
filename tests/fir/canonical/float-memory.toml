@@ -14,8 +14,9 @@
 # pointer's fragments gives poison, a stored poison loads as poison, and a
 # poison pointer is UB. In memory 1, of 16-bit units, an f32 takes two
 # units, the second holding its top 16 bits, and an f64 four, aligned to
-# 4. The backend does not lower a float in memory yet (stage 2 of #264),
-# so every test is interpreter-only.
+# 4. The backend does not lower f16, bf16, f128, float(2, 1) or a memory
+# of 16-bit units, so every test is interpreter-only;
+# float-memory-native.fir runs f32 and f64 natively.
 tests = [
   { func = "@round_f16", args = ["1.0"], expect = ["1.0"] },
   { func = "@round_f16", args = ["0xfe01"], expect = ["0xfe01"] },
