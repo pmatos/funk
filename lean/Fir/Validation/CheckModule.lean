@@ -183,7 +183,7 @@ all with the module's one set of location references.
 references `held` of the module's location table. -/
 def SymbolTable.lookup (held : Std.HashSet LocRef) (t : SymbolTable d) : Lookup d :=
   let symbols := firsts (t.funcs.map fun f => (f.name, f.type))
-  ⟨fun s => symbols[s]?, held.contains⟩
+  ⟨fun s => symbols[s]?, held.contains, t.layouts⟩
 
 theorem SymbolTable.lookup_agrees (keys : List LocRef) (t : SymbolTable d) :
     (t.lookup (Std.HashSet.ofList keys)).Agrees (t.context keys) where
@@ -192,6 +192,7 @@ theorem SymbolTable.lookup_agrees (keys : List LocRef) (t : SymbolTable d) :
     simp [SymbolTable.lookup, SymbolTable.context, SymbolTable.symbols, getElem?_firsts,
       List.find?_map, Function.comp_def]
   hasLoc r := by simp [SymbolTable.lookup, SymbolTable.context]
+  layouts := rfl
 
 variable [DialectSignature d] [DialectValidation d] [DecidableEq d.Ty]
   [DecidableDialectValidation d]
@@ -240,7 +241,7 @@ theorem Module.problems_eq_nil_iff (m : Module d) : m.problems = [] ↔ m.Valid 
 instance (m : Module d) : Decidable m.Valid := decidable_of_iff _ m.problems_eq_nil_iff
 
 instance (ctx : ModuleContext d) (f : Func d) : Decidable (f.Valid ctx) :=
-  decidable_of_iff _ (Func.problems_eq_nil (lk := ⟨ctx.symbols, fun r => decide (r ∈ ctx.locKeys)⟩)
-    ⟨rfl, by simp⟩)
+  decidable_of_iff _ (Func.problems_eq_nil (lk := ⟨ctx.symbols, fun r => decide (r ∈ ctx.locKeys), ctx.layouts⟩)
+    ⟨rfl, by simp, rfl⟩)
 
 end Fir

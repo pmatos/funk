@@ -126,6 +126,14 @@ gives the differential side `f32` and `f64`. A float of a format without
 an alias, such as `float(2, 1)`, counts towards no cell, as at every other
 float op.
 
+The field address `fieldaddr` has a table of its own (`pointer_cells.FIELDS`,
+#236). It has one cell with no index and one at each width of its index;
+its layout and field are no part of a cell, just as a callee is not. A side
+has the cells at its field widths (`cells.FIELD_*`). The backend does not
+lower `fieldaddr` yet, so only the interpreter-only side has them, filled
+by `tests/fir/canonical/fieldaddr.fir`. Stage 4 of #236 gives the
+differential side its widths.
+
 A test exercises each op of the function it runs and of every function it calls,
 directly or through others. A function of a nested module, such as a kernel
 `@dev::@k`, counts too, and its calls go to its own module's functions (#406).

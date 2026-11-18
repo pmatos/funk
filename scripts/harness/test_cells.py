@@ -80,8 +80,9 @@ def decoded_attrs(text: str, floats: str) -> dict[str, tuple[str, ...]]:
     alignment, are not cells: an allocation's cell is the width of its
     type. Nor are `load`'s and `store`'s ordering and alignment, which
     `decodeLoad` and `decodeStore` read: a load's cell is the width of its
-    result, and a store's the width of its value. Any other arm is not
-    known."""
+    result, and a store's the width of its value. Nor are the layout and
+    field that `decodeFieldAddr` reads for `fieldaddr`: its cell is the
+    width of its index. Any other arm is not known."""
     body = definition(text, "Op.decode")
     arms = dict(re.findall(r'\n  \| "(\w+)" =>(.*?)(?=\n  \| |\Z)', body, re.DOTALL))
     for name in re.findall(r'\("(\w+)", \.\w+\)', definition(text, "plainBinOps")):
@@ -104,6 +105,7 @@ def decoded_attrs(text: str, floats: str) -> dict[str, tuple[str, ...]]:
         "decodeAlloca": ("",),
         "decodeLoad": ("",),
         "decodeStore": ("",),
+        "decodeFieldAddr": ("",),
     }
     by_ctor = {
         "decodeFBin": op_attrs(floats, "FBin"),
@@ -191,6 +193,7 @@ class Tests(unittest.TestCase):
                 "fl.attrs ++ o.attrs",
                 "allocaAttrs k t c a",
                 "loadAttrs o a",
+                "fieldAddrAttrs s i",
                 "[]",
             },
         )

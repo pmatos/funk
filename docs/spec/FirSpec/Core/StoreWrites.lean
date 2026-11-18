@@ -14,10 +14,10 @@ fails when the Lean changes under it.
 
 #doc (Manual) "A store declared without a write: readable blocks" =>
 
-:::moduleDocs (fingerprint := "11243257183109581193")
+:::moduleDocs (fingerprint := "6242668512623390127")
 :::
 
-:::readable Fir.Core.Unlawful.storeNoWrite Fir.Core.Unlawful.store_typesValid (pin := Fir.Core.Op.effects) (fingerprint := "12764346124275899649")
+:::readable Fir.Core.Unlawful.storeNoWrite Fir.Core.Unlawful.store_typesValid (pin := Fir.Core.Op.effects) (fingerprint := "7539088053809796109")
 *Definition: a declaration without a write.* The declaration gives every
 core op its
 {ref "The-fir-specification--Execution--Core-effects"}[effects],
@@ -35,7 +35,7 @@ load declared without a read whose one allocation holds 0, gives $`S_1`,
 the same memories with that unit holding 1.
 :::
 
-:::readable Fir.Core.Unlawful.storeNoWrite_unlawful (pin := Fir.LawfulDialectEffects) (fingerprint := "11489798942298084601")
+:::readable Fir.Core.Unlawful.storeNoWrite_unlawful (pin := Fir.LawfulDialectEffects) (fingerprint := "2861601684913385254")
 *Theorem: the obligations reject the declaration.* Over the core's own
 {ref "The-fir-specification--Memory--The-core___s-rules-with-memory"}[semantics with memory],
 the declaration above is not lawful in its effects. The obligation on an

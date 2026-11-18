@@ -209,7 +209,7 @@ case by case: `Core.Op.poisonClass` and `Core.Op.effects` have no case for
 the rest, so a new core op does not build until it has both, and
 `scripts/check_g0.py` fails if a case for the rest comes back. Thirty-six
 ops propagate poison and seven are exceptions (ADR-2026-10-29-2006). The
-samples of the core ops name all 48 of their names, the float constant
+samples of the core ops name all 49 of their names, the float constant
 sharing `const`'s and the two bit casts `bitcast`, and the checks below pin both on them.
 `alloca` allocates in the memory of its result, `load` reads the memory of
 its pointer and `store` writes it; no other core op declares an effect on
@@ -217,18 +217,18 @@ memory, and no core op is observable, since the core dialect has no trace
 yet (ADR-2026-11-09-1541).
 -/
 
-#guard (Core.samples.map Core.Op.name).eraseDups.length == 48
+#guard (Core.samples.map Core.Op.name).eraseDups.length == 49
 #guard ((Core.samples.filter (Core.Op.poisonClass · == .propagates)).map Core.Op.name).eraseDups ==
   ["const", "add", "sub", "mul", "sdiv", "udiv", "srem", "urem", "and", "or", "xor", "shl", "lshr",
    "ashr", "zext", "sext", "trunc", "poison", "icmp", "fcmp", "fadd", "fsub", "fmul", "fdiv", "fneg",
    "fabs", "sqrt", "fma", "frem", "fmod", "bitcast", "sitofp", "uitofp",
-   "fpext", "fptrunc", "ptradd", "alloca", "load", "store", "fptosi", "fptoui"]
+   "fpext", "fptrunc", "ptradd", "fieldaddr", "alloca", "load", "store", "fptosi", "fptoui"]
 #guard ((Core.samples.filter (Core.Op.poisonClass · == .exception)).map Core.Op.name).eraseDups ==
   ["select", "freeze", "br", "cond_br", "ret", "unreachable", "call"]
 #guard ((Core.samples.filter (Core.Op.effects · == {})).map Core.Op.name).eraseDups ==
   ["const", "add", "and", "or", "xor", "select", "zext", "sext", "trunc", "freeze", "call", "icmp",
    "fcmp", "fadd", "fdiv", "fneg", "fabs", "bitcast", "sitofp", "uitofp", "fpext", "fptrunc",
-   "ptradd"]
+   "ptradd", "fieldaddr"]
 #guard ((Core.samples.filter (·.effects.mayUB)).map Core.Op.name).eraseDups ==
   ["sdiv", "udiv", "srem", "urem", "cond_br", "unreachable", "load", "store"]
 #guard ((Core.samples.filter (·.effects.mayPoison)).map Core.Op.name).eraseDups ==

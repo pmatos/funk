@@ -26,7 +26,7 @@ for $`f` too. A store locates its units by their number alone, and its
 alignment check reads the allocations, not the units.
 :::
 
-:::readable Fir.Core.storeAccess Fir.Core.store_denote Fir.Core.storeRule_poison Fir.Core.storeRule_value Fir.Core.store_ownRuleHas (pin := Fir.Core.storeRule) (pin := Fir.Core.memDenoteAt) (pin := Fir.OwnRuleHas) (fingerprint := "17479065974873850673")
+:::readable Fir.Core.storeAccess Fir.Core.store_denote Fir.Core.storeRule_poison Fir.Core.storeRule_value Fir.Core.store_ownRuleHas (pin := Fir.Core.storeRule) (pin := Fir.Core.memDenoteAt) (pin := Fir.OwnRuleHas) (fingerprint := "8708398983508984205")
 *Definitions and theorems: $`\mathsf{store}` with memory.* In the
 {ref "The-fir-specification--Memory--The-state-layer"}[state layer] over
 the set monad, at the layout entries $`\ell` and naming $`\rho`, the

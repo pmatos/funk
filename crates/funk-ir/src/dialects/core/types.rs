@@ -219,10 +219,11 @@ impl TypeSpec for CoreTypes {
         }
     }
 
-    /// `Core.Ty.fieldShape`: an integer or a pointer takes the units of its
-    /// bits, aligned to the least power of two that is at least those
-    /// units, but a pointer of the memory `n` itself to the alignment that
-    /// its entry gives its pointers. A float may not be a field yet (#264).
+    /// `Core.Ty.fieldShape`: an integer, a float or a pointer takes the
+    /// units of its bits, a float those of its `1 + e + m` bits, aligned to
+    /// the least power of two that is at least those units, but a pointer
+    /// of the memory `n` itself to the alignment that its entry gives its
+    /// pointers.
     fn field_shape(
         &self,
         ty: &Type,
@@ -252,7 +253,10 @@ impl TypeSpec for CoreTypes {
                 let u = units(entry(u64::from(m)).pointer);
                 Some((u, u.next_power_of_two()))
             }
-            CoreType::Float { .. } => None,
+            CoreType::Float { e, m } => {
+                let u = units(1 + e + m);
+                Some((u, u.next_power_of_two()))
+            }
         }
     }
 }

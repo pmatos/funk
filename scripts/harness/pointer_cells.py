@@ -19,13 +19,24 @@ and `cells.POINTER_INTERPRETER`, the pointer cells with them, and at the
 side's float formats in memory, `MEMORY_FLOAT_DIFFERENTIAL` and
 `MEMORY_FLOAT_INTERPRETER`. The backend does not load or store a
 float yet, so the differential side has none (stage 1 of #264).
+
+The field address `fieldaddr` (#236) is a cell for each width of its
+index, read as signed, and one, with no index, for the address of a field
+or of a repeated field's first element, whatever its layout and field, as
+a call's callee is not part of its cell. Its cells are at the side's field
+widths, `cells.FIELD_DIFFERENTIAL` and `cells.FIELD_INTERPRETER`: the
+backend does not lower it yet, so the differential side has none (stage 4
+of #236).
 """
 
-from cell_types import Cell, CellError, is_pointer
+from cell_types import Cell, CellError, Row, Table, is_pointer
 from firtext import Op
 from refine import FLOAT_ALIASES, bits_of
 
 POINTER_OPS = ("ptradd", "alloca", "load", "store")
+# The field address, and its table of cells (#236).
+FIELD_ADDR = "fieldaddr"
+FIELDS = "fields"
 # The column of the pointer cells of `alloca`, `load` and `store`.
 POINTER = "ptr"
 # The float formats of `alloca`, `load` and `store` on each side (#264).
@@ -118,3 +129,22 @@ def pointer_cell(op: Op) -> Cell:
     if op.name == "store":
         return memory_store(op)
     return pointer_offset(op)
+
+
+def field_address(op: Op) -> Cell:
+    """The cell of a `fieldaddr`: at the width of its index, or with no
+    index. Its layout and field are not part of its cell. Any other text of
+    it does not decode, so it is not a cell."""
+    if len(op.attrs) == 2 and op.operands and op.results == op.operands[:1]:
+        pointer, *index = op.operands
+        if is_pointer(pointer) and len(index) <= 1 and all(map(is_int, index)):
+            return Cell(FIELDS, op.name, "", "".join(index))
+    raise CellError(f"{op.name} of {op.operands} to {op.results} is not a cell")
+
+
+def field_table(widths: tuple[str, ...]) -> Table:
+    """The table of `fieldaddr`'s cells: with no index, then at each width
+    of its index."""
+    columns = ("", *widths)
+    row = Row(FIELD_ADDR, "", tuple(Cell(FIELDS, FIELD_ADDR, "", t) for t in columns))
+    return Table(FIELDS, columns, (row,))

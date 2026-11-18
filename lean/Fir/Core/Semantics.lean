@@ -38,13 +38,16 @@ choice effect, and the divisions,
   `loadFloat` and the stores `store`, `storePtr` and `storeFloat`, have
   none either: they allocate, read
   and write, so each rule needs the memory effect, and is
-  one of the core's rules with memory.
+  one of the core's rules with memory. Nor has the field address
+  `fieldAddr`: it reads the layout it names in the items that the run
+  gives each op, so its rule too is one of the core's rules with memory.
 * Each terminator has the rule of the control-flow rules or the branch
   rules.
 * An op has rules when one of the two tables gives it one, when it calls
-  a function, or when it touches memory. Every core op has rules: each
-  family gave its ops theirs, the call rules name the callee of `call`, and
-  `alloca` and the loads and stores have their rules with memory.
+  a function, when it touches memory, or when it reads the run's items.
+  Every core op has rules: each family gave its ops theirs, the call rules
+  name the callee of `call`, and `alloca`, the loads and stores and
+  `fieldAddr` have their rules with memory.
 
 An op has no rules when its dialect's semantics gives it none. The rule for
 such an op, first written while its family had not landed, is the one the spec
@@ -103,10 +106,19 @@ def Op.touchesMemory : Op → Bool
   | .storeFloat .. => true
   | _ => false
 
+/-- The core ops whose rules read the items that the run gives each op:
+`fieldAddr`, which reads the layout it names. It touches no memory, but
+the set monad has no run and no items, so it too has a rule only with
+memory (the section on the core's rules with memory). -/
+def Op.readsItems : Op → Bool
+  | .fieldAddr .. => true
+  | _ => false
+
 /-- The rule of each core op that is not a terminator, in any monad with
 the choice and UB effects; `none` for `call`, whose meaning is its
 callee's run, for `alloca`, `load` and `store`, whose rules need memory,
-and for the terminators. -/
+for `fieldAddr`, whose rule needs the run's items, and for the
+terminators. -/
 def Op.denote? [MonadChoice m] [MonadUB m] : (op : Op) →
     Option (HVector toType (Fir.sig (d := CoreDialect) op) →
       m (HVector toType (Fir.returnTypes (d := CoreDialect) op)))
@@ -200,13 +212,14 @@ def Op.exit? [MonadUB m] : (op : Op) →
 
 /-- The op has rules: as an op that is not a terminator, as a terminator,
 as an op that calls a function, whose meaning is its callee's run, or as an
-op that touches memory, whose rule is its rule with memory. It looks at the
+op that touches memory or reads the run's items, whose rule is its rule
+with memory. It looks at the
 rules in the set monad, which has the effects of choice and UB that the
 rules of `freeze`, the float arithmetic, the divisions and `cond_br` ask
 for. -/
 def Op.hasRules (op : Op) : Bool :=
   (op.denote? (m := SetM)).isSome || (op.exit? (m := SetM)).isSome || op.callTarget?.isSome ||
-    op.touchesMemory
+    op.touchesMemory || op.readsItems
 
 -- Every core op has rules: one instance of each, `add` with each of its
 -- flags, and `icmp` and `fcmp` with each of their predicates among them. `call`'s are
@@ -244,6 +257,8 @@ def Op.hasRules (op : Op) : Bool :=
   (Op.storePtr .nonatomic 0 none 0).hasRules && (Op.storePtr .seqCst 2 (some 4) 1).hasRules
 #guard ((Op.loadFloat .nonatomic 8 23 none 0).denote? (m := SetM)).isNone &&
   (Op.loadFloat .nonatomic 8 23 none 0).hasRules && (Op.loadFloat .seqCst 2 1 (some 4) 1).hasRules
+#guard ((Op.fieldAddr "pair" 1 0 none).denote? (m := SetM)).isNone &&
+  (Op.fieldAddr "pair" 1 0 none).hasRules && (Op.fieldAddr "a" 0 1 (some 32)).hasRules
 #guard ((Op.storeFloat .nonatomic 8 23 none 0).denote? (m := SetM)).isNone &&
   (Op.storeFloat .nonatomic 8 23 none 0).hasRules &&
   (Op.storeFloat .seqCst 2 1 (some 4) 1).hasRules

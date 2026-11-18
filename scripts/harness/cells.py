@@ -57,11 +57,12 @@ has neither operands nor attributes, is a cell at each width of its result
   on a side that has them, the interpreter-only one (`gpu_cells.py`, #406),
   and `gpu.work_group_alloca` a cell for each type it allocates, as
   `alloca` (stage 3 of #212).
+- The field address `fieldaddr` is a cell for each width of its index,
+  and one with no index, at the side's field widths
+  (`pointer_cells.py`, #236).
 """
 
-from typing import NamedTuple
-
-from cell_types import Cell, CellError
+from cell_types import Cell, CellError, Row, Table
 from firtext import Op
 from gpu_cells import (
     GPU,
@@ -73,7 +74,14 @@ from gpu_cells import (
     gpu_cells,
     work_group_cell,
 )
-from pointer_cells import POINTER, POINTER_OPS, pointer_cell
+from pointer_cells import (
+    FIELD_ADDR,
+    POINTER,
+    POINTER_OPS,
+    field_address,
+    field_table,
+    pointer_cell,
+)
 from refine import bits_of, float_format
 
 DIFFERENTIAL = (1, 8, 16, 32, 64, 128)
@@ -84,6 +92,10 @@ FLOAT_INTERPRETER = ("f16", "bf16", "f32", "f64", "f128")
 # and of `store`'s value on each side (#231).
 POINTER_DIFFERENTIAL = DIFFERENTIAL
 POINTER_INTERPRETER = INTERPRETER
+# The widths of `fieldaddr`'s index on each side. The backend does not lower
+# it yet, so the differential side has no cell of it (stage 4 of #236).
+FIELD_DIFFERENTIAL: tuple[int, ...] = ()
+FIELD_INTERPRETER = INTERPRETER
 
 WRAP = ("", "nuw", "nsw", "nuw nsw")
 EXACT = ("", "exact")
@@ -190,6 +202,7 @@ OPS = (
     *FLOAT_CONVERSIONS,
     *FLOAT_TO_INT,
     *POINTER_OPS,
+    FIELD_ADDR,
     *(op for op, _ in VALUES if op != "func"),
 )
 
@@ -198,33 +211,13 @@ def ty(w: int) -> str:
     return f"i{w}"
 
 
-class Row(NamedTuple):
-    """A labelled row; `None` entries are not cells, even at a zero count."""
-
-    op: str
-    key: str
-    entries: tuple[Cell | None, ...]
-
-
-class Table(NamedTuple):
-    """An ordered matrix section, with one entry per column in every row.
-
-    `kind` distinguishes display sections, including the four conversion
-    sections whose cells all have table `conversions`. Columns are type
-    names; the empty name is the scalar or no-value column.
-    """
-
-    kind: str
-    columns: tuple[str, ...]
-    rows: tuple[Row, ...]
-
-
 def catalog(
     widths: tuple[int, ...],
     formats: tuple[str, ...] = (),
     offsets: tuple[int, ...] = (),
     gpu: bool = False,
     memory: tuple[str, ...] = (),
+    fields: tuple[int, ...] = (),
 ) -> tuple[Table, ...]:
     """One side's taxonomy, expanded once for enumeration and display.
 
@@ -367,6 +360,8 @@ def catalog(
             tuple(Cell(GPU_MEMORY, WORK_GROUP_ALLOCA, "", t) for t in columns),
         )
         tables.append(Table(GPU_MEMORY, columns, (row,)))
+    if fields:
+        tables.append(field_table(tuple(map(ty, fields))))
     return tuple(tables)
 
 
@@ -376,11 +371,12 @@ def cells(
     offsets: tuple[int, ...] = (),
     gpu: bool = False,
     memory: tuple[str, ...] = (),
+    fields: tuple[int, ...] = (),
 ) -> list[Cell]:
     """Every actual cell of one side, in catalog order."""
     return [
         cell
-        for table in catalog(widths, formats, offsets, gpu, memory)
+        for table in catalog(widths, formats, offsets, gpu, memory, fields)
         for row in table.rows
         for cell in row.entries
         if cell is not None
@@ -504,6 +500,8 @@ def of_op(op: Op) -> set[Cell]:
         return {float_to_int(op)}
     if op.name in POINTER_OPS:
         return {pointer_cell(op)}
+    if op.name == FIELD_ADDR:
+        return {field_address(op)}
     if op.name in GPU_OPS:
         return {gpu_cell(op)}
     if op.name == WORK_GROUP_ALLOCA:

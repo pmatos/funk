@@ -64,7 +64,7 @@ fn check_one(a: &Aggregate, layout: &[MemLayout], reg: &Registry, out: &mut Vec<
         let field = format!("the field at offset {}", f.offset);
         let Some((u, align)) = reg.field_shape(&f.ty, &entry, a.memory) else {
             at(format!(
-                "{field} has a type that may not be a field: an integer or a pointer"
+                "{field} has a type that may not be a field: an integer, a float or a pointer"
             ));
             continue;
         };

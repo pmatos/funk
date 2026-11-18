@@ -11,8 +11,10 @@ human's ruling of 2026-11-12 on #354), the rule that no float op
 carries a reserved word, `contract` or `reassoc` (ADR-2026-11-09-1549),
 the rule that a float op that rounds rounds with the mode `rne`
 (ADR-2026-11-11-1801), the rules of `alloca` (ADR-2026-11-14-0915), the
-rules of the loads and stores (ADR-2026-11-14-2316), and the units and
-alignment of a field of an aggregate's layout (ADR-2026-11-16-1546).
+rules of the loads and stores (ADR-2026-11-14-2316), the rule of
+`fieldAddr`, which reads the layouts of the op's table (#236), and the
+units and alignment of a field of an aggregate's layout
+(ADR-2026-11-16-1546).
 The general rules of the previous sections already
 check every op's operand and result types against its signature, so these
 are all the rules of the core dialect. It has no rule over a whole function.
@@ -98,17 +100,19 @@ theorem pow2AtLeast_eq (n : Nat) : pow2AtLeast n = n.nextPowerOfTwo := by
 
 /-- The units that a field of the type takes in the memory `n` of a module
 whose memories have the entries `lay`, and its alignment there, in units
-(ADR-2026-11-16-1546): an integer or a pointer takes the units of its bits,
-as `alloca` counts them, aligned to the least power of two that is at least
-those units, but a pointer of the memory `n` itself to the alignment that
-its entry gives its pointers. A float type has its units but is not yet a
-field: #264 makes floats fields of aggregates. -/
+(ADR-2026-11-16-1546): an integer, a float or a pointer takes the units of
+its bits, as `alloca` counts them, a float those of its `1 + e + m` bits,
+aligned to the least power of two that is at least those units, but a
+pointer of the memory `n` itself to the alignment that its entry gives its
+pointers. Every core type may be a field: floats are, now that #264 gives
+them their units (#236). -/
 def Ty.fieldShape (lay : Nat → MemLayout) (n : Nat) : Ty → Option (Nat × Nat)
   | .int w => some ((lay n).bitsUnits w, pow2AtLeast ((lay n).bitsUnits w))
   | .ptr m =>
     let u := (lay n).bitsUnits (lay m).pointer
     some (u, if m = n then (lay n).align.getD (pow2AtLeast u) else pow2AtLeast u)
-  | .float _ _ => none
+  | .float fe fm =>
+    some ((lay n).bitsUnits (floatWidth fe fm), pow2AtLeast ((lay n).bitsUnits (floatWidth fe fm)))
 
 /-- The type that `alloca` allocates values of, which it carries in its
 attributes, so that the data layout checks the memory a pointer type there
@@ -121,7 +125,18 @@ def Op.attrTypes : Op → List Ty
   | .alloca _ t _ _ _ => if t.Valid then [t] else []
   | _ => []
 
-/-- `call` refers to its callee's symbol; no other core op refers to one. -/
+/-- A layout, as the rule of an op sees it, admits the field `i` in the
+memory `n`, with an index of an element when `indexed`: the layout is of
+memory `n`, it has a field `i`, and that field is repeated when an index
+names one of its elements. -/
+def _root_.Fir.LayoutRef.admits (l : LayoutRef) (i n : Nat) (indexed : Bool) : Bool :=
+  l.mem == n && match l.counts[i]? with
+    | some c => !indexed || c.isSome
+    | none => false
+
+/-- `call` refers to its callee's symbol, which names a function; no other
+core op refers to a function. `fieldAddr` names a layout, which its own
+rule checks. -/
 def Op.symbolRefs : Op → List String
   | .call f _ _ => [f]
   | _ => []
@@ -198,6 +213,13 @@ The core rules of an op beyond its signature.
 * `loadFloat` and `storeFloat`, the loads and stores of a float, have the
   rules of `load`. The float type they load or store is checked as every
   type is: a valid format.
+* `fieldAddr s i n w` names a layout of an aggregate of its own table, `s`,
+  whose memory is `n`, the memory of its pointer; `i` is one of that
+  layout's fields, counted from 0; and it takes an index only for a
+  repeated field (#236). A field that is repeated may be named with no
+  index, which gives its first element. The index's value is not checked:
+  an element out of the field's range is an address, as for `ptradd`
+  (the human's ruling of 2026-11-16 on #236, Q3 A).
 
 Every other op has no rule beyond its signature.
 -/
@@ -218,6 +240,7 @@ def Op.Valid (ctx : OpContext CoreDialect) : Op → Prop
   | .load o _ a _ | .store o _ a _ | .loadPtr o _ a _ | .storePtr o _ a _
   | .loadFloat o _ _ a _ | .storeFloat o _ _ a _ =>
     o = .nonatomic ∧ ∀ x ∈ a, MemLayout.ValidAlign x
+  | .fieldAddr s i n w => (ctx.layouts s).map (·.admits i n w.isSome) = some true
   | _ => True
 
 end Fir.Core

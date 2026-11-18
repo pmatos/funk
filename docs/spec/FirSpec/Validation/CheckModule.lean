@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Checking modules: readable blocks" =>
 
-:::moduleDocs (fingerprint := "6330129897388176380")
+:::moduleDocs (fingerprint := "1918351448405768996")
 :::
 
 :::readable Fir.Location.malformed (pin := Fir.Location.WellFormed) (fingerprint := "1748085792573784321")
@@ -116,13 +116,13 @@ kind, the check gives no problem exactly when $`i` is
 $`C`. So whether it is valid is decidable.
 :::
 
-:::readable Fir.SymbolTable.lookup Fir.SymbolTable.lookup_agrees (fingerprint := "12308579040400648023")
+:::readable Fir.SymbolTable.lookup Fir.SymbolTable.lookup_agrees (fingerprint := "13198961827848881711")
 *Definition and theorem: the lookup of a symbol table.* The
 {ref "The-fir-specification--Validation--The-validation-check"}[lookup] of
 the table $`T`, given a hash set of the references of the module's location
 table, gives each symbol the type of the first function of $`T` with that
-symbol, from a hash table built once, and has the references of the hash
-set.
+symbol, from a hash table built once, has the references of the hash
+set, and gives the layouts of $`T`.
 
 *Theorem:* for every table $`T` and every list of references $`K`, the
 lookup of $`T` with a hash set of $`K` agrees with the context of $`T` in

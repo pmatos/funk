@@ -3,7 +3,7 @@
 # with fields `field(O, T)` and `field(O, T, C)`, no parameters or results,
 # and an empty body; every number is at most 2^64 - 1. A valid layout
 # describes a declared memory, has an alignment that is a power of two, and
-# places each field of an integer or pointer type at a multiple of its
+# places each field of an integer, float or pointer type at a multiple of its
 # alignment, no larger than the layout's, within the size, and apart from
 # every other field. A repeated field's elements are rounded up to their
 # alignment (the human's ruling of 2026-11-16 on #236).
@@ -338,23 +338,6 @@ verdict = "validation-error"
 rule = "a field's type is valid: i0 is not"
 text = '''
 aggregate @s() memory(0) size(4) align(4) field(0, i0) {
-}
-
-func @f() {
-^e:
-  ret @0
-}
-
-locs {
-  @0 = unknown
-}
-'''
-
-[[reject]]
-verdict = "validation-error"
-rule = "a field's type is an integer or a pointer: f32 has no units yet (#264)"
-text = '''
-aggregate @s() memory(0) size(4) align(4) field(0, f32) {
 }
 
 func @f() {

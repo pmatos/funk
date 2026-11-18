@@ -98,7 +98,7 @@ $`t^*` and $`r^*`: a pointer and an integer, and a pointer of the same
 memory.
 :::
 
-:::readable Fir.Core.Op.decode_encode Fir.Core.Op.encode_decode (pin := Fir.Core.Op.sig) (pin := Fir.Core.Op.returnTypes) (fingerprint := "8909265527090953112")
+:::readable Fir.Core.Op.decode_encode Fir.Core.Op.encode_decode (pin := Fir.Core.Op.sig) (pin := Fir.Core.Op.returnTypes) (fingerprint := "3550939791185654906")
 *Theorems: every core op instance reads back from its spelling, and only
 from it.* For every core op instance $`o`, valid or not:
 
@@ -115,7 +115,8 @@ $`\mathrm{sig}(o) = t^*` and $`\mathrm{ret}(o) = r^*`.
 These are the first two laws of a lawful text for the core dialect. The
 proofs go op by op, for every width, flag, predicate, float format,
 float constant, float op of arithmetic, bit cast, conversion from or to
-an integer and between formats, pointer offset at every memory,
+an integer and between formats, pointer offset at every memory, field
+address of every symbol, field and memory, with and without an index,
 allocation of every kind, type, count and alignment, load and store of
 an integer, a pointer or a float of every ordering, width, format,
 alignment and memory,
@@ -140,7 +141,7 @@ the last three laws: what the core dialect writes fits the grammar.
 *Theorems: the core dialect's text is lawful, and every valid core module
 is well formed.* The theorems above are the seven laws of a
 {ref "The-fir-specification--Text-format--Grammar"}[lawful text] for the
-core dialect, so its text is lawful, for all 47 ops and every type, and
+core dialect, so its text is lawful, for all 48 ops and every type, and
 the proofs about the parser use this proof for core modules. With it, every
 {ref "The-fir-specification--Validation--The-general-rules"}[valid] core
 module is

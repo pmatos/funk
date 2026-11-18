@@ -17,7 +17,7 @@ pins their fingerprint; the build fails when the Lean changes under it.
 :::moduleDocs (fingerprint := "15085586242917980642")
 :::
 
-:::readable Fir.Core.Op.effects_touchesNoMemory Fir.Core.Op.touchesMemory_false Fir.Core.reachesNoMemory Fir.Core.reachesNoMemory_of_all (pin := Fir.Core.Op.effects) (fingerprint := "17028607755377081142")
+:::readable Fir.Core.Op.effects_touchesNoMemory Fir.Core.Op.touchesMemory_false Fir.Core.reachesNoMemory Fir.Core.reachesNoMemory_of_all (pin := Fir.Core.Op.effects) (fingerprint := "16490602054902660931")
 *Theorems: a core op declares a memory effect exactly when it touches
 memory, and a core function with no allocation, load or store in reach
 reaches no memory.* The {ref "The-fir-specification--Execution--Effect-sets"}[effects]
@@ -34,21 +34,24 @@ an op that touches memory; and so it does when no function of the table
 has one.
 :::
 
-:::readable Fir.Core.opsIgnoreMemory (pin := Fir.Core.Op.liftsSetM) (fingerprint := "150627400720746909")
+:::readable Fir.Core.opsIgnoreMemory (pin := Fir.Core.Op.liftsSetM) (fingerprint := "4616432161133284535")
 *Theorem: core ops ignore the memories.* At every layout and naming of the
 core's memories, each core op that declares no memory effect ignores the
 memories: such an op touches no memory, so it is
 {ref "The-fir-specification--Memory--The-core___s-rules-with-memory"}[tied],
-and runs by its rule in the set monad and keeps the memories.
+and runs by its rule in the set monad and keeps the memories, or it is
+$`\mathsf{fieldaddr}`, which reads an item, not memory, and
+{ref "The-fir-specification--Memory--Field-address-obligations"}[gives its result at once]
+and keeps them.
 $`\mathsf{alloca}` and the loads and stores, of an integer, a pointer or a
 float, which touch memory, declare it, so they are not asked.
 :::
 
-:::readable Fir.Core.opsFinite (pin := Fir.Core.Op.liftsSetM) (pin := Fir.OpsFinite) (fingerprint := "14825628572605386215")
+:::readable Fir.Core.opsFinite (pin := Fir.Core.Op.liftsSetM) (pin := Fir.OpsFinite) (fingerprint := "15692013965595329733")
 *Theorem: core ops have finitely many outcomes.* At every layout and
 naming of the core's memories, each core op that runs by its own rule has
 {ref "The-fir-specification--Memory--Ops-of-finitely-many-outcomes"}[finitely many outcomes]
-with memory. Each core op that touches no memory is
+with memory. Each core op that touches no memory and reads no item is
 {ref "The-fir-specification--Memory--The-core___s-rules-with-memory"}[tied],
 so it runs by its rule in the set monad and keeps the memories. Its rule in
 the set monad is the set of its rule in the
@@ -60,6 +63,9 @@ by its own rule; $`\mathsf{load}` and $`\mathsf{store}` have no tie
 either, and have at most one that ends
 ({ref "The-fir-specification--Memory--Load-obligations"}[load obligations],
 {ref "The-fir-specification--Memory--Store-obligations"}[store obligations]).
+$`\mathsf{fieldaddr}` has no tie, and has
+{ref "The-fir-specification--Memory--Field-address-obligations"}[one outcome]
+by its own rule.
 :::
 
 :::readable Fir.Core.replaceBody_isRefinedBy_of_from Fir.Core.caller_isRefinedBy_of_from (fingerprint := "3664423118415088410")
