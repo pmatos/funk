@@ -1,6 +1,6 @@
 """Checks `fir-ref`'s float arithmetic and comparisons against Berkeley
 TestFloat's vectors (#229,
-docs/decisions/testing-and-harness-floats.md#the-testfloat-check).
+docs/decisions/testing-and-harness-float-references.md#the-testfloat-check).
 
 Usage: testfloat.py --fir-ref FIR_REF [--jobs N]
 

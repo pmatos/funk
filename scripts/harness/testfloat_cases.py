@@ -1,5 +1,5 @@
 """Berkeley TestFloat's vectors as checks of `fir-ref`
-(docs/decisions/testing-and-harness-floats.md#the-testfloat-check).
+(docs/decisions/testing-and-harness-float-references.md#the-testfloat-check).
 
 `testfloat.py` runs this module's checks. Here are the parts that need no
 TestFloat: which function of `testfloat_gen` backs which op of fir, how a
@@ -21,8 +21,8 @@ predicates of `fcmp` by IEEE 754 section 5.11: `ole a, b` is `le`, `ugt a, b`
 its negation, `oge b, a` the same order read the other way, and `ult b, a`
 its negation; likewise `lt` gives `olt`, `uge`, `ogt` and `ule`, and `eq`
 gives `oeq` and `une`. TestFloat has no negation or absolute value, so it
-backs no `fneg` and no `fabs`; its `rem` is `frem`, which #310 built, and
-is not run here.
+backs no `fneg` and no `fabs`. Its `rem` is IEEE 754's remainder, fir's
+`frem`, which has no rounding attribute; it has no `fmod`.
 
 `bf16` is not one of TestFloat's formats. Its vectors come from TestFloat's
 `f32` vectors whose operands are all `bf16` values, which are the `f32`
@@ -35,7 +35,10 @@ algorithms using rounding to odd", IEEE Trans. Computers 57(4), 2008). `f32`
 has 16 more mantissa bits than `bf16` at every exponent, the subnormal ones
 included, since both have 8 exponent bits; and SoftFloat's round to odd
 gives the largest finite `f32` for a result past it, which rounds on to the
-infinity, as the exact result does. A comparison needs no rounding.
+infinity, as the exact result does. A comparison needs no rounding, and
+neither does `rem`: a remainder is exact, and `bf16` has `f32`'s exponents,
+so the remainder of two `bf16` values is a `bf16` value, which `f32` holds
+in every rounding mode, and which rounding to `bf16` keeps.
 """
 
 from dataclasses import dataclass
@@ -63,6 +66,7 @@ ARITHMETIC = {
     "div": ("fdiv round(rne)", 2),
     "sqrt": ("sqrt round(rne)", 1),
     "mulAdd": ("fma round(rne)", 3),
+    "rem": ("frem", 2),
 }
 
 # Each comparison of `testfloat_gen`: the predicates it backs, each with
@@ -119,7 +123,7 @@ def parse(function: str, line: str) -> Vector:
 
 def is_nan(f: Format, bits: int) -> bool:
     # Bit tests, not `Format.decode`, which builds a fraction for every
-    # finite value: this runs on each of about 1.5 million results.
+    # finite value: this runs on each of about 1.7 million results.
     return (bits >> f.m) & f.top == f.top and bits & ((1 << f.m) - 1) != 0
 
 

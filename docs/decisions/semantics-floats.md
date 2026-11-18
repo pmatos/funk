@@ -283,7 +283,7 @@ native code refines poison with any value
 TestFloat's vectors at `f16`, `f32`, `f64` and `f128`, and at `bf16` against
 TestFloat's `f32` vectors of `bf16` operands, rounded to odd and then to
 `bf16`, as the human's criterion of 2026-11-10 asks
-([testing-and-harness-floats.md](testing-and-harness-floats.md#the-testfloat-check)).
+([testing-and-harness-float-references.md](testing-and-harness-float-references.md#the-testfloat-check)).
 `float_ref.py` computes the corpus's expected results, and is not that
 independent reference.
 

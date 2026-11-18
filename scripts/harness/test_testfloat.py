@@ -59,6 +59,24 @@ class Bf16Test(unittest.TestCase):
         self.assertEqual(odd.result, want)
         self.assertNotEqual(tc.round_to_bf16(nearest.result), want)
 
+    def test_remainder_needs_no_rounding(self):
+        # `rem` is exact, so its `f32` result on `bf16` operands is already
+        # the `bf16` remainder, and rounding it again changes nothing.
+        rng = random.Random(430)
+        edges = [0, 0x8000, 0x0001, 0x007F, 0x0080, 0x7F7F, 0x7F80, 0x3F80, 0xFF7F]
+        pairs = [(a, b) for a in edges for b in edges]
+        pairs += [(rng.getrandbits(16), rng.getrandbits(16)) for _ in range(5000)]
+        for a, b in pairs:
+            v = tc.Vector((a << 16, b << 16), ref.remainder(F32, a << 16, b << 16))
+            got = tc.to_bf16("rem", v)
+            assert got is not None
+            want = ref.remainder(BF16, a, b)
+            if tc.is_nan(BF16, want):
+                self.assertTrue(tc.is_nan(BF16, got.result), (hex(a), hex(b)))
+            else:
+                self.assertEqual(got.result, want, (hex(a), hex(b)))
+                self.assertTrue(tc.is_bf16(v.result), (hex(a), hex(b)))
+
 
 class ModuleTest(unittest.TestCase):
     def test_arithmetic_module(self):
@@ -68,6 +86,10 @@ class ModuleTest(unittest.TestCase):
         self.assertIn("%x0_1: i16 = const -17408 @0", text)
         self.assertIn("%r0: f16 = fma round(rne) %a0_0, %a0_1, %a0_2 @0", text)
         self.assertIn("ret %s0 @0", text)
+
+    def test_rem_is_frem(self):
+        text = tc.module("f64", "rem", [tc.Vector((1, 2), 1)])
+        self.assertIn("%r0: f64 = frem %a0_0, %a0_1 @0", text)
 
     def test_comparison_module_swaps_and_counts(self):
         vs = [tc.Vector((1, 2), 1), tc.Vector((3, 4), 0)]
