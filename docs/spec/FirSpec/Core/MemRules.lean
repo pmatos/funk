@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "The core's rules with memory: readable blocks" =>
 
-:::moduleDocs (fingerprint := "15486753102270671214")
+:::moduleDocs (fingerprint := "6595861150555564731")
 :::
 
 :::readable Fir.Core.freezeValue_map Fir.Core.ruleOfEv_map Fir.Core.exitOfEv_map (pin := Fir.MonadMorphism.KeepsChoiceUB) (pin := Fir.Core.freezeValue) (pin := Fir.Core.ruleOfEv) (pin := Fir.Core.exitOfEv) (fingerprint := "2405690779588688594")
@@ -52,7 +52,7 @@ keeps UB; and an op with no rule, as $`\mathsf{call}`, maps by the
 hypothesis on $`z_m` and $`z_n`.
 :::
 
-:::readable Fir.Core.Op.memDenote? Fir.Core.Op.memExit? Fir.Core.memDenoteIn (pin := Fir.Core.denoteWith) (pin := Fir.MonadMemory) (pin := Fir.Core.allocaRule) (fingerprint := "5670356850352466129")
+:::readable Fir.Core.Op.memDenote? Fir.Core.Op.memExit? Fir.Core.memDenoteIn (pin := Fir.Core.denoteWith) (pin := Fir.MonadMemory) (pin := Fir.Core.allocaRule) (fingerprint := "5937747185782789596")
 *Definition: the core's rules with memory.* Let $`m` be a monad with
 choice, UB and the
 {ref "The-fir-specification--Memory--The-memory-effect"}[memory effect] on
@@ -69,9 +69,11 @@ and that of $`\mathsf{load}` its
 {ref "The-fir-specification--Memory--Load-rules"}[load rule], which loads
 from the memory $`\rho(N)` of its pointer, and that of $`\mathsf{store}`
 its {ref "The-fir-specification--Memory--Store-rules"}[store rule], which
-stores to the memory $`\rho(N)` of its pointer, and those of the load and
+stores to the memory $`\rho(N)` of its pointer, those of the load and
 store of a pointer their
-{ref "The-fir-specification--Memory--Pointer-load-and-store-rules"}[pointer load and store rules];
+{ref "The-fir-specification--Memory--Pointer-load-and-store-rules"}[pointer load and store rules],
+and those of the load and store of a float their
+{ref "The-fir-specification--Memory--Float-load-and-store-rules"}[float load and store rules];
 these are the core ops
 that touch memory, and none has a rule without memory. Every other op touches no memory, so its
 rule with memory, as an op that is not a terminator and as a terminator,

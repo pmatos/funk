@@ -34,8 +34,9 @@ choice effect, and the divisions,
 
 * Each op that is not a terminator has the rule of its family, from the
   arithmetic rules to the width change rules. `call` has none: its meaning
-  is its callee's run. `alloca`, and the loads `load` and `loadPtr` and
-  the stores `store` and `storePtr`, have none either: they allocate, read
+  is its callee's run. `alloca`, and the loads `load`, `loadPtr` and
+  `loadFloat` and the stores `store`, `storePtr` and `storeFloat`, have
+  none either: they allocate, read
   and write, so each rule needs the memory effect, and is
   one of the core's rules with memory.
 * Each terminator has the rule of the control-flow rules or the branch
@@ -92,12 +93,14 @@ namespace Fir.Core
 
 variable {m : Type → Type} [Monad m]
 
-/-- The core ops that touch memory: `alloca`, which allocates, `load` and
-`loadPtr`, which read, and `store` and `storePtr`, which write. Each has a
+/-- The core ops that touch memory: `alloca`, which allocates, `load`,
+`loadPtr` and `loadFloat`, which read, and `store`, `storePtr` and
+`storeFloat`, which write. Each has a
 rule only in a monad with the memory effect (the section on the core's
 rules with memory). -/
 def Op.touchesMemory : Op → Bool
-  | .alloca .. | .load .. | .store .. | .loadPtr .. | .storePtr .. => true
+  | .alloca .. | .load .. | .store .. | .loadPtr .. | .storePtr .. | .loadFloat ..
+  | .storeFloat .. => true
   | _ => false
 
 /-- The rule of each core op that is not a terminator, in any monad with
@@ -239,6 +242,11 @@ def Op.hasRules (op : Op) : Bool :=
   (Op.loadPtr .nonatomic 0 none 0).hasRules && (Op.loadPtr .seqCst 2 (some 4) 1).hasRules
 #guard ((Op.storePtr .nonatomic 0 none 0).denote? (m := SetM)).isNone &&
   (Op.storePtr .nonatomic 0 none 0).hasRules && (Op.storePtr .seqCst 2 (some 4) 1).hasRules
+#guard ((Op.loadFloat .nonatomic 8 23 none 0).denote? (m := SetM)).isNone &&
+  (Op.loadFloat .nonatomic 8 23 none 0).hasRules && (Op.loadFloat .seqCst 2 1 (some 4) 1).hasRules
+#guard ((Op.storeFloat .nonatomic 8 23 none 0).denote? (m := SetM)).isNone &&
+  (Op.storeFloat .nonatomic 8 23 none 0).hasRules &&
+  (Op.storeFloat .seqCst 2 1 (some 4) 1).hasRules
 
 /-- The core dialect's semantics in a monad `m` from two tables of rules,
 `den` for the ops that are not terminators and `ex` for the terminators:

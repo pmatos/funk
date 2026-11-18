@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Core rules: readable blocks" =>
 
-:::moduleDocs (fingerprint := "1982012493351146310")
+:::moduleDocs (fingerprint := "13316978674594412478")
 :::
 
 :::readable Fir.Core.Ty.Valid Fir.Core.Ty.memory (pin := Fir.Core.maxWidth) (pin := Fir.Core.floatWidth) (fingerprint := "744407091263889301")
@@ -50,7 +50,7 @@ in every module, and $`\mathsf{ptr}\langle N \rangle` with $`N \ge 1` is in
 a module whose layout declares memory $`N` (ADR-2026-11-12-1821).
 :::
 
-:::readable Fir.Core.Op.symbolRefs (fingerprint := "16967459710154356544")
+:::readable Fir.Core.Op.symbolRefs (fingerprint := "9169673307230543629")
 *Definition: the symbols a core op refers to.* $`\mathsf{call}~f : t^* \to r^*`
 refers to the symbol $`f` of its callee: its list of symbols is the
 one-element sequence $`(f)`. No other core op refers to a symbol.
@@ -62,7 +62,19 @@ $$`\mathrm{refs}(\mathit{op}) = \epsilon \ \text{ for every other op}`
 The general rules check that $`f` names a function of the module.
 :::
 
-:::readable Fir.Core.Op.attrTypes (fingerprint := "16302334975423764983")
+:::readable Fir.Core.Ty.IsElem (fingerprint := "15743480132225506412")
+*Definition: the element types of a work-group allocation.* An integer
+type $`\mathsf{i}W` and a pointer type $`\mathsf{ptr}\langle M \rangle` are
+elements, and a float type is not:
+
+$$`\mathrm{elem}(\mathsf{i}W) \qquad \mathrm{elem}(\mathsf{ptr}\langle M \rangle) \qquad \neg\,\mathrm{elem}(\mathsf{float}\langle e,m \rangle)`
+
+`gpu.work_group_alloca` allocates elements only. The core's
+$`\mathsf{alloca}` allocates values of every valid type, a float's
+included, since #264 gives floats their loads and stores.
+:::
+
+:::readable Fir.Core.Op.attrTypes (fingerprint := "14541402550165652625")
 *Definition: the types a core op carries.* $`\mathsf{alloca}_N~k~t~c~a`
 carries the type $`t` that it allocates values of in its attributes, when
 $`t` is valid:
@@ -78,7 +90,7 @@ core op carries a type of its own: $`\mathsf{call}`'s are its callee's, and
 $`\mathsf{ret}`'s the function's results.
 :::
 
-:::readable Fir.Core.FBin.mode Fir.Core.FUnary.mode Fir.Core.Op.Valid Fir.Core.Ty.IsElem (pin := Fir.isPowerOfTwo) (pin := Fir.MemLayout.limit) (pin := Fir.MemLayout.ValidAlign) (fingerprint := "12419764513493553230")
+:::readable Fir.Core.FBin.mode Fir.Core.FUnary.mode Fir.Core.Op.Valid (pin := Fir.isPowerOfTwo) (pin := Fir.MemLayout.limit) (pin := Fir.MemLayout.ValidAlign) (fingerprint := "7601155670973002638")
 *Definition: the core rules of an op.* Beyond its signature, which the
 {ref "The-fir-specification--Validation--The-general-rules"}[general rules]
 check, a core op obeys these rules in its op context $`C`:
@@ -117,7 +129,7 @@ $`\mathsf{fadd}`, $`\mathsf{fsub}`, $`\mathsf{fmul}`, $`\mathsf{fdiv}` and
 $`\mathsf{sqrt}`, and none for $`\mathsf{frem}`, $`\mathsf{fmod}`,
 $`\mathsf{fneg}` and $`\mathsf{fabs}`, which do not round.
 
-$$`\frac{k = \mathsf{stack} \qquad c \ge 1 \qquad a \text{ is none or a valid alignment} \qquad t \in \{\mathsf{i}W, \mathsf{ptr}\langle M \rangle\} \qquad \vdash t~\text{valid}}{C \vdash \mathsf{alloca}_{N}~k~t~c~a~\text{valid}}`
+$$`\frac{k = \mathsf{stack} \qquad c \ge 1 \qquad a \text{ is none or a valid alignment} \qquad \vdash t~\text{valid}}{C \vdash \mathsf{alloca}_{N}~k~t~c~a~\text{valid}}`
 
 $$`\frac{o = \mathsf{nonatomic} \qquad a \text{ is none or a valid alignment}}{C \vdash \mathsf{load}_{N}~o~W~a~\text{valid}}`
 
@@ -125,7 +137,9 @@ $$`\frac{o = \mathsf{nonatomic} \qquad a \text{ is none or a valid alignment}}{C
 
 and the same for the load and store of a pointer,
 $`\mathsf{load}_{N}~o~\mathsf{ptr}\langle M \rangle~a` and
-$`\mathsf{store}_{N}~o~\mathsf{ptr}\langle M \rangle~a`.
+$`\mathsf{store}_{N}~o~\mathsf{ptr}\langle M \rangle~a`, and of a float,
+$`\mathsf{load}_{N}~o~\mathsf{float}\langle e,m \rangle~a` and
+$`\mathsf{store}_{N}~o~\mathsf{float}\langle e,m \rangle~a`.
 
 $$`\frac{\mathit{op} \text{ is another core op}}{C \vdash \mathit{op}~\text{valid}}`
 
@@ -160,11 +174,12 @@ the op, and $`\mathrm{symtab}_C` the module's
   rule for its own alignments, as the human ruled on 2026-11-14 (#382), so
   $`2^{23}` is the largest alignment it gives. One that gives none takes its
   type's natural alignment, which the bound does not cover, as the human
-  ruled on 2026-11-14 (#385). Its type is a valid integer type
-  $`\mathsf{i}W` or pointer type $`\mathsf{ptr}\langle M \rangle`, as
+  ruled on 2026-11-14 (#385). Its type is a valid type: an integer type
+  $`\mathsf{i}W`, a pointer type $`\mathsf{ptr}\langle M \rangle`, as
   stage 4d-2b of #231 adds pointer loads and stores (the human's ruling of
-  2026-11-14 on #382); a float type has no encoding in units, and M1 has
-  no float loads or stores. Its count has no bound: an allocation larger
+  2026-11-14 on #382), or a float type
+  $`\mathsf{float}\langle e,m \rangle`, as #264 adds float loads and
+  stores (the human's ruling of 2026-11-15 on #397). Its count has no bound: an allocation larger
   than a machine holds is a resource error at run time, as a deep
   recursion is.
   Its result's type $`\mathsf{ptr}\langle N \rangle` names its memory,
@@ -172,13 +187,14 @@ the op, and $`\mathrm{symtab}_C` the module's
   (ADR-2026-11-14-0915), and so does a pointer type that it allocates
   values of, which it carries in its attributes ($`\mathrm{optypes}`). So
   $`\mathsf{alloca}~\mathsf{stack}~\mathsf{i32}~4`,
-  $`\mathsf{alloca}~\mathsf{stack}~\mathsf{i8}~\mathsf{align}(2^{23})`
-  and $`\mathsf{alloca}~\mathsf{stack}~\mathsf{ptr}~2` are valid, and
+  $`\mathsf{alloca}~\mathsf{stack}~\mathsf{i8}~\mathsf{align}(2^{23})`,
+  $`\mathsf{alloca}~\mathsf{stack}~\mathsf{ptr}~2` and
+  $`\mathsf{alloca}~\mathsf{stack}~\mathsf{f32}` are valid, and
   $`\mathsf{alloca}~\mathsf{heap}~\mathsf{i32}`,
   $`\mathsf{alloca}~\mathsf{stack}~\mathsf{i32}~0`,
   $`\mathsf{alloca}~\mathsf{stack}~\mathsf{i8}~\mathsf{align}(3)`,
   $`\mathsf{alloca}~\mathsf{stack}~\mathsf{i8}~\mathsf{align}(2^{24})` and
-  $`\mathsf{alloca}~\mathsf{stack}~\mathsf{f32}` are not.
+  $`\mathsf{alloca}~\mathsf{stack}~\mathsf{float}(1, 23)` are not.
 * $`\mathsf{load}` has the ordering $`\mathsf{nonatomic}`, the one M1
   accepts: the atomic orderings are hooks in the format for a concurrency
   model (ADR-2026-11-09-1542). An alignment that it gives is a valid
@@ -200,6 +216,11 @@ the op, and $`\mathrm{symtab}_C` the module's
   $`\mathsf{store}`. The pointer type $`\mathsf{ptr}\langle M \rangle`
   that they load or store is a value's type, so the data layout must
   declare memory $`M`, as for every type.
+* The load and store of a float have the rules of $`\mathsf{load}` and
+  $`\mathsf{store}` too. With no alignment, the access is aligned to the
+  natural alignment of the float's size in its memory, that of
+  $`\mathsf{i}(1+e+m)`. The float type is a value's type, checked as every
+  type is: a valid format.
 
 Every other op has no rule beyond its signature. These definitions
 are what the core dialect

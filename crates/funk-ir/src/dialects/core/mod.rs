@@ -19,11 +19,13 @@
 //! floats `sitofp` and `uitofp`, the conversions between float formats
 //! `fpext` and `fptrunc`, and the conversions from floats to integers
 //! `fptosi` and `fptoui`. #231 adds the pointer offset `ptradd`, the
-//! stack allocation `alloca`, the load `load` and the store `store`. A
-//! later family adds a file and a line here.
+//! stack allocation `alloca`, the load `load` and the store `store`, and
+//! #264 loads, stores and allocations of floats. A later family adds a file
+//! and a line here.
 
 mod access;
 mod align;
+mod alloc_shape;
 mod alloca;
 mod arith;
 mod bitcast;
@@ -48,10 +50,9 @@ mod types;
 mod width;
 
 pub use access::ORDERINGS;
+pub(crate) use alloc_shape::{check_work_group_shape, shape_attr_types, shape_decodes};
 pub use alloca::{Allocation, allocation};
-pub(crate) use alloca::{
-    allocation_effects, check_shape, memory as allocation_memory, shape_attr_types, shape_decodes,
-};
+pub(crate) use alloca::{allocation_effects, memory as allocation_memory};
 pub use arith::WRAP_FLAG_SETS;
 pub use bitwise::{BITWISE_OPS, SHIFT_OPS};
 pub use compare::{FLOAT_PREDICATES, PREDICATES};

@@ -7,7 +7,7 @@ says how to read it.
 
 | op | flags or predicate | `i1` | `i7` | `i8` | `i16` | `i32` | `i33` | `i64` | `i128` |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `const` |  | 288 | 475 | 340 | 215 | 291 | 466 | 209 | 134 |
+| `const` |  | 288 | 475 | 340 | 215 | 291 | 466 | 214 | 134 |
 | `add` |  | 12 | 228 | 33 | 28 | 37 | 228 | 28 | 63 |
 | `add` | `nuw` | 4 | 29 | 6 | 6 | 8 | 29 | 6 | 5 |
 | `add` | `nsw` | 173 | 347 | 211 | 204 | 203 | 319 | 197 | 99 |
@@ -50,7 +50,7 @@ says how to read it.
 
 | op | predicate, attribute or flag | `f16` | `bf16` | `f32` | `f64` | `f128` |
 | --- | --- | --- | --- | --- | --- | --- |
-| `const` |  | 3 | 3 | 1 | 1 | 3 |
+| `const` |  | 3 | 3 | 2 | 1 | 3 |
 | `fcmp` | `oeq` | 21 | 21 | 3 | 3 | 21 |
 | `fcmp` | `one` | 20 | 20 | 3 | 3 | 20 |
 | `fcmp` | `olt` | 20 | 20 | 3 | 3 | 20 |
@@ -72,7 +72,7 @@ says how to read it.
 | `fadd` | `nnan` | 3 | 3 | 3 | 3 | 3 |
 | `fadd` | `ninf` | 3 | 3 | 3 | 3 | 3 |
 | `fadd` | `nsz` | 5 | 5 | 5 | 5 | 5 |
-| `fsub` | `round(rne)` | 16 | 16 | 17 | 17 | 16 |
+| `fsub` | `round(rne)` | 16 | 16 | 17 | 20 | 16 |
 | `fsub` | `nnan` | 3 | 3 | 3 | 3 | 3 |
 | `fsub` | `ninf` | 3 | 3 | 3 | 3 | 3 |
 | `fsub` | `nsz` | 3 | 3 | 3 | 3 | 3 |
@@ -199,14 +199,14 @@ says how to read it.
 | `fptoui` | `f64` | 28 | 28 | 28 | 28 | 28 | 28 | 28 | 28 |
 | `fptoui` | `f128` | 28 | 28 | 28 | 28 | 28 | 28 | 28 | 28 |
 
-## Pointer ops: ptradd by an integer, alloca, load and store of one or of a pointer
+## Pointer ops: ptradd by an integer, alloca, load and store of one, of a float or of a pointer
 
-| op | `i1` | `i7` | `i8` | `i16` | `i32` | `i33` | `i64` | `i128` | `ptr` |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `ptradd` | 1 | 1 | 34 | 2 | 12 | 1 | 20 | 1 |  |
-| `alloca` | 4 | 4 | 37 | 21 | 27 | 5 | 7 | 7 | 38 |
-| `load` | 3 | 3 | 17 | 8 | 39 | 4 | 9 | 3 | 40 |
-| `store` | 2 | 2 | 12 | 5 | 32 | 3 | 6 | 2 | 41 |
+| op | `i1` | `i7` | `i8` | `i16` | `i32` | `i33` | `i64` | `i128` | `ptr` | `f16` | `bf16` | `f32` | `f64` | `f128` |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `ptradd` | 1 | 1 | 34 | 2 | 12 | 1 | 33 | 1 |  |  |  |  |  |  |
+| `alloca` | 4 | 4 | 41 | 23 | 30 | 5 | 9 | 7 | 39 | 5 | 2 | 18 | 16 | 4 |
+| `load` | 3 | 3 | 21 | 12 | 43 | 4 | 11 | 5 | 40 | 3 | 4 | 15 | 17 | 2 |
+| `store` | 2 | 2 | 14 | 7 | 35 | 3 | 8 | 2 | 42 | 6 | 2 | 19 | 15 | 4 |
 
 ## Passed and returned values
 
@@ -217,14 +217,14 @@ says how to read it.
 | `cond_br` | a successor passes nothing | 438 |  |  |  |  |  |  |  |  |  |  |  |  |  |
 | `cond_br` | a successor passes values |  | 13 | 138 | 16 | 14 | 14 | 136 | 13 | 11 | 5 | 5 | 7 | 5 | 5 |
 | `ret` | returns no value | 26 |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| `ret` | returns one value |  | 2570 | 1583 | 828 | 824 | 955 | 1609 | 822 | 1081 | 825 | 777 | 689 | 588 | 530 |
+| `ret` | returns one value |  | 2570 | 1583 | 832 | 828 | 959 | 1609 | 824 | 1083 | 829 | 781 | 704 | 605 | 532 |
 | `ret` | returns several values |  | 56 | 189 | 42 | 28 | 33 | 189 | 51 | 50 | 5 | 6 | 5 | 7 | 5 |
 | `unreachable` | ends a block | 16 |  |  |  |  |  |  |  |  |  |  |  |  |  |
 | `call` | gives no result | 14 |  |  |  |  |  |  |  |  |  |  |  |  |  |
 | `call` | gives one result |  | 74 | 92 | 28 | 23 | 24 | 92 | 23 | 19 | 2 | 2 | 2 | 2 | 2 |
 | `call` | gives several results |  | 41 | 92 | 17 | 11 | 11 | 92 | 25 | 27 | 2 | 3 | 2 | 3 | 2 |
 | `func` | returns no value | 23 |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| `func` | returns one value |  | 2569 | 1583 | 829 | 824 | 955 | 1609 | 822 | 1081 | 823 | 775 | 687 | 586 | 528 |
+| `func` | returns one value |  | 2569 | 1583 | 833 | 828 | 959 | 1609 | 824 | 1083 | 827 | 779 | 702 | 603 | 530 |
 | `func` | returns several values |  | 56 | 189 | 42 | 28 | 33 | 189 | 51 | 48 | 5 | 6 | 5 | 7 | 5 |
 
 ## Ops of the gpu dialect in a dimension

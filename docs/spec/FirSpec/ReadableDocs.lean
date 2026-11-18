@@ -196,6 +196,9 @@ import FirSpec.Core.StoreWrites
 import FirSpec.Core.PtrAccess
 import FirSpec.Core.LoadPtrLaws
 import FirSpec.Core.StorePtrLaws
+import FirSpec.Core.FloatAccess
+import FirSpec.Core.LoadFloatLaws
+import FirSpec.Core.StoreFloatLaws
 import FirSpec.Memory.Ordering
 import FirSpec.Execution.MemoryCallSteps
 import FirSpec.Execution.MemoryProgress

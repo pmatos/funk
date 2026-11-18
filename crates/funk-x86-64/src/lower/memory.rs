@@ -92,7 +92,7 @@ fn load(cx: &mut Cx<'_>, op: &Op) -> Result<(), Unlowered> {
     };
     let w = cx.width(&v.name)?;
     if cx.class(&v.name)? == Class::Sse {
-        return Err("load reads an integer or a pointer, not a float".into());
+        return Err("the x86-64 backend does not lower a load of a float yet (#264)".into());
     }
     cx.width(p)?;
     cx.load(Reg::Rcx, p)?;
@@ -119,7 +119,7 @@ fn store(cx: &mut Cx<'_>, op: &Op) -> Result<(), Unlowered> {
     };
     let w = cx.width(v)?;
     if cx.class(v)? == Class::Sse {
-        return Err("store writes an integer or a pointer, not a float".into());
+        return Err("the x86-64 backend does not lower a store of a float yet (#264)".into());
     }
     cx.width(p)?;
     cx.load(Reg::Rcx, p)?;
@@ -218,6 +218,30 @@ mod tests {
             "\tmovq\t(%rcx), %rax\n",
         ] {
             assert!(asm.contains(line), "{line}\n{asm}");
+        }
+    }
+
+    #[test]
+    fn a_load_or_store_of_a_float_is_reported() {
+        for (func, why) in [
+            (
+                "func @f(%p: ptr) -> f32 {\n^entry:\n  %v: f32 = load nonatomic %p @0\n  \
+                 ret %v @0\n}",
+                "load of a float",
+            ),
+            (
+                "func @f(%v: f64, %p: ptr) {\n^entry:\n  store nonatomic %v, %p @0\n  \
+                 ret @0\n}",
+                "store of a float",
+            ),
+        ] {
+            let text = format!("{func}\n\nlocs {{\n  @0 = unknown\n}}\n");
+            let m = parse(&text, &Registry::core()).unwrap();
+            let Err(ds) = super::super::module(&m) else {
+                panic!("a {why} is lowered");
+            };
+            assert_eq!(ds.len(), 1, "{ds:?}");
+            assert!(ds[0].message.contains(why), "{ds:?}");
         }
     }
 

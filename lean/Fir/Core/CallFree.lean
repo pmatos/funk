@@ -26,8 +26,8 @@ functions with memory):
 
 * _every core op but `call`, `alloca` and the loads and stores is
   total_, by the obligations that each family proves of its ops, and
-  `alloca` and the loads and stores, of an integer or a pointer, are total
-  with memory, each by its own rule;
+  `alloca` and the loads and stores, of an integer, a pointer or a float,
+  are total with memory, each by its own rule;
 * _every valid core function without calls runs within itself_: none of
   its ops calls a function; `br` and `cond_br` go only to successors they
   have and give no results; and `ret`, the only core op whose exit
@@ -104,7 +104,7 @@ theorem Op.total : (op : Op) → op.isCall = false → op.touchesMemory = false 
   | .unreachable, _, _ => unreachable_total
   | .call .., h, _ => nomatch h
   | .alloca .., _, h | .load .., _, h | .store .., _, h | .loadPtr .., _, h
-  | .storePtr .., _, h => nomatch h
+  | .storePtr .., _, h | .loadFloat .., _, h | .storeFloat .., _, h => nomatch h
 
 /-- A core terminator that jumps goes to a successor that it has, and gives
 no results. -/
