@@ -20,14 +20,18 @@
 //! `iN` and 8 for a pointer, with one move, or two for an `i128`. A store
 //! of an `i1` writes its byte as 0 or 1, the zero padding the human ruled
 //! on 2026-11-11 (#231, Q2); a load of an `i1` reads its byte, whose bits
-//! above bit 0 a value's bits above its width may be. Their `align(A)` and
+//! above bit 0 a value's bits above its width may be. An `f32` or `f64`
+//! moves its 4 or 8 bytes through `%xmm0` with `movss` or `movsd`, which
+//! copy the bits as they are, a NaN's sign and payload and a signalling
+//! NaN included (#264); a float of any other format is reported where it
+//! is defined, as at every other float op. Their `align(A)` and
 //! ordering need no code: x86-64 accesses any address, a misaligned access
 //! is UB in the spec, and M1's only ordering is `nonatomic`.
 
 use funk_ir::ir::layout::memory;
 use funk_ir::{MemLayout, Op};
 
-use super::{Cx, Lower, Unlowered};
+use super::{Cx, Lower, Unlowered, farith};
 use crate::asm::Reg;
 use crate::width::{self, Class, Ext, PAIR};
 
@@ -91,11 +95,15 @@ fn load(cx: &mut Cx<'_>, op: &Op) -> Result<(), Unlowered> {
         return Err("load takes a pointer and defines one value".into());
     };
     let w = cx.width(&v.name)?;
-    if cx.class(&v.name)? == Class::Sse {
-        return Err("the x86-64 backend does not lower a load of a float yet (#264)".into());
-    }
     cx.width(p)?;
     cx.load(Reg::Rcx, p)?;
+    if cx.class(&v.name)? == Class::Sse {
+        let (_, mov, _) = farith::format(cx, op, &v.name)?;
+        let slot = cx.slot(&v.name)?;
+        cx.asm.ins(mov, format_args!("(%rcx), %xmm0"));
+        cx.asm.ins("movq", format_args!("%xmm0, {slot}"));
+        return Ok(());
+    }
     if w == PAIR {
         cx.asm.ins("movq", format_args!("(%rcx), %rax"));
         cx.asm.ins("movq", format_args!("8(%rcx), %rdx"));
@@ -118,11 +126,15 @@ fn store(cx: &mut Cx<'_>, op: &Op) -> Result<(), Unlowered> {
         return Err("store takes a value and a pointer and defines nothing".into());
     };
     let w = cx.width(v)?;
-    if cx.class(v)? == Class::Sse {
-        return Err("the x86-64 backend does not lower a store of a float yet (#264)".into());
-    }
     cx.width(p)?;
     cx.load(Reg::Rcx, p)?;
+    if cx.class(v)? == Class::Sse {
+        let (_, mov, _) = farith::format(cx, op, v)?;
+        let slot = cx.slot(v)?;
+        cx.asm.ins(mov, format_args!("{slot}, %xmm0"));
+        cx.asm.ins(mov, format_args!("%xmm0, (%rcx)"));
+        return Ok(());
+    }
     if w == PAIR {
         cx.load_pair(Reg::Rax, Reg::Rdx, v)?;
         cx.asm.ins("movq", format_args!("%rax, (%rcx)"));
@@ -222,26 +234,48 @@ mod tests {
     }
 
     #[test]
-    fn a_load_or_store_of_a_float_is_reported() {
-        for (func, why) in [
+    fn an_f32_or_f64_moves_through_xmm0_with_sse_moves() {
+        let asm = body(
+            "func @f(%a: f32, %b: f64) -> f32, f64 {\n^entry:\n  \
+             %p: ptr = alloca stack f32 @0\n  store nonatomic %a, %p @0\n  \
+             %x: f32 = load nonatomic %p @0\n  %q: ptr = alloca stack f64 @0\n  \
+             store nonatomic align(4) %b, %q @0\n  %y: f64 = load nonatomic align(4) %q @0\n  \
+             ret %x, %y @0\n}",
+        );
+        // An f32 writes its 4 bytes alone: no 8-byte move reaches memory.
+        for mov in ["movss", "movsd"] {
+            let stored = format!("\t{mov}\t%xmm0, (%rcx)\n");
+            let loaded = format!("\t{mov}\t(%rcx), %xmm0\n\tmovq\t%xmm0, ");
+            assert_eq!(asm.matches(&stored).count(), 1, "{stored}\n{asm}");
+            assert_eq!(asm.matches(&loaded).count(), 1, "{loaded}\n{asm}");
+        }
+        for wide in ["movq\t%rax", "movq\t%xmm0"] {
+            assert!(!asm.contains(&format!("\t{wide}, (%rcx)\n")), "{asm}");
+        }
+    }
+
+    #[test]
+    fn a_float_of_another_format_is_reported_where_it_is_defined() {
+        for (func, at) in [
             (
-                "func @f(%p: ptr) -> f32 {\n^entry:\n  %v: f32 = load nonatomic %p @0\n  \
-                 ret %v @0\n}",
-                "load of a float",
+                "func @f(%p: ptr) -> i16 {\n^entry:\n  %v: f16 = load nonatomic %p @0\n  \
+                 %b: i16 = bitcast %v @0\n  ret %b @0\n}",
+                Some(0),
             ),
             (
-                "func @f(%v: f64, %p: ptr) {\n^entry:\n  store nonatomic %v, %p @0\n  \
+                "func @f(%v: f128, %p: ptr) {\n^entry:\n  store nonatomic %v, %p @0\n  \
                  ret @0\n}",
-                "store of a float",
+                None,
             ),
         ] {
             let text = format!("{func}\n\nlocs {{\n  @0 = unknown\n}}\n");
             let m = parse(&text, &Registry::core()).unwrap();
             let Err(ds) = super::super::module(&m) else {
-                panic!("a {why} is lowered");
+                panic!("{func} is lowered");
             };
             assert_eq!(ds.len(), 1, "{ds:?}");
-            assert!(ds[0].message.contains(why), "{ds:?}");
+            assert!(ds[0].message.contains("lowers i1"), "{ds:?}");
+            assert_eq!(ds[0].op, at, "{ds:?}");
         }
     }
 

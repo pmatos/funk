@@ -219,7 +219,7 @@ text and the Rust IR tell them from the integer forms by the value's type.
 and `Core.memDenoteIn_mapsDenote` is unchanged in its statement. Every
 whole-core guarantee keeps its statement
 (semantics-m1-memory.md#the-cores-guarantees). The naive backend sizes an
-`alloca` of floats as one of the integer of their width, but does not load
-or store a float yet: it reports each such `load` and `store` as
-unsupported, and stage 2 of #264 lowers `f32` and `f64` with SSE moves
-(x86-64-backend-lowering-memory.md).
+`alloca` of floats as one of the integer of their width, and loads and
+stores `f32` and `f64` with SSE moves, which keep a NaN's bits; it reports
+a value of any other format where it is defined, as at every other float
+op (x86-64-backend-lowering-memory.md).
