@@ -56,7 +56,7 @@ has neither operands nor attributes, is a cell at each width of its result
 - The ops of the `gpu` dialect are a cell for each dimension, at `i32`,
   on a side that has them, the interpreter-only one (`gpu_cells.py`, #406),
   and `gpu.work_group_alloca` a cell for each type it allocates, as
-  `alloca` (stage 3 of #212).
+  `alloca` (stage 3 of #212), its floats included (#432).
 """
 
 from typing import NamedTuple
@@ -315,12 +315,14 @@ def catalog(
             ),
         ]
     )
+    # The columns of an allocation, a load and a store: each integer, any
+    # pointer and each float format in memory.
+    elements = (*map(ty, offsets), POINTER, *memory)
     if offsets:
-        columns = (*map(ty, offsets), POINTER, *memory)
         tables.append(
             Table(
                 "pointers",
-                columns,
+                elements,
                 tuple(
                     Row(
                         op,
@@ -329,7 +331,7 @@ def catalog(
                             None
                             if op == "ptradd" and (t == POINTER or t in memory)
                             else Cell("pointers", op, "", t)
-                            for t in columns
+                            for t in elements
                         ),
                     )
                     for op in POINTER_OPS
@@ -360,13 +362,12 @@ def catalog(
     if gpu:
         rows = tuple(Row(op, d, (cell,)) for op, d, cell in gpu_cells())
         tables.append(Table(GPU, (GPU_WIDTH,), rows))
-        columns = (*map(ty, offsets), POINTER)
         row = Row(
             WORK_GROUP_ALLOCA,
             "",
-            tuple(Cell(GPU_MEMORY, WORK_GROUP_ALLOCA, "", t) for t in columns),
+            tuple(Cell(GPU_MEMORY, WORK_GROUP_ALLOCA, "", t) for t in elements),
         )
-        tables.append(Table(GPU_MEMORY, columns, (row,)))
+        tables.append(Table(GPU_MEMORY, elements, (row,)))
     return tuple(tables)
 
 

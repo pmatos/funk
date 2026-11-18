@@ -10,8 +10,9 @@
 //! `A` not negative, written only when the op gives an alignment.
 //! Validation accepts a count of at least 1, an alignment that
 //! [`check_align`] accepts, and a valid type: an integer, a pointer, or a
-//! float (#264; the human's ruling of 2026-11-15 on #397), which takes the
-//! units of its bits.
+//! float, which takes the units of its bits. Both ops take a float: `alloca`
+//! by the human's ruling of 2026-11-15 on #397 (#264), and
+//! `gpu.work_group_alloca` by that of 2026-11-18 on #432.
 
 use super::align::{check_align, decode_align};
 use super::types::{CoreType, FLOAT_ALIASES, MAX_MEMORY, MAX_WIDTH, alias, ptr_type};
@@ -40,14 +41,6 @@ fn small(i: &Int) -> Option<u32> {
 /// The memory of a pointer type, when it is at most [`MAX_MEMORY`].
 fn valid_memory(n: &Int) -> Option<u32> {
     small(n).filter(|&n| n <= MAX_MEMORY)
-}
-
-impl AnyType {
-    /// Whether work-group memory holds values of it (`Ty.IsElem`): an
-    /// integer or a pointer type.
-    fn is_elem(&self) -> bool {
-        !matches!(self, AnyType::Float(..))
-    }
 }
 
 /// The core type that `t` is when it is valid (`Ty.Valid`): `iN` with
@@ -137,20 +130,11 @@ pub(crate) fn shape_decodes(attrs: &[Attr]) -> bool {
 }
 
 /// The rules of a work-group allocation, the op `op` whose attributes are
-/// `attrs`: those of `alloca`'s shape, and an integer or pointer element
-/// (`Gpu.Op.Valid`, `Ty.IsElem`). `alloca` takes a float too (#264).
-/// Attributes that do not decode break no rule here: decoding reports them.
+/// `attrs`: those of `alloca`'s shape, a float element included
+/// (`Gpu.Op.Valid`; the human's ruling of 2026-11-18 on #432). Attributes
+/// that do not decode break no rule here: decoding reports them.
 pub(crate) fn check_work_group_shape(op: &str, attrs: &[Attr]) -> Result<(), String> {
-    let Some(p) = shape(attrs) else {
-        return Ok(());
-    };
-    if !p.ty.is_elem() {
-        return Err(format!(
-            "{op} allocates an integer or a pointer type, not {}",
-            written(&p.ty)
-        ));
-    }
-    check_shape_of(op, &p)
+    shape(attrs).map_or(Ok(()), |p| check_shape_of(op, &p))
 }
 
 /// The type an allocation carries, as it is written.
@@ -210,7 +194,7 @@ pub(super) fn shape_types(p: &Shape<'_>) -> Vec<Type> {
 
 /// The attribute `float(e, m)`, for the tests of the dialect's ops.
 #[cfg(test)]
-pub(super) fn float_attr(e: i128, m: i128) -> Attr {
+pub(crate) fn float_attr(e: i128, m: i128) -> Attr {
     Attr::App("float".into(), vec![Attr::int(e), Attr::int(m)])
 }
 
