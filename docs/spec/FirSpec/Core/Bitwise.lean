@@ -14,10 +14,10 @@ changes under it.
 
 #doc (Manual) "Bitwise and shift rules: readable blocks" =>
 
-:::moduleDocs (fingerprint := "11248772833288402856")
+:::moduleDocs (fingerprint := "3140985905062568119")
 :::
 
-:::readable Fir.Core.andValues Fir.Core.orValues Fir.Core.xorValues (pin := BitVec.and) (pin := BitVec.or) (pin := BitVec.xor) (fingerprint := "487211523789888471")
+:::readable Fir.Core.andValues Fir.Core.orValues Fir.Core.xorValues (pin := BitVec.and) (pin := BitVec.or) (pin := BitVec.xor) (fingerprint := "11409522831713285193")
 *Definition: the rules of $`\mathsf{and}`, $`\mathsf{or}` and
 $`\mathsf{xor}`.* For every width $`N`, each op works on two vectors of
 bits one bit at a time, and a poison operand, in either place, gives
@@ -34,7 +34,7 @@ bits 0 and 1. None of them is ever UB, and all three
 (ADR-2026-10-29-2006).
 :::
 
-:::readable Fir.Core.shiftValues (fingerprint := "11993629658997560653")
+:::readable Fir.Core.shiftValues (fingerprint := "5099293470704877088")
 *Definition: a shift, with its amount checked.* For every width $`N` and
 every way $`s` of shifting a vector of $`N` bits by a number of places,
 the shift of $`a` by the amount $`n` reads $`n` as unsigned. It gives
@@ -52,7 +52,7 @@ One definition checks the amount for all three shifts, as LLVM does: a
 shift by $`N` or more places has no defined result.
 :::
 
-:::readable Fir.Core.shlValues Fir.Core.lshrValues Fir.Core.ashrValues (pin := Fir.Core.shiftValues) (pin := BitVec.shiftLeft) (pin := BitVec.ushiftRight) (pin := BitVec.sshiftRight) (fingerprint := "7037673791125197716")
+:::readable Fir.Core.shlValues Fir.Core.lshrValues Fir.Core.ashrValues (pin := Fir.Core.shiftValues) (pin := BitVec.shiftLeft) (pin := BitVec.ushiftRight) (pin := BitVec.sshiftRight) (fingerprint := "4296357564803369469")
 *Definition: the rules of $`\mathsf{shl}`, $`\mathsf{lshr}` and
 $`\mathsf{ashr}`.* For every width $`N`, each is $`\mathrm{shift}_s`
 above, with its own way $`s` of shifting. For $`a \in \mathbb{B}^N` and

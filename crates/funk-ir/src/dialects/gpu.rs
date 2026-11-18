@@ -28,8 +28,8 @@
 //! (ADR-2026-11-09-1544).
 
 use super::core::{
-    self, allocation_effects, allocation_memory, check_shape, int_width, shape_attr_types,
-    shape_decodes, type_list,
+    self, allocation_effects, allocation_memory, check_work_group_shape, int_width,
+    shape_attr_types, shape_decodes, type_list,
 };
 use crate::effects::Effects;
 use crate::ir::{Attr, Type};
@@ -115,7 +115,7 @@ impl OpSpec for WorkGroupAlloca {
     }
 
     fn check(&self, _cx: &OpContext<'_>, op: &OpTypes<'_>) -> Result<(), String> {
-        check_shape(WORK_GROUP_ALLOCA, op.attrs)
+        check_work_group_shape(WORK_GROUP_ALLOCA, op.attrs)
     }
 
     /// The type it allocates values of, when that is a valid pointer type

@@ -1,0 +1,8 @@
+# Tests of aggregates-memories.fir: aggregates' layouts in a declared memory
+# of 16-bit units with 32-bit pointers (ADR-2026-11-16-1546). A pointer of
+# memory 1 takes two of its units and one of memory 0 four, aligned to 4;
+# an i24 takes two units, and a nested module holds a layout of its own.
+# The backend does not realise memory 1, so the test is interpreter-only.
+tests = [
+  { func = "@wide_size", expect = ["8"] },
+]

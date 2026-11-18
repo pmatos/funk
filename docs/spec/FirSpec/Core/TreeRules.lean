@@ -14,10 +14,10 @@ build fails when the Lean changes under it.
 
 #doc (Manual) "The core dialect in the tree of choices: readable blocks" =>
 
-:::moduleDocs (fingerprint := "18250013868975859619")
+:::moduleDocs (fingerprint := "12202870855078692044")
 :::
 
-:::readable Fir.Core.memTreeDenote Fir.Core.memMapsDenote (pin := Fir.Core.memDenoteIn) (pin := Fir.MemMapsDenote) (fingerprint := "209049752458271192")
+:::readable Fir.Core.memTreeDenote Fir.Core.memMapsDenote (pin := Fir.Core.memDenoteIn) (pin := Fir.MemMapsDenote) (fingerprint := "2949639955313741378")
 *Definition: the core ops in the tree of choices, with memory.* In the
 {ref "The-fir-specification--Memory--The-state-layer"}[state layer] over
 the tree of choices, where the run's memories have the layout entries

@@ -14,7 +14,7 @@ changes under it.
 
 #doc (Manual) "Load rules: readable blocks" =>
 
-:::moduleDocs (fingerprint := "9269103291181551108")
+:::moduleDocs (fingerprint := "3722738444429852241")
 :::
 
 :::readable Fir.Core.loadShape (pin := Fir.MemLayout.bitsUnits) (pin := Fir.MemLayout.intAlign) (fingerprint := "6193383421806179696")
@@ -31,7 +31,7 @@ two that is at least its units. In memory 0, an $`\mathsf{i32}` takes 4
 units aligned to 4, and an $`\mathsf{i1}` one unit aligned to 1.
 :::
 
-:::readable Fir.Core.poisonPointer Fir.Core.loadResult Fir.Core.loadRule (pin := Fir.MonadMemory) (pin := Fir.MonadUB) (pin := Fir.Memory.decodeInt) (pin := Fir.Core.Op) (fingerprint := "8966308245158352953")
+:::readable Fir.Core.poisonPointer Fir.Core.loadResult Fir.Core.loadRule (pin := Fir.MonadMemory) (pin := Fir.MonadUB) (pin := Fir.Memory.decodeInt) (pin := Fir.Core.Op) (fingerprint := "78147464086120990")
 *Definition: the rule of $`\mathsf{load}`.* Let a run's memories have the
 layout entries $`\ell`, and let the run name the core's memory $`x` as
 $`\rho(x)`. For $`\mathsf{load}_N~o~W~a` on the pointer operand $`p`, let

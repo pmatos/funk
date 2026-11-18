@@ -29,8 +29,8 @@ any memories, and refinement with memory, which refines memories unit by
 unit and asks each op to be monotone from memories that refine others.
 Between the model and the effect, it says which addresses an exposed
 allocation may be given and which one `fir-ref` gives, and how a value of
-an integer or a pointer type becomes units of a memory, and units a value
-again, at every byte order.
+an integer, a float or a pointer type becomes units of a memory, and units
+a value again, at every byte order.
 
 {includeReadable "." Fir.Memory.Model "The memory model" FirSpec.Memory.Model (level := 1)}
 
@@ -69,6 +69,8 @@ again, at every byte order.
 {includeReadable "." Fir.Execution.StatePaths "How a run with memory ends" FirSpec.Execution.StatePaths (level := 1)}
 
 {includeReadable "." Fir.Execution.MemoryMonotone "Runs with memory at every budget" FirSpec.Execution.MemoryMonotone (level := 1)}
+
+{includeReadable "." Fir.Execution.RunItems "The items a run gives each op" FirSpec.Execution.RunItems (level := 1)}
 
 {includeReadable "." Fir.Execution.MemoryObligations "Memory obligations" FirSpec.Execution.MemoryObligations (level := 1)}
 
@@ -122,6 +124,10 @@ again, at every byte order.
 
 {includeReadable "." Fir.Execution.MemoryStoreLaws "Stores in the state layer" FirSpec.Execution.MemoryStoreLaws (level := 1)}
 
+{includeReadable "." Fir.Execution.MemoryBindLaws "Sequences in the state layer" FirSpec.Execution.MemoryBindLaws (level := 1)}
+
+{includeReadable "." Fir.Execution.MemoryCopyLaws "Copies of units in the state layer" FirSpec.Execution.MemoryCopyLaws (level := 1)}
+
 {includeReadable "." Fir.Core.Alloca "Stack allocation rules" FirSpec.Core.Alloca (level := 1)}
 
 {includeReadable "." Fir.Core.Load "Load rules" FirSpec.Core.Load (level := 1)}
@@ -129,6 +135,8 @@ again, at every byte order.
 {includeReadable "." Fir.Core.Store "Store rules" FirSpec.Core.Store (level := 1)}
 
 {includeReadable "." Fir.Core.PtrAccess "Pointer load and store rules" FirSpec.Core.PtrAccess (level := 1)}
+
+{includeReadable "." Fir.Core.FloatAccess "Float load and store rules" FirSpec.Core.FloatAccess (level := 1)}
 
 {includeReadable "." Fir.Core.MemRules "The core's rules with memory" FirSpec.Core.MemRules (level := 1)}
 
@@ -145,6 +153,10 @@ again, at every byte order.
 {includeReadable "." Fir.Core.LoadPtrLaws "Pointer load obligations" FirSpec.Core.LoadPtrLaws (level := 1)}
 
 {includeReadable "." Fir.Core.StorePtrLaws "Pointer store obligations" FirSpec.Core.StorePtrLaws (level := 1)}
+
+{includeReadable "." Fir.Core.LoadFloatLaws "Float load obligations" FirSpec.Core.LoadFloatLaws (level := 1)}
+
+{includeReadable "." Fir.Core.StoreFloatLaws "Float store obligations" FirSpec.Core.StoreFloatLaws (level := 1)}
 
 {includeReadable "." Fir.Core.TreeRules "The core dialect in the tree of choices" FirSpec.Core.TreeRules (level := 1)}
 

@@ -48,14 +48,14 @@ open SetM Memory
 variable {d : Dialect} [TyDenote d.Ty] [DecidableEq d.Ty] [DialectSignature d] [DialectCall d]
 
 variable [DialectEffects d] [DialectMemDenote d] {N : Type} [DecidableEq N]
-  (lay : N → MemLayout) (ρ : DialectEffects.Mem d → N)
+  (lay : N → MemLayout) (ρ : DialectEffects.Mem d → N) (L : RunItems)
 
 /-! # Runs from given memories are runs with memory -/
 
 section
 
 variable {M : Module d} {s : Name} {f : Func d}
-  (hfree : letI := DialectMemDenote.denoteAt (d := d) lay ρ
+  (hfree : letI := DialectMemDenote.denoteAt (d := d) lay ρ L
     OpsIgnoreMemory d N (unitsOf lay))
   (hf : M.func? s = some f) (hs : M.table.ReachesNoMemory s)
   (a : HVector toType (f.params.map (·.2))) (S : Memories N (unitsOf lay)) (n : Nat)
@@ -64,42 +64,42 @@ include hfree hf hs
 /-- A function that reaches no memory returns from given memories
 what it returns with memory, with those memories. -/
 theorem Func.memRunsFrom_ret_iff {vs : List (DVal d)} {S' : Memories N (unitsOf lay)} :
-    letI := DialectMemDenote.denoteAt (d := d) lay ρ
+    letI := DialectMemDenote.denoteAt (d := d) lay ρ L
     (f.memRunsFrom M (a, S) n).outcomes (.ret (vs, S')) ↔
-      S' = S ∧ (f.memRuns lay ρ M a n).outcomes (.ret vs) := by
-  letI := DialectMemDenote.denoteAt (d := d) lay ρ
+      S' = S ∧ (f.memRuns lay ρ L M a n).outcomes (.ret vs) := by
+  letI := DialectMemDenote.denoteAt (d := d) lay ρ L
   constructor
   · intro h
     obtain ⟨h1, h2⟩ := Func.memRunsFrom_ignoresMemory hfree hf hs a S Memories.empty n
       (Ev.notStuck_ok _) h
     simp only [Ev.mapRet, atMem, Ev.ok.injEq, Except.ok.injEq, Result.ret.injEq, Prod.mk.injEq,
       true_and] at h1
-    exact ⟨h1.symm, (Func.memRuns_ret_iff lay ρ).2 ⟨_, h2⟩⟩
+    exact ⟨h1.symm, (Func.memRuns_ret_iff lay ρ L).2 ⟨_, h2⟩⟩
   · rintro ⟨rfl, h⟩
-    obtain ⟨T, hT⟩ := (Func.memRuns_ret_iff lay ρ).1 h
+    obtain ⟨T, hT⟩ := (Func.memRuns_ret_iff lay ρ L).1 h
     exact (Func.memRunsFrom_ignoresMemory hfree hf hs a Memories.empty S' n (Ev.notStuck_ok _)
       hT).2
 
 /-- A function that reaches no memory hits UB from given memories
 exactly when it does with memory. -/
 theorem Func.memRunsFrom_ub_iff {r : String} :
-    letI := DialectMemDenote.denoteAt (d := d) lay ρ
-    (f.memRunsFrom M (a, S) n).outcomes (.ub r) ↔ (f.memRuns lay ρ M a n).outcomes (.ub r) := by
-  letI := DialectMemDenote.denoteAt (d := d) lay ρ
-  exact ⟨fun h => (Func.memRuns_ub_iff lay ρ).2 (Func.memRunsFrom_ignoresMemory hfree hf hs a S
+    letI := DialectMemDenote.denoteAt (d := d) lay ρ L
+    (f.memRunsFrom M (a, S) n).outcomes (.ub r) ↔ (f.memRuns lay ρ L M a n).outcomes (.ub r) := by
+  letI := DialectMemDenote.denoteAt (d := d) lay ρ L
+  exact ⟨fun h => (Func.memRuns_ub_iff lay ρ L).2 (Func.memRunsFrom_ignoresMemory hfree hf hs a S
       Memories.empty n (Ev.notStuck_ub _) h).2,
     fun h => (Func.memRunsFrom_ignoresMemory hfree hf hs a Memories.empty S n (Ev.notStuck_ub _)
-      ((Func.memRuns_ub_iff lay ρ).1 h)).2⟩
+      ((Func.memRuns_ub_iff lay ρ L).1 h)).2⟩
 
 /-- A function that reaches no memory runs out of fuel from given
 memories exactly when it does with memory. -/
 theorem Func.memRunsFrom_exhausted_iff_memRuns :
-    letI := DialectMemDenote.denoteAt (d := d) lay ρ
+    letI := DialectMemDenote.denoteAt (d := d) lay ρ L
     (f.memRunsFrom M (a, S) n).outcomes .fuelExhausted ↔
-      (f.memRuns lay ρ M a n).outcomes .fuelExhausted := by
-  letI := DialectMemDenote.denoteAt (d := d) lay ρ
+      (f.memRuns lay ρ L M a n).outcomes .fuelExhausted := by
+  letI := DialectMemDenote.denoteAt (d := d) lay ρ L
   exact (Func.memRunsFrom_exhausted_iff hfree hf hs a S Memories.empty n).trans
-    (Func.memRuns_exhausted_iff lay ρ).symm
+    (Func.memRuns_exhausted_iff lay ρ L).symm
 
 end
 
@@ -109,44 +109,45 @@ variable [TyRefinement d.Ty]
 memory, the second refines the first from given memories, the
 memories they end with included, when it refines it with memory. -/
 theorem Func.memRunsFrom_isRefinedBy_of_memRuns
-    (hfree : letI := DialectMemDenote.denoteAt (d := d) lay ρ
+    (hfree : letI := DialectMemDenote.denoteAt (d := d) lay ρ L
       OpsIgnoreMemory d N (unitsOf lay))
     {M M' : Module d} {s s' : Name} {f : Func d} {t : Name} {b : Region d}
     (hf : M.func? s = some f) (hs : M.table.ReachesNoMemory s)
     (hf' : M'.func? s' = some (f.replaceBody t b)) (hs' : M'.table.ReachesNoMemory s')
-    (h : f.memRuns lay ρ M ⊑ (f.replaceBody t b).memRuns lay ρ M') :
-    letI := DialectMemDenote.denoteAt (d := d) lay ρ
+    (h : f.memRuns lay ρ L M ⊑ (f.replaceBody t b).memRuns lay ρ L M') :
+    letI := DialectMemDenote.denoteAt (d := d) lay ρ L
     f.memRunsFrom (Mem := N) (unit := unitsOf lay) M ⊑
       (f.replaceBody t b).memRunsFrom (Mem := N) (unit := unitsOf lay) M' := by
-  letI := DialectMemDenote.denoteAt (d := d) lay ρ
+  letI := DialectMemDenote.denoteAt (d := d) lay ρ L
   intro ⟨a, S⟩ o ho
-  have ub_from : ∀ {r : String}, observable (f.memRuns lay ρ M a) (.ub r) →
+  have ub_from : ∀ {r : String}, observable (f.memRuns lay ρ L M a) (.ub r) →
       ∃ x, observable (f.memRunsFrom M (a, S)) x ∧ x ⊑ o :=
-    fun ⟨k, hk⟩ => ⟨.ub _, ⟨k, (Func.memRunsFrom_ub_iff lay ρ hfree hf hs a S k).2 hk⟩, trivial⟩
+    fun ⟨k, hk⟩ => ⟨.ub _, ⟨k, (Func.memRunsFrom_ub_iff lay ρ L hfree hf hs a S k).2 hk⟩, trivial⟩
   match o, ho with
   | .ret (vs', S''), ⟨n, hn⟩ =>
-    obtain ⟨rfl, hn'⟩ := (Func.memRunsFrom_ret_iff lay ρ hfree hf' hs' a S n).1 hn
+    obtain ⟨rfl, hn'⟩ := (Func.memRunsFrom_ret_iff lay ρ L hfree hf' hs' a S n).1 hn
     obtain ⟨x, hx, hle⟩ := h a (.ret vs') ⟨n, hn'⟩
     match x, hx, hle with
     | .ub _, hx, _ => exact ub_from hx
     | .ret vs, ⟨k, hk⟩, hle =>
-      exact ⟨.ret (vs, S''), ⟨k, (Func.memRunsFrom_ret_iff lay ρ hfree hf hs a S'' k).2 ⟨rfl, hk⟩⟩,
+      exact ⟨.ret (vs, S''), ⟨k, (Func.memRunsFrom_ret_iff lay ρ L hfree hf hs a S'' k).2 ⟨rfl,
+          hk⟩⟩,
         hle, Memories.isRefinedBy_refl S''⟩
     | .fuelExhausted, _, hle => exact hle.elim
   | .ub r', ⟨n, hn⟩ =>
     obtain ⟨x, hx, hle⟩ :=
-      h a (.ub r') ⟨n, (Func.memRunsFrom_ub_iff lay ρ hfree hf' hs' a S n).1 hn⟩
+      h a (.ub r') ⟨n, (Func.memRunsFrom_ub_iff lay ρ L hfree hf' hs' a S n).1 hn⟩
     match x, hx, hle with
     | .ub _, hx, _ => exact ub_from hx
     | .ret _, _, hle | .fuelExhausted, _, hle => exact hle.elim
   | .fuelExhausted, ho =>
     obtain ⟨x, hx, hle⟩ := h a .fuelExhausted fun n =>
-      (Func.memRunsFrom_exhausted_iff_memRuns lay ρ hfree hf' hs' a S n).1 (ho n)
+      (Func.memRunsFrom_exhausted_iff_memRuns lay ρ L hfree hf' hs' a S n).1 (ho n)
     match x, hx, hle with
     | .ub _, hx, _ => exact ub_from hx
     | .fuelExhausted, hx, _ =>
       exact ⟨.fuelExhausted, fun k =>
-        (Func.memRunsFrom_exhausted_iff_memRuns lay ρ hfree hf hs a S k).2 (hx k), trivial⟩
+        (Func.memRunsFrom_exhausted_iff_memRuns lay ρ L hfree hf hs a S k).2 (hx k), trivial⟩
     | .ret _, _, hle => exact hle.elim
 
 /-! # Congruence in the callee, with no budget -/
@@ -166,23 +167,23 @@ theorem Func.memRuns_replaceBody_isRefinedBy_of_finite
     (hrefl : ∀ {t : d.Ty} (v : ⟦t⟧), TyRefinement.IsRefinedBy v v)
     (htrans : ∀ {t : d.Ty} {u v w : ⟦t⟧}, TyRefinement.IsRefinedBy u v →
       TyRefinement.IsRefinedBy v w → TyRefinement.IsRefinedBy u w)
-    (hfree : letI := DialectMemDenote.denoteAt (d := d) lay ρ
+    (hfree : letI := DialectMemDenote.denoteAt (d := d) lay ρ L
       OpsIgnoreMemory d N (unitsOf lay))
     (hM : M.Valid) {g : Func d} (hg : g ∈ M.funcs) (b : Region d)
     (hfin : ∃ L : List (HVector toType (g.params.map (·.2))), ∀ a, a ∈ L)
     (hmem : (M.replaceBody g.name b).table.ReachesNoMemory g.name)
-    (h : letI := DialectMemDenote.denoteAt (d := d) lay ρ;
+    (h : letI := DialectMemDenote.denoteAt (d := d) lay ρ L;
       g.memRunsFrom (Mem := N) (unit := unitsOf lay) M ⊑
         (g.replaceBody g.name b).memRunsFrom (Mem := N) (unit := unitsOf lay) (M.replaceBody
             g.name b))
     {f : Func d} (hf : f ∈ M.funcs) :
-    (letI := DialectMemDenote.denoteAt (d := d) lay ρ;
+    (letI := DialectMemDenote.denoteAt (d := d) lay ρ L;
       f.memRunsFrom (Mem := N) (unit := unitsOf lay) M ⊑
         (f.replaceBody g.name b).memRunsFrom (Mem := N) (unit := unitsOf lay) (M.replaceBody
             g.name b)) ∧
-      f.memRuns lay ρ M ⊑ (f.replaceBody g.name b).memRuns lay ρ (M.replaceBody g.name b) :=
-  letI := DialectMemDenote.denoteAt (d := d) lay ρ
-  Func.memRuns_replaceBody_isRefinedBy_of_bound lay ρ hrefl htrans hM hg b
+      f.memRuns lay ρ L M ⊑ (f.replaceBody g.name b).memRuns lay ρ L (M.replaceBody g.name b) :=
+  letI := DialectMemDenote.denoteAt (d := d) lay ρ L
+  Func.memRuns_replaceBody_isRefinedBy_of_bound lay ρ L hrefl htrans hM hg b
     (Func.memRunsFrom_boundedBy_of_finite hfree
       (Module.func?_replaceBody_self hM.symbolsUnique hg b) hmem hfin) h hf
 
@@ -194,17 +195,17 @@ theorem Func.memRuns_replaceBody_isRefinedBy_of_memRuns
     (hrefl : ∀ {t : d.Ty} (v : ⟦t⟧), TyRefinement.IsRefinedBy v v)
     (htrans : ∀ {t : d.Ty} {u v w : ⟦t⟧}, TyRefinement.IsRefinedBy u v →
       TyRefinement.IsRefinedBy v w → TyRefinement.IsRefinedBy u w)
-    (hfree : letI := DialectMemDenote.denoteAt (d := d) lay ρ
+    (hfree : letI := DialectMemDenote.denoteAt (d := d) lay ρ L
       OpsIgnoreMemory d N (unitsOf lay))
     (hM : M.Valid) {g : Func d} (hg : g ∈ M.funcs) (b : Region d)
     (hfin : ∃ L : List (HVector toType (g.params.map (·.2))), ∀ a, a ∈ L)
     (hold : M.table.ReachesNoMemory g.name)
     (hmem : (M.replaceBody g.name b).table.ReachesNoMemory g.name)
-    (h : g.memRuns lay ρ M ⊑ (g.replaceBody g.name b).memRuns lay ρ (M.replaceBody g.name b))
+    (h : g.memRuns lay ρ L M ⊑ (g.replaceBody g.name b).memRuns lay ρ L (M.replaceBody g.name b))
     {f : Func d} (hf : f ∈ M.funcs) :
-    f.memRuns lay ρ M ⊑ (f.replaceBody g.name b).memRuns lay ρ (M.replaceBody g.name b) :=
-  (Func.memRuns_replaceBody_isRefinedBy_of_finite lay ρ hrefl htrans hfree hM hg b hfin hmem
-    (Func.memRunsFrom_isRefinedBy_of_memRuns lay ρ hfree
+    f.memRuns lay ρ L M ⊑ (f.replaceBody g.name b).memRuns lay ρ L (M.replaceBody g.name b) :=
+  (Func.memRuns_replaceBody_isRefinedBy_of_finite lay ρ L hrefl htrans hfree hM hg b hfin hmem
+    (Func.memRunsFrom_isRefinedBy_of_memRuns lay ρ L hfree
       (Module.func?_of_mem hM.symbolsUnique hg) hold
       (Module.func?_replaceBody_self hM.symbolsUnique hg b) hmem h) hf).2
 
@@ -218,17 +219,17 @@ theorem Func.memRuns_replaceBody_isRefinedBy_of_opsFinite_memRuns
     (hrefl : ∀ {t : d.Ty} (v : ⟦t⟧), TyRefinement.IsRefinedBy v v)
     (htrans : ∀ {t : d.Ty} {u v w : ⟦t⟧}, TyRefinement.IsRefinedBy u v →
       TyRefinement.IsRefinedBy v w → TyRefinement.IsRefinedBy u w)
-    (hfree : letI := DialectMemDenote.denoteAt (d := d) lay ρ
+    (hfree : letI := DialectMemDenote.denoteAt (d := d) lay ρ L
       OpsIgnoreMemory d N (unitsOf lay))
-    (hfin : letI := DialectMemDenote.denoteAt (d := d) lay ρ; OpsFinite d N (unitsOf lay))
+    (hfin : letI := DialectMemDenote.denoteAt (d := d) lay ρ L; OpsFinite d N (unitsOf lay))
     (hM : M.Valid) {g : Func d} (hg : g ∈ M.funcs) (b : Region d)
     (hold : M.table.ReachesNoMemory g.name)
     (hmem : (M.replaceBody g.name b).table.ReachesNoMemory g.name)
-    (h : g.memRuns lay ρ M ⊑ (g.replaceBody g.name b).memRuns lay ρ (M.replaceBody g.name b))
+    (h : g.memRuns lay ρ L M ⊑ (g.replaceBody g.name b).memRuns lay ρ L (M.replaceBody g.name b))
     {f : Func d} (hf : f ∈ M.funcs) :
-    f.memRuns lay ρ M ⊑ (f.replaceBody g.name b).memRuns lay ρ (M.replaceBody g.name b) :=
-  (Func.memRuns_replaceBody_isRefinedBy_of_opsFinite lay ρ hrefl htrans hfin hM hg b
-    (Func.memRunsFrom_isRefinedBy_of_memRuns lay ρ hfree
+    f.memRuns lay ρ L M ⊑ (f.replaceBody g.name b).memRuns lay ρ L (M.replaceBody g.name b) :=
+  (Func.memRuns_replaceBody_isRefinedBy_of_opsFinite lay ρ L hrefl htrans hfin hM hg b
+    (Func.memRunsFrom_isRefinedBy_of_memRuns lay ρ L hfree
       (Module.func?_of_mem hM.symbolsUnique hg) hold
       (Module.func?_replaceBody_self hM.symbolsUnique hg b) hmem h) hf).2
 

@@ -16,7 +16,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Locations: readable blocks" =>
 
-:::moduleDocs (fingerprint := "900412381282629784")
+:::moduleDocs (fingerprint := "9505204009291805164")
 :::
 
 :::readable Fir.LocRef (pin := Fir.printLocRef) (fingerprint := "9162630897479780355")
@@ -30,7 +30,7 @@ numbers are the producer's: they are stored and printed as given, never
 renumbered, so a round trip through the text gives the same numbers back.
 :::
 
-:::readable Fir.Location (pin := Fir.Location.print) (fingerprint := "15186028142405769751")
+:::readable Fir.Location (pin := Fir.Location.print) (fingerprint := "17993591482671843406")
 *Definition: a location.* A location says where an op came from. It is one
 of six kinds:
 
@@ -73,7 +73,7 @@ easy to drop by accident in a pass (ADR-2026-10-29-2013). Locations never
 change what a program means: no rule of execution reads them.
 :::
 
-:::readable Fir.LocTable (pin := Fir.LocTable.Valid) (pin := Fir.LocTable.print) (pin := Fir.Location.WellFormed) (fingerprint := "6615053154589121912")
+:::readable Fir.LocTable (pin := Fir.LocTable.Valid) (pin := Fir.LocTable.print) (pin := Fir.Location.WellFormed) (fingerprint := "3899101525539629867")
 *Definition: a location table.* A module's location table is a sequence of
 entries $`(r = \mathit{loc})^*`, each a location reference $`r` and the
 location $`\mathit{loc}` it stands for. In text it is the block
@@ -93,7 +93,7 @@ The table is a plain sequence; validation asks more of it
 * every reference, line and column is below the limit defined next.
 :::
 
-:::readable Fir.Location.refs Fir.Location.numbers Fir.Location.limit Fir.LocTable.InLimits (pin := Fir.LocTable.Valid) (fingerprint := "13134142017632528915")
+:::readable Fir.Location.refs Fir.Location.numbers Fir.Location.limit Fir.LocTable.InLimits (pin := Fir.LocTable.Valid) (fingerprint := "2366894645116468975")
 *Definition: the numbers of a location, and their limit.* The references
 that a location is built from, $`\mathrm{refs}(\mathit{loc})`, and the
 numbers that it holds, $`\mathrm{nums}(\mathit{loc})`, are these sequences:

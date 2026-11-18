@@ -180,6 +180,7 @@ def Item.tokens : Item d → List Tok
     .word "module" :: .sym name :: .lparen :: .rparen :: .lbrace :: dialectsTokens ds ++
       Item.tokensList is ++ [.rbrace]
   | .dialect i => i.tokens
+  | .aggregate a => a.item.tokens
 
 /-- The tokens of items. -/
 def Item.tokensList : List (Item d) → List Tok

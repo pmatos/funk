@@ -178,11 +178,14 @@ import FirSpec.Execution.MemoryRuns
 import FirSpec.Execution.StatePaths
 import FirSpec.Execution.MemoryMonotone
 import FirSpec.Execution.MemoryObligations
+import FirSpec.Execution.RunItems
 import FirSpec.Execution.MemoryObligationLaws
 import FirSpec.Execution.MemoryTotal
 import FirSpec.Execution.MemoryAllocLaws
 import FirSpec.Execution.MemoryLoadLaws
 import FirSpec.Execution.MemoryStoreLaws
+import FirSpec.Execution.MemoryBindLaws
+import FirSpec.Execution.MemoryCopyLaws
 import FirSpec.Core.Alloca
 import FirSpec.Core.AllocaLaws
 import FirSpec.Core.Load
@@ -194,6 +197,9 @@ import FirSpec.Core.StoreWrites
 import FirSpec.Core.PtrAccess
 import FirSpec.Core.LoadPtrLaws
 import FirSpec.Core.StorePtrLaws
+import FirSpec.Core.FloatAccess
+import FirSpec.Core.LoadFloatLaws
+import FirSpec.Core.StoreFloatLaws
 import FirSpec.Memory.Ordering
 import FirSpec.Execution.MemoryCallSteps
 import FirSpec.Execution.MemoryProgress

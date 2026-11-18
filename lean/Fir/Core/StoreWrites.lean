@@ -48,11 +48,12 @@ it, so the obligations reject the declaration, over the core's own
 semantics with memory. -/
 theorem storeNoWrite_unlawful :
     ¬ @LawfulDialectEffects CoreDialect _ _ _ storeNoWrite _ _
-      (@DialectMemDenote.mk CoreDialect _ _ storeNoWrite fun lay ρ => Core.memDenoteAt lay ρ) := by
+      (@DialectMemDenote.mk CoreDialect _ _ storeNoWrite fun lay ρ _ => Core.memDenoteAt lay ρ) :=
+          by
   intro h
   have hw := @LawfulDialectEffects.writesNot CoreDialect _ _ _ storeNoWrite _ _ _ h
     (.store .nonatomic 8 none 0) store_typesValid (.inr rfl) Unit _ (fun _ => MemLayout.default)
-    (fun _ => ()) () (fun h => nomatch h)
+    (fun _ => ()) RunItems.empty () (fun h => nomatch h)
   have hc := (hw (.cons (.value 1#8) (.cons (.value ⟨some 0, 0⟩) .nil))).1 rfl
   have h1 := (SetM.stateMap_apply (fun _ => (.nil : HVector toType ([] : List Ty)))
     (storeAccess 8 none 0 (fun _ : Unit => MemLayout.default) (fun _ => ()) (.value 1#8) ⟨some 0, 0⟩)

@@ -60,11 +60,11 @@ so the obligations reject the declaration, over the core's own semantics
 with memory. -/
 theorem loadNoRead_unlawful :
     ¬ @LawfulDialectEffects CoreDialect _ _ _ loadNoRead _ _
-      (@DialectMemDenote.mk CoreDialect _ _ loadNoRead fun lay ρ => Core.memDenoteAt lay ρ) := by
+      (@DialectMemDenote.mk CoreDialect _ _ loadNoRead fun lay ρ _ => Core.memDenoteAt lay ρ) := by
   intro h
   have hr := @LawfulDialectEffects.readsNot CoreDialect _ _ _ loadNoRead _ _ _ h
     (.load .nonatomic 8 none 0) load_typesValid (.inr rfl) Unit _ (fun _ => MemLayout.default)
-    (fun _ => ()) () (fun h => nomatch h)
+    (fun _ => ()) RunItems.empty () (fun h => nomatch h)
   have hc := (hr (.cons (.value ⟨some 0, 0⟩) .nil)).1 rfl
   have h0 := (SetM.stateMap_apply (loadResult MemLayout.default 8)
     (loadAccess 8 none 0 (fun _ : Unit => MemLayout.default) (fun _ => ()) ⟨some 0, 0⟩)

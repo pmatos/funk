@@ -244,6 +244,7 @@ theorem Item.spells (n : Nat) :
     ∀ i : Item d, (∀ t ∈ i.tokens, t.Writable) → SpellsAny (i.print n).toList i.tokens
   | .func f, hw => Func.spells n f hw
   | .dialect i, hw => DialectItem.spells n i hw
+  | .aggregate a, hw => DialectItem.spells n a.item hw
   | .module name ds is, hw => by
     have hds := spellsDialects (n + 2) ds fun t ht => hw t (by simp [Item.tokens, ht])
     have his := Item.spellsList (n + 2) is fun t ht => hw t (by simp [Item.tokens, ht])

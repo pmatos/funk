@@ -14,10 +14,10 @@ when the Lean changes under it.
 
 #doc (Manual) "The core's rules with memory: readable blocks" =>
 
-:::moduleDocs (fingerprint := "6346048874939618761")
+:::moduleDocs (fingerprint := "5331535549836484411")
 :::
 
-:::readable Fir.Core.freezeValue_map Fir.Core.ruleOfEv_map Fir.Core.exitOfEv_map (pin := Fir.MonadMorphism.KeepsChoiceUB) (pin := Fir.Core.freezeValue) (pin := Fir.Core.ruleOfEv) (pin := Fir.Core.exitOfEv) (fingerprint := "17793630269427369314")
+:::readable Fir.Core.freezeValue_map Fir.Core.ruleOfEv_map Fir.Core.exitOfEv_map (pin := Fir.MonadMorphism.KeepsChoiceUB) (pin := Fir.Core.freezeValue) (pin := Fir.Core.ruleOfEv) (pin := Fir.Core.exitOfEv) (fingerprint := "2405690779588688594")
 *Theorem: the rules of `freeze`, the divisions and the terminators mean the
 same in both monads.* For every monad morphism $`\varphi` that
 {ref "The-fir-specification--Execution--Monad-morphisms"}[keeps choice and UB],
@@ -52,7 +52,7 @@ keeps UB; and an op with no rule, as $`\mathsf{call}`, maps by the
 hypothesis on $`z_m` and $`z_n`.
 :::
 
-:::readable Fir.Core.Op.memDenote? Fir.Core.Op.memExit? Fir.Core.memDenoteIn (pin := Fir.Core.denoteWith) (pin := Fir.MonadMemory) (pin := Fir.Core.allocaRule) (fingerprint := "16472203083879836616")
+:::readable Fir.Core.Op.memDenote? Fir.Core.Op.memExit? Fir.Core.memDenoteIn (pin := Fir.Core.denoteWith) (pin := Fir.MonadMemory) (pin := Fir.Core.allocaRule) (fingerprint := "5937747185782789596")
 *Definition: the core's rules with memory.* Let $`m` be a monad with
 choice, UB and the
 {ref "The-fir-specification--Memory--The-memory-effect"}[memory effect] on
@@ -69,9 +69,11 @@ and that of $`\mathsf{load}` its
 {ref "The-fir-specification--Memory--Load-rules"}[load rule], which loads
 from the memory $`\rho(N)` of its pointer, and that of $`\mathsf{store}`
 its {ref "The-fir-specification--Memory--Store-rules"}[store rule], which
-stores to the memory $`\rho(N)` of its pointer, and those of the load and
+stores to the memory $`\rho(N)` of its pointer, those of the load and
 store of a pointer their
-{ref "The-fir-specification--Memory--Pointer-load-and-store-rules"}[pointer load and store rules];
+{ref "The-fir-specification--Memory--Pointer-load-and-store-rules"}[pointer load and store rules],
+and those of the load and store of a float their
+{ref "The-fir-specification--Memory--Float-load-and-store-rules"}[float load and store rules];
 these are the core ops
 that touch memory, and none has a rule without memory. Every other op touches no memory, so its
 rule with memory, as an op that is not a terminator and as a terminator,
@@ -103,7 +105,7 @@ gives no result in both. The
 keeps allocation, loads and stores.
 :::
 
-:::readable Fir.Core.memDenoteAt Fir.Core.instDialectMemDenote (pin := Fir.DialectMemDenote) (fingerprint := "718340430128983195")
+:::readable Fir.Core.memDenoteAt Fir.Core.instDialectMemDenote (pin := Fir.DialectMemDenote) (fingerprint := "1738503314275530218")
 *Definition: the core's semantics with memory.* At the layout entries
 $`\ell` and the naming $`\rho`, the core's
 {ref "The-fir-specification--Memory--Memory-obligations"}[semantics with memory]
@@ -115,7 +117,7 @@ monad, so an op that touches memory joins it with its own rule, as
 $`\mathsf{alloca}`, $`\mathsf{load}` and $`\mathsf{store}` do.
 :::
 
-:::readable Fir.Core.Op.liftsSetM (pin := Fir.OpLiftsSetM) (fingerprint := "5082191809985086959")
+:::readable Fir.Core.Op.liftsSetM (pin := Fir.OpLiftsSetM) (fingerprint := "4896862432120104633")
 *Theorem: every core op that touches no memory is tied.* For every core op
 $`p` but $`\mathsf{alloca}`, $`\mathsf{load}` and $`\mathsf{store}`, at
 every layout

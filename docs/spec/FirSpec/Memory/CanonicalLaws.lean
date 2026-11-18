@@ -17,7 +17,7 @@ when the Lean changes under it.
 :::moduleDocs (fingerprint := "8055350114286254482")
 :::
 
-:::readable Fir.Memory.le_bumpFrom Fir.Memory.dvd_bumpFrom (pin := Fir.Memory.bumpFrom) (fingerprint := "1386793675836362666")
+:::readable Fir.Memory.le_bumpFrom Fir.Memory.dvd_bumpFrom (pin := Fir.Memory.bumpFrom) (fingerprint := "9265621592290271333")
 *Theorems: where a canonical address is.* A layout from $`c` puts every
 block at $`c` or above, and a block of alignment $`\alpha > 0` at a
 multiple of $`\alpha`.

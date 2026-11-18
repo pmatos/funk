@@ -29,18 +29,19 @@ $`\mathrm{one}(t)` refines $`\mathrm{one}(s)`: every way $`\mathrm{one}(t)`
 ends is allowed by a way $`\mathrm{one}(s)` ends.
 :::
 
-:::readable Fir.Core.fbinValues_drop Fir.Core.funaryValue_drop Fir.Core.fmaValues_drop Fir.Core.fcmpValues_drop (pin := Fir.Core.fbinValues) (pin := Fir.Core.funaryValue) (pin := Fir.Core.fmaValues) (pin := Fir.Core.fcmpValues) (fingerprint := "984134044064763540")
+:::readable Fir.Core.fbinValues_drop Fir.Core.funaryValue_drop Fir.Core.fmaValues_drop Fir.Core.fcmpValues_drop (pin := Fir.Core.fbinValues) (pin := Fir.Core.funaryValue) (pin := Fir.Core.fmaValues) (pin := Fir.Core.fcmpValues) (fingerprint := "5947816627497613307")
 *Theorem: the rules with fewer flags.* Let $`\phi' \le \phi`. On every
 operands, each value that the rule of $`\mathsf{fadd}`, $`\mathsf{fsub}`,
-$`\mathsf{fmul}`, $`\mathsf{fdiv}`, $`\mathsf{fneg}`, $`\mathsf{fabs}`,
-$`\mathsf{sqrt}` or $`\mathsf{fma}` gives under $`\phi'`, it gives under
-$`\phi`, or under $`\phi` it may give $`\mathsf{poison}`. A poison operand
-gives poison under both, and defined operands give a float result. The
+$`\mathsf{fmul}`, $`\mathsf{fdiv}`, $`\mathsf{frem}`, $`\mathsf{fmod}`,
+$`\mathsf{fneg}`, $`\mathsf{fabs}`, $`\mathsf{sqrt}` or $`\mathsf{fma}`
+gives under $`\phi'`, it gives under $`\phi`, or under $`\phi` it may
+give $`\mathsf{poison}`. A poison operand gives poison under both, and
+defined operands give a float result. The
 $`\mathsf{i1}` of $`\mathsf{fcmp}` under $`\phi` is refined by its
 $`\mathsf{i1}` under $`\phi'`: it is poison, or the same.
 :::
 
-:::readable Fir.Core.fbin_drop Fir.Core.funary_drop Fir.Core.fma_drop Fir.Core.fcmp_drop (pin := Fir.Core.Op.denote?) (fingerprint := "1932391872209236585")
+:::readable Fir.Core.fbin_drop Fir.Core.funary_drop Fir.Core.fma_drop Fir.Core.fcmp_drop (pin := Fir.Core.Op.denote?) (fingerprint := "18093967977468433443")
 *Theorem: dropping a flag refines the flagged op.* For all flags
 $`\phi' \le \phi`, every format, every rounding mode and every operands $`\vec a`,
 

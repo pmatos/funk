@@ -145,7 +145,7 @@ class Tests(unittest.TestCase):
             with self.subTest(module=module):
                 self.assertEqual(len([x for x in tests if "expect" in x]), n)
                 plain = [x for x in tests if "expect" not in x]
-                self.assertEqual(len(plain), n - 3 if cases.is_native(module) else 0)
+                self.assertEqual(len(plain), n if cases.is_native(module) else 0)
 
 
 if __name__ == "__main__":

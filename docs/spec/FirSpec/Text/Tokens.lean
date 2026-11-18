@@ -14,10 +14,10 @@ changes under it.
 
 #doc (Manual) "Lexing printed text: readable blocks" =>
 
-:::moduleDocs (fingerprint := "15140204543063817337")
+:::moduleDocs (fingerprint := "3639006960694888536")
 :::
 
-:::readable Fir.Text.Tok.spell (pin := Fir.Text.printSymbol) (pin := Fir.printLocRef) (pin := Fir.Text.printInt) (pin := Fir.Text.quote) (pin := Nat.toDigits) (fingerprint := "941515271070062022")
+:::readable Fir.Text.Tok.spell (pin := Fir.Text.printSymbol) (pin := Fir.printLocRef) (pin := Fir.Text.printInt) (pin := Fir.Text.quote) (pin := Nat.toDigits) (fingerprint := "17911903898172945497")
 *Definition: the spelling of a token.* Every
 {ref "The-fir-specification--Text-format--The-parser"}[token] $`t` has one
 spelling, $`\mathrm{spell}(t)`, the text that the printer writes for it:
@@ -48,7 +48,7 @@ printed module back compares what it reads with these spellings, so each
 token needs exactly one.
 :::
 
-:::readable Fir.Text.Tok.Writable (pin := Fir.isName) (pin := Fir.isWord) (pin := Fir.Location.limit) (fingerprint := "10394463358271638325")
+:::readable Fir.Text.Tok.Writable (pin := Fir.isName) (pin := Fir.isWord) (pin := Fir.Location.limit) (fingerprint := "5287678716215530782")
 *Definition: a token that can be written.* A token $`t` _can be written_,
 $`\mathrm{writable}(t)`, in these cases:
 
@@ -73,7 +73,7 @@ sections,
 shows that every well-formed module meets this.
 :::
 
-:::readable Fir.Attr.tokens Fir.Attr.tokens.tokensList (fingerprint := "15613669296790130417")
+:::readable Fir.Attr.tokens Fir.Attr.tokens.tokensList (fingerprint := "2088071635729528344")
 *Definition: the tokens of an attribute.* The tokens of an
 {ref "The-fir-specification--Text-format--Grammar"}[attribute], or of a
 type, which is written as one, are:
@@ -93,7 +93,7 @@ printer writes them, so that the printed text of a construct can be
 compared with a list of tokens and its layout set aside.
 :::
 
-:::readable Fir.Location.tokens (fingerprint := "12101892751819525192")
+:::readable Fir.Location.tokens (fingerprint := "12783362097953561350")
 *Definition: the tokens of a location.* The tokens of a
 {ref "The-fir-specification--Abstract-syntax--Locations"}[location], as
 the location table writes it:
@@ -117,7 +117,7 @@ which writes each of its types as an attribute $`\mathrm{attr}(T)`:
   $`\texttt{(}~\mathsf{value}~a_1~\texttt{,}~\dots~\texttt{,}~\mathsf{value}~a_n~\texttt{)}`.
 :::
 
-:::readable Fir.kindTokens Fir.Operation.tokens Fir.Region.tokensList Fir.Block.tokensList Fir.Operation.tokensList (fingerprint := "10506617580454205707")
+:::readable Fir.kindTokens Fir.Operation.tokens Fir.Region.tokensList Fir.Block.tokensList Fir.Operation.tokensList (fingerprint := "16526992346124764294")
 *Definition: the tokens of ops, regions and blocks.* For every dialect with
 a text format, an op with results $`d^*`, op instance $`o`, operands
 $`x_1, \dots, x_m`, successors $`s_1, \dots, s_k`, regions and location
@@ -156,7 +156,7 @@ followed by the tokens of $`\mathrm{attr}(T_1), \dots, \mathrm{attr}(T_n)`,
 separated by $`\texttt{,}`.
 :::
 
-:::readable Fir.Func.tokens Fir.Item.tokens Fir.Item.tokensList Fir.Item.tokensList_eq_flatMap (pin := Fir.dialectsTokens) (fingerprint := "2718090411911793323")
+:::readable Fir.Func.tokens Fir.Item.tokens Fir.Item.tokensList Fir.Item.tokensList_eq_flatMap (pin := Fir.dialectsTokens) (fingerprint := "5441286627495891479")
 *Definition: the tokens of a function and of an item.* For every dialect
 with a text format, a function with symbol $`f`, parameters $`p^*`, result
 types $`T_1, \dots, T_n` and blocks has the tokens:
@@ -166,7 +166,8 @@ $$`\begin{aligned} & \mathsf{word}~\mathtt{func}~\mathsf{sym}~f~\texttt{(}~\math
 where $`\mathit{res}` is empty when $`n = 0`, and otherwise
 $`\texttt{->}` followed by the tokens of $`\mathrm{attr}(T_1), \dots, \mathrm{attr}(T_n)`,
 separated by $`\texttt{,}`. An item that is a function has the tokens of
-its function, and an item of a dialect's kind those of that item. A nested
+its function, an item of a dialect's kind those of that item, and an
+aggregate's layout those of the item of kind `aggregate` that writes it. A nested
 module with the symbol $`s`, the dialect set $`x^*`
 and the items $`i^*` has the tokens:
 
@@ -176,7 +177,7 @@ where the tokens of a dialect set are those of a module's set, below, and
 the tokens of a list of items are the tokens of each item, in order.
 :::
 
-:::readable Fir.LocTable.tokens Fir.dialectsTokens Fir.layoutTokens Fir.Module.tokens (fingerprint := "9825380507763820307")
+:::readable Fir.LocTable.tokens Fir.dialectsTokens Fir.layoutTokens Fir.Module.tokens (fingerprint := "4108822103524263957")
 *Definition: the tokens of the location table and of a module.* The
 location table with entries $`r_1 = \mathit{loc}_1, \dots, r_n = \mathit{loc}_n`
 has the tokens:

@@ -10,8 +10,9 @@ op's context, the width rules of `zext`, `sext` and `trunc`
 human's ruling of 2026-11-12 on #354), the rule that no float op
 carries a reserved word, `contract` or `reassoc` (ADR-2026-11-09-1549),
 the rule that a float op that rounds rounds with the mode `rne`
-(ADR-2026-11-11-1801), the rules of `alloca` (ADR-2026-11-14-0915), and
-the rules of `load` and `store` (ADR-2026-11-14-2316).
+(ADR-2026-11-11-1801), the rules of `alloca` (ADR-2026-11-14-0915), the
+rules of the loads and stores (ADR-2026-11-14-2316), and the units and
+alignment of a field of an aggregate's layout (ADR-2026-11-16-1546).
 The general rules of the previous sections already
 check every op's operand and result types against its signature, so these
 are all the rules of the core dialect. It has no rule over a whole function.
@@ -45,14 +46,69 @@ def Ty.memory : Ty → Option Nat
   | .ptr n => some n
   | _ => none
 
-/-- An integer or a pointer type: the types that M1's `alloca` allocates,
-the ones a value of which has an encoding in units. -/
+/-- An integer or a pointer type: the element types of a work-group
+allocation, `gpu.work_group_alloca` (`Gpu.Op.Valid`). The core's `alloca`
+takes every valid type, a float included (#264). -/
 def Ty.IsElem : Ty → Prop
   | .int _ | .ptr _ => True
   | .float _ _ => False
 
 instance : DecidablePred Ty.IsElem := fun t => by
   cases t <;> unfold Ty.IsElem <;> infer_instance
+
+/-- The least power of two that is at least `n`, `Nat.nextPowerOfTwo`
+written as a loop of at most `n` doublings, by structural recursion, so that
+the rules of validation that use it rest on no axiom. -/
+def pow2AtLeast (n : Nat) : Nat := go n 1
+where
+  /-- Doubles `p` while it is below `n`, at most `k` times. -/
+  go : Nat → Nat → Nat
+    | 0, p => p
+    | k + 1, p => if p < n then go k (p * 2) else p
+
+theorem pow2AtLeast.two_mul_le {p q : Nat} (hp : p.isPowerOfTwo) (hq : q.isPowerOfTwo)
+    (h : p < q) : p * 2 ≤ q := by
+  obtain ⟨a, rfl⟩ := hp
+  obtain ⟨b, rfl⟩ := hq
+  have hab : a < b := (Nat.pow_lt_pow_iff_right (by decide)).mp h
+  rw [← Nat.pow_succ]
+  exact Nat.pow_le_pow_right (by decide) hab
+
+theorem pow2AtLeast.go_spec (n : Nat) : ∀ (k p : Nat), p.isPowerOfTwo →
+    (∀ q, n ≤ q → q.isPowerOfTwo → p ≤ q) → n - p ≤ k →
+      n ≤ pow2AtLeast.go n k p ∧ (pow2AtLeast.go n k p).isPowerOfTwo ∧
+        ∀ q, n ≤ q → q.isPowerOfTwo → pow2AtLeast.go n k p ≤ q
+  | 0, p, hp, hm, h => by
+    rw [pow2AtLeast.go]
+    exact ⟨by omega, hp, hm⟩
+  | k + 1, p, hp, hm, h => by
+    rw [pow2AtLeast.go]
+    split
+    · rename_i hlt
+      have hpos := Nat.pos_of_isPowerOfTwo hp
+      exact pow2AtLeast.go_spec n k (p * 2) (Nat.isPowerOfTwo_mul_two_of_isPowerOfTwo hp)
+        (fun q hq hq2 => pow2AtLeast.two_mul_le hp hq2 (by omega)) (by omega)
+    · exact ⟨by omega, hp, hm⟩
+
+/-- The loop is `Nat.nextPowerOfTwo`. -/
+theorem pow2AtLeast_eq (n : Nat) : pow2AtLeast n = n.nextPowerOfTwo := by
+  have h := pow2AtLeast.go_spec n n 1 Nat.isPowerOfTwo_one
+    (fun q _ hq => Nat.pos_of_isPowerOfTwo hq) (by omega)
+  exact (Nat.nextPowerOfTwo_eq_iff.mpr h).symm
+
+/-- The units that a field of the type takes in the memory `n` of a module
+whose memories have the entries `lay`, and its alignment there, in units
+(ADR-2026-11-16-1546): an integer or a pointer takes the units of its bits,
+as `alloca` counts them, aligned to the least power of two that is at least
+those units, but a pointer of the memory `n` itself to the alignment that
+its entry gives its pointers. A float type has its units but is not yet a
+field: #264 makes floats fields of aggregates. -/
+def Ty.fieldShape (lay : Nat → MemLayout) (n : Nat) : Ty → Option (Nat × Nat)
+  | .int w => some ((lay n).bitsUnits w, pow2AtLeast ((lay n).bitsUnits w))
+  | .ptr m =>
+    let u := (lay n).bitsUnits (lay m).pointer
+    some (u, if m = n then (lay n).align.getD (pow2AtLeast u) else pow2AtLeast u)
+  | .float _ _ => none
 
 /-- The type that `alloca` allocates values of, which it carries in its
 attributes, so that the data layout checks the memory a pointer type there
@@ -114,10 +170,10 @@ The core rules of an op beyond its signature.
   power of two of units (the human's ruling of 2026-11-11 on #231) no
   larger than `MemLayout.limit`, the data layout's rule for its own
   alignments (`MemLayout.ValidAlign`; the human's ruling of 2026-11-14 on
-  #382), and its type is a valid integer or pointer type, as stage 4d-2b
-  of #231 adds pointer loads and stores (the human's ruling of 2026-11-14
-  on #382); a float type has no encoding in units, and M1 has no float
-  loads or stores. Its count has no bound: an allocation larger than a
+  #382), and its type is a valid type: an integer, a pointer, as stage
+  4d-2b of #231 adds pointer loads and stores (the human's ruling of
+  2026-11-14 on #382), or a float, as #264 adds float loads and stores
+  (the human's ruling of 2026-11-15 on #397). Its count has no bound: an allocation larger than a
   machine holds is a resource error at run time,
   as a deep recursion is, and not a rule of validation. Its result names
   its memory, and a pointer type that it allocates values of names one
@@ -139,6 +195,9 @@ The core rules of an op beyond its signature.
   rules of `load`. The pointer they load or store is a value of the
   function, so validation checks that the module has its memory as it
   checks every type.
+* `loadFloat` and `storeFloat`, the loads and stores of a float, have the
+  rules of `load`. The float type they load or store is checked as every
+  type is: a valid format.
 
 Every other op has no rule beyond its signature.
 -/
@@ -155,8 +214,9 @@ def Op.Valid (ctx : OpContext CoreDialect) : Op → Prop
   | .funary o fl .. => fl.Reserved = false ∧ ∀ r ∈ o.mode, r = .rne
   | .fma fl r .. => fl.Reserved = false ∧ r = .rne
   | .alloca k t c a _ => k = .stack ∧ 1 ≤ c ∧ (∀ x ∈ a, MemLayout.ValidAlign x) ∧
-      t.IsElem ∧ t.Valid
-  | .load o _ a _ | .store o _ a _ | .loadPtr o _ a _ | .storePtr o _ a _ =>
+      t.Valid
+  | .load o _ a _ | .store o _ a _ | .loadPtr o _ a _ | .storePtr o _ a _
+  | .loadFloat o _ _ a _ | .storeFloat o _ _ a _ =>
     o = .nonatomic ∧ ∀ x ∈ a, MemLayout.ValidAlign x
   | _ => True
 
@@ -171,5 +231,6 @@ instance : DialectValidation CoreDialect where
   validFunc _ _ _ := True
   tyMemory := Core.Ty.memory
   opTypes := Core.Op.attrTypes
+  fieldShape := Core.Ty.fieldShape
 
 end Fir

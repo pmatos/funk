@@ -38,6 +38,7 @@ import FirTest.ValidateOps
 import FirTest.Validate
 import FirTest.ValidateNested
 import FirTest.Layout
+import FirTest.Aggregate
 import FirTest.LocTable
 import FirTest.Dominance
 import FirTest.OverCore
@@ -74,7 +75,9 @@ import FirTest.Address
 import FirTest.Alloca
 import FirTest.Load
 import FirTest.Store
+import FirTest.MemoryCopy
 import FirTest.PointerAccess
+import FirTest.FloatAccess
 import FirTest.PrintParse
 import FirTest.ParseWellFormed
 import FirTest.G0

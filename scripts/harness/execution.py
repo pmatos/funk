@@ -43,8 +43,10 @@ class ProcessRuns(Runs):
             ]
         )
 
-    def exhaustive(self, args: tuple[str, ...]):
+    def exhaustive(self, args: tuple[str, ...], nans: tuple[str, ...] | None = None):
         budget = [] if self.bits is None else ["--choice-bits", str(self.bits)]
+        if nans is not None:
+            budget += ["--nans", ",".join(nans)]
         return tools.outcomes(self._reference(args, "--exhaustive", *budget))
 
     def scripted(self, args: tuple[str, ...], choices: tuple[str, ...] | None):

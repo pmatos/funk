@@ -47,11 +47,12 @@ a run names its memories. -/
 theorem memRuns_args_isRefinedBy (d : Dialect) [TyDenote d.Ty] [DecidableEq d.Ty]
     [DialectSignature d] [DialectCall d] [DialectEffects d] [DialectMemDenote d]
     [DialectValidation d] [TyRefinement d.Ty] [LawfulDialectMonotone d] {N : Type}
-    [DecidableEq N] (lay : N → MemLayout) (ρ : DialectEffects.Mem d → N) {ctx : ModuleContext d}
+    [DecidableEq N] (lay : N → MemLayout) (ρ : DialectEffects.Mem d → N) (L : RunItems) {ctx :
+        ModuleContext d}
     {M : Module d} (hv : ∀ g ∈ M.funcs, g.Valid ctx) {f : Func d} (hf : f ∈ M.funcs)
     {a a' : HVector toType (f.params.map (·.2))} (ha : a.Forall₂ TyRefinement.IsRefinedBy a') :
-    observable (f.memRuns lay ρ M a) ⊑ observable (f.memRuns lay ρ M a') :=
-  Func.memRuns_args_isRefinedBy_of_lawful lay ρ hv hf ha
+    observable (f.memRuns lay ρ L M a) ⊑ observable (f.memRuns lay ρ L M a') :=
+  Func.memRuns_args_isRefinedBy_of_lawful lay ρ L hv hf ha
 
 /-- Congruence in the callee, with memory, for every function of a valid
 module of every dialect lawful in its monotonicity, wherever a run names
@@ -61,21 +62,21 @@ diverges. -/
 theorem memRuns_replaceBody_isRefinedBy (d : Dialect) [TyDenote d.Ty] [DecidableEq d.Ty]
     [DialectSignature d] [DialectCall d] [DialectEffects d] [DialectMemDenote d]
     [DialectValidation d] [TyRefinement d.Ty] [LawfulDialectMonotone d] {N : Type}
-    [DecidableEq N] (lay : N → MemLayout) (ρ : DialectEffects.Mem d → N)
+    [DecidableEq N] (lay : N → MemLayout) (ρ : DialectEffects.Mem d → N) (L : RunItems)
     (hrefl : ∀ {t : d.Ty} (v : ⟦t⟧), TyRefinement.IsRefinedBy v v)
     (htrans : ∀ {t : d.Ty} {u v w : ⟦t⟧}, TyRefinement.IsRefinedBy u v →
       TyRefinement.IsRefinedBy v w → TyRefinement.IsRefinedBy u w)
     {M : Module d} (hM : M.Valid) {g : Func d} (hg : g ∈ M.funcs) (b : Region d)
-    (hbound : letI := DialectMemDenote.denoteAt (d := d) lay ρ
+    (hbound : letI := DialectMemDenote.denoteAt (d := d) lay ρ L
       ∃ B, ((g.replaceBody g.name b).memRunsFrom (Mem := N) (unit := unitsOf lay)
         (M.replaceBody g.name b)).BoundedBy B)
-    (h : letI := DialectMemDenote.denoteAt (d := d) lay ρ;
+    (h : letI := DialectMemDenote.denoteAt (d := d) lay ρ L;
       g.memRunsFrom (Mem := N) (unit := unitsOf lay) M ⊑
         (g.replaceBody g.name b).memRunsFrom (Mem := N) (unit := unitsOf lay) (M.replaceBody
             g.name b))
     {f : Func d} (hf : f ∈ M.funcs) :
-    f.memRuns lay ρ M ⊑ (f.replaceBody g.name b).memRuns lay ρ (M.replaceBody g.name b) :=
-  (Func.memRuns_replaceBody_isRefinedBy_of_bound lay ρ hrefl htrans hM hg b hbound h hf).2
+    f.memRuns lay ρ L M ⊑ (f.replaceBody g.name b).memRuns lay ρ L (M.replaceBody g.name b) :=
+  (Func.memRuns_replaceBody_isRefinedBy_of_bound lay ρ L hrefl htrans hM hg b hbound h hf).2
 
 /-- Congruence in the callee, with memory, with no budget, for every
 function of a valid module of every dialect lawful in its monotonicity whose
@@ -86,19 +87,19 @@ body does to the memories. -/
 theorem memRuns_replaceBody_isRefinedBy_of_opsFinite (d : Dialect) [TyDenote d.Ty]
     [DecidableEq d.Ty] [DialectSignature d] [DialectCall d] [DialectEffects d] [DialectMemDenote d]
     [DialectValidation d] [TyRefinement d.Ty] [LawfulDialectMonotone d] {N : Type}
-    [DecidableEq N] (lay : N → MemLayout) (ρ : DialectEffects.Mem d → N)
+    [DecidableEq N] (lay : N → MemLayout) (ρ : DialectEffects.Mem d → N) (L : RunItems)
     (hrefl : ∀ {t : d.Ty} (v : ⟦t⟧), TyRefinement.IsRefinedBy v v)
     (htrans : ∀ {t : d.Ty} {u v w : ⟦t⟧}, TyRefinement.IsRefinedBy u v →
       TyRefinement.IsRefinedBy v w → TyRefinement.IsRefinedBy u w)
-    (hfin : letI := DialectMemDenote.denoteAt (d := d) lay ρ; OpsFinite d N (unitsOf lay))
+    (hfin : letI := DialectMemDenote.denoteAt (d := d) lay ρ L; OpsFinite d N (unitsOf lay))
     {M : Module d} (hM : M.Valid) {g : Func d} (hg : g ∈ M.funcs) (b : Region d)
-    (h : letI := DialectMemDenote.denoteAt (d := d) lay ρ;
+    (h : letI := DialectMemDenote.denoteAt (d := d) lay ρ L;
       g.memRunsFrom (Mem := N) (unit := unitsOf lay) M ⊑
         (g.replaceBody g.name b).memRunsFrom (Mem := N) (unit := unitsOf lay) (M.replaceBody
             g.name b))
     {f : Func d} (hf : f ∈ M.funcs) :
-    f.memRuns lay ρ M ⊑ (f.replaceBody g.name b).memRuns lay ρ (M.replaceBody g.name b) :=
-  (Func.memRuns_replaceBody_isRefinedBy_of_opsFinite lay ρ hrefl htrans hfin hM hg b h hf).2
+    f.memRuns lay ρ L M ⊑ (f.replaceBody g.name b).memRuns lay ρ L (M.replaceBody g.name b) :=
+  (Func.memRuns_replaceBody_isRefinedBy_of_opsFinite lay ρ L hrefl htrans hfin hM hg b h hf).2
 
 /-- Congruence in the callee, with memory, with no budget, for every
 function of a valid module of every dialect lawful in its monotonicity whose
@@ -109,20 +110,20 @@ one with memory, whatever the parameter types of the callee. -/
 theorem memRuns_replaceBody_isRefinedBy_of_opsFinite_memRuns (d : Dialect) [TyDenote d.Ty]
     [DecidableEq d.Ty] [DialectSignature d] [DialectCall d] [DialectEffects d] [DialectMemDenote d]
     [DialectValidation d] [TyRefinement d.Ty] [LawfulDialectMonotone d] {N : Type}
-    [DecidableEq N] (lay : N → MemLayout) (ρ : DialectEffects.Mem d → N)
+    [DecidableEq N] (lay : N → MemLayout) (ρ : DialectEffects.Mem d → N) (L : RunItems)
     (hrefl : ∀ {t : d.Ty} (v : ⟦t⟧), TyRefinement.IsRefinedBy v v)
     (htrans : ∀ {t : d.Ty} {u v w : ⟦t⟧}, TyRefinement.IsRefinedBy u v →
       TyRefinement.IsRefinedBy v w → TyRefinement.IsRefinedBy u w)
-    (hfree : letI := DialectMemDenote.denoteAt (d := d) lay ρ
+    (hfree : letI := DialectMemDenote.denoteAt (d := d) lay ρ L
       OpsIgnoreMemory d N (unitsOf lay))
-    (hfin : letI := DialectMemDenote.denoteAt (d := d) lay ρ; OpsFinite d N (unitsOf lay))
+    (hfin : letI := DialectMemDenote.denoteAt (d := d) lay ρ L; OpsFinite d N (unitsOf lay))
     {M : Module d} (hM : M.Valid) {g : Func d} (hg : g ∈ M.funcs) (b : Region d)
     (hold : M.table.ReachesNoMemory g.name)
     (hmem : (M.replaceBody g.name b).table.ReachesNoMemory g.name)
-    (h : g.memRuns lay ρ M ⊑ (g.replaceBody g.name b).memRuns lay ρ (M.replaceBody g.name b))
+    (h : g.memRuns lay ρ L M ⊑ (g.replaceBody g.name b).memRuns lay ρ L (M.replaceBody g.name b))
     {f : Func d} (hf : f ∈ M.funcs) :
-    f.memRuns lay ρ M ⊑ (f.replaceBody g.name b).memRuns lay ρ (M.replaceBody g.name b) :=
-  Func.memRuns_replaceBody_isRefinedBy_of_opsFinite_memRuns lay ρ hrefl htrans hfree hfin hM hg b
+    f.memRuns lay ρ L M ⊑ (f.replaceBody g.name b).memRuns lay ρ L (M.replaceBody g.name b) :=
+  Func.memRuns_replaceBody_isRefinedBy_of_opsFinite_memRuns lay ρ L hrefl htrans hfree hfin hM hg b
     hold hmem h hf
 
 /-- Refinement from given memories with black boxes that need no budget, for

@@ -8,7 +8,8 @@ coverage matrix and the LLVM ports),
 [testing-and-harness-generated.md](testing-and-harness-generated.md) (generated
 programs and fuzzing) and
 [testing-and-harness-floats.md](testing-and-harness-floats.md) (floating
-point).
+point), with its references in
+[testing-and-harness-float-references.md](testing-and-harness-float-references.md).
 
 ## How a test is judged
 
@@ -45,6 +46,9 @@ A run that makes choices is judged on its set of outcomes
 in a set that also holds UB. Otherwise, UB or fuel exhausted anywhere in the set
 makes the test invalid. Native code passes when its result refines one outcome
 of the set. Past the choice budget, a test that declares no results is invalid.
+A run that makes NaN choices lists a part of its set, and is judged on it as
+[testing-and-harness-floats.md](testing-and-harness-floats.md#how-a-nan-result-is-judged)
+says (ADR-2026-11-16-1630).
 
 Rejected: fuel exhausted as a pass or a failure. It says nothing about native
 code, and neither tool is wrong: the test is. Also rejected: comparing UB

@@ -23,7 +23,7 @@ some text with a conversion to a string, and this lets the proofs read the
 text it gives as the string itself.
 :::
 
-:::readable Fir.Attr.spells Fir.Attr.spellsEach (pin := Fir.Attr.print) (pin := Fir.Attr.print.printList) (pin := Fir.Attr.tokens) (pin := Fir.Attr.tokens.tokensList) (fingerprint := "6864249825547241286")
+:::readable Fir.Attr.spells Fir.Attr.spellsEach (pin := Fir.Attr.print) (pin := Fir.Attr.print.printList) (pin := Fir.Attr.tokens) (pin := Fir.Attr.tokens.tokensList) (fingerprint := "337041474587341469")
 *Theorems: a printed attribute spells its tokens.* For every
 {ref "The-fir-specification--Text-format--Grammar"}[attribute] $`a`, or
 type, whose
@@ -37,15 +37,15 @@ where $`\mathrm{print}(a)` is the text that the
 $`\mathrm{spells}` is the relation of the section on
 {ref "The-fir-specification--Text-format--Maximal-munch"}[maximal munch].
 
-The printer writes a word, an integer, a string and a symbol as the
-spelling of its one token, and an application $`h(a_1, \dots, a_n)` as the
+The printer writes a word, an integer, a string, a symbol and a float
+literal as the spelling of its one token, and an application $`h(a_1, \dots, a_n)` as the
 word $`h`, then `(`, the printed arguments with `, ` between them, and
 `)`. So for every list of attributes whose tokens can all be written, the
 printed attributes spell their tokens one by one; the two are proved
 together, since an argument may itself be an application.
 :::
 
-:::readable Fir.Location.spells (pin := Fir.Location.print) (pin := Fir.Location.tokens) (fingerprint := "7007539334904954082")
+:::readable Fir.Location.spells (pin := Fir.Location.print) (pin := Fir.Location.tokens) (fingerprint := "11713857557735166265")
 *Theorem: a printed location spells its tokens.* For every
 {ref "The-fir-specification--Abstract-syntax--Locations"}[location]
 $`\mathit{loc}` whose tokens can all be written:

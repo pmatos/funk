@@ -15,7 +15,7 @@ when the Lean changes under it.
 
 #doc (Manual) "What the grammar accepts: readable blocks" =>
 
-:::moduleDocs (fingerprint := "14143458553753815595")
+:::moduleDocs (fingerprint := "13127211785130359662")
 :::
 
 :::readable Fir.Succ.Writable (fingerprint := "16490823247820214509")
@@ -25,7 +25,7 @@ _can be written_ when its label is a name, and so is each value that it
 passes. These are the names that the printer writes after `^` and `%`.
 :::
 
-:::readable Fir.Location.InLimits (pin := Fir.Location.numbers) (pin := Fir.Location.refs) (pin := Fir.Location.limit) (fingerprint := "14594947355850245201")
+:::readable Fir.Location.InLimits (pin := Fir.Location.numbers) (pin := Fir.Location.refs) (pin := Fir.Location.limit) (fingerprint := "11666604140184175981")
 *Definition: a location within the limits.* A
 {ref "The-fir-specification--Abstract-syntax--Locations"}[location] is
 _within the limits_ when each of the numbers it holds is below $`2^{32}`:
@@ -34,7 +34,7 @@ a $`\mathsf{callsite}`, $`\mathsf{fused}` or $`\mathsf{derived}` location
 is built from. Every implementation holds these numbers in 32 bits.
 :::
 
-:::readable Fir.Text.SDef.Writable (pin := Fir.Attr.IsType) (fingerprint := "18244378496080690369")
+:::readable Fir.Text.SDef.Writable (pin := Fir.Attr.IsType) (fingerprint := "2705970047432993231")
 *Definition: a definition as read that can be written.* A
 {ref "The-fir-specification--Text-format--Reading-the-grammar"}[definition as read],
 $`\mathit{sdef}`, _can be written_ when its value's name is a name, and
@@ -43,7 +43,7 @@ its type is
 word, or a word applied to attributes, that can be written.
 :::
 
-:::readable Fir.Text.SOp.Writable Fir.Text.SRegion.WritableList Fir.Text.SBlock.WritableList Fir.Text.SOp.WritableList (pin := Fir.Succ.Writable) (pin := Fir.Location.limit) (pin := Fir.Text.operandTypes) (fingerprint := "4991093508923232133")
+:::readable Fir.Text.SOp.Writable Fir.Text.SRegion.WritableList Fir.Text.SBlock.WritableList Fir.Text.SOp.WritableList (pin := Fir.Succ.Writable) (pin := Fir.Location.limit) (pin := Fir.Text.operandTypes) (fingerprint := "17184487649306399468")
 *Definition: ops, regions and blocks as read that can be written.* These
 conditions are on the
 {ref "The-fir-specification--Text-format--Reading-the-grammar"}[tree]
@@ -59,8 +59,9 @@ be written_ when:
 * its regions can be written;
 * its location reference is below $`2^{32}`.
 
-A list of regions can be written when the blocks of each region can. A
-list of blocks can be written when, for each block, its label is a name,
+A list of regions can be written when each region that names a kind names
+it by a word, and the blocks of each region can. A list of blocks can be
+written when, for each block, its label is a name,
 each of its arguments can be written, and its ops can. A list of ops can
 be written when each of its ops can. The four are defined together, since
 an op holds regions, which hold blocks, which hold ops.
@@ -70,7 +71,7 @@ the definitions of its function, whose names are names, and rejects one
 that is not there.
 :::
 
-:::readable Fir.Text.SItem.Writable Fir.Text.SBody.Writable Fir.Text.SItem.WritableList Fir.Text.SItem.writable_iff Fir.Text.SItem.writableList_iff Fir.Text.SModule.Writable (pin := Fir.LocTable.InLimits) (pin := Fir.Location.limit) (pin := Fir.Text.decodeItem) (fingerprint := "11219255339940306878")
+:::readable Fir.Text.SItem.Writable Fir.Text.SBody.Writable Fir.Text.SItem.WritableList Fir.Text.SItem.writable_iff Fir.Text.SItem.writableList_iff Fir.Text.SModule.Writable (pin := Fir.LocTable.InLimits) (pin := Fir.Location.limit) (pin := Fir.Text.decodeItem) (fingerprint := "3446217666878047304")
 *Definition: items and modules as read that can be written.* An item as
 read can be written when each of its parameters can be written, each of its
 result types is written as a type, each of its attributes can be written,
@@ -84,11 +85,11 @@ and every number of its
 each key and each number of each location, is below $`2^{32}`.
 
 Nothing is asked of an item's kind or symbol: decoding accepts only a
-`func` and a `module` without attributes, and an item of a dialect's kind,
-whatever their symbol.
+`func` and a `module` without attributes, an `aggregate`, and an item of a
+dialect's kind, whatever their symbol.
 :::
 
-:::readable Fir.Text.TokensWritable.tail Fir.Text.TokensWritable.value Fir.Text.TokensWritable.label Fir.Text.TokensWritable.word Fir.Text.TokensWritable.locRef Fir.Text.TokensWritable.float (pin := Fir.Text.TokensWritable) (pin := Fir.Text.Tok.Writable) (pin := Fir.Location.limit) (fingerprint := "7548386678348029364")
+:::readable Fir.Text.TokensWritable.tail Fir.Text.TokensWritable.value Fir.Text.TokensWritable.label Fir.Text.TokensWritable.word Fir.Text.TokensWritable.locRef Fir.Text.TokensWritable.float (pin := Fir.Text.TokensWritable) (pin := Fir.Text.Tok.Writable) (pin := Fir.Location.limit) (fingerprint := "6329924896610919906")
 *Lemmas: what a list of tokens that can be written says of its first
 token.* For every token $`t`, position and list of tokens
 $`\mathit{ts}`, when the list $`t` followed by $`\mathit{ts}` can be
@@ -106,7 +107,7 @@ reader takes a name, a word, a reference or a float literal from the token
 it reads.
 :::
 
-:::readable Fir.Text.fail_ne_ok (pin := Fir.Text.fail) (fingerprint := "3450482005068552809")
+:::readable Fir.Text.fail_ne_ok (pin := Fir.Text.fail) (fingerprint := "13358114432866455495")
 *Lemma: a reader that fails reads nothing.* For every list of tokens and
 what was expected, the failure of a reader is an error, never a result.
 It closes the cases of the proofs below in which a reader fails.
@@ -130,7 +131,7 @@ are a suffix of it. So the definition asks for it, and each lemma below
 shows it.
 :::
 
-:::readable Fir.Text.expect_writable Fir.Text.keyword_writable Fir.Text.readMore_writable (pin := Fir.Text.expect) (pin := Fir.Text.keyword) (pin := Fir.Text.readMore) (fingerprint := "9387520422673248992")
+:::readable Fir.Text.expect_writable Fir.Text.keyword_writable Fir.Text.readMore_writable (pin := Fir.Text.expect) (pin := Fir.Text.keyword) (pin := Fir.Text.readMore) (fingerprint := "4834934611525121244")
 *Lemmas: the basic readers.* For every list of tokens $`\mathit{ts}`:
 
 * for every token $`t` and what was expected, the reader of the one token
@@ -144,14 +145,15 @@ shows it.
   that $`P` holds of each element it reads.
 :::
 
-:::readable Fir.Text.readAttr_writable Fir.Text.readType_writable Fir.Text.readAttrs_writable (pin := Fir.Text.readAttr) (pin := Fir.Text.readAttrArgs) (pin := Fir.Text.readMoreAttrArgs) (pin := Fir.Text.readType) (pin := Fir.Text.readAttrs) (pin := Fir.Attr.Writable) (pin := Fir.Attr.AllWritable) (pin := Fir.Attr.IsType) (fingerprint := "2210644183673439788")
+:::readable Fir.Text.readAttr_writable Fir.Text.readType_writable Fir.Text.readAttrs_writable (pin := Fir.Text.readAttr) (pin := Fir.Text.readAttrArgs) (pin := Fir.Text.readMoreAttrArgs) (pin := Fir.Text.readType) (pin := Fir.Text.readAttrs) (pin := Fir.Attr.Writable) (pin := Fir.Attr.AllWritable) (pin := Fir.Attr.IsType) (fingerprint := "11888706946574539235")
 *Theorems: attributes and types as read can be written.* For every list of
 tokens:
 
 * the reader of an
   {ref "The-fir-specification--Text-format--Reading-the-grammar"}[attribute]
   gives, on it, that the attribute it reads can be written: each of its
-  words, and the head of each applied word, at any depth, is a word;
+  words, and the head of each applied word, at any depth, is a word, and
+  each float literal in it can be written;
 * the reader of the arguments of an applied attribute, after its `(`, and
   the reader of the arguments after the first, give that each argument
   they read can be written;
@@ -162,10 +164,11 @@ tokens:
 
 The first three readers call one another, so the first two facts are
 proved together, by induction that follows the readers' own recursion.
-Each word comes from a word token, which is a word.
+Each word comes from a word token, which is a word, and each float literal
+from a float literal token, which can be written.
 :::
 
-:::readable Fir.Text.readDefType_writable Fir.Text.readDef_writable Fir.Text.readDefs_writable (pin := Fir.Text.readDefType) (pin := Fir.Text.readDef) (pin := Fir.Text.readDefs) (pin := Fir.Text.SDef.Writable) (fingerprint := "4512358889900069401")
+:::readable Fir.Text.readDefType_writable Fir.Text.readDef_writable Fir.Text.readDefs_writable (pin := Fir.Text.readDefType) (pin := Fir.Text.readDef) (pin := Fir.Text.readDefs) (pin := Fir.Text.SDef.Writable) (fingerprint := "11664228916554188111")
 *Theorems: definitions as read can be written.* For every list of tokens:
 
 * for every name $`x` and position, the reader of the `:` and the type of a
@@ -178,7 +181,7 @@ Each word comes from a word token, which is a word.
   each of them can be written.
 :::
 
-:::readable Fir.Text.readSuccArgs_writable Fir.Text.readSucc_writable Fir.Text.readMoreOperands_writable Fir.Text.readOperands_writable Fir.Text.readOpLoc_writable Fir.Text.readKind_writable (pin := Fir.Text.readSuccArgs) (pin := Fir.Text.readSucc) (pin := Fir.Text.readMoreOperands) (pin := Fir.Text.readOperands) (pin := Fir.Text.readOpLoc) (pin := Fir.Succ.Writable) (pin := Fir.Location.limit) (pin := Fir.Text.operandTypes) (fingerprint := "11394805476722136123")
+:::readable Fir.Text.readSuccArgs_writable Fir.Text.readSucc_writable Fir.Text.readMoreOperands_writable Fir.Text.readOperands_writable Fir.Text.readOpLoc_writable Fir.Text.readKind_writable (pin := Fir.Text.readSuccArgs) (pin := Fir.Text.readSucc) (pin := Fir.Text.readMoreOperands) (pin := Fir.Text.readOperands) (pin := Fir.Text.readOpLoc) (pin := Fir.Succ.Writable) (pin := Fir.Location.limit) (pin := Fir.Text.operandTypes) (fingerprint := "7209667393756534215")
 *Theorems: successors, an op's location reference and a region's kind as
 read can be written.* For every list of tokens:
 

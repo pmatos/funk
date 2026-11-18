@@ -172,7 +172,7 @@ variable {d : Dialect} [TyDenote d.Ty] [DialectSignature d] [DialectEffects d]
 every naming, each op runs by its rule in the set monad and keeps the
 memories. -/
 @[instance_reducible] def DialectMemDenote.ofSetM [DialectDenote d SetM] : DialectMemDenote d :=
-  ⟨fun _ _ => DialectDenote.liftState _⟩
+  ⟨fun _ _ _ => DialectDenote.liftState _⟩
 
 variable [DialectDenote d SetM]
 
@@ -187,25 +187,26 @@ include hl
 property that each computation of the set monad, run in the state layer,
 has: no write, no read and no allocation in any memory among them. -/
 theorem OwnRuleHas.ofLifts {N : Type} [DecidableEq N] (lay : N → MemLayout)
-    (ρ : DialectEffects.Mem d → N) {P : {α : Type} → StateT (Memories N (unitsOf lay)) SetM α → Prop}
-    (hP : ∀ {α : Type} (c : SetM α), P (StateT.lift c)) : OwnRuleHas lay ρ P op :=
+    (ρ : DialectEffects.Mem d → N) (L : RunItems) {P : {α : Type} → StateT (Memories N (unitsOf
+        lay)) SetM α → Prop}
+    (hP : ∀ {α : Type} (c : SetM α), P (StateT.lift c)) : OwnRuleHas lay ρ L P op :=
   fun args => by
-    rw [(hl lay ρ args).1, (hl lay ρ args).2]
+    rw [(hl lay ρ L args).1, (hl lay ρ L args).2]
     exact ⟨fun _ => hP _, fun _ => hP _⟩
 
 /-- An op that touches no memory and never ends in UB in the set monad never
 does with memory, at every naming. -/
 theorem NeverUB.ofLifts (h : NeverUBSetM op) : NeverUB op :=
-  fun lay ρ args => by
-    rw [(hl lay ρ args).1, (hl lay ρ args).2]
+  fun lay ρ L args => by
+    rw [(hl lay ρ L args).1, (hl lay ρ L args).2]
     exact ⟨fun ht => noUB_lift fun r => (h args r).1 ht,
       fun ht => noUB_lift fun r => (h args r).2 ht⟩
 
 /-- An op that touches no memory and makes no poison in the set monad makes
 none with memory, at every naming. -/
 theorem MakesNoPoison.ofLifts [TyPoison d.Ty] (h : MakesNoPoisonSetM op) : MakesNoPoison op := by
-  intro ht N _ lay ρ args hnp S rs S' hden
-  rw [(hl lay ρ args).1] at hden
+  intro ht N _ lay ρ L args hnp S rs S' hden
+  rw [(hl lay ρ L args).1] at hden
   rcases (SetM.lift_apply _ S _).1 hden with ⟨a, ha, he⟩ | ⟨_, -, he⟩
   · cases he
     exact h ht args hnp _ ha
@@ -224,8 +225,9 @@ states it. -/
 theorem DialectMemDenote.ofSetM_writesNot (op : d.Op) (_ : TypesValid op)
     (_ : isTerminator op = true ∨ callee? op = none) {N : Type} [DecidableEq N] (lay : N →
         MemLayout)
-    (ρ : DialectEffects.Mem d → N) (x : N) (_ : ¬ ((effects op).writes.map ρ).Has x) :
-    OwnRuleHas lay ρ (WritesNot x) op :=
+    (ρ : DialectEffects.Mem d → N) (L : RunItems) (x : N) (_ : ¬ ((effects op).writes.map ρ).Has x)
+        :
+    OwnRuleHas lay ρ L (WritesNot x) op :=
   fun _ => ⟨fun _ => writesNot_lift x _, fun _ => writesNot_lift x _⟩
 
 attribute [local instance] DialectMemDenote.ofSetM in
@@ -234,8 +236,8 @@ naming, whatever it declares. -/
 theorem DialectMemDenote.ofSetM_readsNot (op : d.Op) (_ : TypesValid op)
     (_ : isTerminator op = true ∨ callee? op = none) {N : Type} [DecidableEq N] (lay : N →
         MemLayout)
-    (ρ : DialectEffects.Mem d → N) (x : N) (_ : ¬ ((effects op).reads.map ρ).Has x) :
-    OwnRuleHas lay ρ (ReadsNot x) op :=
+    (ρ : DialectEffects.Mem d → N) (L : RunItems) (x : N) (_ : ¬ ((effects op).reads.map ρ).Has x) :
+    OwnRuleHas lay ρ L (ReadsNot x) op :=
   fun _ => ⟨fun _ => readsNot_lift x _, fun _ => readsNot_lift x _⟩
 
 attribute [local instance] DialectMemDenote.ofSetM in
@@ -244,8 +246,9 @@ every naming, whatever it declares. -/
 theorem DialectMemDenote.ofSetM_allocatesNot (op : d.Op) (_ : TypesValid op)
     (_ : isTerminator op = true ∨ callee? op = none) {N : Type} [DecidableEq N] (lay : N →
         MemLayout)
-    (ρ : DialectEffects.Mem d → N) (x : N) (_ : ¬ ((effects op).allocates.map ρ).Has x) :
-    OwnRuleHas lay ρ (AllocatesNot x) op :=
+    (ρ : DialectEffects.Mem d → N) (L : RunItems) (x : N) (_ : ¬ ((effects op).allocates.map ρ).Has
+        x) :
+    OwnRuleHas lay ρ L (AllocatesNot x) op :=
   fun _ => ⟨fun _ => allocatesNot_lift x _, fun _ => allocatesNot_lift x _⟩
 
 end
@@ -254,20 +257,20 @@ attribute [local instance] DialectMemDenote.ofSetM in
 /-- The semantics with memory of a dialect whose ops touch no memory lifts
 its semantics in the set monad: the two are tied. -/
 theorem DialectMemDenote.ofSetM_liftsSetM : LiftsSetM d :=
-  ⟨fun _ _ => rfl⟩
+  ⟨fun _ _ _ => rfl⟩
 
 attribute [local instance] DialectMemDenote.ofSetM in
 /-- An op of a dialect whose ops touch no memory that never ends in UB in the
 set monad never does with memory, at every naming. -/
 theorem NeverUB.ofSetM {op : d.Op} (h : NeverUBSetM op) : NeverUB op :=
-  NeverUB.ofLifts (fun _ _ _ => ⟨rfl, rfl⟩) h
+  NeverUB.ofLifts (fun _ _ _ _ => ⟨rfl, rfl⟩) h
 
 attribute [local instance] DialectMemDenote.ofSetM in
 /-- An op of a dialect whose ops touch no memory that makes no poison in the
 set monad makes none with memory, at every naming. -/
 theorem MakesNoPoison.ofSetM [TyPoison d.Ty] {op : d.Op} (h : MakesNoPoisonSetM op) :
     MakesNoPoison op :=
-  MakesNoPoison.ofLifts (fun _ _ _ => ⟨rfl, rfl⟩) h
+  MakesNoPoison.ofLifts (fun _ _ _ _ => ⟨rfl, rfl⟩) h
 
 /-! # Back to the set monad -/
 
@@ -277,7 +280,7 @@ variable [DialectMemDenote d] [LiftsSetM d]
 memory never does in the set monad. -/
 theorem NeverUB.setM {op : d.Op} (h : NeverUB op) : NeverUBSetM op := by
   intro args r
-  have hu := h (N := Unit) (fun _ => MemLayout.default) (fun _ => ()) args
+  have hu := h (N := Unit) (fun _ => MemLayout.default) (fun _ => ()) RunItems.empty args
   rw [LiftsSetM.lifts] at hu
   exact ⟨fun ht => NoUB.of_lift (hu.1 ht) Memories.empty r,
     fun ht => NoUB.of_lift (hu.2 ht) Memories.empty r⟩
@@ -287,7 +290,8 @@ memory makes none in the set monad. -/
 theorem MakesNoPoison.setM [TyPoison d.Ty] {op : d.Op} (h : MakesNoPoison op) :
     MakesNoPoisonSetM op := by
   intro ht args hnp rs hden
-  have hp := h ht (N := Unit) (fun _ => MemLayout.default) (fun _ => ()) args hnp Memories.empty rs
+  have hp := h ht (N := Unit) (fun _ => MemLayout.default) (fun _ => ()) RunItems.empty args hnp
+      Memories.empty rs
     Memories.empty
   rw [LiftsSetM.lifts] at hp
   exact hp ((SetM.lift_apply _ _ _).2 (.inl ⟨rs, hden, rfl⟩))

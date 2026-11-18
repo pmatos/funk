@@ -14,17 +14,20 @@ when the Lean changes under it.
 
 #doc (Manual) "Stores read back: readable blocks" =>
 
-:::moduleDocs (fingerprint := "14509812814199035746")
+:::moduleDocs (fingerprint := "4520994276030497446")
 :::
 
-:::readable Fir.Core.decodeStore_loadAttrs Fir.Core.decodeStore_storePtr Fir.Core.decodeStore_eq (pin := Fir.Core.decodeStore) (pin := Fir.Core.loadAttrs) (fingerprint := "11805065037129211207")
+:::readable Fir.Core.decodeStore_loadAttrs Fir.Core.decodeStore_storePtr Fir.Core.decodeStore_storeFloat Fir.Core.decodeStore_eq (pin := Fir.Core.decodeStore) (pin := Fir.Core.loadAttrs) (fingerprint := "5072859557127724476")
 *Theorems: every $`\mathsf{store}` reads back from its spelling, and only
-from it.* For every ordering $`o`, width $`W`, alignment $`a` and memories
-$`N` and $`M`, valid or not:
+from it.* For every ordering $`o`, width $`W`, alignment $`a`, memories
+$`N` and $`M` and format $`\mathsf{float}\langle e,m \rangle`, valid or
+not:
 
 $$`\mathrm{decodestore}(\mathrm{loadattrs}(o, a), [\mathsf{i}W, \mathsf{ptr}\langle N \rangle], []) = \mathsf{store}_N~o~W~a`
 
 $$`\mathrm{decodestore}(\mathrm{loadattrs}(o, a), [\mathsf{ptr}\langle M \rangle, \mathsf{ptr}\langle N \rangle], []) = \mathsf{store}_N~o~\mathsf{ptr}\langle M \rangle~a`
+
+$$`\mathrm{decodestore}(\mathrm{loadattrs}(o, a), [\mathsf{float}\langle e,m \rangle, \mathsf{ptr}\langle N \rangle], []) = \mathsf{store}_N~o~\mathsf{float}\langle e,m \rangle~a`
 
 And if $`\mathrm{decodestore}(a^*, t^*, r^*) = op`, then $`op` is named
 `store`, its attributes are $`a^*`, it has the operand types $`t^*` and the

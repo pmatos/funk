@@ -19,7 +19,8 @@ use super::{ParseError, TextPos};
 use crate::ir::names::is_dialect_word;
 use crate::ir::tree::Nest;
 use crate::ir::{
-    Def, DialectItem, Func, Item, MemLayout, Module, NestedModule, Op, Part, Region, Type,
+    Aggregate, AggregateFault, Attr, Def, DialectItem, Func, Item, MemLayout, Module, NestedModule,
+    Op, Part, Region, Type,
 };
 use crate::registry::{OpTypes, Registry, TypeCheck};
 
@@ -120,16 +121,70 @@ fn item(mut s: SItem, reg: &Registry) -> Result<Decoded, ParseError> {
             };
             Ok(Decoded::Module(m, body))
         }
+        "aggregate" => aggregate_item(s, reg).map(Decoded::Item),
         kind if is_dialect_word(kind) => dialect_item(s, reg).map(Decoded::Item),
         _ => err(
             s.kind_pos,
             format!(
-                "unknown item kind {}: the kinds are func, module and the words of dialects",
+                "unknown item kind {}: the kinds are func, module, aggregate and the words of dialects",
                 s.kind
             ),
         ),
     }
 }
+
+/// An aggregate's layout (`decodeAggregate`, ADR-2026-11-16-1546): no
+/// parameters or results, an empty body, and attributes that decode, each
+/// field's type through the registry.
+fn aggregate_item(mut s: SItem, reg: &Registry) -> Result<Item, ParseError> {
+    if let Some((_, at)) = s.params.first() {
+        return err(at.name, "an aggregate has no parameters");
+    }
+    if let Some((_, pos)) = s.results.first() {
+        return err(*pos, "an aggregate has no results");
+    }
+    let empty = matches!(&s.body, SBody::Blocks(blocks, _) if blocks.is_empty());
+    if s.attrs.len() >= 3 && !empty {
+        return err(s.kind_pos, "an aggregate has an empty body");
+    }
+    let (attrs, positions): (Vec<Attr>, Vec<TextPos>) =
+        std::mem::take(&mut s.attrs).into_iter().unzip();
+    let kind_pos = s.kind_pos;
+    let at = |i: usize| positions.get(i).copied().unwrap_or(kind_pos);
+    let type_ok = |t: &Type| !matches!(reg.check_type(t), TypeCheck::Malformed(_));
+    let a = match Aggregate::decode(std::mem::take(&mut s.name), &attrs, type_ok) {
+        Ok(a) => a,
+        Err(AggregateFault::Header) => {
+            return err(
+                kind_pos,
+                "an aggregate's layout writes memory(N), size(S) and align(A), then its fields",
+            );
+        }
+        Err(AggregateFault::Memory) => {
+            return err(
+                at(0),
+                "an aggregate's layout writes memory(N) first, N at most 2^64 - 1",
+            );
+        }
+        Err(AggregateFault::Size) => {
+            return err(
+                at(1),
+                "an aggregate's layout writes size(S) second, S at most 2^64 - 1",
+            );
+        }
+        Err(AggregateFault::Align) => {
+            return err(
+                at(2),
+                "an aggregate's layout writes align(A) third, A at most 2^64 - 1",
+            );
+        }
+        Err(AggregateFault::Field(i)) => return err(at(i + 3), NOT_A_FIELD),
+    };
+    Ok(Item::Aggregate(a))
+}
+
+const NOT_A_FIELD: &str = "not a field of an aggregate's layout, which is written \
+    field(offset, type) or field(offset, type, count), each number at most 2^64 - 1";
 
 /// An item of a dialect's kind (`decodeDialectItem`): its body is empty,
 /// and its result types, then its parameters' types, decode. Its attributes

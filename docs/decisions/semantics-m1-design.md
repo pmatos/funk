@@ -172,6 +172,22 @@ runtime carries its own routines, in place of the C library's that #220 named;
 #234 builds them. Rejected: calls to external functions with known meanings,
 which lose provenance and make every copy an event.
 
+The spec does not have the ops yet. It has the step that copy and move
+share once their own checks pass, the copy of units: a load of `n` units
+of one memory through the source, then a store of them through the
+destination (`lean/Fir/Execution/MemoryCopyLaws.lean`, stage 1 of #234).
+It is an access through both pointers, so it faults through a dangling
+pointer even for `n = 0`; whether the ops reach it for a zero length, and
+whether a copy onto its own range is UB, wait for the human's rulings on
+#234. The load leaves the memories as they were, so overlapping ranges get
+what the source held before the copy. In the state layer the copy of units
+has one outcome. It writes, reads and allocates in no other memory,
+allocates nothing in its own, and refines from refining memories: the
+obligations of an op that reads and writes one memory. Each but the read
+follows from the load's and the store's through the laws of sequences
+(`lean/Fir/Execution/MemoryBindLaws.lean`). This paragraph records agent
+work, not a ruling.
+
 ## Aggregates
 
 In M1 aggregates are layouts over memory, not values (ADR-2026-11-09-1550).
@@ -179,6 +195,22 @@ In M1 aggregates are layouts over memory, not values (ADR-2026-11-09-1550).
 A layout is a size, an alignment and a list of fields. Each field is an offset
 and a scalar type: an integer, a float or a pointer. An array is a repeated
 field. Sizes and offsets count the units of the memory the layout describes.
+
+A layout is an item of the core's kind `aggregate` (ADR-2026-11-16-1546):
+`aggregate @pair() memory(0) size(16) align(8) field(0, i64) field(8, ptr) {`
+and `}`, with `field(O, T, C)` for a repeated field of `C` elements. A field
+takes the units of its type in the layout's memory, aligned as `alloca` aligns
+it; a repeated field's elements are rounded up to that alignment, so four `i24`
+in memory 0 take 16 units. A valid layout names a declared memory and a
+power-of-two alignment, and places each field of an integer or pointer type at
+a multiple of its alignment, no larger than the layout's, within the size and
+apart from every other field. Float fields wait for #264, though floats now
+have their units. The human ruled on 2026-11-16, on #236: repeated elements
+are rounded up to their alignment (Q2 B); the run passes the module's layouts
+to every op's rule (Q1 A); and an element index out of range behaves as
+`ptradd` (Q3 A).
+Rejected: elements spaced by the type's units alone, which misaligns arrays of
+`i24` and C's `long double`.
 
 One op computes the address of a field or element from a pointer and a layout.
 Data moves through the scalar loads and stores. No op makes an aggregate value,

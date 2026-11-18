@@ -15,7 +15,7 @@ changes under it. The grammar of a module opens the section.
 
 #doc (Manual) "Grammar: readable blocks" =>
 
-:::moduleDocs (fingerprint := "11286964170652614300")
+:::moduleDocs (fingerprint := "3272646012666460010")
 :::
 
 A module is written by the grammar below, in the tokens of the
@@ -26,16 +26,22 @@ $`\mid` continues the row above it.
 
 $$`\begin{array}{rcl} \mathit{module} & ::= & \mathit{item}^*~\mathit{locs} \\ \mathit{item} & ::= & \mathit{word}~\mathit{symbol}~\texttt{(}~\mathit{defs}^?~\texttt{)} \\ & & (\texttt{->}~\mathit{types})^?~\mathit{attr}^* \\ & & \texttt{\{}~\mathit{body}~\texttt{\}} \\ \mathit{body} & ::= & \mathit{block}^* \mid \mathit{item}^* \\ \mathit{block} & ::= & \mathit{label}~(\texttt{(}~\mathit{defs}~\texttt{)})^?~\texttt{:}~\mathit{op}^* \\ \mathit{op} & ::= & (\mathit{defs}~\texttt{=})^?~\mathit{word}~\mathit{attr}^* \\ & & \mathit{operands}^?~\mathit{region}^*~\mathit{locref} \\ \mathit{operands} & ::= & \mathit{value}~(\texttt{,}~\mathit{value})^* \\ & & (\texttt{,}~\mathit{succ})^* \\ & \mid & \mathit{succ}~(\texttt{,}~\mathit{succ})^* \\ \mathit{succ} & ::= & \mathit{label}~(\texttt{(}~\mathit{values}~\texttt{)})^? \\ \mathit{values} & ::= & \mathit{value}~(\texttt{,}~\mathit{value})^* \\ \mathit{region} & ::= & \texttt{\{}~\mathit{word}^?~\mathit{block}^*~\texttt{\}} \\ \mathit{defs} & ::= & \mathit{def}~(\texttt{,}~\mathit{def})^* \\ \mathit{def} & ::= & \mathit{value}~\texttt{:}~\mathit{type} \\ \mathit{types} & ::= & \mathit{type}~(\texttt{,}~\mathit{type})^* \\ \mathit{type} & ::= & \mathit{word} \mid \mathit{word}~\texttt{(}~\mathit{attrs}^?~\texttt{)} \\ \mathit{attrs} & ::= & \mathit{attr}~(\texttt{,}~\mathit{attr})^* \\ \mathit{attr} & ::= & \mathit{word} \mid \mathit{int} \mid \mathit{string} \\ & \mid & \mathit{symbol} \mid \mathit{word}~\texttt{(}~\mathit{attrs}^?~\texttt{)} \\ \mathit{locs} & ::= & \texttt{locs}~\texttt{\{}~\mathit{entry}^*~\texttt{\}} \\ \mathit{entry} & ::= & \mathit{locref}~\texttt{=}~\mathit{location} \\ \mathit{location} & ::= & \texttt{unknown} \\ & \mid & \mathit{string}~\texttt{:}~\mathit{nat}~\texttt{:}~\mathit{nat} \\ & & \texttt{to}~\mathit{nat}~\texttt{:}~\mathit{nat} \\ & \mid & \texttt{name}~\texttt{(}~\mathit{string}~\texttt{)} \\ & \mid & \texttt{callsite}~\texttt{(}~\mathit{locref} \\ & & \texttt{at}~\mathit{locref}~\texttt{)} \\ & \mid & \texttt{fused}~\texttt{(}~\mathit{locrefs}^?~\texttt{)} \\ & \mid & \texttt{derived}~\texttt{(}~\mathit{locref}~\texttt{)} \\ \mathit{locrefs} & ::= & \mathit{locref}~(\texttt{,}~\mathit{locref})^* \end{array}`
 
-:::readable Fir.Attr.IsType (fingerprint := "1425367503421061705")
+:::readable Fir.Attr.IsType (fingerprint := "654675492130826663")
 *Definition: an attribute that is written as a type.* The attribute $`a`
 is written as a type when it is $`\mathsf{word}~w` or
 $`\mathsf{app}~h~a_1 \dots a_n`, and it can be written. An integer, a
-string or a symbol is never a type. This is the grammar's
+float literal, a string or a symbol is never a type. This is the grammar's
 $`\mathit{type} ::= \mathit{word} \mid \mathit{word}~\texttt{(}~\mathit{attrs}^?~\texttt{)}`,
 which the parser reads where a type stands.
 :::
 
-:::readable Fir.ByteOrder.word Fir.ByteOrder.decode Fir.MemLayout.attr Fir.MemLayout.InLimits Fir.MemLayout.number Fir.MemLayout.decodeTail Fir.MemLayout.decode (pin := Fir.MemLayout.limit) (fingerprint := "12587074212398096770")
+:::readable Fir.Attr.typeShaped (fingerprint := "1372632850998948318")
+*Definition: an attribute in the form of a type.* An attribute has the form
+of a type when it is a word, or a word applied to attributes. A type is
+such an attribute that can be written.
+:::
+
+:::readable Fir.ByteOrder.word Fir.ByteOrder.decode Fir.MemLayout.attr Fir.MemLayout.InLimits Fir.MemLayout.number Fir.MemLayout.decodeTail Fir.MemLayout.decode (pin := Fir.MemLayout.limit) (fingerprint := "11420116922030376226")
 *Definition: the data layout in text.* A module's
 {ref "The-fir-specification--Abstract-syntax--Data-layouts"}[data layout]
 is written on one line after its dialect set: the word `layout`, then each
@@ -54,6 +60,29 @@ words, decodes to its entry; every other attribute decodes to none, so a
 missing part, a part out of place, another word, a negative number and a
 number above the limit are no entry. A memory whose order is `big` decodes,
 and validation rejects it.
+:::
+
+:::readable Fir.Aggregate.number Fir.Aggregate.decodeNumber Fir.Field.attr Fir.Aggregate.attrs Fir.Aggregate.item Fir.Field.decode (pin := Fir.Aggregate.limit) (pin := Fir.DialectText) (fingerprint := "11163670655948192796")
+*Definitions: an aggregate's layout in text.* An aggregate's layout is
+written with the one production of an item (ADR-2026-11-16-1546): the kind
+`aggregate`, its symbol, no parameters or results, its attributes and an
+empty body. Its attributes are `memory(n)`, `size(z)` and `align(a)`, in
+that order, then one per field: a field at the offset $`o` of the type
+$`t` is written `field(o, t')`, where $`t' = \mathrm{tyattr}(t)`, and a
+repeated field of $`c` elements `field(o, t', c)`. So the pair of an `i64`
+and a pointer is
+
+```
+aggregate @pair() memory(0) size(16) align(8) field(0, i64) field(8, ptr) {
+}
+```
+
+A number of a layout is an integer from 0 to $`2^{64} - 1`;
+$`\mathrm{number}(i)` is $`i` when it is one and none otherwise, and
+$`h(N)` writes the number $`N` for the word $`h` when $`N` is one. A field
+decodes from `field(o, t')` or `field(o, t', c)` when $`o` and $`c` are
+numbers, $`t'` has the form of a type, and the dialect decodes $`t'` as a
+type. Every other attribute is no field.
 :::
 
 :::readable Fir.DialectText (fingerprint := "7609871035768420774")
@@ -78,7 +107,7 @@ operands and results are defined. The parser has no code for any op of any
 dialect beyond these functions.
 :::
 
-:::readable Fir.LawfulDialectText (pin := Fir.DialectSignature) (pin := Fir.DialectValidation) (fingerprint := "12695300317126033549")
+:::readable Fir.LawfulDialectText (pin := Fir.DialectSignature) (pin := Fir.DialectValidation) (fingerprint := "16177606339395822275")
 *Definition: a dialect whose text is lawful.* Let $`d` be a dialect with its
 {ref "The-fir-specification--Abstract-syntax--Dialects"}[signature], which
 gives each op instance $`o` its operand types $`\mathrm{sig}(o)` and its

@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Values and refinement: readable blocks" =>
 
-:::moduleDocs (fingerprint := "5669569679317351933")
+:::moduleDocs (fingerprint := "14796550515427156452")
 :::
 
 :::readable Fir.PoisonOr (fingerprint := "17169256414108514350")
@@ -54,7 +54,7 @@ sides may be of different kinds, though every instance in this chapter
 relates things of one kind.
 :::
 
-:::readable Fir.PoisonOr.IsRefinedBy (fingerprint := "3337330117320181529")
+:::readable Fir.PoisonOr.IsRefinedBy (fingerprint := "7331913144800236033")
 *Definition: refinement of values that may be poison.* Poison is refined by
 every value, and a value other than poison only by itself:
 
@@ -91,7 +91,7 @@ $`x \sqsubseteq z`. With the theorem on lists below, it makes the
 refinement of what a function returns transitive.
 :::
 
-:::readable Fir.List.IsRefinedBy Fir.List.isRefinedBy_trans (fingerprint := "15616140829063086083")
+:::readable Fir.List.IsRefinedBy Fir.List.isRefinedBy_trans (fingerprint := "16907176528479312162")
 *Definition: refinement of lists.* A list is refined by a list of the same
 length whose elements refine its own, position by position:
 
@@ -109,7 +109,7 @@ of element. This is what makes refinement of returned lists, and so of a
 pipeline of passes, transitive.
 :::
 
-:::readable Fir.List.IsRefinedBy.length_eq Fir.List.isRefinedBy_refl Fir.List.IsRefinedBy.append Fir.List.IsRefinedBy.drop Fir.List.IsRefinedBy.take Fir.List.IsRefinedBy.getElem? Fir.List.IsRefinedBy.set Fir.List.IsRefinedBy.modify Fir.instHRefinementProd (pin := Fir.List.IsRefinedBy) (fingerprint := "7346315508574861417")
+:::readable Fir.List.IsRefinedBy.length_eq Fir.List.isRefinedBy_refl Fir.List.IsRefinedBy.append Fir.List.IsRefinedBy.drop Fir.List.IsRefinedBy.take Fir.List.IsRefinedBy.getElem? Fir.List.IsRefinedBy.set Fir.List.IsRefinedBy.modify Fir.instHRefinementProd (pin := Fir.List.IsRefinedBy) (fingerprint := "17821919194897633108")
 *Theorems: lists that refine element by element, and pairs.* A list
 $`l'` refines $`l` when they have the same length and each element of
 $`l'` refines the element of $`l` at the same index. Then:

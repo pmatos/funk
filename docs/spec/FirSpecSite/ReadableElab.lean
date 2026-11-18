@@ -12,10 +12,11 @@ and so the spec build, naming the place and what to do:
   declarations `N₁ … Nₖ` of one module of `fir`. Each must exist, and the
   fingerprint of what they say must be the one the block pins: a change to
   a statement, a definition or a constructor fails the build until the
-  block is read again and its pin updated. The fingerprint covers only
-  each declaration's own terms, so a block whose prose restates a
-  definition that they merely refer to, from any module, adds it with
-  `(pin := P)`; its body then counts too.
+  block is read again and its pin updated. The fingerprint covers each
+  declaration's own terms and the helpers that Lean generates for its body,
+  such as a recursive definition's `f._f` and its matchers. A block whose
+  prose restates a definition that they merely refer to, from any module,
+  adds it with `(pin := P)`; its body then counts too.
 * A ```` ```grammar T ```` box inside a readable block shows the
   constructors of the inductive type `T`, or the fields of the structure
   `T`, which the block must explain. The boxes of a block together show

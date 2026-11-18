@@ -53,6 +53,7 @@ abbrev allocResult (p : Pointer) : HVector toType (Fir.returnTypes (d := GpuDial
 section
 
 variable {N : Type} [DecidableEq N] (lay : N → MemLayout) (ρ : DialectEffects.Mem GpuDialect → N)
+    (L : RunItems)
 
 /-- The allocation that `gpu.work_group_alloca`'s rule makes, in the state
 layer over the set monad. -/
@@ -62,7 +63,7 @@ abbrev allocAlloc : StateT (Memories N (unitsOf lay)) SetM Pointer :=
 /-- `gpu.work_group_alloca` runs with memory by its rule: its allocation,
 with the pointer as its result. -/
 theorem alloc_denote (args : HVector toType (Fir.sig (d := GpuDialect) (Op.alloc t c a n))) :
-    letI := DialectMemDenote.denoteAt (d := GpuDialect) lay ρ
+    letI := DialectMemDenote.denoteAt (d := GpuDialect) lay ρ L
     @Eq (StateT (Memories N (unitsOf lay)) SetM _)
       (DialectDenote.denote (d := GpuDialect) (m := StateT (Memories N (unitsOf lay)) SetM)
         (Op.alloc t c a n) args)
@@ -72,50 +73,50 @@ theorem alloc_denote (args : HVector toType (Fir.sig (d := GpuDialect) (Op.alloc
 end
 
 /-- `gpu.work_group_alloca` never ends in UB. -/
-theorem Op.alloc_neverUB : NeverUB (d := GpuDialect) (.alloc t c a n) := fun lay _ _ =>
+theorem Op.alloc_neverUB : NeverUB (d := GpuDialect) (.alloc t c a n) := fun lay _ _ _ =>
   ⟨fun _ => (Fir.alloc_noUB (unit := unitsOf lay) _ _ _ _).map (allocResult t c a n),
     fun h => nomatch h⟩
 
 /-- `gpu.work_group_alloca` gives a pointer, never poison. -/
 theorem Op.alloc_makesNoPoison : MakesNoPoison (d := GpuDialect) (.alloc t c a n) := by
-  intro _ N _ lay ρ args _ S rs S' h
+  intro _ N _ lay ρ L args _ S rs S' h
   rw [alloc_denote] at h
   rcases (SetM.stateMap_apply _ _ S _).1 h with ⟨p, _, _, he⟩ | ⟨_, _, he⟩ <;> cases he
   exact fun h => by rcases h with h | h <;> cases h
 
 /-- `gpu.work_group_alloca` writes no unit of any memory. -/
 theorem Op.alloc_writesNot {N : Type} [DecidableEq N] (lay : N → MemLayout)
-    (ρ : DialectEffects.Mem GpuDialect → N) (x : N) :
-    OwnRuleHas lay ρ (WritesNot x) (d := GpuDialect) (.alloc t c a n) := fun _ =>
+    (ρ : DialectEffects.Mem GpuDialect → N) (L : RunItems) (x : N) :
+    OwnRuleHas lay ρ L (WritesNot x) (d := GpuDialect) (.alloc t c a n) := fun _ =>
   ⟨fun _ => (Fir.alloc_writesNot (unit := unitsOf lay) _ _ _ _ x).map (allocResult t c a n),
     fun h => nomatch h⟩
 
 /-- `gpu.work_group_alloca` reads no memory. -/
 theorem Op.alloc_readsNot {N : Type} [DecidableEq N] (lay : N → MemLayout)
-    (ρ : DialectEffects.Mem GpuDialect → N) (x : N) :
-    OwnRuleHas lay ρ (ReadsNot x) (d := GpuDialect) (.alloc t c a n) := fun _ =>
+    (ρ : DialectEffects.Mem GpuDialect → N) (L : RunItems) (x : N) :
+    OwnRuleHas lay ρ L (ReadsNot x) (d := GpuDialect) (.alloc t c a n) := fun _ =>
   ⟨fun _ => (Fir.alloc_readsNot (unit := unitsOf lay) _ _ _ _ x).map (allocResult t c a n),
     fun h => nomatch h⟩
 
 /-- `gpu.work_group_alloca` allocates in no memory but the memory of its
 result. -/
 theorem Op.alloc_allocatesNot {N : Type} [DecidableEq N] (lay : N → MemLayout)
-    (ρ : DialectEffects.Mem GpuDialect → N) (x : N)
+    (ρ : DialectEffects.Mem GpuDialect → N) (L : RunItems) (x : N)
     (hx : ¬ ((Fir.effects (d := GpuDialect) (.alloc t c a n)).allocates.map ρ).Has x) :
-    OwnRuleHas lay ρ (AllocatesNot x) (d := GpuDialect) (.alloc t c a n) := fun _ =>
+    OwnRuleHas lay ρ L (AllocatesNot x) (d := GpuDialect) (.alloc t c a n) := fun _ =>
   ⟨fun _ => (Fir.alloc_allocatesNot (unit := unitsOf lay) _ _ _ _
       fun h => hx (List.mem_singleton.2 h.symm)).map (allocResult t c a n),
     fun h => nomatch h⟩
 
 /-- `gpu.work_group_alloca` has an outcome from any memories. -/
-theorem Op.alloc_memTotal : MemTotal (d := GpuDialect) (.alloc t c a n) := fun lay _ _ =>
+theorem Op.alloc_memTotal : MemTotal (d := GpuDialect) (.alloc t c a n) := fun lay _ _ _ =>
   ⟨fun _ => (Fir.alloc_hasOutcome (unit := unitsOf lay) _ _ _ _).map (allocResult t c a n),
     fun h => nomatch h⟩
 
 /-- From memories that refine others, `gpu.work_group_alloca` gives the
 same pointer and memories that refine the others'. -/
 theorem Op.alloc_memMonotone : MemMonotone (d := GpuDialect) (.alloc t c a n) :=
-  fun lay _ _ _ _ =>
+  fun lay _ _ _ _ _ =>
     ⟨fun _ => StateRefinedBy.map (allocResult t c a n)
         (fun {p p'} (h : p = p') => by subst h; exact ⟨Core.Ty.isRefinedBy_refl (t := .ptr n) _, trivial⟩)
         (Fir.alloc_refines (unit := unitsOf lay) _ _ _ _),
@@ -124,12 +125,12 @@ theorem Op.alloc_memMonotone : MemMonotone (d := GpuDialect) (.alloc t c a n) :=
 /-- `gpu.work_group_alloca` has no operands, so it propagates poison with
 memory. -/
 theorem Op.alloc_memPropagates : MemPropagatesPoison (d := GpuDialect) (.alloc t c a n) where
-  poisonOut _ _ args h := by cases args with | nil => exact h.elim
-  ubByOwnRules _ _ args _ _ h := by cases args with | nil => exact h.elim
+  poisonOut _ _ _ args h := by cases args with | nil => exact h.elim
+  ubByOwnRules _ _ _ args _ _ h := by cases args with | nil => exact h.elim
 
 /-- `gpu.work_group_alloca` gives a result from memories inside a call. -/
 theorem Op.alloc_memReturnsOnDefined :
-    MemReturnsOnDefined (d := GpuDialect) (.alloc t c a n) := fun lay ρ => by
+    MemReturnsOnDefined (d := GpuDialect) (.alloc t c a n) := fun lay ρ L => by
   let S : Memories _ (unitsOf lay) := Memories.empty.enter
   let sh := Core.allocaShape lay (fun x => ρ (.inl x)) t c a n
   let q := S.alloc (ρ (.inl n)) .global sh.1 sh.2
@@ -139,9 +140,9 @@ theorem Op.alloc_memReturnsOnDefined :
 
 /-- `gpu.work_group_alloca` has one outcome from any memories. -/
 theorem Op.alloc_finitelyMany {N : Type} [DecidableEq N] (lay : N → MemLayout)
-    (ρ : DialectEffects.Mem GpuDialect → N)
+    (ρ : DialectEffects.Mem GpuDialect → N) (L : RunItems)
     (args : HVector toType (Fir.sig (d := GpuDialect) (Op.alloc t c a n))) :
-    letI := DialectMemDenote.denoteAt (d := GpuDialect) lay ρ
+    letI := DialectMemDenote.denoteAt (d := GpuDialect) lay ρ L
     FinitelyMany (DialectDenote.denote (d := GpuDialect)
       (m := StateT (Memories N (unitsOf lay)) SetM) (Op.alloc t c a n) args) := fun S => by
   let sh := Core.allocaShape lay (fun x => ρ (.inl x)) t c a n
@@ -165,19 +166,19 @@ instance lawfulDialectEffects : LawfulDialectEffects GpuDialect where
     (fun q d w => MakesNoPoison.ofLifts (query_liftsSetM q d w) (query_makesNoPoisonSetM q d w))
     Op.alloc_makesNoPoison
   notControl op _ := by cases op <;> rfl
-  writesNot op _ _ _ _ lay ρ x _ := Op.memCases
-    (P := fun op => OwnRuleHas lay ρ (WritesNot x) (d := GpuDialect) op) op
-    (fun q d w => OwnRuleHas.ofLifts (query_liftsSetM q d w) lay ρ fun c => writesNot_lift x c)
-    fun t c a n => Op.alloc_writesNot t c a n lay ρ x
-  readsNot op _ _ _ _ lay ρ x _ := Op.memCases
-    (P := fun op => OwnRuleHas lay ρ (ReadsNot x) (d := GpuDialect) op) op
-    (fun q d w => OwnRuleHas.ofLifts (query_liftsSetM q d w) lay ρ fun c => readsNot_lift x c)
-    fun t c a n => Op.alloc_readsNot t c a n lay ρ x
-  allocatesNot op _ _ _ _ lay ρ x hx := by
+  writesNot op _ _ _ _ lay ρ L x _ := Op.memCases
+    (P := fun op => OwnRuleHas lay ρ L (WritesNot x) (d := GpuDialect) op) op
+    (fun q d w => OwnRuleHas.ofLifts (query_liftsSetM q d w) lay ρ L fun c => writesNot_lift x c)
+    fun t c a n => Op.alloc_writesNot t c a n lay ρ L x
+  readsNot op _ _ _ _ lay ρ L x _ := Op.memCases
+    (P := fun op => OwnRuleHas lay ρ L (ReadsNot x) (d := GpuDialect) op) op
+    (fun q d w => OwnRuleHas.ofLifts (query_liftsSetM q d w) lay ρ L fun c => readsNot_lift x c)
+    fun t c a n => Op.alloc_readsNot t c a n lay ρ L x
+  allocatesNot op _ _ _ _ lay ρ L x hx := by
     cases op with
     | query q d w =>
-      exact OwnRuleHas.ofLifts (query_liftsSetM q d w) lay ρ fun c => allocatesNot_lift x c
-    | alloc t c a n => exact Op.alloc_allocatesNot t c a n lay ρ x hx
+      exact OwnRuleHas.ofLifts (query_liftsSetM q d w) lay ρ L fun c => allocatesNot_lift x c
+    | alloc t c a n => exact Op.alloc_allocatesNot t c a n lay ρ L x hx
 
 /-- `gpu` is lawful in its totality: a question is total and tied, and an
 allocation has an outcome from any memories. -/

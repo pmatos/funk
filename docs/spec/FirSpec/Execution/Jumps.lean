@@ -17,7 +17,7 @@ when the Lean changes under it.
 :::moduleDocs (fingerprint := "15565638748605099005")
 :::
 
-:::readable Fir.Env.mapM_value_ok (pin := Fir.Env.value) (pin := Fir.Env.Holds) (fingerprint := "13566937332335085816")
+:::readable Fir.Env.mapM_value_ok (pin := Fir.Env.value) (pin := Fir.Env.Holds) (fingerprint := "1996321406165831052")
 *Theorem: the values of names that an environment holds are found, with
 their types.* If the environment $`E` holds the names
 $`x_1, \dots, x_k` for the function $`f`, then looking each of them up in
@@ -32,7 +32,7 @@ there is none. A jump looks up the values that its successor passes this
 way.
 :::
 
-:::readable Fir.Func.op_ready_of_scoped (pin := Fir.Func.runOps) (fingerprint := "11296134603188533961")
+:::readable Fir.Func.op_ready_of_scoped (pin := Fir.Func.runOps) (fingerprint := "13063702288189310815")
 *Theorem: what a run needs of an op, from the values in scope.* Let $`f`
 be {ref "The-fir-specification--Validation--The-general-rules"}[valid] in
 a module context, $`b` a block of $`\mathrm{blocks}(f)`, and $`o` the op
@@ -74,7 +74,7 @@ $$`\mathrm{scoped}_f(E', \mathrm{label}(b), i + 1)`
 This is how the invariant goes from one op to the next.
 :::
 
-:::readable Fir.Func.jump_ok (pin := Fir.Func.jump) (fingerprint := "5130593395890871916")
+:::readable Fir.Func.jump_ok (pin := Fir.Func.jump) (fingerprint := "17990571614923610149")
 *Theorem: from an environment that holds every value in scope, a jump
 from a terminator with no results to a successor it has succeeds, and
 lands holding every value in scope at its target.* Let $`f` be valid in a module

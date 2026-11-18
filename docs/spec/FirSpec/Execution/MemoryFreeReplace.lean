@@ -14,10 +14,10 @@ pins their fingerprint; the build fails when the Lean changes under it.
 
 #doc (Manual) "Congruence in a callee that touches no memory: readable blocks" =>
 
-:::moduleDocs (fingerprint := "4071111802552640418")
+:::moduleDocs (fingerprint := "334346420242660595")
 :::
 
-:::readable Fir.Func.memRunsFrom_ret_iff Fir.Func.memRunsFrom_ub_iff Fir.Func.memRunsFrom_exhausted_iff_memRuns (pin := Fir.Func.memRuns) (fingerprint := "3525218910041995322")
+:::readable Fir.Func.memRunsFrom_ret_iff Fir.Func.memRunsFrom_ub_iff Fir.Func.memRunsFrom_exhausted_iff_memRuns (pin := Fir.Func.memRuns) (fingerprint := "17394388488478459700")
 *Theorems: runs from given memories are runs with memory.* Let the ops of
 the dialect ignore the memories where they touch none, at a layout and
 naming of its memories, and let $`f` reach no memory. Then
@@ -28,7 +28,7 @@ returns $`\vec{w}`, and hits UB, or runs out of fuel, exactly when its run
 with memory does.
 :::
 
-:::readable Fir.Func.memRunsFrom_isRefinedBy_of_memRuns (fingerprint := "6732269954989396360")
+:::readable Fir.Func.memRunsFrom_isRefinedBy_of_memRuns (fingerprint := "16360999196720494447")
 *Theorem: refinement with memory is refinement from given memories, for
 functions that touch no memory.* When $`f` in $`M` and $`f` with a new
 body in $`M'` both reach no memory, and the second refines
@@ -37,7 +37,7 @@ they end with included: from $`S`, both end with $`S`, which refines
 itself.
 :::
 
-:::readable Fir.Func.memRuns_replaceBody_isRefinedBy_of_finite Fir.Func.memRuns_replaceBody_isRefinedBy_of_memRuns (pin := Fir.LawfulDialectMonotone) (fingerprint := "8613120408715234675")
+:::readable Fir.Func.memRuns_replaceBody_isRefinedBy_of_finite Fir.Func.memRuns_replaceBody_isRefinedBy_of_memRuns (pin := Fir.LawfulDialectMonotone) (fingerprint := "16201362122271735226")
 *Theorems: congruence in the callee, with no budget, for a callee that
 touches no memory.* For a dialect lawful in its monotonicity, whose values'
 refinement is reflexive and transitive, at a layout and naming at which its
@@ -65,7 +65,7 @@ vectors. These theorems ask no finitely many
 outcomes, so they stay for a dialect whose ops may have infinitely many.
 :::
 
-:::readable Fir.Func.memRuns_replaceBody_isRefinedBy_of_opsFinite_memRuns (pin := Fir.OpsFinite) (fingerprint := "15115983703759884879")
+:::readable Fir.Func.memRuns_replaceBody_isRefinedBy_of_opsFinite_memRuns (pin := Fir.OpsFinite) (fingerprint := "16948426808443807025")
 *Theorem: congruence in the callee, with memory, for a callee that touches
 no memory, with ops of finitely many outcomes.* For a dialect lawful in its
 monotonicity, whose values' refinement is reflexive and transitive, at a

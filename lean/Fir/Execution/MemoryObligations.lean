@@ -1,5 +1,6 @@
 import Fir.Execution.MemoryState
 import Fir.Execution.OpEffects
+import Fir.Execution.RunItems
 import Fir.Syntax.Layout
 
 /-!
@@ -49,6 +50,12 @@ An op names a memory of the run when its declaration, with its names
 mapped by `ρ`, holds it; a declaration of every memory names each memory
 of the run. A dialect whose ops touch no memory runs each op by its rule
 and keeps the memories, at every naming.
+
+A run also gives each op the items of its module that ops name by their
+symbols (the human's ruling of 2026-11-16 on #236): the section on the
+items a run gives. A dialect gives its semantics for every such record, so
+_wherever a run names its memories_ includes whatever items it gives, and
+every obligation below holds for each of them.
 -/
 
 namespace Fir
@@ -136,24 +143,27 @@ entries `lay`: the unit of its entry. -/
 /-- A dialect's semantics in the state layer over the set monad, wherever a
 run names its memories: for the names `N` of a run's memories, the layout
 entry `lay y` of each memory `y` of the run, whose units are as wide as its
-entry says, and the name `ρ x` that the run gives each memory `x` of the
-dialect. -/
+entry says, the name `ρ x` that the run gives each memory `x` of the
+dialect, and the items `L` of its module that the run gives each op (the
+human's ruling of 2026-11-16 on #236). -/
 class DialectMemDenote (d : Dialect) [TyDenote d.Ty] [DialectSignature d] [DialectEffects d] where
   /-- The semantics of each op, where the run names the dialect's memory `x`
-  as `ρ x`, whose entry is `lay (ρ x)`. -/
+  as `ρ x`, whose entry is `lay (ρ x)`, and gives the items `L`. -/
   denoteAt : {N : Type} → [DecidableEq N] → (lay : N → MemLayout) →
-    (ρ : DialectEffects.Mem d → N) → DialectDenote d (StateT (Memories N (unitsOf lay)) SetM)
+    (ρ : DialectEffects.Mem d → N) → (L : RunItems) →
+      DialectDenote d (StateT (Memories N (unitsOf lay)) SetM)
 
 variable {d : Dialect} [TyDenote d.Ty] [DialectSignature d] [DialectEffects d]
   [DialectMemDenote d]
 
 /-- What an op runs by its own rule, where a run's memories have the
-entries `lay` and the run names the dialect's memories by `ρ`, has the
-property `P`: the op's meaning when it is not a terminator, and its exit
+entries `lay`, the run names the dialect's memories by `ρ` and gives the
+items `L`, has the property `P`: the op's meaning when it is not a terminator, and its exit
 when it is. -/
 def OwnRuleHas {N : Type} [DecidableEq N] (lay : N → MemLayout) (ρ : DialectEffects.Mem d → N)
-    (P : {α : Type} → StateT (Memories N (unitsOf lay)) SetM α → Prop) (op : d.Op) : Prop :=
-  letI := DialectMemDenote.denoteAt (d := d) lay ρ
+    (L : RunItems) (P : {α : Type} → StateT (Memories N (unitsOf lay)) SetM α → Prop) (op : d.Op) :
+    Prop :=
+  letI := DialectMemDenote.denoteAt (d := d) lay ρ L
   ∀ args : HVector toType (sig op),
     (isTerminator op = false → P (DialectDenote.denote op args)) ∧
     (isTerminator op = true → P (DialectDenote.exit op args))

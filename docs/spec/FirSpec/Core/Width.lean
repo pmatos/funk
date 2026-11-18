@@ -14,10 +14,10 @@ changes under it.
 
 #doc (Manual) "Width change rules: readable blocks" =>
 
-:::moduleDocs (fingerprint := "15486588000683322125")
+:::moduleDocs (fingerprint := "11886173335948128790")
 :::
 
-:::readable Fir.Core.zextValue (pin := BitVec.setWidth) (fingerprint := "5245716347567910269")
+:::readable Fir.Core.zextValue (pin := BitVec.setWidth) (fingerprint := "1589107713734342979")
 *Definition: the rule of $`\mathsf{zext}`.* For all widths $`M` and
 $`N`, $`\mathsf{zext}_{M \to N}` of a vector of $`M` bits is the vector of
 $`N` bits that writes the same number, modulo $`2^N`; of poison, it is
@@ -38,7 +38,7 @@ changes are never UB, and a poison operand gives poison: they
 {ref "The-fir-specification--Execution--Poison-classes"}[propagate poison].
 :::
 
-:::readable Fir.Core.sextValue (pin := BitVec.signExtend) (fingerprint := "113031403167316890")
+:::readable Fir.Core.sextValue (pin := BitVec.signExtend) (fingerprint := "17779451062833936229")
 *Definition: the rule of $`\mathsf{sext}`.* For all widths $`M` and
 $`N`, $`\mathsf{sext}_{M \to N}` of a vector of $`M` bits is the vector of
 $`N` bits that writes its signed value, modulo $`2^N`; of poison, it is
@@ -57,7 +57,7 @@ $`\mathsf{i8}` value $`-1` to $`\mathsf{i32}` is $`-1`, and $`\mathsf{sext}`
 of the $`\mathsf{i1}` value 1 is $`-1`, where $`\mathsf{zext}` gives 1.
 :::
 
-:::readable Fir.Core.truncValue (pin := BitVec.setWidth) (fingerprint := "5245716347567910269")
+:::readable Fir.Core.truncValue (pin := BitVec.setWidth) (fingerprint := "1589107713734342979")
 *Definition: the rule of $`\mathsf{trunc}`.* For all widths $`M` and
 $`N`, $`\mathsf{trunc}_{M \to N}` of a vector of $`M` bits is the same
 number modulo $`2^N`, as for $`\mathsf{zext}`; of poison, it is poison:

@@ -14,7 +14,7 @@ changes under it.
 
 #doc (Manual) "The parser: readable blocks" =>
 
-:::moduleDocs (fingerprint := "4993556563598950667")
+:::moduleDocs (fingerprint := "15914544584614923657")
 :::
 
 :::readable Fir.Text.Tok (pin := Fir.Location.limit) (fingerprint := "10018366003460929732")
@@ -45,7 +45,7 @@ are read whole: a location reference below $`2^{32}`, an integer of any
 size, and a float literal of any length (ADR-2026-11-11-1438).
 :::
 
-:::readable Fir.Text.Tok.describe Fir.Text.Token Fir.TextPos.advance Fir.Text.utf8Len Fir.Text.codePoint Fir.Text.errorAt (pin := Fir.Text.printSymbol) (pin := Fir.Text.quote) (pin := Fir.Text.hex) (fingerprint := "14280597566275184498")
+:::readable Fir.Text.Tok.describe Fir.Text.Token Fir.TextPos.advance Fir.Text.utf8Len Fir.Text.codePoint Fir.Text.errorAt (pin := Fir.Text.printSymbol) (pin := Fir.Text.quote) (pin := Fir.Text.hex) (fingerprint := "1007193707624245819")
 *Definition: a token at its position, and the parts of an error.* A token
 of the lexer's output is a token with the
 {ref "The-fir-specification--Text-format--Round-trips"}[position] where it
@@ -78,7 +78,7 @@ $`h_1 \dots h_k` is $`\sum_j h_j \cdot 16^{k-j}`, where `a` to `f` count
 10 to 15.
 :::
 
-:::readable Fir.Text.unicodeEscape Fir.Text.lexEscape Fir.Text.lexStringFrom Fir.Text.lexString (pin := Fir.Text.isEscaped) (fingerprint := "9424781684911375709")
+:::readable Fir.Text.unicodeEscape Fir.Text.lexEscape Fir.Text.lexStringFrom Fir.Text.lexString (pin := Fir.Text.isEscaped) (fingerprint := "14583705275692100870")
 *Definition: reading a string.* After the opening `"`, the lexer reads the
 characters of a string up to the closing `"`, and gives the string, the
 characters after it and the position there. Each character $`c` is read
@@ -94,8 +94,8 @@ as follows:
 
 The text ending before the closing `"` is an error at the opening `"`.
 After a `\`, the escapes `\\`, `\"`, `\n` and `\t` are a backslash, a
-quote, a line feed and a tab. `\u{h}`, with $`h` one or more hexadecimal
-digits, is the character with the code point $`h`, when all of these hold,
+quote, a line feed and a tab. `\u{h}`, with $`h` one or more lowercase
+hexadecimal digits, is the character with the code point $`h`, when all of these hold,
 and each failure is an error at the `\`:
 
 * $`h` is the code point of a character;
@@ -111,7 +111,7 @@ printer writes. The loop keeps the characters read so far, and calls itself
 as its last step, so that a string of any length takes no stack.
 :::
 
-:::readable Fir.Text.runsInto Fir.Text.lexEnd Fir.Text.lexDigits Fir.Text.digitsValue (pin := Fir.isNameChar) (fingerprint := "15126838995952750980")
+:::readable Fir.Text.runsInto Fir.Text.lexEnd Fir.Text.lexDigits Fir.Text.digitsValue (pin := Fir.isNameChar) (fingerprint := "7243075605569799031")
 *Definition: reading the digits of a number.* A number that starts with
 the digit 0 is the one digit 0. Any other number is its first digit and
 every digit that follows it. When the character after the digits is a name
@@ -126,7 +126,7 @@ that a constant of millions of digits, as wide types allow, is read in
 about the time of a few products, not in time quadratic in its length.
 :::
 
-:::readable Fir.Text.lexAt Fir.Text.lexInt (pin := Fir.Location.limit) (pin := Fir.isWord) (pin := Fir.isWordStart) (pin := Fir.isNameChar) (fingerprint := "18065001386041064136")
+:::readable Fir.Text.lexAt Fir.Text.lexInt (pin := Fir.Location.limit) (pin := Fir.isWord) (pin := Fir.isWordStart) (pin := Fir.isNameChar) (fingerprint := "16869005498632866917")
 *Definition: reading what follows `@`, and an integer.* After `@`, the
 lexer reads:
 
@@ -142,7 +142,7 @@ An integer is its digits, read as above, and is negative when a `-` comes
 before them. Its value has no limit: the dialect that reads it bounds it.
 :::
 
-:::readable Fir.Text.lexExponent Fir.Text.lexHex Fir.Text.lexFraction (pin := Fir.FloatLit.print) (pin := Fir.Text.isHexDigit) (fingerprint := "3991405548286914506")
+:::readable Fir.Text.lexExponent Fir.Text.lexHex Fir.Text.lexFraction (pin := Fir.FloatLit.print) (pin := Fir.Text.isHexDigit) (fingerprint := "14940034420055590767")
 *Definition: reading the parts of a float literal.* After the `.` of a
 decimal, the lexer reads its fraction, the first digit and every digit
 after it, and then:
@@ -161,7 +161,7 @@ lowercase hexadecimal digit, an error when there is none, and the literal
 must then end. So `0x7FC00000` is an error: `7` runs into `F`.
 :::
 
-:::readable Fir.Text.afterWhole Fir.Text.wholeValue Fir.Text.length_afterWhole Fir.Text.lexFloat Fir.Text.lexNumber (pin := Fir.Text.lexInt) (fingerprint := "6986309815023208422")
+:::readable Fir.Text.afterWhole Fir.Text.wholeValue Fir.Text.length_afterWhole Fir.Text.lexFloat Fir.Text.lexNumber (pin := Fir.Text.lexInt) (fingerprint := "10361619201897161735")
 *Definition: reading a number.* The whole part of a number is `0`, or its
 first digit, when that is not 0, and every digit after it. A float literal
 starts when the whole part is followed by `.` and a digit, read as a
@@ -171,7 +171,7 @@ integer. What follows the whole part is never longer than what followed
 its first digit, so the lexer still ends.
 :::
 
-:::readable Fir.Text.lexToken (pin := Fir.Text.allowedOutsideStrings) (pin := Fir.isNameChar) (pin := Fir.isWordStart) (pin := Fir.Text.lexNumber) (fingerprint := "9610677684206949810")
+:::readable Fir.Text.lexToken (pin := Fir.Text.allowedOutsideStrings) (pin := Fir.isNameChar) (pin := Fir.isWordStart) (pin := Fir.Text.lexNumber) (fingerprint := "3481713002336338835")
 *Definition: reading one token.* The lexer reads the token that starts with
 the character $`c`, which is not whitespace and does not start a comment:
 
@@ -182,8 +182,8 @@ the character $`c`, which is not whitespace and does not start a comment:
 * `@` starts a symbol or a location reference, and `"` a string, read as
   above;
 * `-` followed by `>` is `->`, and followed by a digit a negative number:
-  an integer or a decimal float literal; `-0` that does not start a
-  decimal, such as `-0.5`, is an error, and so is a `-` followed by
+  an integer or a decimal float literal; `-0` is an error unless it
+  starts a decimal, such as `-0.5`, and so is a `-` followed by
   anything else;
 * a digit starts a number: an integer or a float literal;
 * a letter or `_` starts a word: it and every name character after it;
@@ -195,7 +195,7 @@ an error, so
 each token is the longest one that the text starts with: maximal munch.
 :::
 
-:::readable Fir.Text.notLineFeed Fir.Text.firstDisallowed Fir.Text.lexFrom Fir.Text.lex (pin := Fir.Text.allowedOutsideStrings) (fingerprint := "16125086146743415106")
+:::readable Fir.Text.notLineFeed Fir.Text.firstDisallowed Fir.Text.lexFrom Fir.Text.lex (pin := Fir.Text.allowedOutsideStrings) (fingerprint := "11060444519077350368")
 *Definition: the tokens of a text.* The lexer reads the characters of a
 text from the first, at line 1 and column 1, and keeps the position:
 

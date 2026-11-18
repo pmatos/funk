@@ -16,8 +16,23 @@ an item of a dialect's kind, at any depth. A
 nested module has no layout of its own, so its types name the memories of
 the module that holds it.
 
+The layout of an aggregate describes a block of units of one memory
+(ADR-2026-11-09-1550, ADR-2026-11-16-1546). It is valid when its numbers
+are at most `2^64 - 1`, so that the text can write it, the module has its
+memory, its alignment is valid as an entry's is, its types are valid and
+name memories of the module, and its fields are placed: each field's type
+may be a field, as the dialect of the type says (`fieldShape`), its offset
+is a multiple of its type's alignment, that alignment is no larger than the
+layout's, the field ends within the layout's size, and no two fields share
+a unit. A repeated field takes its count times the units of one element
+rounded up to the element's alignment (the human's ruling of 2026-11-16 on
+#236), so a field of four `i24` in memory 0 takes 16 units, not 12. A field
+that takes no units, such as a repeated field of no elements, which a C
+flexible array member is, shares a unit with no field.
+
 This section gives the rule of an alignment, which an `alloca` shares, of
-an entry, of a layout, and of the memories that a module's types name.
+an entry, of a layout, of the memories that a module's types name, and of
+an aggregate's layout.
 -/
 
 namespace Fir
@@ -90,5 +105,75 @@ structure SymbolTable.MemoriesIn (l : DataLayout) (t : SymbolTable d) : Prop whe
 /-- The layout has each memory that the types of a module name, in each of
 its symbol tables: its own and that of each nested module. -/
 def Module.MemoriesDeclared (m : Module d) : Prop := ∀ t ∈ m.tables, t.MemoriesIn m.layout
+
+/-- `u` rounded up to a multiple of `a`: the units that one element of a
+repeated field takes, where one value of its type takes `u` units and its
+alignment is `a`. -/
+def roundUp (u a : Nat) : Nat := (u + a - 1) / a * a
+
+example : roundUp 3 4 = 4 ∧ roundUp 8 8 = 8 ∧ roundUp 10 16 = 16 := by decide
+
+/-- The units that a field takes, where one value of its type takes `u`
+units aligned to `a`: `u` for one value, and for a repeated field its count
+times `u` rounded up to `a`. -/
+def Field.extent (f : Field d) (u a : Nat) : Nat :=
+  match f.count with
+  | none => u
+  | some c => c * roundUp u a
+
+/-- The units and the alignment of one value of a field's type in the memory
+`n` of a module whose data layout is `l`, if the type may be a field. -/
+def Field.shape (l : DataLayout) (n : Nat) (f : Field d) : Option (Nat × Nat) :=
+  fieldShape l.entry n f.ty
+
+/-- The units that a field takes in the memory `n` of a module whose data
+layout is `l`: none when its type may not be a field. -/
+def Field.units (l : DataLayout) (n : Nat) (f : Field d) : Nat :=
+  match f.shape l n with
+  | some (u, a) => f.extent u a
+  | none => 0
+
+/-- A field is placed in a layout of the memory `n` with the size `size` and
+the alignment `align`: its type may be a field, its offset is a multiple of
+its type's alignment, that alignment is no larger than `align`, and the
+field ends within `size`. -/
+def Field.Placed (l : DataLayout) (n size align : Nat) (f : Field d) : Prop :=
+  match f.shape l n with
+  | some (u, a) => a ∣ f.offset ∧ a ≤ align ∧ f.offset + f.extent u a ≤ size
+  | none => False
+
+instance Field.decidablePlaced (l : DataLayout) (n size align : Nat) (f : Field d) :
+    Decidable (f.Placed l n size align) := by
+  unfold Field.Placed
+  split <;> infer_instance
+
+/-- Two fields of a layout of the memory `n` share no unit: one ends before
+the other starts, or one takes no units. -/
+def Field.Apart (l : DataLayout) (n : Nat) (f g : Field d) : Prop :=
+  f.offset + f.units l n ≤ g.offset ∨ g.offset + g.units l n ≤ f.offset ∨
+    f.units l n = 0 ∨ g.units l n = 0
+
+instance Field.decidableApart (l : DataLayout) (n : Nat) (f g : Field d) :
+    Decidable (f.Apart l n g) := by
+  unfold Field.Apart
+  infer_instance
+
+/-- An aggregate's layout is valid in a module whose data layout is `l`:
+its numbers are within the limit, the module has its memory, its alignment is valid, each type it states is
+valid and names a memory of the module, each field is placed, and no two
+fields share a unit. -/
+structure Aggregate.Valid (l : DataLayout) (a : Aggregate d) : Prop where
+  limits : a.InLimits
+  memory : l.Declares a.mem
+  align : MemLayout.ValidAlign a.align
+  types : ∀ t ∈ a.types, validTy t
+  memories : ∀ t ∈ a.types, l.HasMemoryOf t
+  fields : ∀ f ∈ a.fields, f.Placed l a.mem a.size a.align
+  apart : a.fields.Pairwise (Field.Apart l a.mem)
+
+/-- Each aggregate's layout of each symbol table of a module is valid in the
+module's data layout. -/
+def Module.AggregatesValid (m : Module d) : Prop :=
+  ∀ t ∈ m.tables, ∀ a ∈ t.aggregates, a.Valid m.layout
 
 end Fir

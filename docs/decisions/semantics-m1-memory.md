@@ -134,15 +134,21 @@ capping the natural alignment at the pointer's.
   call frees a stack allocation when the call returns.
 - Validation accepts the kind `stack` alone, a count of at least 1, a power
   of two for `A` no larger than `MemLayout.limit` (`MemLayout.ValidAlign`,
-  the layout's own rule) and a valid integer or pointer type.
+  the layout's own rule) and a valid integer, pointer or float type.
   `global` and `heap` decode, as hooks in the format (ADR-2026-11-09-1542).
-- The element is an integer or a pointer type: the human ruled on
+- The element is an integer, a pointer or a float type: the human ruled on
   2026-11-14 (#382) that pointer elements come with their loads and
   stores, which stage 4d-2b of #231 adds
-  ([semantics-m1-memory-access.md](semantics-m1-memory-access.md#pointers-in-memory)).
-  A float element stays rejected: a float has no encoding in units, and M1
-  has no float loads or stores. Rejected: float and pointer elements before
-  any access could read or write them.
+  ([semantics-m1-memory-access.md](semantics-m1-memory-access.md#pointers-in-memory)),
+  and on 2026-11-15 (#397) that float elements come with float loads and
+  stores, which #264 adds
+  ([semantics-m1-memory-access.md](semantics-m1-memory-access.md#floats-in-memory)).
+  A float of `float<e,m>` takes the units of the integer of its
+  `1 + e + m` bits, at the natural alignment of the float's size: in
+  memory 0, `f16` and `bf16` 2, `f32` 4, `f64` 8 and `f128` 16 (#378 Q3).
+  `gpu.work_group_alloca` keeps integer and pointer elements (`Ty.IsElem`):
+  whether it takes floats as `alloca` now does waits for the human. Rejected: float and pointer elements before any
+  access could read or write them.
 - `A` is at most `MemLayout.limit`, 2^24 - 1, the bound of the data layout's
   own alignments, so the largest `A` is 2^23; the count has no bound. An
   allocation larger than a machine holds is a resource error at run time, as
@@ -249,6 +255,14 @@ module, `alloca`, `load` and `store` included:
   `Core.replaceBody_isRefinedBy_of_from` and
   `Core.caller_isRefinedBy_of_from`, with no condition on the callee
   (#214; `lean/Fir/Core/MemoryCallRefine.lean`).
+
+Each holds wherever a run names the core's memories and for every record of
+the items a run gives each op (`RunItems`, `lean/Fir/Execution/RunItems.lean`),
+with no hypothesis on it, and so do their `CoreGpu` counterparts. The human
+ruled on 2026-11-16, on #236 (Q1 A), that the run passes the module's
+layouts to every op's rule and that these guarantees gain that argument.
+Rejected: the parser looking a layout up when it reads an op (Q1 B), which
+changes every dialect's text laws.
 
 The sum of the core and `gpu` keeps every one of them, at every work-item,
 for the functions of every table of a valid module, a device module's

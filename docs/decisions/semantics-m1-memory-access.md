@@ -63,8 +63,7 @@ pointer's.
   (`MemLayout.intAlign`), as the human ruled on 2026-11-11 (#231, Q4).
 - The result is an integer type, or a pointer type (below; the human's
   ruling of 2026-11-14 on #382, Q2, gives pointer loads to stage 4d-2b).
-  A float result stays rejected: #231 covers integers and pointers, and a
-  float has no encoding in units yet.
+  A float result is a load of a float (below; #264).
 - A poison pointer is immediate UB. Some defined pointer in its place, one
   with no provenance, faults, so this is UB by the op's own rules. Otherwise
   the op is the aligned load of the units of `iW`, its bits rounded up to
@@ -101,7 +100,8 @@ memory is its pointer's.
   `load`, above: the same ordering words, `nonatomic` alone valid, and
   `align(A)` valid as `alloca`'s is (`Core.Op.Valid`; the shared Rust
   module `crates/funk-ir/src/dialects/core/access.rs`).
-- The value is an integer type or, as for `load`, a pointer type (below).
+- The value is an integer type or, as for `load`, a pointer or a float
+  type (below).
 - A poison pointer is immediate UB, whatever the value, for the reason of
   `load`'s. Otherwise the op is the aligned store of the value's encoding
   in the memory's units and byte order (ADR-2026-11-12-2125): its bits
@@ -167,8 +167,7 @@ text and the Rust IR tell them from the integer forms by the value's type.
   `M`'s `align(A)`, which counts `M`'s units, into `N`'s units, a rule
   nothing specifies.
 - The type that `alloca` allocates names a memory, which the data layout
-  must declare (text-format-layout.md#valid-layouts). A float element, value
-  or result stays rejected: floats have no encoding in units.
+  must declare (text-format-layout.md#valid-layouts).
 
 `Core.Op.memCases` gained a case for each of `loadPtr` and `storePtr`, and
 `Module.valid_replaceBody` asks that the new body's ops carry types of
@@ -176,3 +175,51 @@ memories the layout declares (`ha`). `Core.memDenoteIn_mapsDenote` is
 unchanged: its morphism keeps loads and stores, whatever they access. Every
 whole-core guarantee keeps its statement
 (semantics-m1-memory.md#the-cores-guarantees).
+
+## Floats in memory
+
+A float is stored, loaded and allocated as the integer of its bits is,
+through the same ops (#264; the human's rulings of 2026-11-10 on #177 and
+of 2026-11-15 on #397): `%p: ptr = alloca stack f64 2`,
+`store nonatomic %f, %p` with `%f` a float, and
+`%g: f32 = load nonatomic align(2) %q`. The Lean names the float forms
+`Op.loadFloat` and `Op.storeFloat` (`lean/Fir/Core/FloatAccess.lean`); the
+text and the Rust IR tell them from the integer forms by the value's type.
+
+- A value of `float<e,m>` is its IEEE bit pattern
+  (ADR-2026-11-09-1549), so it takes the units of `i(1+e+m)` in the memory
+  it is stored in, with the encoding of that integer: its bits rounded up
+  to whole units, the bits past `1 + e + m` zero, in the memory's byte
+  order (ADR-2026-11-12-2125). `float<2,1>`, of 4 bits, takes one byte
+  whose top 4 bits are zero. Poison takes as many poison units.
+- A load decodes the units as that integer and gives the float with those
+  bits. So a float stored and loaded back is the same float, a NaN's
+  payload and sign included (#219, item 3), a float loaded as the integer
+  of its width gives its bits, and an integer loaded as a float of its
+  width gives the float with its bits: the two touch the same units and
+  read them the same way (`storeFloatRule_eq`, `loadFloatResult_bits`).
+  A float load from fresh memory or a pointer's fragments gives poison, as
+  an integer load does.
+- With no `align(A)`, an access or an `alloca` of a float is aligned to the
+  natural alignment of the float's size, that of the integer of its width:
+  the human ruled this on 2026-11-15 (#397, from #378 Q3). Rejected: a
+  float-specific alignment table, which no target in M1 needs.
+- Ordering, validation, effects and poison class are those of `load` and
+  `store`: `nonatomic` alone, `align(A)` valid as `alloca`'s is, `reads(N)`
+  or `writes(N)` and may-UB, a load may produce poison. Each meets every
+  obligation with memory by its own rule
+  (`lean/Fir/Core/LoadFloatLaws.lean`, `StoreFloatLaws.lean`), the proofs
+  of `load` and `store` at the float's width.
+- Rejected: one generalised `load` and `store` over every type, which
+  would change the statements of `loadRule`, `storeRule` and their laws;
+  and floats through `bitcast` only, which leaves every frontend to cast
+  around each access.
+
+`Core.Op.memCases` gained a case for each of `loadFloat` and `storeFloat`,
+and `Core.memDenoteIn_mapsDenote` is unchanged in its statement. Every
+whole-core guarantee keeps its statement
+(semantics-m1-memory.md#the-cores-guarantees). The naive backend sizes an
+`alloca` of floats as one of the integer of their width, but does not load
+or store a float yet: it reports each such `load` and `store` as
+unsupported, and stage 2 of #264 lowers `f32` and `f64` with SSE moves
+(x86-64-backend-lowering-memory.md).

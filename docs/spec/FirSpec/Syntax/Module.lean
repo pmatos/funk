@@ -17,7 +17,7 @@ the Lean changes under it.
 
 #doc (Manual) "Modules, functions, blocks and ops: readable blocks" =>
 
-:::moduleDocs (fingerprint := "6401044773702666807")
+:::moduleDocs (fingerprint := "5598977903389090342")
 :::
 
 :::readable Fir.Name (pin := Fir.Func.Valid) (fingerprint := "11509972817217138124")
@@ -33,7 +33,7 @@ Validation restricts the strings of values and labels to the names defined
 next; a symbol may be any string.
 :::
 
-:::readable Fir.isLetter Fir.isWordStart Fir.isNameChar Fir.isName Fir.isWord (pin := Fir.Func.Valid) (pin := Fir.Text.printSymbol) (fingerprint := "18103268847858425710")
+:::readable Fir.isLetter Fir.isWordStart Fir.isNameChar Fir.isName Fir.isWord (pin := Fir.Func.Valid) (pin := Fir.Text.printSymbol) (fingerprint := "2253624661991813575")
 *Definition: names and words.* A _name_ is one or more name characters,
 and a _word_ is a name that starts with a letter or an underscore:
 
@@ -62,7 +62,7 @@ none of them is `func` or `module`, which are the core's, nor a word that
 the grammar reserves, such as `dialects` or `locs`.
 :::
 
-:::readable Fir.Text.isHexDigit Fir.FloatLit Fir.FloatLit.valid (pin := Fir.FloatLit.print) (fingerprint := "11904308684752133396")
+:::readable Fir.Text.isHexDigit Fir.FloatLit Fir.FloatLit.valid (pin := Fir.FloatLit.print) (fingerprint := "8265536692726687142")
 *Definition: a float literal, as written.* A hexadecimal digit is a
 decimal digit or one of the lowercase letters `a` to `f`; uppercase letters
 are not digits. A float literal is one of two kinds (ADR-2026-11-11-1438):
@@ -80,7 +80,7 @@ spell a value of a float type is the
 {ref "The-fir-specification--Text-format--Float-constants-in-text"}[core dialect's rule].
 :::
 
-:::readable Fir.Attr (pin := Fir.Attr.print) (fingerprint := "5017374719707371876")
+:::readable Fir.Attr (pin := Fir.Attr.print) (fingerprint := "8633512635814987414")
 *Definition: an attribute, or a type, as written.* The grammar writes the
 attributes of ops and items, and every type, as one kind of generic term:
 
@@ -109,7 +109,7 @@ dialects can write structured attributes and types without a change to the
 grammar. A word applied to no attributes, `h()`, is not the word `h`.
 :::
 
-:::readable Fir.Attr.repr Fir.Attr.reprList (fingerprint := "1789584298090586371")
+:::readable Fir.Attr.repr Fir.Attr.reprList (fingerprint := "14853416558229886364")
 *Definition: how Lean shows an attribute.* For tests and debugging, Lean
 shows an attribute as the Lean term that builds it. This is written out by
 hand, since the one Lean would derive is not proved to terminate (Lean marks it
@@ -117,7 +117,7 @@ partial), and no definition of the spec is partial (ADR-2026-10-30-1452). It pla
 in the text format.
 :::
 
-:::readable Fir.Attr.Writable Fir.Attr.AllWritable (pin := Fir.isWord) (pin := Fir.FloatLit.valid) (fingerprint := "995596476100570680")
+:::readable Fir.Attr.Writable Fir.Attr.AllWritable (pin := Fir.isWord) (pin := Fir.FloatLit.valid) (fingerprint := "1280204447325578679")
 *Definition: an attribute that can be written.* An attribute can be
 written as tokens when each word in it is a
 {ref "The-fir-specification--Abstract-syntax--Modules___-functions___-blocks-and-ops"}[word]:
@@ -266,16 +266,47 @@ line. $`\mathrm{types}(i)` is the types it states: its parameters' types,
 then its results.
 :::
 
-:::readable Fir.Item Fir.Item.name Fir.Item.func? Fir.Item.func?_func Fir.Item.func?_module Fir.Item.func?_dialect Fir.Item.dialect? (fingerprint := "2482776140988760982")
+:::readable Fir.Field Fir.Aggregate Fir.Aggregate.types Fir.Aggregate.limit Fir.Aggregate.InLimits (fingerprint := "14843076151940009161")
+*Definition: an aggregate's layout.* In M1 an aggregate is a layout over
+memory, not a value (ADR-2026-11-09-1550). A layout is an item of the
+core's kind `aggregate` (ADR-2026-11-16-1546): the memory it describes, by
+its number, a size and an alignment, and a list of fields, all counted in
+the units of that memory:
+
+```grammar Fir.Field
+\mathit{field}
+offset,ty,count \{\mathsf{offset}~o,~\mathsf{ty}~t,~\mathsf{count}~c^?\,\}
+```
+
+```grammar Fir.Aggregate
+\mathit{aggregate}
+name,mem,size,align,fields \begin{array}{l} \{\mathsf{name}~s,~\mathsf{mem}~n, \\ \enspace \mathsf{size}~z,~\mathsf{align}~a, \\ \enspace \mathsf{fields}~\mathit{field}^*\,\} \end{array}
+```
+
+A field is one value of the scalar type $`t` at the offset $`o`, or, when it
+has a count $`c`, a repeated field: an array of $`c` elements of $`t`. Each
+element is rounded up to the alignment of $`t` (the human's ruling of
+2026-11-16 on #236), so four `i24` in memory 0 take 16 units, not 12. In
+text a layout is written `aggregate @s() memory(n) size(z) align(a)`, then
+`field(o, t)` or `field(o, t, c)` for each field, then `{` and `}` on the
+next line. $`\mathrm{types}(A)` is the types it states, one for each field.
+Every number of a layout is at most $`2^{64} - 1`, its limit; a layout
+whose numbers are all within it is within its limits, and only such a
+layout can be written.
+:::
+
+:::readable Fir.Item Fir.Item.name Fir.Item.func? Fir.Item.func?_func Fir.Item.func?_module Fir.Item.func?_dialect Fir.Item.func?_aggregate Fir.Item.dialect? Fir.Item.aggregate? (fingerprint := "16161428770469696969")
 *Definition: an item.* An item is one entry of a module: a function, a
-module nested in it (ADR-2026-11-10-1510), or an item of a kind that a
-dialect registers (ADR-2026-11-09-1543):
+module nested in it (ADR-2026-11-10-1510), an item of a kind that a
+dialect registers (ADR-2026-11-09-1543), or an aggregate's layout
+(ADR-2026-11-16-1546):
 
 ```grammar Fir.Item
 \mathit{item}
 func \mathsf{func}~\mathit{func}
 module \mathsf{module}~s~\mathit{name}^*~\mathit{item}^*
 dialect \mathsf{dialect}~\mathit{ditem}
+aggregate \mathsf{aggregate}~\mathit{aggregate}
 ```
 
 A module is a table of symbols, and fir lets such tables nest, as a device
@@ -287,13 +318,15 @@ table. In text it is written `module @s() { … }`, with its dialect set and
 its items between the braces.
 
 The symbol of an item, $`\mathrm{sym}(i)`, is the symbol of its function,
-of its module or of its item of a dialect's kind. $`\mathrm{func?}(i)` is
-the function $`f` when $`i` is $`\mathsf{func}~f`, and none otherwise;
-$`\mathrm{dialect?}(i)` is the item $`d` when $`i` is
-$`\mathsf{dialect}~d`, and none otherwise.
+of its module, of its item of a dialect's kind or of its layout.
+$`\mathrm{func?}(i)` is the function $`f` when $`i` is
+$`\mathsf{func}~f`, and none otherwise; $`\mathrm{dialect?}(i)` is the
+item $`d` when $`i` is $`\mathsf{dialect}~d`, and $`\mathrm{aggregate?}(i)`
+the layout $`A` when $`i` is $`\mathsf{aggregate}~A`, each none
+otherwise.
 :::
 
-:::readable Fir.Module Fir.Module.funcs (pin := Fir.Module.Valid) (pin := Fir.Module.print) (pin := Fir.LocTable.print) (fingerprint := "9134888408589343886")
+:::readable Fir.Module Fir.Module.funcs (pin := Fir.Module.Valid) (pin := Fir.Module.print) (pin := Fir.LocTable.print) (fingerprint := "17123371513117714081")
 *Definition: a module.* A module is its dialect set, its
 {ref "The-fir-specification--Abstract-syntax--Data-layouts"}[data layout],
 its items, then its
@@ -324,6 +357,7 @@ A module is the unit that fir validates, runs and prints.
 requires the location table to be well formed, each symbol table of the
 module, its own and each nested module's, to be valid: each symbol names
 one item of its table, and each function, and each item of a dialect's
-kind, is valid in the context of its table; and the layout to be valid and
-to declare each memory that a type of the module names.
+kind, is valid in the context of its table; the layout to be valid and to
+declare each memory that a type of the module names; and each aggregate's
+layout of each table to be valid in the layout.
 :::

@@ -14,15 +14,15 @@ when the Lean changes under it.
 
 #doc (Manual) "Core poison classes: readable blocks" =>
 
-:::moduleDocs (fingerprint := "13571860324649457868")
+:::moduleDocs (fingerprint := "2750617968630473107")
 :::
 
-:::readable Fir.Core.Op.poisonClass (fingerprint := "4293765746051215904")
-*Definition: the poison class of each core op.* Thirty-eight core ops
+:::readable Fir.Core.Op.poisonClass (fingerprint := "11554226221990855381")
+*Definition: the poison class of each core op.* Forty core ops
 {ref "The-fir-specification--Execution--Poison-classes"}[propagate poison],
 and seven are exceptions:
 
-$$`\begin{aligned} \mathsf{propagates}:\ & \mathsf{const}_N,\ \mathsf{const}_{e,m},\ \mathsf{poison},\ \mathsf{add}, \\ & \mathsf{sub},\ \mathsf{mul},\ \mathsf{sdiv},\ \mathsf{udiv}, \\ & \mathsf{srem},\ \mathsf{urem},\ \mathsf{and},\ \mathsf{or}, \\ & \mathsf{xor},\ \mathsf{shl},\ \mathsf{lshr},\ \mathsf{ashr}, \\ & \mathsf{icmp},\ \mathsf{fcmp},\ \mathsf{zext},\ \mathsf{sext},\ \mathsf{trunc}, \\ & \mathit{fbin},\ \mathit{funary},\ \mathsf{fma},\ \mathsf{bitcast}^{\to \mathsf{i}},\ \mathsf{bitcast}^{\mathsf{i} \to}, \\ & \mathsf{sitofp},\ \mathsf{uitofp},\ \mathsf{fpext},\ \mathsf{fptrunc},\ \mathsf{ptradd}, \\ & \mathsf{fptosi},\ \mathsf{fptoui},\ \mathsf{alloca}, \\ & \mathsf{load},\ \mathsf{store},\ \mathsf{load}~\mathsf{ptr},\ \mathsf{store}~\mathsf{ptr} \end{aligned}`
+$$`\begin{aligned} \mathsf{propagates}:\ & \mathsf{const}_N,\ \mathsf{const}_{e,m},\ \mathsf{poison},\ \mathsf{add}, \\ & \mathsf{sub},\ \mathsf{mul},\ \mathsf{sdiv},\ \mathsf{udiv}, \\ & \mathsf{srem},\ \mathsf{urem},\ \mathsf{and},\ \mathsf{or}, \\ & \mathsf{xor},\ \mathsf{shl},\ \mathsf{lshr},\ \mathsf{ashr}, \\ & \mathsf{icmp},\ \mathsf{fcmp},\ \mathsf{zext},\ \mathsf{sext},\ \mathsf{trunc}, \\ & \mathit{fbin},\ \mathit{funary},\ \mathsf{fma},\ \mathsf{bitcast}^{\to \mathsf{i}},\ \mathsf{bitcast}^{\mathsf{i} \to}, \\ & \mathsf{sitofp},\ \mathsf{uitofp},\ \mathsf{fpext},\ \mathsf{fptrunc},\ \mathsf{ptradd}, \\ & \mathsf{fptosi},\ \mathsf{fptoui},\ \mathsf{alloca}, \\ & \mathsf{load},\ \mathsf{store},\ \mathsf{load}~\mathsf{ptr},\ \mathsf{store}~\mathsf{ptr}, \\ & \mathsf{load}~\mathsf{float},\ \mathsf{store}~\mathsf{float} \end{aligned}`
 
 $$`\begin{aligned} \mathsf{exception}:\ & \mathsf{select},\ \mathsf{freeze},\ \mathsf{br}, \\ & \mathsf{cond\_br},\ \mathsf{ret},\ \mathsf{unreachable},\ \mathsf{call} \end{aligned}`
 
@@ -34,14 +34,16 @@ result and is UB on a poison pointer for the same reason; a poison value
 it stores as poison units. The load and store of a pointer,
 $`\mathsf{load}~\mathsf{ptr}` and $`\mathsf{store}~\mathsf{ptr}`
 (`loadPtr` and `storePtr` in the Lean), propagate poison as
-$`\mathsf{load}` and $`\mathsf{store}` do.
+$`\mathsf{load}` and $`\mathsf{store}` do, and so do the load and store
+of a float, $`\mathsf{load}~\mathsf{float}` and
+$`\mathsf{store}~\mathsf{float}` (`loadFloat` and `storeFloat`).
 The definition lists every op, with no case for the rest, so a new core op
 does not build until it declares its class (ADR-2026-11-03-0600).
 $`\mathsf{cond\_br}` is `condBr` in the Lean. The Lean checks the
 exceptions against one instance of every core op.
 :::
 
-:::readable Fir.Core.Ty.IsPoison (fingerprint := "4747879516839045781")
+:::readable Fir.Core.Ty.IsPoison (fingerprint := "7383584068609470623")
 *Definition: which core values are poison.* A value of $`\mathsf{i}N`, of
 $`\mathsf{float}\langle e,m \rangle` or of
 $`\mathsf{ptr}\langle N \rangle` is poison when it is $`\mathsf{poison}`.
@@ -49,7 +51,7 @@ These are the poison values of the core dialect's types, which the
 obligations speak of.
 :::
 
-:::readable Fir.Core.Ty.poison_isRefinedBy (pin := Fir.Core.Ty.IsRefinedBy) (fingerprint := "7175011835509932689")
+:::readable Fir.Core.Ty.poison_isRefinedBy (pin := Fir.Core.Ty.IsRefinedBy) (fingerprint := "248690010009350158")
 *Theorem: a poison core value is refined by every value of its type.* For
 every core type $`t` and all $`p, v \in \llbracket t \rrbracket`: if $`p` is
 poison, then $`p \sqsubseteq_t v`.

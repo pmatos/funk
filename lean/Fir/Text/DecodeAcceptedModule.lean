@@ -13,8 +13,10 @@ types decode as types do, from attributes written as types.
 An item decodes only as a `func` with no attributes, whose body holds
 blocks or holds nothing, as a `module` with no parameters, results or
 attributes, whose body holds a dialect set and items, decoded in turn, or
-holds nothing, or as an item of a dialect's kind, whose kind is a word of a
-dialect and whose body is empty, with its attributes as read. Decoding a
+holds nothing, as an aggregate's layout whose numbers are within the limit
+and whose fields' types are written as types and decode back, or as an item
+of a dialect's kind, whose kind is a word of a dialect and whose body is
+empty, with its attributes as read. Decoding a
 module decodes each entry of its data layout, which is within the limit
 when it decodes, and keeps the location table as it was read. So a module decoded from a
 tree that can be written is well formed: the decoding step.
@@ -138,6 +140,53 @@ theorem decodeDialectItem_wellFormed {kind : String} {kindPos : TextPos} {name :
       exact ha b hb
   · cases h
 
+/-- Fields decoded from attributes that can be written have their numbers
+within the limit, and their types are written as types and decode back. -/
+theorem decodeFields_wellFormed : ∀ {ss : List (Attr × TextPos)} {fs : List (Field d)},
+    ss.mapM decodeField = .ok fs → (∀ a ∈ ss, a.1.Writable) → ∀ f ∈ fs,
+      f.offset ≤ Aggregate.limit ∧ (∀ c ∈ f.count, c ≤ Aggregate.limit) ∧
+        (tyAttr f.ty).IsType ∧ decodeTy (tyAttr f.ty) = some f.ty
+  | [], fs, h, _ => by cases h; simp
+  | (a, p) :: ss, fs, h, hw => by
+    rw [List.mapM_cons] at h
+    bind_step h with ⟨f, h₁, h⟩
+    bind_step h with ⟨fs', h₂, h⟩
+    cases h
+    intro g hg
+    rcases List.mem_cons.mp hg with rfl | hg
+    · simp only [decodeField] at h₁
+      cases hd : Field.decode (d := d) a with
+      | none => rw [hd] at h₁; cases h₁
+      | some f' =>
+        rw [hd] at h₁
+        cases h₁
+        exact Field.wellFormed_of_decode hd (hw _ (.head _)) LawfulDialectText.encode_decodeTy
+    · exact decodeFields_wellFormed h₂ (fun a' ha' => hw a' (.tail _ ha')) g hg
+
+/-- An aggregate's layout decoded from attributes that can be written is
+well formed. -/
+theorem decodeAggregate_wellFormed {kindPos : TextPos} {name : String} {params : List SDef}
+    {results attrs : List (Attr × TextPos)} {body : SBody} {i : Item d}
+    (h : decodeAggregate kindPos name params results attrs body = .ok i)
+    (ha : ∀ a ∈ attrs, a.1.Writable) : i.WellFormed := by
+  unfold decodeAggregate at h
+  split at h
+  · cases h
+  · cases h
+  · split at h
+    · rename_i hm hs hal
+      bind_step h with ⟨fs, e, h⟩
+      cases h
+      have hF := decodeFields_wellFormed e fun x hx => ha x (by simp [hx])
+      exact ⟨⟨Aggregate.le_of_decodeNumber hm, Aggregate.le_of_decodeNumber hs,
+        Aggregate.le_of_decodeNumber hal, fun f hf => ⟨(hF f hf).1, (hF f hf).2.1⟩⟩,
+        fun t ht => by
+          obtain ⟨f, hf, rfl⟩ := List.mem_map.mp ht
+          exact (hF f hf).2.2⟩
+    all_goals cases h
+  · cases h
+  · cases h
+
 -- The two theorems recurse together, so both take the dialect's lawful
 -- text, which only the first states it needs.
 set_option linter.unusedSectionVars false in
@@ -160,6 +209,10 @@ theorem decodeItem_wellFormed : ∀ {si : SItem} {i : Item d}, decodeItem si = .
         cases h
         exact ⟨hd, decodeItems_wellFormed e hs⟩
       · simp only [hk, hm, ↓reduceIte] at h
+        by_cases hg : kind = "aggregate"
+        · simp only [hg, ↓reduceIte] at h
+          exact decodeAggregate_wellFormed h ha
+        simp only [hg, ↓reduceIte] at h
         split at h
         · exact decodeDialectItem_wellFormed h (by assumption) hp hr ha
         · cases h
@@ -179,6 +232,10 @@ theorem decodeItem_wellFormed : ∀ {si : SItem} {i : Item d}, decodeItem si = .
           exact ⟨by simp, trivial⟩
         | cons => simp [errorAt] at h
       · simp only [hk, hm, ↓reduceIte] at h
+        by_cases hg : kind = "aggregate"
+        · simp only [hg, ↓reduceIte] at h
+          exact decodeAggregate_wellFormed h ha
+        simp only [hg, ↓reduceIte] at h
         split at h
         · exact decodeDialectItem_wellFormed h (by assumption) hp hr ha
         · cases h

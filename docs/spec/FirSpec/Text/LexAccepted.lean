@@ -25,7 +25,7 @@ The proofs below take the parser's readers apart one step at a time with
 it.
 :::
 
-:::readable Fir.Text.mem_takeWhile Fir.Text.isName_takeWhile Fir.Text.isWord_takeWhile (pin := Fir.isName) (pin := Fir.isWord) (pin := Fir.isWordStart) (fingerprint := "1045717097886148641")
+:::readable Fir.Text.mem_takeWhile Fir.Text.isName_takeWhile Fir.Text.isWord_takeWhile (pin := Fir.isName) (pin := Fir.isWord) (pin := Fir.isWordStart) (fingerprint := "8751545941374527900")
 *Lemmas: a leading run of name characters is a name, or a word.* For
 every test $`p` on characters and every list of characters, each
 character of the longest prefix of the list whose characters all pass
@@ -44,7 +44,7 @@ in exactly this way, so these lemmas are what make its tokens names and
 words.
 :::
 
-:::readable Fir.Text.map_eq_ok Fir.Text.lexFraction_writable Fir.Text.lexHex_writable Fir.Text.lexFloat_writable Fir.Text.lexNumber_writable (pin := Fir.Text.lexFraction) (pin := Fir.Text.lexHex) (pin := Fir.Text.lexFloat) (pin := Fir.Text.lexNumber) (pin := Fir.FloatLit.valid) (fingerprint := "3927361144757319295")
+:::readable Fir.Text.map_eq_ok Fir.Text.lexFraction_writable Fir.Text.lexHex_writable Fir.Text.lexFloat_writable Fir.Text.lexNumber_writable (pin := Fir.Text.lexFraction) (pin := Fir.Text.lexHex) (pin := Fir.Text.lexFloat) (pin := Fir.Text.lexNumber) (pin := Fir.FloatLit.valid) (fingerprint := "2262142593502590471")
 *Theorems: every float literal and number that the lexer reads can be
 written.* A step that ends with a result and then has a map applied ends
 with a result only when the step did, and the map of its result is that
@@ -57,7 +57,7 @@ every float literal that it reads can be written, and so can every number
 it reads from a first digit, an integer or a float literal.
 :::
 
-:::readable Fir.Text.lexInt_writable Fir.Text.lexAt_writable Fir.Text.lexToken_writable (pin := Fir.Text.lexInt) (pin := Fir.Text.lexAt) (pin := Fir.Text.lexToken) (pin := Fir.Text.Tok.Writable) (pin := Fir.Location.limit) (pin := Fir.isWordStart) (fingerprint := "16150394269038920626")
+:::readable Fir.Text.lexInt_writable Fir.Text.lexAt_writable Fir.Text.lexToken_writable (pin := Fir.Text.lexInt) (pin := Fir.Text.lexAt) (pin := Fir.Text.lexToken) (pin := Fir.Text.Tok.Writable) (pin := Fir.Location.limit) (pin := Fir.isWordStart) (fingerprint := "5144646892652199226")
 *Theorems: every token that the lexer reads can be written.* For every
 character $`c`, the characters after it, and position in the text, from
 which the reader counts where the next token starts and which its error
@@ -84,7 +84,7 @@ all, and the end of the text, $`\mathsf{eof}`, is added by the loop that
 calls it.
 :::
 
-:::readable Fir.Text.TokensWritable (pin := Fir.Text.lexFrom) (fingerprint := "2498256053963689202")
+:::readable Fir.Text.TokensWritable (pin := Fir.Text.lexFrom) (fingerprint := "13062495268651758728")
 *Definition: a list of tokens that can be written.* A list of tokens
 $`\mathit{ts}` _can be written_, written $`\mathrm{writable}(\mathit{ts})`,
 when each of its tokens is $`\mathsf{eof}` or can be written. The lexer
@@ -94,7 +94,7 @@ so it is allowed here, and every other token must be one that the printer
 could write.
 :::
 
-:::readable Fir.Text.lexFrom_writable Fir.Text.lex_writable (pin := Fir.Text.lexFrom) (pin := Fir.Text.lex) (fingerprint := "16547685817246884587")
+:::readable Fir.Text.lexFrom_writable Fir.Text.lex_writable (pin := Fir.Text.lexFrom) (pin := Fir.Text.lex) (fingerprint := "14651385701096438121")
 *Theorems: the lexer's step.* The lexer's loop reads a text from a
 position, keeping the tokens it has read so far. For every list of
 characters, position, and list of tokens read so far each of which can be

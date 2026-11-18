@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Progress and no stuck path, with memory: readable blocks" =>
 
-:::moduleDocs (fingerprint := "10818362700393689301")
+:::moduleDocs (fingerprint := "10644134568607406999")
 :::
 
 :::readable Fir.Module.calls_memNoStuck Fir.Module.calls_memHasPath (pin := Fir.HasOutcome) (fingerprint := "17375378244954417757")
@@ -49,13 +49,13 @@ returns values of the call's result types, whatever it did to the
 memories.
 :::
 
-:::readable Fir.NoStuck.finish Fir.HasPath.finish (pin := Fir.Result.finish) (fingerprint := "11051480644896066662")
+:::readable Fir.NoStuck.finish Fir.HasPath.finish (pin := Fir.Result.finish) (fingerprint := "10097690051987089580")
 *Theorems: what a function does with its ops' run.* A function returns
 what its entry block's ops return, or runs out of fuel when they do; it has
 no stuck path when they have none, and a path when they have one.
 :::
 
-:::readable Fir.Func.memNeverStuck Fir.Func.memProgress (pin := Fir.NeverStuck) (pin := Fir.Progress) (fingerprint := "5118189292493913343")
+:::readable Fir.Func.memNeverStuck Fir.Func.memProgress (pin := Fir.NeverStuck) (pin := Fir.Progress) (fingerprint := "15426673428919102909")
 *Theorem: every function of a module whose functions are all valid and run
 within it with memory has no stuck path with memory, and has progress
 with memory when its dialect is lawful in its totality, calls and recursion

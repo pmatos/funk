@@ -14,16 +14,17 @@ when the Lean changes under it.
 
 #doc (Manual) "Core op semantics: readable blocks" =>
 
-:::moduleDocs (fingerprint := "13546835037080206771")
+:::moduleDocs (fingerprint := "17281230621683384280")
 :::
 
-:::readable Fir.Core.Op.denote? (fingerprint := "4904635401474457729")
+:::readable Fir.Core.Op.denote? (fingerprint := "12358975260916379547")
 *Definition: the rule of each core op that is not a terminator.* For
 every way of computing with the
 {ref "The-fir-specification--Execution--Effects-and-op-semantics"}[choice and UB effects],
-each core op that is not a terminator, other than $`\mathsf{call}` and
-$`\mathsf{alloca}`, has the rule of its family, which takes its operand values and gives its one
-result:
+each core op that is not a terminator, other than $`\mathsf{call}`,
+$`\mathsf{alloca}`, and the loads and stores of an integer, a pointer or
+a float, has the rule of its family, which takes its operand values and gives its
+one result:
 
 * $`\mathsf{const}_N~c`, the float constant $`\mathsf{const}_{e,m}~v` and
   $`\mathsf{poison}_N`: the
@@ -69,8 +70,9 @@ result:
 The rule of an op that rounds reads its mode $`r` as $`\mathsf{rne}`,
 the one mode that validation accepts.
 
-$`\mathsf{call}`, $`\mathsf{alloca}`, $`\mathsf{load}`, $`\mathsf{store}`
-and the terminators have none here: a call's meaning is the run of its
+$`\mathsf{call}`, $`\mathsf{alloca}`, the loads and stores of an integer
+or a pointer (`loadPtr` and `storePtr` in the Lean for a pointer) and the
+terminators have none here: a call's meaning is the run of its
 callee, $`\mathsf{alloca}` allocates, $`\mathsf{load}` reads and
 $`\mathsf{store}` writes, so each of their
 rules needs the memory effect and is one of the
@@ -81,7 +83,7 @@ effects, so the spec's set of the ways a run may end and the tree of
 choices that `fir-ref run` walks share them.
 :::
 
-:::readable Fir.Core.Op.exit? (fingerprint := "34922924445590343")
+:::readable Fir.Core.Op.exit? (fingerprint := "10690001557293425631")
 *Definition: the rule of each core terminator.* For every way of
 computing with the
 {ref "The-fir-specification--Execution--Effects-and-op-semantics"}[UB effect],
@@ -93,7 +95,7 @@ Each takes the terminator's operand values and says where control goes.
 Every op that is not a terminator has none here.
 :::
 
-:::readable Fir.Core.denoteWith Fir.Core.denoteIn (fingerprint := "3568116688035604745")
+:::readable Fir.Core.denoteWith Fir.Core.denoteIn (fingerprint := "548956072214993055")
 *Definition: the core dialect's semantics in a monad.* Given two tables
 of rules in a monad $`m`, one for the ops that are not terminators and one
 for the terminators, and a computation $`z(p)` for each op $`p`, the core's
@@ -105,11 +107,11 @@ tree of choices and the state layer use the same tables, or tables with
 memory, with their own $`z`.
 :::
 
-:::readable Fir.Core.Op.hasRules Fir.Core.Op.touchesMemory (pin := Fir.instDialectDenoteCoreDialectSetM) (pin := Fir.instDialectCallCoreDialect) (pin := Fir.Core.Op.callTarget?) (pin := Fir.Core.Op.denote?) (pin := Fir.Core.Op.exit?) (fingerprint := "1293411919349281793")
+:::readable Fir.Core.Op.hasRules Fir.Core.Op.touchesMemory (pin := Fir.instDialectDenoteCoreDialectSetM) (pin := Fir.instDialectCallCoreDialect) (pin := Fir.Core.Op.callTarget?) (pin := Fir.Core.Op.denote?) (pin := Fir.Core.Op.exit?) (fingerprint := "7599230684517020063")
 *Definition: the core ops that touch memory.* $`\mathsf{alloca}`, which
 allocates, $`\mathsf{load}`, which reads, and $`\mathsf{store}`, which
-writes, an integer or a pointer (`loadPtr` and `storePtr` in the Lean),
-touch memory, and no other core op does. Each rule needs the memory effect, so each has one only in a
+writes, an integer, a pointer or a float (`loadPtr`, `storePtr`,
+`loadFloat` and `storeFloat` in the Lean), touch memory, and no other core op does. Each rule needs the memory effect, so each has one only in a
 monad with memory.
 
 *Definition: an op has rules.* A core op has rules when one of the two

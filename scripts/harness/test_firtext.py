@@ -130,12 +130,21 @@ class Tests(unittest.TestCase):
         )
         self.assertEqual(read(text)["@f"].params, ("ptr(1)",))
 
+    def test_an_aggregate_is_skipped(self):
+        text = (
+            "aggregate @pair() memory(0) size(16) align(8) field(0, i64) "
+            "field(8, ptr(1), 2) {\n}\n\n"
+            "func @f(%p: ptr) {\n^e:\n  ret @0\n}\n\nlocs {\n  @0 = unknown\n}\n"
+        )
+        self.assertEqual(list(read(text)), ["@f"])
+
     def test_texts_it_cannot_read(self):
         for text, needle in [
             ("func @f() {\n^e:\n  ret %x @0\n}\nlocs {\n}\n", "%x is not defined"),
             ("global @g() {\n}\nlocs {\n}\n", "an item of kind global"),
             ("module @m() {\n  func @f() {\n", "the end: expected }"),
             ("module @m() {\n", "the end: expected }"),
+            ("aggregate @a() memory(0) size(1) align(1) {\n", "the end: expected }"),
             ("layout memory(1, unit(8)", "an entry of the data layout does not end"),
             ("func @f() {\n^e:\n  ret @0\n}\n", "expected word"),
             ("locs {\n}\nfunc", "text after the location table"),

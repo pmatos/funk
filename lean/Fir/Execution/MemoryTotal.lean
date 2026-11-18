@@ -100,8 +100,8 @@ variable {d : Dialect} [TyDenote d.Ty] [DialectSignature d] [DialectEffects d]
 every operand vector, an op that is not a terminator has an outcome from
 any memories, and so does the exit of a terminator. -/
 def MemTotal (op : d.Op) : Prop :=
-  ∀ {N : Type} [DecidableEq N] (lay : N → MemLayout) (ρ : DialectEffects.Mem d → N),
-    OwnRuleHas lay ρ HasOutcome op
+  ∀ {N : Type} [DecidableEq N] (lay : N → MemLayout) (ρ : DialectEffects.Mem d → N) (L : RunItems),
+    OwnRuleHas lay ρ L HasOutcome op
 
 /-- A dialect lawful in its totality: every valid instance that runs by its
 own rule, a terminator or an op with no callee, is total with memory. -/
@@ -119,8 +119,8 @@ variable {d : Dialect} [TyDenote d.Ty] [DialectSignature d] [DialectEffects d]
 /-- An op that touches no memory and is total in the set monad is total
 with memory. -/
 theorem MemTotal.ofLifts {op : d.Op} (hl : OpLiftsSetM op) (h : OpTotal op) : MemTotal op :=
-  fun lay ρ args => by
-    rw [(hl lay ρ args).1, (hl lay ρ args).2]
+  fun lay ρ L args => by
+    rw [(hl lay ρ L args).1, (hl lay ρ L args).2]
     exact ⟨fun ht => hasOutcome_lift ((h args).1 ht), fun ht => hasOutcome_lift ((h args).2 ht)⟩
 
 variable [LiftsSetM d]
@@ -129,7 +129,7 @@ variable [LiftsSetM d]
 in the set monad. -/
 theorem MemTotal.setM {op : d.Op} (h : MemTotal op) : OpTotal op := by
   intro args
-  have hu := h (N := Unit) (fun _ => MemLayout.default) (fun _ => ()) args
+  have hu := h (N := Unit) (fun _ => MemLayout.default) (fun _ => ()) RunItems.empty args
   rw [LiftsSetM.lifts] at hu
   exact ⟨fun ht => (hu.1 ht).of_lift Memories.empty, fun ht => (hu.2 ht).of_lift Memories.empty⟩
 

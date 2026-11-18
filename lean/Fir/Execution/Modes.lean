@@ -24,6 +24,10 @@ import Fir.Execution.ChoiceTree
   scripted mode on them follows the same path. So sampled mode, too, gives
   a member of the run's set of outcomes, whatever the generator.
 
+A fourth walk, exhaustive mode that tries only a few NaNs at each NaN
+choice, has a section of its own (the section on exhaustive runs that try a
+few NaNs).
+
 All three modes report how many choices a path made, so that a run that makes
 no choice is known to have one outcome. The choice budget is not the fuel
 budget: each mode runs the interpreter at one fuel budget _n_, so the theorems

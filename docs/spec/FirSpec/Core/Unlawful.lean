@@ -14,7 +14,7 @@ fails when the Lean changes under it.
 
 #doc (Manual) "Semantics the obligations reject: readable blocks" =>
 
-:::moduleDocs (fingerprint := "4845064695708264964")
+:::moduleDocs (fingerprint := "13168917855558869439")
 :::
 
 :::readable Fir.Core.Unlawful.add_typesValid Fir.Core.Unlawful.sdiv_typesValid (pin := Fir.TypesValid) (fingerprint := "5393438447920550166")
@@ -42,7 +42,7 @@ like this would drop every path of every run, and an empty behaviour
 refines every source, so without totality it would pass for correct.
 :::
 
-:::readable Fir.Core.Unlawful.poisonIsUB Fir.Core.Unlawful.poisonIsUB_unlawful (pin := Fir.LawfulDialectPoison) (pin := Fir.UBByOwnRules) (pin := Fir.HVector.Any) (fingerprint := "1528769472209587911")
+:::readable Fir.Core.Unlawful.poisonIsUB Fir.Core.Unlawful.poisonIsUB_unlawful (pin := Fir.LawfulDialectPoison) (pin := Fir.UBByOwnRules) (pin := Fir.HVector.Any) (fingerprint := "2503533416153702783")
 *Definition: a semantics in which poison is UB.* Every op is immediate UB
 on an operand vector some element of which is poison, and returns some
 result on every other operand vector. Every terminator's exit is UB.
@@ -55,7 +55,7 @@ turns every poison operand into UB, which would undo the deferral that
 poison exists for.
 :::
 
-:::readable Fir.Core.Unlawful.sdivOld Fir.Core.Unlawful.oldSDiv Fir.Core.Unlawful.oldSDiv_not_monotone Fir.Core.Unlawful.oldSDiv_unlawful (pin := Fir.LawfulDialectPoison) (pin := Fir.OpMonotone) (pin := Fir.Ev.IsRefinedBy) (pin := Fir.Core.Ty.IsRefinedBy) (fingerprint := "1600389928004172081")
+:::readable Fir.Core.Unlawful.sdivOld Fir.Core.Unlawful.oldSDiv Fir.Core.Unlawful.oldSDiv_not_monotone Fir.Core.Unlawful.oldSDiv_unlawful (pin := Fir.LawfulDialectPoison) (pin := Fir.OpMonotone) (pin := Fir.Ev.IsRefinedBy) (pin := Fir.Core.Ty.IsRefinedBy) (fingerprint := "2203857964530636037")
 *Definition: the rejected rule for $`\mathsf{sdiv}`.* Under it, a poison
 dividend by $`-1` gives poison. For $`a, b \in \llbracket \mathsf{i}N \rrbracket`:
 
@@ -78,7 +78,7 @@ not. This is why fir's $`\mathsf{sdiv}` by $`-1` is immediate UB on a
 poison dividend.
 :::
 
-:::readable Fir.Core.Unlawful.fillZero Fir.Core.Unlawful.fillZero_fills (pin := Fir.HVector.IsFilledBy) (pin := Fir.HVector.Any) (pin := Fir.HVector.Forall₂) (fingerprint := "10563675819995500177")
+:::readable Fir.Core.Unlawful.fillZero Fir.Core.Unlawful.fillZero_fills (pin := Fir.HVector.IsFilledBy) (pin := Fir.HVector.Any) (pin := Fir.HVector.Forall₂) (fingerprint := "2808819041721387470")
 *Definition: each poison replaced by zero.* For an operand vector
 $`\vec{v}` of core values, $`\mathrm{fill}_0(\vec{v})` replaces each poison
 of an integer or float type by the value $`0` of its type, and each poison
@@ -108,7 +108,7 @@ every op UB would pass. Exceptions are exempt from it, so an exception
 that is always UB, such as $`\mathsf{unreachable}`, stays allowed.
 :::
 
-:::readable Fir.Core.Unlawful.memUnlawful Fir.Core.Unlawful.all_memUnlawful (pin := Fir.LawfulDialectMem) (pin := Fir.DialectMemDenote.ofSetM) (fingerprint := "1637578780204857706")
+:::readable Fir.Core.Unlawful.memUnlawful Fir.Core.Unlawful.all_memUnlawful (pin := Fir.LawfulDialectMem) (pin := Fir.DialectMemDenote.ofSetM) (fingerprint := "18082393574708919618")
 *Theorems: the obligations with memory reject the same semantics.* Each of
 the four semantics above is a semantics in the set monad. Lifted into the
 state layer, as the semantics with memory of a dialect whose ops touch no

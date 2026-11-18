@@ -142,9 +142,9 @@ theorem recModule_typesValid :
 /-- A run with memory of `@even`, which calls `@odd`, which calls it back,
 has an outcome at every budget, by the class of totality with memory alone. -/
 theorem even_progress_of_lawful (args : HVector toType (evenFn.params.map (·.2))) :
-    Progress (evenFn.memRuns recModule.layout.entry id recModule args) :=
-  Func.memProgress _ _ recModule_valid.funcs
-    (fun g hg => inModuleAt_of_valid _ _ (recModule_valid.funcs g hg))
+    Progress (evenFn.memRuns recModule.layout.entry id recModule.runItems recModule args) :=
+  Func.memProgress _ _ _ recModule_valid.funcs
+    (fun g hg => inModuleAt_of_valid _ _ _ (recModule_valid.funcs g hg))
     (by simp [recModule, Module.funcs]) args
 
 /-! # Axioms -/

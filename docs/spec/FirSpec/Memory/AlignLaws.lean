@@ -17,13 +17,13 @@ when the Lean changes under it.
 :::moduleDocs (fingerprint := "12590413594868773260")
 :::
 
-:::readable Fir.Memory.Memory.aligned_one (pin := Fir.Memory.Memory.aligned) (fingerprint := "6260021138719888865")
+:::readable Fir.Memory.Memory.aligned_one (pin := Fir.Memory.Memory.aligned) (fingerprint := "13858609998696589949")
 *Theorem: every access is aligned to 1.* For every memory $`M` and
 pointer $`p`, $`\mathrm{aligned}_M(p, 1)`: 1 divides every alignment and
 every offset.
 :::
 
-:::readable Fir.Memory.Memory.loadAligned_of_aligned Fir.Memory.Memory.storeAligned_of_aligned Fir.Memory.Memory.loadAligned_one Fir.Memory.Memory.storeAligned_one (pin := Fir.Memory.Memory.loadAligned) (pin := Fir.Memory.Memory.storeAligned) (fingerprint := "14260621340238884520")
+:::readable Fir.Memory.Memory.loadAligned_of_aligned Fir.Memory.Memory.storeAligned_of_aligned Fir.Memory.Memory.loadAligned_one Fir.Memory.Memory.storeAligned_one (pin := Fir.Memory.Memory.loadAligned) (pin := Fir.Memory.Memory.storeAligned) (fingerprint := "6343105406473981670")
 *Theorems: an aligned access is the plain one.* When an access through
 $`p` aligned to $`\alpha` units is aligned, the aligned load of $`n`
 units is the plain load of $`n` units, and the aligned store of

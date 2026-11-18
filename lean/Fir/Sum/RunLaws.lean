@@ -53,10 +53,10 @@ variable [DialectEffects base] [DialectEffects (base.over e)] [DialectMemOver ba
 /-- A base op tied to the set monad in the base is tied in the sum. -/
 theorem opLiftsSetM_inl [DialectDenote base SetM] [DialectDenote (base.over e) SetM]
     {o : base.Op} (h : OpLiftsSetM o) : OpLiftsSetM (d := base ⊞ e) (.inl o) :=
-  fun lay ρ _ =>
-    ⟨(congrArg (HVector.toSum <$> ·) (h lay (ρ ∘ DialectMemOver.ofBase) _).1).trans
+  fun lay ρ L _ =>
+    ⟨(congrArg (HVector.toSum <$> ·) (h lay (ρ ∘ DialectMemOver.ofBase) L _).1).trans
         ((MonadMorphism.liftState SetM _).map_map _ _).symm,
-      (h lay (ρ ∘ DialectMemOver.ofBase) _).2⟩
+      (h lay (ρ ∘ DialectMemOver.ofBase) L _).2⟩
 
 /-- Mapping the results of a computation keeps finitely many outcomes. -/
 theorem _root_.Fir.FinitelyMany.map {σ α β : Type} (f : α → β) {c : StateT σ SetM α}
@@ -69,17 +69,17 @@ theorem _root_.Fir.FinitelyMany.map {σ α β : Type} (f : α → β) {c : State
   · cases he
 
 variable [DialectCall base] [DialectCall (base.over e)] {N : Type} [DecidableEq N]
-  (lay : N → MemLayout) (ρ : DialectEffects.Mem (base ⊞ e) → N)
+  (lay : N → MemLayout) (ρ : DialectEffects.Mem (base ⊞ e) → N) (L : RunItems)
 
 /-- The sum's ops have finitely many outcomes with memory when the base's
 do, where the run names each memory of the base as the sum does, and `e`'s
 do. -/
 theorem opsFinite
-    (h₁ : letI := DialectMemDenote.denoteAt (d := base) lay (ρ ∘ DialectMemOver.ofBase)
+    (h₁ : letI := DialectMemDenote.denoteAt (d := base) lay (ρ ∘ DialectMemOver.ofBase) L
       OpsFinite base N (unitsOf lay))
-    (h₂ : letI := DialectMemDenote.denoteAt (d := base.over e) lay ρ
+    (h₂ : letI := DialectMemDenote.denoteAt (d := base.over e) lay ρ L
       OpsFinite (base.over e) N (unitsOf lay)) :
-    letI := DialectMemDenote.denoteAt (d := base ⊞ e) lay ρ
+    letI := DialectMemDenote.denoteAt (d := base ⊞ e) lay ρ L
     OpsFinite (base ⊞ e) N (unitsOf lay)
   | .inl o, hc, args =>
     ⟨fun ht => FinitelyMany.map _ ((h₁ o hc (HVector.ofSum args)).1 ht),
@@ -90,11 +90,11 @@ theorem opsFinite
 do, where the run names each memory of the base as the sum does, and `e`'s
 do. -/
 theorem opsIgnoreMemory
-    (h₁ : letI := DialectMemDenote.denoteAt (d := base) lay (ρ ∘ DialectMemOver.ofBase)
+    (h₁ : letI := DialectMemDenote.denoteAt (d := base) lay (ρ ∘ DialectMemOver.ofBase) L
       OpsIgnoreMemory base N (unitsOf lay))
-    (h₂ : letI := DialectMemDenote.denoteAt (d := base.over e) lay ρ
+    (h₂ : letI := DialectMemDenote.denoteAt (d := base.over e) lay ρ L
       OpsIgnoreMemory (base.over e) N (unitsOf lay)) :
-    letI := DialectMemDenote.denoteAt (d := base ⊞ e) lay ρ
+    letI := DialectMemDenote.denoteAt (d := base ⊞ e) lay ρ L
     OpsIgnoreMemory (base ⊞ e) N (unitsOf lay)
   | .inl o, hc, ht, args =>
     have h := h₁ o hc ht.of_map (HVector.ofSum args)

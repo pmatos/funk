@@ -154,8 +154,8 @@ such as `sdiv` and `udiv`. Pointer types are separate: `ptr<N>` points into the
 memory `N`, and the core `ptr` is `ptr<0>`. A value of a pointer type is poison
 or a pointer (ADR-2026-11-09-1542). `alloca` makes one (ADR-2026-11-14-0915),
 `ptradd` moves one (ADR-2026-11-13-0251; semantics-m1-memory.md says
-how), and `load` and `store` load and store an integer or a pointer
-through one (ADR-2026-11-14-2316; semantics-m1-memory-access.md). These types
+how), and `load` and `store` load and store an integer, a pointer or a
+float through one (ADR-2026-11-14-2316; semantics-m1-memory-access.md). These types
 belong to the core dialect, not to a closed type system (ADR-2026-10-29-2007).
 This is S2. Rejected: signed and unsigned integer types. Signedness is a
 property of an operation, and one bit pattern is read both ways.

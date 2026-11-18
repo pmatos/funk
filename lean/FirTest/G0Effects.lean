@@ -79,9 +79,9 @@ theorem makesNoPoison_setM (d : Dialect) [TyDenote d.Ty] [TyPoison d.Ty] [Dialec
 the state layer over the set monad, wherever a run names its memories. -/
 example (d : Dialect) [TyDenote d.Ty] [DialectSignature d] [DialectEffects d]
     [DialectMemDenote d] {N : Type} [DecidableEq N] (lay : N → MemLayout)
-    (ρ : DialectEffects.Mem d → N) : DialectDenote d (StateT (Memory.Memories N (unitsOf lay))
-        SetM) :=
-  DialectMemDenote.denoteAt lay ρ
+    (ρ : DialectEffects.Mem d → N) (L : RunItems) :
+    DialectDenote d (StateT (Memory.Memories N (unitsOf lay)) SetM) :=
+  DialectMemDenote.denoteAt lay ρ L
 
 /-- In every dialect lawful in its effects, a valid op that runs by its own
 rule and does not declare a write to a memory of a run writes no unit of
@@ -90,9 +90,9 @@ theorem writesNot (d : Dialect) [TyDenote d.Ty] [TyPoison d.Ty] [DialectSignatur
     [DialectEffects d] [DialectCall d] [DialectValidation d]
     [DialectMemDenote d] [LawfulDialectEffects d] (op : d.Op) (hv : TypesValid op)
     (hc : isTerminator op = true ∨ callee? op = none) {N : Type} [DecidableEq N]
-    (lay : N → MemLayout) (ρ : DialectEffects.Mem d → N) (x : N)
-    (h : ¬ ((effects op).writes.map ρ).Has x) : OwnRuleHas lay ρ (WritesNot x) op :=
-  LawfulDialectEffects.writesNot op hv hc lay ρ x h
+    (lay : N → MemLayout) (ρ : DialectEffects.Mem d → N) (L : RunItems) (x : N)
+    (h : ¬ ((effects op).writes.map ρ).Has x) : OwnRuleHas lay ρ L (WritesNot x) op :=
+  LawfulDialectEffects.writesNot op hv hc lay ρ L x h
 
 /-- In every dialect lawful in its effects, a valid op that runs by its own
 rule and does not declare a read of a memory of a run does not depend on
@@ -101,9 +101,9 @@ theorem readsNot (d : Dialect) [TyDenote d.Ty] [TyPoison d.Ty] [DialectSignature
     [DialectEffects d] [DialectCall d] [DialectValidation d]
     [DialectMemDenote d] [LawfulDialectEffects d] (op : d.Op) (hv : TypesValid op)
     (hc : isTerminator op = true ∨ callee? op = none) {N : Type} [DecidableEq N]
-    (lay : N → MemLayout) (ρ : DialectEffects.Mem d → N) (x : N)
-    (h : ¬ ((effects op).reads.map ρ).Has x) : OwnRuleHas lay ρ (ReadsNot x) op :=
-  LawfulDialectEffects.readsNot op hv hc lay ρ x h
+    (lay : N → MemLayout) (ρ : DialectEffects.Mem d → N) (L : RunItems) (x : N)
+    (h : ¬ ((effects op).reads.map ρ).Has x) : OwnRuleHas lay ρ L (ReadsNot x) op :=
+  LawfulDialectEffects.readsNot op hv hc lay ρ L x h
 
 /-- In every dialect lawful in its effects, a valid op that runs by its own
 rule and does not declare allocation in a memory of a run leaves its
@@ -112,9 +112,9 @@ theorem allocatesNot (d : Dialect) [TyDenote d.Ty] [TyPoison d.Ty] [DialectSigna
     [DialectEffects d] [DialectCall d] [DialectValidation d]
     [DialectMemDenote d] [LawfulDialectEffects d] (op : d.Op) (hv : TypesValid op)
     (hc : isTerminator op = true ∨ callee? op = none) {N : Type} [DecidableEq N]
-    (lay : N → MemLayout) (ρ : DialectEffects.Mem d → N) (x : N)
-    (h : ¬ ((effects op).allocates.map ρ).Has x) : OwnRuleHas lay ρ (AllocatesNot x) op :=
-  LawfulDialectEffects.allocatesNot op hv hc lay ρ x h
+    (lay : N → MemLayout) (ρ : DialectEffects.Mem d → N) (L : RunItems) (x : N)
+    (h : ¬ ((effects op).allocates.map ρ).Has x) : OwnRuleHas lay ρ L (AllocatesNot x) op :=
+  LawfulDialectEffects.allocatesNot op hv hc lay ρ L x h
 
 /-- In every dialect lawful in its totality, a valid op that runs by its
 own rule has an outcome from any memories, wherever a run names the
@@ -122,9 +122,9 @@ dialect's memories. -/
 theorem memTotal (d : Dialect) [TyDenote d.Ty] [DialectSignature d] [DialectEffects d]
     [DialectCall d] [DialectValidation d] [DialectMemDenote d] [LawfulDialectTotal d]
     (op : d.Op) (hv : TypesValid op) (hc : isTerminator op = true ∨ callee? op = none)
-    {N : Type} [DecidableEq N] (lay : N → MemLayout) (ρ : DialectEffects.Mem d → N) :
-    OwnRuleHas lay ρ HasOutcome op :=
-  LawfulDialectTotal.total op hv hc lay ρ
+    {N : Type} [DecidableEq N] (lay : N → MemLayout) (ρ : DialectEffects.Mem d → N) (L : RunItems) :
+    OwnRuleHas lay ρ L HasOutcome op :=
+  LawfulDialectTotal.total op hv hc lay ρ L
 
 /-- Every lawful dialect that lifts the set monad is lawful in its
 totality. -/
@@ -181,11 +181,12 @@ memory, wherever a run names the dialect's memories. -/
 theorem summary_neverUB (d : Dialect) [TyDenote d.Ty] [DecidableEq d.Ty] [TyPoison d.Ty]
     [DialectSignature d] [DialectEffects d] [DialectCall d] [DialectValidation d]
     [DialectMemDenote d] [LawfulDialectEffects d] {N : Type} [DecidableEq N]
-    (lay : N → MemLayout) (ρ : DialectEffects.Mem d → N) {ctx : ModuleContext d} {M : Module d}
+    (lay : N → MemLayout) (ρ : DialectEffects.Mem d → N) (L : RunItems) {ctx : ModuleContext d} {M
+        : Module d}
     (hv : ∀ g ∈ M.funcs, g.Valid ctx) {s : Name} {f : Func d} (hf : M.func? s = some f)
     (hs : (M.table.summary s).mayUB = false) (args : HVector toType (f.params.map (·.2)))
-    (fuel : Nat) (r : String) : ¬ f.memRuns lay ρ M args fuel (.ub r) :=
-  Module.summary_neverUB lay ρ hv hf hs args fuel r
+    (fuel : Nat) (r : String) : ¬ f.memRuns lay ρ L M args fuel (.ub r) :=
+  Module.summary_neverUB lay ρ L hv hf hs args fuel r
 
 /-- In every dialect lawful in its effects, a function of a module of valid
 functions whose summary leaves out may produce poison returns no poison on
@@ -194,12 +195,13 @@ dialect's memories. -/
 theorem summary_noPoison (d : Dialect) [TyDenote d.Ty] [DecidableEq d.Ty] [TyPoison d.Ty]
     [DialectSignature d] [DialectEffects d] [DialectCall d] [DialectValidation d]
     [DialectMemDenote d] [LawfulDialectEffects d] {N : Type} [DecidableEq N]
-    (lay : N → MemLayout) (ρ : DialectEffects.Mem d → N) {ctx : ModuleContext d} {M : Module d}
+    (lay : N → MemLayout) (ρ : DialectEffects.Mem d → N) (L : RunItems) {ctx : ModuleContext d} {M
+        : Module d}
     (hv : ∀ g ∈ M.funcs, g.Valid ctx) {s : Name} {f : Func d} (hf : M.func? s = some f)
     (hs : (M.table.summary s).mayPoison = false) (args : HVector toType (f.params.map (·.2)))
     (hargs : ¬ args.Any TyPoison.IsPoison) (fuel : Nat) (vs : List (DVal d)) :
-    f.memRuns lay ρ M args fuel (.ok (.ok (.ret vs))) → DVals.Clean vs :=
-  Module.summary_noPoison lay ρ hv hf hs args hargs fuel vs
+    f.memRuns lay ρ L M args fuel (.ok (.ok (.ret vs))) → DVals.Clean vs :=
+  Module.summary_noPoison lay ρ L hv hf hs args hargs fuel vs
 
 /-!
 The core dialect declares a class and a set of effects for each of its ops,
