@@ -8,7 +8,8 @@ coverage matrix and the LLVM ports),
 [testing-and-harness-generated.md](testing-and-harness-generated.md) (generated
 programs and fuzzing) and
 [testing-and-harness-floats.md](testing-and-harness-floats.md) (floating
-point).
+point), with its references in
+[testing-and-harness-float-references.md](testing-and-harness-float-references.md).
 
 ## How a test is judged
 

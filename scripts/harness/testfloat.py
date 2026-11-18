@@ -1,6 +1,6 @@
 """Checks `fir-ref`'s float arithmetic and comparisons against Berkeley
 TestFloat's vectors (#229,
-docs/decisions/testing-and-harness-floats.md#the-testfloat-check).
+docs/decisions/testing-and-harness-float-references.md#the-testfloat-check).
 
 Usage: testfloat.py --fir-ref FIR_REF [--jobs N]
 
@@ -121,7 +121,7 @@ def generate(gen: Path, name: str, rodd: bool) -> Iterator[str]:
 
 def vectors(gen: Path, fmt: str, function: str) -> list[tc.Vector]:
     source = "f32" if fmt == "bf16" else fmt
-    rodd = fmt == "bf16" and function in tc.ARITHMETIC
+    rodd = fmt == "bf16" and tc.rounds(function)
     # bf16 keeps every vector whose operands are bf16 values.
     sampled = function == "mulAdd" and fmt != "bf16"
     n = tc.arity(function)
