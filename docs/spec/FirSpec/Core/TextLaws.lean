@@ -98,7 +98,7 @@ $`t^*` and $`r^*`: a pointer and an integer, and a pointer of the same
 memory.
 :::
 
-:::readable Fir.Core.Op.decode_encode Fir.Core.Op.encode_decode (pin := Fir.Core.Op.sig) (pin := Fir.Core.Op.returnTypes) (fingerprint := "8909265527090953112")
+:::readable Fir.Core.Op.decode_encode Fir.Core.Op.encode_decode (pin := Fir.Core.Op.sig) (pin := Fir.Core.Op.returnTypes) (fingerprint := "11356703310336137971")
 *Theorems: every core op instance reads back from its spelling, and only
 from it.* For every core op instance $`o`, valid or not:
 
@@ -118,7 +118,7 @@ float constant, float op of arithmetic, bit cast, conversion from or to
 an integer and between formats, pointer offset at every memory,
 allocation of every kind, type, count and alignment, load and store of
 an integer, a pointer or a float of every ordering, width, format,
-alignment and memory,
+alignment and memory, copy and move of every ordering, width and memory,
 and list of types. A float constant reads back because its one spelling
 reads back as its bits:
 $`\mathrm{decodelit}_{e,m}(\mathrm{floatlit}_{e,m}(v)) = v`.

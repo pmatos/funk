@@ -34,8 +34,9 @@ MATRIX = ROOT / "docs" / "coverage" / "README.md"
 class Side(NamedTuple):
     """One side of the matrix: its key, its title, the widths, float
     formats and widths of a pointer op's integer that it has cells at,
-    whether it has the cells of the `gpu` dialect, and the float formats of
-    its loads, stores and allocations."""
+    whether it has the cells of the `gpu` dialect, the float formats of
+    its loads, stores and allocations, and whether it has the cells of
+    `memcpy` and `memmove`."""
 
     name: str
     title: str
@@ -44,15 +45,26 @@ class Side(NamedTuple):
     offsets: tuple[int, ...]
     gpu: bool = False
     memory: tuple[str, ...] = ()
+    copies: bool = False
 
     def catalog(self) -> tuple[cells.Table, ...]:
         return cells.catalog(
-            self.widths, self.formats, self.offsets, self.gpu, self.memory
+            self.widths,
+            self.formats,
+            self.offsets,
+            self.gpu,
+            self.memory,
+            self.copies,
         )
 
     def cells(self) -> list[Cell]:
         return cells.cells(
-            self.widths, self.formats, self.offsets, self.gpu, self.memory
+            self.widths,
+            self.formats,
+            self.offsets,
+            self.gpu,
+            self.memory,
+            self.copies,
         )
 
 
@@ -73,6 +85,7 @@ SIDES = (
         cells.POINTER_INTERPRETER,
         gpu=True,
         memory=MEMORY_FLOAT_INTERPRETER,
+        copies=True,
     ),
 )
 
@@ -172,6 +185,7 @@ SECTIONS = {
         "",
     ),
     "values": ("Passed and returned values", ("op", "what"), ""),
+    "copies": ("Copies and moves, by the width of their length", ("op",), ""),
     "gpu": ("Ops of the gpu dialect in a dimension", ("op", "dimension"), ""),
     "gpu_memory": (
         "Work-group allocation of the gpu dialect, of one or of a pointer",
@@ -232,7 +246,7 @@ def catalog_row(counts: Counter, kind: str, row: cells.Row) -> list[str]:
     """Format a row's labels and cell counts, retaining applicability blanks."""
     if kind == "float_conversions":
         shown = [code(row.key)]
-    elif kind in ("pointers", "gpu_memory"):
+    elif kind in ("pointers", "gpu_memory", "copies"):
         shown = [code(row.op)]
     elif kind == "values":
         shown = [code(row.op), WHAT[row.op][row.key]]

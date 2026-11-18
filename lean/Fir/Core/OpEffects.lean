@@ -49,6 +49,11 @@ frees its call's stack allocations when the call returns.
   faults depends on the allocations of its memory, not on what their units
   hold. Each gives no result, so it makes no poison, though it may store a
   poison value's units.
+* Reads and writes memory `N`, and may-UB: `memCopy`, a copy or a move,
+  over a pointer of `ptr<N>`. It reads the units it carries and writes
+  them, and is UB on a poison pointer, on an access that faults and, for a
+  copy, on ranges that partly overlap, unless its length is 0. It gives no
+  result, so it makes no poison, though it may carry poison units.
 * Control: the terminators `br`, `ret`, `cond_br` and `unreachable`.
   `cond_br` may hit UB too, on a poison condition, and `unreachable` hits
   UB whenever a run reaches it (ADR-2026-11-09-1548).
@@ -88,5 +93,6 @@ def Op.effects : Op → Effects Mem
     { reads := .these [n], mayUB := true, mayPoison := true }
   | .store _ _ _ n | .storePtr _ _ _ n | .storeFloat _ _ _ _ n =>
     { writes := .these [n], mayUB := true }
+  | .memCopy _ _ _ n => { reads := .these [n], writes := .these [n], mayUB := true }
 
 end Fir.Core

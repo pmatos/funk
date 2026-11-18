@@ -55,8 +55,8 @@ for a valid module.
 namespace Fir.Core
 
 /-- Every core terminator and every core op with no callee is monotone, at
-every width: every core op but `call`. `alloca` and the loads and stores,
-of an integer, a pointer or a float, have no rule in the set monad, so no
+every width: every core op but `call`. `alloca`, the loads and stores,
+of an integer, a pointer or a float, and `memCopy` have no rule in the set monad, so no
 outcome there, and are monotone in it at once; each is monotone with
 memory by its own rule. -/
 theorem Op.monotone_all : (op : Op) →
@@ -103,7 +103,7 @@ theorem Op.monotone_all : (op : Op) →
   | .unreachable, _ => unreachable_monotone
   | .call .., h => by rcases h with h | h <;> cases h
   | .alloca .., _ | .load .., _ | .store .., _ | .loadPtr .., _ | .storePtr .., _
-  | .loadFloat .., _ | .storeFloat .., _ =>
+  | .loadFloat .., _ | .storeFloat .., _ | .memCopy .., _ =>
     fun _ _ _ => ⟨fun _ _ he => he.elim, fun h => nomatch h⟩
 
 /-- Every terminator and every op with no callee of every core function is

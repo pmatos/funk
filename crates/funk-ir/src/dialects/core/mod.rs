@@ -20,8 +20,9 @@
 //! `fpext` and `fptrunc`, and the conversions from floats to integers
 //! `fptosi` and `fptoui`. #231 adds the pointer offset `ptradd`, the
 //! stack allocation `alloca`, the load `load` and the store `store`, and
-//! #264 loads, stores and allocations of floats. A later family adds a file
-//! and a line here.
+//! #264 loads, stores and allocations of floats. #234 adds the copy
+//! `memcpy` and the move `memmove`. A later family adds a file and a line
+//! here.
 
 mod access;
 mod align;
@@ -43,6 +44,7 @@ mod float_to_int;
 mod freeze;
 mod int_to_float;
 mod load;
+mod memcopy;
 mod pointer;
 mod rounding;
 mod store;
@@ -115,6 +117,8 @@ pub fn dialect() -> Dialect {
         .op(alloca::Alloca)
         .op(load::LOAD)
         .op(store::STORE)
+        .op(memcopy::MemCopy("memcpy"))
+        .op(memcopy::MemCopy("memmove"))
         .op(float_to_int::FloatToInt("fptosi"))
         .op(float_to_int::FloatToInt("fptoui"));
     float_arith::FloatArith::all().fold(core, Dialect::op)

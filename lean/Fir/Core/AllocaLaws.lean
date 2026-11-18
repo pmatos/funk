@@ -36,30 +36,31 @@ variable (k : AllocKind) (t : Ty) (c : Nat) (a : Option Nat) (n : Nat)
 
 /-- A property holds of every core op when it holds of each op that
 touches no memory, of `alloca`, of `load`, of `store`, of `loadPtr`, of
-`storePtr`, of `loadFloat` and of `storeFloat`. So an obligation with memory is met op by op: by its tie for
-the first, and by its own rule for each op that touches memory. -/
+`storePtr`, of `loadFloat`, of `storeFloat` and of `memCopy`. So an
+obligation with memory is met op by op: by its tie for the first, and by
+its own rule for each op that touches memory. -/
 theorem Op.memCases {P : Op → Prop} (op : Op) (ht : ∀ op, op.touchesMemory = false → P op)
     (ha : ∀ k t c a n, P (.alloca k t c a n)) (hl : ∀ o w a n, P (.load o w a n))
     (hs : ∀ o w a n, P (.store o w a n)) (hlp : ∀ o mp a n, P (.loadPtr o mp a n))
     (hsp : ∀ o mp a n, P (.storePtr o mp a n)) (hlf : ∀ o e m a n, P (.loadFloat o e m a n))
-    (hsf : ∀ o e m a n, P (.storeFloat o e m a n)) : P op := by
+    (hsf : ∀ o e m a n, P (.storeFloat o e m a n)) (hmc : ∀ k o w n, P (.memCopy k o w n)) :
+    P op := by
   cases hm : op.touchesMemory
   · exact ht op hm
   · cases op <;> first
       | exact ha .. | exact hl .. | exact hs .. | exact hlp .. | exact hsp .. | exact hlf ..
-      | exact hsf .. | cases hm
+      | exact hsf .. | exact hmc .. | cases hm
 
-/-- A core op with an outcome in the set monad touches no memory: `alloca`
-and the loads and stores, `load`, `store`, `loadPtr`, `storePtr`,
-`loadFloat` and `storeFloat`, have
-none there. -/
+/-- A core op with an outcome in the set monad touches no memory: `alloca`,
+the loads and stores, `load`, `store`, `loadPtr`, `storePtr`,
+`loadFloat` and `storeFloat`, and `memCopy` have none there. -/
 theorem Op.touchesMemory_false_of_denote {op : Op}
     {args : HVector toType (Fir.sig (d := CoreDialect) op)}
     {e : Ev (HVector toType (Fir.returnTypes (d := CoreDialect) op))}
     (h : DialectDenote.denote (m := SetM) (d := CoreDialect) op args e) :
     op.touchesMemory = false := by
   cases op with
-  | alloca | load | store | loadPtr | storePtr | loadFloat | storeFloat => exact h.elim
+  | alloca | load | store | loadPtr | storePtr | loadFloat | storeFloat | memCopy => exact h.elim
   | _ => rfl
 
 /-- The result vector of `alloca`, from the pointer it allocates. -/

@@ -35,8 +35,8 @@ choice effect, and the divisions,
 * Each op that is not a terminator has the rule of its family, from the
   arithmetic rules to the width change rules. `call` has none: its meaning
   is its callee's run. `alloca`, and the loads `load`, `loadPtr` and
-  `loadFloat` and the stores `store`, `storePtr` and `storeFloat`, have
-  none either: they allocate, read
+  `loadFloat`, the stores `store`, `storePtr` and `storeFloat`, and the
+  copy or move `memCopy` have none either: they allocate, read
   and write, so each rule needs the memory effect, and is
   one of the core's rules with memory.
 * Each terminator has the rule of the control-flow rules or the branch
@@ -94,13 +94,13 @@ namespace Fir.Core
 variable {m : Type → Type} [Monad m]
 
 /-- The core ops that touch memory: `alloca`, which allocates, `load`,
-`loadPtr` and `loadFloat`, which read, and `store`, `storePtr` and
-`storeFloat`, which write. Each has a
+`loadPtr` and `loadFloat`, which read, `store`, `storePtr` and
+`storeFloat`, which write, and `memCopy`, which reads and writes. Each has a
 rule only in a monad with the memory effect (the section on the core's
 rules with memory). -/
 def Op.touchesMemory : Op → Bool
   | .alloca .. | .load .. | .store .. | .loadPtr .. | .storePtr .. | .loadFloat ..
-  | .storeFloat .. => true
+  | .storeFloat .. | .memCopy .. => true
   | _ => false
 
 /-- The rule of each core op that is not a terminator, in any monad with
@@ -247,6 +247,8 @@ def Op.hasRules (op : Op) : Bool :=
 #guard ((Op.storeFloat .nonatomic 8 23 none 0).denote? (m := SetM)).isNone &&
   (Op.storeFloat .nonatomic 8 23 none 0).hasRules &&
   (Op.storeFloat .seqCst 2 1 (some 4) 1).hasRules
+#guard ((Op.memCopy .copy .nonatomic 64 0).denote? (m := SetM)).isNone &&
+  (Op.memCopy .copy .nonatomic 64 0).hasRules && (Op.memCopy .move .seqCst 1 1).hasRules
 
 /-- The core dialect's semantics in a monad `m` from two tables of rules,
 `den` for the ops that are not terminators and `ex` for the terminators:

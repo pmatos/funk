@@ -14,10 +14,10 @@ when the Lean changes under it.
 
 #doc (Manual) "Core functions without calls: readable blocks" =>
 
-:::moduleDocs (fingerprint := "16455796760024068047")
+:::moduleDocs (fingerprint := "13778259068842250978")
 :::
 
-:::readable Fir.Core.Op.isCall Fir.Core.CallFree (fingerprint := "10771216309160978630")
+:::readable Fir.Core.Op.isCall Fir.Core.CallFree (fingerprint := "6096175511024671147")
 *Definition: a call, and a function without calls.* A core op _is a
 call_ when it is $`\mathsf{call}~g : t^* \to r^*`, for any symbol $`g`
 and types $`t^*` and $`r^*`. A core function is _without calls_ when no
@@ -26,23 +26,24 @@ is decided by looking at each of its ops.
 :::
 
 :::readable Fir.Core.Op.total (pin := Fir.OpTotal) (fingerprint := "10277650597748481361")
-*Theorem: every core op but $`\mathsf{call}`, $`\mathsf{alloca}`,
-$`\mathsf{load}` and $`\mathsf{store}` is total in the set monad.* Every core op that is not a call and touches no
+*Theorem: every core op but $`\mathsf{call}`, $`\mathsf{alloca}`, the
+loads and stores and the copies and moves is total in the set monad.* Every core op that is not a call and touches no
 memory is
 {ref "The-fir-specification--Execution--Poison-classes"}[total]: on every
 operand vector, its semantics, or its exit for a terminator, has some
 outcome. Each op's family proves it in its obligations, from
 $`\mathsf{const}` to $`\mathsf{ret}`. $`\mathsf{call}` is left out: a run
 never uses its semantics, and goes on by its callee's run
-(ADR-2026-10-29-2006). $`\mathsf{alloca}`, $`\mathsf{load}` and
-$`\mathsf{store}` are left out too: they have no rule in the set monad,
+(ADR-2026-10-29-2006). $`\mathsf{alloca}`, the loads and stores and the
+copies and moves are left out too: they have no rule in the set monad,
 and are total with memory by their own rules
 ({ref "The-fir-specification--Memory--Stack-allocation-obligations"}[stack allocation obligations],
 {ref "The-fir-specification--Memory--Load-obligations"}[load obligations],
-{ref "The-fir-specification--Memory--Store-obligations"}[store obligations]).
+{ref "The-fir-specification--Memory--Store-obligations"}[store obligations],
+{ref "The-fir-specification--Memory--Copy-and-move-obligations"}[copy and move obligations]).
 :::
 
-:::readable Fir.Core.Op.exit_goto (pin := Fir.Core.Op.exit?) (pin := Fir.Core.brExit) (pin := Fir.Core.condBrExit) (pin := Fir.Core.Op.returnTypes) (pin := Fir.Core.retExit) (pin := Fir.Core.unreachableExit) (fingerprint := "14204157444338241313")
+:::readable Fir.Core.Op.exit_goto (pin := Fir.Core.Op.exit?) (pin := Fir.Core.brExit) (pin := Fir.Core.condBrExit) (pin := Fir.Core.Op.returnTypes) (pin := Fir.Core.retExit) (pin := Fir.Core.unreachableExit) (fingerprint := "1671581568067612537")
 *Theorem: a core terminator that jumps goes to a successor that it has,
 and gives no results.* For every core op $`o` that is a terminator, every
 operand vector $`v^*` and every $`i`: if $`\mathrm{exit}_o(v^*)`, run in
@@ -53,7 +54,7 @@ successors, and neither has results. $`\mathsf{ret}` returns, and
 $`\mathsf{unreachable}` is UB.
 :::
 
-:::readable Fir.Core.Op.exit_ret (pin := Fir.Core.Op.exit?) (pin := Fir.Core.brExit) (pin := Fir.Core.condBrExit) (pin := Fir.Core.unreachableExit) (fingerprint := "12418950697427609529")
+:::readable Fir.Core.Op.exit_ret (pin := Fir.Core.Op.exit?) (pin := Fir.Core.brExit) (pin := Fir.Core.condBrExit) (pin := Fir.Core.unreachableExit) (fingerprint := "13832530921667552374")
 *Theorem: the only core op whose exit returns is $`\mathsf{ret}`.* For
 every core op $`o` and operand vector $`v^*`: if $`\mathrm{exit}_o(v^*)`,
 run in the set monad, may end with $`\mathsf{ret}`, then $`o` is
@@ -62,13 +63,13 @@ $`\mathsf{cond\_br}` jumps, or hits UB on a poison condition, and
 $`\mathsf{unreachable}` always hits UB.
 :::
 
-:::readable Fir.Core.Op.callee_none (pin := Fir.Core.Op.callTarget?) (fingerprint := "14841128462627210918")
+:::readable Fir.Core.Op.callee_none (pin := Fir.Core.Op.callTarget?) (fingerprint := "9456925913922851850")
 *Theorem: a core op other than $`\mathsf{call}` calls no function.* For
 every core op $`o` that is not a call, $`\mathrm{callee}(o)` is none: in
 the core dialect, only $`\mathsf{call}` calls a function.
 :::
 
-:::readable Fir.Core.local_of_valid (pin := Fir.Func.Local) (pin := Fir.Core.Op.Valid) (pin := Fir.Core.Op.sig) (fingerprint := "2691428925805863128")
+:::readable Fir.Core.local_of_valid (pin := Fir.Func.Local) (pin := Fir.Core.Op.Valid) (pin := Fir.Core.Op.sig) (fingerprint := "3292436023489300648")
 *Theorem: every valid core function without calls runs within itself.*
 Let $`f` be a core function that is
 {ref "The-fir-specification--Validation--The-general-rules"}[valid] in a

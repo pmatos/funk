@@ -198,6 +198,11 @@ The core rules of an op beyond its signature.
 * `loadFloat` and `storeFloat`, the loads and stores of a float, have the
   rules of `load`. The float type they load or store is checked as every
   type is: a valid format.
+* `memCopy`, a copy or a move, has the ordering `nonatomic`. Its two
+  pointers and its length are values of the function, so validation checks
+  that the module has their memory, and that the length's width is valid,
+  as it checks every type. Its text already asks that the two pointers be
+  of one memory.
 
 Every other op has no rule beyond its signature.
 -/
@@ -218,6 +223,7 @@ def Op.Valid (ctx : OpContext CoreDialect) : Op → Prop
   | .load o _ a _ | .store o _ a _ | .loadPtr o _ a _ | .storePtr o _ a _
   | .loadFloat o _ _ a _ | .storeFloat o _ _ a _ =>
     o = .nonatomic ∧ ∀ x ∈ a, MemLayout.ValidAlign x
+  | .memCopy _ o _ _ => o = .nonatomic
   | _ => True
 
 end Fir.Core

@@ -2,6 +2,7 @@ import Fir.Core.Signature
 import Fir.Core.AllocaText
 import Fir.Core.LoadText
 import Fir.Core.StoreText
+import Fir.Core.MemCopyText
 import Fir.Core.FloatText
 import Fir.Core.FloatOpText
 import Fir.Text.Grammar
@@ -72,6 +73,9 @@ results, which are written where those values are defined.
   integer, a pointer or a float, and then a pointer, and gives no result:
   `store nonatomic %v, %p @1`. The stores of a pointer and of a float,
   `storePtr` and `storeFloat`, are written `store` too.
+* `memCopy` is written `memcpy` for a copy and `memmove` for a move. Its
+  one attribute is its ordering, and it takes the destination, the source
+  and the length, and gives no result: `memcpy nonatomic %d, %s, %n @1`.
 * `fptosi` and `fptoui` have no attributes, since they truncate and do not
   round, and take a float of any format to an integer of any width:
   `%i: i32 = fptosi %f @1`.
@@ -104,9 +108,10 @@ results, which are written where those values are defined.
   (ADR-2026-11-11-0951). `float(1, 1)` decodes, and validation rejects it.
 
 The section on the core types in text gives how each type is written and
-read back, the section on stack allocation in text how `alloca` is, and
-the section on loads in text how `load` is, and the section on stores in
-text how `store` is.
+read back, the section on stack allocation in text how `alloca` is, the
+section on loads in text how `load` is, the section on stores in text how
+`store` is, and the section on copies and moves in text how
+`memcpy` and `memmove` are.
 
 The values of `fir-ref`'s arguments, the values in its JSON output and the
 choices that scripted mode follows (see the section "Exhaustive, scripted
@@ -160,7 +165,7 @@ def Op.name : Op → String
   | .ptradd .. => "ptradd" | .alloca .. => "alloca"
   | .load .. | .loadPtr .. | .loadFloat .. => "load"
   | .store .. | .storePtr .. | .storeFloat .. => "store"
-  | .fptosi .. => "fptosi" | .fptoui .. => "fptoui"
+  | .fptosi .. => "fptosi" | .fptoui .. => "fptoui" | .memCopy k .. => k.name
   | .freeze _ => "freeze" | .poison _ => "poison" | .br => "br" | .condBr => "cond_br"
   | .ret _ => "ret" | .unreachable => "unreachable" | .call .. => "call"
 
@@ -189,6 +194,7 @@ def Op.attrs : Op → List Attr
   | .alloca k t c a _ => allocaAttrs k t c a
   | .load o _ a _ | .store o _ a _ | .loadPtr o _ a _ | .storePtr o _ a _
   | .loadFloat o _ _ a _ | .storeFloat o _ _ a _ => loadAttrs o a
+  | .memCopy _ o _ _ => loadAttrs o none
   | _ => []
 
 /-- Reads the flags of `add`, `sub` or `mul`. -/
@@ -302,6 +308,8 @@ def Op.decode (n : String) (as : List Attr) (ts rs : List Ty) : Option Op :=
   | "alloca" => decodeAlloca as ts rs
   | "load" => decodeLoad as ts rs
   | "store" => decodeStore as ts rs
+  | "memcpy" => decodeMemCopy .copy as ts rs
+  | "memmove" => decodeMemCopy .move as ts rs
   | "fptosi" => decodeFloatToInt true as ts rs
   | "fptoui" => decodeFloatToInt false as ts rs
   | _ => if let some mk := plainBinOps.lookup n then bare as ((binWidth ts rs).map mk) else none

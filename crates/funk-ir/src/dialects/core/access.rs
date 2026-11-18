@@ -41,7 +41,7 @@ fn access_attrs(attrs: &[Attr]) -> Option<(&str, Option<&Int>)> {
 
 /// Checks the ordering and the alignment that the access `op` writes,
 /// against M1's validation (`Op.Valid` in `lean/Fir/Core/Validation.lean`).
-fn check_access(op: &str, ordering: &str, align: Option<&Int>) -> Result<(), String> {
+pub(super) fn check_access(op: &str, ordering: &str, align: Option<&Int>) -> Result<(), String> {
     if ordering != "nonatomic" {
         return Err(format!(
             "{op} is nonatomic in M1, not {ordering}: the atomic orderings are hooks"

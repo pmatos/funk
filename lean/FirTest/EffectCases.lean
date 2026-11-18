@@ -73,10 +73,10 @@ def Case.holds (c : Case) : Bool :=
 /-- The core op that a case pins, if it pins one. -/
 def Case.coreOp (c : Case) : Option Core.Op := c.op.bind Sum.getLeft?
 
-#guard cases.length == 103
+#guard cases.length == 108
 #guard (cases.filter (!·.holds)).map (·.name) == []
 -- The cases pin every core op, and every op of `gpu`.
-#guard ((cases.filterMap Case.coreOp).map Core.Op.name).eraseDups.length == 48
+#guard ((cases.filterMap Case.coreOp).map Core.Op.name).eraseDups.length == 50
 #guard (Core.samples.map Core.Op.name).all fun n =>
   (cases.filterMap Case.coreOp).any (·.name == n)
 #guard ((cases.filterMap (·.op.bind Sum.getRight?)).map Gpu.Op.name).eraseDups ==

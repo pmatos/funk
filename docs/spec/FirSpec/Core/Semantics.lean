@@ -14,10 +14,10 @@ when the Lean changes under it.
 
 #doc (Manual) "Core op semantics: readable blocks" =>
 
-:::moduleDocs (fingerprint := "17281230621683384280")
+:::moduleDocs (fingerprint := "10018870251620614844")
 :::
 
-:::readable Fir.Core.Op.denote? (fingerprint := "12358975260916379547")
+:::readable Fir.Core.Op.denote? (fingerprint := "17349285098225368612")
 *Definition: the rule of each core op that is not a terminator.* For
 every way of computing with the
 {ref "The-fir-specification--Execution--Effects-and-op-semantics"}[choice and UB effects],
@@ -83,7 +83,7 @@ effects, so the spec's set of the ways a run may end and the tree of
 choices that `fir-ref run` walks share them.
 :::
 
-:::readable Fir.Core.Op.exit? (fingerprint := "10690001557293425631")
+:::readable Fir.Core.Op.exit? (fingerprint := "12235942846815092532")
 *Definition: the rule of each core terminator.* For every way of
 computing with the
 {ref "The-fir-specification--Execution--Effects-and-op-semantics"}[UB effect],
@@ -107,11 +107,13 @@ tree of choices and the state layer use the same tables, or tables with
 memory, with their own $`z`.
 :::
 
-:::readable Fir.Core.Op.hasRules Fir.Core.Op.touchesMemory (pin := Fir.instDialectDenoteCoreDialectSetM) (pin := Fir.instDialectCallCoreDialect) (pin := Fir.Core.Op.callTarget?) (pin := Fir.Core.Op.denote?) (pin := Fir.Core.Op.exit?) (fingerprint := "7599230684517020063")
+:::readable Fir.Core.Op.hasRules Fir.Core.Op.touchesMemory (pin := Fir.instDialectDenoteCoreDialectSetM) (pin := Fir.instDialectCallCoreDialect) (pin := Fir.Core.Op.callTarget?) (pin := Fir.Core.Op.denote?) (pin := Fir.Core.Op.exit?) (fingerprint := "3470832357074142351")
 *Definition: the core ops that touch memory.* $`\mathsf{alloca}`, which
 allocates, $`\mathsf{load}`, which reads, and $`\mathsf{store}`, which
 writes, an integer, a pointer or a float (`loadPtr`, `storePtr`,
-`loadFloat` and `storeFloat` in the Lean), touch memory, and no other core op does. Each rule needs the memory effect, so each has one only in a
+`loadFloat` and `storeFloat` in the Lean), and $`\mathsf{memcpy}` and
+$`\mathsf{memmove}` (`memCopy`), which read and write, touch memory, and
+no other core op does. Each rule needs the memory effect, so each has one only in a
 monad with memory.
 
 *Definition: an op has rules.* A core op has rules when one of the two
@@ -124,8 +126,8 @@ predicates, at a valid format and at one that validation rejects, each
 float op of arithmetic, both bit casts, both conversions from integers,
 both conversions between formats and both conversions to integers, among
 them;
-$`\mathsf{call}` counts through its callee, and $`\mathsf{alloca}` and
-the loads and stores through their rules with memory.
+$`\mathsf{call}` counts through its callee, and $`\mathsf{alloca}`, the
+loads and stores and the copies and moves through their rules with memory.
 
 *Definition: the core dialect's semantics.* In the
 {ref "The-fir-specification--Execution--Outcomes-and-behaviours"}[set monad], the

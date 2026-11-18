@@ -23,11 +23,12 @@ terminator and each core op with no callee is
 {ref "The-fir-specification--Memory--Totality-with-memory"}[total with memory],
 at every layout and naming: it is total in the set monad, and it is
 {ref "The-fir-specification--Memory--The-core___s-rules-with-memory"}[tied],
-or it is $`\mathsf{alloca}`, $`\mathsf{load}` or $`\mathsf{store}`,
+or it is $`\mathsf{alloca}`, a load, a store, a copy or a move,
 total with memory by its own rule
 ({ref "The-fir-specification--Memory--Stack-allocation-obligations"}[stack allocation obligations],
 {ref "The-fir-specification--Memory--Load-obligations"}[load obligations],
-{ref "The-fir-specification--Memory--Store-obligations"}[store obligations]).
+{ref "The-fir-specification--Memory--Store-obligations"}[store obligations],
+{ref "The-fir-specification--Memory--Copy-and-move-obligations"}[copy and move obligations]).
 :::
 
 :::readable Fir.Core.lawfulDialectMonotone (fingerprint := "853410003265425313")
@@ -35,7 +36,7 @@ total with memory by its own rule
 terminator and each core op with no callee is
 {ref "The-fir-specification--Memory--Monotonicity-with-memory"}[monotone with memory],
 at every layout and naming: it is monotone in the set monad, and it is
-tied, or it is $`\mathsf{alloca}`, $`\mathsf{load}` or $`\mathsf{store}`,
+tied, or it is $`\mathsf{alloca}`, a load, a store, a copy or a move,
 monotone by its own rule.
 :::
 
@@ -45,8 +46,8 @@ core op instance that propagates poison
 {ref "The-fir-specification--Memory--Poison-obligations-with-memory"}[propagates it with memory]
 and returns a result on some defined operands with memory, at every layout
 and naming of the core's memories: it meets both in the set monad, and it
-is tied, or it is $`\mathsf{alloca}`, $`\mathsf{load}` or
-$`\mathsf{store}`, which meets both by its own rule. A
+is tied, or it is $`\mathsf{alloca}`, a load, a store, a copy or a move,
+which meets both by its own rule. A
 poison value of each valid core type is refined by every value of the
 type.
 :::
@@ -78,8 +79,8 @@ Each core terminator and each core op with no callee, at every width, valid
 or not, is
 {ref "The-fir-specification--Memory--Monotonicity-with-memory"}[monotone with memory],
 at every layout and naming: it is monotone in the set monad and tied, or
-it is $`\mathsf{alloca}`, $`\mathsf{load}` or $`\mathsf{store}`,
-monotone by its own rule. These are what the
+it is $`\mathsf{alloca}`, a load, a store, a copy or a move, monotone by
+its own rule. These are what the
 theorems below ask of the core's ops.
 :::
 

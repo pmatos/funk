@@ -1,0 +1,14 @@
+# Tests of gpu-memcpy.fir: memcpy and memmove in gpu work-group memory, a
+# memory of 16-bit units (#234). Each work-item stores its value in its own
+# slot of a work-group buffer of 8 i32, copies its 2 units 8 units on, and
+# reads them back; the last half of the work-items copy past the buffer,
+# which is UB. A move of an i32 one unit up keeps it; a length past the
+# allocation is UB. The backend builds no device module, so each test is
+# interpreter-only.
+tests = [
+  { func = "@dev::@copy", args = ["-5"], expect = ["-5"], work_item = { id = [3, 0, 0], group_size = [8, 1, 1] } },
+  { func = "@dev::@copy", args = ["9"], expect = ["9"], work_item = { id = [0, 0, 0], group_size = [8, 1, 1] } },
+  { func = "@dev::@copy", args = ["9"], expect = "ub", work_item = { id = [4, 0, 0], group_size = [8, 1, 1] } },
+  { func = "@dev::@move", args = ["67305985", "2"], expect = ["67305985"] },
+  { func = "@dev::@move", args = ["67305985", "4"], expect = "ub" },
+]

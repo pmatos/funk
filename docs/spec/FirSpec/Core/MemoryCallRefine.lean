@@ -17,16 +17,18 @@ pins their fingerprint; the build fails when the Lean changes under it.
 :::moduleDocs (fingerprint := "15085586242917980642")
 :::
 
-:::readable Fir.Core.Op.effects_touchesNoMemory Fir.Core.Op.touchesMemory_false Fir.Core.reachesNoMemory Fir.Core.reachesNoMemory_of_all (pin := Fir.Core.Op.effects) (fingerprint := "17028607755377081142")
+:::readable Fir.Core.Op.effects_touchesNoMemory Fir.Core.Op.touchesMemory_false Fir.Core.reachesNoMemory Fir.Core.reachesNoMemory_of_all (pin := Fir.Core.Op.effects) (fingerprint := "12289472600996982496")
 *Theorems: a core op declares a memory effect exactly when it touches
-memory, and a core function with no allocation, load or store in reach
+memory, and a core function with no allocation, load, store, copy or move
+in reach
 reaches no memory.* The {ref "The-fir-specification--Execution--Effect-sets"}[effects]
 of every core op that touches no memory, every one but
-$`\mathsf{alloca}` and the loads and stores, read, write and allocate in
+$`\mathsf{alloca}`, the loads and stores and the copies and moves, read, write and allocate in
 no memory, and an op that declares no memory effect touches no memory,
 since $`\mathsf{alloca}_N` declares that it allocates in memory $`N`,
 $`\mathsf{load}_N` of an integer, a pointer or a float that it reads it
-and $`\mathsf{store}_N` of any of them that it writes it. So in a core symbol table, the
+$`\mathsf{store}_N` of any of them that it writes it, and
+$`\mathsf{memcpy}_N` and $`\mathsf{memmove}_N` that they read it. So in a core symbol table, the
 function named $`s`
 {ref "The-fir-specification--Memory--Touching-no-memory"}[reaches no memory]
 when no function that the walk from $`s` reaches, $`s`'s own included, has
@@ -40,8 +42,9 @@ core's memories, each core op that declares no memory effect ignores the
 memories: such an op touches no memory, so it is
 {ref "The-fir-specification--Memory--The-core___s-rules-with-memory"}[tied],
 and runs by its rule in the set monad and keeps the memories.
-$`\mathsf{alloca}` and the loads and stores, of an integer, a pointer or a
-float, which touch memory, declare it, so they are not asked.
+$`\mathsf{alloca}`, the loads and stores, of an integer, a pointer or a
+float, and the copies and moves, which touch memory, declare it, so they
+are not asked.
 :::
 
 :::readable Fir.Core.opsFinite (pin := Fir.Core.Op.liftsSetM) (pin := Fir.OpsFinite) (fingerprint := "14825628572605386215")

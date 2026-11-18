@@ -78,7 +78,7 @@ poison class through `DialectEffects`: `propagates` or `exception`
 (ADR-2026-10-29-2006). Rejected: propagation in prose only, as LLVM's reference
 states it. An op whose rules forget to propagate poison would go unnoticed.
 
-In the core dialect, 40 ops propagate and seven are exceptions. The 40 are
+In the core dialect, 41 ops propagate and seven are exceptions. The 41 are
 `const`, the float constant and `poison`, which have no operands, `add`, `sub`
 and `mul`, the four divisions, the bitwise ops and shifts, `icmp`, the width
 changes, `fcmp`, the three ops of float arithmetic, the two bit casts, the
@@ -90,7 +90,11 @@ offset `ptradd` (ADR-2026-11-13-0251), the two conversions to integers,
 pointer in its place faults (ADR-2026-11-14-2316), and `store`, which is UB
 on a poison pointer for the same reason, stores a poison value as poison
 units and gives no result, each of an integer, of a pointer and of a float
-(`loadPtr`, `storePtr`, `loadFloat` and `storeFloat` in the Lean). `select`, `freeze` and `cond_br` are
+(`loadPtr`, `storePtr`, `loadFloat` and `storeFloat` in the Lean), and
+`memcpy` and `memmove` (`memCopy`), which give no result, do nothing for a
+length of 0, are UB on a poison pointer otherwise, and run a poison length
+as some length, chosen, so that it is UB only where some length is
+(ADR-2026-11-18-2131). `select`, `freeze` and `cond_br` are
 exceptions with their own rules. `br`, `ret` and `call` are exceptions that pass
 values on as they are, to block arguments, the caller or the callee.
 `unreachable` is an exception that is always UB, which the obligations below

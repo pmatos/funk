@@ -5,6 +5,7 @@ import Fir.Text.RoundTrip
 import Fir.Core.TypeTextLaws
 import Fir.Core.AllocaTextLaws
 import Fir.Core.StoreTextLaws
+import Fir.Core.MemCopyTextLaws
 import Fir.Core.FloatTextLaws
 import Fir.Core.FloatOpTextLaws
 
@@ -242,6 +243,9 @@ theorem Op.decode_encode (o : Op) : Op.decode o.name o.attrs o.sig o.returnTypes
   | storeFloat o e m a n =>
     simpa [Op.name, Op.attrs, Op.sig, Op.returnTypes, Op.decode] using
       decodeStore_storeFloat o e m a n
+  | memCopy k o w n =>
+    cases k <;> simpa [Op.name, CopyKind.name, Op.attrs, Op.sig, Op.returnTypes, Op.decode] using
+      decodeMemCopy_loadAttrs _ o w n
   | fptosi e m n | fptoui e m n =>
     simp [Op.name, Op.attrs, Op.sig, Op.returnTypes, Op.decode, decodeFloatToInt, i]
   | _ =>
@@ -378,6 +382,8 @@ theorem Op.encode_decode {n : String} {as : List Attr} {ts rs : List Ty} {o : Op
   · exact decodeAlloca_eq h -- alloca
   · exact decodeLoad_eq h -- load
   · exact decodeStore_eq h -- store
+  · exact decodeMemCopy_eq h -- memcpy
+  · exact decodeMemCopy_eq h -- memmove
   · exact decodeFloatToInt_eq (signed := true) h -- fptosi
   · exact decodeFloatToInt_eq (signed := false) h -- fptoui
   · -- srem, urem, and, or, xor, shl, lshr and ashr
@@ -396,6 +402,7 @@ theorem Op.name_isWord (o : Op) : isWord o.name := by
   cases o <;> first
     | (simp only [Op.name]; decide)
     | (rename_i o _ _ _; cases o <;> simp only [Op.name, FBin.name, FUnary.name] <;> decide)
+    | (rename_i k _ _ _; exact k.name_isWord)
 
 /-- Every predicate's name is a word. -/
 theorem Pred.name_isWord (p : Pred) : isWord p.name := by
@@ -452,6 +459,7 @@ theorem Op.attrs_writable (o : Op) : Attr.AllWritable o.attrs := by
   | alloca k t c a => exact allocaAttrs_writable k t c a
   | load o _ a | store o _ a | loadPtr o _ a | storePtr o _ a | loadFloat o _ _ a
   | storeFloat o _ _ a => exact loadAttrs_writable o a
+  | memCopy _ o => exact loadAttrs_writable o none
   | _ => trivial
 
 end Fir.Core

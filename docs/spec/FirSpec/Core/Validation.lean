@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Core rules: readable blocks" =>
 
-:::moduleDocs (fingerprint := "5137340132006099769")
+:::moduleDocs (fingerprint := "15018742342867230570")
 :::
 
 :::readable Fir.Core.Ty.Valid Fir.Core.Ty.memory (pin := Fir.Core.maxWidth) (pin := Fir.Core.floatWidth) (fingerprint := "744407091263889301")
@@ -50,7 +50,7 @@ in every module, and $`\mathsf{ptr}\langle N \rangle` with $`N \ge 1` is in
 a module whose layout declares memory $`N` (ADR-2026-11-12-1821).
 :::
 
-:::readable Fir.Core.Op.symbolRefs (fingerprint := "9169673307230543629")
+:::readable Fir.Core.Op.symbolRefs (fingerprint := "9113568926302878071")
 *Definition: the symbols a core op refers to.* $`\mathsf{call}~f : t^* \to r^*`
 refers to the symbol $`f` of its callee: its list of symbols is the
 one-element sequence $`(f)`. No other core op refers to a symbol.
@@ -74,7 +74,7 @@ $`\mathsf{alloca}` allocates values of every valid type, a float's
 included, since #264 gives floats their loads and stores.
 :::
 
-:::readable Fir.Core.Op.attrTypes (fingerprint := "14541402550165652625")
+:::readable Fir.Core.Op.attrTypes (fingerprint := "18252529104676094500")
 *Definition: the types a core op carries.* $`\mathsf{alloca}_N~k~t~c~a`
 carries the type $`t` that it allocates values of in its attributes, when
 $`t` is valid:
@@ -113,7 +113,7 @@ a field: #264 makes floats fields of aggregates. These are the units and the
 alignment that $`\mathsf{alloca}` gives one value of a field's type.
 :::
 
-:::readable Fir.Core.FBin.mode Fir.Core.FUnary.mode Fir.Core.Op.Valid (pin := Fir.isPowerOfTwo) (pin := Fir.MemLayout.limit) (pin := Fir.MemLayout.ValidAlign) (fingerprint := "7601155670973002638")
+:::readable Fir.Core.FBin.mode Fir.Core.FUnary.mode Fir.Core.Op.Valid (pin := Fir.isPowerOfTwo) (pin := Fir.MemLayout.limit) (pin := Fir.MemLayout.ValidAlign) (fingerprint := "8810794484991043802")
 *Definition: the core rules of an op.* Beyond its signature, which the
 {ref "The-fir-specification--Validation--The-general-rules"}[general rules]
 check, a core op obeys these rules in its op context $`C`:
@@ -163,6 +163,8 @@ $`\mathsf{load}_{N}~o~\mathsf{ptr}\langle M \rangle~a` and
 $`\mathsf{store}_{N}~o~\mathsf{ptr}\langle M \rangle~a`, and of a float,
 $`\mathsf{load}_{N}~o~\mathsf{float}\langle e,m \rangle~a` and
 $`\mathsf{store}_{N}~o~\mathsf{float}\langle e,m \rangle~a`.
+
+$$`\frac{o = \mathsf{nonatomic}}{C \vdash \mathsf{memcpy}_{N}~o~W~\text{valid}} \qquad \frac{o = \mathsf{nonatomic}}{C \vdash \mathsf{memmove}_{N}~o~W~\text{valid}}`
 
 $$`\frac{\mathit{op} \text{ is another core op}}{C \vdash \mathit{op}~\text{valid}}`
 

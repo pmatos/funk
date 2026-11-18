@@ -25,7 +25,7 @@ each way $`e` to end, a place to go or UB, into a terminator's rule. In
 the set monad, that rule ends with $`e'` exactly when $`e' = e`.
 :::
 
-:::readable Fir.Core.br_exit Fir.Core.condBr_exit (pin := Fir.Core.brExit) (pin := Fir.Core.condBrExit) (pin := Fir.Core.Op.exit?) (pin := Fir.instDialectDenoteCoreDialectSetM) (fingerprint := "15039227657803294881")
+:::readable Fir.Core.br_exit Fir.Core.condBr_exit (pin := Fir.Core.brExit) (pin := Fir.Core.condBrExit) (pin := Fir.Core.Op.exit?) (pin := Fir.instDialectDenoteCoreDialectSetM) (fingerprint := "13737910251075082246")
 *Theorem: where $`\mathsf{br}` and $`\mathsf{cond\_br}` go.* In the set
 monad, $`\mathsf{br}` goes to its one successor and nowhere else, on every
 operand vector $`\vec{v}`; $`\mathsf{cond\_br}` (`condBr` in the Lean) on a
@@ -53,7 +53,7 @@ the successor's block arguments are not its operands: the interpreter
 passes them on as they are, poison included.
 :::
 
-:::readable Fir.Core.br_goto_lt (pin := Fir.Core.Op.succCount) (fingerprint := "13592310352485137163")
+:::readable Fir.Core.br_goto_lt (pin := Fir.Core.Op.succCount) (fingerprint := "16686676128064712096")
 *Theorem: $`\mathsf{br}` goes only to a successor it has.* For every
 operand vector, if the exit of $`\mathsf{br}` may be
 $`\mathsf{ok}~(\mathsf{goto}~i)`, then $`i` is less than the number of
@@ -73,7 +73,7 @@ $`\mathsf{cond\_br}` on $`c` is UB, which allows whatever it does on
 $`c'`. Otherwise $`c'` is $`c`, and it goes to the same place.
 :::
 
-:::readable Fir.Core.condBr_goto_lt (pin := Fir.Core.Op.succCount) (fingerprint := "4631638980351255133")
+:::readable Fir.Core.condBr_goto_lt (pin := Fir.Core.Op.succCount) (fingerprint := "2916904520886643534")
 *Theorem: $`\mathsf{cond\_br}` goes only to a successor it has.* For every
 operand vector, if the exit of $`\mathsf{cond\_br}` may be
 $`\mathsf{ok}~(\mathsf{goto}~i)`, then $`i` is less than the number of

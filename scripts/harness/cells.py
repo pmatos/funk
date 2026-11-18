@@ -57,11 +57,14 @@ has neither operands nor attributes, is a cell at each width of its result
   on a side that has them, the interpreter-only one (`gpu_cells.py`, #406),
   and `gpu.work_group_alloca` a cell for each type it allocates, as
   `alloca` (stage 3 of #212).
+- `memcpy` and `memmove` are a cell for each width of their length, on
+  the interpreter-only side (`copy_cells.py`, #234).
 """
 
 from typing import NamedTuple
 
 from cell_types import Cell, CellError
+from copy_cells import COPIES, COPY_OPS, copy_cell, copy_cells
 from firtext import Op
 from gpu_cells import (
     GPU,
@@ -225,6 +228,7 @@ def catalog(
     offsets: tuple[int, ...] = (),
     gpu: bool = False,
     memory: tuple[str, ...] = (),
+    copies: bool = False,
 ) -> tuple[Table, ...]:
     """One side's taxonomy, expanded once for enumeration and display.
 
@@ -367,6 +371,9 @@ def catalog(
             tuple(Cell(GPU_MEMORY, WORK_GROUP_ALLOCA, "", t) for t in columns),
         )
         tables.append(Table(GPU_MEMORY, columns, (row,)))
+    if copies:
+        rows = tuple(Row(op, "", c) for op, c in copy_cells(tuple(map(ty, offsets))))
+        tables.append(Table(COPIES, tuple(map(ty, offsets)), rows))
     return tuple(tables)
 
 
@@ -376,11 +383,12 @@ def cells(
     offsets: tuple[int, ...] = (),
     gpu: bool = False,
     memory: tuple[str, ...] = (),
+    copies: bool = False,
 ) -> list[Cell]:
     """Every actual cell of one side, in catalog order."""
     return [
         cell
-        for table in catalog(widths, formats, offsets, gpu, memory)
+        for table in catalog(widths, formats, offsets, gpu, memory, copies)
         for row in table.rows
         for cell in row.entries
         if cell is not None
@@ -504,6 +512,8 @@ def of_op(op: Op) -> set[Cell]:
         return {float_to_int(op)}
     if op.name in POINTER_OPS:
         return {pointer_cell(op)}
+    if op.name in COPY_OPS:
+        return {copy_cell(op)}
     if op.name in GPU_OPS:
         return {gpu_cell(op)}
     if op.name == WORK_GROUP_ALLOCA:

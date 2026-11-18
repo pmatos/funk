@@ -14,21 +14,23 @@ fails when the Lean changes under it.
 
 #doc (Manual) "Stack allocation obligations: readable blocks" =>
 
-:::moduleDocs (fingerprint := "4459584888210257344")
+:::moduleDocs (fingerprint := "8273711717474599312")
 :::
 
-:::readable Fir.Core.Op.memCases Fir.Core.Op.touchesMemory_false_of_denote (pin := Fir.Core.Op.touchesMemory) (fingerprint := "3808853761330035302")
+:::readable Fir.Core.Op.memCases Fir.Core.Op.touchesMemory_false_of_denote (pin := Fir.Core.Op.touchesMemory) (fingerprint := "5308871934810962906")
 *Theorems: the core ops, split by memory.* A property holds of every core
 op when it holds of each op that touches no memory, of every
 $`\mathsf{alloca}`, and of every $`\mathsf{load}` and every
-$`\mathsf{store}` of an integer, of a pointer or of a float, the core ops
-that do.
+$`\mathsf{store}` of an integer, of a pointer or of a float, and of every
+$`\mathsf{memcpy}` and $`\mathsf{memmove}` (`memCopy` in the Lean), the
+core ops that do.
 So the core dialect meets an obligation with memory op by op: an op that
 touches no memory by its
 {ref "The-fir-specification--Memory--The-core___s-rules-with-memory"}[tie]
-to the set monad, and $`\mathsf{alloca}` and each load and store by its
-own rule. A core op with an outcome in the set monad touches no memory,
-since $`\mathsf{alloca}` and the loads and stores have none there.
+to the set monad, and $`\mathsf{alloca}`, each load and store, and each
+copy and move by its own rule. A core op with an outcome in the set monad
+touches no memory, since $`\mathsf{alloca}`, the loads and stores and the
+copies and moves have none there.
 :::
 
 :::readable Fir.Core.allocaResult Fir.Core.allocaAlloc Fir.Core.alloca_denote (pin := Fir.Core.allocaRule) (pin := Fir.Core.memDenoteAt) (fingerprint := "2842131165515027301")
