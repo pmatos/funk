@@ -141,7 +141,7 @@ def field_address(op: Op) -> Cell:
     if attrs_decode and op.operands and op.results == op.operands[:1]:
         pointer, *index = op.operands
         if is_pointer(pointer) and len(index) <= 1 and all(map(is_int, index)):
-            return Cell(FIELDS, op.name, "", "".join(index))
+            return Cell(FIELDS, op.name, "", index[0] if index else "")
     raise CellError(f"{op.name} of {op.operands} to {op.results} is not a cell")
 
 

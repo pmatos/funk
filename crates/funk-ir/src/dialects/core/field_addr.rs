@@ -38,12 +38,12 @@ fn attrs<'a>(op: &OpTypes<'a>) -> Result<(&'a str, &'a Int), String> {
 /// The memory of the pointer that `fieldaddr` takes, and whether it takes an
 /// index too, when its operands and result decode.
 fn shape(op: &OpTypes<'_>) -> Option<(u32, bool)> {
-    let indexed = match op.operands {
-        [_] => false,
-        [_, k] if matches!(core_type(k), Some(CoreType::Int(_))) => true,
+    let (pointer, indexed) = match op.operands {
+        [p] => (p, false),
+        [p, k] if matches!(core_type(k), Some(CoreType::Int(_))) => (p, true),
         _ => return None,
     };
-    match (op.operands.first().and_then(core_type), op.results) {
+    match (core_type(pointer), op.results) {
         (Some(CoreType::Ptr(n)), [r]) if core_type(r) == Some(CoreType::Ptr(n)) => {
             Some((n, indexed))
         }
