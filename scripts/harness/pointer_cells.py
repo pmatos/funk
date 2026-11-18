@@ -17,8 +17,8 @@ ADR-2026-11-03-0557).
 Each is a cell at the side's pointer widths, `cells.POINTER_DIFFERENTIAL`
 and `cells.POINTER_INTERPRETER`, the pointer cells with them, and at the
 side's float formats in memory, `MEMORY_FLOAT_DIFFERENTIAL` and
-`MEMORY_FLOAT_INTERPRETER`. The backend does not load or store a
-float yet, so the differential side has none (stage 1 of #264).
+`MEMORY_FLOAT_INTERPRETER`: the differential side has `f32` and `f64`,
+which the backend loads and stores with SSE moves (stage 2 of #264).
 """
 
 from cell_types import Cell, CellError, is_pointer
@@ -29,7 +29,7 @@ POINTER_OPS = ("ptradd", "alloca", "load", "store")
 # The column of the pointer cells of `alloca`, `load` and `store`.
 POINTER = "ptr"
 # The float formats of `alloca`, `load` and `store` on each side (#264).
-MEMORY_FLOAT_DIFFERENTIAL: tuple[str, ...] = ()
+MEMORY_FLOAT_DIFFERENTIAL = ("f32", "f64")
 MEMORY_FLOAT_INTERPRETER = tuple(FLOAT_ALIASES)
 
 

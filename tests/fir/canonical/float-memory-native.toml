@@ -1,0 +1,74 @@
+# Tests of float-memory-native.fir: loads, stores and allocas of f32 and
+# f64 run on fir-ref and as native code (stage 2 of #264), where the
+# backend moves a float with movss or movsd. A float stored and loaded
+# back is itself, a NaN's sign and payload included, a signalling NaN's
+# too; a float loaded as the integer of its width gives its bits, and an
+# integer loaded as a float gives the float with those bits. The bytes
+# are in little-endian order, so byte 3 of an f32 holds its sign. An
+# alloca of several floats holds each at its own offset: the stores go
+# last element first, so an f32 store that wrote more than its 4 bytes
+# would clobber the next element. An f64 at offset 4 of an allocation of
+# i32s is aligned to 4, which the access writes as align(4). A stored
+# poison loads as poison, which native code refines with any value. A NaN
+# that fsub chooses keeps its bits through memory, loaded as a float or
+# as the integer of its width: native code's NaN must be one that fir-ref
+# can choose, and the interpreter-only tests pin some of fir-ref's
+# choices. float-memory.fir has the formats the backend does
+# not lower, memories of other units, and the UB and poison cases. Each
+# test that declares its result pins fir-ref's own as well as native
+# code's.
+tests = [
+  { func = "@round_f32", args = ["1.5"], results = [{ values = ["1.5"], witness = [] }] },
+  { func = "@round_f32", args = ["-0.0"], results = [{ values = ["-0.0"], witness = [] }] },
+  { func = "@round_f32", args = ["0xffc00123"], results = [{ values = ["0xffc00123"], witness = [] }] },
+  { func = "@round_f32", args = ["0x7f800001"], results = [{ values = ["0x7f800001"], witness = [] }] },
+  { func = "@round_f32", args = ["0x7f800000"], results = [{ values = ["0x7f800000"], witness = [] }] },
+  { func = "@round_f32", args = ["poison"], results = [{ values = ["poison"], witness = [] }] },
+  { func = "@round_f64", args = ["0.1"], results = [{ values = ["0.1"], witness = [] }] },
+  { func = "@round_f64", args = ["-0.0"], results = [{ values = ["-0.0"], witness = [] }] },
+  { func = "@round_f64", args = ["0x7ff0000000000001"], results = [{ values = ["0x7ff0000000000001"], witness = [] }] },
+  { func = "@round_f64", args = ["0xfff8000000000123"], results = [{ values = ["0xfff8000000000123"], witness = [] }] },
+  { func = "@round_f64", args = ["poison"], results = [{ values = ["poison"], witness = [] }] },
+  { func = "@f32_bits", args = ["1.5"], results = [{ values = ["1069547520"], witness = [] }] },
+  { func = "@f32_bits", args = ["-0.0"], results = [{ values = ["-2147483648"], witness = [] }] },
+  { func = "@f32_bits", args = ["0xffc00123"], results = [{ values = ["-4194013"], witness = [] }] },
+  { func = "@f32_bits", args = ["0x7f800001"], results = [{ values = ["2139095041"], witness = [] }] },
+  { func = "@f32_of_bits", args = ["1069547520"], results = [{ values = ["1.5"], witness = [] }] },
+  { func = "@f32_of_bits", args = ["-2147483648"], results = [{ values = ["-0.0"], witness = [] }] },
+  { func = "@f32_of_bits", args = ["-4194013"], results = [{ values = ["0xffc00123"], witness = [] }] },
+  { func = "@f32_of_bits", args = ["2139095041"], results = [{ values = ["0x7f800001"], witness = [] }] },
+  { func = "@f64_bits", args = ["0.1"], results = [{ values = ["4591870180066957722"], witness = [] }] },
+  { func = "@f64_bits", args = ["-2.0"], results = [{ values = ["-4611686018427387904"], witness = [] }] },
+  { func = "@f64_bits", args = ["0x7ff0000000000001"], results = [{ values = ["9218868437227405313"], witness = [] }] },
+  { func = "@f64_bits", args = ["0xfff8000000000123"], results = [{ values = ["-2251799813684957"], witness = [] }] },
+  { func = "@f64_of_bits", args = ["4591870180066957722"], results = [{ values = ["0.1"], witness = [] }] },
+  { func = "@f64_of_bits", args = ["-9223372036854775808"], results = [{ values = ["-0.0"], witness = [] }] },
+  { func = "@f64_of_bits", args = ["9218868437227405313"], results = [{ values = ["0x7ff0000000000001"], witness = [] }] },
+  { func = "@f64_of_bits", args = ["-2251799813684957"], results = [{ values = ["0xfff8000000000123"], witness = [] }] },
+  { func = "@f32_top_byte", args = ["0xffc00123"], results = [{ values = ["-1"], witness = [] }] },
+  { func = "@f32_top_byte", args = ["1.0"], results = [{ values = ["63"], witness = [] }] },
+  { func = "@f32_array", args = ["1.5", "-0.0", "0x7f800001"], results = [{ values = ["1.5", "-0.0", "0x7f800001"], witness = [] }] },
+  { func = "@f32_array", args = ["0xffc00123", "2.5", "-3.25"], results = [{ values = ["0xffc00123", "2.5", "-3.25"], witness = [] }] },
+  { func = "@f64_array", args = ["0.1", "0x7ff0000000000001"], results = [{ values = ["0.1", "0x7ff0000000000001"], witness = [] }] },
+  { func = "@f64_array", args = ["-0.0", "-2.0"], results = [{ values = ["-0.0", "-2.0"], witness = [] }] },
+  { func = "@f64_at_four", args = ["0x7ff0000000000001"], results = [{ values = ["0x7ff0000000000001"], witness = [] }] },
+  { func = "@f64_at_four", args = ["0.1"], results = [{ values = ["0.1"], witness = [] }] },
+  { func = "@f32_nan", args = ["1.0", "0.5"], results = [{ values = ["0.5"], witness = [] }] },
+  { func = "@f32_nan", args = ["0x7f800000", "0x7f800000"] },
+  { func = "@f32_nan", args = ["0x7fc00001", "1.0"] },
+  { func = "@f32_nan", args = ["0x7f800000", "0x7f800000"], choices = ["0"], expect = ["0x7fc00000"] },
+  { func = "@f32_nan", args = ["0x7f800000", "0x7f800000"], choices = ["-1"], expect = ["0xffffffff"] },
+  { func = "@f64_nan", args = ["1.0", "0.5"], results = [{ values = ["0.5"], witness = [] }] },
+  { func = "@f64_nan", args = ["0x7ff0000000000000", "0x7ff0000000000000"] },
+  { func = "@f64_nan", args = ["0x7ff8000000000001", "1.0"] },
+  { func = "@f64_nan", args = ["0x7ff0000000000000", "0x7ff0000000000000"], choices = ["0"], expect = ["0x7ff8000000000000"] },
+  { func = "@f64_nan", args = ["0x7ff0000000000000", "0x7ff0000000000000"], choices = ["-1"], expect = ["0xffffffffffffffff"] },
+  { func = "@f32_nan_bits", args = ["1.0", "0.5"], results = [{ values = ["1056964608"], witness = [] }] },
+  { func = "@f32_nan_bits", args = ["0x7f800000", "0x7f800000"] },
+  { func = "@f32_nan_bits", args = ["0x7fc00001", "1.0"] },
+  { func = "@f32_nan_bits", args = ["0x7f800000", "0x7f800000"], choices = ["0"], expect = ["2143289344"] },
+  { func = "@f64_nan_bits", args = ["1.0", "0.5"], results = [{ values = ["4602678819172646912"], witness = [] }] },
+  { func = "@f64_nan_bits", args = ["0x7ff0000000000000", "0x7ff0000000000000"] },
+  { func = "@f64_nan_bits", args = ["0x7ff8000000000001", "1.0"] },
+  { func = "@f64_nan_bits", args = ["0x7ff0000000000000", "0x7ff0000000000000"], choices = ["0"], expect = ["9221120237041090560"] },
+]
