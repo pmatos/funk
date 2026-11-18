@@ -21,7 +21,9 @@ Tier: direction; area: semantics
 - **Poison.** A poison pointer is UB when the length is not 0. A poison
   length runs as some length, chosen as `freeze` chooses bits, so it is UB
   wherever some length is (ADR-2026-10-29-2006), and otherwise copies some
-  length. The op's poison class is `propagates`.
+  length. The op's poison class is `propagates`. This rule is agent work:
+  it replaces the stage plan's "a poison length is UB", which the class
+  forbids, and it waits for the human's ruling on #234.
 
 ADR-2026-11-09-1551 gives the meaning of the ops: the zero length and
 overlap rulings of 2026-11-18 on #234.

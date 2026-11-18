@@ -62,6 +62,7 @@ pub(super) const LOAD: Access = Access {
     shape: "a pointer and defines an integer, a pointer or a float",
     memory,
     effects,
+    aligns: true,
 };
 
 #[cfg(test)]

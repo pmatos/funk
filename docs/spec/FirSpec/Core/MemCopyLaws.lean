@@ -14,17 +14,15 @@ when the Lean changes under it.
 
 #doc (Manual) "Copy and move obligations: readable blocks" =>
 
-:::moduleDocs (fingerprint := "2923105879354413431")
+:::moduleDocs (fingerprint := "552254409804306718")
 :::
 
-:::readable Fir.Core.memCopy_denote Fir.Core.stateM_pure_lift Fir.Core.stateM_ub_lift (pin := Fir.Core.memCopyRule) (fingerprint := "12474698737465803715")
+:::readable Fir.Core.memCopy_denote (pin := Fir.Core.memCopyRule) (fingerprint := "14154648767080549574")
 *Theorems: $`\mathsf{memcpy}` and $`\mathsf{memmove}` run by their rule.*
 With memory, $`\mathsf{memCopy}_N~k~o~W` on the destination $`p`, the
 source $`q` and the length $`l` runs the
 {ref "The-fir-specification--Memory--Copy-and-move-rules"}[rule]
-$`\mathrm{memcopy}_{k,W,N}(p, q, l)`. In the state layer over the set
-monad, returning a value and UB are the lifts of returning it and of UB in
-the set monad.
+$`\mathrm{memcopy}_{k,W,N}(p, q, l)`.
 :::
 
 :::readable Fir.Core.copyLenRule_cases Fir.Core.memCopyRule_cases Fir.Core.memCopy_ownRuleHas (pin := Fir.Core.copyLenRule) (pin := Fir.OwnRuleHas) (fingerprint := "9593497698176751475")

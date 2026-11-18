@@ -14,19 +14,21 @@ when the Lean changes under it.
 
 #doc (Manual) "Copy and move rules: readable blocks" =>
 
-:::moduleDocs (fingerprint := "17128075274612928423")
+:::moduleDocs (fingerprint := "12405156472491787047")
 :::
 
-:::readable Fir.Core.partlyOverlap (fingerprint := "4706066638542222308")
+:::readable Fir.Core.partlyOverlap (fingerprint := "9681611242270941796")
 *Definition: ranges that partly overlap.* The ranges of $`n` units
 through the pointers $`p` and $`q` partly overlap when $`p` and $`q` have
-the same provenance and different offsets less than $`n` apart:
+the provenance of one allocation, not the absence of one, written
+$`\bot`, and different offsets less than $`n` apart:
 
-$$`\mathrm{partly}(p, q, n) \iff \mathrm{prov}(p) = \mathrm{prov}(q) \wedge \mathrm{off}(p) \ne \mathrm{off}(q) \wedge |\mathrm{off}(p) - \mathrm{off}(q)| < n`
+$$`\mathrm{partly}(p, q, n) \iff \mathrm{prov}(p) = \mathrm{prov}(q) \ne \bot \wedge \mathrm{off}(p) \ne \mathrm{off}(q) \wedge |\mathrm{off}(p) - \mathrm{off}(q)| < n`
 
 Equal ranges do not partly overlap, and neither do ranges in two
-allocations. Whether two ranges partly overlap depends only on the
-pointers and $`n`, not on the memories.
+allocations or through pointers with no provenance. Whether two ranges
+partly overlap depends only on the pointers and $`n`, not on the
+memories.
 :::
 
 :::readable Fir.Core.poisonCopyPointer Fir.Core.overlapCopy Fir.Core.copyLenRule Fir.Core.memCopyRule (pin := Fir.copyUnits) (pin := Fir.MonadMemory) (pin := Fir.MonadUB) (pin := Fir.MonadChoice) (pin := Fir.Core.CopyKind) (fingerprint := "12326008513904577959")

@@ -14,7 +14,14 @@ fails when the Lean changes under it.
 
 #doc (Manual) "Choices in the state layer: readable blocks" =>
 
-:::moduleDocs (fingerprint := "15354973541174894382")
+:::moduleDocs (fingerprint := "17407515382249405867")
+:::
+
+:::readable Fir.SetM.statePure_lift Fir.SetM.stateUB_lift (fingerprint := "11922181007677381646")
+*Theorems: returning and UB are lifts.* In the
+{ref "The-fir-specification--Memory--The-state-layer"}[state layer] over
+the set monad, returning a value and UB are the lifts of returning it and
+of UB in the set monad.
 :::
 
 :::readable Fir.SetM.stateChoose_apply Fir.SetM.chooseBind_apply (pin := Fir.instMonadChoiceStateT) (fingerprint := "8421021278155478931")

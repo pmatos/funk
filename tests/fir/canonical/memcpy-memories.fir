@@ -31,8 +31,18 @@ func @past(%n: i32) -> i32 {
   ret %n @2
 }
 
+func @overlap(%n: i16) -> i16 {
+^entry:
+  %p: ptr(1) = alloca stack i32 2 @3
+  %one: i16 = const 1 @3
+  %q: ptr(1) = ptradd %p, %one @3
+  memcpy nonatomic %q, %p, %n @3
+  ret %n @3
+}
+
 locs {
   @0 = unknown
   @1 = unknown
   @2 = unknown
+  @3 = unknown
 }

@@ -18,6 +18,10 @@ such a rule may end are the ways the computation may end on some bits:
   the other's on the same bits, and a rule refines a computation that the
   rule's computation on some bits refines, since the rule may make that
   choice.
+
+Such a rule's other ends, returning a value at once or UB, are the lifts
+of returning it and of UB in the set monad, so the laws of a lift apply to
+them.
 -/
 
 namespace Fir
@@ -25,6 +29,15 @@ namespace Fir
 open Memory
 
 variable {σ α : Type}
+
+/-- `pure` in the state layer over the set monad is the lift of `pure`. -/
+theorem SetM.statePure_lift (a : α) : (pure a : StateT σ SetM α) = StateT.lift (pure a) :=
+  funext fun S => (SetM.pure_bind a fun b => (pure (b, S) : SetM _)).symm
+
+/-- UB in the state layer over the set monad is the lift of UB. -/
+theorem SetM.stateUB_lift (r : String) :
+    (MonadUB.ub r : StateT σ SetM α) = StateT.lift (MonadUB.ub r) :=
+  funext fun _ => (SetM.ub_bind r _).symm
 
 /-- The ways a choice of `w` bits in the state layer may end: with some
 bits, and the state it started from. -/

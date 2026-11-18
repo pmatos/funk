@@ -12,8 +12,8 @@ memory, which it meets by its own rule:
   poison. A poison length is UB only where the length it chose is, so that
   length fills it. A poison pointer is UB only for a length other than 0,
   and there a pointer with no provenance fills it: a copy of units through
-  it faults, whatever the other pointer is, and a copy whose filled ranges
-  partly overlap is UB by that check.
+  it faults, whatever the other pointer is, unless the overlap check is UB
+  first.
 * _A result on defined operands._ A length of 0 gives no result and does
   nothing, from any memories, whatever the pointers are.
 

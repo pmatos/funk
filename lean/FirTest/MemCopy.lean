@@ -155,6 +155,10 @@ def loadP (p : Pointer) (S : Mems) : Option (PoisonOr Pointer) :=
   (alloc 4 0).2) == some "an access through a pointer without provenance"
 #guard ubOf (copy .move 0 64 (.value (alloc 4 0).1) (.value (alloc 4 0).1) (.value 1)
   (alloc 4 0).2.exit) == some "an access to a freed allocation"
+-- Two pointers with no provenance lie in no allocation, so a copy through
+-- them faults for that, not for an overlap.
+#guard ubOf (copy .copy 0 64 (.value ⟨none, 0⟩) (.value ⟨none, 2⟩) (.value 4)
+  (alloc 4 0).2) == some "an access through a pointer without provenance"
 
 -- In memory 1, of 16-bit units, an `i32` takes two units, and a length of
 -- 2 copies it.

@@ -51,16 +51,6 @@ theorem memCopy_denote (d s : PoisonOr Pointer) (l : PoisonOr (BitVec w)) :
       (memCopyRule lay ρ k w n d s l) :=
   rfl
 
-omit [DecidableEq N] in
-/-- `pure` in the state layer is the lift of `pure`. -/
-theorem stateM_pure_lift {α : Type} (a : α) : (pure a : SM α) = StateT.lift (pure a) :=
-  funext fun S => (SetM.pure_bind a fun b => (pure (b, S) : SetM _)).symm
-
-omit [DecidableEq N] in
-/-- UB in the state layer is the lift of UB. -/
-theorem stateM_ub_lift {α : Type} (r : String) : (MonadUB.ub r : SM α) = StateT.lift (MonadUB.ub r) :=
-  funext fun _ => (SetM.ub_bind r _).symm
-
 /-- A property holds of the rule of a defined length when it holds of
 giving no result, of UB, and of the copy of units with no result. -/
 theorem copyLenRule_cases {P : SM (HVector toType ([] : List Ty)) → Prop}
@@ -69,18 +59,18 @@ theorem copyLenRule_cases {P : SM (HVector toType ([] : List Ty)) → Prop}
     (len : Nat) (d s : PoisonOr Pointer) : P (copyLenRule lay ρ k n len d s) := by
   unfold copyLenRule
   split
-  · rw [stateM_pure_lift]
+  · rw [SetM.statePure_lift]
     exact hp
   · match d, s with
     | .value d, .value s =>
       dsimp only
       split
-      · rw [stateM_ub_lift]
+      · rw [SetM.stateUB_lift]
         exact hu _
       · exact hc _ _ _
     | .poison, _ | .value _, .poison =>
       show P (MonadUB.ub poisonCopyPointer)
-      rw [stateM_ub_lift]
+      rw [SetM.stateUB_lift]
       exact hu _
 
 /-- A property holds of `memCopy`'s rule when it holds of the rule of each

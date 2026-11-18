@@ -18,7 +18,9 @@ pointer keeps its provenance. The rule takes the length first:
   provenance in its place faults, so the UB is the op's own rule (the
   section on poison obligations with memory);
 * otherwise a copy whose two ranges partly overlap is immediate UB: they
-  lie in one allocation, at different offsets less than `len` apart.
+  lie in one allocation, at different offsets less than `len` apart. Two
+  pointers with no provenance lie in no allocation, so their ranges never
+  overlap, and the copy of units faults through them.
   Equal ranges are allowed, and so are disjoint ones (the human's ruling
   of 2026-11-18 on #234, Q2). A move allows any overlap;
 * otherwise it is the copy of units of the section on copies of units in
@@ -46,10 +48,12 @@ namespace Fir.Core
 open Memory
 
 /-- Whether the ranges of `len` units through `d` and `s` partly overlap:
-the pointers have the same provenance, and different offsets less than
-`len` apart. Equal ranges do not partly overlap. -/
+the pointers have the provenance of one allocation, and different offsets
+less than `len` apart. Equal ranges do not partly overlap, and neither do
+ranges through pointers with no provenance. -/
 def partlyOverlap (d s : Pointer) (len : Nat) : Bool :=
-  d.prov == s.prov && d.offset != s.offset && decide ((d.offset - s.offset).natAbs < len)
+  d.prov.isSome && d.prov == s.prov && d.offset != s.offset &&
+    decide ((d.offset - s.offset).natAbs < len)
 
 /-- Why a copy or a move through a poison pointer is UB. -/
 def poisonCopyPointer : String := "a copy or move through a poison pointer"
@@ -86,9 +90,10 @@ def memCopyRule [MonadChoice m] (lay : N → MemLayout) (ρ : Mem → N)
   | .poison => MonadChoice.choose w >>= fun l => copyLenRule lay ρ k n l.toNat d s
 
 -- Ranges of 4 units 2 apart in one allocation partly overlap; equal ranges,
--- ranges 4 apart, and ranges in two allocations do not.
+-- ranges 4 apart, ranges in two allocations, and ranges through pointers
+-- with no provenance do not.
 #guard partlyOverlap ⟨some 0, 2⟩ ⟨some 0, 0⟩ 4 && partlyOverlap ⟨some 0, 0⟩ ⟨some 0, 2⟩ 4
 #guard !partlyOverlap ⟨some 0, 3⟩ ⟨some 0, 3⟩ 4 && !partlyOverlap ⟨some 0, 4⟩ ⟨some 0, 0⟩ 4 &&
-  !partlyOverlap ⟨some 0, 2⟩ ⟨some 1, 0⟩ 4
+  !partlyOverlap ⟨some 0, 2⟩ ⟨some 1, 0⟩ 4 && !partlyOverlap ⟨none, 2⟩ ⟨none, 0⟩ 4
 
 end Fir.Core

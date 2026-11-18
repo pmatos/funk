@@ -7,9 +7,9 @@
 //! pointer `%s` to the pointer `%d`, both of `ptr<N>`, where `%n` is an
 //! integer of any width read as unsigned, and gives no result; `memmove`
 //! does the same with ranges that may overlap. The one attribute is the
-//! ordering, a word of [`ORDERINGS`]; there is no `align(A)`, since each
-//! access is aligned to one unit. Pointers of two memories, an alignment
-//! and any other shape do not decode.
+//! ordering; there is no `align(A)`, since each access is aligned to one
+//! unit. Pointers of two memories, an alignment and any other shape do not
+//! decode. Each is an [`Access`] that takes no alignment.
 //!
 //! Validation accepts only the ordering `nonatomic`. The op reads and
 //! writes memory `N` and may be UB: on a poison pointer, an access out of
@@ -18,24 +18,10 @@
 //! (the human's rulings of 2026-11-18 on #234). It gives no result, so it
 //! makes no poison.
 
-use super::access::{ORDERINGS, check_access};
-use super::type_list;
+use super::access::Access;
 use super::types::{CoreType, core_type};
-use crate::Attr;
 use crate::effects::{Effects, MemSet};
-use crate::registry::{OpContext, OpShape, OpSpec, OpTypes};
-
-/// A copy, `memcpy`, or a move, `memmove`, by its name.
-pub(super) struct MemCopy(pub(super) &'static str);
-
-/// The ordering that the op writes, when it writes one word of
-/// [`ORDERINGS`] and nothing else.
-fn ordering(attrs: &[Attr]) -> Option<&str> {
-    match attrs {
-        [Attr::Word(o)] if ORDERINGS.contains(&o.as_str()) => Some(o),
-        _ => None,
-    }
-}
+use crate::registry::OpTypes;
 
 /// The memory of the op's pointers, when it takes two pointers of one
 /// memory and then an integer, and has no result.
@@ -49,63 +35,46 @@ fn memory(op: &OpTypes<'_>) -> Option<u32> {
     }
 }
 
-impl OpSpec for MemCopy {
-    fn name(&self) -> &str {
-        self.0
-    }
-
-    fn decode(&self, op: &OpTypes<'_>) -> Result<OpShape, String> {
-        if memory(op).is_none() {
-            return Err(format!(
-                "{} takes two pointers of one memory and then an integer, and defines \
-                 nothing, not {} -> {}",
-                self.0,
-                type_list(op.operands),
-                type_list(op.results)
-            ));
-        }
-        if ordering(op.attrs).is_none() {
-            return Err(format!("{} takes an ordering alone", self.0));
-        }
-        Ok(OpShape::default())
-    }
-
-    fn check(&self, _cx: &OpContext<'_>, op: &OpTypes<'_>) -> Result<(), String> {
-        ordering(op.attrs).map_or(Ok(()), |o| check_access(self.0, o, None))
-    }
-
-    /// Reads and writes its memory, and may be UB (`Core.Op.effects`).
-    fn effects(&self, op: &OpTypes<'_>) -> Effects {
-        let memory = memory(op).map_or(MemSet::NONE, |n| MemSet::These(vec![n.to_string()]));
-        Effects {
-            reads: memory.clone(),
-            writes: memory,
-            may_ub: true,
-            ..Effects::PURE
-        }
+/// Reads and writes its memory, and may be UB (`Core.Op.effects`).
+fn effects(memory: MemSet) -> Effects {
+    Effects {
+        reads: memory.clone(),
+        writes: memory,
+        may_ub: true,
+        ..Effects::PURE
     }
 }
+
+const SHAPE: &str = "two pointers of one memory and then an integer, and defines nothing";
+
+/// `memcpy nonatomic %d, %s, %n`.
+pub(super) const MEMCPY: Access = Access {
+    name: "memcpy",
+    shape: SHAPE,
+    memory,
+    effects,
+    aligns: false,
+};
+
+/// `memmove nonatomic %d, %s, %n`.
+pub(super) const MEMMOVE: Access = Access {
+    name: "memmove",
+    shape: SHAPE,
+    memory,
+    effects,
+    aligns: false,
+};
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::dialects::core::access::tests::{align, types};
+    use crate::Attr;
+    use crate::dialects::core::access::ORDERINGS;
+    use crate::dialects::core::access::tests::{align, check, types};
     use crate::dialects::core::{MAX_MEMORY, int_type, ptr_type};
-    use crate::{SymbolTable, Type};
+    use crate::registry::{OpShape, OpSpec};
 
-    const OPS: [MemCopy; 2] = [MemCopy("memcpy"), MemCopy("memmove")];
-
-    fn check(op: &MemCopy, attrs: &[Attr], operands: &[Type]) -> Result<(), String> {
-        let symbols = SymbolTable::of(&[]);
-        let cx = OpContext {
-            symbols: &symbols,
-            func: "f",
-            results: &[],
-        };
-        let t = types(attrs, operands, &[]);
-        op.decode(&t)?;
-        op.check(&cx, &t)
-    }
+    const OPS: [Access; 2] = [MEMCPY, MEMMOVE];
 
     #[test]
     fn every_ordering_width_and_memory_decodes() {
@@ -119,7 +88,7 @@ mod tests {
                         op.decode(&t),
                         Ok(OpShape::default()),
                         "{} {o} {n} {w}",
-                        op.0
+                        op.name
                     );
                 }
             }
@@ -161,7 +130,7 @@ mod tests {
                 assert!(
                     op.decode(&t).is_err(),
                     "{} {attrs:?} {operands:?} {results:?}",
-                    op.0
+                    op.name
                 );
             }
         }
@@ -171,10 +140,13 @@ mod tests {
     fn validation_accepts_only_nonatomic() {
         let operands = [ptr_type(0), ptr_type(0), int_type(64)];
         for op in &OPS {
-            assert_eq!(check(op, &[Attr::word("nonatomic")], &operands), Ok(()));
-            let e = check(op, &[Attr::word("seq_cst")], &operands).unwrap_err();
+            assert_eq!(
+                check(op, &[Attr::word("nonatomic")], &operands, &[]),
+                Ok(())
+            );
+            let e = check(op, &[Attr::word("seq_cst")], &operands, &[]).unwrap_err();
             assert!(
-                e.starts_with(&format!("{} is nonatomic in M1", op.0)),
+                e.starts_with(&format!("{} is nonatomic in M1", op.name)),
                 "{e}"
             );
         }

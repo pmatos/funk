@@ -186,6 +186,14 @@ func @lengths(%v: i32) -> i32 {
   ret %w @9
 }
 
+func @copy_from(%k: i64, %n: i64) -> i64 {
+^entry:
+  %p: ptr = alloca stack i32 2 @10
+  %q: ptr = ptradd %p, %k @10
+  memcpy nonatomic %p, %q, %n @10
+  ret %n @10
+}
+
 locs {
   @0 = unknown
   @1 = unknown
@@ -197,4 +205,5 @@ locs {
   @7 = unknown
   @8 = unknown
   @9 = unknown
+  @10 = unknown
 }

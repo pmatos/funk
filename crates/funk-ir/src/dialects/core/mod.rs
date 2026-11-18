@@ -117,8 +117,8 @@ pub fn dialect() -> Dialect {
         .op(alloca::Alloca)
         .op(load::LOAD)
         .op(store::STORE)
-        .op(memcopy::MemCopy("memcpy"))
-        .op(memcopy::MemCopy("memmove"))
+        .op(memcopy::MEMCPY)
+        .op(memcopy::MEMMOVE)
         .op(float_to_int::FloatToInt("fptosi"))
         .op(float_to_int::FloatToInt("fptoui"));
     float_arith::FloatArith::all().fold(core, Dialect::op)
