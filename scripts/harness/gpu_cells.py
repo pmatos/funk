@@ -11,9 +11,10 @@ a rounding mode other than `rne` is not.
 
 `gpu.work_group_alloca` allocates in work-group memory as `alloca` does
 (stage 3 of #212). It is a cell for each width of the integer type it
-allocates, whatever its count and alignment, and one, `ptr`, for a pointer
-type of any memory, as `alloca`'s cells are (`pointer_cells.py`), at the
-side's pointer widths.
+allocates, whatever its count and alignment, one, `ptr`, for a pointer
+type of any memory, and one for each float format it allocates (#432), as
+`alloca`'s cells are (`pointer_cells.py`), at the side's pointer widths and
+float formats in memory.
 
 The cells are on the interpreter-only side alone: a kernel is a function of
 a nested module, which `funk build` does not build, so every test of one is
@@ -22,7 +23,7 @@ interpreter-only (#212).
 
 from cell_types import Cell, CellError, is_pointer
 from firtext import Op
-from pointer_cells import int_or_pointer
+from pointer_cells import element
 
 GPU = "gpu"
 # The ops, in the order of `Query`, and the dimensions, in that of `Dim`.
@@ -62,12 +63,11 @@ def gpu_cell(op: Op) -> Cell:
 
 
 def work_group_cell(op: Op) -> Cell:
-    """The cell of a `gpu.work_group_alloca`: at the width of the integer
-    type it allocates, its first attribute, or at `ptr`. Its count and
-    alignment are not part of its cell, as `alloca`'s are not. A float
-    element is not valid in work-group memory, so it is not a cell."""
+    """The cell of a `gpu.work_group_alloca`: at the integer or float type
+    it allocates, its first attribute, or at `ptr`. Its count and alignment
+    are not part of its cell, as `alloca`'s are not."""
     if op.attrs and not op.operands and len(op.results) == 1:
-        column = int_or_pointer(op.attrs[0])
+        column = element(op.attrs[0])
         if column and is_pointer(op.results[0]):
             return Cell(GPU_MEMORY, op.name, "", column)
     raise CellError(f"{op.name} {' '.join(op.attrs)} to {op.results} is not a cell")

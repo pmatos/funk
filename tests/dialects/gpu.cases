@@ -155,6 +155,7 @@ module @dev() {
     store nonatomic %q, %pp @0
     %r: ptr(3) = load nonatomic %pp @0
     %w: i32 = load nonatomic %r @0
+    %tile: ptr(3) = gpu.work_group_alloca f32 64 align(4) @0
     ret %w @0
   }
 

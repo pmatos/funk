@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "The GPU dialect's rules: readable blocks" =>
 
-:::moduleDocs (fingerprint := "13928833768383133596")
+:::moduleDocs (fingerprint := "6479117330328471040")
 :::
 
 :::readable Fir.Gpu.ValidTy Fir.Gpu.instDecidableValidTy (fingerprint := "4133016473030974221")
@@ -23,17 +23,20 @@ when it is a valid core type, since its types are the core's. Whether it
 is valid is decided.
 :::
 
-:::readable Fir.Gpu.Op.Valid Fir.Gpu.Op.attrTypes Fir.Gpu.instDecidableOpValid (fingerprint := "6095714268801176293")
+:::readable Fir.Gpu.Op.Valid Fir.Gpu.Op.attrTypes Fir.Gpu.instDecidableOpValid (fingerprint := "1737443107451698717")
 *Definition: the rule of an op of `gpu`.* A question of `gpu` is valid
 when it gives an $`\mathsf{i32}`, the width of every id and size of a
 work-item. An allocation has the rules of `alloca` but its kind: it
 allocates at least one value, its alignment, when given, is a power of two
-no larger than the data layout's limit, and its type is a valid integer or
-pointer type:
+no larger than the data layout's limit, and its type is a valid type: an
+integer, a pointer or a float, as for `alloca` (the human's ruling of
+2026-11-18 on #432):
 
-$$`\frac{N = 32}{C \vdash \mathsf{query}_N~q~d~\text{valid}} \qquad \frac{1 \le c \quad (a~\text{absent or a valid alignment}) \quad t \in \{\mathsf{i}W, \mathsf{ptr}\langle m\rangle\}~\text{valid}}{C \vdash \mathsf{alloc}_n~t~c~a~\text{valid}}`
+$$`\frac{N = 32}{C \vdash \mathsf{query}_N~q~d~\text{valid}} \qquad \frac{1 \le c \quad (a~\text{absent or a valid alignment}) \quad t~\text{valid}}{C \vdash \mathsf{alloc}_n~t~c~a~\text{valid}}`
 
-So `%i: i64 = gpu.work_item_id gpu.x` decodes, and validation rejects it.
+So `%i: i64 = gpu.work_item_id gpu.x` decodes, and validation rejects it,
+while `%p: ptr(3) = gpu.work_group_alloca f32 64` is valid, and
+`gpu.work_group_alloca float(1, 1)` is not, since that format is not.
 An allocation carries its type $`t` in its attributes, and when $`t` is
 valid the data layout checks the memory a pointer type there names, as for
 `alloca`; its result type names the memory $`n`, which the layout checks as
