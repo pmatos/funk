@@ -47,25 +47,22 @@ class Side(NamedTuple):
     memory: tuple[str, ...] = ()
     copies: bool = False
 
+    def taxonomy(self) -> dict:
+        """The side's arguments of `cells.catalog` and `cells.cells`."""
+        return {
+            "widths": self.widths,
+            "formats": self.formats,
+            "offsets": self.offsets,
+            "gpu": self.gpu,
+            "memory": self.memory,
+            "copies": self.copies,
+        }
+
     def catalog(self) -> tuple[cells.Table, ...]:
-        return cells.catalog(
-            self.widths,
-            self.formats,
-            self.offsets,
-            self.gpu,
-            self.memory,
-            self.copies,
-        )
+        return cells.catalog(**self.taxonomy())
 
     def cells(self) -> list[Cell]:
-        return cells.cells(
-            self.widths,
-            self.formats,
-            self.offsets,
-            self.gpu,
-            self.memory,
-            self.copies,
-        )
+        return cells.cells(**self.taxonomy())
 
 
 SIDES = (
