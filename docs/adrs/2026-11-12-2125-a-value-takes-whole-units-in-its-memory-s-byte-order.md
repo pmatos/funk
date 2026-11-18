@@ -10,6 +10,10 @@ Tier: direction; area: semantics
   multiple of `U`, a store sets the bits past `N` to zero, and a load
   ignores them, whatever they hold: an `i1` loaded from the byte `0xFF` is
   1, with no UB and no poison.
+- **Floats.** A value of `float<e,m>` is its IEEE bit pattern
+  (ADR-2026-11-09-1549), so it takes the units of `i(1+e+m)`, with that
+  integer's encoding: a float loaded as the integer of its width gives its
+  bits, and the other way round, a NaN's payload and sign included (#264).
 - **Pointers.** A value of `ptr<N>` takes `ceil(P / U)` units, where `P` is
   the pointer width of memory `N` in the data layout. Each unit holds one
   fragment of the pointer and the memory number `N`. So a pointer copied
@@ -17,8 +21,8 @@ Tier: direction; area: semantics
 - **Poison.** Poison takes the same number of units, each one poison. A
   load from units of which any is poison gives poison.
 - **Punned and partial loads.** A load gives poison when its units are not
-  the encoding of a value of its type: an integer from a pointer's
-  fragments, and a `ptr<N>` from anything but one pointer's fragments of
+  the encoding of a value of its type: an integer or a float from a
+  pointer's fragments, and a `ptr<N>` from anything but one pointer's fragments of
   memory `N`, in order. An integer copy of memory therefore carries no
   pointer: a pointer loaded from the copy is poison.
 - **Byte order.** The units are placed in the memory's byte order: `little`
@@ -27,7 +31,8 @@ Tier: direction; area: semantics
   `little` (ADR-2026-11-12-1821).
 
 The human ruled odd widths, punned loads and the byte-order parameter on
-2026-11-11, on #231.
+2026-11-11, on #231. Floats in memory as their bit patterns are #264's,
+filed on the human's ruling of 2026-11-10 on #177.
 
 ## Why
 

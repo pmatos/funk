@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Checking functions: readable blocks" =>
 
-:::moduleDocs (fingerprint := "16947650484722065126")
+:::moduleDocs (fingerprint := "4187508177888970517")
 :::
 
 :::readable Fir.Func.problem Fir.Func.blockProblem (fingerprint := "495569798519738376")
@@ -25,7 +25,7 @@ its block $`b` is placed at the symbol of $`f`, the label of $`b`, and the
 location reference of the first op of $`b`, when $`b` has an op.
 :::
 
-:::readable Fir.Func.kindProblems Fir.Func.kindProblems_eq_nil Fir.Func.entryProblems Fir.Func.entryProblems_eq_nil (fingerprint := "11743999808642634351")
+:::readable Fir.Func.kindProblems Fir.Func.kindProblems_eq_nil Fir.Func.entryProblems Fir.Func.entryProblems_eq_nil (fingerprint := "12997526125689500835")
 *Definitions and theorems: the checks of the body's kind and of the entry
 block.* The check of the body's kind gives "the function's body is a region
 of kind $`k`: a function's body is a region of the core's kind" when the
@@ -41,7 +41,7 @@ that declares no arguments, the first premise of the
 {ref "The-fir-specification--Validation--The-general-rules"}[rule of a valid function].
 :::
 
-:::readable Fir.Func.ruleProblem (fingerprint := "11410949032950985230")
+:::readable Fir.Func.ruleProblem (fingerprint := "15893493299113378936")
 *Definition: the problem of a broken function rule.* A function has no
 location of its own. So when a function breaks its dialect's own rule over a
 whole function, the problem "the function breaks a rule of its dialect"
@@ -49,7 +49,7 @@ names the function and its entry block, and has the location reference of
 that block's first op. A function with no blocks has only its symbol.
 :::
 
-:::readable Fir.Func.problemsIn Fir.Func.problems (fingerprint := "6541225577311025103")
+:::readable Fir.Func.problemsIn Fir.Func.problems (fingerprint := "12606752748106272386")
 *Definition: the check of a function.* Given a
 {ref "The-fir-specification--Validation--The-validation-check"}[lookup] and
 a list of the function's blocks at any depth, the check of the function

@@ -42,7 +42,7 @@ variable (o : Memory.Ordering) (w : Nat) (a : Option Nat) (n : Nat)
 
 section
 
-variable {N : Type} [DecidableEq N] (lay : N → MemLayout) (ρ : Mem → N)
+variable {N : Type} [DecidableEq N] (lay : N → MemLayout) (ρ : Mem → N) (L : RunItems)
 
 local notation "SM" => StateT (Memories N (unitsOf lay)) SetM
 
@@ -53,7 +53,7 @@ abbrev loadAccess (p : Pointer) : SM (List (MemUnit (unitsOf lay (ρ n)))) :=
 
 /-- `load` runs with memory by its rule. -/
 theorem load_denote (p : PoisonOr Pointer) :
-    letI := DialectMemDenote.denoteAt (d := CoreDialect) lay ρ
+    letI := DialectMemDenote.denoteAt (d := CoreDialect) lay ρ L
     @Eq (SM (HVector toType [Ty.int w]))
       (DialectDenote.denote (d := CoreDialect) (m := SM) (Op.load o w a n) (.cons p .nil))
       (loadRule lay ρ w a n p) :=
@@ -73,28 +73,28 @@ theorem loadRule_value (p : Pointer) :
 every pointer. -/
 theorem load_ownRuleHas {P : {α : Type} → SM α → Prop}
     (h : ∀ p, P (loadRule lay ρ w a n p : SM (HVector toType [Ty.int w]))) :
-    OwnRuleHas lay ρ P (d := CoreDialect) (.load o w a n) := fun
+    OwnRuleHas lay ρ L P (d := CoreDialect) (.load o w a n) := fun
   | .cons p .nil => ⟨fun _ => h p, fun h => nomatch h⟩
 
 /-- `load` writes no unit of any memory. -/
 theorem load_writesNot (x : N) :
-    OwnRuleHas lay ρ (WritesNot x) (d := CoreDialect) (.load o w a n) :=
-  load_ownRuleHas o w a n lay ρ fun
+    OwnRuleHas lay ρ L (WritesNot x) (d := CoreDialect) (.load o w a n) :=
+  load_ownRuleHas o w a n lay ρ L fun
     | .poison => fun _ _ _ h => nomatch h
     | .value p => (Fir.load_writesNot (unit := unitsOf lay) _ p _ _ x).map _
 
 /-- `load` neither allocates nor frees in any memory. -/
 theorem load_allocatesNot (x : N) :
-    OwnRuleHas lay ρ (AllocatesNot x) (d := CoreDialect) (.load o w a n) :=
-  load_ownRuleHas o w a n lay ρ fun
+    OwnRuleHas lay ρ L (AllocatesNot x) (d := CoreDialect) (.load o w a n) :=
+  load_ownRuleHas o w a n lay ρ L fun
     | .poison => fun _ _ _ h => nomatch h
     | .value p => (Fir.load_allocatesNot (unit := unitsOf lay) _ p _ _ x).map _
 
 /-- `load` reads no memory but the memory of its pointer. -/
 theorem load_readsNot (x : N)
     (hx : ¬ ((Fir.effects (d := CoreDialect) (.load o w a n)).reads.map ρ).Has x) :
-    OwnRuleHas lay ρ (ReadsNot x) (d := CoreDialect) (.load o w a n) :=
-  load_ownRuleHas o w a n lay ρ fun
+    OwnRuleHas lay ρ L (ReadsNot x) (d := CoreDialect) (.load o w a n) :=
+  load_ownRuleHas o w a n lay ρ L fun
     | .poison => fun _ _ _ e he => by
       subst he
       exact ⟨_, rfl, rfl⟩
@@ -102,15 +102,15 @@ theorem load_readsNot (x : N)
         fun h => hx (List.mem_singleton.2 h.symm)).map _
 
 /-- `load` has an outcome from any memories. -/
-theorem load_memTotal : MemTotal (d := CoreDialect) (.load o w a n) := fun lay ρ =>
-  load_ownRuleHas o w a n lay ρ fun
+theorem load_memTotal : MemTotal (d := CoreDialect) (.load o w a n) := fun lay ρ L =>
+  load_ownRuleHas o w a n lay ρ L fun
     | .poison => fun _ => ⟨_, rfl⟩
     | .value p => (Fir.load_hasOutcome (unit := unitsOf lay) _ p _ _).map _
 
 /-- `load` has at most one outcome that ends, from any memories. -/
 theorem load_finitelyMany
     (args : HVector toType (Fir.sig (d := CoreDialect) (Op.load o w a n))) :
-    letI := DialectMemDenote.denoteAt (d := CoreDialect) lay ρ
+    letI := DialectMemDenote.denoteAt (d := CoreDialect) lay ρ L
     FinitelyMany (DialectDenote.denote (d := CoreDialect)
       (m := SM) (Op.load o w a n) args) := by
   match args with
@@ -132,7 +132,7 @@ end
 another faults for the same reason or gives a value that refines the
 other's; on a poison pointer it is UB, which every outcome refines. -/
 theorem load_memMonotone : MemMonotone (d := CoreDialect) (.load o w a n) := by
-  intro N _ lay ρ args args' h
+  intro N _ lay ρ L args args' h
   refine ⟨fun _ => ?_, fun h => nomatch h⟩
   match args, args', h with
   | .cons p .nil, .cons p' .nil, ⟨hp, _⟩ =>
@@ -152,13 +152,13 @@ theorem load_memMonotone : MemMonotone (d := CoreDialect) (.load o w a n) := by
 and its UB is the UB of a pointer with no provenance, from the same
 memories. -/
 theorem load_memPropagates : MemPropagatesPoison (d := CoreDialect) (.load o w a n) where
-  poisonOut _ _ args hany _ _ _ h := by
+  poisonOut _ _ _ args hany _ _ _ h := by
     match args, hany with
     | .cons p .nil, hany =>
       have hp : p = .poison := hany.elim id False.elim
       subst hp
       exact nomatch h
-  ubByOwnRules lay ρ args S _ hany _ := by
+  ubByOwnRules lay ρ L args S _ hany _ := by
     match args, hany with
     | .cons p .nil, hany =>
       refine ⟨HVector.cons (f := toType) (a := Ty.ptr n) (.value ⟨none, 0⟩ : PoisonOr Pointer) .nil,
@@ -173,7 +173,7 @@ theorem load_memPropagates : MemPropagatesPoison (d := CoreDialect) (.load o w a
 allocation of its units at its alignment, through the pointer to it: the
 value its poison units decode to. -/
 theorem load_memReturnsOnDefined : MemReturnsOnDefined (d := CoreDialect) (.load o w a n) :=
-  fun lay ρ => by
+  fun lay ρ L => by
   let sh := loadShape (lay (ρ n)) w a
   let q := (Memories.empty : Memories _ (unitsOf lay)).enter.alloc (ρ n) .heap sh.1 sh.2
   have hl : q.2.load (ρ n) q.1 sh.1 sh.2 = .ok (List.replicate sh.1 .poison) := by

@@ -14,7 +14,7 @@ fails when the Lean changes under it.
 
 #doc (Manual) "Checking the data layout: readable blocks" =>
 
-:::moduleDocs (fingerprint := "15259949326640597717")
+:::moduleDocs (fingerprint := "11164250426651830568")
 :::
 
 :::readable Fir.need Fir.need_eq_nil (fingerprint := "7722159485140472772")
@@ -47,7 +47,7 @@ the types name and $`L` does not declare. There are none exactly when $`L`
 has the memory of each type.
 :::
 
-:::readable Fir.memoryProblem Fir.memoryProblem_eq_none Fir.SymbolTable.memoryProblems Fir.SymbolTable.memoryProblems_eq_nil (fingerprint := "12703735416319205326")
+:::readable Fir.memoryProblem Fir.memoryProblem_eq_none Fir.SymbolTable.memoryProblems Fir.SymbolTable.memoryProblems_eq_nil (fingerprint := "15954637914171883189")
 *Definition: the check of a table's memories.* The check of the memories of
 the symbol table $`T` in the layout $`L` gives one problem for each function
 of $`T`, and then for each item of a dialect's kind, whose types name a
@@ -56,4 +56,27 @@ those its ops carry in their attributes. The problem names the item's symbol and
 memory it misses: "a type names memory $`n`, which the data layout does not
 declare". The check gives no problem exactly when the memories of $`T` are
 in $`L`.
+:::
+
+:::readable Fir.Aggregate.decidableInLimits Fir.Aggregate.problem Fir.Field.problems Fir.Field.problems_eq_nil (fingerprint := "12681125869588812337")
+*Definition: the check of a field.* Whether a layout is within its limits
+can be decided. A problem about the layout $`A` names its symbol. The
+problems of a field $`F` at the offset $`o` of $`A` are one, "the field at
+offset $`o` has a type that may not be a field: an integer or a pointer",
+when its type has no shape; and otherwise, in order, "the field at offset
+$`o` is not a multiple of its type's alignment, $`a`", "the field at offset
+$`o` has a type aligned to $`a` units, more than the layout's $`A`" and
+"the field at offset $`o` ends past the layout's size, $`z`", each when $`F`
+breaks that rule. A field has no problem exactly when it is placed.
+:::
+
+:::readable Fir.Aggregate.problems Fir.Aggregate.problems_eq_nil Fir.Aggregate.decidableValid (fingerprint := "18075158507381701911")
+*Definition: the check of an aggregate's layout.* The problems of a layout
+$`A` in a module whose data layout is $`\ell` are, in order: one when a
+number of $`A` is above $`2^{64} - 1`; one when $`\ell` does not declare
+its memory; one when its alignment is not valid; one when a type of $`A` is
+not valid; one, as for a function, when a type of $`A` names a memory that
+$`\ell` does not declare; the problems of each field, in order; and "two
+fields of the layout share a unit" when two fields are not apart. A layout
+has no problem exactly when it is valid, so validity can be decided.
 :::

@@ -14,16 +14,17 @@ changes under it.
 
 #doc (Manual) "A load declared without a read: readable blocks" =>
 
-:::moduleDocs (fingerprint := "6668287062299218849")
+:::moduleDocs (fingerprint := "15386988644906753511")
 :::
 
-:::readable Fir.Core.Unlawful.loadNoRead Fir.Core.Unlawful.load_typesValid (pin := Fir.Core.Op.effects) (fingerprint := "16630047219764988643")
+:::readable Fir.Core.Unlawful.loadNoRead Fir.Core.Unlawful.load_typesValid (pin := Fir.Core.Op.effects) (fingerprint := "6837136521895330495")
 *Definition: a declaration without a read.* The declaration gives every
 core op its
 {ref "The-fir-specification--Execution--Core-effects"}[effects],
-but $`\mathsf{load}` only $`\mathsf{may\text{-}ub}` and
-$`\mathsf{may\text{-}poison}`: it leaves out $`\mathsf{reads}(N)`. A load
-of an $`\mathsf{i8}` through a pointer of memory 0 is a valid op instance.
+but the load of an integer, $`\mathsf{load}_N~o~W~a`, only
+$`\mathsf{may\text{-}ub}` and $`\mathsf{may\text{-}poison}`: it leaves
+out $`\mathsf{reads}(N)`. The load of a pointer keeps its read. A load of
+an $`\mathsf{i8}` through a pointer of memory 0 is a valid op instance.
 :::
 
 :::readable Fir.Core.Unlawful.oneUnit Fir.Core.Unlawful.loadShape_i8 Fir.Core.Unlawful.oneUnit_load₀ Fir.Core.Unlawful.oneUnit_load₁ (pin := Fir.Memory.Memories.load) (fingerprint := "13044400643083213551")
@@ -34,7 +35,7 @@ default memory, aligned to 1, so the load of an $`\mathsf{i8}` through the
 pointer to that unit gives the unit $`b`, from $`S_0` and from $`S_1`.
 :::
 
-:::readable Fir.Core.Unlawful.loadNoRead_unlawful (pin := Fir.LawfulDialectEffects) (fingerprint := "1740729391299073176")
+:::readable Fir.Core.Unlawful.loadNoRead_unlawful (pin := Fir.LawfulDialectEffects) (fingerprint := "7291189078906008646")
 *Theorem: the obligations reject the declaration.* Over the core's own
 {ref "The-fir-specification--Memory--The-core___s-rules-with-memory"}[semantics with memory],
 the declaration above is not lawful in its effects. The obligation on an

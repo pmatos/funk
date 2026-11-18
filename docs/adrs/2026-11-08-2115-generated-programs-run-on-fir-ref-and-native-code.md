@@ -7,8 +7,9 @@ Tier: direction; area: testing-and-harness
 
 - `generate::program` makes a program: a module of the backend's widths, and
   argument vectors for each function, often at boundary values. Its functions
-  are random, bounded ones that iterate and then end, and ones planted to end in
-  UB or out of fuel. Bounded functions mostly use ops that stay defined and feed
+  are random, bounded ones that iterate and then end, ones planted to end in
+  UB or out of fuel, and float functions at `f32` and `f64` whose NaN results
+  are judged as in ADR-2026-11-16-1630. Bounded functions mostly use ops that stay defined and feed
   what they return. Arguments hold no `poison`, since each one multiplies
   native runs.
 - The first bounded function of each program, and half of the others, are

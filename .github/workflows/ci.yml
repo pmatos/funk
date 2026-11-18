@@ -362,14 +362,17 @@ jobs:
         run: |
           rustup toolchain install
           cargo --version
-      - name: Install the assembler and linker
+      - name: Install the assembler, linker, C compiler and make
         run: |
-          if ! command -v as >/dev/null || ! command -v ld >/dev/null; then
+          if ! command -v as >/dev/null || ! command -v ld >/dev/null ||
+            ! command -v gcc >/dev/null || ! command -v make >/dev/null; then
             sudo apt-get update
-            sudo apt-get install --yes --no-install-recommends binutils
+            sudo apt-get install --yes --no-install-recommends binutils gcc make
           fi
           as --version
           ld --version
+          gcc --version
+          make --version
       - if: ${{ !cancelled() }}
         run: uvx pre-commit@4.6.2 run fir-round-trip --all-files --verbose --show-diff-on-failure
       - if: ${{ !cancelled() }}

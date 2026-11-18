@@ -70,8 +70,8 @@ state layer over the tree. -/
 
 example (M : Module CoreToy) (f : Func CoreToy) (args : HVector toType (f.params.map (·.2)))
     (fuel : Nat) {N : Type} [DecidableEq N] (lay : N → MemLayout)
-    (ρ : DialectEffects.Mem CoreToy → N) : Run (List (DVal CoreToy)) :=
-  f.memRuns lay ρ M args fuel
+    (ρ : DialectEffects.Mem CoreToy → N) (L : RunItems) : Run (List (DVal CoreToy)) :=
+  f.memRuns lay ρ L M args fuel
 
 /-- The tree of choices that the tests run a mixed module in. A path with
 no outcome names the op that has no rule for what the interpreter asks of

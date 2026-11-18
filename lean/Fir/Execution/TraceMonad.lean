@@ -23,10 +23,10 @@ where a set of paths is a set monad with no UB of its own. A sequence shows
 the trace of its first computation, then that of the second: a computation
 never reads the trace shown before it.
 
-The layer has the effects of the state layer: a choice of bits, UB, and
-frames, which enter a call before its computation and leave it after. It
-adds the _event effect_: `emit e` shows the event `e` to the world, and goes
-on with the world's answer. Every world counts, so in the layer an event may
+The layer has the effects of the state layer: a choice, of bits or of a
+NaN, UB, and frames, which enter a call before its computation and leave it
+after. It adds the _event effect_: `emit e` shows the event `e` to the
+world, and goes on with the world's answer. Every world counts, so in the layer an event may
 get any answer, and the computation shows the act that holds the event and
 its answer.
 

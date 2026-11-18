@@ -9,14 +9,17 @@
 //!
 //! Some bounded functions are built to stay defined, and their runs must
 //! neither hit UB nor run out of fuel: the generator is a second opinion on
-//! `fir-ref` there. `planted.rs` adds functions that must end one way.
+//! `fir-ref` there. `planted.rs` adds functions that must end one way, and
+//! `floats.rs` float functions at `f32` and `f64`, whose NaN results the
+//! harness judges on the NaNs that `fir-ref` tries (#219).
 
-use super::{Rng, Widths, bounded, module_of, planted};
+use super::{Rng, Widths, bounded, floats, module_of, planted};
 use crate::dialects::core::int_width;
 use crate::ir::{Func, LocRef, Module};
 use crate::text::print_symbol;
 
 pub use super::bounded::SAFE_PREFIX;
+pub use super::floats::{FLOAT_PREFIX, MAX_FLOAT_RESULTS, MAX_NAN_OPS};
 
 /// The fuel of a run that may return. Enough for every run that returns
 /// to do so in the common case, and small enough that a loop that never
@@ -146,6 +149,11 @@ pub fn program(rng: &mut Rng) -> Program {
     planted_funcs.extend(planted::spin(rng, loc));
     for (f, run) in planted_funcs {
         runs.push(run);
+        module = module.func(f);
+    }
+    for k in 0..1 + rng.below(2) {
+        let (f, more) = floats::function(rng, format!("{FLOAT_PREFIX}{k}"), loc);
+        runs.extend(more);
         module = module.func(f);
     }
     Program { module, runs }

@@ -3,7 +3,9 @@
 This page continues [testing-and-harness.md](testing-and-harness.md). It says
 what holds today for how the corpus and the coverage matrix test #229's
 floating point. It is the record: when this page and an ADR disagree, the page
-wins, and the ADR is fixed or deleted (ADR-2026-11-09-1610).
+wins, and the ADR is fixed or deleted (ADR-2026-11-09-1610). The references
+that check `fir-ref`'s floats, `float_ref.py` and Berkeley TestFloat, are on
+[testing-and-harness-float-references.md](testing-and-harness-float-references.md).
 
 ## The coverage matrix
 
@@ -81,22 +83,14 @@ choice budget (#219 Q2).
   `fir-ref` runs on the failing vector, with the seeded runs, and UB or
   fuel exhausted there makes the test invalid.
 
+The generated programs' float functions are judged the same way
+([testing-and-harness-generated.md](testing-and-harness-generated.md#float-functions)).
+
 The list misses a NaN whose bits integer ops change, hence the declared
 fallback, and UB or a stuck path that only an untried NaN reaches. A pass
 is still sound: the native result is in the set. Rejected: native code
 first, with its NaNs always given, which charges the budget on runs that
 pass with the quiet NaN.
-
-## The exact-rational reference
-
-`scripts/harness/float_ref.py` computes IEEE 754 results at any format
-`float<e,m>` with exact rational arithmetic, rounding to nearest even, apart
-from Lean's code. `float_cases.py` writes, from it, the known answers that check
-Lean's float model at `f16`, `bf16`, `f128` and `float<2,1>`. Its tests, under
-the `fir-harness-test` hook, check it against the host's binary16, binary32 and
-binary64 arithmetic. The human ruled on 2026-11-11 (#229) that this generator
-lives under `scripts/harness/`, with its tests under the existing
-`fir-harness-test` hook, and no new hook or CI step.
 
 ## The arithmetic corpus
 

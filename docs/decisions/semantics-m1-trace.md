@@ -143,16 +143,17 @@ events before the UB (ADR-2026-11-09-1540).
 Every refinement theorem gains a quantifier over worlds. The first theorems to
 be restated are those that #206 and #209 touch.
 
-Pending the human's confirmation (#233, asked before its congruence stage):
-in the spec, the world's answer to an event is any answer, and the trace
+The world answers what the target shows: poison inside an event is refined
+by any value (ADR-2026-11-09-1540). The human ruled this on 2026-11-18, on
+#233, option A. In the spec, the world's answer to an event is any answer, and the trace
 records it. One act refines another when its event refines the other's, with
 poison refined as for values, and both have the same answer, so the world
 answers what the target shows: where the source shows poison in an event, the
 target may show any value, and the world's answer to that value is an answer
 to the source's poison, which may be any value. Refinement of traced
 behaviours is then equivalent to refinement at every world, since every trace
-is shown at some world. Rejected: one world that answers the source's poison
-and the target's value apart. Refined arguments would then fail: a function
+is shown at some world. Rejected (option B): a world that answers the
+source's poison and the target's value apart. Refined arguments would then fail: a function
 that returns the world's answer to its argument would return different values
 on poison and on 5 at a world that answers them differently.
 

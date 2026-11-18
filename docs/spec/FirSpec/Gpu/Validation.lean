@@ -14,16 +14,16 @@ when the Lean changes under it.
 
 #doc (Manual) "The GPU dialect's rules: readable blocks" =>
 
-:::moduleDocs (fingerprint := "10677295734459586330")
+:::moduleDocs (fingerprint := "13928833768383133596")
 :::
 
-:::readable Fir.Gpu.ValidTy Fir.Gpu.instDecidableValidTy (fingerprint := "4189508138758385399")
+:::readable Fir.Gpu.ValidTy Fir.Gpu.instDecidableValidTy (fingerprint := "4133016473030974221")
 *Definition: the valid types of `gpu`.* A type is valid in `gpu` exactly
 when it is a valid core type, since its types are the core's. Whether it
 is valid is decided.
 :::
 
-:::readable Fir.Gpu.Op.Valid Fir.Gpu.Op.attrTypes Fir.Gpu.instDecidableOpValid (fingerprint := "1064520712639969876")
+:::readable Fir.Gpu.Op.Valid Fir.Gpu.Op.attrTypes Fir.Gpu.instDecidableOpValid (fingerprint := "6095714268801176293")
 *Definition: the rule of an op of `gpu`.* A question of `gpu` is valid
 when it gives an $`\mathsf{i32}`, the width of every id and size of a
 work-item. An allocation has the rules of `alloca` but its kind: it
@@ -41,11 +41,13 @@ it checks every type. So work-group memory is any memory that the host's
 data layout declares. Whether the rule holds is decided.
 :::
 
-:::readable Fir.Gpu.instDialectValidation Fir.Gpu.instDecidableDialectValidation (fingerprint := "7719433257487037105")
+:::readable Fir.Gpu.instDialectValidation Fir.Gpu.instDecidableDialectValidation (fingerprint := "6830372403999317208")
 *Definition: the rules of `gpu`, and their check.* `gpu` accepts the
 core's valid types, its ops refer to no symbol, an allocation carries its
 type, and it adds no rule for a
-function, a region or an item. Whether a function is a kernel is where it
+function, a region or an item. Its types are the core's, and each is a
+field of an aggregate's layout with the units and alignment that the core
+gives it. Whether a function is a kernel is where it
 lives: in a device module whose dialect set names `gpu`. The dialect-set
 rule already keeps every word of `gpu` out of a module whose set does not
 name it. Each of these rules is decided, so the validation check runs them.

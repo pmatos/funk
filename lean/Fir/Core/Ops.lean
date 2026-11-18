@@ -10,7 +10,7 @@ shifts, comparison and selection, width changes, `freeze` and `poison`,
 branches and calls, the float constants, comparisons, arithmetic, bit
 casts, conversions from integers, conversions between formats and
 conversions to integers, pointer offsets, stack allocation, loads and
-stores.
+stores, of integers, pointers and floats.
 Each op below is an op instance: it carries its
 attributes and the widths it is used at, so that its operand and result
 types follow from it.
@@ -181,8 +181,8 @@ Stack allocation (#231; the human's ruling of 2026-11-14 on #378):
   it returns. Its units are poison until a store writes them. It is never
   UB, never gives poison, and allocates in the memory `n`. M1's validation
   accepts only the kind `stack`, a count of at least 1, an alignment that
-  is a power of two no larger than `MemLayout.limit`, and an integer or
-  pointer type `t`; the count has no bound (ADR-2026-11-14-0915).
+  is a power of two no larger than `MemLayout.limit`, and a valid type
+  `t`; the count has no bound (ADR-2026-11-14-0915).
 
 Loads (#231):
 
@@ -222,6 +222,17 @@ Loads and stores of pointers (#231; the human's ruling of 2026-11-14 on
 
 With no alignment, either access is aligned to the default alignment of
 `ptr<M>` in memory `N`, as an `alloca` of `ptr<M>` is.
+
+Loads and stores of floats (#264):
+
+* `loadFloat o e m a n`: loads a `float<e,m>` through a pointer of
+  `ptr<N>`, as `load` loads an integer of its `1 + e + m` bits: the same
+  units, the same default alignment, and the same decoding, so the bits
+  that the units hold are the float's IEEE bit pattern, a NaN's payload
+  and sign included. Its effects are `load`'s.
+* `storeFloat o e m a n`: stores a `float<e,m>` through a pointer of
+  `ptr<N>`, as `store` stores an integer of its `1 + e + m` bits: its bit
+  pattern, or poison units for poison. Its effects are `store`'s.
 
 Conversions from a float to an integer, by Lean's float model
 (ADR-2026-11-09-1549; the human's ruling of 2026-11-12 on #354):
@@ -301,6 +312,8 @@ inductive Op where
   | store (o : Memory.Ordering) (w : Nat) (a : Option Nat) (n : Nat)
   | loadPtr (o : Memory.Ordering) (m : Nat) (a : Option Nat) (n : Nat)
   | storePtr (o : Memory.Ordering) (m : Nat) (a : Option Nat) (n : Nat)
+  | loadFloat (o : Memory.Ordering) (e m : Nat) (a : Option Nat) (n : Nat)
+  | storeFloat (o : Memory.Ordering) (e m : Nat) (a : Option Nat) (n : Nat)
   | fptosi (e m n : Nat)
   | fptoui (e m n : Nat)
   | freeze (w : Nat)

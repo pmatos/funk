@@ -17,7 +17,7 @@ when the Lean changes under it.
 :::moduleDocs (fingerprint := "9509901482889504764")
 :::
 
-:::readable Fir.Core.exitOfEv_iff (pin := Fir.Core.exitOfEv) (fingerprint := "2335364038614251743")
+:::readable Fir.Core.exitOfEv_iff (pin := Fir.Core.exitOfEv) (fingerprint := "18380316048396719649")
 *Theorem: a terminator rule made from a way to end ends that way.* A step
 in the proofs below. The
 {ref "The-fir-specification--Execution--Branch-rules"}[branch rules] make
@@ -25,7 +25,7 @@ each way $`e` to end, a place to go or UB, into a terminator's rule. In
 the set monad, that rule ends with $`e'` exactly when $`e' = e`.
 :::
 
-:::readable Fir.Core.br_exit Fir.Core.condBr_exit (pin := Fir.Core.brExit) (pin := Fir.Core.condBrExit) (pin := Fir.Core.Op.exit?) (pin := Fir.instDialectDenoteCoreDialectSetM) (fingerprint := "12193982817263337387")
+:::readable Fir.Core.br_exit Fir.Core.condBr_exit (pin := Fir.Core.brExit) (pin := Fir.Core.condBrExit) (pin := Fir.Core.Op.exit?) (pin := Fir.instDialectDenoteCoreDialectSetM) (fingerprint := "15039227657803294881")
 *Theorem: where $`\mathsf{br}` and $`\mathsf{cond\_br}` go.* In the set
 monad, $`\mathsf{br}` goes to its one successor and nowhere else, on every
 operand vector $`\vec{v}`; $`\mathsf{cond\_br}` (`condBr` in the Lean) on a
@@ -53,14 +53,14 @@ the successor's block arguments are not its operands: the interpreter
 passes them on as they are, poison included.
 :::
 
-:::readable Fir.Core.br_goto_lt (pin := Fir.Core.Op.succCount) (fingerprint := "3075993009042733143")
+:::readable Fir.Core.br_goto_lt (pin := Fir.Core.Op.succCount) (fingerprint := "13592310352485137163")
 *Theorem: $`\mathsf{br}` goes only to a successor it has.* For every
 operand vector, if the exit of $`\mathsf{br}` may be
 $`\mathsf{ok}~(\mathsf{goto}~i)`, then $`i` is less than the number of
 successors that validation gives $`\mathsf{br}`, which is one.
 :::
 
-:::readable Fir.Core.condBr_total Fir.Core.condBr_monotone (pin := Fir.OpTotal) (pin := Fir.OpMonotone) (pin := Fir.Ev.IsRefinedBy) (fingerprint := "15160494712549368114")
+:::readable Fir.Core.condBr_total Fir.Core.condBr_monotone (pin := Fir.OpTotal) (pin := Fir.OpMonotone) (pin := Fir.Ev.IsRefinedBy) (fingerprint := "10989956861025858646")
 *Theorem: $`\mathsf{cond\_br}` is total and monotone.* Under fir's
 execution rules, $`\mathsf{cond\_br}` is
 {ref "The-fir-specification--Execution--Poison-classes"}[total] and
@@ -73,7 +73,7 @@ $`\mathsf{cond\_br}` on $`c` is UB, which allows whatever it does on
 $`c'`. Otherwise $`c'` is $`c`, and it goes to the same place.
 :::
 
-:::readable Fir.Core.condBr_goto_lt (pin := Fir.Core.Op.succCount) (fingerprint := "13851265096645987601")
+:::readable Fir.Core.condBr_goto_lt (pin := Fir.Core.Op.succCount) (fingerprint := "4631638980351255133")
 *Theorem: $`\mathsf{cond\_br}` goes only to a successor it has.* For every
 operand vector, if the exit of $`\mathsf{cond\_br}` may be
 $`\mathsf{ok}~(\mathsf{goto}~i)`, then $`i` is less than the number of

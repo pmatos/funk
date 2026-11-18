@@ -1,6 +1,7 @@
 //! The in-memory IR: the abstract syntax of `lean/Fir/Syntax/`, with the
 //! builder.
 
+mod aggregate;
 mod attr;
 mod build;
 mod debug;
@@ -13,6 +14,7 @@ mod nested;
 mod region;
 pub(crate) mod tree;
 
+pub use aggregate::{Aggregate, AggregateFault, Field};
 pub use attr::{Attr, Type};
 pub use int::{Int, Nat};
 pub use layout::{ByteOrder, MemLayout};

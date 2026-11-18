@@ -119,7 +119,7 @@ end
 variable {d : Dialect} [TyDenote d.Ty] [DecidableEq d.Ty] [DialectSignature d] [DialectCall d]
   [DialectEffects d] [DialectMemDenote d] [DialectValidation d] [TyRefinement d.Ty]
   [LawfulDialectMonotone d] {N : Type} [DecidableEq N] (lay : N → MemLayout)
-  (ρ : DialectEffects.Mem d → N) {M : Module d}
+  (ρ : DialectEffects.Mem d → N) (L : RunItems) {M : Module d}
 
 /-- Congruence in the callee, with memory, by the class alone, with ops of
 finitely many outcomes: in a valid module, replacing the body of its
@@ -134,23 +134,23 @@ theorem Func.memRuns_replaceBody_isRefinedBy_of_opsFinite
     (hrefl : ∀ {t : d.Ty} (v : ⟦t⟧), TyRefinement.IsRefinedBy v v)
     (htrans : ∀ {t : d.Ty} {u v w : ⟦t⟧}, TyRefinement.IsRefinedBy u v →
       TyRefinement.IsRefinedBy v w → TyRefinement.IsRefinedBy u w)
-    (hfin : letI := DialectMemDenote.denoteAt (d := d) lay ρ; OpsFinite d N (unitsOf lay))
+    (hfin : letI := DialectMemDenote.denoteAt (d := d) lay ρ L; OpsFinite d N (unitsOf lay))
     (hM : M.Valid) {g : Func d} (hg : g ∈ M.funcs) (b : Region d)
-    (h : letI := DialectMemDenote.denoteAt (d := d) lay ρ;
+    (h : letI := DialectMemDenote.denoteAt (d := d) lay ρ L;
       g.memRunsFrom (Mem := N) (unit := unitsOf lay) M ⊑
         (g.replaceBody g.name b).memRunsFrom (Mem := N) (unit := unitsOf lay) (M.replaceBody
             g.name b))
     {f : Func d} (hf : f ∈ M.funcs) :
-    (letI := DialectMemDenote.denoteAt (d := d) lay ρ;
+    (letI := DialectMemDenote.denoteAt (d := d) lay ρ L;
       f.memRunsFrom (Mem := N) (unit := unitsOf lay) M ⊑
         (f.replaceBody g.name b).memRunsFrom (Mem := N) (unit := unitsOf lay) (M.replaceBody
             g.name b)) ∧
-      f.memRuns lay ρ M ⊑ (f.replaceBody g.name b).memRuns lay ρ (M.replaceBody g.name b) := by
-  letI := DialectMemDenote.denoteAt (d := d) lay ρ
+      f.memRuns lay ρ L M ⊑ (f.replaceBody g.name b).memRuns lay ρ L (M.replaceBody g.name b) := by
+  letI := DialectMemDenote.denoteAt (d := d) lay ρ L
   have hmono := fun g (hg : g ∈ M.funcs) => (hM.funcs g hg).memOpsMonotone
-    (fun op hvo hc => LawfulDialectMonotone.monotone op hvo hc lay ρ)
+    (fun op hvo hc => LawfulDialectMonotone.monotone op hvo hc lay ρ L)
   have hr := Func.memRunsFrom_replaceBody_isRefinedBy_of_opsFinite hmono hfin hrefl htrans
     hM.symbolsUnique hg b h hf
-  exact ⟨hr, fun a => Func.memRuns_isRefinedBy_of_from lay ρ (hr (a, Memories.empty))⟩
+  exact ⟨hr, fun a => Func.memRuns_isRefinedBy_of_from lay ρ L (hr (a, Memories.empty))⟩
 
 end Fir

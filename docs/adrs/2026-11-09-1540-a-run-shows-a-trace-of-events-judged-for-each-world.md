@@ -25,14 +25,18 @@ Tier: direction; area: semantics
   frees. `malloc` stays an external declaration.
 - **Refinement.** A target refines a source when, for every world, each trace
   it shows is one the source shows, with poison refined as today. UB in the
-  source allows only a target that first shows the source's events.
+  source allows only a target that first shows the source's events. The
+  world answers what the target shows, so poison inside an event is refined
+  by any value, as elsewhere: no world answers the source's poison and the
+  target's value apart.
 
 [semantics-m1-trace.md](../decisions/semantics-m1-trace.md) states each rule:
 what each event holds, the ways an address escapes, and how tests script the
 world. The human ruled this on 2026-11-09, on #207, and on 2026-11-11 on #251
 (what an observer sees, heap from the world) and on #299 (escape, live memory
 only), and on 2026-11-15 on #309 (a dangling pointer in observed memory is
-poison) and on #233 (in returned values and call arguments too).
+poison) and on #233 (in returned values and call arguments too), and on
+2026-11-18 on #233 (poison in an event).
 
 ## Why
 
@@ -61,4 +65,7 @@ outside code can read.
 - **Exact match outside observed memory.** A dangling pointer in a returned
   value or a call argument would have to match exactly, so a target would
   keep a pointer there that neither side can use without UB.
+- **A world that answers poison and a value apart.** A function that returns
+  the world's answer to its argument would return different values on poison
+  and on 5, so refined arguments would no longer refine its runs.
 - **Heap ops in the core.** C calls allocators that funk does not know by name.

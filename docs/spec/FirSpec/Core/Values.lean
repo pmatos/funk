@@ -14,10 +14,10 @@ changes under it.
 
 #doc (Manual) "Core values: readable blocks" =>
 
-:::moduleDocs (fingerprint := "9715545657570832416")
+:::moduleDocs (fingerprint := "13887954274731160766")
 :::
 
-:::readable Fir.Core.Ty.toType (pin := Fir.PoisonOr) (pin := Fir.Core.floatWidth) (fingerprint := "16673355204431494593")
+:::readable Fir.Core.Ty.toType (pin := Fir.PoisonOr) (pin := Fir.Core.floatWidth) (fingerprint := "10285359965930145332")
 *Definition: the values of the core types.* A value of
 $`\mathsf{i}N` is poison or a vector of $`N` bits, a value of
 $`\mathsf{float}\langle e,m \rangle` is poison or a vector of
@@ -42,7 +42,7 @@ pointer value does not name it, and every pointer type has the same
 values.
 :::
 
-:::readable Fir.Core.Ty.IsRefinedBy (pin := Fir.PoisonOr.IsRefinedBy) (fingerprint := "18213522499732200753")
+:::readable Fir.Core.Ty.IsRefinedBy (pin := Fir.PoisonOr.IsRefinedBy) (fingerprint := "14731245390601233930")
 *Definition: refinement of core values.* A value of every core type is
 refined as a value that may be poison: poison is refined by every value of
 its type, a vector of bits only by itself, and a pointer only by itself,
@@ -56,7 +56,7 @@ values refine as
 do: same type, and a value that refines.
 :::
 
-:::readable Fir.Core.Obs (pin := Fir.List.IsRefinedBy) (pin := Fir.instHRefinementDVal) (pin := Fir.Core.Ty.IsRefinedBy) (fingerprint := "16613570527610667338")
+:::readable Fir.Core.Obs (pin := Fir.List.IsRefinedBy) (pin := Fir.instHRefinementDVal) (pin := Fir.Core.Ty.IsRefinedBy) (fingerprint := "8547199971930857808")
 *Definition: the observation of a core function.* What an observer sees of
 a return of a core function is the list of typed values it returns, any
 number of them (ADR-2026-10-29-2008). A returned list is refined by a list

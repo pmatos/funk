@@ -7,7 +7,9 @@ order, then each memory that the layout declares more than once. The check
 of a module's memories names, for each function and each item of a
 dialect's kind whose types, or for a function the types that its ops carry
 in their attributes, name a memory that the layout does not declare, the
-first such memory (ADR-2026-11-12-1821).
+first such memory (ADR-2026-11-12-1821). The check of an aggregate's layout
+names each rule of a valid layout that it breaks, and each field that is not
+placed (ADR-2026-11-16-1546).
 -/
 
 namespace Fir
@@ -92,5 +94,70 @@ theorem SymbolTable.memoryProblems_eq_nil (l : DataLayout) (t : SymbolTable d) :
     memoryProblem_eq_none, DataLayout.missing_eq_nil, List.mem_append]
   exact ⟨fun ⟨a, b⟩ => ⟨fun f hf ty h => a f hf ty (.inl h), b, fun f hf ty h => a f hf ty (.inr h)⟩,
     fun ⟨a, b, c⟩ => ⟨fun f hf ty h => h.elim (a f hf ty) (c f hf ty), b⟩⟩
+
+section
+variable [DecidableDialectValidation d]
+
+instance Aggregate.decidableInLimits (a : Aggregate d) : Decidable a.InLimits := by
+  unfold Aggregate.InLimits
+  infer_instance
+
+/-- A problem about the aggregate's layout `a`. -/
+def Aggregate.problem (a : Aggregate d) (message : String) : Problem := { message, func := a.name }
+
+/-- The problems of a field of the aggregate's layout `a`: a type that may
+not be a field, or else each rule of a placed field that it breaks. -/
+def Field.problems (l : DataLayout) (a : Aggregate d) (f : Field d) : List Problem :=
+  let at_ := "the field at offset " ++ toString f.offset
+  match f.shape l a.mem with
+  | none => [a.problem (at_ ++ " has a type that may not be a field: an integer or a pointer")]
+  | some (u, al) =>
+    need (al ∣ f.offset) (a.problem (at_ ++ " is not a multiple of its type's alignment, " ++
+      toString al)) ++
+    need (al ≤ a.align) (a.problem (at_ ++ " has a type aligned to " ++ toString al ++
+      " units, more than the layout's " ++ toString a.align)) ++
+    need (f.offset + f.extent u al ≤ a.size) (a.problem (at_ ++ " ends past the layout's size, " ++
+      toString a.size))
+
+omit [DecidableDialectValidation d] in
+theorem Field.problems_eq_nil (l : DataLayout) (a : Aggregate d) (f : Field d) :
+    f.problems l a = [] ↔ f.Placed l a.mem a.size a.align := by
+  unfold Field.problems Field.Placed
+  cases f.shape l a.mem with
+  | none => simp
+  | some s =>
+    obtain ⟨u, al⟩ := s
+    simp only [List.append_eq_nil_iff, need_eq_nil, and_assoc]
+
+/-- The problems of an aggregate's layout in a module whose data layout is
+`l`: each rule of a valid layout that it breaks, with one problem for each
+field that is not placed. -/
+def Aggregate.problems (l : DataLayout) (a : Aggregate d) : List Problem :=
+  need a.InLimits (a.problem "a number of the layout is above 2^64 - 1") ++
+  need (l.Declares a.mem) (a.problem ("the layout describes memory " ++ toString a.mem ++
+    ", which the data layout does not declare")) ++
+  need (MemLayout.ValidAlign a.align) (a.problem ("the layout is aligned to " ++
+    toString a.align ++ " units: an alignment is a power of two no larger than 16777215")) ++
+  need (∀ t ∈ a.types, validTy t) (a.problem "a type of the layout is not valid") ++
+  (memoryProblem a.name (l.missing a.types)).toList ++
+  a.fields.flatMap (Field.problems l a) ++
+  need (a.fields.Pairwise (Field.Apart l a.mem)) (a.problem "two fields of the layout share a unit")
+
+/-- The check of an aggregate's layout decides `Aggregate.Valid`. -/
+theorem Aggregate.problems_eq_nil (l : DataLayout) (a : Aggregate d) :
+    a.problems l = [] ↔ a.Valid l := by
+  have hm : (memoryProblem a.name (l.missing a.types)).toList = [] ↔
+      ∀ t ∈ a.types, l.HasMemoryOf t := by
+    rw [← DataLayout.missing_eq_nil, ← memoryProblem_eq_none a.name]
+    cases memoryProblem a.name (l.missing a.types) <;> simp
+  simp only [Aggregate.problems, List.append_eq_nil_iff, need_eq_nil, hm,
+    List.flatMap_eq_nil_iff, Field.problems_eq_nil]
+  exact ⟨fun ⟨⟨⟨⟨⟨⟨z, a⟩, b⟩, c⟩, e⟩, f⟩, g⟩ => ⟨z, a, b, c, e, f, g⟩,
+    fun ⟨z, a, b, c, e, f, g⟩ => ⟨⟨⟨⟨⟨⟨z, a⟩, b⟩, c⟩, e⟩, f⟩, g⟩⟩
+
+instance Aggregate.decidableValid (l : DataLayout) (a : Aggregate d) : Decidable (a.Valid l) :=
+  decidable_of_iff _ (a.problems_eq_nil l)
+
+end
 
 end Fir

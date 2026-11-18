@@ -14,17 +14,17 @@ fails when the Lean changes under it.
 
 #doc (Manual) "Float arithmetic in text: readable blocks" =>
 
-:::moduleDocs (fingerprint := "6009710563051250219")
+:::moduleDocs (fingerprint := "249163121854614643")
 :::
 
-:::readable Fir.Core.FBin.name Fir.Core.FUnary.name (fingerprint := "14437250899229671676")
+:::readable Fir.Core.FBin.name Fir.Core.FUnary.name (fingerprint := "881267350645119966")
 *Definition: the names of the float ops.* The ops of two operands are
 written $`\mathtt{fadd}`, $`\mathtt{fsub}`, $`\mathtt{fmul}`,
 $`\mathtt{fdiv}`, $`\mathtt{frem}` and $`\mathtt{fmod}`, and those of
 one $`\mathtt{fneg}`, $`\mathtt{fabs}` and $`\mathtt{sqrt}`. $`\mathsf{fma}` is written $`\mathtt{fma}`.
 :::
 
-:::readable Fir.Core.FastMath.attrs Fir.Core.takeWord Fir.Core.splitFlags Fir.Core.flagFree (fingerprint := "12119595488592313051")
+:::readable Fir.Core.FastMath.attrs Fir.Core.takeWord Fir.Core.splitFlags Fir.Core.flagFree (fingerprint := "1608719451239738061")
 *Definition: the flags in text.* The fast-math flags $`\phi` are written
 as words, one for each flag set, in the fixed order $`\mathtt{nnan}`,
 $`\mathtt{ninf}`, $`\mathtt{nsz}`, $`\mathtt{contract}`,
@@ -40,7 +40,7 @@ op has one spelling. Attributes are _free of flags_ when they do not start
 with one of the five words.
 :::
 
-:::readable Fir.Core.FBin.attrs Fir.Core.FUnary.attrs Fir.Core.FBin.read Fir.Core.FUnary.read (fingerprint := "5992479220069585484")
+:::readable Fir.Core.FBin.attrs Fir.Core.FUnary.attrs Fir.Core.FBin.read Fir.Core.FUnary.read (fingerprint := "5765315837599216485")
 *Definition: the rounding attribute.* An op that rounds carries one
 attribute, its mode $`\mathtt{round}(r)`
 ({ref "The-fir-specification--Text-format--The-rounding-mode-in-text"}[the rounding mode in text];
@@ -55,7 +55,7 @@ which the op then carries; for one that does not round they must be
 empty. Any mode reads, and validation accepts only $`\mathtt{rne}`.
 :::
 
-:::readable Fir.Core.floatOpFormat Fir.Core.decodeFBin Fir.Core.decodeFUnary Fir.Core.decodeFma (fingerprint := "4871091213376226508")
+:::readable Fir.Core.floatOpFormat Fir.Core.decodeFBin Fir.Core.decodeFUnary Fir.Core.decodeFma (fingerprint := "5742992106061459092")
 *Definition: reading a float op back.* The format of a float op of $`k`
 operands is $`\mathsf{float}\langle e,m \rangle` when its operand types
 are $`k` copies of that type and its one result type is that type, and it
@@ -81,7 +81,7 @@ $`\phi` and those attributes: none of the op's own attributes, a
 predicate or $`\mathtt{round}(r)`, is a flag's word.
 :::
 
-:::readable Fir.Core.decodeBitcast (pin := Fir.Core.floatWidth) (fingerprint := "16509005206996759472")
+:::readable Fir.Core.decodeBitcast (pin := Fir.Core.floatWidth) (fingerprint := "12384467779911382009")
 *Definition: reading a bit cast back.* $`\mathtt{bitcast}` decodes from
 no attributes, one operand type and one result type, one of them
 $`\mathsf{float}\langle e,m \rangle` and the other $`\mathsf{i}N` with
@@ -93,7 +93,7 @@ two floats or two integers, or with $`\mathtt{round(rne)}` does not
 decode.
 :::
 
-:::readable Fir.Core.decodeIntToFloat (pin := Fir.Core.decodeRound) (fingerprint := "13383955105414411804")
+:::readable Fir.Core.decodeIntToFloat (pin := Fir.Core.decodeRound) (fingerprint := "12385617048798395753")
 *Definition: reading a conversion from an integer back.*
 $`\mathtt{sitofp}` and $`\mathtt{uitofp}` decode from the attributes
 $`[\mathtt{round}(r)]`, one operand type $`\mathsf{i}N` and one result
@@ -104,7 +104,7 @@ float or to an integer, does not decode; one with $`\mathtt{round(rtz)}`
 decodes, for validation to reject.
 :::
 
-:::readable Fir.Core.decodeFpext Fir.Core.decodeFptrunc (pin := Fir.Core.decodeRound) (fingerprint := "12046846403340649519")
+:::readable Fir.Core.decodeFpext Fir.Core.decodeFptrunc (pin := Fir.Core.decodeRound) (fingerprint := "18030748234840308641")
 *Definition: reading a conversion between formats back.*
 $`\mathtt{fpext}` decodes from no attributes, and $`\mathtt{fptrunc}`
 from the attributes $`[\mathtt{round}(r)]`, for any mode $`r`, each with
@@ -118,7 +118,7 @@ of formats each takes is a
 validation.
 :::
 
-:::readable Fir.Core.decodeFloatToInt (fingerprint := "6732754814002919827")
+:::readable Fir.Core.decodeFloatToInt (fingerprint := "9380210725827639756")
 *Definition: reading a conversion to an integer back.*
 $`\mathtt{fptosi}` and $`\mathtt{fptoui}` decode from no attributes, one
 operand type $`\mathsf{float}\langle e,m \rangle` and one result type

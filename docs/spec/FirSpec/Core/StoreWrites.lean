@@ -14,16 +14,17 @@ fails when the Lean changes under it.
 
 #doc (Manual) "A store declared without a write: readable blocks" =>
 
-:::moduleDocs (fingerprint := "7026218142577757368")
+:::moduleDocs (fingerprint := "11243257183109581193")
 :::
 
-:::readable Fir.Core.Unlawful.storeNoWrite Fir.Core.Unlawful.store_typesValid (pin := Fir.Core.Op.effects) (fingerprint := "1898334460989131878")
+:::readable Fir.Core.Unlawful.storeNoWrite Fir.Core.Unlawful.store_typesValid (pin := Fir.Core.Op.effects) (fingerprint := "12764346124275899649")
 *Definition: a declaration without a write.* The declaration gives every
 core op its
 {ref "The-fir-specification--Execution--Core-effects"}[effects],
-but $`\mathsf{store}` only $`\mathsf{may\text{-}ub}`: it leaves out
-$`\mathsf{writes}(N)`. A store of an $`\mathsf{i8}` through a pointer of
-memory 0 is a valid op instance.
+but the store of an integer, $`\mathsf{store}_N~o~W~a`, only
+$`\mathsf{may\text{-}ub}`: it leaves out $`\mathsf{writes}(N)`. The store
+of a pointer keeps its write. A store of an $`\mathsf{i8}` through a
+pointer of memory 0 is a valid op instance.
 :::
 
 :::readable Fir.Core.Unlawful.storeAlign_i8 Fir.Core.Unlawful.oneUnit_store (pin := Fir.Memory.Memories.store) (pin := Fir.Core.Unlawful.oneUnit) (fingerprint := "9529801639186522702")
@@ -34,7 +35,7 @@ load declared without a read whose one allocation holds 0, gives $`S_1`,
 the same memories with that unit holding 1.
 :::
 
-:::readable Fir.Core.Unlawful.storeNoWrite_unlawful (pin := Fir.LawfulDialectEffects) (fingerprint := "11574669081044416067")
+:::readable Fir.Core.Unlawful.storeNoWrite_unlawful (pin := Fir.LawfulDialectEffects) (fingerprint := "11489798942298084601")
 *Theorem: the obligations reject the declaration.* Over the core's own
 {ref "The-fir-specification--Memory--The-core___s-rules-with-memory"}[semantics with memory],
 the declaration above is not lawful in its effects. The obligation on an

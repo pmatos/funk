@@ -17,7 +17,7 @@ build fails when the Lean changes under it.
 :::moduleDocs (fingerprint := "8472785573976490432")
 :::
 
-:::readable Fir.Text.Attr.allWritable_of_forall (pin := Fir.Attr.AllWritable) (fingerprint := "7430246370871112945")
+:::readable Fir.Text.Attr.allWritable_of_forall (pin := Fir.Attr.AllWritable) (fingerprint := "11825618486817116511")
 *Lemma: proof plumbing.* For every list of attributes each of which can
 be {ref "The-fir-specification--Text-format--Grammar"}[written], the list
 can be written. The condition on a list of attributes is defined element
@@ -27,7 +27,7 @@ can be written, which is what the reader of an op's attributes gives, so
 that it fits the condition on an op.
 :::
 
-:::readable Fir.Text.readBlocks_writable (pin := Fir.Text.readBlocks) (pin := Fir.Text.readOps) (pin := Fir.Text.readOpWithResults) (pin := Fir.Text.readOpBody) (pin := Fir.Text.readRegions) (pin := Fir.Text.ReadsWritable) (pin := Fir.Text.SOp.Writable) (pin := Fir.Text.SBlock.WritableList) (fingerprint := "17238551784082129617")
+:::readable Fir.Text.readBlocks_writable (pin := Fir.Text.readBlocks) (pin := Fir.Text.readOps) (pin := Fir.Text.readOpWithResults) (pin := Fir.Text.readOpBody) (pin := Fir.Text.readRegions) (pin := Fir.Text.ReadsWritable) (pin := Fir.Text.SOp.Writable) (pin := Fir.Text.SBlock.WritableList) (fingerprint := "1954111721538448529")
 *Theorem: blocks as read can be written, at any depth.* For every list
 of tokens $`\mathit{ts}`, the
 {ref "The-fir-specification--Text-format--Reading-the-grammar"}[reader of blocks]
@@ -35,7 +35,8 @@ of tokens $`\mathit{ts}`, the
 on $`\mathit{ts}`, that the blocks it reads can be written: when
 $`\mathit{ts}` can be written and the reader reads blocks from it, each
 block's label is a name, its arguments can be written, and its ops can be
-written, at any depth, and the tokens it leaves can be written.
+written, at any depth, where each region that names a kind names it by a
+word; and the tokens it leaves can be written.
 
 The reader of blocks calls the reader of ops, which calls the reader of an
 op with results or the reader of the rest of an op, which calls the reader
@@ -53,7 +54,8 @@ what the readers it calls give on the tokens left to them:
 * the rest of an op gives attributes, successors and a location reference
   that can be written, by the lemmas of the previous section, and regions
   that can be written, by the case of the reader of regions;
-* a region's blocks come from the reader of blocks.
+* a region's kind, when it names one, comes from a word token, so it is a
+  word, and its blocks come from the reader of blocks.
 
 No case looks inside a reader that it calls, as in the round trip's
 lemmas (`docs/decisions/text-format-proofs.md`).

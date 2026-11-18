@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Round trips: readable blocks" =>
 
-:::moduleDocs (fingerprint := "13078688161419937493")
+:::moduleDocs (fingerprint := "5056643367855155288")
 :::
 
 :::readable Fir.Func.OpWellFormed (pin := Fir.Func.typeOf) (pin := Fir.DialectSignature) (pin := Fir.Location.limit) (fingerprint := "12115051900375411089")
@@ -51,7 +51,14 @@ $`\mathrm{decodety}(\mathrm{tyattr}(t)) = t`, and each of its attributes
 can be written. Its symbol may be any string.
 :::
 
-:::readable Fir.Func.WellFormed Fir.Item.WellFormed Fir.Item.WellFormedList Fir.Item.wellFormedList_iff Fir.Module.WellFormed Fir.Module.WellFormed.funcs (pin := Fir.Func.defs) (pin := Fir.Func.types) (pin := Fir.LocTable.InLimits) (pin := Fir.Location.numbers) (pin := Fir.Location.limit) (pin := Fir.Module.funcs) (fingerprint := "12062401946120036104")
+:::readable Fir.Aggregate.WellFormed (pin := Fir.Aggregate.InLimits) (pin := Fir.Aggregate.types) (fingerprint := "11214723136827224733")
+*Definition: a well-formed aggregate's layout.* An aggregate's layout can be
+written and read back when its numbers are within the limit, $`2^{64} - 1`,
+and each type it states is written as a type and decodes back to itself.
+Its symbol can be any string.
+:::
+
+:::readable Fir.Func.WellFormed Fir.Item.WellFormed Fir.Item.WellFormedList Fir.Item.wellFormedList_iff Fir.Module.WellFormed Fir.Module.WellFormed.funcs (pin := Fir.Func.defs) (pin := Fir.Func.types) (pin := Fir.LocTable.InLimits) (pin := Fir.Location.numbers) (pin := Fir.Location.limit) (pin := Fir.Module.funcs) (fingerprint := "10026940259730778410")
 *Definition: a well-formed function, item and module.* A function
 $`f` is _well formed_ when:
 
@@ -70,7 +77,8 @@ $`f` is _well formed_ when:
 Its symbol may be any string, since a symbol that is not a word is quoted.
 An item is well formed when it is a well-formed function, a nested module
 whose dialect set names each dialect by a word and each of whose items is
-well formed, at any depth, or a well-formed item of a dialect's kind. A module is _well formed_ when each
+well formed, at any depth, a well-formed item of a dialect's kind, or a
+well-formed aggregate's layout. A module is _well formed_ when each
 dialect of its set is named by a word, each number of its data layout is
 within the {ref "The-fir-specification--Text-format--Grammar"}[limit] of
 an entry, each of its items is well formed, and its
@@ -136,7 +144,7 @@ and two different valid modules never print the same text. The next block
 shows that every dialect whose text is lawful meets it.
 :::
 
-:::readable Fir.Func.Valid.wellFormed Fir.SymbolTable.Valid.itemsWellFormed Fir.MemLayout.Valid.inLimits Fir.validIsWellFormed (pin := Fir.Func.Valid) (pin := Fir.LocTable.Valid) (pin := Fir.Module.Valid) (pin := Fir.SymbolTable.Valid) (pin := Fir.Location.limit) (fingerprint := "7347656030747688238")
+:::readable Fir.Func.Valid.wellFormed Fir.SymbolTable.Valid.itemsWellFormed Fir.MemLayout.Valid.inLimits Fir.validIsWellFormed (pin := Fir.Func.Valid) (pin := Fir.LocTable.Valid) (pin := Fir.Module.Valid) (pin := Fir.SymbolTable.Valid) (pin := Fir.Location.limit) (fingerprint := "6346721430650771500")
 *Theorems: a valid function is well formed, and so is every valid module.*
 Let $`d` be a dialect with a signature, a text and validation rules, whose
 text is {ref "The-fir-specification--Text-format--Grammar"}[lawful]. Then:
@@ -144,10 +152,13 @@ text is {ref "The-fir-specification--Text-format--Grammar"}[lawful]. Then:
 * for every location table that is valid, every function $`f` that is
   {ref "The-fir-specification--Validation--The-general-rules"}[valid] in
   a context whose references are those of the table is well formed;
-* the items of a valid symbol table, whose nested tables are all valid,
-  are well formed, at any depth: an item of a dialect's kind is, since its
-  kind is a word of a dialect, its parameters are named by names, its
-  types are valid and its attributes can be written;
+* the items of a valid symbol table, whose nested tables are all valid and
+  whose aggregates' layouts, its own and those of its nested tables, are
+  all valid in one data layout, are well formed, at any depth: an item of a
+  dialect's kind is, since its kind is a word of a dialect, its parameters
+  are named by names, its types are valid and its attributes can be
+  written; and an aggregate's layout is, since its numbers are within the
+  limit and its types are valid;
 * the numbers of a valid entry of a data layout are within the limit;
 * every valid module of $`d` is well formed.
 

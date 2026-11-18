@@ -66,6 +66,7 @@ def itemWeight : Item d → Nat
   | .func f => blocksWeight f.body.blocks + 4
   | .module _ _ is => itemsWeight is + 5
   | .dialect _ => 2
+  | .aggregate _ => 2
 
 /-- A measure of items. -/
 def itemsWeight : List (Item d) → Nat
@@ -169,6 +170,8 @@ def printFrames (acc : String) : List (Frame d) → String
         .str "\n" :: .items n is :: fs)
   | .items n (.dialect i :: is) :: fs =>
     printFrames (acc ++ dialectItemText n i) (.str "\n" :: .items n is :: fs)
+  | .items n (.aggregate a :: is) :: fs =>
+    printFrames (acc ++ dialectItemText n a.item) (.str "\n" :: .items n is :: fs)
 termination_by fs => framesWeight fs
 decreasing_by
   all_goals
@@ -210,6 +213,10 @@ theorem printFrames_eq (acc : String) (fs : List (Frame d)) :
     simp only [Frame.text, Item.printList, Item.print, List.map_cons, String.join_cons,
       String.append_assoc]
   | case12 acc n i is fs ih =>
+    rw [ih]
+    simp only [Frame.text, Item.printList, Item.print, DialectItem.print, dialectItemText,
+      defsText_eq, List.map_cons, String.join_cons, String.append_assoc]
+  | case13 acc n a is fs ih =>
     rw [ih]
     simp only [Frame.text, Item.printList, Item.print, DialectItem.print, dialectItemText,
       defsText_eq, List.map_cons, String.join_cons, String.append_assoc]

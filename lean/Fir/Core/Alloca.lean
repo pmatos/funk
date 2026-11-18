@@ -27,13 +27,22 @@ never UB, and its result is never poison. The rule needs the memory effect
 and the layout entry of the memory it allocates in, so `alloca` has no rule
 in the set monad (the section on the core's rules with memory).
 
-M1's validation accepts an integer type and a pointer type. A pointer type
-`ptr<M>` takes the units of the width of memory `M`'s pointers in memory
-`N`, the units its encoding takes. Its natural alignment in memory `N` is
-the least power of two that is at least those units, but in memory `M`
-itself it is the alignment that `M`'s layout entry gives its pointers,
-which is that power of two unless the entry writes `align(A)`. A float
-type has no encoding and takes no units; validation rejects it.
+M1's validation accepts an integer type, a pointer type and a float type.
+A pointer type `ptr<M>` takes the units of the width of memory `M`'s
+pointers in memory `N`, the units its encoding takes. Its natural alignment
+in memory `N` is the least power of two that is at least those units, but
+in memory `M` itself it is the alignment that `M`'s layout entry gives its
+pointers, which is that power of two unless the entry writes `align(A)`. A
+float type `float<e,m>` takes the units of its `1 + e + m` bits, as the
+integer of its width does, and has that integer's natural alignment: the
+natural alignment of the float's size, as the human ruled on 2026-11-15
+(#397). In memory 0, `f16` and `bf16` have 2, `f32` 4, `f64` 8 and `f128`
+16.
+
+A field of an integer or a pointer type in an aggregate's layout of memory
+`N` takes the units and the alignment of one value that `alloca` makes
+there with no alignment of its own (`Ty.fieldShape_eq_allocaShape`,
+ADR-2026-11-16-1546).
 -/
 
 namespace Fir.Core
@@ -42,12 +51,12 @@ open Memory
 
 /-- The units that a value of the type `t` takes in a memory whose entry is
 `e`, where the pointers of memory `M` are `ptrBits M` bits wide: its bits,
-rounded up to whole units, the units its encoding takes. A float type has
-no encoding, and takes none. -/
+rounded up to whole units, the units its encoding takes. A float of
+`float<fe,fm>` takes those of its `1 + fe + fm` bits. -/
 def Ty.units (e : MemLayout) (ptrBits : Nat → Nat) : Ty → Nat
   | .int w => e.bitsUnits w
   | .ptr m => e.bitsUnits (ptrBits m)
-  | .float _ _ => 0
+  | .float fe fm => e.bitsUnits (floatWidth fe fm)
 
 /-- An integer type takes the units of its encoding (`Ty.units?`). -/
 theorem Ty.units?_int (l : DataLayout) (e : MemLayout) (ptrBits : Nat → Nat) (w : Nat) :
@@ -61,6 +70,16 @@ def Ty.naturalAlign (e : MemLayout) (ptrBits : Nat → Nat) (t : Ty) : Nat :=
 /-- The natural alignment of `iN` is the one that the layout gives it. -/
 theorem Ty.naturalAlign_int (e : MemLayout) (ptrBits : Nat → Nat) (w : Nat) :
     (Ty.int w).naturalAlign e ptrBits = e.intAlign w := rfl
+
+/-- A float type takes the units of its encoding (`Ty.units?`), those of
+the integer of its width. -/
+theorem Ty.units?_float (l : DataLayout) (e : MemLayout) (ptrBits : Nat → Nat) (fe fm : Nat) :
+    (Ty.float fe fm).units? l e.unit = some ((Ty.float fe fm).units e ptrBits) := rfl
+
+/-- The natural alignment of `float<fe,fm>` is that of the integer of its
+width, the natural alignment of the float's size. -/
+theorem Ty.naturalAlign_float (e : MemLayout) (ptrBits : Nat → Nat) (fe fm : Nat) :
+    (Ty.float fe fm).naturalAlign e ptrBits = e.intAlign (floatWidth fe fm) := rfl
 
 variable {N : Type} {m : Type → Type} [Monad m]
 
@@ -81,6 +100,24 @@ def allocaShape (lay : N → MemLayout) (ρ : Mem → N) (t : Ty) (c : Nat) (a :
     (n : Nat) : Nat × Nat :=
   (c * t.units (lay (ρ n)) (fun j => (lay (ρ j)).pointer), a.getD (t.defaultAlign lay ρ n))
 
+/-- A field of an aggregate's layout takes the units of one value that
+`alloca` allocates, aligned as `alloca` aligns it when the op gives no
+alignment (ADR-2026-11-16-1546): a layout of the memory `n` and an
+allocation in it count the same units. -/
+theorem Ty.fieldShape_eq_allocaShape (lay : Nat → MemLayout) (n : Nat) {t : Ty} (h : t.IsElem) :
+    t.fieldShape lay n = some (allocaShape lay id t 1 none n) := by
+  cases t with
+  | int w => simp [Ty.fieldShape, allocaShape, Ty.units, Ty.defaultAlign, Ty.naturalAlign,
+      pow2AtLeast_eq]
+  | ptr m =>
+    by_cases hm : m = n
+    · subst hm
+      simp [Ty.fieldShape, allocaShape, Ty.units, Ty.defaultAlign, MemLayout.alignment,
+        MemLayout.naturalAlign, MemLayout.pointerUnits_eq, pow2AtLeast_eq]
+    · simp [Ty.fieldShape, allocaShape, Ty.units, Ty.defaultAlign, Ty.naturalAlign, hm,
+        pow2AtLeast_eq]
+  | float => exact absurd h id
+
 /-- The rule of `alloca k t c a n`, in a monad with the memory effect on the
 memories of a run whose layout entries are `lay`, where the run names the
 core's memory `x` as `ρ x`: it allocates the units of `c` values of `t` in
@@ -98,6 +135,19 @@ example : allocaShape (fun _ : Unit => MemLayout.default) (fun _ => ()) (.int 32
     (16, 4) ∧
     allocaShape (fun _ : Unit => MemLayout.default) (fun _ => ()) (.int 8) 12 (some 4) 0 =
       (12, 4) := by
+  decide +kernel
+
+/-- Two `f64` take 16 units of memory 0, aligned to 8; an `f16` takes 2,
+aligned to 2; a `float<2,1>` of 4 bits takes 1, aligned to 1; and three
+`f32` aligned to 16 take 12. -/
+example : allocaShape (fun _ : Unit => MemLayout.default) (fun _ => ()) (.float 11 52) 2 none 0 =
+    (16, 8) ∧
+    allocaShape (fun _ : Unit => MemLayout.default) (fun _ => ()) (.float 5 10) 1 none 0 =
+      (2, 2) ∧
+    allocaShape (fun _ : Unit => MemLayout.default) (fun _ => ()) (.float 2 1) 1 none 0 =
+      (1, 1) ∧
+    allocaShape (fun _ : Unit => MemLayout.default) (fun _ => ()) (.float 8 23) 3 (some 16) 0 =
+      (12, 16) := by
   decide +kernel
 
 /-- Two pointers of memory 0 take 16 units of memory 0, aligned to 8; in a

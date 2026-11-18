@@ -14,7 +14,7 @@ changes under it.
 
 #doc (Manual) "The sum of dialects: readable blocks" =>
 
-:::moduleDocs (fingerprint := "8866412804714216891")
+:::moduleDocs (fingerprint := "9833271456796701359")
 :::
 
 :::readable Fir.Dialect.over Fir.Dialect.sum (fingerprint := "6781788953757055949")
@@ -36,13 +36,13 @@ take and give values of the base's types. The sum is left-nested:
 $`b \boxplus e_1 \boxplus e_2` adds $`e_2` to $`b \boxplus e_1`.
 :::
 
-:::readable Fir.instTyDenoteEmpty Fir.instTyPoisonEmpty Fir.instTyRefinementEmpty (fingerprint := "4013406741606831454")
+:::readable Fir.instTyDenoteEmpty Fir.instTyPoisonEmpty Fir.instTyRefinementEmpty (fingerprint := "10730480508878045560")
 *Definition: no types of its own.* A dialect with no types of its own takes
 the empty type set. It has no values, so none is poison and none refines
 another.
 :::
 
-:::readable Fir.instTyDenoteSum Fir.instTyPoisonSum Fir.instTyRefinementSum Fir.instTyDenoteSumTy Fir.instTyPoisonSumTy Fir.instTyRefinementSumTy (fingerprint := "10356629448207356528")
+:::readable Fir.instTyDenoteSum Fir.instTyPoisonSum Fir.instTyRefinementSum Fir.instTyDenoteSumTy Fir.instTyPoisonSumTy Fir.instTyRefinementSumTy (fingerprint := "8371175881041076736")
 *Definition: the values of summed types.* A summed type denotes what it
 denotes on its own side, and its values are poison, and refine one
 another, as on that side:
@@ -52,14 +52,14 @@ $$`[\![\mathsf{inl}\ t]\!] = [\![t]\!] \qquad [\![\mathsf{inr}\ t]\!] = [\![t]\!
 The types of a sum are summed types.
 :::
 
-:::readable Fir.instDecidableEqSumOp Fir.instDecidableEqSumTy (fingerprint := "6348055299131146135")
+:::readable Fir.instDecidableEqSumOp Fir.instDecidableEqSumTy (fingerprint := "3060582415460609695")
 *Definition: comparing ops and types of a sum.* Two ops, or two types, of a
 sum are equal when they are on the same side and equal there. So the
 validation check, which compares types, works on a sum when it works on
 each side.
 :::
 
-:::readable Fir.HVector.toSum Fir.HVector.ofSum (fingerprint := "1822864197566416814")
+:::readable Fir.HVector.toSum Fir.HVector.ofSum (fingerprint := "11587439825275724480")
 *Definition: values of the base in the sum.* A value of the base's type
 $`t` is a value of the sum's type $`\mathsf{inl}\ t`, and the other way
 round. $`\uparrow` moves a vector of values of the base's types $`t^*` to
@@ -87,7 +87,7 @@ host's ops and types that are the base's. The extension's view keeps the
 host's ops that are $`e`'s, and every type of the sum.
 :::
 
-:::readable Fir.Dialect.sum.BaseValidOp Fir.Dialect.sum.instDecidableBaseValidOp (fingerprint := "2778241861756789920")
+:::readable Fir.Dialect.sum.BaseValidOp Fir.Dialect.sum.instDecidableBaseValidOp (fingerprint := "2655456245482603648")
 *Definition: a base op in a context of the sum.* An op $`p` of the base
 obeys its rule in the op context $`C` of the sum when the base can see
 $`C` and $`p` obeys the base's rule there:
@@ -125,7 +125,7 @@ As for region kinds, the laws of names send each kind of item to the
 dialect that registers it.
 :::
 
-:::readable Fir.Dialect.sum.instDialectSignature Fir.Dialect.sum.instDialectValidation Fir.Dialect.sum.instDecidableDialectValidation (fingerprint := "8504422436437816816")
+:::readable Fir.Dialect.sum.instDialectSignature Fir.Dialect.sum.instDialectValidation Fir.Dialect.sum.instDecidableDialectValidation (fingerprint := "3954617858786097869")
 *Definition: the signature and the rules of a sum.* An op of the sum has
 the signature of its side. A base op's types are the base's, tagged
 $`\mathsf{inl}`:
@@ -134,7 +134,8 @@ $$`\mathrm{sig}(\mathsf{inl}\ p) = (\mathsf{inl}\ t)^* \text{ where } \mathrm{si
 
 and the same for its result types, whether it ends a block, its number
 of successors and the kinds of its regions. A type of the sum is valid as
-its side says, names the memory that its side says, an op refers
+its side says, names the memory that its side says, takes the units and
+alignment as a field that its side says, an op refers
 to the symbols that its side says, carries the types that its side says,
 tagged as its side's, and obeys its side's rule as above. A
 function of the sum obeys the function rule of each side, each through its
@@ -159,7 +160,7 @@ $`e` names the base's memory $`x` as
 $`\mathrm{ofBase}(x) = \mathrm{join}(\mathsf{inl}\ x)`.
 :::
 
-:::readable Fir.Dialect.sum.instDialectEffects Fir.Dialect.sum.instDialectCall Fir.Dialect.sum.instDialectDenote (pin := Fir.Effects.map) (fingerprint := "5103561852968972671")
+:::readable Fir.Dialect.sum.instDialectEffects Fir.Dialect.sum.instDialectCall Fir.Dialect.sum.instDialectDenote (pin := Fir.Effects.map) (fingerprint := "4989984237654859011")
 *Definition: how an op of a sum runs.* The memories of the sum are
 $`e`'s, $`M_e`, which name the base's: so a memory has one name in the
 sum, whichever side names it (ADR-2026-11-09-2306). An op of the sum has
@@ -178,7 +179,7 @@ $$`[\![\mathsf{inl}\ p]\!](v^*) = \uparrow [\![p]\!]_b(\downarrow v^*) \qquad [\
 A terminator's exit is its side's, in the same way.
 :::
 
-:::readable Fir.Dialect.sum.decodeOp Fir.Dialect.sum.decodeTy Fir.Dialect.sum.instDialectText (fingerprint := "930447549735669784")
+:::readable Fir.Dialect.sum.decodeOp Fir.Dialect.sum.decodeTy Fir.Dialect.sum.instDialectText (fingerprint := "9916751987336972133")
 *Definition: the text of a sum.* The sum writes each op and each type as
 its side writes it. It reads a word back by the dialect that the word
 names. Let $`n_e` be $`e`'s name.

@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Refinement through core calls: readable blocks" =>
 
-:::moduleDocs (fingerprint := "17626712809999231749")
+:::moduleDocs (fingerprint := "14185840672508508217")
 :::
 
 :::readable Fir.Core.Op.monotone_all Fir.Core.opsMonotone_all (fingerprint := "17589815968064864618")
@@ -36,7 +36,7 @@ would give them only for valid modules. Congruence in the callee with memory
 goes through the lawful class, so it asks for a valid module.
 :::
 
-:::readable Fir.Core.Ty.Finite Fir.Core.Ty.values Fir.Core.Ty.mem_values Fir.Core.argVectors Fir.Core.mem_argVectors (pin := Fir.ChoiceTree.allBits) (pin := Fir.Core.Ty.toType) (pin := Fir.Core.floatWidth) (fingerprint := "1998525394283694137")
+:::readable Fir.Core.Ty.Finite Fir.Core.Ty.values Fir.Core.Ty.mem_values Fir.Core.argVectors Fir.Core.mem_argVectors (pin := Fir.ChoiceTree.allBits) (pin := Fir.Core.Ty.toType) (pin := Fir.Core.floatWidth) (fingerprint := "2685164540097414696")
 *Definitions and theorems: every value of a core type with finitely many
 values, and every argument vector.* An integer and a float type have
 finitely many values; a pointer type has infinitely many, one for every

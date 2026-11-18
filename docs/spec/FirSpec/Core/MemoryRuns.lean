@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Core functions with memory: readable blocks" =>
 
-:::moduleDocs (fingerprint := "16752635001136110453")
+:::moduleDocs (fingerprint := "16317722508308020643")
 :::
 
 :::readable Fir.Core.lawfulDialectTotal (fingerprint := "7465536416105822801")
@@ -51,7 +51,7 @@ poison value of each valid core type is refined by every value of the
 type.
 :::
 
-:::readable Fir.Core.funcRuns (pin := Fir.Func.memRuns) (fingerprint := "15348739681123349600")
+:::readable Fir.Core.funcRuns (pin := Fir.Func.memRuns) (fingerprint := "9538173135972044021")
 *Definition: the runs of a function of a core module.* For a core module
 $`M` and a core function $`f`, the runs of $`f` are its
 {ref "The-fir-specification--Memory--Runs-with-memory"}[runs with memory]
@@ -60,7 +60,9 @@ $`x`: on each vector $`v^*` of values of its parameter types, poison
 included, and at each budget $`n`, the run of the interpreter in the state
 layer over the set monad, from the empty memories, with $`n` steps of fuel,
 by the core's semantics with memory, with each memory's entry in the
-module's data layout. An observer sees what it returns. They are the
+module's data layout and the items of the module's own table
+({ref "The-fir-specification--Memory--The-items-a-run-gives-each-op"}[items]).
+An observer sees what it returns. They are the
 {ref "The-fir-specification--Execution--Core-values"}[runs of a core function]
 whose observations are the lists of values returned, and the runs that the
 modes report. The equivalence experiment of #282 and congruence in the
@@ -81,7 +83,7 @@ monotone by its own rule. These are what the
 theorems below ask of the core's ops.
 :::
 
-:::readable Fir.Core.inModuleAt_of_inModule Fir.Core.inModuleAt_of_valid (pin := Fir.Core.inModule_of_valid) (pin := Fir.Func.InModule.inModuleAt_of_tied) (fingerprint := "10953520611792496938")
+:::readable Fir.Core.inModuleAt_of_inModule Fir.Core.inModuleAt_of_valid (pin := Fir.Core.inModule_of_valid) (pin := Fir.Func.InModule.inModuleAt_of_tied) (fingerprint := "4552382603713231128")
 *Theorems: a core function that runs within a module runs within it with
 memory.* For every core module $`M`, every core function $`f` that
 {ref "The-fir-specification--Execution--Core-functions-with-calls"}[runs within M],
@@ -91,7 +93,7 @@ function {ref "The-fir-specification--Validation--The-general-rules"}[valid]
 in the context of $`M`.
 :::
 
-:::readable Fir.Core.fuelMonotone Fir.Core.neverStuck Fir.Core.progress Fir.Core.runsWell (pin := Fir.Core.RunsWell) (fingerprint := "8733541239344487932")
+:::readable Fir.Core.fuelMonotone Fir.Core.neverStuck Fir.Core.progress Fir.Core.runsWell (pin := Fir.Core.RunsWell) (fingerprint := "14375166297929863412")
 *Theorem: the runs with memory of every core function are fuel-monotone.*
 For every core module $`M`, every function $`f`, every vector $`v^*` of
 values of its parameter types and every layout and naming of the core's
@@ -108,7 +110,7 @@ calls and recursion included. Every function of $`M` runs within $`M`
 with memory, and the core dialect is lawful in its totality.
 :::
 
-:::readable Fir.Core.runsWell_of_local Fir.Core.callFree_runsWell Fir.Core.callFree_fuelMonotone Fir.Core.callFree_progress Fir.Core.callFree_neverStuck (pin := Fir.Core.CallFree) (fingerprint := "5063858304775921035")
+:::readable Fir.Core.runsWell_of_local Fir.Core.callFree_runsWell Fir.Core.callFree_fuelMonotone Fir.Core.callFree_progress Fir.Core.callFree_neverStuck (pin := Fir.Core.CallFree) (fingerprint := "14687512406758567358")
 *Theorem: every valid core function that runs within itself runs well with
 memory.* For every core module $`M`, every core function $`f` valid in the
 context of $`M` that
@@ -131,7 +133,7 @@ so the theorems on
 apply. Only $`f` need be valid, not its module.
 :::
 
-:::readable Fir.Core.tracer_runsWell Fir.Core.tracer_fuelMonotone Fir.Core.tracer_progress Fir.Core.tracer_neverStuck (pin := Fir.Core.InTracer) (fingerprint := "14461548596925548796")
+:::readable Fir.Core.tracer_runsWell Fir.Core.tracer_fuelMonotone Fir.Core.tracer_progress Fir.Core.tracer_neverStuck (pin := Fir.Core.InTracer) (fingerprint := "13050645975661346974")
 *Theorem: every function of the tracer subset in a valid core module runs
 well with memory.* For every valid core module $`M`, every function $`f`
 of $`M` in the
@@ -143,7 +145,7 @@ runs within itself, and the theorems on progress with memory without calls
 apply.
 :::
 
-:::readable Fir.Core.args_isRefinedBy (pin := Fir.Core.opsMonotone_all) (fingerprint := "3686017503688643883")
+:::readable Fir.Core.args_isRefinedBy (pin := Fir.Core.opsMonotone_all) (fingerprint := "17553697295606449802")
 *Theorem: refined arguments, with memory, for every core module.* For
 every core module $`M`, valid or not, every function $`f` of it, and every
 layout and naming of the core's memories, the behaviour with memory of

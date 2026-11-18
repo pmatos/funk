@@ -14,13 +14,13 @@ fails when the Lean changes under it.
 
 #doc (Manual) "Poison obligations with memory: readable blocks" =>
 
-:::moduleDocs (fingerprint := "7803779081920680412")
+:::moduleDocs (fingerprint := "6758325273172261735")
 :::
 
-:::readable Fir.MemPoisonOut Fir.MemUBByOwnRules Fir.MemPropagatesPoison (pin := Fir.HVector.IsFilledBy) (pin := Fir.HVector.Any) (pin := Fir.HVector.All) (fingerprint := "14323327561986073065")
+:::readable Fir.MemPoisonOut Fir.MemUBByOwnRules Fir.MemPropagatesPoison (pin := Fir.HVector.IsFilledBy) (pin := Fir.HVector.Any) (pin := Fir.HVector.All) (fingerprint := "4413865311223537012")
 *Definitions: an op that propagates poison, with memory.* Wherever a run
-names the dialect's memories, by any names $`N`, layout entries and map
-$`\rho` from the dialect's memories to $`N`, the op $`o` that is not a
+names the dialect's memories, by any names $`N`, layout entries, map
+$`\rho` from the dialect's memories to $`N` and items $`L`, the op $`o` that is not a
 terminator has two clauses, over its
 {ref "The-fir-specification--Memory--Memory-obligations"}[semantics with memory]
 $`⟦o⟧_\rho`:
@@ -43,7 +43,7 @@ poison pointer may be UB because some pointer in its place faults on those
 memories. An op _propagates poison with memory_ when both clauses hold.
 :::
 
-:::readable Fir.MemReturnsOnDefined Fir.LawfulDialectMemPoison Fir.LawfulDialectMem (pin := Fir.TypesValid) (pin := Fir.Memory.Memories) (fingerprint := "8888602367402709010")
+:::readable Fir.MemReturnsOnDefined Fir.LawfulDialectMemPoison Fir.LawfulDialectMem (pin := Fir.TypesValid) (pin := Fir.Memory.Memories) (fingerprint := "13853852145589061710")
 *Definitions: a result on defined operands with memory, and a dialect lawful
 in its poison with memory.* An op _returns a result on defined operands
 with memory_ when, wherever a run names the dialect's memories, it returns
@@ -67,7 +67,7 @@ it then holds every poison obligation over the semantics with memory, as
 holds them in the set monad.
 :::
 
-:::readable Fir.MemPropagatesPoison.ofLifts Fir.MemPropagatesPoison.setM Fir.MemReturnsOnDefined.ofLifts Fir.MemReturnsOnDefined.setM (pin := Fir.PropagatesPoison) (pin := Fir.ReturnsOnDefined) (pin := Fir.OpLiftsSetM) (fingerprint := "11433492997181876195")
+:::readable Fir.MemPropagatesPoison.ofLifts Fir.MemPropagatesPoison.setM Fir.MemReturnsOnDefined.ofLifts Fir.MemReturnsOnDefined.setM (pin := Fir.PropagatesPoison) (pin := Fir.ReturnsOnDefined) (pin := Fir.OpLiftsSetM) (fingerprint := "18167095568221111493")
 *Theorems: the poison obligations with memory, for an op that touches no
 memory.* An op that is
 {ref "The-fir-specification--Memory--Runs-with-memory"}[tied] and

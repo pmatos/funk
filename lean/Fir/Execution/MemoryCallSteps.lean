@@ -225,13 +225,13 @@ variable {d : Dialect} [TyDenote d.Ty] [DialectSignature d] [DialectCall d] {N :
   [DecidableEq N] {M : Module d}
 
 variable [DialectEffects d] [DialectMemDenote d] (lay : N → MemLayout)
-  (ρ : DialectEffects.Mem d → N)
+  (ρ : DialectEffects.Mem d → N) (L : RunItems)
 
 /-- The ops of `f` run within the module `M` with memory, where a run names
 the dialect's memory `x` as `ρ x`, whose layout entry is `lay (ρ x)`:
 they run within it by the dialect's semantics with memory at that naming. -/
 def Func.InModuleAt (M : Module d) (f : Func d) : Prop :=
-  letI := DialectMemDenote.denoteAt (d := d) lay ρ
+  letI := DialectMemDenote.denoteAt (d := d) lay ρ L
   f.MemInModule (unitsOf lay) M
 
 /-- A run with memory of a function that starts, at a budget, at a naming:
@@ -240,11 +240,11 @@ finished. -/
 theorem Func.memRuns_enter [DecidableEq d.Ty] (M : Module d) (f : Func d)
     (args : HVector toType (f.params.map (·.2))) (n : Nat) {body : List (Operation d)}
     {env : Env d} (hen : f.enter args.toDVals = .ok (body, env)) :
-    letI := DialectMemDenote.denoteAt (d := d) lay ρ
-    f.memRuns lay ρ M args n = (Result.finish Prod.fst
+    letI := DialectMemDenote.denoteAt (d := d) lay ρ L
+    f.memRuns lay ρ L M args n = (Result.finish Prod.fst
       (runFrom (Func.runOps (m := StateT (Memories N (unitsOf lay)) SetM) M n f env body)
         Memories.empty.enter)).run := by
-  letI := DialectMemDenote.denoteAt (d := d) lay ρ
+  letI := DialectMemDenote.denoteAt (d := d) lay ρ L
   rw [← Func.run_fromState M f args n _ hen]
   exact fromState_fst _ _
 
@@ -255,14 +255,14 @@ other ops may touch memory. -/
 theorem Func.InModule.inModuleAt_of_tied [DialectDenote d SetM] {f : Func d}
     (h : f.InModule M)
     (ht : ∀ b ∈ f.blocks, ∀ o ∈ b.body, isTerminator o.op = true → OpLiftsSetM o.op) :
-    f.InModuleAt lay ρ M := by
-  letI := DialectMemDenote.denoteAt (d := d) lay ρ
+    f.InModuleAt lay ρ L M := by
+  letI := DialectMemDenote.denoteAt (d := d) lay ρ L
   have ex : ∀ {op : d.Op} (hlo : OpLiftsSetM op) {args : HVector toType (sig op)}
       {S : Memories N (unitsOf lay)} {x : Exit} {S' : Memories N (unitsOf lay)},
       DialectDenote.exit (m := StateT (Memories N (unitsOf lay)) SetM) op args S
         (.ok (x, S')) → DialectDenote.exit (m := SetM) op args (.ok x) := by
     intro op hlo args S x S' hx
-    rw [(hlo lay ρ args).2] at hx
+    rw [(hlo lay ρ L args).2] at hx
     rcases (SetM.lift_apply _ _ _).1 hx with ⟨_, hc, he⟩ | ⟨_, _, he⟩
     · cases he
       exact hc
@@ -274,8 +274,8 @@ theorem Func.InModule.inModuleAt_of_tied [DialectDenote d SetM] {f : Func d}
 /-- A function that runs within its module runs within it with memory,
 wherever a run names the memories of a dialect that lifts the set monad. -/
 theorem Func.InModule.inModuleAt [DialectDenote d SetM] [LiftsSetM d] {f : Func d}
-    (h : f.InModule M) : f.InModuleAt lay ρ M :=
-  h.inModuleAt_of_tied lay ρ fun _ _ o _ _ => LiftsSetM.opLifts o.op
+    (h : f.InModule M) : f.InModuleAt lay ρ L M :=
+  h.inModuleAt_of_tied lay ρ L fun _ _ o _ _ => LiftsSetM.opLifts o.op
 
 end
 

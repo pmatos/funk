@@ -9,6 +9,7 @@
 
 use std::collections::HashMap;
 
+use super::aggregate::Aggregate;
 use super::attr::{Attr, Type};
 use super::layout::MemLayout;
 use super::location::{LocRef, LocTable};
@@ -201,8 +202,9 @@ impl DialectItem {
 
 /// An item of a module. Every item is written
 /// `kind @sym(params) -> results attrs { body }` (N2). The core's kinds are
-/// `func` and `module` (ADR-2026-11-10-1510), and a dialect registers kinds
-/// of its own (ADR-2026-11-09-1543).
+/// `func`, `module` (ADR-2026-11-10-1510) and `aggregate`
+/// (ADR-2026-11-16-1546), and a dialect registers kinds of its own
+/// (ADR-2026-11-09-1543).
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 #[non_exhaustive]
 pub enum Item {
@@ -212,6 +214,8 @@ pub enum Item {
     Module(NestedModule),
     /// An item of a kind that a dialect registers.
     Dialect(DialectItem),
+    /// The layout of an aggregate.
+    Aggregate(Aggregate),
 }
 
 impl Item {
@@ -221,6 +225,7 @@ impl Item {
             Item::Func(f) => &f.name,
             Item::Module(m) => &m.name,
             Item::Dialect(i) => &i.name,
+            Item::Aggregate(a) => &a.name,
         }
     }
 
@@ -244,6 +249,14 @@ impl Item {
     pub fn as_dialect(&self) -> Option<&DialectItem> {
         match self {
             Item::Dialect(i) => Some(i),
+            _ => None,
+        }
+    }
+
+    /// The aggregate's layout that this item is, if it is one.
+    pub fn as_aggregate(&self) -> Option<&Aggregate> {
+        match self {
+            Item::Aggregate(a) => Some(a),
             _ => None,
         }
     }

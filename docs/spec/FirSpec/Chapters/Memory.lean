@@ -27,10 +27,10 @@ the obligations that an op's declaration of its effects on memory puts on
 its semantics, progress with memory, which asks each op to be total from
 any memories, and refinement with memory, which refines memories unit by
 unit and asks each op to be monotone from memories that refine others.
-Between the model and the effect, it says how a value of an integer or a
-pointer type becomes units of a memory, and units a value again, at every
-byte order. It ends with traces: the events that a run shows to the world
-outside it, the layer in which a run shows them, and refinement of the
+Between the model and the effect, it says how a value of an integer, a
+float or a pointer type becomes units of a memory, and units a value again,
+at every byte order. It ends with traces: the events that a run shows to the
+world outside it, the layer in which a run shows them, and refinement of the
 traced runs of functions for every world (ADR-2026-11-09-1540).
 
 {includeReadable "." Fir.Memory.Model "The memory model" FirSpec.Memory.Model (level := 1)}
@@ -62,6 +62,8 @@ traced runs of functions for every world (ADR-2026-11-09-1540).
 {includeReadable "." Fir.Execution.StatePaths "How a run with memory ends" FirSpec.Execution.StatePaths (level := 1)}
 
 {includeReadable "." Fir.Execution.MemoryMonotone "Runs with memory at every budget" FirSpec.Execution.MemoryMonotone (level := 1)}
+
+{includeReadable "." Fir.Execution.RunItems "The items a run gives each op" FirSpec.Execution.RunItems (level := 1)}
 
 {includeReadable "." Fir.Execution.MemoryObligations "Memory obligations" FirSpec.Execution.MemoryObligations (level := 1)}
 
@@ -127,6 +129,8 @@ traced runs of functions for every world (ADR-2026-11-09-1540).
 
 {includeReadable "." Fir.Core.PtrAccess "Pointer load and store rules" FirSpec.Core.PtrAccess (level := 1)}
 
+{includeReadable "." Fir.Core.FloatAccess "Float load and store rules" FirSpec.Core.FloatAccess (level := 1)}
+
 {includeReadable "." Fir.Core.MemRules "The core's rules with memory" FirSpec.Core.MemRules (level := 1)}
 
 {includeReadable "." Fir.Core.AllocaLaws "Stack allocation obligations" FirSpec.Core.AllocaLaws (level := 1)}
@@ -142,6 +146,10 @@ traced runs of functions for every world (ADR-2026-11-09-1540).
 {includeReadable "." Fir.Core.LoadPtrLaws "Pointer load obligations" FirSpec.Core.LoadPtrLaws (level := 1)}
 
 {includeReadable "." Fir.Core.StorePtrLaws "Pointer store obligations" FirSpec.Core.StorePtrLaws (level := 1)}
+
+{includeReadable "." Fir.Core.LoadFloatLaws "Float load obligations" FirSpec.Core.LoadFloatLaws (level := 1)}
+
+{includeReadable "." Fir.Core.StoreFloatLaws "Float store obligations" FirSpec.Core.StoreFloatLaws (level := 1)}
 
 {includeReadable "." Fir.Core.TreeRules "The core dialect in the tree of choices" FirSpec.Core.TreeRules (level := 1)}
 

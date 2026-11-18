@@ -85,14 +85,24 @@ structure DialectItem.WellFormed (i : DialectItem d) : Prop where
   types : ∀ t ∈ i.types, (tyAttr t).IsType ∧ decodeTy (tyAttr t) = some t
   attrs : Attr.AllWritable i.attrs
 
+/--
+An aggregate's layout can be written and read back: its numbers are within
+the limit, and each type it states is written as a type and decodes back to
+itself. Its symbol can be any string.
+-/
+structure Aggregate.WellFormed (a : Aggregate d) : Prop where
+  limits : a.InLimits
+  types : ∀ t ∈ a.types, (tyAttr t).IsType ∧ decodeTy (tyAttr t) = some t
+
 mutual
 /-- An item can be written and read back: a function that can, a nested
 module whose dialect set names each dialect by a word and whose items can,
-or an item of a dialect's kind that can. -/
+an item of a dialect's kind that can, or an aggregate's layout that can. -/
 def Item.WellFormed : Item d → Prop
   | .func f => f.WellFormed
   | .module _ ds is => (∀ x ∈ ds, isWord x) ∧ Item.WellFormedList is
   | .dialect i => i.WellFormed
+  | .aggregate a => a.WellFormed
 
 /-- Each of these items can be written and read back. -/
 def Item.WellFormedList : List (Item d) → Prop
@@ -123,7 +133,7 @@ theorem Module.WellFormed.funcs {m : Module d} (h : m.WellFormed) : ∀ f ∈ m.
   | func g =>
     cases he
     exact h.items _ hi
-  | module | dialect => cases he
+  | module | dialect | aggregate => cases he
 
 /-- A position in a text: a line and a column, counted as in locations.
 Lines count from 1, and columns count UTF-8 bytes from 1. -/
@@ -227,23 +237,32 @@ theorem Func.Valid.wellFormed {locs : LocTable} {syms : Name → Option (FuncTyp
   · exact ((hgen o ho).1.2 r hr k (Option.mem_def.mp hk)).1
 
 /-- The items of a valid symbol table are well formed when the tables
-nested in them are valid too, in a module whose location table is valid. -/
-theorem SymbolTable.Valid.itemsWellFormed {locs : LocTable} (hl : LocTable.Valid locs) :
+nested in them are valid too, and the aggregates' layouts of all of them are
+valid in a data layout, in a module whose location table is valid. -/
+theorem SymbolTable.Valid.itemsWellFormed {locs : LocTable} (hl : LocTable.Valid locs)
+    {l : DataLayout} :
     ∀ (ds : List Name) (is : List (Item d)), SymbolTable.Valid (locs.map (·.1)) ⟨ds, is⟩ →
-      (∀ u ∈ Item.tablesIn is, u.Valid (locs.map (·.1))) → ∀ i ∈ is, i.WellFormed
-  | _, is, ht, hn, i, hi => by
+      (∀ u ∈ Item.tablesIn is, u.Valid (locs.map (·.1))) →
+      (∀ u ∈ (⟨ds, is⟩ : SymbolTable d) :: Item.tablesIn is, ∀ a ∈ u.aggregates, a.Valid l) →
+      ∀ i ∈ is, i.WellFormed
+  | _, is, ht, hn, hA, i, hi => by
     cases i with
     | func f => exact Func.Valid.wellFormed (ht.funcs f (List.mem_filterMap.mpr ⟨_, hi, rfl⟩)) hl
     | dialect j =>
       have hv := ht.dialectItems j (List.mem_filterMap.mpr ⟨_, hi, rfl⟩)
       exact ⟨hv.kind, hv.names, fun t h => ⟨LawfulDialectText.tyAttr_isType t (hv.types t h),
         LawfulDialectText.decodeTy_encode t (hv.types t h)⟩, hv.attrs⟩
+    | aggregate a =>
+      have hv := hA _ (List.mem_cons_self ..) a (List.mem_filterMap.mpr ⟨_, hi, rfl⟩)
+      exact ⟨hv.limits, fun t h => ⟨LawfulDialectText.tyAttr_isType t (hv.types t h),
+        LawfulDialectText.decodeTy_encode t (hv.types t h)⟩⟩
     | module n ds' js =>
       have hsub := Item.mem_tablesIn hi
       have hv := hn _ (hsub _ (List.mem_cons_self ..))
       rw [Item.WellFormed, Item.wellFormedList_iff]
       exact ⟨hv.dialectNames, SymbolTable.Valid.itemsWellFormed hl ds' js hv
-        fun u hu => hn u (hsub u (List.mem_cons_of_mem _ hu))⟩
+        (fun u hu => hn u (hsub u (List.mem_cons_of_mem _ hu)))
+        fun u hu => hA u (List.mem_cons_of_mem _ (hsub u hu))⟩
 termination_by _ is => sizeOf is
 decreasing_by
   have := List.sizeOf_lt_of_mem hi
@@ -258,7 +277,7 @@ theorem MemLayout.Valid.inLimits {e : MemLayout} (h : e.Valid) : e.InLimits :=
 theorem validIsWellFormed : ValidIsWellFormed (d := d) :=
   fun m hm => ⟨hm.dialectNames, fun e he => (hm.layout.entries e he).inLimits,
     SymbolTable.Valid.itemsWellFormed hm.locs m.dialects m.items hm.table
-      (fun u hu => hm.tables u (List.mem_cons_of_mem _ hu)),
+      (fun u hu => hm.tables u (List.mem_cons_of_mem _ hu)) hm.aggregates,
     hm.locs.2.1⟩
 
 end Fir

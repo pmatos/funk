@@ -17,7 +17,7 @@ when the Lean changes under it.
 :::moduleDocs (fingerprint := "16257157132352493751")
 :::
 
-:::readable Fir.Core.Op.eq_call_of_callee (pin := Fir.Core.Op.callTarget?) (fingerprint := "6238840022199865495")
+:::readable Fir.Core.Op.eq_call_of_callee (pin := Fir.Core.Op.callTarget?) (fingerprint := "15598823240397860464")
 *Theorem: a core op that calls a function is $`\mathsf{call}` of that
 function.* For every core op $`o` and symbol $`g`: if
 $`\mathrm{callee}(o) = g`, then $`o` is $`\mathsf{call}~g : t^* \to r^*`
@@ -46,7 +46,7 @@ they are the ops that the progress theorem for modules asks to be total,
 the ops that the interpreter runs by their own rule.
 :::
 
-:::readable Fir.Core.inModule_of_valid (pin := Fir.Func.InModule) (pin := Fir.Core.Op.Valid) (pin := Fir.Core.Op.sig) (pin := Fir.Core.Op.returnTypes) (pin := Fir.Module.context) (fingerprint := "17603866799742578698")
+:::readable Fir.Core.inModule_of_valid (pin := Fir.Func.InModule) (pin := Fir.Core.Op.Valid) (pin := Fir.Core.Op.sig) (pin := Fir.Core.Op.returnTypes) (pin := Fir.Module.context) (fingerprint := "12957863022593889346")
 *Theorem: every core function valid in the context of a module runs
 within that module.* Let $`M` be a core module, and $`f` a core function
 {ref "The-fir-specification--Validation--The-general-rules"}[valid] in the

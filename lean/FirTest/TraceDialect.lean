@@ -45,7 +45,7 @@ instance : DialectTrace EmitDialect where
   Event := Nat
   Answer := Nat
   IsRefinedBy := Eq
-  traceAt _ _ :=
+  traceAt _ _ _ :=
     { denote := fun
         | .emit, _ => (fun (_ : Nat) => .nil) <$> MonadEvent.emit (0 : Nat)
         | .ret, _ => MonadUB.ub "ret is a terminator"
@@ -71,7 +71,7 @@ def emitModule : Module EmitDialect := { items := [.func emitMain], locs := [(0,
 /-- The traced runs of `emitMain`, with no memory. -/
 abbrev runs : FuncTraceRuns (HVector toType ([] : List Core.Ty)) (DialectTrace.Acts EmitDialect)
     (List (DVal EmitDialect)) :=
-  emitMain.traceRuns (fun _ : Empty => MemLayout.default) id emitModule
+  emitMain.traceRuns (fun _ : Empty => MemLayout.default) id RunItems.empty emitModule
 
 /-! # Paths of the traced layer, with stuck paths -/
 
@@ -110,6 +110,7 @@ op's step before the op's acts. -/
 theorem emitMain_run (a : Nat) :
     runs .nil 2 (.ok (.ok (.ret []), [.tick, .act (⟨0, a⟩ : Act Nat Nat), .tick])) := by
   letI := DialectTrace.stepAt (d := EmitDialect) (fun _ : Empty => MemLayout.default) id
+    RunItems.empty
   refine ⟨.ok (.ok (.ret []), [.tick, .act (⟨0, a⟩ : Act Nat Nat), .tick],
     (Memories.empty : Memories Empty _).enter.exit), ?_, rfl⟩
   unfold Func.run
@@ -149,7 +150,7 @@ example (a : Nat) : traceObservable (runs .nil) (.ret [(⟨0, a⟩ : Act Nat Nat
 /-- Erasing the steps of `emitMain`'s traced runs gives its runs by the
 emit dialect's rules alone. -/
 example (fuel : Nat) :=
-  Func.run_eraseSteps (d := EmitDialect) (fun _ : Empty => MemLayout.default) id emitModule emitMain
-    .nil fuel
+  Func.run_eraseSteps (d := EmitDialect) (fun _ : Empty => MemLayout.default) id RunItems.empty
+    emitModule emitMain .nil fuel
 
 end FirTest.TraceDialect

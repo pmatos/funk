@@ -17,7 +17,7 @@ fails when the Lean changes under it.
 :::moduleDocs (fingerprint := "88123864055373757")
 :::
 
-:::readable Fir.Core.decodeWrap_attrs Fir.Core.attrs_of_decodeWrap Fir.Core.attrs_of_decodeExact (pin := Fir.Core.WrapFlags.attrs) (pin := Fir.Core.decodeWrap) (pin := Fir.Core.decodeExact) (fingerprint := "17401711866704955162")
+:::readable Fir.Core.decodeWrap_attrs Fir.Core.attrs_of_decodeWrap Fir.Core.attrs_of_decodeExact (pin := Fir.Core.WrapFlags.attrs) (pin := Fir.Core.decodeWrap) (pin := Fir.Core.decodeExact) (fingerprint := "8508249869924011798")
 *Theorems: flags read back from their spelling, and only from it.* With
 $`\mathrm{flags}`, $`\mathrm{decodeflags}` and $`\mathrm{decodeexact}` of
 the {ref "The-fir-specification--Text-format--The-core-dialect-in-text"}[previous section]:
@@ -34,7 +34,7 @@ the {ref "The-fir-specification--Text-format--The-core-dialect-in-text"}[previou
 The proofs of the laws for $`\mathsf{add}` to $`\mathsf{udiv}` use them.
 :::
 
-:::readable Fir.Core.find_pred_name Fir.Core.name_of_find_pred (pin := Fir.Core.Pred.name) (pin := Fir.Core.Pred.all) (fingerprint := "18400209700053729532")
+:::readable Fir.Core.find_pred_name Fir.Core.name_of_find_pred (pin := Fir.Core.Pred.name) (pin := Fir.Core.Pred.all) (fingerprint := "2360766627162177571")
 *Theorems: a predicate is found by its name, and only by it.* For every
 predicate $`p`, looking $`\mathrm{name}(p)` up in the list of the ten
 predicates finds $`p`; and for every string $`s`, a predicate found by
@@ -42,7 +42,7 @@ looking $`s` up has the name $`s`. The proofs of the laws for
 $`\mathsf{icmp}` use them.
 :::
 
-:::readable Fir.Core.find_fpred_name Fir.Core.name_of_find_fpred (pin := Fir.Core.FPred.name) (pin := Fir.Core.FPred.all) (fingerprint := "5854253884255476291")
+:::readable Fir.Core.find_fpred_name Fir.Core.name_of_find_fpred (pin := Fir.Core.FPred.name) (pin := Fir.Core.FPred.all) (fingerprint := "4595827450233367391")
 *Theorems: a float predicate is found by its name, and only by it.* For
 every float predicate $`p`, looking $`\mathrm{name}(p)` up in the list of
 the fourteen float predicates finds $`p`; and for every string $`s`, a
@@ -50,14 +50,14 @@ float predicate found by looking $`s` up has the name $`s`. The proofs of
 the laws for $`\mathsf{fcmp}` use them.
 :::
 
-:::readable Fir.Core.constAttr_of_ne_one Fir.Core.bitVec_one_cases (pin := Fir.Core.constAttr) (fingerprint := "683726526858554718")
+:::readable Fir.Core.constAttr_of_ne_one Fir.Core.bitVec_one_cases (pin := Fir.Core.constAttr) (fingerprint := "7069144073951225592")
 *Theorems: the two cases of a constant.* For every width $`W \neq 1` and
 every $`W`-bit value $`v`, $`\mathrm{constattr}_W(v)` is the integer $`v`
 read as signed; and every 1-bit value is 1 or 0. They split the proofs for
 $`\mathsf{const}` into its two spellings.
 :::
 
-:::readable Fir.Core.binWidth_eq Fir.Core.binOp_eq Fir.Core.bare_eq Fir.Core.decodeCast_eq Fir.Core.plainBinOps_lookup (pin := Fir.Core.binWidth) (pin := Fir.Core.bare) (pin := Fir.Core.decodeCast) (pin := Fir.Core.plainBinOps) (fingerprint := "7384889230442516513")
+:::readable Fir.Core.binWidth_eq Fir.Core.binOp_eq Fir.Core.bare_eq Fir.Core.decodeCast_eq Fir.Core.plainBinOps_lookup (pin := Fir.Core.binWidth) (pin := Fir.Core.bare) (pin := Fir.Core.decodeCast) (pin := Fir.Core.plainBinOps) (fingerprint := "958117574825870309")
 *Theorems: what each step of reading an op back accepts.* Each says that a
 helper of $`\mathrm{decodeop}` succeeds only on the shape it reads:
 
@@ -89,7 +89,7 @@ that reading takes back put the attributes back together. The proof of
 the next theorem uses them for this op.
 :::
 
-:::readable Fir.Core.decodePtrAdd_eq (pin := Fir.Core.decodePtrAdd) (fingerprint := "13106390997175491723")
+:::readable Fir.Core.decodePtrAdd_eq (pin := Fir.Core.decodePtrAdd) (fingerprint := "10693430974551034378")
 *Theorem: a pointer offset decodes only from its own spelling.* If
 $`\mathtt{ptradd}` decodes from the attributes $`a^*` and the types
 $`t^*` and $`r^*`, the op it gives is written $`\mathtt{ptradd}`, has no
@@ -98,7 +98,7 @@ $`t^*` and $`r^*`: a pointer and an integer, and a pointer of the same
 memory.
 :::
 
-:::readable Fir.Core.Op.decode_encode Fir.Core.Op.encode_decode (pin := Fir.Core.Op.sig) (pin := Fir.Core.Op.returnTypes) (fingerprint := "2428736090177167356")
+:::readable Fir.Core.Op.decode_encode Fir.Core.Op.encode_decode (pin := Fir.Core.Op.sig) (pin := Fir.Core.Op.returnTypes) (fingerprint := "8909265527090953112")
 *Theorems: every core op instance reads back from its spelling, and only
 from it.* For every core op instance $`o`, valid or not:
 
@@ -117,12 +117,14 @@ proofs go op by op, for every width, flag, predicate, float format,
 float constant, float op of arithmetic, bit cast, conversion from or to
 an integer and between formats, pointer offset at every memory,
 allocation of every kind, type, count and alignment, load and store of
-an integer or a pointer of every ordering, width, alignment and memory,
-and list of types. A float constant reads back because its
-signed reading names its bits exactly.
+an integer, a pointer or a float of every ordering, width, format,
+alignment and memory,
+and list of types. A float constant reads back because its one spelling
+reads back as its bits:
+$`\mathrm{decodelit}_{e,m}(\mathrm{floatlit}_{e,m}(v)) = v`.
 :::
 
-:::readable Fir.Core.Op.name_isWord Fir.Core.Pred.name_isWord Fir.Core.FPred.name_isWord Fir.Core.Attr.allWritable_append Fir.Core.FastMath.attrs_writable Fir.Core.Op.attrs_writable (pin := Fir.isWord) (fingerprint := "4794657475226313482")
+:::readable Fir.Core.Op.name_isWord Fir.Core.Pred.name_isWord Fir.Core.FPred.name_isWord Fir.Core.Attr.allWritable_append Fir.Core.FastMath.attrs_writable Fir.Core.Op.attrs_writable (pin := Fir.isWord) (fingerprint := "13055863407114268067")
 *Theorems: core ops are written as tokens.* For every core op instance
 $`o`, $`\mathrm{opname}(o)` is a word and every attribute of
 $`\mathrm{opattrs}(o)` can be written; and the name of every predicate,
@@ -138,7 +140,7 @@ the last three laws: what the core dialect writes fits the grammar.
 *Theorems: the core dialect's text is lawful, and every valid core module
 is well formed.* The theorems above are the seven laws of a
 {ref "The-fir-specification--Text-format--Grammar"}[lawful text] for the
-core dialect, so its text is lawful, for all 45 ops and every type, and
+core dialect, so its text is lawful, for all 47 ops and every type, and
 the proofs about the parser use this proof for core modules. With it, every
 {ref "The-fir-specification--Validation--The-general-rules"}[valid] core
 module is

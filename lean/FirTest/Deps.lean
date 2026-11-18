@@ -199,14 +199,14 @@ abbrev oneLayout : Unit → MemLayout := fun _ => MemLayout.default
 
 /-- `bit.low` at `i8` takes the low bit of 5 in the sum of three, with
 memory. -/
-example : letI := DialectMemDenote.denoteAt (d := CoreToyBit) oneLayout (fun _ => ())
+example : letI := DialectMemDenote.denoteAt (d := CoreToyBit) oneLayout (fun _ => ()) .empty
     DialectDenote.denote (m := StateT (Memory.Memories Unit (unitsOf oneLayout)) SetM)
       (d := CoreToyBit) (.inr (.low 8)) (.cons (.value 5) .nil) Memory.Memories.empty
       (.ok (.cons (.value true) .nil, Memory.Memories.empty)) :=
   .inl ⟨_, .inl ⟨_, rfl, rfl⟩, rfl⟩
 
 /-- `bit.int` gives a poison bit back as poison, with memory. -/
-example : letI := DialectMemDenote.denoteAt (d := CoreToyBit) oneLayout (fun _ => ())
+example : letI := DialectMemDenote.denoteAt (d := CoreToyBit) oneLayout (fun _ => ()) .empty
     DialectDenote.denote (m := StateT (Memory.Memories Unit (unitsOf oneLayout)) SetM)
       (d := CoreToyBit) (.inr .int) (.cons .poison .nil) Memory.Memories.empty
       (.ok (.cons .poison .nil, Memory.Memories.empty)) :=

@@ -49,7 +49,7 @@ def tableAt (ds : List Name) (items : List (Item CoreDialect)) :
   | [] => some ⟨ds, items⟩
   | n :: ns => items.findSome? fun
     | .module n' ds' is => if n' == n then tableAt ds' is ns else none
-    | .func _ | .dialect _ => none
+    | .func _ | .dialect _ | .aggregate _ => none
 
 mutual
 /-- The paths of the functions of every table under an item, behind
@@ -57,7 +57,7 @@ mutual
 def funcPathsItem (pre : List Name) : Item CoreDialect → List (List Name)
   | .func f => [pre ++ [f.name]]
   | .module n _ is => funcPaths (pre ++ [n]) is
-  | .dialect _ => []
+  | .dialect _ | .aggregate _ => []
 
 /-- The paths of every function of every table under `items`, behind
 `pre`. -/
@@ -138,8 +138,8 @@ example {ctx : ModuleContext CoreDialect} {M : Module CoreDialect}
     (hv : ∀ g ∈ M.funcs, g.Valid ctx) {s : Name} {f : Func CoreDialect}
     (hf : M.func? s = some f) (hs : (M.table.summary s).mayUB = false)
     (args : HVector toType (f.params.map (·.2))) (fuel : Nat) (r : String) :
-    ¬ f.memRuns M.layout.entry id M args fuel (.ub r) :=
-  Module.summary_neverUB _ _ hv hf hs args fuel r
+    ¬ f.memRuns M.layout.entry id M.runItems M args fuel (.ub r) :=
+  Module.summary_neverUB _ _ _ hv hf hs args fuel r
 
 /-! # The theorems' axioms -/
 

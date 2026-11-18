@@ -19,7 +19,8 @@ validation says which terms are valid.
 
 This section gives names first, then float literals and attributes, then
 the terms from the inside out: a successor, an op with blocks and regions, a
-function, an item of a dialect's kind, an item and a module.
+function, an item of a dialect's kind, an aggregate's layout, an item and a
+module.
 -/
 
 namespace Fir
@@ -250,8 +251,48 @@ types, then its results. -/
 def DialectItem.types (i : DialectItem d) : List d.Ty := i.params.map (·.2) ++ i.results
 
 /--
-An item of a module: a function, a nested module (ADR-2026-11-10-1510), or
-an item of a kind that a dialect registers (ADR-2026-11-09-1543).
+A field of an aggregate's layout (ADR-2026-11-09-1550): its offset, in
+units of the layout's memory, and its type, a scalar. A repeated field,
+`count = some c`, is an array of `c` elements of the type, each element
+rounded up to the type's alignment (the human's ruling of 2026-11-16 on
+#236); a field with `count = none` is one value of the type, and has no
+elements.
+-/
+structure Field (d : Dialect) where
+  offset : Nat
+  ty : d.Ty
+  count : Option Nat := none
+
+/--
+The layout of an aggregate (ADR-2026-11-09-1550, ADR-2026-11-16-1546): an
+item that names a size, an alignment and a list of fields, each at an
+offset, all counted in the units of the memory `mem` that the layout
+describes. A layout is not a type: no value has it, and an op reads it by
+its symbol.
+-/
+structure Aggregate (d : Dialect) where
+  name : Name
+  mem : Nat
+  size : Nat
+  align : Nat
+  fields : List (Field d)
+
+/-- Every type that an aggregate's layout states: the type of each field. -/
+def Aggregate.types (a : Aggregate d) : List d.Ty := a.fields.map (·.ty)
+
+/-- The largest number that an aggregate's layout may hold, `2^64 - 1`: its
+memory, size, alignment, and each field's offset and count. -/
+def Aggregate.limit : Nat := 2 ^ 64 - 1
+
+/-- The numbers of an aggregate's layout are within the limit. -/
+def Aggregate.InLimits (a : Aggregate d) : Prop :=
+  a.mem ≤ Aggregate.limit ∧ a.size ≤ Aggregate.limit ∧ a.align ≤ Aggregate.limit ∧
+    ∀ f ∈ a.fields, f.offset ≤ Aggregate.limit ∧ ∀ c ∈ f.count, c ≤ Aggregate.limit
+
+/--
+An item of a module: a function, a nested module (ADR-2026-11-10-1510),
+an item of a kind that a dialect registers (ADR-2026-11-09-1543), or the
+layout of an aggregate (ADR-2026-11-16-1546).
 
 A module is a symbol table, and G0 requires that symbol tables can nest, for
 example a device module inside a host module. A `module` item is such a
@@ -260,12 +301,14 @@ not its parent's, and its symbols are its own: an op refers by symbol only
 to an item of its own table. The text format writes every item with one
 generic production (N2), so a nested module needs no new production, only
 the dialect set that may start its body. An item of a dialect's kind is
-written with the same production too.
+written with the same production too, and so is an aggregate's layout, a
+kind of item of the core.
 -/
 inductive Item (d : Dialect) where
   | func (f : Func d)
   | module (name : Name) (dialects : List Name) (items : List (Item d))
   | dialect (i : DialectItem d)
+  | aggregate (a : Aggregate d)
 
 /--
 A module: its dialect set, its data layout, its items, then its location
@@ -292,6 +335,7 @@ def Item.name : Item d → Name
   | .func f => f.name
   | .module n .. => n
   | .dialect i => i.name
+  | .aggregate a => a.name
 
 /-- The function that an item is, if it is one. -/
 def Item.func? : Item d → Option (Func d)
@@ -302,10 +346,16 @@ def Item.func? : Item d → Option (Func d)
 @[simp] theorem Item.func?_module (n : Name) (ds : List Name) (is : List (Item d)) :
     (Item.module n ds is).func? = none := rfl
 @[simp] theorem Item.func?_dialect (i : DialectItem d) : (Item.dialect i).func? = none := rfl
+@[simp] theorem Item.func?_aggregate (a : Aggregate d) : (Item.aggregate a).func? = none := rfl
 
 /-- The item of a dialect's kind that an item is, if it is one. -/
 def Item.dialect? : Item d → Option (DialectItem d)
   | .dialect i => some i
+  | _ => none
+
+/-- The aggregate's layout that an item is, if it is one. -/
+def Item.aggregate? : Item d → Option (Aggregate d)
+  | .aggregate a => some a
   | _ => none
 
 /-- The functions of a module's own table, in order. The functions of a

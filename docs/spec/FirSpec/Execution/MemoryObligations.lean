@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Memory obligations: readable blocks" =>
 
-:::moduleDocs (fingerprint := "8050425547938664499")
+:::moduleDocs (fingerprint := "12698197914653539461")
 :::
 
 :::readable Fir.Memory.Memory.allocs Fir.Memory.Memory.contents Fir.Memory.Memory.unitAt (fingerprint := "16077720331530795137")
@@ -58,7 +58,7 @@ it was. UB ends a path and shows no memory, so both speak only of the
 paths that end.
 :::
 
-:::readable Fir.ReadsNot.Match Fir.ReadsNot (fingerprint := "8910926687692953877")
+:::readable Fir.ReadsNot.Match Fir.ReadsNot (fingerprint := "12419194272958014085")
 *Definition: no read.* A computation $`c` _does not read_ $`x` when it does
 not depend on the units of $`x`. For all memories of a run $`S` and every
 memory $`m` with $`\mathrm{allocs}(m) = \mathrm{allocs}(S.\mathit{mem}(x))`,
@@ -85,19 +85,25 @@ UB_ when, from every memories $`S`, $`\mathsf{ub}~r \notin c(S)` for every
 reason $`r`.
 :::
 
-:::readable Fir.unitsOf Fir.DialectMemDenote Fir.OwnRuleHas (fingerprint := "3251495137520435974")
+:::readable Fir.unitsOf Fir.DialectMemDenote Fir.OwnRuleHas (fingerprint := "9407010316940367332")
 *Definition: a dialect's semantics with memory.* A dialect gives each op a
 semantics in the state layer over the set monad _wherever a run names its
 memories_: for every type $`N` of a run's memory names, the layout entry
-$`\ell(y)` of each memory $`y` of the run, and every map $`\rho` from the
-dialect's memory names to $`N`, a semantics of its ops in the state layer
-over the memories named by $`N`, where the units of $`y` are
-$`\ell(y).\mathit{unit}` bits wide. The op names the dialect's memory $`x`
-as the run's memory $`\rho(x)`, whose entry $`\ell(\rho(x))` gives its unit
-width, its byte order, the width of its pointers and their alignment, so an
-op that loads or stores takes them from the memory it accesses.
+$`\ell(y)` of each memory $`y` of the run, every map $`\rho` from the
+dialect's memory names to $`N`, and every record $`L` of the
+{ref "The-fir-specification--Memory--The-items-a-run-gives-each-op"}[items a run gives each op],
+a semantics of its ops in the state layer over the memories named by
+$`N`, where the units of $`y` are $`\ell(y).\mathit{unit}` bits wide. The
+op names the dialect's memory $`x` as the run's memory $`\rho(x)`, whose
+entry $`\ell(\rho(x))` gives its unit width, its byte order, the width of
+its pointers and their alignment, so an op that loads or stores takes them
+from the memory it accesses. An op that names an item of its module by its
+symbol reads it from $`L` (the human's ruling of 2026-11-16 on #236).
+Wherever this specification says _wherever a run names its memories_, it
+means at every $`N`, $`\ell` and $`\rho`, and every $`L`: no obligation
+or guarantee asks anything of the items a run gives.
 
-What an op $`o` runs by its own rule at $`\ell` and $`\rho` _has a
+What an op $`o` runs by its own rule at $`\ell`, $`\rho` and $`L` _has a
 property_ $`P` when,
 on every operand vector $`\vec{v}`, $`P(\mathrm{denote}_o(\vec{v}))` holds
 if $`o` is not a terminator, and $`P(\mathrm{exit}_o(\vec{v}))` holds if it

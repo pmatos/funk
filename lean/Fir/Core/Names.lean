@@ -106,7 +106,8 @@ theorem opAttrs_bare (o : Op) : Attr.dialectsAll (opAttrs (d := CoreDialect) o) 
     by_cases hc : c = 1 <;> cases a <;>
       simp [opAttrs, Op.attrs, allocaAttrs, hc, Attr.dialectsAll, Attr.dialects, hk, ht,
         wordDialect]
-  | load o _ a | store o _ a | loadPtr o _ a | storePtr o _ a =>
+  | load o _ a | store o _ a | loadPtr o _ a | storePtr o _ a | loadFloat o _ _ a
+  | storeFloat o _ _ a =>
     have ho : '.' ∉ o.word.toList := by cases o <;> decide
     cases a <;> simp [opAttrs, Op.attrs, loadAttrs, Attr.dialectsAll, Attr.dialects, ho, wordDialect]
   | _ => rfl
