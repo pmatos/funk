@@ -7,7 +7,7 @@ says how to read it.
 
 | op | flags or predicate | `i1` | `i7` | `i8` | `i16` | `i32` | `i33` | `i64` | `i128` |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `const` |  | 288 | 475 | 340 | 215 | 291 | 466 | 215 | 134 |
+| `const` |  | 288 | 475 | 340 | 216 | 296 | 466 | 215 | 134 |
 | `add` |  | 12 | 228 | 33 | 28 | 37 | 228 | 28 | 63 |
 | `add` | `nuw` | 4 | 29 | 6 | 6 | 8 | 29 | 6 | 5 |
 | `add` | `nsw` | 173 | 347 | 211 | 204 | 203 | 319 | 197 | 99 |
@@ -16,7 +16,7 @@ says how to read it.
 | `sub` | `nuw` | 6 | 29 | 6 | 6 | 6 | 29 | 6 | 5 |
 | `sub` | `nsw` | 6 | 29 | 8 | 6 | 17 | 29 | 6 | 5 |
 | `sub` | `nuw nsw` | 6 | 29 | 6 | 6 | 11 | 29 | 6 | 5 |
-| `mul` |  | 9 | 64 | 27 | 22 | 34 | 62 | 22 | 17 |
+| `mul` |  | 9 | 64 | 27 | 22 | 37 | 62 | 22 | 17 |
 | `mul` | `nuw` | 6 | 29 | 13 | 6 | 10 | 29 | 6 | 6 |
 | `mul` | `nsw` | 10 | 35 | 15 | 12 | 14 | 35 | 12 | 6 |
 | `mul` | `nuw nsw` | 8 | 29 | 6 | 6 | 6 | 29 | 6 | 6 |
@@ -203,10 +203,10 @@ says how to read it.
 
 | op | `i1` | `i7` | `i8` | `i16` | `i32` | `i33` | `i64` | `i128` | `ptr` | `f16` | `bf16` | `f32` | `f64` | `f128` |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `ptradd` | 1 | 1 | 34 | 2 | 12 | 1 | 33 | 1 |  |  |  |  |  |  |
+| `ptradd` | 1 | 1 | 34 | 3 | 17 | 1 | 33 | 1 |  |  |  |  |  |  |
 | `alloca` | 4 | 4 | 41 | 23 | 30 | 5 | 9 | 7 | 39 | 5 | 2 | 18 | 16 | 4 |
-| `load` | 3 | 3 | 21 | 12 | 43 | 4 | 11 | 5 | 40 | 3 | 4 | 15 | 17 | 2 |
-| `store` | 2 | 2 | 14 | 7 | 35 | 3 | 8 | 2 | 42 | 6 | 2 | 19 | 15 | 4 |
+| `load` | 3 | 3 | 21 | 14 | 45 | 4 | 11 | 5 | 40 | 4 | 5 | 18 | 21 | 3 |
+| `store` | 2 | 2 | 14 | 7 | 35 | 3 | 8 | 2 | 42 | 7 | 3 | 26 | 18 | 5 |
 
 ## Passed and returned values
 
@@ -217,21 +217,21 @@ says how to read it.
 | `cond_br` | a successor passes nothing | 438 |  |  |  |  |  |  |  |  |  |  |  |  |  |
 | `cond_br` | a successor passes values |  | 13 | 138 | 16 | 14 | 14 | 136 | 13 | 11 | 5 | 5 | 7 | 5 | 5 |
 | `ret` | returns no value | 26 |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| `ret` | returns one value |  | 2570 | 1583 | 832 | 828 | 959 | 1609 | 825 | 1083 | 829 | 781 | 704 | 605 | 532 |
+| `ret` | returns one value |  | 2570 | 1583 | 832 | 830 | 961 | 1609 | 825 | 1083 | 830 | 782 | 707 | 609 | 533 |
 | `ret` | returns several values |  | 56 | 189 | 42 | 28 | 33 | 189 | 51 | 50 | 5 | 6 | 5 | 7 | 5 |
 | `unreachable` | ends a block | 16 |  |  |  |  |  |  |  |  |  |  |  |  |  |
 | `call` | gives no result | 14 |  |  |  |  |  |  |  |  |  |  |  |  |  |
 | `call` | gives one result |  | 74 | 92 | 28 | 23 | 24 | 92 | 23 | 19 | 2 | 2 | 2 | 2 | 2 |
 | `call` | gives several results |  | 41 | 92 | 17 | 11 | 11 | 92 | 25 | 27 | 2 | 3 | 2 | 3 | 2 |
 | `func` | returns no value | 23 |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| `func` | returns one value |  | 2569 | 1583 | 833 | 828 | 959 | 1609 | 825 | 1083 | 827 | 779 | 702 | 603 | 530 |
+| `func` | returns one value |  | 2569 | 1583 | 833 | 830 | 961 | 1609 | 825 | 1083 | 828 | 780 | 705 | 607 | 531 |
 | `func` | returns several values |  | 56 | 189 | 42 | 28 | 33 | 189 | 51 | 48 | 5 | 6 | 5 | 7 | 5 |
 
 ## Ops of the gpu dialect in a dimension
 
 | op | dimension | `i32` |
 | --- | --- | --- |
-| `gpu.work_item_id` | `gpu.x` | 11 |
+| `gpu.work_item_id` | `gpu.x` | 14 |
 | `gpu.work_item_id` | `gpu.y` | 4 |
 | `gpu.work_item_id` | `gpu.z` | 2 |
 | `gpu.work_group_id` | `gpu.x` | 5 |
@@ -244,8 +244,8 @@ says how to read it.
 | `gpu.num_work_groups` | `gpu.y` | 4 |
 | `gpu.num_work_groups` | `gpu.z` | 3 |
 
-## Work-group allocation of the gpu dialect, of one or of a pointer
+## Work-group allocation of the gpu dialect, of one, of a float or of a pointer
 
-| op | `i1` | `i7` | `i8` | `i16` | `i32` | `i33` | `i64` | `i128` | `ptr` |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `gpu.work_group_alloca` | 1 | 1 | 1 | 1 | 9 | 1 | 1 | 1 | 5 |
+| op | `i1` | `i7` | `i8` | `i16` | `i32` | `i33` | `i64` | `i128` | `ptr` | `f16` | `bf16` | `f32` | `f64` | `f128` |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `gpu.work_group_alloca` | 1 | 1 | 1 | 1 | 9 | 1 | 1 | 1 | 5 | 1 | 1 | 7 | 4 | 1 |

@@ -48,14 +48,6 @@ def element(t: str) -> str | None:
     return POINTER if is_pointer(t) else None
 
 
-def int_or_pointer(t: str) -> str | None:
-    """The column of a type that work-group memory holds (`Ty.IsElem`): an
-    integer type's own, and `ptr` for a pointer type of any memory; none for
-    a float or any other type."""
-    column = element(t)
-    return column if column == POINTER or is_int(t) else None
-
-
 def pointer_offset(op: Op) -> Cell:
     """The cell of a `ptradd`: at the width of its integer. Any other text
     of it does not decode, so it is not a cell."""

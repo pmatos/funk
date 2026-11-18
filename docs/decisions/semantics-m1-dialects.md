@@ -183,10 +183,9 @@ memory its meaning (ADR-2026-11-09-1542;
   does. Its attributes are `alloca`'s after the kind: the type, the count
   when not 1 and `align(A)` when given. It writes no kind, and a kind does
   not decode. Validation has `alloca`'s rules but the kind: at least one
-  value, a power-of-two alignment within the layout's limit, an integer or
-  pointer type, and the data layout declares the result's memory and the
-  memory of a pointer type it allocates (`Gpu.Op.Valid`,
-  `Gpu.Op.attrTypes`). Its effect is to allocate in its result's memory,
+  value, a power-of-two alignment within the layout's limit, a valid type,
+  and the data layout declares the result's memory and the memory of a
+  pointer type it allocates (`Gpu.Op.Valid`, `Gpu.Op.attrTypes`). Its effect is to allocate in its result's memory,
   `allocates(N)`, as `alloca`'s is. The name and spelling are an
   implementation choice of stage 3, which the human may rule on: the name
   follows `gpu.work_group_*`, and the attributes reuse `alloca`'s reading
@@ -219,6 +218,16 @@ memory its meaning (ADR-2026-11-09-1542;
   (`tests/fir/canonical/gpu-work-group.fir`, `FirTest.GpuRuns`,
   `tests/dialects/gpu.cases`); no core op, theorem or `fir-ref` path
   changed.
+- **Floats in work-group memory.** The human ruled on 2026-11-18 (#432,
+  option b) that `gpu.work_group_alloca` allocates floats, as `alloca`
+  does since #264: a valid float type is an element, which takes the units
+  of the integer of its `1 + e + m` bits at the natural alignment of its
+  size, and the float loads and stores work on it unchanged
+  (`tests/fir/canonical/gpu-work-group-floats.fir`). `Gpu.Op.Valid` drops
+  `Ty.IsElem`, so its rule for an allocation is `alloca`'s but the kind.
+  Rejected: integer and pointer elements only (option a), which would keep
+  a kernel's f32 tile out of work-group memory though a float is stored as
+  its bits in any memory.
 - **Changed statements.** `Gpu.lawful` (the dialect lawful in the set
   monad) and `Gpu.instLiftsSetM` are removed, and the set-monad lemmas of
   the ops, `denote_eq`, `results_noPoison`, `results_refl`, `propagates`

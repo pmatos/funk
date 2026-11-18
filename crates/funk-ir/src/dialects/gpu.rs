@@ -204,10 +204,14 @@ mod tests {
     fn a_work_group_allocation_is_written_as_alloca_without_its_kind() {
         let p3 = [ptr_type(3)];
         let align = |a| Attr::App("align".into(), vec![Attr::int(a)]);
+        let float_attr = |e, m| Attr::App("float".into(), vec![Attr::int(e), Attr::int(m)]);
         for attrs in [
             vec![Attr::word("i32")],
             vec![Attr::word("i32"), Attr::int(64)],
             vec![Attr::word("ptr"), align(8)],
+            vec![Attr::word("f32"), Attr::int(64)],
+            vec![Attr::word("f16"), align(2)],
+            vec![float_attr(2, 1)],
         ] {
             assert_eq!(alloc(&attrs, &[], &p3), Ok(()), "{attrs:?}");
         }
@@ -223,10 +227,13 @@ mod tests {
             (vec![Attr::word("i32")], vec![], vec![int_type(32)]),
             (vec![Attr::word("i32"), Attr::int(0)], vec![], p3.to_vec()),
             (vec![Attr::word("i32"), align(3)], vec![], p3.to_vec()),
-            (vec![Attr::word("f32")], vec![], p3.to_vec()),
         ] {
             assert!(alloc(&attrs, &operands, &results).is_err(), "{attrs:?}");
         }
+        assert_eq!(
+            alloc(&[float_attr(1, 1)], &[], &p3),
+            Err("gpu.work_group_alloca allocates a valid float type, not float(1, 1)".into())
+        );
     }
 
     #[test]
