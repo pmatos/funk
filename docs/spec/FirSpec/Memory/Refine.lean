@@ -14,10 +14,10 @@ when the Lean changes under it.
 
 #doc (Manual) "Refining memories: readable blocks" =>
 
-:::moduleDocs (fingerprint := "12420755195892133100")
+:::moduleDocs (fingerprint := "444526487067295512")
 :::
 
-:::readable Fir.Memory.MemUnit.IsRefinedBy Fir.Memory.Block.IsRefinedBy Fir.Memory.Memory.IsRefinedBy (fingerprint := "2915498007534642534")
+:::readable Fir.Memory.MemUnit.IsRefinedBy Fir.Memory.Block.IsRefinedBy Fir.Memory.Memory.IsRefinedBy (fingerprint := "15233952586122848034")
 *Definitions: refining units, blocks and memories.* A unit is refined by
 itself, and a poison unit by any unit:
 
@@ -25,14 +25,15 @@ $$`\mathsf{poison} \sqsubseteq v \qquad \mathsf{bits}(b) \sqsubseteq v \iff v = 
 
 So a fragment of a pointer keeps its pointer, and its provenance, in every
 memory that refines it, and units of bits keep their bits. A block $`b'`
-refines $`b` when it has the same kind, alignment, liveness and size, and,
-while $`b` is live, its units refine the units of $`b` one by one. So an
+refines $`b` when it has the same kind, alignment, liveness, size and
+address, given or not, and, while $`b` is live, its units refine the
+units of $`b` one by one. So an
 access is aligned in $`b` exactly when it is aligned in $`b'`. No access
 reaches a freed block, so its units are not compared: a store to a block
 that is then freed may be dropped. A memory refines another when its
 blocks refine the other's one by one, in the order they were made: both
-have the same allocations, each with its kind, alignment, size and
-liveness.
+have the same allocations, each with its kind, alignment, size, liveness
+and address.
 :::
 
 :::readable Fir.Memory.MemUnit.isRefinedBy_refl Fir.Memory.MemUnit.isRefinedBy_trans Fir.Memory.Block.isRefinedBy_refl Fir.Memory.Block.isRefinedBy_trans Fir.Memory.Memory.isRefinedBy_refl Fir.Memory.Memory.isRefinedBy_trans (fingerprint := "5718639929467021518")
@@ -44,7 +45,7 @@ units of the first two are compared exactly when those of the last two
 are.
 :::
 
-:::readable Fir.Memory.Block.IsRefinedBy.kill Fir.Memory.Memory.IsRefinedBy.free Fir.Memory.Memory.IsRefinedBy.alloc (pin := Fir.Memory.Memory.alloc) (pin := Fir.Memory.Memory.free) (fingerprint := "7642812868179659280")
+:::readable Fir.Memory.Block.IsRefinedBy.kill Fir.Memory.Memory.IsRefinedBy.free Fir.Memory.Memory.IsRefinedBy.alloc (pin := Fir.Memory.Memory.alloc) (pin := Fir.Memory.Memory.free) (fingerprint := "8503162411188206675")
 *Theorems: allocating and freeing keep refinement.* Let $`M \sqsubseteq M'`.
 Freeing a block keeps refinement, and so does freeing the allocation $`a`
 in both: the freed blocks keep their kinds, alignments and sizes, and

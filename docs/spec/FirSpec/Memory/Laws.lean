@@ -14,7 +14,7 @@ changes under it.
 
 #doc (Manual) "Memory laws: readable blocks" =>
 
-:::moduleDocs (fingerprint := "16193504762057093044")
+:::moduleDocs (fingerprint := "6036295745442037520")
 :::
 
 :::readable Fir.Memory.Block.write_length (fingerprint := "6572027941022401979")
@@ -85,11 +85,12 @@ pointer $`(|M|, 0)`: provenance for the new allocation, which no allocation
 had before, and its first unit.
 :::
 
-:::readable Fir.Memory.Memory.alloc_blocks_lt Fir.Memory.Memory.alloc_blocks_new (fingerprint := "920788015735308395")
+:::readable Fir.Memory.Memory.alloc_blocks_lt Fir.Memory.Memory.alloc_blocks_new (fingerprint := "7885593531571407399")
 *Theorem: an allocation adds one block and changes none.* After an
 allocation of $`n` units of kind $`k`, aligned to $`\alpha`, every
 allocation $`a < |M|` has the block it had, and the new allocation $`|M|`
-has the live block $`(k, \alpha, \mathsf{poison}^n, \mathsf{true})`.
+has the live block $`(k, \alpha, \mathsf{poison}^n, \mathsf{true}, \bot)`,
+with no address.
 :::
 
 :::readable Fir.Memory.Memory.locate_alloc (fingerprint := "2186274606770818381")
