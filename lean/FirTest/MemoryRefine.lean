@@ -34,7 +34,7 @@ example : let M : Memory 8 := (Memory.empty.alloc .stack 1 1).2
     ∀ M' : Memory 8, M.store ⟨some 0, 0⟩ [.bits 5] = .ok M' → M ⊑ M' := by
   intro M M' h
   cases h
-  exact ⟨⟨rfl, rfl, rfl, rfl, fun _ => ⟨trivial, trivial⟩⟩, trivial⟩
+  exact ⟨⟨rfl, rfl, rfl, rfl, rfl, fun _ => ⟨trivial, trivial⟩⟩, trivial⟩
 
 /-- No access reaches a freed block, so its units are not compared: a store
 to a stack slot that is then freed may be dropped. -/
@@ -42,14 +42,14 @@ example : let M : Memory 8 := (Memory.empty.alloc .stack 1 1).2
     ∀ N : Memory 8, M.store ⟨some 0, 0⟩ [.bits 5] = .ok N → N.free 0 ⊑ M.free 0 := by
   intro M N h
   cases h
-  exact ⟨⟨rfl, rfl, rfl, rfl, fun h => Bool.noConfusion h⟩, trivial⟩
+  exact ⟨⟨rfl, rfl, rfl, rfl, rfl, fun h => Bool.noConfusion h⟩, trivial⟩
 
 /-- While the block is live, the store may not be dropped. -/
 example : let M : Memory 8 := (Memory.empty.alloc .stack 1 1).2
     ∀ N : Memory 8, M.store ⟨some 0, 0⟩ [.bits 5] = .ok N → ¬ (N ⊑ M) := by
   intro M N h hr
   cases h
-  exact nomatch (hr.1.2.2.2.2 rfl).1
+  exact nomatch (hr.1.2.2.2.2.2 rfl).1
 
 /-- Two memories whose allocations differ do not refine each other. -/
 example : ¬ ((Memory.empty : Memory 8) ⊑ ((Memory.empty.alloc .heap 1 1).2 : Memory 8)) :=
