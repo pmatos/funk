@@ -81,10 +81,10 @@ theorem alloc_refines {N : Type} [DecidableEq N] {unit : N → Nat} (x : N) (k :
 dialect's memory: `alloc` allocates the same unit from memories that refine
 others, and `ret` returns from them. -/
 theorem alloc_memMonotone : ∀ op : AllocOp, MemMonotone (d := AllocDialect) op
-  | .alloc => fun _ ρ _ _ _ =>
+  | .alloc => fun _ ρ _ _ _ _ =>
     ⟨fun _ => StateRefinedBy.map _ (fun _ => trivial) (alloc_refines (ρ ()) .stack 1 1),
       fun h => (nomatch h)⟩
-  | .ret => fun _ _ _ _ _ =>
+  | .ret => fun _ _ _ _ _ _ =>
     ⟨fun h => (nomatch h), fun _ S S' hS e he => by
       cases he
       exact ⟨.ok (.ret, S), rfl, rfl, hS⟩⟩
@@ -97,9 +97,9 @@ instance : LawfulDialectMonotone AllocDialect := ⟨fun op _ _ => alloc_memMonot
 allocates, refine themselves on arguments that refine others. -/
 example {f : Func AllocDialect} (hf : f ∈ allocModule.funcs)
     {a a' : HVector toType (f.params.map (·.2))} (ha : a.Forall₂ TyRefinement.IsRefinedBy a') :
-    observable (f.memRuns (fun _ : Unit => MemLayout.default) id allocModule a) ⊑
-      observable (f.memRuns (fun _ : Unit => MemLayout.default) id allocModule a') :=
-  Func.memRuns_args_isRefinedBy_of_lawful _ _ allocModule_valid.funcs hf ha
+    observable (f.memRuns (fun _ : Unit => MemLayout.default) id RunItems.empty allocModule a) ⊑
+      observable (f.memRuns (fun _ : Unit => MemLayout.default) id RunItems.empty allocModule a') :=
+  Func.memRuns_args_isRefinedBy_of_lawful _ _ RunItems.empty allocModule_valid.funcs hf ha
 
 /-- From memories that refine others, a run of a function of the module,
 the memories it ends with included, refines its run from those others. -/
@@ -107,8 +107,9 @@ example {f : Func AllocDialect} (hf : f ∈ allocModule.funcs)
     {a a' : HVector toType (f.params.map (·.2))} (ha : a.Forall₂ TyRefinement.IsRefinedBy a')
     {S S' : Memories Unit (unitsOf fun _ : Unit => MemLayout.default)} (hS : S ⊑ S') :
     letI := DialectMemDenote.denoteAt (d := AllocDialect) (fun _ : Unit => MemLayout.default) id
+      RunItems.empty
     observable (f.memRunsFrom allocModule (a, S)) ⊑ observable (f.memRunsFrom allocModule (a', S')) :=
-  Func.memRunsFrom_args_isRefinedBy_of_lawful _ _ allocModule_valid.funcs hf ha hS
+  Func.memRunsFrom_args_isRefinedBy_of_lawful _ _ _ allocModule_valid.funcs hf ha hS
 
 /-! # Congruence in the callee, with memory, applies -/
 
@@ -122,9 +123,11 @@ theorem noBlocks_outcomes (a : HVector toType (allocMain.params.map (·.2)))
     (o : Outcome (List (DVal AllocDialect) × Memories Unit (unitsOf fun _ : Unit =>
         MemLayout.default))) :
     letI := DialectMemDenote.denoteAt (d := AllocDialect) (fun _ : Unit => MemLayout.default) id
+      RunItems.empty
     ¬ ((allocMain.replaceBody allocMain.name noBlocks).memRunsFrom
       (allocModule.replaceBody allocMain.name noBlocks) (a, S) m).outcomes o := by
   letI := DialectMemDenote.denoteAt (d := AllocDialect) (fun _ : Unit => MemLayout.default) id
+      RunItems.empty
   have key : ∀ x, Ev.NotStuck x → ¬ ((allocMain.replaceBody allocMain.name noBlocks).memRunsFrom
       (allocModule.replaceBody allocMain.name noBlocks) (a, S) m) x := by
     intro x hx h
@@ -139,6 +142,7 @@ theorem noBlocks_outcomes (a : HVector toType (allocMain.params.map (·.2)))
 /-- No budget lets the new `allocMain` run out of fuel. -/
 theorem noBlocks_bounded :
     letI := DialectMemDenote.denoteAt (d := AllocDialect) (fun _ : Unit => MemLayout.default) id
+      RunItems.empty
     ∃ B, ((allocMain.replaceBody allocMain.name noBlocks).memRunsFrom (Mem := Unit)
       (unit := unitsOf fun _ : Unit => MemLayout.default) (allocModule.replaceBody allocMain.name
           noBlocks)).BoundedBy B :=
@@ -148,6 +152,7 @@ theorem noBlocks_bounded :
 observable behaviour. -/
 theorem noBlocks_refines :
     letI := DialectMemDenote.denoteAt (d := AllocDialect) (fun _ : Unit => MemLayout.default) id
+      RunItems.empty
     allocMain.memRunsFrom (Mem := Unit) (unit := unitsOf fun _ : Unit => MemLayout.default)
         allocModule ⊑
       (allocMain.replaceBody allocMain.name noBlocks).memRunsFrom (Mem := Unit)
@@ -165,12 +170,13 @@ the new body. -/
 
 example {f : Func AllocDialect} (hf : f ∈ allocModule.funcs)
     (a : HVector toType (f.params.map (·.2))) :
-    observable (f.memRuns (fun _ : Unit => MemLayout.default) id allocModule a) ⊑
+    observable (f.memRuns (fun _ : Unit => MemLayout.default) id RunItems.empty allocModule a) ⊑
       observable ((f.replaceBody allocMain.name noBlocks).memRuns (fun _ : Unit =>
           MemLayout.default) id
-        (allocModule.replaceBody allocMain.name noBlocks) a) := by
+        RunItems.empty (allocModule.replaceBody allocMain.name noBlocks) a) := by
   have h := Func.memRuns_replaceBody_isRefinedBy_of_bound (fun _ : Unit => MemLayout.default) id
-    Core.Ty.isRefinedBy_refl Core.Ty.isRefinedBy_trans allocModule_valid (g := allocMain)
+    RunItems.empty Core.Ty.isRefinedBy_refl Core.Ty.isRefinedBy_trans allocModule_valid (g :=
+        allocMain)
     (by simp [allocModule, Module.funcs]) noBlocks ?hb ?hr hf
   case hb => exact noBlocks_bounded
   case hr => exact noBlocks_refines
@@ -181,8 +187,9 @@ example {f : Func AllocDialect} (hf : f ∈ allocModule.funcs)
 /-- Each alloc op has finitely many outcomes with memory, wherever a run
 names the dialect's memory: `alloc` allocates the next unit, and `ret`
 returns. -/
-theorem alloc_opsFinite {N : Type} [DecidableEq N] (lay : N → MemLayout) (ρ : Unit → N) :
-    letI := DialectMemDenote.denoteAt (d := AllocDialect) lay ρ
+theorem alloc_opsFinite {N : Type} [DecidableEq N] (lay : N → MemLayout) (ρ : Unit → N)
+    (L : RunItems) :
+    letI := DialectMemDenote.denoteAt (d := AllocDialect) lay ρ L
     OpsFinite AllocDialect N (unitsOf lay)
   | .alloc, _, _ => ⟨fun _ S => ⟨[(.nil, (S.alloc (ρ ()) .stack 1 1).2)], fun x hx => by
       rcases (SetM.stateMap_apply _ _ S _).1 hx with ⟨_, _, ha, he⟩ | ⟨_, _, he⟩
@@ -199,12 +206,13 @@ allocates with no budget: every op of the alloc dialect has finitely many
 outcomes. -/
 example {f : Func AllocDialect} (hf : f ∈ allocModule.funcs)
     (a : HVector toType (f.params.map (·.2))) :
-    observable (f.memRuns (fun _ : Unit => MemLayout.default) id allocModule a) ⊑
+    observable (f.memRuns (fun _ : Unit => MemLayout.default) id RunItems.empty allocModule a) ⊑
       observable ((f.replaceBody allocMain.name noBlocks).memRuns (fun _ : Unit =>
           MemLayout.default) id
-        (allocModule.replaceBody allocMain.name noBlocks) a) := by
+        RunItems.empty (allocModule.replaceBody allocMain.name noBlocks) a) := by
   have h := Func.memRuns_replaceBody_isRefinedBy_of_opsFinite (fun _ : Unit => MemLayout.default)
-    id Core.Ty.isRefinedBy_refl Core.Ty.isRefinedBy_trans (alloc_opsFinite _ _) allocModule_valid
+    id RunItems.empty Core.Ty.isRefinedBy_refl Core.Ty.isRefinedBy_trans
+    (alloc_opsFinite _ _ _) allocModule_valid
     (g := allocMain) (by simp [allocModule, Module.funcs]) noBlocks ?hr hf
   case hr => exact noBlocks_refines
   exact h.2 a

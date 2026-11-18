@@ -42,9 +42,9 @@ variable {N : Type} [DecidableEq N] (lay : N → MemLayout)
 /-- The core's semantics in the layer over the tree of choices denotes its
 semantics with memory, wherever a run names the core's memories, whatever
 their entries: `toSet` through the layer keeps choice and UB, op by op. -/
-theorem memMapsDenote (ρ : DialectEffects.Mem CoreDialect → N) :
+theorem memMapsDenote (ρ : DialectEffects.Mem CoreDialect → N) (L : RunItems) :
     letI := memTreeDenote lay ρ
-    MemMapsDenote (d := CoreDialect) lay (ε := Op) ρ :=
+    MemMapsDenote (d := CoreDialect) lay (ε := Op) ρ L :=
   memDenoteIn_mapsDenote lay ρ (ChoiceTree.toSetState Op _) (ChoiceTree.toSetState_keeps Op _)
     (fun x k size al => ChoiceTree.toSetMorphism.state_alloc x k size al)
     (fun x p k al => ChoiceTree.toSetMorphism.state_load ChoiceTree.toSet_keeps.ub x p k al)

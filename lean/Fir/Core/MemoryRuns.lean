@@ -141,14 +141,15 @@ instance Core.lawfulDialectMemPoison : LawfulDialectMemPoison CoreDialect where
 namespace Core
 
 variable {M : Module CoreDialect} {f : Func CoreDialect} {N : Type} [DecidableEq N]
-  (lay : N → MemLayout) (ρ : DialectEffects.Mem CoreDialect → N)
+  (lay : N → MemLayout) (ρ : DialectEffects.Mem CoreDialect → N) (L : RunItems)
 
 /-- The runs of the function `f` of the core module `M`: its runs with memory
 at the module's layout, where the core's memory `x` is the module's memory
-`x`, on each argument vector of its parameter types, poison included, at
-each budget. They are the runs that the modes report. -/
+`x` and each op is given the items of the module's own table, on each
+argument vector of its parameter types, poison included, at each budget.
+They are the runs that the modes report. -/
 def funcRuns (M : Module CoreDialect) (f : Func CoreDialect) : FuncRuns (f.params.map (·.2)) :=
-  f.memRuns M.layout.entry id M
+  f.memRuns M.layout.entry id M.runItems M
 
 /-- Every core terminator is tied: it touches no memory. -/
 theorem Op.liftsSetM_of_terminator {op : Op} (h : Fir.isTerminator (d := CoreDialect) op = true) :
@@ -175,13 +176,13 @@ theorem Op.memMonotone_all (op : Op)
 
 /-- A core function that runs within a module runs within it with memory,
 wherever a run names the core's memories: each of its terminators is tied. -/
-theorem inModuleAt_of_inModule (h : f.InModule M) : f.InModuleAt lay ρ M :=
-  h.inModuleAt_of_tied lay ρ fun _ _ _ _ hT => Op.liftsSetM_of_terminator hT
+theorem inModuleAt_of_inModule (h : f.InModule M) : f.InModuleAt lay ρ L M :=
+  h.inModuleAt_of_tied lay ρ L fun _ _ _ _ hT => Op.liftsSetM_of_terminator hT
 
 /-- A core function valid in the context of a module runs within that
 module with memory, wherever a run names the core's memories. -/
-theorem inModuleAt_of_valid (hv : f.Valid M.context) : f.InModuleAt lay ρ M :=
-  inModuleAt_of_inModule lay ρ (inModule_of_valid hv)
+theorem inModuleAt_of_valid (hv : f.Valid M.context) : f.InModuleAt lay ρ L M :=
+  inModuleAt_of_inModule lay ρ L (inModule_of_valid hv)
 
 /-! # Fuel and progress -/
 
@@ -189,90 +190,90 @@ theorem inModuleAt_of_valid (hv : f.Valid M.context) : f.InModuleAt lay ρ M :=
 module returns or hits UB, wherever a run names the core's memories, calls
 and recursion included. -/
 theorem fuelMonotone (M : Module CoreDialect) (f : Func CoreDialect)
-    (args : HVector toType (f.params.map (·.2))) : FuelMonotone (f.memRuns lay ρ M args) :=
-  Func.memRuns_fuelMonotone lay ρ M f args
+    (args : HVector toType (f.params.map (·.2))) : FuelMonotone (f.memRuns lay ρ L M args) :=
+  Func.memRuns_fuelMonotone lay ρ L M f args
 
 /-- No path of a run with memory of a function of a valid core module is
 stuck, calls and recursion included, wherever a run names the core's
 memories. -/
 theorem neverStuck (hM : M.Valid) (hf : f ∈ M.funcs)
-    (args : HVector toType (f.params.map (·.2))) : NeverStuck (f.memRuns lay ρ M args) :=
-  Func.memNeverStuck lay ρ hM.funcs (fun _ hg => inModuleAt_of_valid lay ρ (hM.funcs _ hg)) hf
+    (args : HVector toType (f.params.map (·.2))) : NeverStuck (f.memRuns lay ρ L M args) :=
+  Func.memNeverStuck lay ρ L hM.funcs (fun _ hg => inModuleAt_of_valid lay ρ L (hM.funcs _ hg)) hf
     args
 
 /-- A run with memory of a function of a valid core module has an outcome
 at every budget, calls and recursion included, wherever a run names the
 core's memories. -/
 theorem progress (hM : M.Valid) (hf : f ∈ M.funcs)
-    (args : HVector toType (f.params.map (·.2))) : Progress (f.memRuns lay ρ M args) :=
-  Func.memProgress lay ρ hM.funcs (fun _ hg => inModuleAt_of_valid lay ρ (hM.funcs _ hg)) hf
+    (args : HVector toType (f.params.map (·.2))) : Progress (f.memRuns lay ρ L M args) :=
+  Func.memProgress lay ρ L hM.funcs (fun _ hg => inModuleAt_of_valid lay ρ L (hM.funcs _ hg)) hf
     args
 
 /-- Every function of a valid core module runs well with memory on every
 argument vector, calls and recursion included, wherever a run names the
 core's memories. -/
 theorem runsWell (hM : M.Valid) (hf : f ∈ M.funcs) (args : HVector toType (f.params.map (·.2))) :
-    RunsWell (f.memRuns lay ρ M args) :=
-  ⟨fuelMonotone lay ρ M f args, progress lay ρ hM hf args, neverStuck lay ρ hM hf args⟩
+    RunsWell (f.memRuns lay ρ L M args) :=
+  ⟨fuelMonotone lay ρ L M f args, progress lay ρ L hM hf args, neverStuck lay ρ L hM hf args⟩
 
 /-- A core function that runs within itself and is valid in its module runs
 well with memory on every argument vector, jumps and loops included,
 wherever a run names the core's memories. -/
 theorem runsWell_of_local (hv : f.Valid M.context) (hl : f.Local)
-    (args : HVector toType (f.params.map (·.2))) : RunsWell (f.memRuns lay ρ M args) :=
-  have hm := inModuleAt_of_inModule lay ρ (hl.inModule M)
-  ⟨fuelMonotone lay ρ M f args, Func.memProgress_of_local lay ρ hv hl.noCall hm args,
-    Func.memNeverStuck_of_local lay ρ hv hl.noCall hm args⟩
+    (args : HVector toType (f.params.map (·.2))) : RunsWell (f.memRuns lay ρ L M args) :=
+  have hm := inModuleAt_of_inModule lay ρ L (hl.inModule M)
+  ⟨fuelMonotone lay ρ L M f args, Func.memProgress_of_local lay ρ L hv hl.noCall hm args,
+    Func.memNeverStuck_of_local lay ρ L hv hl.noCall hm args⟩
 
 /-- A function without calls that is valid in its module runs well with
 memory on every argument vector, jumps and loops included, wherever a run
 names the core's memories. -/
 theorem callFree_runsWell (hv : f.Valid M.context) (hc : CallFree f)
-    (args : HVector toType (f.params.map (·.2))) : RunsWell (f.memRuns lay ρ M args) :=
-  runsWell_of_local lay ρ hv (local_of_valid hv hc) args
+    (args : HVector toType (f.params.map (·.2))) : RunsWell (f.memRuns lay ρ L M args) :=
+  runsWell_of_local lay ρ L hv (local_of_valid hv hc) args
 
 /-- More fuel never changes how a run with memory of a valid core function
 without calls returns or hits UB. -/
 theorem callFree_fuelMonotone (hM : M.Valid) (hf : f ∈ M.funcs) (hc : CallFree f)
-    (args : HVector toType (f.params.map (·.2))) : FuelMonotone (f.memRuns lay ρ M args) :=
-  (callFree_runsWell lay ρ (hM.funcs f hf) hc args).fuelMonotone
+    (args : HVector toType (f.params.map (·.2))) : FuelMonotone (f.memRuns lay ρ L M args) :=
+  (callFree_runsWell lay ρ L (hM.funcs f hf) hc args).fuelMonotone
 
 /-- A run with memory of a valid core function without calls has an outcome
 at every budget. -/
 theorem callFree_progress (hM : M.Valid) (hf : f ∈ M.funcs) (hc : CallFree f)
-    (args : HVector toType (f.params.map (·.2))) : Progress (f.memRuns lay ρ M args) :=
-  (callFree_runsWell lay ρ (hM.funcs f hf) hc args).progress
+    (args : HVector toType (f.params.map (·.2))) : Progress (f.memRuns lay ρ L M args) :=
+  (callFree_runsWell lay ρ L (hM.funcs f hf) hc args).progress
 
 /-- No path of a run with memory of a valid core function without calls is
 stuck. -/
 theorem callFree_neverStuck (hM : M.Valid) (hf : f ∈ M.funcs) (hc : CallFree f)
-    (args : HVector toType (f.params.map (·.2))) : NeverStuck (f.memRuns lay ρ M args) :=
-  (callFree_runsWell lay ρ (hM.funcs f hf) hc args).neverStuck
+    (args : HVector toType (f.params.map (·.2))) : NeverStuck (f.memRuns lay ρ L M args) :=
+  (callFree_runsWell lay ρ L (hM.funcs f hf) hc args).neverStuck
 
 /-- Every function of the tracer subset in a valid core module runs well
 with memory on every argument vector, wherever a run names the core's
 memories. -/
 theorem tracer_runsWell (hM : M.Valid) (hf : f ∈ M.funcs) (ht : InTracer f)
-    (args : HVector toType (f.params.map (·.2))) : RunsWell (f.memRuns lay ρ M args) :=
-  runsWell_of_local lay ρ (hM.funcs f hf) (straight_of_tracer (hM.funcs f hf) ht).local args
+    (args : HVector toType (f.params.map (·.2))) : RunsWell (f.memRuns lay ρ L M args) :=
+  runsWell_of_local lay ρ L (hM.funcs f hf) (straight_of_tracer (hM.funcs f hf) ht).local args
 
 /-- More fuel never changes how a run with memory of a valid function of
 the tracer subset returns or hits UB. -/
 theorem tracer_fuelMonotone (hM : M.Valid) (hf : f ∈ M.funcs) (ht : InTracer f)
-    (args : HVector toType (f.params.map (·.2))) : FuelMonotone (f.memRuns lay ρ M args) :=
-  (tracer_runsWell lay ρ hM hf ht args).fuelMonotone
+    (args : HVector toType (f.params.map (·.2))) : FuelMonotone (f.memRuns lay ρ L M args) :=
+  (tracer_runsWell lay ρ L hM hf ht args).fuelMonotone
 
 /-- A run with memory of a valid function of the tracer subset has an
 outcome at every budget. -/
 theorem tracer_progress (hM : M.Valid) (hf : f ∈ M.funcs) (ht : InTracer f)
-    (args : HVector toType (f.params.map (·.2))) : Progress (f.memRuns lay ρ M args) :=
-  (tracer_runsWell lay ρ hM hf ht args).progress
+    (args : HVector toType (f.params.map (·.2))) : Progress (f.memRuns lay ρ L M args) :=
+  (tracer_runsWell lay ρ L hM hf ht args).progress
 
 /-- No path of a run with memory of a valid function of the tracer subset
 is stuck. -/
 theorem tracer_neverStuck (hM : M.Valid) (hf : f ∈ M.funcs) (ht : InTracer f)
-    (args : HVector toType (f.params.map (·.2))) : NeverStuck (f.memRuns lay ρ M args) :=
-  (tracer_runsWell lay ρ hM hf ht args).neverStuck
+    (args : HVector toType (f.params.map (·.2))) : NeverStuck (f.memRuns lay ρ L M args) :=
+  (tracer_runsWell lay ρ L hM hf ht args).neverStuck
 
 /-! # Refinement -/
 
@@ -282,11 +283,11 @@ module refine its runs with memory on those others, calls and recursion
 included, wherever a run names the core's memories. -/
 theorem args_isRefinedBy (M : Module CoreDialect) (f : Func CoreDialect)
     {a a' : HVector toType (f.params.map (·.2))} (h : a.Forall₂ TyRefinement.IsRefinedBy a') :
-    observable (f.memRuns lay ρ M a) ⊑ observable (f.memRuns lay ρ M a') :=
-  letI := DialectMemDenote.denoteAt (d := CoreDialect) lay ρ
+    observable (f.memRuns lay ρ L M a) ⊑ observable (f.memRuns lay ρ L M a') :=
+  letI := DialectMemDenote.denoteAt (d := CoreDialect) lay ρ L
   have hm : ∀ g : Func CoreDialect, g.MemOpsMonotone N (unitsOf lay) :=
-    fun _ _ _ o _ hc => Op.memMonotone_all o.op hc lay ρ
-  Func.memRuns_isRefinedBy_of_from lay ρ (Func.memRunsFrom_args_isRefinedBy M (fun g _ => hm g) f
+    fun _ _ _ o _ hc => Op.memMonotone_all o.op hc lay ρ L
+  Func.memRuns_isRefinedBy_of_from lay ρ L (Func.memRunsFrom_args_isRefinedBy M (fun g _ => hm g) f
     (hm f) h (Memory.Memories.isRefinedBy_refl _))
 
 end Core

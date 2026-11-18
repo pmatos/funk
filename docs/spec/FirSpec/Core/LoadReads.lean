@@ -14,7 +14,7 @@ changes under it.
 
 #doc (Manual) "A load declared without a read: readable blocks" =>
 
-:::moduleDocs (fingerprint := "16568806231319552338")
+:::moduleDocs (fingerprint := "15386988644906753511")
 :::
 
 :::readable Fir.Core.Unlawful.loadNoRead Fir.Core.Unlawful.load_typesValid (pin := Fir.Core.Op.effects) (fingerprint := "6837136521895330495")
@@ -35,7 +35,7 @@ default memory, aligned to 1, so the load of an $`\mathsf{i8}` through the
 pointer to that unit gives the unit $`b`, from $`S_0` and from $`S_1`.
 :::
 
-:::readable Fir.Core.Unlawful.loadNoRead_unlawful (pin := Fir.LawfulDialectEffects) (fingerprint := "1740729391299073176")
+:::readable Fir.Core.Unlawful.loadNoRead_unlawful (pin := Fir.LawfulDialectEffects) (fingerprint := "7291189078906008646")
 *Theorem: the obligations reject the declaration.* Over the core's own
 {ref "The-fir-specification--Memory--The-core___s-rules-with-memory"}[semantics with memory],
 the declaration above is not lawful in its effects. The obligation on an

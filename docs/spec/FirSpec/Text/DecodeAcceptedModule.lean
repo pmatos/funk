@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "What decoding accepts: readable blocks" =>
 
-:::moduleDocs (fingerprint := "6111608245691226456")
+:::moduleDocs (fingerprint := "5789374968429715202")
 :::
 
 :::readable Fir.mapM_decodeType_writable (pin := Fir.Text.decodeType) (fingerprint := "13728904447647436187")
@@ -77,7 +77,15 @@ is well formed. Its body is then empty, its types decoded from attributes
 written as types, and its attributes kept as they were read.
 :::
 
-:::readable Fir.decodeFuncItem_wellFormed Fir.decodeItem_wellFormed Fir.decodeItems_wellFormed (pin := Fir.Text.decodeFuncItem) (pin := Fir.Text.decodeItem) (pin := Fir.Text.decodeItems) (pin := Fir.Text.SItem.Writable) (fingerprint := "12714080273814053242")
+:::readable Fir.decodeFields_wellFormed Fir.decodeAggregate_wellFormed (pin := Fir.Text.decodeAggregate) (pin := Fir.Aggregate.WellFormed) (fingerprint := "2713669664253862019")
+*Theorems: an aggregate's layout as decoded is well formed.* For a
+dialect whose text is lawful, fields decoded from attributes that can be
+written have their numbers within the limit, and their types are written
+as types and decode back. So an aggregate's layout decoded from
+attributes that can be written is well formed.
+:::
+
+:::readable Fir.decodeFuncItem_wellFormed Fir.decodeItem_wellFormed Fir.decodeItems_wellFormed (pin := Fir.Text.decodeFuncItem) (pin := Fir.Text.decodeItem) (pin := Fir.Text.decodeItems) (pin := Fir.Text.SItem.Writable) (fingerprint := "14856319559286512185")
 *Theorems: items decoded from a tree that can be written are well formed.*
 Let $`d` be a dialect with a signature, validation rules and a text, whose
 text is lawful:
@@ -95,8 +103,8 @@ blocks, which can be written, or nothing, and the function is decoded from
 them. A `module` decodes only when it has no parameters, results or
 attributes; its body then holds no blocks, or a dialect set whose names are
 words and items that can be written, which decode to well-formed items in
-turn. An item whose kind is a word of a dialect decodes by the theorem
-above. The last two theorems call one another, and are proved together by
+turn. An `aggregate`, and an item whose kind is a word of a dialect,
+decode by the theorems above. The last two theorems call one another, and are proved together by
 induction on the items.
 :::
 

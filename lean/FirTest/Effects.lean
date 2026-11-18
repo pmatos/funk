@@ -39,31 +39,32 @@ abbrev lay1 : Unit → MemLayout := fun _ => MemLayout.default
 
 /-- `add` with `nsw` gives poison on `127 + 1` at `i8`, with memory. -/
 theorem addNsw_makesPoison : ¬ MakesNoPoison (d := CoreDialect) (.add 8 { nsw := true }) :=
-  fun h => h rfl lay1 (fun _ => ()) (.cons (.value 127) (.cons (.value 1) .nil))
+  fun h => h rfl lay1 (fun _ => ()) RunItems.empty (.cons (.value 127) (.cons (.value 1) .nil))
     (by rintro (h | h | h) <;> cases h) Memory.Memories.empty _ Memory.Memories.empty rfl
     (.inl (show addWith (w := 8) { nsw := true } (.value 127) (.value 1) = .poison by decide))
 
 /-- `shl` gives poison for a shift of `8` at `i8`, with memory. -/
 theorem shl_makesPoison : ¬ MakesNoPoison (d := CoreDialect) (.shl 8) :=
-  fun h => h rfl lay1 (fun _ => ()) (.cons (.value 1) (.cons (.value 8) .nil))
+  fun h => h rfl lay1 (fun _ => ()) RunItems.empty (.cons (.value 1) (.cons (.value 8) .nil))
     (by rintro (h | h | h) <;> cases h) Memory.Memories.empty _ Memory.Memories.empty rfl
     (.inl (show shlValues (w := 8) (.value 1) (.value 8) = .poison by decide))
 
 /-- `udiv` by zero is UB, with memory. -/
 theorem udiv_mayUB : ¬ NeverUB (d := CoreDialect) (.udiv 8 false) :=
-  fun h => (h lay1 (fun _ => ()) (.cons (.value 1) (.cons (.value 0) .nil))).1 rfl
+  fun h => (h lay1 (fun _ => ()) RunItems.empty (.cons (.value 1) (.cons (.value 0) .nil))).1 rfl
     Memory.Memories.empty _ rfl
 
 /-- `cond_br` on poison is UB, with memory. -/
 theorem condBr_mayUB : ¬ NeverUB (d := CoreDialect) .condBr :=
-  fun h => (h lay1 (fun _ => ()) (.cons .poison .nil)).2 rfl Memory.Memories.empty _ rfl
+  fun h => (h lay1 (fun _ => ()) RunItems.empty (.cons .poison .nil)).2 rfl Memory.Memories.empty _
+      rfl
 
 /-- `br` is a terminator. -/
 theorem br_control : Fir.isTerminator (d := CoreDialect) .br = true := rfl
 
 /-- Reaching `unreachable` is UB, with memory. -/
 theorem unreachable_mayUB : ¬ NeverUB (d := CoreDialect) .unreachable :=
-  fun h => (h lay1 (fun _ => ()) .nil).2 rfl Memory.Memories.empty _ rfl
+  fun h => (h lay1 (fun _ => ()) RunItems.empty .nil).2 rfl Memory.Memories.empty _ rfl
 
 /-- `unreachable` is a terminator. -/
 theorem unreachable_control : Fir.isTerminator (d := CoreDialect) .unreachable = true := rfl

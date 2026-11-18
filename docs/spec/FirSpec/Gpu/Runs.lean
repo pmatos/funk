@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Runs of the core and gpu: readable blocks" =>
 
-:::moduleDocs (fingerprint := "17313037030010505992")
+:::moduleDocs (fingerprint := "10810036935191732082")
 :::
 
 :::readable Fir.Gpu.coreGpu_lawfulEffects Fir.Gpu.coreGpu_lawfulTotal Fir.Gpu.coreGpu_lawfulMonotone Fir.Gpu.coreGpu_lawfulMemPoison (fingerprint := "2096482798007682310")
@@ -32,7 +32,7 @@ callee, is monotone with memory at every width, valid or not: a core op by
 the core's guarantee, and an op of `gpu` by its own.
 :::
 
-:::readable Fir.Gpu.isRefinedBy_refl Fir.Gpu.isRefinedBy_trans Fir.Gpu.memOpsMonotone (fingerprint := "4963033560987553732")
+:::readable Fir.Gpu.isRefinedBy_refl Fir.Gpu.isRefinedBy_trans Fir.Gpu.memOpsMonotone (fingerprint := "12291044322890330351")
 *Theorems: refinement in the sum, and monotone functions.* Refinement of
 values of the sum is reflexive and transitive, since the core's is and
 `gpu` has no type of its own. At every work-item, layout and naming of the
@@ -40,7 +40,7 @@ memories, each op of every function of the sum that runs by its own rule
 is monotone with memory, by the theorem above.
 :::
 
-:::readable Fir.Gpu.inModule_of_valid Fir.Gpu.inModuleAt_of_valid (fingerprint := "10589849443278182106")
+:::readable Fir.Gpu.inModule_of_valid Fir.Gpu.inModuleAt_of_valid (fingerprint := "8455768621662374231")
 *Theorems: a valid function of the sum runs within its module.* A core op
 of the sum is valid when the core can write the function's result types
 and the op obeys the core's rule over the symbols whose types are all the
@@ -52,7 +52,7 @@ since each of its terminators is the core's and is tied, it runs within it
 with memory, wherever a run names the sum's memories.
 :::
 
-:::readable Fir.Gpu.fuelMonotone Fir.Gpu.progress Fir.Gpu.neverStuck (fingerprint := "1902991765062497967")
+:::readable Fir.Gpu.fuelMonotone Fir.Gpu.progress Fir.Gpu.neverStuck (fingerprint := "1577721949564323807")
 *Theorems: every function of each table runs well.* At every work-item,
 wherever a run names the sum's memories, the runs with memory of every
 function of every module of the sum are fuel-monotone. For each table $`t`
@@ -63,7 +63,7 @@ stuck, calls and recursion included. These are the core's guarantees of
 progress, for the sum, and for a device module's kernels.
 :::
 
-:::readable Fir.Gpu.args_isRefinedBy (fingerprint := "3317227888454036313")
+:::readable Fir.Gpu.args_isRefinedBy (fingerprint := "13199659388663841284")
 *Theorem: refined arguments.* At every work-item, wherever a run names the
 sum's memories, on arguments that refine others, the observable runs with
 memory of every function of every module of the sum, the module of a nested
@@ -71,7 +71,7 @@ table included, refine its observable runs on those others, calls and
 recursion included.
 :::
 
-:::readable Fir.Gpu.opsFinite_gpu Fir.Gpu.opsFinite (fingerprint := "4862271034210431619")
+:::readable Fir.Gpu.opsFinite_gpu Fir.Gpu.opsFinite (fingerprint := "4322924343464796543")
 *Theorems: the sum's ops have finitely many outcomes.* Each op of `gpu` has
 one outcome with memory, at every layout and naming: a question its
 results, and an allocation its one allocation. So each op of the sum
@@ -79,7 +79,7 @@ that runs by its own rule has finitely many outcomes with memory, a core
 op by the core's own count.
 :::
 
-:::readable Fir.Gpu.opsIgnoreMemory_gpu Fir.Gpu.opsIgnoreMemory (fingerprint := "11680516443012203440")
+:::readable Fir.Gpu.opsIgnoreMemory_gpu Fir.Gpu.opsIgnoreMemory (fingerprint := "5099270480060642387")
 *Theorems: the sum's ops ignore the memories where they touch none.* At
 every layout and naming, a question of `gpu` declares no memory effect,
 runs by its rule in the set monad and keeps the memories, so it ignores
@@ -90,7 +90,7 @@ core's own guarantee. This is what the congruence for a callee that
 reaches no memory asks of the ops (`FirTest.GpuG0Runs`).
 :::
 
-:::readable Fir.Gpu.replaceBody_isRefinedBy_of_from (fingerprint := "12042385926450760296")
+:::readable Fir.Gpu.replaceBody_isRefinedBy_of_from (fingerprint := "6681485415385327139")
 *Theorem: congruence in the callee.* At every work-item, wherever a run
 names the sum's memories, let $`t` be a table of a valid module $`M` and
 $`g` a function of $`t`. Replace the body of $`g` in $`M.\mathrm{nest}(t)`
@@ -101,14 +101,14 @@ whatever the parameter types of $`g` and whatever its new body does to the
 memories.
 :::
 
-:::readable Fir.Gpu.caller_isRefinedBy_of_from (fingerprint := "14827038118109970806")
+:::readable Fir.Gpu.caller_isRefinedBy_of_from (fingerprint := "9558268597473190834")
 *Theorem: the callers.* Under the hypotheses of congruence in the callee
 from given memories, every function of $`t` other than $`g`, a caller of
 $`g` or not, is refined with memory by itself in the module with $`g`'s new
 body.
 :::
 
-:::readable Fir.Gpu.replaceBody_isRefinedBy Fir.Gpu.caller_isRefinedBy (fingerprint := "4609871783831191071")
+:::readable Fir.Gpu.replaceBody_isRefinedBy Fir.Gpu.caller_isRefinedBy (fingerprint := "5903436693037255114")
 *Theorems: congruence for a callee that reaches no memory.* At every
 work-item, wherever a run names the sum's memories, let $`t` be a table of
 a valid module $`M` and $`g` a function of $`t` that reaches no memory in

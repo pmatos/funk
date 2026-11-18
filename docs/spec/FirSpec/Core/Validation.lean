@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Core rules: readable blocks" =>
 
-:::moduleDocs (fingerprint := "13316978674594412478")
+:::moduleDocs (fingerprint := "5137340132006099769")
 :::
 
 :::readable Fir.Core.Ty.Valid Fir.Core.Ty.memory (pin := Fir.Core.maxWidth) (pin := Fir.Core.floatWidth) (fingerprint := "744407091263889301")
@@ -88,6 +88,29 @@ such as a pointer of a memory above the bound, breaks the op's own rule and
 names no memory to check, as no type written for a value can. No other
 core op carries a type of its own: $`\mathsf{call}`'s are its callee's, and
 $`\mathsf{ret}`'s the function's results.
+:::
+
+:::readable Fir.Core.pow2AtLeast Fir.Core.pow2AtLeast.go Fir.Core.pow2AtLeast.two_mul_le Fir.Core.pow2AtLeast.go_spec Fir.Core.pow2AtLeast_eq (fingerprint := "14321921282438045218")
+*Definition: the least power of two at least a number.* $`\mathrm{pow2}(n)`
+doubles $`1` while it is below $`n`, at most $`n` times. It is the least
+power of two that is at least $`n`, Lean's `Nat.nextPowerOfTwo`: each
+doubling keeps a power of two that no power of two at least $`n` is below,
+and $`n` doublings reach $`n`. It is written as a loop of at most $`n`
+steps, by structural recursion, so the rules that use it rest on no axiom.
+:::
+
+:::readable Fir.Core.Ty.fieldShape (fingerprint := "15071636215976170057")
+*Definition: a core field's units and alignment.* In the memory $`n` of a
+module whose memories have the entries $`\ell`, with $`e = \ell(n)`, a field
+of a core type takes (ADR-2026-11-16-1546):
+
+$$`\begin{aligned} \mathrm{shape}(\mathsf{i}W) &= (u_W,~\mathrm{pow2}(u_W)) \\ \mathrm{shape}(\mathsf{ptr}\langle M \rangle) &= (u_P,~a) \quad\text{where } P = \mathrm{ptr}_{\ell(M)} \end{aligned}`
+
+where $`u_W` is $`W` bits in whole units of $`e`, and $`a` is the alignment
+that $`e` gives its pointers when $`M = n` and it writes one, and
+$`\mathrm{pow2}(u_P)` otherwise. A float type has its units but is not yet
+a field: #264 makes floats fields of aggregates. These are the units and the
+alignment that $`\mathsf{alloca}` gives one value of a field's type.
 :::
 
 :::readable Fir.Core.FBin.mode Fir.Core.FUnary.mode Fir.Core.Op.Valid (pin := Fir.isPowerOfTwo) (pin := Fir.MemLayout.limit) (pin := Fir.MemLayout.ValidAlign) (fingerprint := "7601155670973002638")

@@ -25,7 +25,9 @@ is:
 * an item of a dialect's kind written as a function's header, with its
   kind in place of `func`, then each attribute after a space, then ` {` and,
   on the next line, its closing `}` at its indentation
-  (ADR-2026-11-09-1543);
+  (ADR-2026-11-09-1543), and an aggregate's layout written in the same way,
+  with the kind `aggregate`, no parameters or results, and its memory,
+  size, alignment and fields as attributes (ADR-2026-11-16-1546);
 * one empty line after each item, then the location table, its entries
   indented by two spaces, in the order they are stored;
 * a line feed at the end of every line, the last included, and no trailing
@@ -156,6 +158,7 @@ def Item.print (n : Nat) : Item d → String
     indent n ++ "module " ++ printSymbol name ++ "() {\n" ++ printDialects (n + 2) ds ++
       Item.printList (n + 2) is ++ indent n ++ "}\n"
   | .dialect i => i.print n
+  | .aggregate a => a.item.print n
 
 /-- Items at indentation `n`, each followed by an empty line. -/
 def Item.printList (n : Nat) : List (Item d) → String

@@ -18,8 +18,8 @@ use std::fmt::{self, Display, Write};
 use super::chars::{print_symbol, quote};
 use crate::ir::tree::{Step, walk};
 use crate::ir::{
-    Attr, Block, Def, DialectItem, Func, Item, LocTable, Location, MemLayout, Module, Op, Part,
-    Succ, Type,
+    Aggregate, Attr, Block, Def, DialectItem, Func, Item, LocTable, Location, MemLayout, Module,
+    Op, Part, Succ, Type,
 };
 
 impl Display for MemLayout {
@@ -250,6 +250,28 @@ fn write_dialect_item(out: &mut impl Write, i: &DialectItem, n: usize) -> fmt::R
     out.write_str("}\n")
 }
 
+/// An aggregate's layout at indentation `n`, with its line feed
+/// (ADR-2026-11-16-1546): the header of an item of kind `aggregate`, its
+/// memory, size and alignment, its fields, then its empty body.
+fn write_aggregate(out: &mut impl Write, a: &Aggregate, n: usize) -> fmt::Result {
+    write_header(out, "aggregate", &a.name, &[], &[], n)?;
+    write!(
+        out,
+        " memory({}) size({}) align({})",
+        a.memory, a.size, a.align
+    )?;
+    for f in &a.fields {
+        write!(out, " field({}, {}", f.offset, f.ty)?;
+        if let Some(c) = f.count {
+            write!(out, ", {c}")?;
+        }
+        out.write_char(')')?;
+    }
+    out.write_str(" {\n")?;
+    indent(out, n)?;
+    out.write_str("}\n")
+}
+
 /// A dialect set at indentation `n`, then an empty line, or nothing when it
 /// names no dialect.
 fn write_dialects(out: &mut impl Write, names: &[String], n: usize) -> fmt::Result {
@@ -284,6 +306,10 @@ fn write_items(out: &mut impl Write, items: &[Item], n: usize) -> fmt::Result {
             }
             Some(Item::Dialect(i)) => {
                 write_dialect_item(out, i, n)?;
+                out.write_char('\n')?;
+            }
+            Some(Item::Aggregate(a)) => {
+                write_aggregate(out, a, n)?;
                 out.write_char('\n')?;
             }
             Some(Item::Module(m)) => {

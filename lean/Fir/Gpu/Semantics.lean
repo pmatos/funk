@@ -117,7 +117,7 @@ and an allocation allocates. -/
 
 /-- The semantics of `gpu` with memory, at each layout and naming of its
 memories: its rules in the state layer over the set monad. -/
-instance instDialectMemDenote : DialectMemDenote GpuDialect := ⟨fun lay ρ => memDenoteIn lay ρ⟩
+instance instDialectMemDenote : DialectMemDenote GpuDialect := ⟨fun lay ρ _ => memDenoteIn lay ρ⟩
 
 end
 
@@ -147,7 +147,7 @@ theorem queryResults_refl (q : Query) (d : Dim) (n : Nat) :
 /-- A question touches no memory: at every layout and naming, it runs with
 memory by its rule in the set monad and keeps the memories. -/
 theorem query_liftsSetM (q : Query) (d : Dim) (n : Nat) :
-    OpLiftsSetM (d := GpuDialect) (Op.query q d n) := fun _ _ _ =>
+    OpLiftsSetM (d := GpuDialect) (Op.query q d n) := fun _ _ _ _ =>
   ⟨funext fun S => (pure_bind (f := fun a => (pure (a, S) : SetM _)) _).symm,
     funext fun S => (pure_bind (f := fun a => (pure (a, S) : SetM _)) Exit.ret).symm⟩
 

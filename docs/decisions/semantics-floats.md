@@ -279,13 +279,14 @@ case of a width the backend lowers differential at `f32` and `f64`, where
 native code refines poison with any value
 ([testing-and-harness-floats.md](testing-and-harness-floats.md#the-float-to-integer-corpus)).
 
-`fir-ref`'s arithmetic and comparisons are checked against Berkeley
+`fir-ref`'s arithmetic, `frem` and comparisons are checked against Berkeley
 TestFloat's vectors at `f16`, `f32`, `f64` and `f128`, and at `bf16` against
 TestFloat's `f32` vectors of `bf16` operands, rounded to odd and then to
-`bf16`, as the human's criterion of 2026-11-10 asks
-([testing-and-harness-floats.md](testing-and-harness-floats.md#the-testfloat-check)).
+`bf16` where the op rounds, as the human's criterion of 2026-11-10 asks
+([testing-and-harness-float-references.md](testing-and-harness-float-references.md#the-testfloat-check)).
 `float_ref.py` computes the corpus's expected results, and is not that
-independent reference.
+independent reference. TestFloat has no `fmod`, so `fmod` has only the
+corpus.
 
 The fast-math flags hold in the spec, `fir-ref`, the Rust IR, parser, printer,
 verifier and backend, and `reject/float-flags.toml` holds their must-reject

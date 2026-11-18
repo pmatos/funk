@@ -134,17 +134,21 @@ order. -/
 def SymbolTable.dialectItems (t : SymbolTable d) : List (DialectItem d) :=
   t.items.filterMap Item.dialect?
 
+/-- The layouts of aggregates of a symbol table, in order. -/
+def SymbolTable.aggregates (t : SymbolTable d) : List (Aggregate d) :=
+  t.items.filterMap Item.aggregate?
+
 /-- The type of the function that each symbol of a table names: its first
 function with that symbol. -/
 def SymbolTable.symbols (t : SymbolTable d) (s : Name) : Option (FuncType d) :=
   (t.funcs.find? (·.name == s)).map Func.type
 
 mutual
-/-- The symbol tables that an item holds, at any depth: none for a function
-or an item of a dialect's kind, and a nested module's own, then those its
-items hold. -/
+/-- The symbol tables that an item holds, at any depth: none for a
+function, an item of a dialect's kind or an aggregate's layout, and a nested
+module's own, then those its items hold. -/
 def Item.tables : Item d → List (SymbolTable d)
-  | .func _ | .dialect _ => []
+  | .func _ | .dialect _ | .aggregate _ => []
   | .module _ ds is => ⟨ds, is⟩ :: Item.tablesIn is
 
 /-- The symbol tables that a list of items holds, at any depth, in order. -/
@@ -168,6 +172,7 @@ theorem funcNames_sublist : ∀ is : List (Item d),
   | .func _ :: is => .cons_cons _ (funcNames_sublist is)
   | .module .. :: is => .cons _ (funcNames_sublist is)
   | .dialect _ :: is => .cons _ (funcNames_sublist is)
+  | .aggregate _ :: is => .cons _ (funcNames_sublist is)
 
 /-- Items that are all functions hold no symbol table. -/
 theorem Item.tablesIn_eq_nil : ∀ {is : List (Item d)}, (∀ i ∈ is, i.func?.isSome) →
@@ -178,6 +183,7 @@ theorem Item.tablesIn_eq_nil : ∀ {is : List (Item d)}, (∀ i ∈ is, i.func?.
     rfl
   | .module .. :: _, h => absurd (h _ (List.mem_cons_self ..)) (by simp [Item.func?])
   | .dialect _ :: _, h => absurd (h _ (List.mem_cons_self ..)) (by simp [Item.func?])
+  | .aggregate _ :: _, h => absurd (h _ (List.mem_cons_self ..)) (by simp [Item.func?])
 
 /-- The tables that an item of a list holds are tables of the list. -/
 theorem Item.mem_tablesIn {i : Item d} : ∀ {is : List (Item d)}, i ∈ is →
@@ -256,6 +262,12 @@ The rules a dialect adds to validation.
   memory. Validation requires that the layout declare each memory that a
   type names (ADR-2026-11-12-1821). A dialect without pointer types names
   none.
+* `fieldShape` gives the units that a value of a type takes as a field of
+  an aggregate's layout, and its alignment, in units, in the memory `n` of
+  a module whose memories have the entries `lay`, and `none` for a type
+  that may not be a field (ADR-2026-11-16-1546). The core gives one to its
+  integer and pointer types. A dialect whose types may not be fields gives
+  none, the default.
 * `opTypes` lists the types that an op carries in its attributes, beyond
   the types of its operands and results, such as the type of the values
   that the core's `alloca` allocates. Validation checks the memory that
@@ -275,7 +287,8 @@ class DialectValidation (d : Dialect) where
     Prop := fun _ _ _ => False
   tyMemory : d.Ty → Option Nat := fun _ => none
   opTypes : d.Op → List d.Ty := fun _ => []
+  fieldShape : (Nat → MemLayout) → Nat → d.Ty → Option (Nat × Nat) := fun _ _ _ => none
 export DialectValidation (validTy symbolRefs validOp validFunc regionKindNames validRegion
-  itemKindNames validItem tyMemory opTypes)
+  itemKindNames validItem tyMemory opTypes fieldShape)
 
 end Fir

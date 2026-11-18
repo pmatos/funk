@@ -6,7 +6,8 @@ import Fir.Text.ReadTable
 
 A module's dialect set reads back first, then its items before the word
 `locs`, which starts its location table, and the table before `eof`. A
-function, and an item of a dialect's kind, read back as the previous
+function, an item of a dialect's kind and an aggregate's layout, which is
+written as such an item of kind `aggregate`, read back as the previous
 sections show. A nested module reads
 back the same way as a module, its dialect set and then its items, before
 the `}` that closes its body; the reader of items and the reader of an item
@@ -93,6 +94,7 @@ def Item.kind : Item d → String
   | .func _ => "func"
   | .module .. => "module"
   | .dialect i => i.kind
+  | .aggregate _ => "aggregate"
 
 theorem Item.tokens_eq (i : Item d) : i.tokens = .word i.kind :: i.tokens.tail := by
   cases i <;> rfl
@@ -104,6 +106,7 @@ def Item.TypesWritable : Item d → Prop
   | .func f => ∀ t ∈ f.types, (tyAttr t).IsType
   | .module _ _ is => Item.TypesWritableList is
   | .dialect i => isDialectWord i.kind ∧ ∀ t ∈ i.types, (tyAttr t).IsType
+  | .aggregate _ => True
 
 /-- Each type that these items write is written as a type. -/
 def Item.TypesWritableList : List (Item d) → Prop
@@ -119,15 +122,17 @@ theorem Item.typesWritableList_iff : ∀ is : List (Item d),
 /-- The tokens of items, then tokens that start with `P`, start with a word
 that is the kind of an item, or with `P`. -/
 theorem head_items (is : List (Item d)) (rest : List Tok) (P : Tok → Prop)
-    (hk : P (.word "func") ∧ P (.word "module") ∧ ∀ w, isDialectWord w → P (.word w))
+    (hk : P (.word "func") ∧ P (.word "module") ∧ P (.word "aggregate") ∧
+      ∀ w, isDialectWord w → P (.word w))
     (hw : ∀ i ∈ is.head?, i.TypesWritable) (hr : ∀ t ∈ rest.head?, P t) :
     ∀ t ∈ (Item.tokensList is ++ rest).head?, P t := by
   cases is with
   | nil => simpa [Item.tokensList] using hr
   | cons i _ =>
     have hi := hw i rfl
-    cases i <;> simp [Item.tokensList, Item.tokens, Func.tokens, DialectItem.tokens, hk]
-    exact hk.2.2 _ hi.1
+    cases i <;> simp [Item.tokensList, Item.tokens, Func.tokens, DialectItem.tokens,
+      Aggregate.item, hk]
+    exact hk.2.2.2 _ hi.1
 
 /-- A word of a dialect is neither `dialects`, `locs` nor `layout`. -/
 theorem isDialectWord_not_reserved {w : String} (h : isDialectWord w) :
@@ -146,6 +151,8 @@ theorem Item.reads : ∀ i : Item d, i.TypesWritable → ∀ p,
     Reads (readItem i.kind p) SItem.erase i.tree i.tokens.tail (fun _ => True)
   | .func f, ht, p => Func.reads f ht p
   | .dialect i, ht, p => DialectItem.reads i ht.2 p
+  | .aggregate a, _, p => DialectItem.reads a.item (fun _ h => by
+      simp [Aggregate.item, DialectItem.types] at h) p
   | .module name ds is, ht, p => by
     have his := Item.readsList false is ht
     rintro ts rest h -
@@ -202,7 +209,7 @@ theorem Item.reads : ∀ i : Item d, i.TypesWritable → ∀ p,
           · rcases is with _ | ⟨i, is⟩
             · exact absurd ⟨rfl, rfl⟩ he
             · cases i <;> simp [dialectsTokens, Item.tokensList, Item.tokens, Func.tokens,
-                DialectItem.tokens]
+                DialectItem.tokens, Aggregate.item]
           · simp [dialectsTokens]
         rw [hL] at h
         obtain ⟨q, tl, rfl, h⟩ := map_tok_cons h
@@ -212,7 +219,7 @@ theorem Item.reads : ∀ i : Item d, i.TypesWritable → ∀ p,
             rw [hL]; simp [h]
           have hst : ∀ t ∈ (Item.tokensList is ++ .rbrace :: rest).head?,
               t ≠ .comma ∧ t ≠ .word "dialects" :=
-            head_items _ _ _ ⟨by simp, by simp, fun w hw => by
+            head_items _ _ _ ⟨by simp, by simp, by simp, fun w hw => by
               simp [(isDialectWord_not_reserved hw).1]⟩
               (fun i hi => by
                 cases is with
@@ -284,7 +291,7 @@ theorem readModule_tokens {m : Module d}
     apply head?_append
     · simpa using head_items m.items []
         (fun t => t ≠ .comma ∧ t ≠ .lparen ∧ t ≠ .word "dialects" ∧ t ≠ .word "layout")
-        ⟨by simp, by simp, fun w hw => by
+        ⟨by simp, by simp, by simp, fun w hw => by
           simp [(isDialectWord_not_reserved hw).1, (isDialectWord_not_reserved hw).2.2]⟩
         (fun i hi => ht i (List.mem_of_mem_head? hi)) (by simp)
     · simp [LocTable.tokens]
@@ -317,6 +324,7 @@ theorem Item.WellFormed.typesWritable : ∀ {i : Item d}, i.WellFormed → i.Typ
   | .func _, h => fun t ht => (Func.WellFormed.types h t ht).1
   | .module _ _ _, h => Item.WellFormed.typesWritableList h.2
   | .dialect _, h => ⟨h.kind, fun t ht => (h.types t ht).1⟩
+  | .aggregate _, _ => trivial
 
 /-- Each type that well-formed items write is written as a type. -/
 theorem Item.WellFormed.typesWritableList : ∀ {is : List (Item d)}, Item.WellFormedList is →

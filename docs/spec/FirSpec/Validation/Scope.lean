@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Scope and symbols: readable blocks" =>
 
-:::moduleDocs (fingerprint := "7392587270328602311")
+:::moduleDocs (fingerprint := "532347281641330505")
 :::
 
 :::readable Fir.Func.blocks Fir.Region.allBlocks Fir.Block.allBlocks Fir.Operation.regionBlocks Fir.Func.allBlocks (fingerprint := "9127946111391752751")
@@ -108,7 +108,7 @@ A valid module has one function for each symbol. A call is valid only when
 the symbol table gives its symbol the type the call states.
 :::
 
-:::readable Fir.SymbolTable Fir.SymbolTable.funcs Fir.SymbolTable.dialectItems Fir.SymbolTable.symbols (fingerprint := "4849842385175751582")
+:::readable Fir.SymbolTable Fir.SymbolTable.funcs Fir.SymbolTable.dialectItems Fir.SymbolTable.aggregates Fir.SymbolTable.symbols (fingerprint := "13060690585010064588")
 *Definition: a symbol table of a module.* A module nested in another is a
 symbol table of its own, with its own dialect set (ADR-2026-11-10-1510). A
 _symbol table_ $`T` is a dialect set $`\mathrm{dialects}(T)` and a list of
@@ -116,25 +116,29 @@ items $`\mathrm{items}(T)`: those of a module, or of a module nested in
 one. Its functions $`\mathrm{funcs}(T)` are the items of $`T` that are
 functions, in order; the functions of a nested module are those of its own
 table. Its items of a dialect's kind $`\mathrm{ditems}(T)` are the items
-of $`T` of a kind that a dialect registers, in order. Its symbol table
+of $`T` of a kind that a dialect registers, in order, and its aggregates'
+layouts $`\mathrm{aggregates}(T)` are the layouts among its items, in
+order. Its symbol table
 $`\mathrm{symtab}_T(s)` is the type of the first
 function of $`T` whose symbol is $`s`, as for a module:
 
 $$`\mathrm{symtab}_T(s) = \mathrm{type}(g)`
 
 where $`g` is the first function of $`\mathrm{funcs}(T)` with the symbol
-$`s`. The symbol of a nested module, or of an item of a dialect's kind,
-names no function, so no op refers to it as a callee.
+$`s`. The symbol of a nested module, of an item of a dialect's kind or of
+an aggregate's layout names no function, so no op refers to it as a
+callee.
 :::
 
-:::readable Fir.Item.tables Fir.Item.tablesIn Fir.Module.table Fir.Module.tables (fingerprint := "11760842403195667494")
+:::readable Fir.Item.tables Fir.Item.tablesIn Fir.Module.table Fir.Module.tables (fingerprint := "18417648986635413284")
 *Definition: the symbol tables of a module.* The tables that an item
-holds, at any depth, are none for a function or an item of a dialect's
-kind, and for a nested module with the dialect set $`D` and the items
-$`I`, its own table $`(D, I)`, then the tables that $`I` holds. The tables
-that a list of items holds are those of each item, in order:
+holds, at any depth, are none for a function, an item of a dialect's kind
+or an aggregate's layout, and for a nested module with
+the dialect set $`D` and the items $`I`, its own table $`(D, I)`, then the
+tables that $`I` holds. The tables that a list of items holds are those of
+each item, in order:
 
-$$`\begin{aligned} \mathrm{tables}(\mathsf{func}~f) &= \epsilon \\ \mathrm{tables}(\mathsf{dialect}~i) &= \epsilon \\ \mathrm{tables}(\mathsf{module}~s~D~I) &= (D, I) \cdot \mathrm{tables}^*(I) \\ \mathrm{tables}^*(i_1 \dots i_n) &= \mathrm{tables}(i_1) \dots \mathrm{tables}(i_n) \end{aligned}`
+$$`\begin{aligned} \mathrm{tables}(\mathsf{func}~f) &= \epsilon \\ \mathrm{tables}(\mathsf{dialect}~i) &= \epsilon \\ \mathrm{tables}(\mathsf{aggregate}~a) &= \epsilon \\ \mathrm{tables}(\mathsf{module}~s~D~I) &= (D, I) \cdot \mathrm{tables}^*(I) \\ \mathrm{tables}^*(i_1 \dots i_n) &= \mathrm{tables}(i_1) \dots \mathrm{tables}(i_n) \end{aligned}`
 
 A module's own table, $`\mathrm{table}(M)`, is its dialect set and its
 items, and its tables are its own, then those that its items hold:
@@ -180,11 +184,11 @@ operands and the results of such an op stay visible. A dialect sees its own
 functions through the identity view.
 :::
 
-:::readable Fir.DialectValidation (fingerprint := "9768386860120422173")
+:::readable Fir.DialectValidation (fingerprint := "11932845281982970259")
 *Definition: what a dialect adds to validation.* The general rules of the
 next sections hold for every
 {ref "The-fir-specification--Abstract-syntax--Dialects"}[dialect]. Each
-dialect $`d` adds eight things of its own:
+dialect $`d` adds nine things of its own:
 
 * which of its types are valid, written $`\vdash_d t~\text{valid}`;
 * $`\mathrm{refs}_d(\mathit{op})`, the symbols that the op instance
@@ -220,16 +224,22 @@ dialect $`d` adds eight things of its own:
   types, such as the type that the core's $`\mathsf{alloca}` allocates
   values of. Validation checks the memory that each names, as it checks
   that of every type a function states. An op that carries no type has
-  none, the default.
+  none, the default;
+* $`\mathrm{shape}_d(\ell, n, t)`, the units that a value of its type $`t`
+  takes as a field of an aggregate's layout in the memory $`n` of a module
+  whose memories have the entries $`\ell`, and its alignment there, in
+  units, or none for a type that may not be a field (ADR-2026-11-16-1546).
+  A dialect whose types may not be fields gives none, the default.
 
 The {ref "The-fir-specification--Validation--Core-rules"}[core rules] give
 these for the core dialect: for example, $`\mathsf{ret}` must return the
 function's result types, and $`\mathsf{call}` must match its callee's type.
 The core dialect has no rule over a whole function. Its pointer type
 $`\mathsf{ptr}\langle N \rangle` names the memory $`N`, and the one op
-that carries a type is $`\mathsf{alloca}`. It registers no kind of
-item: its kinds, `func` and `module`, have rules of their own in the next
-sections. It registers no region kind either: the rule of its own kind, a
+that carries a type is $`\mathsf{alloca}`. Its integer and pointer types
+may be fields, with the units and alignment that $`\mathsf{alloca}` gives
+one value of them. It registers no kind of item: its kinds, `func`,
+`module` and `aggregate`, have rules of their own in the next sections. It registers no region kind either: the rule of its own kind, a
 control-flow graph, is the rule of a function's body.
 :::
 

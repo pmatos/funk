@@ -23,7 +23,9 @@
 //!   tables of their own (ADR-2026-11-10-1510);
 //! - items of a kind from [`ITEM_KINDS`], with parameters, results and
 //!   attributes, which every reader decodes whichever dialect registers
-//!   the kind, and no registry here does (ADR-2026-11-09-1543).
+//!   the kind, and no registry here does (ADR-2026-11-09-1543);
+//! - aggregates' layouts of any numbers, with fields of core integer and
+//!   pointer types, repeated or not (ADR-2026-11-16-1546).
 //!
 //! Each new op still decodes: its operands are values the function defines,
 //! somewhere, of the types its name and attributes need, and its results
@@ -40,14 +42,17 @@
 //! whatever dialects the reader holds. The generator is deterministic: one
 //! seed gives one module.
 
-use super::{Rng, Widths, constant, name, string, symbol, width};
-use crate::dialects::core::{self, int_type, spell_float};
+use super::{Rng, Widths, constant, name, symbol, width};
+use crate::dialects::core::{self, int_type};
 use crate::effects::Effects;
 use crate::ir::{
     Attr, Block, Def, DialectItem, Func, Item, LocRef, Module, NestedModule, Op, Region, Succ, Type,
 };
 use crate::registry::{Dialect, OpShape, OpSpec, OpTypes};
+use attr::attr;
 
+mod aggregate;
+mod attr;
 mod layout;
 mod locs;
 
@@ -126,6 +131,10 @@ pub fn module(rng: &mut Rng, dialects: Dialects) -> Module {
         let at = rng.below(m.items.len() as u64 + 1) as usize;
         m.items.insert(at, dialect_item(rng));
     }
+    if rng.one_in(3) {
+        let at = rng.below(m.items.len() as u64 + 1) as usize;
+        m.items.insert(at, aggregate::aggregate(rng));
+    }
     if rng.one_in(4) {
         m.items.push(Item::Module(nested(rng, 3)));
     }
@@ -165,6 +174,9 @@ fn nested(rng: &mut Rng, depth: u32) -> NestedModule {
     n.items = super::module(rng).items;
     if rng.one_in(3) {
         n.items.push(dialect_item(rng));
+    }
+    if rng.one_in(3) {
+        n.items.push(aggregate::aggregate(rng));
     }
     if depth > 1 && rng.one_in(3) {
         n.items.push(Item::Module(nested(rng, depth - 1)));
@@ -490,41 +502,4 @@ impl<'m> Shaper<'m> {
 fn insert(rng: &mut Rng, ops: &mut Vec<Op>, op: Op) {
     let at = rng.below(ops.len() as u64 + 1) as usize;
     ops.insert(at, op);
-}
-
-/// An attribute of any kind, often a string or an applied word, which
-/// nests below depth three.
-/// A float literal: the spelling of random bits of a format with
-/// decimals, or `0x` and up to eight hexadecimal digits, any of them.
-fn float_lit(rng: &mut Rng) -> Attr {
-    if rng.below(2) == 0 {
-        let e = 2 + rng.below(14) as u32;
-        let m = 1 + rng.below(48) as u32;
-        let bits = rng.next_u64() >> (63 - e - m);
-        return Attr::Float(spell_float(e, m, u128::from(bits)));
-    }
-    let digits: String = (0..=rng.below(8))
-        .map(|_| char::from_digit(rng.below(16) as u32, 16).expect("a digit below 16"))
-        .collect();
-    Attr::Float(format!("0x{digits}"))
-}
-
-fn attr(rng: &mut Rng, depth: u32) -> Attr {
-    match rng.below(if depth < 3 { 7 } else { 5 }) {
-        0 | 1 => Attr::Str(string(rng)),
-        2 => Attr::Word(name(rng, true)),
-        3 if rng.below(2) == 0 => float_lit(rng),
-        3 => {
-            let w = width(rng, Widths::Any);
-            constant(rng, w)
-        }
-        4 => Attr::Sym(symbol(rng)),
-        5 => Attr::App(name(rng, true), Vec::new()),
-        _ => {
-            let args = (0..1 + rng.below(3))
-                .map(|_| attr(rng, depth + 1))
-                .collect();
-            Attr::App(name(rng, true), args)
-        }
-    }
 }

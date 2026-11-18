@@ -253,15 +253,15 @@ section
 
 variable {d : Dialect} [TyDenote d.Ty] [DecidableEq d.Ty] [DialectSignature d] [DialectCall d]
   [DialectEffects d] [DialectMemDenote d] [TyRefinement d.Ty] {N : Type} [DecidableEq N]
-  (lay : N → MemLayout) (ρ : DialectEffects.Mem d → N)
+  (lay : N → MemLayout) (ρ : DialectEffects.Mem d → N) (L : RunItems)
 
 omit [TyRefinement d.Ty] in
 /-- A run with memory is the run from the empty memories, with the memories
 it ends with dropped. -/
 theorem Func.memRuns_eq_fromState (M : Module d) (f : Func d)
     (a : HVector toType (f.params.map (·.2))) (n : Nat) :
-    letI := DialectMemDenote.denoteAt (d := d) lay ρ
-    f.memRuns lay ρ M a n = (Prod.fst <$> fromState
+    letI := DialectMemDenote.denoteAt (d := d) lay ρ L
+    f.memRuns lay ρ L M a n = (Prod.fst <$> fromState
       (f.run M (m := StateT (Memories N (unitsOf lay)) SetM) a n) Memories.empty).run :=
   fromState_fst _ _
 
@@ -271,11 +271,11 @@ omit [TyRefinement d.Ty] in
 /-- A run with memory returns what the run from the empty memories returns,
 with whatever memories that run ends with. -/
 theorem Func.memRuns_ret_iff {vs : List (DVal d)} :
-    letI := DialectMemDenote.denoteAt (d := d) lay ρ
-    (f.memRuns lay ρ M a n).outcomes (.ret vs) ↔
+    letI := DialectMemDenote.denoteAt (d := d) lay ρ L
+    (f.memRuns lay ρ L M a n).outcomes (.ret vs) ↔
       ∃ T, (f.memRunsFrom M (a, (Memories.empty : Memories N (unitsOf lay))) n).outcomes
         (.ret (vs, T)) := by
-  letI := DialectMemDenote.denoteAt (d := d) lay ρ
+  letI := DialectMemDenote.denoteAt (d := d) lay ρ L
   simp only [Run.outcomes, Func.memRunsFrom, Func.memRuns_eq_fromState]
   constructor
   · intro h
@@ -296,10 +296,10 @@ omit [TyRefinement d.Ty] in
 /-- A run with memory hits UB exactly when the run from the empty memories
 does. -/
 theorem Func.memRuns_ub_iff {r : String} :
-    letI := DialectMemDenote.denoteAt (d := d) lay ρ
-    (f.memRuns lay ρ M a n).outcomes (.ub r) ↔
+    letI := DialectMemDenote.denoteAt (d := d) lay ρ L
+    (f.memRuns lay ρ L M a n).outcomes (.ub r) ↔
       (f.memRunsFrom M (a, (Memories.empty : Memories N (unitsOf lay))) n).outcomes (.ub r) := by
-  letI := DialectMemDenote.denoteAt (d := d) lay ρ
+  letI := DialectMemDenote.denoteAt (d := d) lay ρ L
   simp only [Run.outcomes, Func.memRunsFrom, Func.memRuns_eq_fromState]
   constructor
   · intro h
@@ -319,11 +319,11 @@ omit [TyRefinement d.Ty] in
 /-- A run with memory runs out of fuel exactly when the run from the empty
 memories does. -/
 theorem Func.memRuns_exhausted_iff :
-    letI := DialectMemDenote.denoteAt (d := d) lay ρ
-    (f.memRuns lay ρ M a n).outcomes .fuelExhausted ↔
+    letI := DialectMemDenote.denoteAt (d := d) lay ρ L
+    (f.memRuns lay ρ L M a n).outcomes .fuelExhausted ↔
       (f.memRunsFrom M (a, (Memories.empty : Memories N (unitsOf lay)))
         n).outcomes .fuelExhausted := by
-  letI := DialectMemDenote.denoteAt (d := d) lay ρ
+  letI := DialectMemDenote.denoteAt (d := d) lay ρ L
   simp only [Run.outcomes, Func.memRunsFrom, Func.memRuns_eq_fromState]
   constructor
   · intro h
@@ -346,32 +346,32 @@ runs from the empty memories do: they are those runs, with the memories they
 end with dropped. -/
 theorem Func.memRuns_isRefinedBy_of_from {M M' : Module d} {f f' : Func d}
     {a : HVector toType (f.params.map (·.2))} {a' : HVector toType (f'.params.map (·.2))}
-    (h : letI := DialectMemDenote.denoteAt (d := d) lay ρ
+    (h : letI := DialectMemDenote.denoteAt (d := d) lay ρ L
       observable (f.memRunsFrom M (a, (Memories.empty : Memories N (unitsOf lay)))) ⊑
         observable (f'.memRunsFrom M' (a', (Memories.empty : Memories N (unitsOf lay))))) :
-    observable (f.memRuns lay ρ M a) ⊑ observable (f'.memRuns lay ρ M' a') := by
-  letI := DialectMemDenote.denoteAt (d := d) lay ρ
+    observable (f.memRuns lay ρ L M a) ⊑ observable (f'.memRuns lay ρ L M' a') := by
+  letI := DialectMemDenote.denoteAt (d := d) lay ρ L
   intro t ht
   match t, ht with
   | .ret vs', ⟨n, hn⟩ =>
-    obtain ⟨T', h₀⟩ := (Func.memRuns_ret_iff lay ρ).1 hn
+    obtain ⟨T', h₀⟩ := (Func.memRuns_ret_iff lay ρ L).1 hn
     obtain ⟨s, hs, hle⟩ := h (.ret (vs', T')) ⟨n, h₀⟩
     match s, hs, hle with
-    | .ub r, ⟨N, hN⟩, _ => exact ⟨.ub r, ⟨N, (Func.memRuns_ub_iff lay ρ).2 hN⟩, trivial⟩
+    | .ub r, ⟨N, hN⟩, _ => exact ⟨.ub r, ⟨N, (Func.memRuns_ub_iff lay ρ L).2 hN⟩, trivial⟩
     | .ret (vs, T), ⟨N, hN⟩, hle =>
-      exact ⟨.ret vs, ⟨N, (Func.memRuns_ret_iff lay ρ).2 ⟨T, hN⟩⟩, hle.1⟩
+      exact ⟨.ret vs, ⟨N, (Func.memRuns_ret_iff lay ρ L).2 ⟨T, hN⟩⟩, hle.1⟩
     | .fuelExhausted, _, hle => exact hle.elim
   | .ub r', ⟨n, hn⟩ =>
-    obtain ⟨s, hs, hle⟩ := h (.ub r') ⟨n, (Func.memRuns_ub_iff lay ρ).1 hn⟩
+    obtain ⟨s, hs, hle⟩ := h (.ub r') ⟨n, (Func.memRuns_ub_iff lay ρ L).1 hn⟩
     match s, hs, hle with
-    | .ub r, ⟨N, hN⟩, _ => exact ⟨.ub r, ⟨N, (Func.memRuns_ub_iff lay ρ).2 hN⟩, trivial⟩
+    | .ub r, ⟨N, hN⟩, _ => exact ⟨.ub r, ⟨N, (Func.memRuns_ub_iff lay ρ L).2 hN⟩, trivial⟩
     | .ret _, _, hle | .fuelExhausted, _, hle => exact hle.elim
   | .fuelExhausted, ht =>
-    obtain ⟨s, hs, hle⟩ := h .fuelExhausted fun n => (Func.memRuns_exhausted_iff lay ρ).1 (ht n)
+    obtain ⟨s, hs, hle⟩ := h .fuelExhausted fun n => (Func.memRuns_exhausted_iff lay ρ L).1 (ht n)
     match s, hs, hle with
-    | .ub r, ⟨N, hN⟩, _ => exact ⟨.ub r, ⟨N, (Func.memRuns_ub_iff lay ρ).2 hN⟩, trivial⟩
+    | .ub r, ⟨N, hN⟩, _ => exact ⟨.ub r, ⟨N, (Func.memRuns_ub_iff lay ρ L).2 hN⟩, trivial⟩
     | .fuelExhausted, hs, _ =>
-      exact ⟨.fuelExhausted, fun N => (Func.memRuns_exhausted_iff lay ρ).2 (hs N), trivial⟩
+      exact ⟨.fuelExhausted, fun N => (Func.memRuns_exhausted_iff lay ρ L).2 (hs N), trivial⟩
     | .ret _, _, hle => exact hle.elim
 
 end

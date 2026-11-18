@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "The module decoded back: readable blocks" =>
 
-:::moduleDocs (fingerprint := "15814474905113288281")
+:::moduleDocs (fingerprint := "5140629926850999888")
 :::
 
 :::readable Fir.bind_eq_of (fingerprint := "12224089499088332229")
@@ -54,9 +54,9 @@ a body of the core's kind, which is the kind of a well-formed function's
 body.
 :::
 
-:::readable Fir.isDialectWord_ne Fir.DialectItem.WellFormed.decodeItem_eq (pin := Fir.Text.decodeDialectItem) (pin := Fir.DialectItem.WellFormed) (fingerprint := "2519922189377776560")
+:::readable Fir.isDialectWord_ne Fir.DialectItem.WellFormed.decodeItem_eq (pin := Fir.Text.decodeDialectItem) (pin := Fir.DialectItem.WellFormed) (fingerprint := "1439375910759526258")
 *Theorems: an item of a dialect's kind decodes back.* A word of a dialect
-holds a `.`, so it is neither `func` nor `module`. For every dialect with
+holds a `.`, so it is neither `func`, `module` nor `aggregate`. For every dialect with
 a text format and every well-formed item $`i` of a dialect's kind, an item
 as written that erases to the tree of $`i` decodes as $`i`, at any
 positions: its kind is a word of a dialect, its body is no blocks, its
@@ -64,7 +64,17 @@ result types and its parameters decode back, and its attributes are kept
 as they were read.
 :::
 
-:::readable Fir.Func.WellFormed.decodeItem_eq Fir.Item.WellFormed.decodeItem_eq Fir.Item.WellFormed.decodeItems_eq (pin := Fir.Text.decodeItem) (pin := Fir.Text.decodeItems) (fingerprint := "13677868610136160431")
+:::readable Fir.decodeFields_eq Fir.Aggregate.WellFormed.decodeItem_eq (pin := Fir.Text.decodeAggregate) (pin := Fir.Aggregate.WellFormed) (fingerprint := "8170585867673597594")
+*Theorems: an aggregate's layout decodes back.* Fields whose numbers are
+within the limit and whose types are written as types and decode back
+decode back from the attributes they write, at any positions. So for every
+dialect with a text format and every well-formed aggregate's layout $`A`,
+an item as written that erases to the tree of $`A` decodes as $`A`: its
+kind is `aggregate`, it has no parameters or results, its body is no
+blocks, and its memory, size, alignment and fields decode back.
+:::
+
+:::readable Fir.Func.WellFormed.decodeItem_eq Fir.Item.WellFormed.decodeItem_eq Fir.Item.WellFormed.decodeItems_eq (pin := Fir.Text.decodeItem) (pin := Fir.Text.decodeItems) (fingerprint := "533334474839276520")
 *Theorems: items decode back.* For every dialect with signatures,
 validation rules and a lawful text:
 
@@ -82,7 +92,8 @@ to the tree of a nested module is a `module` with no parameters, results
 or attributes; its body is no blocks when the module has no dialect set and
 no items, and otherwise its dialect set and items that erase to the trees
 of its items, which decode back in turn. An item that erases to the tree of
-an item of a dialect's kind decodes back by the theorem above. The last two theorems call one
+an item of a dialect's kind, or of an aggregate's layout, decodes back by
+the theorems above. The last two theorems call one
 another, and are proved together by induction on the items.
 :::
 

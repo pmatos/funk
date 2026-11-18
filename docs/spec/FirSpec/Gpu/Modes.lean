@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Modes of the core and gpu: readable blocks" =>
 
-:::moduleDocs (fingerprint := "11672538903844191493")
+:::moduleDocs (fingerprint := "1212278537580134786")
 :::
 
 :::readable Fir.Gpu.memName (fingerprint := "9143936946335769858")
@@ -33,7 +33,7 @@ the run names each core memory as the sum does; an op with no rule ends its
 path with no outcome, naming that op.
 :::
 
-:::readable Fir.Gpu.treeMapsDenote Fir.Gpu.memMapsDenote (fingerprint := "13419976580743854577")
+:::readable Fir.Gpu.treeMapsDenote Fir.Gpu.memMapsDenote (fingerprint := "4366114471396580295")
 *Theorems: the tree denotes the runs with memory.* Taking the set of each
 path through the state layer keeps a result, the memories and an
 allocation, so it maps the rules of `gpu` in the tree to its rules with
@@ -53,11 +53,12 @@ walk that tries a few NaNs below, on a function of the module or a kernel
 of a nested module run in the module of its table, and nothing else.
 :::
 
-:::readable Fir.Gpu.exhaustive_memOutcomes Fir.Gpu.exhaustive_memStuck (pin := Fir.Run.outcomes) (pin := Fir.Run.IsStuck) (pin := Fir.ChoiceTree.Leaf.pathEnd) (fingerprint := "14287693176026857430")
+:::readable Fir.Gpu.exhaustive_memOutcomes Fir.Gpu.exhaustive_memStuck (pin := Fir.Run.outcomes) (pin := Fir.Run.IsStuck) (pin := Fir.ChoiceTree.Leaf.pathEnd) (fingerprint := "14808889149253367906")
 *Theorems: exhaustive mode gives exactly the outcomes.* At every
 work-item, within its choice budget, exhaustive mode on a function of the
 sum lists exactly the outcomes of its run with memory at the fuel it runs
-with, and lists a stuck path exactly when the run has one.
+with, where the run gives each op the items of the module's own table, and
+lists a stuck path exactly when the run has one.
 :::
 
 :::readable Fir.Gpu.exhaustiveNaN (pin := Fir.ChoiceTree.exploreNaN) (fingerprint := "8539463227524929146")
@@ -67,7 +68,7 @@ the {ref "The-fir-specification--Memory--Exhaustive-runs-that-try-a-few-NaNs"}[w
 does. `fir-ref run --exhaustive --nans` computes it (ADR-2026-11-16-0855).
 :::
 
-:::readable Fir.Gpu.exhaustiveNaN_memOutcomes Fir.Gpu.exhaustiveNaN_memStuck Fir.Gpu.exhaustiveNaN_exact (pin := Fir.Run.outcomes) (pin := Fir.Run.IsStuck) (pin := Fir.ChoiceTree.Leaf.pathEnd) (fingerprint := "13630301087183346647")
+:::readable Fir.Gpu.exhaustiveNaN_memOutcomes Fir.Gpu.exhaustiveNaN_memStuck Fir.Gpu.exhaustiveNaN_exact (pin := Fir.Run.outcomes) (pin := Fir.Run.IsStuck) (pin := Fir.ChoiceTree.Leaf.pathEnd) (fingerprint := "14286353753860856937")
 *Theorems: the walk that tries a few NaNs gives outcomes, and all of them
 without a NaN choice.* At every work-item, each outcome that it lists on a
 function of the sum, and each stuck path, is one of its run with memory at
@@ -75,13 +76,13 @@ the fuel it runs with. When no path that it lists made a NaN choice, it
 lists exactly the outcomes of the run.
 :::
 
-:::readable Fir.Gpu.scripted_memOutcomes Fir.Gpu.scripted_memStuck (pin := Fir.Run.outcomes) (pin := Fir.Run.IsStuck) (pin := Fir.ChoiceTree.Leaf.pathEnd) (fingerprint := "1707494772383201581")
+:::readable Fir.Gpu.scripted_memOutcomes Fir.Gpu.scripted_memStuck (pin := Fir.Run.outcomes) (pin := Fir.Run.IsStuck) (pin := Fir.ChoiceTree.Leaf.pathEnd) (fingerprint := "4189661354652431804")
 *Theorems: scripted mode gives an outcome.* At every work-item, on a choice
 sequence that fits, scripted mode on a function of the sum gives an outcome
 of its run with memory, and reports a stuck path only when the run has one.
 :::
 
-:::readable Fir.Gpu.sampled_fits Fir.Gpu.sampled_memOutcomes Fir.Gpu.sampled_memStuck (pin := Fir.ChoiceTree.readChosen) (pin := Fir.Run.outcomes) (pin := Fir.Run.IsStuck) (pin := Fir.ChoiceTree.Leaf.pathEnd) (fingerprint := "17359222630756484873")
+:::readable Fir.Gpu.sampled_fits Fir.Gpu.sampled_memOutcomes Fir.Gpu.sampled_memStuck (pin := Fir.ChoiceTree.readChosen) (pin := Fir.Run.outcomes) (pin := Fir.Run.IsStuck) (pin := Fir.ChoiceTree.Leaf.pathEnd) (fingerprint := "11568252885017401103")
 *Theorems: sampled mode gives an outcome.* The values that sampled mode
 chose are a choice sequence that fits the run: scripted mode on them reports
 the same path, with as many choices. So, whatever the generator, sampled

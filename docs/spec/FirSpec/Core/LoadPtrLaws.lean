@@ -14,10 +14,10 @@ when the Lean changes under it.
 
 #doc (Manual) "Pointer load obligations: readable blocks" =>
 
-:::moduleDocs (fingerprint := "10878465812067272121")
+:::moduleDocs (fingerprint := "4149560778941201635")
 :::
 
-:::readable Fir.Core.loadPtrAccess Fir.Core.loadPtr_denote Fir.Core.loadPtr_ownRuleHas (pin := Fir.Core.loadPtrRule) (pin := Fir.Core.memDenoteAt) (pin := Fir.OwnRuleHas) (fingerprint := "16888063152754854324")
+:::readable Fir.Core.loadPtrAccess Fir.Core.loadPtr_denote Fir.Core.loadPtr_ownRuleHas (pin := Fir.Core.loadPtrRule) (pin := Fir.Core.memDenoteAt) (pin := Fir.OwnRuleHas) (fingerprint := "3083137036737846683")
 *Definitions and theorems: the load of a pointer with memory.* In the
 {ref "The-fir-specification--Memory--The-state-layer"}[state layer] over
 the set monad, at the layout entries $`\ell` and naming $`\rho`, the
@@ -28,7 +28,7 @@ So what it runs by its own rule has a property when its rule has it on
 every pointer.
 :::
 
-:::readable Fir.Core.loadPtr_writesNot Fir.Core.loadPtr_allocatesNot Fir.Core.loadPtr_readsNot (pin := Fir.WritesNot) (pin := Fir.ReadsNot) (pin := Fir.AllocatesNot) (fingerprint := "2058534185973023888")
+:::readable Fir.Core.loadPtr_writesNot Fir.Core.loadPtr_allocatesNot Fir.Core.loadPtr_readsNot (pin := Fir.WritesNot) (pin := Fir.ReadsNot) (pin := Fir.AllocatesNot) (fingerprint := "15595423325696301472")
 *Theorems: the load of a pointer touches memory only by reading where it
 declares.* At every layout $`\ell` and naming $`\rho`, it writes no unit
 of any memory, allocates and frees in none, and reads no memory but
@@ -40,7 +40,7 @@ loads. Each follows from the
 own laws.
 :::
 
-:::readable Fir.Core.loadPtr_memTotal Fir.Core.loadPtr_finitelyMany (pin := Fir.MemTotal) (pin := Fir.FinitelyMany) (fingerprint := "18048734112742873610")
+:::readable Fir.Core.loadPtr_memTotal Fir.Core.loadPtr_finitelyMany (pin := Fir.MemTotal) (pin := Fir.FinitelyMany) (fingerprint := "14054923403509672839")
 *Theorems: the load of a pointer has an outcome, and at most one that
 ends.* From any memories it ends in UB or gives a value, a pointer or
 poison: it is
@@ -49,7 +49,7 @@ and it has
 {ref "The-fir-specification--Memory--Ops-of-finitely-many-outcomes"}[finitely many outcomes].
 :::
 
-:::readable Fir.Core.loadPtr_memMonotone (pin := Fir.MemMonotone) (fingerprint := "16743030478545639297")
+:::readable Fir.Core.loadPtr_memMonotone (pin := Fir.MemMonotone) (fingerprint := "14549399474543527207")
 *Theorem: the load of a pointer is monotone with memory.* A poison
 pointer is UB, which every outcome refines. On the same pointer, from
 memories that refine others, the load faults for the same reason or loads
@@ -58,7 +58,7 @@ units that refine the others', and their decoding as a pointer
 the others' value.
 :::
 
-:::readable Fir.Core.loadPtr_memPropagates Fir.Core.loadPtr_memReturnsOnDefined (pin := Fir.MemPropagatesPoison) (pin := Fir.MemReturnsOnDefined) (fingerprint := "8648561909289404791")
+:::readable Fir.Core.loadPtr_memPropagates Fir.Core.loadPtr_memReturnsOnDefined (pin := Fir.MemPropagatesPoison) (pin := Fir.MemReturnsOnDefined) (fingerprint := "6582210912202632347")
 *Theorems: the load of a pointer propagates poison with memory, and
 returns on defined operands.* A poison pointer gives no result, and the
 UB it gives from memories $`S` is the UB of a pointer with no provenance

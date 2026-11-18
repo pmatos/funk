@@ -186,7 +186,8 @@ def tableMemoryProblems (l : DataLayout) (t : SymbolTable d) : List Problem :=
 def moduleProblems (m : Module d) : List Problem :=
   let held := Std.HashSet.ofList (m.locs.map (·.1))
   m.locs.problems ++ m.tables.flatMap (·.problems held) ++ m.layout.problems ++
-    m.tables.flatMap (·.memoryProblems m.layout)
+    m.tables.flatMap (·.memoryProblems m.layout) ++
+    m.tables.flatMap (·.aggregates.flatMap (·.problems m.layout))
 
 @[csimp] theorem problems_eq_moduleProblems : @Module.problems = @moduleProblems := rfl
 
@@ -248,7 +249,8 @@ def tableSetProblems (t : SymbolTable d) : List Problem :=
   t.dialects.filterMap (fun x => if x ∈ names d then none else
     some { message := "the dialect set names " ++ x ++ ", which is not a known dialect" }) ++
   t.funcs.flatMap (Func.setProblems t.dialects) ++
-  t.dialectItems.flatMap (DialectItem.setProblems t.dialects)
+  t.dialectItems.flatMap (DialectItem.setProblems t.dialects) ++
+  t.aggregates.flatMap (Aggregate.setProblems t.dialects)
 
 @[csimp] theorem setProblems_eq_tableSetProblems :
     @SymbolTable.setProblems = @tableSetProblems := rfl

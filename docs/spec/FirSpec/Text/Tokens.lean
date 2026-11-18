@@ -14,7 +14,7 @@ changes under it.
 
 #doc (Manual) "Lexing printed text: readable blocks" =>
 
-:::moduleDocs (fingerprint := "16571737538791315518")
+:::moduleDocs (fingerprint := "3639006960694888536")
 :::
 
 :::readable Fir.Text.Tok.spell (pin := Fir.Text.printSymbol) (pin := Fir.printLocRef) (pin := Fir.Text.printInt) (pin := Fir.Text.quote) (pin := Nat.toDigits) (fingerprint := "17911903898172945497")
@@ -156,7 +156,7 @@ followed by the tokens of $`\mathrm{attr}(T_1), \dots, \mathrm{attr}(T_n)`,
 separated by $`\texttt{,}`.
 :::
 
-:::readable Fir.Func.tokens Fir.Item.tokens Fir.Item.tokensList Fir.Item.tokensList_eq_flatMap (pin := Fir.dialectsTokens) (fingerprint := "14755129217300646177")
+:::readable Fir.Func.tokens Fir.Item.tokens Fir.Item.tokensList Fir.Item.tokensList_eq_flatMap (pin := Fir.dialectsTokens) (fingerprint := "5441286627495891479")
 *Definition: the tokens of a function and of an item.* For every dialect
 with a text format, a function with symbol $`f`, parameters $`p^*`, result
 types $`T_1, \dots, T_n` and blocks has the tokens:
@@ -166,7 +166,8 @@ $$`\begin{aligned} & \mathsf{word}~\mathtt{func}~\mathsf{sym}~f~\texttt{(}~\math
 where $`\mathit{res}` is empty when $`n = 0`, and otherwise
 $`\texttt{->}` followed by the tokens of $`\mathrm{attr}(T_1), \dots, \mathrm{attr}(T_n)`,
 separated by $`\texttt{,}`. An item that is a function has the tokens of
-its function, and an item of a dialect's kind those of that item. A nested
+its function, an item of a dialect's kind those of that item, and an
+aggregate's layout those of the item of kind `aggregate` that writes it. A nested
 module with the symbol $`s`, the dialect set $`x^*`
 and the items $`i^*` has the tokens:
 

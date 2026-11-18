@@ -305,6 +305,9 @@ instance instDialectValidation [DialectValidation base] [DialectValidation (base
     | .inl o => (opTypes o).map .inl
     | .inr o => opTypes (d := base.over e) o
   validItem := ValidItem
+  fieldShape lay n
+    | .inl t => fieldShape lay n t
+    | .inr t => fieldShape (d := base.over e) lay n (.inr t)
 
 /-- The sum's rules can be decided when each side's can. -/
 instance instDecidableDialectValidation [DialectValidation base] [DialectValidation (base.over e)]

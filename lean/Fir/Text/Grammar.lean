@@ -15,9 +15,10 @@ float is an attribute already, written as a float literal token. A nested
 symbol reference needs a new token: a change to the tokens of the previous
 section.
 
-* An item's kind says what it is. The core's kinds are `func` and
-  `module`, so a function is written as `func @sum(%n: i32) -> i32 { ... }`
-  and a nested module as `module @dev() { ... }`. A `func` has no
+* An item's kind says what it is. The core's kinds are `func`, `module`
+  and `aggregate`, an aggregate's layout (below), so a function is written
+  as `func @sum(%n: i32) -> i32 { ... }` and a nested module as
+  `module @dev() { ... }`. A `func` has no
   attributes, and its body is its blocks. A `module` has no parameters,
   results or attributes, and its body is its items, which may start with
   its own dialect set (ADR-2026-11-10-1510). Any other kind is a word of a
@@ -78,6 +79,12 @@ one of these terms of a particular form.
 def Attr.IsType : Attr → Prop
   | a@(.word _) | a@(.app ..) => a.Writable
   | _ => False
+
+/-- Whether an attribute has the form of a type: a word, or a word applied
+to attributes. -/
+def Attr.typeShaped : Attr → Bool
+  | .word _ | .app .. => true
+  | _ => false
 
 /-!
 # The data layout in text
@@ -199,6 +206,59 @@ class LawfulDialectText (d : Dialect) [DialectSignature d] [DialectValidation d]
   tyAttr_isType : ∀ t : d.Ty, validTy t → (tyAttr t).IsType
 
 /-!
+# Aggregates' layouts in text
+
+An aggregate's layout is an item of the core's kind `aggregate`, written
+with the one production of an item, with no parameters, no results and an
+empty body (ADR-2026-11-16-1546). Its attributes are `memory(N)`,
+`size(S)` and `align(A)`, in that order, then one attribute for each field,
+in order: `field(O, T)` for a field of one value of the type `T` at the
+offset `O`, and `field(O, T, C)` for a repeated field of `C` elements, as in
+`aggregate @pair() memory(0) size(16) align(8) field(0, i64) field(8, ptr) {`
+and `}` on the next line. Every number is at most `2^64 - 1`; a larger one,
+a negative one and every other attribute do not decode.
+-/
+
+/-- The number that an integer of an aggregate's layout writes: one from 0
+to the limit. -/
+def Aggregate.number (i : Int) : Option Nat :=
+  if 0 ≤ i ∧ i ≤ Aggregate.limit then some i.toNat else none
+
+/-- The number that the attribute `h(N)` writes, for the word `h`. -/
+def Aggregate.decodeNumber (h : String) : Attr → Option Nat
+  | .app w [.int i] => if w = h then Aggregate.number i else none
+  | _ => none
+
+section
+variable {d : Dialect} [DialectText d]
+
+/-- How a field is written. -/
+def Field.attr (f : Field d) : Attr :=
+  .app "field" ([.int f.offset, tyAttr f.ty] ++ (f.count.map fun c => .int c).toList)
+
+/-- How an aggregate's layout writes its attributes: its memory, size and
+alignment, then its fields. -/
+def Aggregate.attrs (a : Aggregate d) : List Attr :=
+  .app "memory" [.int a.mem] :: .app "size" [.int a.size] :: .app "align" [.int a.align] ::
+    a.fields.map Field.attr
+
+/-- An aggregate's layout as the one production of an item writes it: the
+kind `aggregate`, its symbol, no parameters or results, and its
+attributes. -/
+def Aggregate.item (a : Aggregate d) : DialectItem d := ⟨"aggregate", a.name, [], [], a.attrs⟩
+
+/-- The field that an attribute writes, if any: its type is written in the
+form of a type. -/
+def Field.decode : Attr → Option (Field d)
+  | .app h [.int o, t] => if h = "field" ∧ t.typeShaped then do
+      pure ⟨← Aggregate.number o, ← decodeTy t, none⟩ else none
+  | .app h [.int o, t, .int c] => if h = "field" ∧ t.typeShaped then do
+      pure ⟨← Aggregate.number o, ← decodeTy t, some (← Aggregate.number c)⟩ else none
+  | _ => none
+
+end
+
+/-!
 # Reading a text
 
 A parser reads a text in two steps. It first reads the text by the grammar
@@ -215,12 +275,14 @@ applies (ADR-2026-10-29-2014):
 * a string or quoted symbol not in its one spelling, such as an escape the
   printer does not write, or a quoted name that is a word;
 * an item whose kind the parser does not know: every kind but `func`,
-  `module` and the words of dialects; a `func` with attributes, or with a
+  `module`, `aggregate` and the words of dialects; a `func` with attributes, or with a
   dialect set or items in its body; a `module` with parameters, results,
   attributes or blocks; and an item of a dialect's kind with a body that is
   not empty;
 * a type that does not decode;
 * an entry of the data layout that does not decode;
+* an aggregate's layout with parameters, results or a body that is not
+  empty, or whose attributes do not decode (ADR-2026-11-16-1546);
 * a value that a function defines twice: an operand's type is found at its
   definition, so each value has one;
 * an operand that the function does not define, or defines in another

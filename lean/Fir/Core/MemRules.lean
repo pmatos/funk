@@ -22,9 +22,9 @@ memory effect, over the memories of a run, whose layout entries are `lay`,
 where the run names the core's memory `x` as `ρ x`. An op that touches
 memory reads the entry `lay (ρ x)` of the memory it accesses
 (ADR-2026-11-13-0906). `alloca`'s rule allocates in the memory of its
-result, `load`'s and `loadPtr`'s read the memory of their pointer, and
-`store`'s and `storePtr`'s write it: each is its rule with memory alone,
-and has no rule in the set monad.
+result, `load`'s, `loadPtr`'s and `loadFloat`'s read the memory of their
+pointer, and `store`'s, `storePtr`'s and `storeFloat`'s write it: each is
+its rule with memory alone, and has no rule in the set monad.
 Every other core op touches no memory, and its rule with memory is its
 rule. The core's semantics with memory runs those rules in the state layer
 over the set monad, op by op; an op with no rule, as `call`, has no outcome
@@ -37,8 +37,8 @@ with memory by its rule in the set monad and keeps the memories. Each
 obligation with memory of a tied op follows from its own tie and its
 obligation in the set monad, and `alloca` and the loads and stores meet
 each by their own proofs (the sections on the stack allocation, load,
-store, pointer load and pointer store obligations). No
-theorem asks that the whole core dialect lift the set monad.
+store, pointer load, pointer store, float load and float store
+obligations). No theorem asks that the whole core dialect lift the set monad.
 -/
 
 namespace Fir.Core
@@ -259,7 +259,7 @@ namespace Fir
 /-- The core dialect's semantics with memory, at each layout and naming of
 its memories. -/
 instance Core.instDialectMemDenote : DialectMemDenote CoreDialect :=
-  ⟨Core.memDenoteAt⟩
+  ⟨fun lay ρ _ => Core.memDenoteAt lay ρ⟩
 
 namespace Core
 
@@ -270,7 +270,7 @@ layout and naming. Lifting into the layer keeps choice and UB, and maps an
 op with no rule to one with no outcome. -/
 theorem Op.liftsSetM (op : Op) (hm : op.touchesMemory = false) :
     OpLiftsSetM (d := CoreDialect) op := by
-  intro N _ lay ρ args
+  intro N _ lay ρ L args
   have h := denoteIn_mapsDenote (MonadMorphism.liftState SetM (Memory.Memories N (unitsOf lay)))
     (MonadMorphism.liftState_keeps _ fun r f => SetM.ub_bind r f) (fun _ _ => False)
     (fun _ _ _ => False) fun _ => by

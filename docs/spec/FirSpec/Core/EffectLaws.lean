@@ -14,7 +14,7 @@ fingerprint; the build fails when the Lean changes under it.
 
 #doc (Manual) "The core dialect's effect obligations: readable blocks" =>
 
-:::moduleDocs (fingerprint := "4929771034019889168")
+:::moduleDocs (fingerprint := "1808800050713880090")
 :::
 
 :::readable Fir.Core.Op.neverUB_all (pin := Fir.Core.Op.effects) (pin := Fir.NeverUBSetM) (fingerprint := "1260851317332000110")
@@ -89,7 +89,7 @@ declares
 $`\mathsf{control}`.
 :::
 
-:::readable Fir.Core.lawfulDialectEffects (pin := Fir.LawfulDialectEffects) (fingerprint := "1816632172257312251")
+:::readable Fir.Core.lawfulDialectEffects (pin := Fir.LawfulDialectEffects) (fingerprint := "172079627767923088")
 *Theorem: the core dialect is lawful in its effects.* Every effect that a
 core op leaves out, it does not have. Every core op but
 $`\mathsf{alloca}`, $`\mathsf{load}` and $`\mathsf{store}` touches no
@@ -115,7 +115,7 @@ may-UB. So a pass may rely on the core ops' effect sets
 (ADR-2026-11-09-1541).
 :::
 
-:::readable Fir.Core.Unlawful.sdivNoUB Fir.Core.Unlawful.sdivNoUB_unlawful (pin := Fir.Core.Op.effects) (pin := Fir.NeverUB) (pin := Fir.Core.memDenoteAt) (fingerprint := "7577140437904869602")
+:::readable Fir.Core.Unlawful.sdivNoUB Fir.Core.Unlawful.sdivNoUB_unlawful (pin := Fir.Core.Op.effects) (pin := Fir.NeverUB) (pin := Fir.Core.memDenoteAt) (fingerprint := "4669650355519170038")
 *Definition and theorem: the obligations reject a wrong declaration.* The
 declaration $`\mathrm{eff}'` gives each core op its set but
 $`\mathsf{sdiv}`, which it declares without $`\mathsf{mayUB}`, keeping

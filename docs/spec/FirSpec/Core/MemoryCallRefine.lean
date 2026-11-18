@@ -14,7 +14,7 @@ pins their fingerprint; the build fails when the Lean changes under it.
 
 #doc (Manual) "Congruence in a core callee: readable blocks" =>
 
-:::moduleDocs (fingerprint := "11776099395834119705")
+:::moduleDocs (fingerprint := "15085586242917980642")
 :::
 
 :::readable Fir.Core.Op.effects_touchesNoMemory Fir.Core.Op.touchesMemory_false Fir.Core.reachesNoMemory Fir.Core.reachesNoMemory_of_all (pin := Fir.Core.Op.effects) (fingerprint := "17028607755377081142")
@@ -34,7 +34,7 @@ an op that touches memory; and so it does when no function of the table
 has one.
 :::
 
-:::readable Fir.Core.opsIgnoreMemory (pin := Fir.Core.Op.liftsSetM) (fingerprint := "8906603344257890118")
+:::readable Fir.Core.opsIgnoreMemory (pin := Fir.Core.Op.liftsSetM) (fingerprint := "150627400720746909")
 *Theorem: core ops ignore the memories.* At every layout and naming of the
 core's memories, each core op that declares no memory effect ignores the
 memories: such an op touches no memory, so it is
@@ -44,7 +44,7 @@ $`\mathsf{alloca}` and the loads and stores, of an integer, a pointer or a
 float, which touch memory, declare it, so they are not asked.
 :::
 
-:::readable Fir.Core.opsFinite (pin := Fir.Core.Op.liftsSetM) (pin := Fir.OpsFinite) (fingerprint := "8297816828923716502")
+:::readable Fir.Core.opsFinite (pin := Fir.Core.Op.liftsSetM) (pin := Fir.OpsFinite) (fingerprint := "14825628572605386215")
 *Theorem: core ops have finitely many outcomes.* At every layout and
 naming of the core's memories, each core op that runs by its own rule has
 {ref "The-fir-specification--Memory--Ops-of-finitely-many-outcomes"}[finitely many outcomes]
@@ -62,7 +62,7 @@ either, and have at most one that ends
 {ref "The-fir-specification--Memory--Store-obligations"}[store obligations]).
 :::
 
-:::readable Fir.Core.replaceBody_isRefinedBy_of_from Fir.Core.caller_isRefinedBy_of_from (fingerprint := "11864989512908111455")
+:::readable Fir.Core.replaceBody_isRefinedBy_of_from Fir.Core.caller_isRefinedBy_of_from (fingerprint := "3664423118415088410")
 *Theorem: congruence in a core callee, from given memories.* Let $`M` be a
 valid core module, $`g` a function of $`M` with the symbol $`s`, $`b` a
 region, and $`M[s \leftarrow b]` the module with $`b` in place of $`g`'s
@@ -79,7 +79,7 @@ applies (#214). So every function of $`M` whose symbol is not $`s`, a caller
 of $`g` or not, is refined with memory by itself in $`M[s \leftarrow b]`.
 :::
 
-:::readable Fir.Core.replaceBody_isRefinedBy Fir.Core.caller_isRefinedBy (fingerprint := "11835033131941382943")
+:::readable Fir.Core.replaceBody_isRefinedBy Fir.Core.caller_isRefinedBy (fingerprint := "13131969631230233583")
 *Theorems: congruence in a core callee that touches no memory, with
 memory.* With $`M`, $`g`, $`s` and $`b` as above, let $`s` reach no memory
 both in $`M` and in $`M[s \leftarrow b]`. If the runs with

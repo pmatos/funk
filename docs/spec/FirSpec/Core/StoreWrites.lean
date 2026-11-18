@@ -14,7 +14,7 @@ fails when the Lean changes under it.
 
 #doc (Manual) "A store declared without a write: readable blocks" =>
 
-:::moduleDocs (fingerprint := "13074576148374134104")
+:::moduleDocs (fingerprint := "11243257183109581193")
 :::
 
 :::readable Fir.Core.Unlawful.storeNoWrite Fir.Core.Unlawful.store_typesValid (pin := Fir.Core.Op.effects) (fingerprint := "12764346124275899649")
@@ -35,7 +35,7 @@ load declared without a read whose one allocation holds 0, gives $`S_1`,
 the same memories with that unit holding 1.
 :::
 
-:::readable Fir.Core.Unlawful.storeNoWrite_unlawful (pin := Fir.LawfulDialectEffects) (fingerprint := "11574669081044416067")
+:::readable Fir.Core.Unlawful.storeNoWrite_unlawful (pin := Fir.LawfulDialectEffects) (fingerprint := "11489798942298084601")
 *Theorem: the obligations reject the declaration.* Over the core's own
 {ref "The-fir-specification--Memory--The-core___s-rules-with-memory"}[semantics with memory],
 the declaration above is not lawful in its effects. The obligation on an

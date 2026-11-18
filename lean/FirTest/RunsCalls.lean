@@ -28,8 +28,8 @@ theorem sum10_mem : sum10 ∈ sumModule.funcs := by
 no path of it is stuck, and more fuel never changes how it returns or hits
 UB. -/
 theorem sum10_runsWell (args : HVector toType (sum10.params.map (·.2))) :
-    RunsWell (sum10.memRuns sumModule.layout.entry id sumModule args) :=
-  Core.runsWell _ _ sumModule_valid sum10_mem args
+    RunsWell (sum10.memRuns sumModule.layout.entry id sumModule.runItems sumModule args) :=
+  Core.runsWell _ _ _ sumModule_valid sum10_mem args
 
 /-! # Recursion and mutual recursion -/
 
@@ -180,26 +180,26 @@ theorem recModule_valid : recModule.Valid := Module.valid_of_flat
 /-- Every run with memory of `@fact`, which calls itself, has an outcome, no
 path of it is stuck, and more fuel never changes how it returns or hits UB. -/
 theorem fact_runsWell (args : HVector toType (factFn.params.map (·.2))) :
-    RunsWell (factFn.memRuns recModule.layout.entry id recModule args) :=
-  Core.runsWell _ _ recModule_valid (by simp [recModule, Module.funcs]) args
+    RunsWell (factFn.memRuns recModule.layout.entry id recModule.runItems recModule args) :=
+  Core.runsWell _ _ _ recModule_valid (by simp [recModule, Module.funcs]) args
 
 /-- A run with memory of `@even`, which calls `@odd`, which calls it back,
 has an outcome at every budget. -/
 theorem even_progress (args : HVector toType (evenFn.params.map (·.2))) :
-    Progress (evenFn.memRuns recModule.layout.entry id recModule args) :=
-  Core.progress _ _ recModule_valid (by simp [recModule, Module.funcs]) args
+    Progress (evenFn.memRuns recModule.layout.entry id recModule.runItems recModule args) :=
+  Core.progress _ _ _ recModule_valid (by simp [recModule, Module.funcs]) args
 
 /-- No path of a run with memory of `@odd`, which calls `@even`, which calls
 it back, is stuck. -/
 theorem odd_neverStuck (args : HVector toType (oddFn.params.map (·.2))) :
-    NeverStuck (oddFn.memRuns recModule.layout.entry id recModule args) :=
-  Core.neverStuck _ _ recModule_valid (by simp [recModule, Module.funcs]) args
+    NeverStuck (oddFn.memRuns recModule.layout.entry id recModule.runItems recModule args) :=
+  Core.neverStuck _ _ _ recModule_valid (by simp [recModule, Module.funcs]) args
 
 /-- More fuel never changes how a run with memory of `@odd` returns or hits
 UB. -/
 theorem odd_fuelMonotone (args : HVector toType (oddFn.params.map (·.2))) :
-    FuelMonotone (oddFn.memRuns recModule.layout.entry id recModule args) :=
-  Core.fuelMonotone _ _ recModule oddFn args
+    FuelMonotone (oddFn.memRuns recModule.layout.entry id recModule.runItems recModule args) :=
+  Core.fuelMonotone _ _ _ recModule oddFn args
 
 /-! # Axioms
 

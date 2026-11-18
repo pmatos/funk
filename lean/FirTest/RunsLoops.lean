@@ -28,18 +28,18 @@ theorem sum_mem : sum ∈ sumModule.funcs := by
 /-- More fuel never changes how a run with memory of `@sum` returns or hits
 UB. -/
 theorem sum_fuelMonotone (args : HVector toType (sum.params.map (·.2))) :
-    FuelMonotone (sum.memRuns sumModule.layout.entry id sumModule args) :=
-  callFree_fuelMonotone _ _ sumModule_valid sum_mem (by decide) args
+    FuelMonotone (sum.memRuns sumModule.layout.entry id sumModule.runItems sumModule args) :=
+  callFree_fuelMonotone _ _ _ sumModule_valid sum_mem (by decide) args
 
 /-- A run with memory of `@sum` has an outcome at every budget. -/
 theorem sum_progress (args : HVector toType (sum.params.map (·.2))) :
-    Progress (sum.memRuns sumModule.layout.entry id sumModule args) :=
-  callFree_progress _ _ sumModule_valid sum_mem (by decide) args
+    Progress (sum.memRuns sumModule.layout.entry id sumModule.runItems sumModule args) :=
+  callFree_progress _ _ _ sumModule_valid sum_mem (by decide) args
 
 /-- No path of a run with memory of `@sum` is stuck. -/
 theorem sum_neverStuck (args : HVector toType (sum.params.map (·.2))) :
-    NeverStuck (sum.memRuns sumModule.layout.entry id sumModule args) :=
-  callFree_neverStuck _ _ sumModule_valid sum_mem (by decide) args
+    NeverStuck (sum.memRuns sumModule.layout.entry id sumModule.runItems sumModule args) :=
+  callFree_neverStuck _ _ _ sumModule_valid sum_mem (by decide) args
 
 /-! # A loop that never ends -/
 
@@ -127,10 +127,11 @@ theorem forever_mem : forever ∈ foreverModule.funcs := by
 stuck, and more fuel never changes how it returns or hits UB, which it never
 does. -/
 theorem forever_runsWell (args : HVector toType (forever.params.map (·.2))) :
-    RunsWell (forever.memRuns foreverModule.layout.entry id foreverModule args) :=
-  ⟨callFree_fuelMonotone _ _ foreverModule_valid forever_mem (by decide) args,
-    callFree_progress _ _ foreverModule_valid forever_mem (by decide) args,
-    callFree_neverStuck _ _ foreverModule_valid forever_mem (by decide) args⟩
+    RunsWell (forever.memRuns foreverModule.layout.entry id foreverModule.runItems foreverModule
+        args) :=
+  ⟨callFree_fuelMonotone _ _ _ foreverModule_valid forever_mem (by decide) args,
+    callFree_progress _ _ _ foreverModule_valid forever_mem (by decide) args,
+    callFree_neverStuck _ _ _ foreverModule_valid forever_mem (by decide) args⟩
 
 /-! # Axioms
 

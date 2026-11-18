@@ -254,6 +254,14 @@ module, `alloca`, `load` and `store` included:
   `Core.caller_isRefinedBy_of_from`, with no condition on the callee
   (#214; `lean/Fir/Core/MemoryCallRefine.lean`).
 
+Each holds wherever a run names the core's memories and for every record of
+the items a run gives each op (`RunItems`, `lean/Fir/Execution/RunItems.lean`),
+with no hypothesis on it, and so do their `CoreGpu` counterparts. The human
+ruled on 2026-11-16, on #236 (Q1 A), that the run passes the module's
+layouts to every op's rule and that these guarantees gain that argument.
+Rejected: the parser looking a layout up when it reads an op (Q1 B), which
+changes every dialect's text laws.
+
 The sum of the core and `gpu` keeps every one of them, at every work-item,
 for the functions of every table of a valid module, a device module's
 kernels included (`lean/Fir/Gpu/Runs.lean`, #212; semantics-m1-dialects.md).

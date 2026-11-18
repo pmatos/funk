@@ -1,0 +1,462 @@
+# Must-reject texts of aggregates' layouts (ADR-2026-11-16-1546). An
+# aggregate's layout is an item `aggregate @s() memory(N) size(S) align(A)`
+# with fields `field(O, T)` and `field(O, T, C)`, no parameters or results,
+# and an empty body; every number is at most 2^64 - 1. A valid layout
+# describes a declared memory, has an alignment that is a power of two, and
+# places each field of an integer or pointer type at a multiple of its
+# alignment, no larger than the layout's, within the size, and apart from
+# every other field. A repeated field's elements are rounded up to their
+# alignment (the human's ruling of 2026-11-16 on #236).
+
+[[reject]]
+verdict = "parse-error"
+rule = "an aggregate's layout writes memory(N), size(S) and align(A) in that order: size first does not decode"
+text = '''
+aggregate @s() size(16) memory(0) align(8) {
+}
+
+func @f() {
+^e:
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "an aggregate's numbers are at most 2^64 - 1: size(18446744073709551616) does not decode"
+text = '''
+aggregate @s() memory(0) size(18446744073709551616) align(1) {
+}
+
+func @f() {
+^e:
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "an aggregate's numbers are not negative: size(-1) does not decode"
+text = '''
+aggregate @s() memory(0) size(-1) align(8) {
+}
+
+func @f() {
+^e:
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "an aggregate's layout writes memory, size and align: one without align does not decode"
+text = '''
+aggregate @s() memory(0) size(16) {
+}
+
+func @f() {
+^e:
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "a field is field(O, T) or field(O, T, C): field(0) does not decode"
+text = '''
+aggregate @s() memory(0) size(16) align(8) field(0) {
+}
+
+func @f() {
+^e:
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "a field's type is a type: field(0, 5) does not decode"
+text = '''
+aggregate @s() memory(0) size(16) align(8) field(0, 5) {
+}
+
+func @f() {
+^e:
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "a field's type decodes: field(0, i0x) does not decode"
+text = '''
+aggregate @s() memory(0) size(16) align(8) field(0, i0x) {
+}
+
+func @f() {
+^e:
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "an aggregate has no parameters"
+text = '''
+aggregate @s(%x: i8) memory(0) size(1) align(1) {
+}
+
+func @f() {
+^e:
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "an aggregate has no results"
+text = '''
+aggregate @s() -> i8 memory(0) size(1) align(1) {
+}
+
+func @f() {
+^e:
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "an aggregate has an empty body"
+text = '''
+aggregate @s() memory(0) size(1) align(1) {
+^e:
+  ret @0
+}
+
+func @f() {
+^e:
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "no two fields share a unit: an i32 at 4 overlaps an i64 at 0"
+text = '''
+aggregate @s() memory(0) size(16) align(8) field(0, i64) field(4, i32) {
+}
+
+func @f() {
+^e:
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "no two fields share a unit: four i24 take 16 units, so an i8 at 12 overlaps them"
+text = '''
+aggregate @s() memory(0) size(16) align(4) field(0, i24, 4) field(12, i8) {
+}
+
+func @f() {
+^e:
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "a field's offset is a multiple of its type's alignment: an i64 at 4"
+text = '''
+aggregate @s() memory(0) size(16) align(8) field(4, i64) {
+}
+
+func @f() {
+^e:
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "a field ends within the size: four i24 take 16 units, not 12"
+text = '''
+aggregate @s() memory(0) size(12) align(4) field(0, i24, 4) {
+}
+
+func @f() {
+^e:
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "a field's type is aligned no more than the layout: an i64 in a layout aligned to 4"
+text = '''
+aggregate @s() memory(0) size(16) align(4) field(0, i64) {
+}
+
+func @f() {
+^e:
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "a layout's alignment is a power of two: 6 is not"
+text = '''
+aggregate @s() memory(0) size(12) align(6) {
+}
+
+func @f() {
+^e:
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "a layout's alignment is a power of two: 0 is not"
+text = '''
+aggregate @s() memory(0) size(1) align(0) {
+}
+
+func @f() {
+^e:
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "a layout describes a memory that the module declares: memory 1 is not declared"
+text = '''
+aggregate @s() memory(1) size(4) align(4) field(0, i32) {
+}
+
+func @f() {
+^e:
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "a field's type names a declared memory: ptr(1) in a module that declares only memory 0"
+text = '''
+aggregate @s() memory(0) size(8) align(8) field(0, ptr(1)) {
+}
+
+func @f() {
+^e:
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "a field's type is valid: i0 is not"
+text = '''
+aggregate @s() memory(0) size(4) align(4) field(0, i0) {
+}
+
+func @f() {
+^e:
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "a field's type is an integer or a pointer: f32 has no units yet (#264)"
+text = '''
+aggregate @s() memory(0) size(4) align(4) field(0, f32) {
+}
+
+func @f() {
+^e:
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "a symbol names one item: an aggregate and a function share @f"
+text = '''
+aggregate @f() memory(0) size(1) align(1) {
+}
+
+func @f() {
+^e:
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "in a memory of 16-bit units a pointer of memory 0 takes 4 units aligned to 4: at offset 2 it is misaligned"
+text = '''
+layout memory(1, unit(16), pointer(32), little)
+
+aggregate @s() memory(1) size(6) align(4) field(2, ptr) {
+}
+
+func @f() {
+^e:
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "in a memory of 16-bit units two i24 take 4 units, not 3"
+text = '''
+layout memory(1, unit(16), pointer(32), little)
+
+aggregate @s() memory(1) size(3) align(2) field(0, i24, 2) {
+}
+
+func @f() {
+^e:
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "an entry's align(4) aligns the memory's pointer fields to 4, more than a layout aligned to 2"
+text = '''
+layout memory(1, unit(16), pointer(32), little, align(4))
+
+aggregate @s() memory(1) size(4) align(2) field(0, ptr(1)) {
+}
+
+func @f() {
+^e:
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "a nested module's layout describes a memory of the module's one data layout: memory 1 is not declared"
+text = '''
+module @dev() {
+  aggregate @s() memory(1) size(4) align(4) {
+  }
+
+}
+
+func @f() {
+^e:
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''

@@ -37,13 +37,13 @@ variable (o : Memory.Ordering) (fe fm : Nat) (a : Option Nat) (n : Nat)
 
 section
 
-variable {N : Type} [DecidableEq N] (lay : N → MemLayout) (ρ : Mem → N)
+variable {N : Type} [DecidableEq N] (lay : N → MemLayout) (ρ : Mem → N) (L : RunItems)
 
 local notation "SM" => StateT (Memories N (unitsOf lay)) SetM
 
 /-- `storeFloat` runs with memory by its rule. -/
 theorem storeFloat_denote (v : PoisonOr (BitVec (floatWidth fe fm))) (p : PoisonOr Pointer) :
-    letI := DialectMemDenote.denoteAt (d := CoreDialect) lay ρ
+    letI := DialectMemDenote.denoteAt (d := CoreDialect) lay ρ L
     @Eq (SM (HVector toType ([] : List Ty)))
       (DialectDenote.denote (d := CoreDialect) (m := SM) (Op.storeFloat o fe fm a n) (.cons v (.cons p .nil)))
       (storeFloatRule lay ρ fe fm a n v p) :=
@@ -65,22 +65,22 @@ theorem storeFloatRule_value (v : PoisonOr (BitVec (floatWidth fe fm))) (p : Poi
 on every value and pointer. -/
 theorem storeFloat_ownRuleHas {P : {α : Type} → SM α → Prop}
     (h : ∀ v p, P (storeFloatRule lay ρ fe fm a n v p : SM (HVector toType ([] : List Ty)))) :
-    OwnRuleHas lay ρ P (d := CoreDialect) (.storeFloat o fe fm a n) := fun
+    OwnRuleHas lay ρ L P (d := CoreDialect) (.storeFloat o fe fm a n) := fun
   | .cons v (.cons p .nil) => ⟨fun _ => h v p, fun h => nomatch h⟩
 
 /-- `storeFloat` writes no memory but the memory of its pointer. -/
 theorem storeFloat_writesNot (x : N)
     (hx : ¬ ((Fir.effects (d := CoreDialect) (.storeFloat o fe fm a n)).writes.map ρ).Has x) :
-    OwnRuleHas lay ρ (WritesNot x) (d := CoreDialect) (.storeFloat o fe fm a n) :=
-  storeFloat_ownRuleHas o fe fm a n lay ρ fun
+    OwnRuleHas lay ρ L (WritesNot x) (d := CoreDialect) (.storeFloat o fe fm a n) :=
+  storeFloat_ownRuleHas o fe fm a n lay ρ L fun
     | _, .poison => fun _ _ _ h => nomatch h
     | _, .value p => (Fir.store_writesNot (unit := unitsOf lay) _ p _ _
         fun h => hx (List.mem_singleton.2 h.symm)).map _
 
 /-- `storeFloat` reads no memory, its own included. -/
 theorem storeFloat_readsNot (x : N) :
-    OwnRuleHas lay ρ (ReadsNot x) (d := CoreDialect) (.storeFloat o fe fm a n) :=
-  storeFloat_ownRuleHas o fe fm a n lay ρ fun
+    OwnRuleHas lay ρ L (ReadsNot x) (d := CoreDialect) (.storeFloat o fe fm a n) :=
+  storeFloat_ownRuleHas o fe fm a n lay ρ L fun
     | _, .poison => fun _ _ _ e he => by
       subst he
       exact ⟨_, rfl, rfl⟩
@@ -88,21 +88,21 @@ theorem storeFloat_readsNot (x : N) :
 
 /-- `storeFloat` neither allocates nor frees in any memory. -/
 theorem storeFloat_allocatesNot (x : N) :
-    OwnRuleHas lay ρ (AllocatesNot x) (d := CoreDialect) (.storeFloat o fe fm a n) :=
-  storeFloat_ownRuleHas o fe fm a n lay ρ fun
+    OwnRuleHas lay ρ L (AllocatesNot x) (d := CoreDialect) (.storeFloat o fe fm a n) :=
+  storeFloat_ownRuleHas o fe fm a n lay ρ L fun
     | _, .poison => fun _ _ _ h => nomatch h
     | _, .value p => (Fir.store_allocatesNot (unit := unitsOf lay) _ p _ _ x).map _
 
 /-- `storeFloat` has an outcome from any memories. -/
-theorem storeFloat_memTotal : MemTotal (d := CoreDialect) (.storeFloat o fe fm a n) := fun lay ρ =>
-  storeFloat_ownRuleHas o fe fm a n lay ρ fun
+theorem storeFloat_memTotal : MemTotal (d := CoreDialect) (.storeFloat o fe fm a n) := fun lay ρ L =>
+  storeFloat_ownRuleHas o fe fm a n lay ρ L fun
     | _, .poison => fun _ => ⟨_, rfl⟩
     | _, .value p => (Fir.store_hasOutcome (unit := unitsOf lay) _ p _ _).map _
 
 /-- `storeFloat` has at most one outcome that ends, from any memories. -/
 theorem storeFloat_finitelyMany
     (args : HVector toType (Fir.sig (d := CoreDialect) (Op.storeFloat o fe fm a n))) :
-    letI := DialectMemDenote.denoteAt (d := CoreDialect) lay ρ
+    letI := DialectMemDenote.denoteAt (d := CoreDialect) lay ρ L
     FinitelyMany (DialectDenote.denote (d := CoreDialect)
       (m := SM) (Op.storeFloat o fe fm a n) args) := by
   match args with
@@ -122,7 +122,7 @@ end
 
 /-- `storeFloat` gives no result, so none is poison. -/
 theorem storeFloat_makesNoPoison : MakesNoPoison (d := CoreDialect) (.storeFloat o fe fm a n) := by
-  intro _ N _ lay ρ args _ S rs S' _ h
+  intro _ N _ lay ρ L args _ S rs S' _ h
   cases rs
   exact h
 
@@ -131,7 +131,7 @@ another, through a pointer that refines another, faults for the same
 reason or gives memories that refine the others'; on a poison pointer it
 is UB, which every outcome refines. -/
 theorem storeFloat_memMonotone : MemMonotone (d := CoreDialect) (.storeFloat o fe fm a n) := by
-  intro N _ lay ρ args args' h
+  intro N _ lay ρ L args args' h
   refine ⟨fun _ => ?_, fun h => nomatch h⟩
   match args, args', h with
   | .cons v (.cons p .nil), .cons v' (.cons p' .nil), ⟨hv, hp, _⟩ =>
@@ -150,10 +150,10 @@ theorem storeFloat_memMonotone : MemMonotone (d := CoreDialect) (.storeFloat o f
 pointer is the UB of a pointer with no provenance, and a poison value is UB
 only where a defined value's units, as many, are, from the same memories. -/
 theorem storeFloat_memPropagates : MemPropagatesPoison (d := CoreDialect) (.storeFloat o fe fm a n) where
-  poisonOut _ _ _ _ _ rs _ _ := by
+  poisonOut _ _ _ _ _ _ rs _ _ := by
     cases rs
     trivial
-  ubByOwnRules lay ρ args S r hany hub := by
+  ubByOwnRules lay ρ L args S r hany hub := by
     match args, hany, hub with
     | .cons v (.cons .poison .nil), _, _ =>
       refine ⟨HVector.cons (f := toType) (a := Ty.float fe fm) (.value (match v with
@@ -194,7 +194,7 @@ theorem storeFloat_memPropagates : MemPropagatesPoison (d := CoreDialect) (.stor
 allocation of its units at its alignment, through the pointer to it: it
 stores a zero there. -/
 theorem storeFloat_memReturnsOnDefined : MemReturnsOnDefined (d := CoreDialect) (.storeFloat o fe fm a n) :=
-  fun lay ρ => by
+  fun lay ρ L => by
   let e := lay (ρ n)
   let us := storeUnits e (.value 0#(floatWidth fe fm))
   let al := storeAlign e (floatWidth fe fm) a
