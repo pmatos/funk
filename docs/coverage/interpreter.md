@@ -72,7 +72,7 @@ says how to read it.
 | `fadd` | `nnan` | 3 | 3 | 3 | 3 | 3 |
 | `fadd` | `ninf` | 3 | 3 | 3 | 3 | 3 |
 | `fadd` | `nsz` | 5 | 5 | 5 | 5 | 5 |
-| `fsub` | `round(rne)` | 16 | 16 | 17 | 20 | 16 |
+| `fsub` | `round(rne)` | 16 | 16 | 20 | 23 | 16 |
 | `fsub` | `nnan` | 3 | 3 | 3 | 3 | 3 |
 | `fsub` | `ninf` | 3 | 3 | 3 | 3 | 3 |
 | `fsub` | `nsz` | 3 | 3 | 3 | 3 | 3 |
@@ -204,9 +204,9 @@ says how to read it.
 | op | `i1` | `i7` | `i8` | `i16` | `i32` | `i33` | `i64` | `i128` | `ptr` | `f16` | `bf16` | `f32` | `f64` | `f128` |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | `ptradd` | 1 | 1 | 34 | 2 | 12 | 1 | 33 | 1 |  |  |  |  |  |  |
-| `alloca` | 4 | 4 | 41 | 23 | 30 | 5 | 9 | 7 | 39 | 5 | 2 | 18 | 16 | 4 |
-| `load` | 3 | 3 | 21 | 12 | 43 | 4 | 11 | 5 | 40 | 3 | 4 | 15 | 17 | 2 |
-| `store` | 2 | 2 | 14 | 7 | 35 | 3 | 8 | 2 | 42 | 6 | 2 | 19 | 15 | 4 |
+| `alloca` | 4 | 4 | 41 | 23 | 30 | 5 | 9 | 7 | 39 | 5 | 2 | 21 | 19 | 4 |
+| `load` | 3 | 3 | 21 | 12 | 44 | 4 | 12 | 5 | 40 | 3 | 4 | 17 | 19 | 2 |
+| `store` | 2 | 2 | 14 | 7 | 35 | 3 | 8 | 2 | 42 | 6 | 2 | 22 | 18 | 4 |
 
 ## Passed and returned values
 
@@ -217,14 +217,14 @@ says how to read it.
 | `cond_br` | a successor passes nothing | 438 |  |  |  |  |  |  |  |  |  |  |  |  |  |
 | `cond_br` | a successor passes values |  | 13 | 138 | 16 | 14 | 14 | 136 | 13 | 11 | 5 | 5 | 7 | 5 | 5 |
 | `ret` | returns no value | 26 |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| `ret` | returns one value |  | 2570 | 1583 | 832 | 828 | 959 | 1609 | 825 | 1083 | 829 | 781 | 704 | 605 | 532 |
+| `ret` | returns one value |  | 2570 | 1583 | 832 | 828 | 960 | 1609 | 826 | 1083 | 829 | 781 | 706 | 607 | 532 |
 | `ret` | returns several values |  | 56 | 189 | 42 | 28 | 33 | 189 | 51 | 50 | 5 | 6 | 5 | 7 | 5 |
 | `unreachable` | ends a block | 16 |  |  |  |  |  |  |  |  |  |  |  |  |  |
 | `call` | gives no result | 14 |  |  |  |  |  |  |  |  |  |  |  |  |  |
 | `call` | gives one result |  | 74 | 92 | 28 | 23 | 24 | 92 | 23 | 19 | 2 | 2 | 2 | 2 | 2 |
 | `call` | gives several results |  | 41 | 92 | 17 | 11 | 11 | 92 | 25 | 27 | 2 | 3 | 2 | 3 | 2 |
 | `func` | returns no value | 23 |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| `func` | returns one value |  | 2569 | 1583 | 833 | 828 | 959 | 1609 | 825 | 1083 | 827 | 779 | 702 | 603 | 530 |
+| `func` | returns one value |  | 2569 | 1583 | 833 | 828 | 960 | 1609 | 826 | 1083 | 827 | 779 | 704 | 605 | 530 |
 | `func` | returns several values |  | 56 | 189 | 42 | 28 | 33 | 189 | 51 | 48 | 5 | 6 | 5 | 7 | 5 |
 
 ## Ops of the gpu dialect in a dimension
