@@ -15,7 +15,7 @@
 # Last, scripts/harness/testfloat.py checks fir-ref's float arithmetic and
 # comparisons against Berkeley TestFloat's vectors, which it builds at
 # pinned commits
-# (docs/decisions/testing-and-harness-floats.md#the-testfloat-check).
+# (docs/decisions/testing-and-harness-float-references.md#the-testfloat-check).
 set -euo pipefail
 
 if [[ $# -ne 0 ]]; then
