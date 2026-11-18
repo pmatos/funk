@@ -131,7 +131,9 @@ commands until it succeeds. Start agents in another worktree with
   `ld`) on an x86-64 Linux host, which `funk build` runs in the
   `rust-test` hook, glibc's development files (`libc.so`; `libc6-dev` on
   Debian and Ubuntu), which `funk build` links a program that calls C
-  with, and valgrind (the `rust-speed` hook).
+  with, valgrind (the `rust-speed` hook), and `gcc`, `make` and `git`
+  with access to github.com, with which the `fir-harness` hook builds
+  Berkeley TestFloat once, at pinned commits, into `~/.cache`.
 - Never bypass checks: no `--no-verify`, no `SKIP=`, no overridden
   `core.hooksPath`. If hooks cannot install or run, report why and do not
   commit until the environment is fixed.

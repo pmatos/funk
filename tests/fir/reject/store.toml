@@ -219,12 +219,42 @@ locs {
 '''
 
 [[reject]]
-verdict = "parse-error"
-rule = "store stores an integer or a pointer: an f32 value does not decode"
+verdict = "validation-error"
+rule = "a store of a float is nonatomic in M1: the ordering release on an f32 decodes and is rejected"
 text = '''
 func @f(%p: ptr, %v: i32, %f: f32) -> i32 {
 ^e:
-  store nonatomic %f, %p @0
+  store release %f, %p @0
+  ret %v @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "a store of a float aligns to a power of two of units: align(0) on an f16 is rejected"
+text = '''
+func @f(%p: ptr, %h: f16) -> f16 {
+^e:
+  store nonatomic align(0) %h, %p @0
+  ret %h @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "store stores through a pointer: a float in the pointer's place does not decode"
+text = '''
+func @f(%p: ptr, %v: i32, %f: f32) -> i32 {
+^e:
+  store nonatomic %v, %f @0
   ret %v @0
 }
 

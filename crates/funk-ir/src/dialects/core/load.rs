@@ -3,22 +3,26 @@
 //! `lean/Fir/Core/Validation.lean`; #231).
 //!
 //! `%v: iW = load ORDERING [align(A)] %p` loads an `iW` through the pointer
-//! `%p` of `ptr<N>`, from memory `N`, and `%r: ptr<M> = load ...` loads a
-//! pointer of memory `M` (`loadPtr`; stage 4d-2b of #231). Its attributes
-//! are those of an access (`access.rs`), in order: the ordering, one of the
-//! words of [`ORDERINGS`]; and `align(A)`, with `A` not negative, written
-//! only when the op gives an alignment. It has one pointer operand and one
-//! integer or pointer result. Any other shape does not decode.
+//! `%p` of `ptr<N>`, from memory `N`, `%r: ptr<M> = load ...` loads a
+//! pointer of memory `M` (`loadPtr`; stage 4d-2b of #231), and
+//! `%f: float<e,m> = load ...` loads a float as the integer of its
+//! `1 + e + m` bits (`loadFloat`, in `lean/Fir/Core/FloatAccess.lean`;
+//! #264). Its attributes are those of an access (`access.rs`), in order: the
+//! ordering, one of the words of [`ORDERINGS`]; and `align(A)`, with `A` not
+//! negative, written only when the op gives an alignment. It has one pointer
+//! operand and one integer, pointer or float result. Any other shape does
+//! not decode.
 //!
 //! Validation accepts only the ordering `nonatomic`, the other orderings
 //! being hooks for a concurrency model (ADR-2026-11-09-1542), and an
 //! alignment that is a power of two no larger than [`MemLayout::LIMIT`], as
 //! `alloca`'s is. With no `align(A)` the access is aligned to the natural
-//! alignment of `iW` in memory `N`, or to the default alignment of `ptr<M>`
-//! there, as `alloca`'s. The op reads memory `N`, may be UB (on a poison
-//! pointer, or an access out of bounds, to a freed allocation, without
-//! provenance or misaligned) and may give poison (units that are not an
-//! encoding of its type, as fresh memory's, or a punned load).
+//! alignment of `iW` or of the float's size in memory `N`, or to the
+//! default alignment of `ptr<M>` there, as `alloca`'s. The op reads memory
+//! `N`, may be UB (on a poison pointer, or an access out of bounds, to a
+//! freed allocation, without provenance or misaligned) and may give poison
+//! (units that are not an encoding of its type, as fresh memory's, or a
+//! punned load).
 //!
 //! [`MemLayout::LIMIT`]: crate::ir::MemLayout::LIMIT
 //! [`ORDERINGS`]: super::ORDERINGS
@@ -29,11 +33,13 @@ use crate::effects::{Effects, MemSet};
 use crate::registry::OpTypes;
 
 /// The memory of the pointer `load` loads through, when it has one pointer
-/// operand and one integer or pointer result.
+/// operand and one result of any core type.
 fn memory(op: &OpTypes<'_>) -> Option<u32> {
     match (op.operands, op.results) {
         ([p], [r]) => match (core_type(p)?, core_type(r)?) {
-            (CoreType::Ptr(n), CoreType::Int(_) | CoreType::Ptr(_)) => Some(n),
+            (CoreType::Ptr(n), CoreType::Int(_) | CoreType::Ptr(_) | CoreType::Float { .. }) => {
+                Some(n)
+            }
             _ => None,
         },
         _ => None,
@@ -53,7 +59,7 @@ fn effects(reads: MemSet) -> Effects {
 /// `%v: i32 = load nonatomic align(4) %p`.
 pub(super) const LOAD: Access = Access {
     name: "load",
-    shape: "a pointer and defines an integer or a pointer",
+    shape: "a pointer and defines an integer, a pointer or a float",
     memory,
     effects,
 };
@@ -96,12 +102,27 @@ mod tests {
     }
 
     #[test]
+    fn a_float_of_any_format_loads_through_a_pointer_of_any_memory() {
+        for (n, e, m) in [(0, 8, 23), (1, 11, 52), (MAX_MEMORY, 2, 1), (3, 15, 112)] {
+            let attrs = [Attr::word("nonatomic"), align(2)];
+            let (operands, results) = ([ptr_type(n)], [float_type(e, m)]);
+            let op = types(&attrs, &operands, &results);
+            assert_eq!(LOAD.decode(&op), Ok(OpShape::default()), "{n} {e} {m}");
+            assert_eq!(
+                LOAD.effects(&op),
+                effects(MemSet::These(vec![n.to_string()])),
+                "{n} {e} {m}"
+            );
+        }
+    }
+
+    #[test]
     fn other_shapes_do_not_decode() {
         let (p, i32, f32) = (ptr_type(0), int_type(32), float_type(8, 23));
         let ok = [Attr::word("nonatomic")];
         for (attrs, operands, results) in [
             (vec![], vec![p.clone()], vec![i32.clone()]),
-            (ok.to_vec(), vec![p.clone()], vec![f32.clone()]),
+            (ok.to_vec(), vec![f32.clone()], vec![f32.clone()]),
             (ok.to_vec(), vec![i32.clone()], vec![i32.clone()]),
             (ok.to_vec(), vec![p.clone(), p.clone()], vec![i32.clone()]),
             (ok.to_vec(), vec![], vec![i32.clone()]),

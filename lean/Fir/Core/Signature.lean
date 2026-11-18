@@ -37,9 +37,10 @@ def Op.sig : Op → List Ty
   | .sitofp _ n .. | .uitofp _ n .. => [i n]
   | .fpext e m .. | .fptrunc _ e m .. | .fptosi e m _ | .fptoui e m _ => [.float e m]
   | .ptradd n w => [.ptr n, i w]
-  | .load _ _ _ n | .loadPtr _ _ _ n => [.ptr n]
+  | .load _ _ _ n | .loadPtr _ _ _ n | .loadFloat _ _ _ _ n => [.ptr n]
   | .store _ w _ n => [i w, .ptr n]
   | .storePtr _ m _ n => [.ptr m, .ptr n]
+  | .storeFloat _ e m _ n => [.float e m, .ptr n]
   | .freeze w => [i w]
   | .condBr => [i 1]
   | .ret ts => ts
@@ -61,7 +62,8 @@ def Op.returnTypes : Op → List Ty
   | .fptosi _ _ n | .fptoui _ _ n => [i n]
   | .load _ w _ _ => [i w]
   | .loadPtr _ m _ _ => [.ptr m]
-  | .br | .condBr | .ret _ | .unreachable | .store .. | .storePtr .. => []
+  | .loadFloat _ e m _ _ => [.float e m]
+  | .br | .condBr | .ret _ | .unreachable | .store .. | .storePtr .. | .storeFloat .. => []
   | .call _ _ rs => rs
 
 /-- `br`, `cond_br`, `ret` and `unreachable` end a block. -/

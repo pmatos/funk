@@ -237,6 +237,11 @@ theorem Op.decode_encode (o : Op) : Op.decode o.name o.attrs o.sig o.returnTypes
     simpa [Op.name, Op.attrs, Op.sig, Op.returnTypes, Op.decode] using decodeLoad_loadPtr o mp a n
   | storePtr o mp a n =>
     simpa [Op.name, Op.attrs, Op.sig, Op.returnTypes, Op.decode] using decodeStore_storePtr o mp a n
+  | loadFloat o e m a n =>
+    simpa [Op.name, Op.attrs, Op.sig, Op.returnTypes, Op.decode] using decodeLoad_loadFloat o e m a n
+  | storeFloat o e m a n =>
+    simpa [Op.name, Op.attrs, Op.sig, Op.returnTypes, Op.decode] using
+      decodeStore_storeFloat o e m a n
   | fptosi e m n | fptoui e m n =>
     simp [Op.name, Op.attrs, Op.sig, Op.returnTypes, Op.decode, decodeFloatToInt, i]
   | _ =>
@@ -445,7 +450,8 @@ theorem Op.attrs_writable (o : Op) : Attr.AllWritable o.attrs := by
     cases e <;> simp [Op.attrs, Attr.AllWritable, Attr.Writable] <;> decide
   | call => exact ⟨trivial, trivial⟩
   | alloca k t c a => exact allocaAttrs_writable k t c a
-  | load o _ a | store o _ a | loadPtr o _ a | storePtr o _ a => exact loadAttrs_writable o a
+  | load o _ a | store o _ a | loadPtr o _ a | storePtr o _ a | loadFloat o _ _ a
+  | storeFloat o _ _ a => exact loadAttrs_writable o a
   | _ => trivial
 
 end Fir.Core

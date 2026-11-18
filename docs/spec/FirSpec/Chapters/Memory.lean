@@ -27,8 +27,8 @@ the obligations that an op's declaration of its effects on memory puts on
 its semantics, progress with memory, which asks each op to be total from
 any memories, and refinement with memory, which refines memories unit by
 unit and asks each op to be monotone from memories that refine others.
-Between the model and the effect, it says how a value of an integer or a
-pointer type becomes units of a memory, and units a value again, at every
+Between the model and the effect, it says how a value of an integer, a
+float or a pointer type becomes units of a memory, and units a value again, at every
 byte order.
 
 {includeReadable "." Fir.Memory.Model "The memory model" FirSpec.Memory.Model (level := 1)}
@@ -127,6 +127,8 @@ byte order.
 
 {includeReadable "." Fir.Core.PtrAccess "Pointer load and store rules" FirSpec.Core.PtrAccess (level := 1)}
 
+{includeReadable "." Fir.Core.FloatAccess "Float load and store rules" FirSpec.Core.FloatAccess (level := 1)}
+
 {includeReadable "." Fir.Core.MemRules "The core's rules with memory" FirSpec.Core.MemRules (level := 1)}
 
 {includeReadable "." Fir.Core.AllocaLaws "Stack allocation obligations" FirSpec.Core.AllocaLaws (level := 1)}
@@ -142,6 +144,10 @@ byte order.
 {includeReadable "." Fir.Core.LoadPtrLaws "Pointer load obligations" FirSpec.Core.LoadPtrLaws (level := 1)}
 
 {includeReadable "." Fir.Core.StorePtrLaws "Pointer store obligations" FirSpec.Core.StorePtrLaws (level := 1)}
+
+{includeReadable "." Fir.Core.LoadFloatLaws "Float load obligations" FirSpec.Core.LoadFloatLaws (level := 1)}
+
+{includeReadable "." Fir.Core.StoreFloatLaws "Float store obligations" FirSpec.Core.StoreFloatLaws (level := 1)}
 
 {includeReadable "." Fir.Core.TreeRules "The core dialect in the tree of choices" FirSpec.Core.TreeRules (level := 1)}
 

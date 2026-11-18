@@ -1,5 +1,5 @@
 # Must-reject texts of load (#231). It takes one pointer operand
-# and defines an integer or a pointer (stage 4d-2b); its attributes are its ordering and align(A),
+# and defines an integer, a pointer (stage 4d-2b) or a float (#264); its attributes are its ordering and align(A),
 # in that order, separated by spaces. Every ordering decodes, and
 # validation accepts only nonatomic (ADR-2026-11-09-1542); an alignment
 # decodes when it is not negative, and validation accepts a power of two no
@@ -218,12 +218,58 @@ locs {
 '''
 
 [[reject]]
-verdict = "parse-error"
-rule = "load loads an integer or a pointer type: an f32 result does not decode"
+verdict = "validation-error"
+rule = "a load of a float is nonatomic in M1: the ordering acquire on an f32 decodes and is rejected"
 text = '''
-func @f(%p: ptr, %k: i64) -> i32 {
+func @f(%p: ptr) -> f32 {
 ^e:
-  %v: f32 = load nonatomic %p @0
+  %v: f32 = load acquire %p @0
+  ret %v @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "a load of a float aligns to a power of two of units: align(6) on an f64 is rejected"
+text = '''
+func @f(%p: ptr) -> f64 {
+^e:
+  %v: f64 = load nonatomic align(6) %p @0
+  ret %v @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "a load of a float loads a valid format: float(1, 4) has too few exponent bits"
+text = '''
+func @f(%p: ptr) -> i32 {
+^e:
+  %v: float(1, 4) = load nonatomic %p @0
+  %w: i32 = const 0 @0
+  ret %w @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "load takes a pointer: a float operand does not decode"
+text = '''
+func @f(%x: f32) -> f32 {
+^e:
+  %v: f32 = load nonatomic %x @0
   ret %v @0
 }
 

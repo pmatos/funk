@@ -14,14 +14,15 @@ fails when the Lean changes under it.
 
 #doc (Manual) "Stack allocation obligations: readable blocks" =>
 
-:::moduleDocs (fingerprint := "7922837685928949309")
+:::moduleDocs (fingerprint := "4459584888210257344")
 :::
 
-:::readable Fir.Core.Op.memCases Fir.Core.Op.touchesMemory_false_of_denote (pin := Fir.Core.Op.touchesMemory) (fingerprint := "16608099363425758506")
+:::readable Fir.Core.Op.memCases Fir.Core.Op.touchesMemory_false_of_denote (pin := Fir.Core.Op.touchesMemory) (fingerprint := "3808853761330035302")
 *Theorems: the core ops, split by memory.* A property holds of every core
 op when it holds of each op that touches no memory, of every
 $`\mathsf{alloca}`, and of every $`\mathsf{load}` and every
-$`\mathsf{store}` of an integer or of a pointer, the core ops that do.
+$`\mathsf{store}` of an integer, of a pointer or of a float, the core ops
+that do.
 So the core dialect meets an obligation with memory op by op: an op that
 touches no memory by its
 {ref "The-fir-specification--Memory--The-core___s-rules-with-memory"}[tie]

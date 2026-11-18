@@ -84,7 +84,9 @@ def layout : DataLayout :=
 #guard Core.Ty.units? layout 8 (.ptr 1) == some 4
 #guard Core.Ty.units? layout 16 (.ptr 1) == some 2
 #guard Core.Ty.units? [] 8 (.ptr 1) == none
-#guard Core.Ty.units? [] 8 (.float 8 23) == none
+#guard Core.Ty.units? [] 8 (.float 8 23) == some 4
+#guard Core.Ty.units? [] 8 (.float 2 1) == some 1
+#guard Core.Ty.units? [] 16 (.float 15 112) == some 8
 #guard Core.Ty.units? layout 12 (.ptr 1) == some 3
 
 -- A `ptr<2>` stored and loaded as a `ptr`, of the same width, is poison.

@@ -14,10 +14,10 @@ pins their fingerprint; the build fails when the Lean changes under it.
 
 #doc (Manual) "Core ops: readable blocks" =>
 
-:::moduleDocs (fingerprint := "635787582131226193")
+:::moduleDocs (fingerprint := "3726621739230790826")
 :::
 
-:::readable Fir.Core.Op (pin := Fir.Core.Op.Valid) (fingerprint := "503139881940763868")
+:::readable Fir.Core.Op (pin := Fir.Core.Op.Valid) (fingerprint := "3961360518786788184")
 *Ops.* An op of the core dialect carries the width $`N` of the integers it
 works on, or the format $`\mathsf{float}\langle e,m \rangle` of the floats
 it works on, so the types of its operands and results follow from it.
@@ -240,16 +240,18 @@ alloca \mathsf{alloca}_{N}~k~t~c~a
   never gives poison; it allocates in the memory $`N`. The
   {ref "The-fir-specification--Validation--Core-rules"}[core rules]
   accept only the kind $`\mathsf{stack}`, a count of at least 1, an
-  alignment that is a power of two no larger than $`2^{24} - 1`, and an
-  integer or a pointer type; the count has no bound (ADR-2026-11-14-0915).
+  alignment that is a power of two no larger than $`2^{24} - 1`, and a
+  valid type: an integer, a pointer or a float (#264); the count has no
+  bound (ADR-2026-11-14-0915).
 
-*Loads* read a value from memory (#231).
+*Loads* read a value from memory (#231, #264).
 
 ```grammar Fir.Core.Op
 \mathit{op}
 -    \dots
-load    \mathsf{load}_{N}~o~W~a
-loadPtr \mathsf{load}_{N}~o~\mathsf{ptr}\langle M \rangle~a
+load      \mathsf{load}_{N}~o~W~a
+loadPtr   \mathsf{load}_{N}~o~\mathsf{ptr}\langle M \rangle~a
+loadFloat \mathsf{load}_{N}~o~\mathsf{float}\langle e,m \rangle~a
 ```
 
 * $`\mathsf{load}_{N}~o~W~a` loads an $`\mathsf{i}W` through a pointer of
@@ -265,14 +267,19 @@ loadPtr \mathsf{load}_{N}~o~\mathsf{ptr}\langle M \rangle~a
 * $`\mathsf{load}_{N}~o~\mathsf{ptr}\langle M \rangle~a` (`loadPtr`)
   loads a pointer of memory $`M` in the same way. Only one such pointer's
   fragments, in order, give it; other units give poison (#231, Q3).
+* $`\mathsf{load}_{N}~o~\mathsf{float}\langle e,m \rangle~a`
+  (`loadFloat`) loads a float as $`\mathsf{load}_{N}~o~(1+e+m)~a` loads
+  the integer of its width, and gives the float whose bit pattern that
+  integer is: a NaN keeps its payload and sign.
 
-*Stores* write a value to memory (#231).
+*Stores* write a value to memory (#231, #264).
 
 ```grammar Fir.Core.Op
 \mathit{op}
 -     \dots
-store    \mathsf{store}_{N}~o~W~a
-storePtr \mathsf{store}_{N}~o~\mathsf{ptr}\langle M \rangle~a
+store      \mathsf{store}_{N}~o~W~a
+storePtr   \mathsf{store}_{N}~o~\mathsf{ptr}\langle M \rangle~a
+storeFloat \mathsf{store}_{N}~o~\mathsf{float}\langle e,m \rangle~a
 ```
 
 * $`\mathsf{store}_{N}~o~W~a` stores an $`\mathsf{i}W` through a pointer
@@ -282,6 +289,9 @@ storePtr \mathsf{store}_{N}~o~\mathsf{ptr}\langle M \rangle~a
   that faults, is immediate UB. The core rules are those of a load.
 * $`\mathsf{store}_{N}~o~\mathsf{ptr}\langle M \rangle~a` (`storePtr`)
   stores a pointer's fragments, or poison units, in the same way.
+* $`\mathsf{store}_{N}~o~\mathsf{float}\langle e,m \rangle~a`
+  (`storeFloat`) stores a float as $`\mathsf{store}_{N}~o~(1+e+m)~a`
+  stores the integer of its bits.
 
 *Conversions to integers* give a float's number truncated toward zero as
 an integer (ADR-2026-11-09-1549; the human's ruling of 2026-11-12 on #354).
@@ -375,7 +385,7 @@ validation ask:
   $`\mathsf{fma}` carry fast-math flags that set neither of the reserved
   words $`\mathsf{contract}` and $`\mathsf{reassoc}`;
 * $`\mathsf{alloca}`, and $`\mathsf{load}` and $`\mathsf{store}` of an
-  integer or a pointer, have the rules given with them above.
+  integer, a pointer or a float, have the rules given with them above.
 
 The other ops have no core rule of their own.
 :::

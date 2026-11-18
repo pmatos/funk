@@ -64,13 +64,14 @@ results, which are written where those values are defined.
   memory it allocates in: `%p: ptr = alloca stack i32 4 @1`
   (ADR-2026-11-14-0915).
 * `load` has its ordering and `align(A)` when it gives an alignment, takes
-  a pointer and gives the integer or the pointer it loads:
-  `%v: i32 = load nonatomic %p @1`. The load of a pointer, `loadPtr`, is
-  written `load` too: `%q: ptr = load nonatomic %p @1`.
+  a pointer and gives the integer, the pointer or the float it loads:
+  `%v: i32 = load nonatomic %p @1`. The loads of a pointer and of a float,
+  `loadPtr` and `loadFloat`, are written `load` too:
+  `%q: ptr = load nonatomic %p @1` and `%f: f32 = load nonatomic %p @1`.
 * `store` has the attributes of `load`, takes the value it stores, an
-  integer or a pointer, and then a pointer, and gives no result:
-  `store nonatomic %v, %p @1`. The store of a pointer, `storePtr`, is
-  written `store` too.
+  integer, a pointer or a float, and then a pointer, and gives no result:
+  `store nonatomic %v, %p @1`. The stores of a pointer and of a float,
+  `storePtr` and `storeFloat`, are written `store` too.
 * `fptosi` and `fptoui` have no attributes, since they truncate and do not
   round, and take a float of any format to an integer of any width:
   `%i: i32 = fptosi %f @1`.
@@ -156,8 +157,9 @@ def Op.name : Op → String
   | .zext .. => "zext" | .sext .. => "sext" | .trunc .. => "trunc"
   | .toBits .. | .ofBits .. => "bitcast" | .sitofp .. => "sitofp" | .uitofp .. => "uitofp"
   | .fpext .. => "fpext" | .fptrunc .. => "fptrunc"
-  | .ptradd .. => "ptradd" | .alloca .. => "alloca" | .load .. | .loadPtr .. => "load"
-  | .store .. | .storePtr .. => "store"
+  | .ptradd .. => "ptradd" | .alloca .. => "alloca"
+  | .load .. | .loadPtr .. | .loadFloat .. => "load"
+  | .store .. | .storePtr .. | .storeFloat .. => "store"
   | .fptosi .. => "fptosi" | .fptoui .. => "fptoui"
   | .freeze _ => "freeze" | .poison _ => "poison" | .br => "br" | .condBr => "cond_br"
   | .ret _ => "ret" | .unreachable => "unreachable" | .call .. => "call"
@@ -185,7 +187,8 @@ def Op.attrs : Op → List Attr
   | .sdiv _ e | .udiv _ e => if e then [.word "exact"] else []
   | .call f _ _ => [.sym f]
   | .alloca k t c a _ => allocaAttrs k t c a
-  | .load o _ a _ | .store o _ a _ | .loadPtr o _ a _ | .storePtr o _ a _ => loadAttrs o a
+  | .load o _ a _ | .store o _ a _ | .loadPtr o _ a _ | .storePtr o _ a _
+  | .loadFloat o _ _ a _ | .storeFloat o _ _ a _ => loadAttrs o a
   | _ => []
 
 /-- Reads the flags of `add`, `sub` or `mul`. -/

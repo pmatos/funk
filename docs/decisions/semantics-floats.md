@@ -219,7 +219,7 @@ The conversions of #241, `bitcast`, `sitofp`, `uitofp`, `fpext`, `fptrunc`,
 
 ## What holds today
 
-#229 builds floating point in stages. Today the spec, `fir-ref`, the Rust IR,
+#229 built floating point in five stages. Today the spec, `fir-ref`, the Rust IR,
 parser, printer and verifier have the float types, their values and their
 refinement, and the corpus holds them. They also have the comparison and the
 arithmetic above, the remainders of #310, float constants, `bitcast` between a
@@ -279,6 +279,14 @@ case of a width the backend lowers differential at `f32` and `f64`, where
 native code refines poison with any value
 ([testing-and-harness-floats.md](testing-and-harness-floats.md#the-float-to-integer-corpus)).
 
+`fir-ref`'s arithmetic and comparisons are checked against Berkeley
+TestFloat's vectors at `f16`, `f32`, `f64` and `f128`, and at `bf16` against
+TestFloat's `f32` vectors of `bf16` operands, rounded to odd and then to
+`bf16`, as the human's criterion of 2026-11-10 asks
+([testing-and-harness-floats.md](testing-and-harness-floats.md#the-testfloat-check)).
+`float_ref.py` computes the corpus's expected results, and is not that
+independent reference.
+
 The fast-math flags hold in the spec, `fir-ref`, the Rust IR, parser, printer,
 verifier and backend, and `reject/float-flags.toml` holds their must-reject
 texts. The corpus runs each float op with each flag at every aliased format, on
@@ -287,7 +295,11 @@ code refines poison and either zero; each flag of each float op is a cell of
 the coverage matrix, by the human's ruling of 2026-11-13 on #355
 ([testing-and-harness-floats.md](testing-and-harness-floats.md#the-fast-math-flag-corpus)).
 
-`poison`, `select` and `freeze` take no float yet. The lawful and effect
+`load`, `store` and `alloca` take every float format, a float stored as
+its bit pattern in the units of the integer of its width
+([semantics-m1-memory-access.md](semantics-m1-memory-access.md#floats-in-memory),
+#264); the backend lowers none of them yet. `poison`, `select` and
+`freeze` take no float yet. The lawful and effect
 theorems of the core depend on `Classical.choice`, since Lean's
 `UnpackedFloat.unpack` does; the axiom check allows it (ADR-2026-10-30-1452).
 

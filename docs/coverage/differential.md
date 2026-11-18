@@ -174,7 +174,7 @@ says how to read it.
 | `fptoui` | `f32` | 28 | 28 | 28 | 28 | 28 | 24 |
 | `fptoui` | `f64` | 28 | 28 | 28 | 28 | 28 | 28 |
 
-## Pointer ops: ptradd by an integer, alloca, load and store of one or of a pointer
+## Pointer ops: ptradd by an integer, alloca, load and store of one, of a float or of a pointer
 
 | op | `i1` | `i8` | `i16` | `i32` | `i64` | `i128` | `ptr` |
 | --- | --- | --- | --- | --- | --- | --- | --- |

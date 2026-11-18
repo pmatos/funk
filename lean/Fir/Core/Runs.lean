@@ -50,7 +50,7 @@ theorem straight_of_tracer {ctx : ModuleContext CoreDialect} {f : Func CoreDiale
     | .freeze _ | .poison _ | .br | .condBr | .unreachable | .call .. | .fconst .. | .fcmp ..
     | .fbin .. | .funary .. | .fma .. | .toBits .. | .ofBits .. | .sitofp .. | .uitofp ..
     | .fpext .. | .fptrunc .. | .ptradd .. | .alloca .. | .load .. | .store .. | .loadPtr ..
-    | .storePtr .. | .fptosi .. | .fptoui .. =>
+    | .storePtr .. | .loadFloat .. | .storeFloat .. | .fptosi .. | .fptoui .. =>
       intro h; exact False.elim h
   noJump b hb o ho args i h := by
     have hop := ht b hb o ho

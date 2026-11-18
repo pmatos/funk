@@ -14,18 +14,20 @@ when the Lean changes under it.
 
 #doc (Manual) "Stores in text: readable blocks" =>
 
-:::moduleDocs (fingerprint := "13228393435064887206")
+:::moduleDocs (fingerprint := "1166509462577244941")
 :::
 
-:::readable Fir.Core.decodeStore (pin := Fir.Core.decodeOrdering) (pin := Fir.Core.decodeAlign) (fingerprint := "1141597553384607657")
+:::readable Fir.Core.decodeStore (pin := Fir.Core.decodeOrdering) (pin := Fir.Core.decodeAlign) (fingerprint := "16340718634028510098")
 *Definition: the text of $`\mathsf{store}`.* The attributes of
 $`\mathsf{store}_N~o~W~a` are those of a load, written as
 $`\mathrm{loadattrs}(o, a)`: the word of its ordering $`o`, then
 $`\mathtt{align}(a)` when it gives an alignment. Its operands are the
 value, then the pointer, and it has no result.
 $`\mathrm{decodestore}(a^*, t^*, r^*)` reads it back: two operands, of an
-integer type $`\mathsf{i}W`, or a pointer type
-$`\mathsf{ptr}\langle M \rangle` for the store of a pointer, and then a
+integer type $`\mathsf{i}W`, a pointer type
+$`\mathsf{ptr}\langle M \rangle` for the store of a pointer, or a float
+type $`\mathsf{float}\langle e,m \rangle` for the store of a float, and
+then a
 pointer type $`\mathsf{ptr}\langle N \rangle`, no result, an ordering's
 word, and an
 alignment written as $`\mathsf{alloca}`'s is. Any other shape does not

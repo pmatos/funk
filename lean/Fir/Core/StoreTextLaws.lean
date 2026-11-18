@@ -2,7 +2,7 @@ import Fir.Core.LoadTextLaws
 import Fir.Core.StoreText
 
 /-!
-`store` and `storePtr` read back from how they are written, and only from
+`store`, `storePtr` and `storeFloat` read back from how they are written, and only from
 it, for every instance, valid or not: its attributes are those of `load`, which are
 written as tokens, and its operand types carry its width and memory. The
 laws of the core dialect's text use these facts.
@@ -22,8 +22,14 @@ theorem decodeStore_storePtr (o : Memory.Ordering) (mp : Nat) (a : Option Nat) (
     decodeStore (loadAttrs o a) [.ptr mp, .ptr n] [] = some (.storePtr o mp a n) := by
   simp [decodeStore, decodeAccess_loadAttrs]
 
-/-- `store` and `storePtr` decode only from their name, their attributes,
-an integer or pointer operand and a pointer operand, and no result. -/
+/-- Each `storeFloat` reads back from how it is written. -/
+theorem decodeStore_storeFloat (o : Memory.Ordering) (e m : Nat) (a : Option Nat) (n : Nat) :
+    decodeStore (loadAttrs o a) [.float e m, .ptr n] [] = some (.storeFloat o e m a n) := by
+  simp [decodeStore, decodeAccess_loadAttrs]
+
+/-- `store`, `storePtr` and `storeFloat` decode only from their name, their
+attributes, an integer, pointer or float operand and a pointer operand, and
+no result. -/
 theorem decodeStore_eq {as : List Attr} {ts rs : List Ty} {op : Op}
     (h : decodeStore as ts rs = some op) :
     op.name = "store" ∧ op.attrs = as ∧ op.sig = ts ∧ op.returnTypes = rs := by

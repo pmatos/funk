@@ -10,8 +10,8 @@ op's context, the width rules of `zext`, `sext` and `trunc`
 human's ruling of 2026-11-12 on #354), the rule that no float op
 carries a reserved word, `contract` or `reassoc` (ADR-2026-11-09-1549),
 the rule that a float op that rounds rounds with the mode `rne`
-(ADR-2026-11-11-1801), the rules of `alloca` (ADR-2026-11-14-0915), and
-the rules of `load` and `store` (ADR-2026-11-14-2316), and the units and
+(ADR-2026-11-11-1801), the rules of `alloca` (ADR-2026-11-14-0915), the
+rules of the loads and stores (ADR-2026-11-14-2316), and the units and
 alignment of a field of an aggregate's layout (ADR-2026-11-16-1546).
 The general rules of the previous sections already
 check every op's operand and result types against its signature, so these
@@ -46,8 +46,9 @@ def Ty.memory : Ty → Option Nat
   | .ptr n => some n
   | _ => none
 
-/-- An integer or a pointer type: the types that M1's `alloca` allocates,
-the ones a value of which has an encoding in units. -/
+/-- An integer or a pointer type: the element types of a work-group
+allocation, `gpu.work_group_alloca` (`Gpu.Op.Valid`). The core's `alloca`
+takes every valid type, a float included (#264). -/
 def Ty.IsElem : Ty → Prop
   | .int _ | .ptr _ => True
   | .float _ _ => False
@@ -100,8 +101,8 @@ whose memories have the entries `lay`, and its alignment there, in units
 (ADR-2026-11-16-1546): an integer or a pointer takes the units of its bits,
 as `alloca` counts them, aligned to the least power of two that is at least
 those units, but a pointer of the memory `n` itself to the alignment that
-its entry gives its pointers. A float type may not be a field until it has
-an encoding in units (#264). -/
+its entry gives its pointers. A float type has its units but is not yet a
+field: #264 makes floats fields of aggregates. -/
 def Ty.fieldShape (lay : Nat → MemLayout) (n : Nat) : Ty → Option (Nat × Nat)
   | .int w => some ((lay n).bitsUnits w, pow2AtLeast ((lay n).bitsUnits w))
   | .ptr m =>
@@ -169,10 +170,10 @@ The core rules of an op beyond its signature.
   power of two of units (the human's ruling of 2026-11-11 on #231) no
   larger than `MemLayout.limit`, the data layout's rule for its own
   alignments (`MemLayout.ValidAlign`; the human's ruling of 2026-11-14 on
-  #382), and its type is a valid integer or pointer type, as stage 4d-2b
-  of #231 adds pointer loads and stores (the human's ruling of 2026-11-14
-  on #382); a float type has no encoding in units, and M1 has no float
-  loads or stores. Its count has no bound: an allocation larger than a
+  #382), and its type is a valid type: an integer, a pointer, as stage
+  4d-2b of #231 adds pointer loads and stores (the human's ruling of
+  2026-11-14 on #382), or a float, as #264 adds float loads and stores
+  (the human's ruling of 2026-11-15 on #397). Its count has no bound: an allocation larger than a
   machine holds is a resource error at run time,
   as a deep recursion is, and not a rule of validation. Its result names
   its memory, and a pointer type that it allocates values of names one
@@ -194,6 +195,9 @@ The core rules of an op beyond its signature.
   rules of `load`. The pointer they load or store is a value of the
   function, so validation checks that the module has its memory as it
   checks every type.
+* `loadFloat` and `storeFloat`, the loads and stores of a float, have the
+  rules of `load`. The float type they load or store is checked as every
+  type is: a valid format.
 
 Every other op has no rule beyond its signature.
 -/
@@ -210,8 +214,9 @@ def Op.Valid (ctx : OpContext CoreDialect) : Op → Prop
   | .funary o fl .. => fl.Reserved = false ∧ ∀ r ∈ o.mode, r = .rne
   | .fma fl r .. => fl.Reserved = false ∧ r = .rne
   | .alloca k t c a _ => k = .stack ∧ 1 ≤ c ∧ (∀ x ∈ a, MemLayout.ValidAlign x) ∧
-      t.IsElem ∧ t.Valid
-  | .load o _ a _ | .store o _ a _ | .loadPtr o _ a _ | .storePtr o _ a _ =>
+      t.Valid
+  | .load o _ a _ | .store o _ a _ | .loadPtr o _ a _ | .storePtr o _ a _
+  | .loadFloat o _ _ a _ | .storeFloat o _ _ a _ =>
     o = .nonatomic ∧ ∀ x ∈ a, MemLayout.ValidAlign x
   | _ => True
 

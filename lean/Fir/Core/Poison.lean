@@ -20,8 +20,8 @@ integers, `fptosi` and `fptoui`, the stack allocation `alloca`, the
 load `load`, which is immediate UB on a poison pointer, as a defined
 pointer in its place may fault, and the store `store`, which is too, and
 which stores the poison units of a poison value and gives no result, and
-the load and store of a pointer, `loadPtr` and `storePtr`, which are as
-`load` and `store`.
+the loads and stores of a pointer and of a float, `loadPtr`, `storePtr`,
+`loadFloat` and `storeFloat`, which are as `load` and `store`.
 `const`, `fconst`, `poison` and `alloca` have no operands, so they
 propagate poison whatever their semantics. `poison` meets the
 obligation of a result on defined operands too: its one operand vector,
@@ -86,7 +86,7 @@ def Op.poisonClass : Op → PoisonClass
   | .fbin .. | .funary .. | .fma .. | .zext .. | .sext .. | .trunc .. | .poison _
   | .toBits .. | .ofBits .. | .sitofp .. | .uitofp .. | .fpext .. | .fptrunc .. | .ptradd ..
   | .fptosi .. | .fptoui .. | .alloca .. | .load .. | .store .. | .loadPtr .. | .storePtr ..
-    => .propagates
+  | .loadFloat .. | .storeFloat .. => .propagates
   | .select _ | .freeze _ | .br | .condBr | .ret _ | .unreachable | .call .. => .exception
 
 /-- A core value is poison when it is the poison of its type: `iN`, a

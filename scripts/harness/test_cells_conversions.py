@@ -6,6 +6,7 @@ import unittest
 import cells
 from cells import Cell, CellError, of_op
 from firtext import Op
+from pointer_cells import MEMORY_FLOAT_DIFFERENTIAL, MEMORY_FLOAT_INTERPRETER
 
 
 class Tests(unittest.TestCase):
@@ -156,9 +157,13 @@ class Tests(unittest.TestCase):
                 op = Op("alloca", attrs, (), (ptr,), ())
                 with self.subTest(op=op):
                     self.assertEqual(of_op(op), {Cell("pointers", "alloca", "", "i32")})
+        for t in ("f32", "float(2, 1)"):
+            op = Op("alloca", ("stack", t, "2"), (), ("ptr",), ())
+            with self.subTest(op=op):
+                self.assertEqual(of_op(op), {Cell("pointers", "alloca", "", t)})
         for bad in [
             Op("alloca", ("stack",), (), ("ptr",), ()),
-            Op("alloca", ("stack", "f32"), (), ("ptr",), ()),
+            Op("alloca", ("stack", "word"), (), ("ptr",), ()),
             Op("alloca", ("stack", "i32"), ("i32",), ("ptr",), ()),
             Op("alloca", ("stack", "i32"), (), ("i64",), ()),
             Op("alloca", ("stack", "i32"), (), (), ()),
@@ -181,15 +186,31 @@ class Tests(unittest.TestCase):
             {Cell("pointers", op, "", "ptr") for op in ("alloca", "load", "store")},
         )
 
+    def test_floats_in_memory_are_cells_on_the_interpreter_side_alone(self):
+        memory = ("f16", "f32")
+        found = cells.cells(cells.INTERPRETER, offsets=(8,), memory=memory)
+        self.assertEqual(
+            {c for c in found if c.table == "pointers" and c.width in memory},
+            {
+                Cell("pointers", op, "", f)
+                for op in ("alloca", "load", "store")
+                for f in memory
+            },
+        )
+        self.assertEqual(MEMORY_FLOAT_DIFFERENTIAL, ())
+        self.assertEqual(MEMORY_FLOAT_INTERPRETER, cells.FLOAT_INTERPRETER)
+
     def test_a_load_is_a_cell_for_each_width_of_its_result(self):
         for attrs in [("nonatomic",), ("nonatomic", "align(4)"), ("seq_cst",)]:
             for ptr in ("ptr", "ptr(1)"):
                 op = Op("load", attrs, (ptr,), ("i33",), ())
                 with self.subTest(op=op):
                     self.assertEqual(of_op(op), {Cell("pointers", "load", "", "i33")})
+        op = Op("load", ("nonatomic",), ("ptr",), ("f32",), ())
+        self.assertEqual(of_op(op), {Cell("pointers", "load", "", "f32")})
         for bad in [
             Op("load", (), ("ptr",), ("i32",), ()),
-            Op("load", ("nonatomic",), ("ptr",), ("f32",), ()),
+            Op("load", ("nonatomic",), ("f32",), ("f32",), ()),
             Op("load", ("nonatomic",), ("i64",), ("i32",), ()),
             Op("load", ("nonatomic",), ("ptr", "ptr"), ("i32",), ()),
             Op("load", ("nonatomic",), ("ptr",), (), ()),
@@ -203,10 +224,12 @@ class Tests(unittest.TestCase):
                 op = Op("store", attrs, ("i33", ptr), (), ())
                 with self.subTest(op=op):
                     self.assertEqual(of_op(op), {Cell("pointers", "store", "", "i33")})
+        op = Op("store", ("release",), ("bf16", "ptr(1)"), (), ())
+        self.assertEqual(of_op(op), {Cell("pointers", "store", "", "bf16")})
         for bad in [
             Op("store", (), ("i32", "ptr"), (), ()),
             Op("store", ("nonatomic",), ("ptr", "i32"), (), ()),
-            Op("store", ("nonatomic",), ("f32", "ptr"), (), ()),
+            Op("store", ("nonatomic",), ("ptr", "f32"), (), ()),
             Op("store", ("nonatomic",), ("i32",), (), ()),
             Op("store", ("nonatomic",), ("i32", "ptr"), ("i32",), ()),
         ]:

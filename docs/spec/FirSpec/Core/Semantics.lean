@@ -14,16 +14,16 @@ when the Lean changes under it.
 
 #doc (Manual) "Core op semantics: readable blocks" =>
 
-:::moduleDocs (fingerprint := "18080548060070090279")
+:::moduleDocs (fingerprint := "17281230621683384280")
 :::
 
-:::readable Fir.Core.Op.denote? (fingerprint := "345134840245554430")
+:::readable Fir.Core.Op.denote? (fingerprint := "12358975260916379547")
 *Definition: the rule of each core op that is not a terminator.* For
 every way of computing with the
 {ref "The-fir-specification--Execution--Effects-and-op-semantics"}[choice and UB effects],
 each core op that is not a terminator, other than $`\mathsf{call}`,
-$`\mathsf{alloca}`, and the loads and stores of an integer or a pointer,
-has the rule of its family, which takes its operand values and gives its
+$`\mathsf{alloca}`, and the loads and stores of an integer, a pointer or
+a float, has the rule of its family, which takes its operand values and gives its
 one result:
 
 * $`\mathsf{const}_N~c`, the float constant $`\mathsf{const}_{e,m}~v` and
@@ -83,7 +83,7 @@ effects, so the spec's set of the ways a run may end and the tree of
 choices that `fir-ref run` walks share them.
 :::
 
-:::readable Fir.Core.Op.exit? (fingerprint := "11179345685827745508")
+:::readable Fir.Core.Op.exit? (fingerprint := "10690001557293425631")
 *Definition: the rule of each core terminator.* For every way of
 computing with the
 {ref "The-fir-specification--Execution--Effects-and-op-semantics"}[UB effect],
@@ -107,11 +107,11 @@ tree of choices and the state layer use the same tables, or tables with
 memory, with their own $`z`.
 :::
 
-:::readable Fir.Core.Op.hasRules Fir.Core.Op.touchesMemory (pin := Fir.instDialectDenoteCoreDialectSetM) (pin := Fir.instDialectCallCoreDialect) (pin := Fir.Core.Op.callTarget?) (pin := Fir.Core.Op.denote?) (pin := Fir.Core.Op.exit?) (fingerprint := "6129570260806776532")
+:::readable Fir.Core.Op.hasRules Fir.Core.Op.touchesMemory (pin := Fir.instDialectDenoteCoreDialectSetM) (pin := Fir.instDialectCallCoreDialect) (pin := Fir.Core.Op.callTarget?) (pin := Fir.Core.Op.denote?) (pin := Fir.Core.Op.exit?) (fingerprint := "7599230684517020063")
 *Definition: the core ops that touch memory.* $`\mathsf{alloca}`, which
 allocates, $`\mathsf{load}`, which reads, and $`\mathsf{store}`, which
-writes, an integer or a pointer (`loadPtr` and `storePtr` in the Lean),
-touch memory, and no other core op does. Each rule needs the memory effect, so each has one only in a
+writes, an integer, a pointer or a float (`loadPtr`, `storePtr`,
+`loadFloat` and `storeFloat` in the Lean), touch memory, and no other core op does. Each rule needs the memory effect, so each has one only in a
 monad with memory.
 
 *Definition: an op has rules.* A core op has rules when one of the two

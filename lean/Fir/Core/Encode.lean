@@ -4,17 +4,18 @@ import Fir.Memory.EncodeLaws
 import Fir.Validation.Layout
 
 /-!
-The core's values in memory. A value of `iN` or of `ptr<N>` is stored in a
-memory whose units are `u` bits wide, in the memory's byte order, by the
-encodings of the section on values in units. The module's data layout
-gives the width of `ptr<N>`'s pointers, from its entry for the memory `N`,
-so a pointer takes as many units of the memory it is stored in as that
-width needs.
+The core's values in memory. A value of `iN`, of `float<e,m>` or of
+`ptr<N>` is stored in a memory whose units are `u` bits wide, in the
+memory's byte order, by the encodings of the section on values in units.
+A float is stored as its IEEE bit pattern, the integer of its `1 + e + m`
+bits, so it takes the units of `i(1+e+m)` and has that integer's encoding
+(#264). The module's data layout gives the width of `ptr<N>`'s pointers,
+from its entry for the memory `N`, so a pointer takes as many units of the
+memory it is stored in as that width needs.
 
-The core's loads and stores read and write integers and pointers (#231).
-A float type has no encoding here: no op stores one yet. Nor does a
-pointer type whose memory the layout does not declare, which validation
-rejects.
+The core's loads and stores read and write integers, pointers (#231) and
+floats (#264). A pointer type whose memory the layout does not declare
+has no encoding here, and validation rejects it.
 
 The laws: an encoding takes the type's size, and decoding it gives the
 value back, poison included, at every byte order, for every valid type of
@@ -29,28 +30,28 @@ open Memory
 
 /-- The size of a value of the type `t` in a memory whose units are `u`
 bits wide, under the layout `l`: `⌈N / u⌉` units for `iN`, and for
-`ptr<N>` as many as the width of memory `N`'s pointers needs. A float type
-has none, and neither has a pointer into a memory that `l` does not
-declare. -/
+`ptr<N>` as many as the width of memory `N`'s pointers needs, and for
+`float<e,m>` as many as its `1 + e + m` bits need. A pointer into a memory
+that `l` does not declare has none. -/
 def Ty.units? (l : DataLayout) (u : Nat) : Ty → Option Nat
   | .int w => some (unitsFor u w)
   | .ptr n => (l.memory? n).map fun e => unitsFor u e.pointer
-  | .float _ _ => none
+  | .float e m => some (unitsFor u (floatWidth e m))
 
 /-- The encoding of a value of the type `t` in `u`-bit units placed in the
 byte order `o`, under the layout `l`, when `t` has a size. A pointer's
-fragments record its memory. -/
+fragments record its memory, and a float's units are those of its bits. -/
 def Ty.encode? (l : DataLayout) (u : Nat) (o : ByteOrder) : (t : Ty) → ⟦t⟧ → Option (List (MemUnit u))
   | .int _, v => some (encodeInt u o v)
   | .ptr n, v => ((Ty.ptr n).units? l u).map fun k => encodePtr n k o v
-  | .float _ _, _ => none
+  | .float _ _, v => some (encodeInt u o v)
 
 /-- The decoding of `u`-bit units in the byte order `o` as a value of the
 type `t`, under the layout `l`, when `t` has a size. -/
 def Ty.decode? (l : DataLayout) (u : Nat) (o : ByteOrder) : (t : Ty) → List (MemUnit u) → Option ⟦t⟧
   | .int w, us => some (decodeInt u w o us)
   | .ptr n, us => ((Ty.ptr n).units? l u).map fun k => decodePtr n k o us
-  | .float _ _, _ => none
+  | .float e m, us => some (decodeInt u (floatWidth e m) o us)
 
 /-- A value's encoding takes the size of its type. -/
 theorem Ty.encode?_length {l : DataLayout} {u : Nat} {o : ByteOrder} {t : Ty} {v : ⟦t⟧}
@@ -64,12 +65,15 @@ theorem Ty.encode?_length {l : DataLayout} {u : Nat} {o : ByteOrder} {t : Ty} {v
     obtain ⟨k, hk, rfl⟩ := h
     rw [hk]
     exact congrArg some (length_encodePtr (u := u) n k o v).symm
-  | float _ _ => cases h
+  | float e m =>
+    cases h
+    exact congrArg some (length_encodeInt (u := u) o (w := floatWidth e m) v).symm
 
-/-- Every integer type has a size, and so has a pointer type whose memory
-the layout declares. -/
+/-- Every integer type and every float type has a size, and so has a
+pointer type whose memory the layout declares. -/
 theorem Ty.units?_isSome {l : DataLayout} {u : Nat} {t : Ty} :
-    (t.units? l u).isSome ↔ (∃ w, t = .int w) ∨ ∃ n, t = .ptr n ∧ l.Declares n := by
+    (t.units? l u).isSome ↔
+      (∃ w, t = .int w) ∨ (∃ e m, t = .float e m) ∨ ∃ n, t = .ptr n ∧ l.Declares n := by
   cases t <;> simp [Ty.units?, DataLayout.Declares]
 
 /-- Decoding a value's encoding gives the value back, poison included, at
@@ -88,7 +92,10 @@ theorem Ty.decode?_encode? {l : DataLayout} (hl : l.Valid) {u : Nat} (hu : 0 < u
     obtain ⟨e, he, rfl⟩ := hk
     simp only [Ty.decode?, Ty.units?, he, Option.map_some]
     exact congrArg some (decodePtr_encodePtr (unitsFor_pos hu (DataLayout.pointer_pos hl he)) o v)
-  | float _ _ => cases h
+  | float e m =>
+    cases h
+    exact congrArg some (decodeInt_encodeInt hu o (w := floatWidth e m)
+      (by simp only [floatWidth]; omega) v)
 
 end Core
 

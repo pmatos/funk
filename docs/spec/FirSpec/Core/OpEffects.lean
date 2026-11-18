@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Core effects: readable blocks" =>
 
-:::moduleDocs (fingerprint := "16666610981230852379")
+:::moduleDocs (fingerprint := "14253884279762886695")
 :::
 
 :::readable Fir.Core.Mem (fingerprint := "11401156343561318334")
@@ -30,7 +30,7 @@ $`\mathsf{load}` and $`\mathsf{store}` the memory of their pointer; no
 other core op names a memory.
 :::
 
-:::readable Fir.Core.Op.effects (fingerprint := "9988592053290855438")
+:::readable Fir.Core.Op.effects (fingerprint := "16981218494327732314")
 *Definition: the effects of each core op.* For each
 {ref "The-fir-specification--Abstract-syntax--Core-ops"}[core op instance]:
 
@@ -56,7 +56,11 @@ The load and store of a pointer, $`\mathsf{load}_N~o~\mathsf{ptr}\langle M \rang
 and $`\mathsf{store}_N~o~\mathsf{ptr}\langle M \rangle~a` (`loadPtr` and
 `storePtr` in the Lean), have the sets of $`\mathsf{load}_N` and
 $`\mathsf{store}_N`: the memory is $`N`, the pointer's they access
-through, never the memory $`M` of the pointer they load or store.
+through, never the memory $`M` of the pointer they load or store. So do
+the load and store of a float,
+$`\mathsf{load}_N~o~\mathsf{float}\langle e,m \rangle~a` and
+$`\mathsf{store}_N~o~\mathsf{float}\langle e,m \rangle~a` (`loadFloat`
+and `storeFloat`).
 
 $`\mathsf{const}` here is a constant of any type, an integer's or a
 float's. The float ops without $`\mathsf{nnan}` and $`\mathsf{ninf}`

@@ -248,8 +248,9 @@ theorem core_touchesMemory_false {o : Core.Op}
   cases o with
   | alloca _ _ _ _ n => exact ((h (.inl n)).2.2 (List.mem_singleton_self _)).elim
   | load _ _ _ n => exact ((h (.inl n)).1 (List.mem_singleton_self _)).elim
-  | store _ _ _ n | storePtr _ _ _ n => exact ((h (.inl n)).2.1 (List.mem_singleton_self _)).elim
-  | loadPtr _ _ _ n => exact ((h (.inl n)).1 (List.mem_singleton_self _)).elim
+  | store _ _ _ n | storePtr _ _ _ n | storeFloat _ _ _ _ n =>
+    exact ((h (.inl n)).2.1 (List.mem_singleton_self _)).elim
+  | loadPtr _ _ _ n | loadFloat _ _ _ _ n => exact ((h (.inl n)).1 (List.mem_singleton_self _)).elim
   | _ => rfl
 
 /-- Each op of `CoreProbe` ignores the memories, at every layout and

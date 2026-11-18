@@ -1,8 +1,8 @@
 # Tests of float-nan-memory.fir: a NaN that goes through memory as an
 # integer (#219, ADR-2026-11-16-1630). Each function computes inf - inf,
 # or a NaN operand minus a number, which is any NaN; casts it to the
-# integer of its width; stores that and loads it back. A float has no
-# loads or stores in M1, so the NaN reaches memory through bitcast.
+# integer of its width; stores that and loads it back, so the NaN reaches
+# memory through bitcast; float-memory.fir stores floats themselves.
 # @f32_bits and @f64_bits return the integer whole: native code's result
 # is a NaN's bits, and the harness has fir-ref try them as a NaN, so the
 # differential test passes when a NaN choice gives them. @f32_top and

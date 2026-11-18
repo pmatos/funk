@@ -4,24 +4,33 @@ ADR-2026-11-03-0557).
 - `ptradd`, which has no attributes, is a cell for each width of its
   integer.
 - `alloca` is a cell for each width of the integer type it allocates,
-  whatever its kind, count and alignment, and one, `ptr`, for a pointer
-  type of any memory (stage 4d-2b of #231).
+  whatever its kind, count and alignment, one, `ptr`, for a pointer
+  type of any memory (stage 4d-2b of #231), and one for each float format
+  it allocates (#264).
 - `load` is a cell for each width of the integer it loads, whatever its
-  ordering and alignment, and one, `ptr`, for a pointer of any memory.
+  ordering and alignment, one, `ptr`, for a pointer of any memory, and one
+  for each float format it loads.
 - `store` is a cell for each width of the integer it stores, whatever its
-  ordering and alignment, and one, `ptr`, for a pointer of any memory.
+  ordering and alignment, one, `ptr`, for a pointer of any memory, and one
+  for each float format it stores.
 
 Each is a cell at the side's pointer widths, `cells.POINTER_DIFFERENTIAL`
-and `cells.POINTER_INTERPRETER`, and the pointer cells with them.
+and `cells.POINTER_INTERPRETER`, the pointer cells with them, and at the
+side's float formats in memory, `MEMORY_FLOAT_DIFFERENTIAL` and
+`MEMORY_FLOAT_INTERPRETER`. The backend does not load or store a
+float yet, so the differential side has none (stage 1 of #264).
 """
 
 from cell_types import Cell, CellError, is_pointer
 from firtext import Op
-from refine import bits_of
+from refine import FLOAT_ALIASES, bits_of
 
 POINTER_OPS = ("ptradd", "alloca", "load", "store")
 # The column of the pointer cells of `alloca`, `load` and `store`.
 POINTER = "ptr"
+# The float formats of `alloca`, `load` and `store` on each side (#264).
+MEMORY_FLOAT_DIFFERENTIAL: tuple[str, ...] = ()
+MEMORY_FLOAT_INTERPRETER = tuple(FLOAT_ALIASES)
 
 
 def is_int(t: str) -> bool:
@@ -31,11 +40,20 @@ def is_int(t: str) -> bool:
 
 
 def element(t: str) -> str | None:
-    """The column of a type that memory holds: an integer type's own, and
-    `ptr` for a pointer type of any memory; none for any other type."""
-    if is_int(t):
+    """The column of a type that memory holds: an integer or a float type's
+    own, and `ptr` for a pointer type of any memory; none for any other
+    type."""
+    if bits_of(t) is not None:
         return t
     return POINTER if is_pointer(t) else None
+
+
+def int_or_pointer(t: str) -> str | None:
+    """The column of a type that work-group memory holds (`Ty.IsElem`): an
+    integer type's own, and `ptr` for a pointer type of any memory; none for
+    a float or any other type."""
+    column = element(t)
+    return column if column == POINTER or is_int(t) else None
 
 
 def pointer_offset(op: Op) -> Cell:
@@ -49,8 +67,8 @@ def pointer_offset(op: Op) -> Cell:
 
 
 def stack_allocation(op: Op) -> Cell:
-    """The cell of an `alloca`: at the width of the integer type it
-    allocates, its second attribute after its kind, or at `ptr`. Its count and alignment
+    """The cell of an `alloca`: at the integer or float type it allocates,
+    its second attribute after its kind, or at `ptr`. Its count and alignment
     are not part of its cell, as a constant's value is not. The matrix
     reads canonical modules, which both tools decode, so the rest of its
     attributes needs no check here."""
@@ -62,11 +80,10 @@ def stack_allocation(op: Op) -> Cell:
 
 
 def memory_load(op: Op) -> Cell:
-    """The cell of a `load`: at the width of the integer it loads, or at
-    `ptr`. Its
-    ordering and alignment are not part of its cell, as an allocation's
-    count is not. The matrix reads canonical modules, which both tools
-    decode, so the rest of its attributes needs no check here."""
+    """The cell of a `load`: at the integer or float type it loads, or at
+    `ptr`. Its ordering and alignment are not part of its cell, as an
+    allocation's count is not. The matrix reads canonical modules, which
+    both tools decode, so the rest of its attributes needs no check here."""
     if op.attrs and len(op.operands) == len(op.results) == 1:
         [pointer], [result] = op.operands, op.results
         column = element(result)
@@ -78,7 +95,7 @@ def memory_load(op: Op) -> Cell:
 
 
 def memory_store(op: Op) -> Cell:
-    """The cell of a `store`: at the width of the integer it stores, its
+    """The cell of a `store`: at the integer or float type it stores, its
     first operand, or at `ptr`. Its ordering and alignment are not part of its cell, as
     a load's are not. The matrix reads canonical modules, which both tools
     decode, so the rest of its attributes needs no check here."""
