@@ -54,7 +54,8 @@ SoftFloat's last before its `bf16` work, both of 2025-03-07.
   vectors for `one`, `ueq`, `ord` and `uno`, or for `fneg` and `fabs`, which
   stay on `float_ref.py`'s corpus.
 - TestFloat's `rem` is IEEE 754's remainder, `frem` (#430). It has no
-  `fmod`, which stays on `float_rem_cases.py`'s corpus.
+  `fmod`, which stays on the arithmetic corpus's `float-rem-FORMAT`
+  ([testing-and-harness-floats.md](testing-and-harness-floats.md#the-arithmetic-corpus)).
 - At `f32` and `f64` it checks Lean's model apart from the backend; the
   corpus compares native code with `fir-ref`.
 - It exits with 1 when a vector fails, and with 2 when TestFloat cannot be
@@ -69,11 +70,11 @@ result is rounded once more, to nearest even at `bf16`; rounding to odd
 with at least two more bits, then to nearest, is correctly rounded (Boldo
 and Melquiond, IEEE Trans. Computers 57(4), 2008), and `f32` has 16 more
 at every exponent. A comparison needs no rounding, and neither does
-`rem`, which takes the same path: a remainder is exact, and `bf16` has
-`f32`'s exponents, so the remainder of two `bf16` values is a `bf16` value.
-`f32` holds it whatever the rounding, and rounding it to `bf16` keeps it;
-`testfloat_gen` writes the same `rem` vectors under `-rodd` as under
-`-rnear_even`, and `test_testfloat.py` checks the claim on `float_ref.py`.
+`rem`: a remainder is exact, and `bf16` has `f32`'s exponents, so the
+remainder of two `bf16` values is a `bf16` value. Its vectors are
+generated to nearest even, and each result is read as it is; one that is
+not a `bf16` value is an error, so the check would report it rather than
+round it. `test_testfloat.py` checks the claim on `float_ref.py`.
 These operands target
 `f32`'s edges, not `bf16`'s ties, which the corpus's hard inputs target.
 Rejected: SoftFloat's own `bf16` routines, new in October 2026, for which

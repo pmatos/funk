@@ -59,9 +59,10 @@ class Bf16Test(unittest.TestCase):
         self.assertEqual(odd.result, want)
         self.assertNotEqual(tc.round_to_bf16(nearest.result), want)
 
-    def test_remainder_needs_no_rounding(self):
-        # `rem` is exact, so its `f32` result on `bf16` operands is already
-        # the `bf16` remainder, and rounding it again changes nothing.
+    def test_remainder_is_read_exactly(self):
+        # A remainder is exact: on `bf16` operands the `f32` result is the
+        # `bf16` remainder, read without rounding.
+        self.assertFalse(tc.rounds("rem"))
         rng = random.Random(430)
         edges = [0, 0x8000, 0x0001, 0x007F, 0x0080, 0x7F7F, 0x7F80, 0x3F80, 0xFF7F]
         pairs = [(a, b) for a in edges for b in edges]
@@ -75,7 +76,10 @@ class Bf16Test(unittest.TestCase):
                 self.assertTrue(tc.is_nan(BF16, got.result), (hex(a), hex(b)))
             else:
                 self.assertEqual(got.result, want, (hex(a), hex(b)))
-                self.assertTrue(tc.is_bf16(v.result), (hex(a), hex(b)))
+
+    def test_an_inexact_remainder_is_an_error(self):
+        with self.assertRaises(ValueError):
+            tc.to_bf16("rem", tc.Vector((0x3F800000, 0x40000000), 0x3F800001))
 
 
 class ModuleTest(unittest.TestCase):

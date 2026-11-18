@@ -36,9 +36,10 @@ has 16 more mantissa bits than `bf16` at every exponent, the subnormal ones
 included, since both have 8 exponent bits; and SoftFloat's round to odd
 gives the largest finite `f32` for a result past it, which rounds on to the
 infinity, as the exact result does. A comparison needs no rounding, and
-neither does `rem`: a remainder is exact, and `bf16` has `f32`'s exponents,
-so the remainder of two `bf16` values is a `bf16` value, which `f32` holds
-in every rounding mode, and which rounding to `bf16` keeps.
+neither does `rem`, whose vectors are generated to nearest even and whose
+result is read as it is: a remainder is exact, and `bf16` has `f32`'s
+exponents, so the remainder of two `bf16` values is a `bf16` value, and an
+`f32` result that is not one is an error.
 """
 
 from dataclasses import dataclass
@@ -68,6 +69,8 @@ ARITHMETIC = {
     "mulAdd": ("fma round(rne)", 3),
     "rem": ("frem", 2),
 }
+# The arithmetic whose result is exact, so a `bf16` vector needs no rounding.
+EXACT = {"rem"}
 
 # Each comparison of `testfloat_gen`: the predicates it backs, each with
 # whether it swaps the operands and whether it negates TestFloat's answer.
@@ -143,12 +146,25 @@ def round_to_bf16(bits: int) -> int:
     return upper
 
 
+def rounds(function: str) -> bool:
+    """Whether a `bf16` vector of `function` must come from `-rodd`."""
+    return function in ARITHMETIC and function not in EXACT
+
+
 def to_bf16(function: str, v: Vector) -> Vector | None:
     """The `bf16` vector of an `f32` one, or None when an operand is not a
-    `bf16`. An arithmetic vector must come from `-rodd`."""
+    `bf16`. A vector of a function that `rounds` must come from `-rodd`;
+    an exact result that is not a `bf16` raises ValueError."""
     if not all(is_bf16(a) for a in v.operands):
         return None
-    result = v.result if function in COMPARISONS else round_to_bf16(v.result)
+    if function in COMPARISONS:
+        result = v.result
+    elif function in EXACT:
+        if not is_bf16(v.result):
+            raise ValueError(f"{function}: {v.result:08X} is not a bf16")
+        result = v.result >> 16
+    else:
+        result = round_to_bf16(v.result)
     return Vector(tuple(a >> 16 for a in v.operands), result)
 
 
