@@ -23,8 +23,8 @@
 //! above bit 0 a value's bits above its width may be. An `f32` or `f64`
 //! moves its 4 or 8 bytes through `%xmm0` with `movss` or `movsd`, which
 //! copy the bits as they are, a NaN's sign and payload and a signalling
-//! NaN included (#264); an `f16`, `bf16` or `f128` is reported where it is
-//! defined, as at every other float op. Their `align(A)` and
+//! NaN included (#264); a float of any other format is reported where it
+//! is defined, as at every other float op. Their `align(A)` and
 //! ordering need no code: x86-64 accesses any address, a misaligned access
 //! is UB in the spec, and M1's only ordering is `nonatomic`.
 
@@ -249,7 +249,9 @@ mod tests {
             assert_eq!(asm.matches(&stored).count(), 1, "{stored}\n{asm}");
             assert_eq!(asm.matches(&loaded).count(), 1, "{loaded}\n{asm}");
         }
-        assert!(!asm.contains("\tmovq\t%rax, (%rcx)\n"), "{asm}");
+        for wide in ["movq\t%rax", "movq\t%xmm0"] {
+            assert!(!asm.contains(&format!("\t{wide}, (%rcx)\n")), "{asm}");
+        }
     }
 
     #[test]

@@ -197,6 +197,19 @@ class Tests(unittest.TestCase):
                 for f in memory
             },
         )
+        found = cells.cells(
+            cells.DIFFERENTIAL,
+            offsets=cells.POINTER_DIFFERENTIAL,
+            memory=MEMORY_FLOAT_DIFFERENTIAL,
+        )
+        self.assertEqual(
+            {c for c in found if c.table == "pointers" and c.width.startswith("f")},
+            {
+                Cell("pointers", op, "", f)
+                for op in ("alloca", "load", "store")
+                for f in ("f32", "f64")
+            },
+        )
         self.assertEqual(MEMORY_FLOAT_DIFFERENTIAL, cells.FLOAT_DIFFERENTIAL)
         self.assertEqual(MEMORY_FLOAT_INTERPRETER, cells.FLOAT_INTERPRETER)
 

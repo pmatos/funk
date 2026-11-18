@@ -10,9 +10,10 @@
 # would clobber the next element. An f64 at offset 4 of an allocation of
 # i32s is aligned to 4, which the access writes as align(4). A stored
 # poison loads as poison, which native code refines with any value. A NaN
-# that fsub chooses keeps its bits through memory: native code's NaN must
-# be one that fir-ref can choose, and the interpreter-only tests pin two
-# of fir-ref's choices. float-memory.fir has the formats the backend does
+# that fsub chooses keeps its bits through memory, loaded as a float or
+# as the integer of its width: native code's NaN must be one that fir-ref
+# can choose, and the interpreter-only tests pin some of fir-ref's
+# choices. float-memory.fir has the formats the backend does
 # not lower, memories of other units, and the UB and poison cases. Each
 # test that declares its result pins fir-ref's own as well as native
 # code's.
@@ -62,4 +63,12 @@ tests = [
   { func = "@f64_nan", args = ["0x7ff8000000000001", "1.0"] },
   { func = "@f64_nan", args = ["0x7ff0000000000000", "0x7ff0000000000000"], choices = ["0"], expect = ["0x7ff8000000000000"] },
   { func = "@f64_nan", args = ["0x7ff0000000000000", "0x7ff0000000000000"], choices = ["-1"], expect = ["0xffffffffffffffff"] },
+  { func = "@f32_nan_bits", args = ["1.0", "0.5"], results = [{ values = ["1056964608"], witness = [] }] },
+  { func = "@f32_nan_bits", args = ["0x7f800000", "0x7f800000"] },
+  { func = "@f32_nan_bits", args = ["0x7fc00001", "1.0"] },
+  { func = "@f32_nan_bits", args = ["0x7f800000", "0x7f800000"], choices = ["0"], expect = ["2143289344"] },
+  { func = "@f64_nan_bits", args = ["1.0", "0.5"], results = [{ values = ["4602678819172646912"], witness = [] }] },
+  { func = "@f64_nan_bits", args = ["0x7ff0000000000000", "0x7ff0000000000000"] },
+  { func = "@f64_nan_bits", args = ["0x7ff8000000000001", "1.0"] },
+  { func = "@f64_nan_bits", args = ["0x7ff0000000000000", "0x7ff0000000000000"], choices = ["0"], expect = ["9221120237041090560"] },
 ]

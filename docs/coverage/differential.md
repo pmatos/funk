@@ -72,7 +72,7 @@ says how to read it.
 | `fadd` | `nnan` | 3 | 3 |
 | `fadd` | `ninf` | 3 | 3 |
 | `fadd` | `nsz` | 3 | 3 |
-| `fsub` | `round(rne)` | 23 | 23 |
+| `fsub` | `round(rne)` | 26 | 26 |
 | `fsub` | `nnan` | 3 | 3 |
 | `fsub` | `ninf` | 3 | 3 |
 | `fsub` | `nsz` | 2 | 2 |
@@ -179,9 +179,9 @@ says how to read it.
 | op | `i1` | `i8` | `i16` | `i32` | `i64` | `i128` | `ptr` | `f32` | `f64` |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | `ptradd` | 2 | 4 | 4 | 4 | 37 | 4 |  |  |  |
-| `alloca` | 2 | 12 | 6 | 46 | 14 | 5 | 4 | 17 | 14 |
-| `load` | 2 | 37 | 7 | 22 | 13 | 5 | 4 | 15 | 16 |
-| `store` | 4 | 9 | 6 | 46 | 14 | 5 | 4 | 17 | 16 |
+| `alloca` | 2 | 12 | 6 | 46 | 14 | 5 | 4 | 20 | 17 |
+| `load` | 2 | 37 | 7 | 25 | 16 | 5 | 4 | 15 | 16 |
+| `store` | 4 | 9 | 6 | 46 | 14 | 5 | 4 | 20 | 19 |
 
 ## Passed and returned values
 
@@ -192,12 +192,12 @@ says how to read it.
 | `cond_br` | a successor passes nothing | 858 |  |  |  |  |  |  |  |  |
 | `cond_br` | a successor passes values |  | 58 | 140 | 132 | 160 | 132 | 153 | 9 | 7 |
 | `ret` | returns no value | 73 |  |  |  |  |  |  |  |  |
-| `ret` | returns one value |  | 2947 | 1624 | 1276 | 1706 | 1465 | 2490 | 546 | 473 |
+| `ret` | returns one value |  | 2947 | 1624 | 1276 | 1709 | 1468 | 2490 | 546 | 473 |
 | `ret` | returns several values |  | 282 | 432 | 266 | 249 | 399 | 539 | 11 | 11 |
 | `unreachable` | ends a block | 38 |  |  |  |  |  |  |  |  |
 | `call` | gives no result | 35 |  |  |  |  |  |  |  |  |
 | `call` | gives one result |  | 89 | 87 | 80 | 87 | 93 | 130 | 2 | 2 |
 | `call` | gives several results |  | 171 | 220 | 126 | 111 | 191 | 279 | 3 | 4 |
 | `func` | returns no value | 41 |  |  |  |  |  |  |  |  |
-| `func` | returns one value |  | 2947 | 1624 | 1276 | 1706 | 1465 | 2490 | 544 | 471 |
+| `func` | returns one value |  | 2947 | 1624 | 1276 | 1709 | 1468 | 2490 | 544 | 471 |
 | `func` | returns several values |  | 282 | 432 | 266 | 240 | 399 | 503 | 11 | 11 |

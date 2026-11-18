@@ -111,6 +111,24 @@ func @f64_nan(%a: f64, %b: f64) -> f64 {
   ret %r @0
 }
 
+func @f32_nan_bits(%a: f32, %b: f32) -> i32 {
+^entry:
+  %n: f32 = fsub round(rne) %a, %b @0
+  %p: ptr = alloca stack f32 @0
+  store nonatomic %n, %p @0
+  %r: i32 = load nonatomic %p @0
+  ret %r @0
+}
+
+func @f64_nan_bits(%a: f64, %b: f64) -> i64 {
+^entry:
+  %n: f64 = fsub round(rne) %a, %b @0
+  %p: ptr = alloca stack f64 @0
+  store nonatomic %n, %p @0
+  %r: i64 = load nonatomic %p @0
+  ret %r @0
+}
+
 locs {
   @0 = unknown
 }

@@ -60,8 +60,8 @@ signalling NaN stays signalling
 ([semantics-m1-memory-access.md](semantics-m1-memory-access.md#floats-in-memory),
 #264). The value goes to or from its slot as other float ops' do: `movq`
 from `%xmm0` into the slot, whose bits above an `f32`'s 32 are unspecified,
-and `movss` or `movsd` from it. An `f16`, `bf16` or `f128` value is
-reported where it is defined, as at every other float op
+and `movss` or `movsd` from it. A float of any other format is reported
+where it is defined, as at every other float op
 ([x86-64-backend-lowering-floats.md](x86-64-backend-lowering-floats.md)).
 Rejected: moving a float's bits through `%rax` with integer moves, which
 gives the same bytes but not the SSE moves that #264 asks for.
