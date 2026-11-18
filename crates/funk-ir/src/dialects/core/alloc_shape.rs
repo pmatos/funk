@@ -194,7 +194,7 @@ pub(super) fn shape_types(p: &Shape<'_>) -> Vec<Type> {
 
 /// The attribute `float(e, m)`, for the tests of the dialect's ops.
 #[cfg(test)]
-pub(super) fn float_attr(e: i128, m: i128) -> Attr {
+pub(crate) fn float_attr(e: i128, m: i128) -> Attr {
     Attr::App("float".into(), vec![Attr::int(e), Attr::int(m)])
 }
 

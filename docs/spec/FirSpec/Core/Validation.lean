@@ -71,9 +71,8 @@ $$`\mathrm{elem}(\mathsf{i}W) \qquad \mathrm{elem}(\mathsf{ptr}\langle M \rangle
 
 A field of such a type in an aggregate's layout takes what one value
 that $`\mathsf{alloca}` allocates takes. A float type is not yet a field
-(#264). No allocation asks for one: the core's $`\mathsf{alloca}`
-and `gpu.work_group_alloca` allocate values of every valid type, a float's
-included (#264; the human's ruling of 2026-11-18 on #432).
+(#264). No allocation asks for one: $`\mathsf{alloca}` allocates values
+of every valid type, a float's included (#264).
 :::
 
 :::readable Fir.Core.Op.attrTypes (fingerprint := "14541402550165652625")

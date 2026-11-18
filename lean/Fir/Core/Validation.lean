@@ -49,7 +49,7 @@ def Ty.memory : Ty → Option Nat
 /-- An integer or a pointer type: the types whose field in an aggregate's
 layout takes what one value that `alloca` allocates takes
 (`Ty.fieldShape_eq_allocaShape`). A float type is not yet a field (#264),
-though `alloca` and `gpu.work_group_alloca` allocate floats. -/
+though `alloca` allocates floats. -/
 def Ty.IsElem : Ty → Prop
   | .int _ | .ptr _ => True
   | .float _ _ => False

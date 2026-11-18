@@ -185,8 +185,9 @@ memory its meaning (ADR-2026-11-09-1542;
   not decode. Validation has `alloca`'s rules but the kind: at least one
   value, a power-of-two alignment within the layout's limit, a valid type,
   and the data layout declares the result's memory and the memory of a
-  pointer type it allocates (`Gpu.Op.Valid`, `Gpu.Op.attrTypes`). Its effect is to allocate in its result's memory,
-  `allocates(N)`, as `alloca`'s is. The name and spelling are an
+  pointer type it allocates (`Gpu.Op.Valid`, `Gpu.Op.attrTypes`). Its
+  effect is to allocate in its result's memory, `allocates(N)`, as
+  `alloca`'s is. The name and spelling are an
   implementation choice of stage 3, which the human may rule on: the name
   follows `gpu.work_group_*`, and the attributes reuse `alloca`'s reading
   (`Gpu.decodeAlloc`; `crates/funk-ir/src/dialects/core/alloc_shape.rs`).

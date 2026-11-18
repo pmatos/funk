@@ -143,7 +143,7 @@ pub fn dialect() -> Dialect {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::dialects::core::{int_type, ptr_type};
+    use crate::dialects::core::{float_attr, int_type, ptr_type};
     use crate::effects::MemSet;
 
     fn decode(attrs: &[Attr], operands: &[Type], results: &[Type]) -> Result<OpShape, String> {
@@ -204,7 +204,6 @@ mod tests {
     fn a_work_group_allocation_is_written_as_alloca_without_its_kind() {
         let p3 = [ptr_type(3)];
         let align = |a| Attr::App("align".into(), vec![Attr::int(a)]);
-        let float_attr = |e, m| Attr::App("float".into(), vec![Attr::int(e), Attr::int(m)]);
         for attrs in [
             vec![Attr::word("i32")],
             vec![Attr::word("i32"), Attr::int(64)],
