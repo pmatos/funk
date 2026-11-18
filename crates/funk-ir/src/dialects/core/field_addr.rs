@@ -18,7 +18,6 @@
 use super::type_list;
 use super::types::{CoreType, core_type};
 use crate::effects::Effects;
-use crate::ir::Item;
 use crate::registry::{OpContext, OpShape, OpSpec, OpTypes};
 use crate::text::print_symbol;
 use crate::{Attr, Int};
@@ -79,7 +78,7 @@ impl OpSpec for FieldAddr {
         let (s, i) = attrs(op)?;
         let (n, indexed) = shape(op).ok_or("fieldaddr does not decode")?;
         let sym = print_symbol(s);
-        let Some(a) = cx.symbols.get(s).and_then(Item::as_aggregate) else {
+        let Some(a) = cx.symbols.layout(s) else {
             return Err(format!("fieldaddr {sym} names no aggregate's layout"));
         };
         if a.memory != u64::from(n) {

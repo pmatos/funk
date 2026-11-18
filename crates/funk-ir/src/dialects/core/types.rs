@@ -231,33 +231,26 @@ impl TypeSpec for CoreTypes {
         n: u64,
     ) -> Option<(u128, u128)> {
         let ty = decode(ty)?.ok()?;
-        let e = entry(n);
+        let layout = entry(n);
         let units = |w: u32| {
-            if e.unit == 0 {
+            if layout.unit == 0 {
                 0
             } else {
-                u128::from(w.div_ceil(e.unit))
+                u128::from(w.div_ceil(layout.unit))
             }
         };
-        match ty {
-            CoreType::Int(w) => {
-                let u = units(w);
-                Some((u, u.next_power_of_two()))
-            }
+        let bits = match ty {
+            CoreType::Int(w) => w,
+            CoreType::Float { e, m } => 1 + e + m,
             // In its own memory a pointer is aligned as the entry aligns its
             // pointers, whose units are then these.
             CoreType::Ptr(m) if u64::from(m) == n => {
-                Some((units(e.pointer), u128::from(e.alignment())))
+                return Some((units(layout.pointer), u128::from(layout.alignment())));
             }
-            CoreType::Ptr(m) => {
-                let u = units(entry(u64::from(m)).pointer);
-                Some((u, u.next_power_of_two()))
-            }
-            CoreType::Float { e, m } => {
-                let u = units(1 + e + m);
-                Some((u, u.next_power_of_two()))
-            }
-        }
+            CoreType::Ptr(m) => entry(u64::from(m)).pointer,
+        };
+        let u = units(bits);
+        Some((u, u.next_power_of_two()))
     }
 }
 

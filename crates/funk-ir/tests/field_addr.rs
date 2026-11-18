@@ -113,3 +113,17 @@ fn an_op_names_only_the_layouts_of_its_own_table() {
         "fieldaddr @out names no aggregate's layout",
     );
 }
+
+#[test]
+fn an_op_names_the_first_layout_of_its_symbol_whatever_else_shares_it() {
+    // The module is invalid for its two items @pair, but the op names the
+    // layout, as `SymbolTable.layouts` gives it in Lean.
+    let text = module(0, "%q: ptr = fieldaddr @pair 1 %p @0")
+        .replace("locs {", "func @pair() {\n^entry:\n  ret @0\n}\n\nlocs {");
+    let found = diagnostics(&text);
+    assert!(!found.is_empty(), "{text}");
+    assert!(
+        found.iter().all(|d| !d.message.contains("fieldaddr")),
+        "{found:#?}"
+    );
+}

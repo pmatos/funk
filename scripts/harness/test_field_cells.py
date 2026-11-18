@@ -20,6 +20,10 @@ class Tests(unittest.TestCase):
         for bad in [
             Op("fieldaddr", ("@pair",), ("ptr",), ("ptr",), ()),
             Op("fieldaddr", ("@pair", "1", "2"), ("ptr",), ("ptr",), ()),
+            Op("fieldaddr", ("1", "@pair"), ("ptr",), ("ptr",), ()),
+            Op("fieldaddr", ("@pair", "-1"), ("ptr",), ("ptr",), ()),
+            Op("fieldaddr", ("@pair", "@q"), ("ptr",), ("ptr",), ()),
+            Op("fieldaddr", ("pair", "1"), ("ptr",), ("ptr",), ()),
             Op("fieldaddr", ("@pair", "1"), ("ptr", "f32"), ("ptr",), ()),
             Op("fieldaddr", ("@pair", "1"), ("ptr", "ptr"), ("ptr",), ()),
             Op("fieldaddr", ("@pair", "1"), ("ptr", "i8", "i8"), ("ptr",), ()),

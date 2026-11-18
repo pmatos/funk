@@ -19,7 +19,8 @@ Tier: direction; area: semantics
   poison operand gives poison, and the op is pure.
 - **Every record.** The laws hold for every record of items a run may give,
   with no hypothesis: a record without the layout or the field moves the
-  pointer by 0. Validation keeps a valid module from naming one.
+  pointer by 0. Validation keeps a valid module from naming one, and the
+  run gives each op the layout validation checked (`RunItems.ofTable_ref`).
 - **Validation.** The symbol names a layout of the op's own table, in the
   pointer's memory; the field is one of its fields; and only a repeated
   field takes an index. A repeated field named with no index gives its

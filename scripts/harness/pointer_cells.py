@@ -133,9 +133,12 @@ def pointer_cell(op: Op) -> Cell:
 
 def field_address(op: Op) -> Cell:
     """The cell of a `fieldaddr`: at the width of its index, or with no
-    index. Its layout and field are not part of its cell. Any other text of
-    it does not decode, so it is not a cell."""
-    if len(op.attrs) == 2 and op.operands and op.results == op.operands[:1]:
+    index. Its layout's symbol and its field's number are not part of its
+    cell. Any other text of it does not decode, so it is not a cell."""
+    attrs_decode = (
+        len(op.attrs) == 2 and op.attrs[0].startswith("@") and op.attrs[1].isdigit()
+    )
+    if attrs_decode and op.operands and op.results == op.operands[:1]:
         pointer, *index = op.operands
         if is_pointer(pointer) and len(index) <= 1 and all(map(is_int, index)):
             return Cell(FIELDS, op.name, "", "".join(index))
