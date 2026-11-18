@@ -181,7 +181,7 @@ SECTIONS = {
     "values": ("Passed and returned values", ("op", "what"), ""),
     "gpu": ("Ops of the gpu dialect in a dimension", ("op", "dimension"), ""),
     "gpu_memory": (
-        "Work-group allocation of the gpu dialect, of one or of a pointer",
+        "Work-group allocation of the gpu dialect, of one, of a float or of a pointer",
         ("op",),
         "",
     ),

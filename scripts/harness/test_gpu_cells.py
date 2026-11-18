@@ -102,12 +102,14 @@ class Cells(unittest.TestCase):
             (("i7",), "i7"),
             (("ptr(3)",), "ptr"),
             (("ptr",), "ptr"),
+            (("f32", "8"), "f32"),
+            (("bf16", "align(4)"), "bf16"),
         ]:
             op = Op(name, attrs, (), ("ptr(3)",), ())
             self.assertEqual(of_op(op), {Cell("gpu_memory", name, "", column)})
         for op in [
-            Op(name, ("f32",), (), ("ptr(3)",), ()),
             Op(name, ("i32",), (), ("i32",), ()),
+            Op(name, ("f32",), (), ("f32",), ()),
             Op(name, (), (), ("ptr(3)",), ()),
         ]:
             with self.subTest(op=op), self.assertRaises(CellError):
@@ -118,9 +120,9 @@ class Cells(unittest.TestCase):
         self.assertEqual(len(found), 12)
         self.assertEqual(found[1], Cell("gpu", "gpu.work_item_id", "gpu.y", "i32"))
         self.assertFalse(any(c.table == "gpu" for c in cells.cells((8,))))
-        memory = [c for c in cells.cells((8,), offsets=(8, 16), gpu=True)]
-        memory = [c.width for c in memory if c.table == "gpu_memory"]
-        self.assertEqual(memory, ["i8", "i16", "ptr"])
+        found = cells.cells((8,), offsets=(8, 16), gpu=True, memory=("f32", "f64"))
+        memory = [c.width for c in found if c.table == "gpu_memory"]
+        self.assertEqual(memory, ["i8", "i16", "ptr", "f32", "f64"])
 
     def test_only_the_interpreter_only_side_has_them(self):
         self.assertEqual(

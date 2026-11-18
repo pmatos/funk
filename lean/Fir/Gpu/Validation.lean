@@ -7,7 +7,8 @@ The rules of `gpu` (ADR-2026-11-09-1545). A question of `gpu` is valid
 when it gives an `i32`, the width of every id and size of a work-item.
 `gpu.work_group_alloca` has the rules of `alloca` but its kind: it
 allocates at least one value, aligned to a power of two of units no larger
-than `MemLayout.limit`, and its type is a valid integer or pointer type.
+than `MemLayout.limit`, and its type is a valid type: an integer, a pointer
+or a float, as for `alloca` (the human's ruling of 2026-11-18 on #432).
 Its result names its memory, and a pointer type that it allocates values of
 names one too (`Op.attrTypes`), so the module's data layout checks that the
 module has each, as for `alloca`: work-group memory is any memory that the
@@ -36,7 +37,7 @@ instance instDecidableValidTy : DecidablePred ValidTy
 allocation has the rules of `alloca` but its kind. -/
 def Op.Valid : Op → Prop
   | .query _ _ w => w = 32
-  | .alloc t c a _ => 1 ≤ c ∧ (∀ x ∈ a, MemLayout.ValidAlign x) ∧ t.IsElem ∧ t.Valid
+  | .alloc t c a _ => 1 ≤ c ∧ (∀ x ∈ a, MemLayout.ValidAlign x) ∧ t.Valid
 
 /-- The type that an allocation in work-group memory allocates values of,
 which it carries in its attributes, so that the data layout checks the
@@ -70,6 +71,8 @@ instance instDecidableDialectValidation : DecidableDialectValidation GpuDialect 
 #guard decide (Op.Valid (.alloc (.ptr 5) 1 none 3))
 #guard !decide (Op.Valid (.alloc (.int 32) 0 none 3))
 #guard !decide (Op.Valid (.alloc (.int 32) 1 (some 3) 3))
-#guard !decide (Op.Valid (.alloc (.float 8 23) 1 none 3))
+#guard decide (Op.Valid (.alloc (.float 8 23) 1 none 3))
+#guard decide (Op.Valid (.alloc (.float 2 1) 4 (some 2) 5))
+#guard !decide (Op.Valid (.alloc (.float 1 1) 1 none 3))
 
 end Fir.Gpu

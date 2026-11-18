@@ -27,7 +27,7 @@ of a pointer keeps its write. A store of an $`\mathsf{i8}` through a
 pointer of memory 0 is a valid op instance.
 :::
 
-:::readable Fir.Core.Unlawful.storeAlign_i8 Fir.Core.Unlawful.oneUnit_store (pin := Fir.Memory.Memories.store) (pin := Fir.Core.Unlawful.oneUnit) (fingerprint := "9529801639186522702")
+:::readable Fir.Core.Unlawful.storeAlign_i8 Fir.Core.Unlawful.oneUnit_store (pin := Fir.Memory.Memories.store) (pin := Fir.Core.Unlawful.oneUnit) (fingerprint := "499630171697357063")
 *Theorems: a store of one unit.* An $`\mathsf{i8}` is stored to the
 default memory aligned to 1, so the store of the $`\mathsf{i8}` 1 through
 the pointer to the one unit of $`S_0`, the memories of the section on a

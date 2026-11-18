@@ -118,11 +118,11 @@ through it; its rule on pointers is checked in Lean too, in
 `lean/Fir/Core/Pointer.lean` (#231).
 
 `alloca`, `load` and `store` have one more cell each for every float
-format of a side's floats in memory (`pointer_cells.MEMORY_FLOAT_*`, #264).
-The backend sizes an `alloca` of floats but does not load or store a
-float yet, so only the interpreter-only side has them, at `f16`, `bf16`, `f32`, `f64` and
-`f128`, filled by `tests/fir/canonical/float-memory.fir`; stage 2 of #264
-gives the differential side `f32` and `f64`. A float of a format without
+format of a side's floats in memory (`pointer_cells.MEMORY_FLOAT_*`, #264):
+`f16`, `bf16`, `f32`, `f64` and `f128` on the interpreter-only side, filled
+by `tests/fir/canonical/float-memory.fir`, and `f32` and `f64`, which the
+backend loads and stores, on the differential side, filled by
+`tests/fir/canonical/float-memory-native.fir`. A float of a format without
 an alias, such as `float(2, 1)`, counts towards no cell, as at every other
 float op.
 

@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Frame laws: readable blocks" =>
 
-:::moduleDocs (fingerprint := "1445022465900720440")
+:::moduleDocs (fingerprint := "3105686093892118235")
 :::
 
 :::readable Fir.Memory.Memories.enter_mem Fir.Memory.Memories.exit_enter (fingerprint := "3818146357299077169")
@@ -83,12 +83,13 @@ them $`((x, |\mathit{mem}(x)|)~\mathit{fr})~\mathit{fr}^*`. An allocation
 of any other kind leaves the frames as they were.
 :::
 
-:::readable Fir.Memory.Memories.enter_alloc_exit Fir.Memory.Memories.enter_alloc_exit_load (fingerprint := "1372037307957666265")
+:::readable Fir.Memory.Memories.enter_alloc_exit Fir.Memory.Memories.enter_alloc_exit_load (fingerprint := "1011913146706496402")
 *Theorem: a call's stack allocation is freed when the call returns.* Enter
 a call, allocate $`n` units on the stack of the memory $`x`, aligned to
 $`\alpha` units, and leave the call. Then the new allocation,
 $`|\mathit{mem}(x)|`, is a block of the stack kind and the alignment
-$`\alpha`, of $`n` poisons, no longer live, and every load from it, at
+$`\alpha`, of $`n` poisons, no longer live and with no address, and
+every load from it, at
 any offset, of any size and of any alignment, faults with
 $`\mathsf{freed}`
 (ADR-2026-11-09-1548).

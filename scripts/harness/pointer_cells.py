@@ -17,8 +17,8 @@ ADR-2026-11-03-0557).
 Each is a cell at the side's pointer widths, `cells.POINTER_DIFFERENTIAL`
 and `cells.POINTER_INTERPRETER`, the pointer cells with them, and at the
 side's float formats in memory, `MEMORY_FLOAT_DIFFERENTIAL` and
-`MEMORY_FLOAT_INTERPRETER`. The backend does not load or store a
-float yet, so the differential side has none (stage 1 of #264).
+`MEMORY_FLOAT_INTERPRETER`: the differential side has `f32` and `f64`,
+which the backend loads and stores with SSE moves (stage 2 of #264).
 
 The field address `fieldaddr` (#236) is a cell for each width of its
 index, read as signed, and one, with no index, for the address of a field
@@ -40,7 +40,7 @@ FIELDS = "fields"
 # The column of the pointer cells of `alloca`, `load` and `store`.
 POINTER = "ptr"
 # The float formats of `alloca`, `load` and `store` on each side (#264).
-MEMORY_FLOAT_DIFFERENTIAL: tuple[str, ...] = ()
+MEMORY_FLOAT_DIFFERENTIAL = ("f32", "f64")
 MEMORY_FLOAT_INTERPRETER = tuple(FLOAT_ALIASES)
 
 
@@ -57,14 +57,6 @@ def element(t: str) -> str | None:
     if bits_of(t) is not None:
         return t
     return POINTER if is_pointer(t) else None
-
-
-def int_or_pointer(t: str) -> str | None:
-    """The column of a type that work-group memory holds (`Ty.IsElem`): an
-    integer type's own, and `ptr` for a pointer type of any memory; none for
-    a float or any other type."""
-    column = element(t)
-    return column if column == POINTER or is_int(t) else None
 
 
 def pointer_offset(op: Op) -> Cell:

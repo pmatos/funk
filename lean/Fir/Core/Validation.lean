@@ -48,9 +48,10 @@ def Ty.memory : Ty → Option Nat
   | .ptr n => some n
   | _ => none
 
-/-- An integer or a pointer type: the element types of a work-group
-allocation, `gpu.work_group_alloca` (`Gpu.Op.Valid`). The core's `alloca`
-takes every valid type, a float included (#264). -/
+/-- An integer or a pointer type: the types whose field in an aggregate's
+layout takes what one value that `alloca` allocates takes
+(`Ty.fieldShape_eq_allocaShape`). A float type is not yet a field (#264),
+though `alloca` allocates floats. -/
 def Ty.IsElem : Ty → Prop
   | .int _ | .ptr _ => True
   | .float _ _ => False
