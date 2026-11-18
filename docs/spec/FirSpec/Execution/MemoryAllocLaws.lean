@@ -17,7 +17,7 @@ fails when the Lean changes under it.
 :::moduleDocs (fingerprint := "16258933277607196906")
 :::
 
-:::readable Fir.Memory.Memory.unitAt_alloc_lt Fir.Memory.Memory.unitAt_alloc_ge Fir.Memory.Memory.allocs_alloc Fir.Memory.Memory.length_of_allocs (pin := Fir.Memory.Memory.alloc) (pin := Fir.Memory.Memory.unitAt) (pin := Fir.Memory.Memory.allocs) (fingerprint := "11439987531688671613")
+:::readable Fir.Memory.Memory.unitAt_alloc_lt Fir.Memory.Memory.unitAt_alloc_ge Fir.Memory.Memory.allocs_alloc Fir.Memory.Memory.length_of_allocs (pin := Fir.Memory.Memory.alloc) (pin := Fir.Memory.Memory.unitAt) (pin := Fir.Memory.Memory.allocs) (fingerprint := "15589818588162062018")
 *Theorems: an allocation adds a block after the others.* Let $`M` be a
 {ref "The-fir-specification--Memory--The-memory-model"}[memory], and
 $`M'` the memory after an allocation of $`n` units, of kind $`k` and

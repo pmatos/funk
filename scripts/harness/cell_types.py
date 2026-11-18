@@ -1,5 +1,5 @@
-"""The cell of the coverage matrix and the type tests that every module of
-cells shares (ADR-2026-11-03-0557). `cells.py` gives the cell set,
+"""The cell, row and table of the coverage matrix and the type tests that
+every module of cells shares (ADR-2026-11-03-0557). `cells.py` gives the cell set,
 `pointer_cells.py` the cells of the pointer ops, `gpu_cells.py` those of
 the `gpu` dialect, and `copy_cells.py` those of `memcpy` and `memmove`."""
 
@@ -27,6 +27,27 @@ class Cell(NamedTuple):
 
 class CellError(Exception):
     pass
+
+
+class Row(NamedTuple):
+    """A labelled row; `None` entries are not cells, even at a zero count."""
+
+    op: str
+    key: str
+    entries: tuple[Cell | None, ...]
+
+
+class Table(NamedTuple):
+    """An ordered matrix section, with one entry per column in every row.
+
+    `kind` distinguishes display sections, including the four conversion
+    sections whose cells all have table `conversions`. Columns are type
+    names; the empty name is the scalar or no-value column.
+    """
+
+    kind: str
+    columns: tuple[str, ...]
+    rows: tuple[Row, ...]
 
 
 def is_pointer(t: str) -> bool:

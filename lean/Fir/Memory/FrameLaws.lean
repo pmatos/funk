@@ -197,7 +197,7 @@ theorem alloc_frames {k : AllocKind} (hk : k ≠ .stack) (S : Memories Mem unit)
 /-- A stack allocation that a call makes is freed when the call returns. -/
 theorem enter_alloc_exit (S : Memories Mem unit) (x : Mem) (n al : Nat) :
     (((S.enter.alloc x .stack n al).2.exit).mem x).blocks[(S.mem x).blocks.length]? =
-      some ⟨.stack, al, List.replicate n .poison, false⟩ := by
+      some ⟨.stack, al, List.replicate n .poison, false, none⟩ := by
   have hf : (S.enter.alloc x .stack n al).2.frames =
       [(x, (S.mem x).blocks.length)] :: S.frames :=
     alloc_stack_frames (S := S.enter) rfl x n al

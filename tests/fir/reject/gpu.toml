@@ -327,7 +327,7 @@ locs {
 
 [[reject]]
 verdict = "validation-error"
-rule = "gpu.work_group_alloca allocates an integer or a pointer type, not a float"
+rule = "gpu.work_group_alloca allocates a valid float type, as alloca does: float(1, 1), with too few exponent bits, is rejected"
 text = '''
 layout memory(3, unit(8), pointer(32), little)
 
@@ -336,7 +336,7 @@ module @dev() {
 
   func @k() -> ptr(3) {
   ^e:
-    %p: ptr(3) = gpu.work_group_alloca f32 @0
+    %p: ptr(3) = gpu.work_group_alloca float(1, 1) @0
     ret %p @0
   }
 

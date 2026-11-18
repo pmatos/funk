@@ -56,15 +56,13 @@ has neither operands nor attributes, is a cell at each width of its result
 - The ops of the `gpu` dialect are a cell for each dimension, at `i32`,
   on a side that has them, the interpreter-only one (`gpu_cells.py`, #406),
   and `gpu.work_group_alloca` a cell for each type it allocates, as
-  `alloca` (stage 3 of #212).
+  `alloca` (stage 3 of #212), its floats included (#432).
 - `memcpy` and `memmove` are a cell for each width of their length, on
   the interpreter-only side (`copy_cells.py`, #234).
 """
 
-from typing import NamedTuple
-
-from cell_types import Cell, CellError
-from copy_cells import COPIES, COPY_OPS, copy_cell, copy_cells
+from cell_types import Cell, CellError, Row, Table
+from copy_cells import COPY_OPS, copies_table, copy_cell
 from firtext import Op
 from gpu_cells import (
     GPU,
@@ -201,27 +199,6 @@ def ty(w: int) -> str:
     return f"i{w}"
 
 
-class Row(NamedTuple):
-    """A labelled row; `None` entries are not cells, even at a zero count."""
-
-    op: str
-    key: str
-    entries: tuple[Cell | None, ...]
-
-
-class Table(NamedTuple):
-    """An ordered matrix section, with one entry per column in every row.
-
-    `kind` distinguishes display sections, including the four conversion
-    sections whose cells all have table `conversions`. Columns are type
-    names; the empty name is the scalar or no-value column.
-    """
-
-    kind: str
-    columns: tuple[str, ...]
-    rows: tuple[Row, ...]
-
-
 def catalog(
     widths: tuple[int, ...],
     formats: tuple[str, ...] = (),
@@ -319,12 +296,14 @@ def catalog(
             ),
         ]
     )
+    # The columns of an allocation, a load and a store: each integer, any
+    # pointer and each float format in memory.
+    elements = (*map(ty, offsets), POINTER, *memory)
     if offsets:
-        columns = (*map(ty, offsets), POINTER, *memory)
         tables.append(
             Table(
                 "pointers",
-                columns,
+                elements,
                 tuple(
                     Row(
                         op,
@@ -333,7 +312,7 @@ def catalog(
                             None
                             if op == "ptradd" and (t == POINTER or t in memory)
                             else Cell("pointers", op, "", t)
-                            for t in columns
+                            for t in elements
                         ),
                     )
                     for op in POINTER_OPS
@@ -364,16 +343,14 @@ def catalog(
     if gpu:
         rows = tuple(Row(op, d, (cell,)) for op, d, cell in gpu_cells())
         tables.append(Table(GPU, (GPU_WIDTH,), rows))
-        columns = (*map(ty, offsets), POINTER)
         row = Row(
             WORK_GROUP_ALLOCA,
             "",
-            tuple(Cell(GPU_MEMORY, WORK_GROUP_ALLOCA, "", t) for t in columns),
+            tuple(Cell(GPU_MEMORY, WORK_GROUP_ALLOCA, "", t) for t in elements),
         )
-        tables.append(Table(GPU_MEMORY, columns, (row,)))
+        tables.append(Table(GPU_MEMORY, elements, (row,)))
     if copies:
-        rows = tuple(Row(op, "", c) for op, c in copy_cells(tuple(map(ty, offsets))))
-        tables.append(Table(COPIES, tuple(map(ty, offsets)), rows))
+        tables.append(copies_table(tuple(map(ty, offsets))))
     return tuple(tables)
 
 

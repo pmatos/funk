@@ -211,6 +211,10 @@ import FirSpec.Execution.MemoryCallSteps
 import FirSpec.Execution.MemoryProgress
 import FirSpec.Execution.MemoryLocal
 import FirSpec.Memory.Refine
+import FirSpec.Memory.Address
+import FirSpec.Memory.AddressLaws
+import FirSpec.Memory.CanonicalLaws
+import FirSpec.Memory.ExposeLaws
 import FirSpec.Execution.MemoryOpRefine
 import FirSpec.Execution.MemoryPoison
 import FirSpec.Execution.MemoryStepPaths

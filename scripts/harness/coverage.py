@@ -188,7 +188,7 @@ SECTIONS = {
     "copies": ("Copies and moves, by the width of their length", ("op",), ""),
     "gpu": ("Ops of the gpu dialect in a dimension", ("op", "dimension"), ""),
     "gpu_memory": (
-        "Work-group allocation of the gpu dialect, of one or of a pointer",
+        "Work-group allocation of the gpu dialect, of one, of a float or of a pointer",
         ("op",),
         "",
     ),

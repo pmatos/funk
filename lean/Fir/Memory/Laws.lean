@@ -161,7 +161,7 @@ theorem alloc_blocks_lt (M : Memory u) (k : AllocKind) (n al : Nat) {a : AllocId
 units. -/
 theorem alloc_blocks_new (M : Memory u) (k : AllocKind) (n al : Nat) :
     (M.alloc k n al).2.blocks[M.blocks.length]? =
-      some ⟨k, al, List.replicate n .poison, true⟩ := by
+      some ⟨k, al, List.replicate n .poison, true, none⟩ := by
   simp [alloc]
 
 /-- An allocation changes no access through a pointer without provenance

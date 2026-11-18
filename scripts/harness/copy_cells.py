@@ -11,18 +11,20 @@ The cells are on the interpreter-only side alone, until the backend lowers
 the two ops to funk's own runtime routines (stage 4 of #234).
 """
 
-from cell_types import Cell, CellError, is_pointer
+from cell_types import Cell, CellError, Row, Table, is_pointer
 from firtext import Op
 
 COPIES = "copies"
 COPY_OPS = ("memcpy", "memmove")
 
 
-def copy_cells(columns: tuple[str, ...]) -> tuple[tuple[str, tuple[Cell, ...]], ...]:
-    """Each op, with its cell at each width of the columns."""
-    return tuple(
-        (op, tuple(Cell(COPIES, op, "", t) for t in columns)) for op in COPY_OPS
+def copies_table(columns: tuple[str, ...]) -> Table:
+    """The table `copies`: each op, with its cell at each width of the
+    columns."""
+    rows = tuple(
+        Row(op, "", tuple(Cell(COPIES, op, "", t) for t in columns)) for op in COPY_OPS
     )
+    return Table(COPIES, columns, rows)
 
 
 def copy_cell(op: Op) -> Cell:

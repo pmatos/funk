@@ -172,6 +172,10 @@ import Fir.Memory.FrameLaws
 import Fir.Memory.Refine
 import Fir.Memory.Encode
 import Fir.Memory.EncodeLaws
+import Fir.Memory.Address
+import Fir.Memory.AddressLaws
+import Fir.Memory.CanonicalLaws
+import Fir.Memory.ExposeLaws
 import Fir.Core.Encode
 import Fir.Text.Lexical
 import Fir.Text.Grammar
