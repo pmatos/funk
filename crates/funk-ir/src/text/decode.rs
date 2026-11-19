@@ -137,13 +137,21 @@ fn item(mut s: SItem, reg: &Registry) -> Result<Decoded, ParseError> {
 /// An aggregate's layout (`decodeAggregate`, ADR-2026-11-16-1546): no
 /// parameters or results, an empty body, and attributes that decode, each
 /// field's type through the registry.
-fn aggregate_item(mut s: SItem, reg: &Registry) -> Result<Item, ParseError> {
+/// An item of a core kind that has no signature, such as an aggregate's
+/// layout or a global, `what` it is: an error at its first parameter or
+/// result, if it has one.
+fn no_signature(s: &SItem, what: &str) -> Result<(), ParseError> {
     if let Some((_, at)) = s.params.first() {
-        return err(at.name, "an aggregate has no parameters");
+        return err(at.name, format!("{what} has no parameters"));
     }
     if let Some((_, pos)) = s.results.first() {
-        return err(*pos, "an aggregate has no results");
+        return err(*pos, format!("{what} has no results"));
     }
+    Ok(())
+}
+
+fn aggregate_item(mut s: SItem, reg: &Registry) -> Result<Item, ParseError> {
+    no_signature(&s, "an aggregate")?;
     let empty = matches!(&s.body, SBody::Blocks(blocks, _) if blocks.is_empty());
     if s.attrs.len() >= 3 && !empty {
         return err(s.kind_pos, "an aggregate has an empty body");
@@ -187,12 +195,7 @@ fn aggregate_item(mut s: SItem, reg: &Registry) -> Result<Item, ParseError> {
 /// A global (`decodeGlobal`, ADR-2026-11-09-1546): no parameters or
 /// results, an empty body, and attributes that decode.
 fn global_item(mut s: SItem) -> Result<Item, ParseError> {
-    if let Some((_, at)) = s.params.first() {
-        return err(at.name, "a global has no parameters");
-    }
-    if let Some((_, pos)) = s.results.first() {
-        return err(*pos, "a global has no results");
-    }
+    no_signature(&s, "a global")?;
     if !matches!(&s.body, SBody::Blocks(blocks, _) if blocks.is_empty()) {
         return err(s.kind_pos, "a global has an empty body");
     }
