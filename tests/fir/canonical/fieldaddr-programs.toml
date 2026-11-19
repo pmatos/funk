@@ -1,0 +1,35 @@
+# Tests of fieldaddr-programs.fir: struct and array programs in the default
+# memory that reach each field and element through fieldaddr (#236).
+# @point_fields stores an integer, two floats and a pointer to itself in a
+# struct, and reads them back by their offsets. @row_sum fills a row of
+# four i64 in a loop and sums it, and @row_at reads an element by an index:
+# the fourth element's index, 4, is one past the end, an address that
+# ptradd could give, and reading it leaves the allocation, so it is UB, as
+# is reading by a poison index (the human's ruling of 2026-11-16 on #236,
+# Q3 A). @one_past steps back from that address to the last element.
+# @list_sum walks a linked list of three nodes. @vec_push appends to an
+# array that follows its length, and @flex_tail writes past a flexible
+# array member of no elements, up to the end of its allocation, and before
+# its start, where index -2 reaches the struct's first field. The elements
+# of @long_doubles are 16 units apart, each 10-unit float(15, 64) rounded up
+# to its alignment (Q2 B). The backend does not lower fieldaddr yet, so each
+# test is interpreter-only (stage 4 of #236).
+tests = [
+  { func = "@point_fields", args = ["7", "1.5", "-2.25"], expect = ["7", "1.5", "-2.25"] },
+  { func = "@row_sum", args = ["1"], expect = ["64"] },
+  { func = "@row_sum", args = ["-5"], expect = ["40"] },
+  { func = "@row_at", args = ["0"], expect = ["100"] },
+  { func = "@row_at", args = ["3"], expect = ["103"] },
+  { func = "@row_at", args = ["4"], expect = "ub" },
+  { func = "@row_at", args = ["-1"], expect = "ub" },
+  { func = "@row_at", args = ["poison"], expect = "ub" },
+  { func = "@one_past", args = ["42"], expect = ["42"] },
+  { func = "@list_sum", expect = ["6"] },
+  { func = "@vec_push", args = ["5", "-6"], expect = ["2", "5", "-6"] },
+  { func = "@flex_tail", args = ["0"], expect = ["9"] },
+  { func = "@flex_tail", args = ["3"], expect = ["9"] },
+  { func = "@flex_tail", args = ["4"], expect = "ub" },
+  { func = "@flex_tail", args = ["-2"], expect = ["9"] },
+  { func = "@flex_tail", args = ["-3"], expect = "ub" },
+  { func = "@long_double_stride", args = ["2.5"], expect = ["2.5"] },
+]

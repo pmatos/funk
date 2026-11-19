@@ -24,8 +24,11 @@
 //! - items of a kind from [`ITEM_KINDS`], with parameters, results and
 //!   attributes, which every reader decodes whichever dialect registers
 //!   the kind, and no registry here does (ADR-2026-11-09-1543);
-//! - aggregates' layouts of any numbers, with fields of core integer and
-//!   pointer types, repeated or not (ADR-2026-11-16-1546).
+//! - aggregates' layouts of any numbers, with fields of core integer, float
+//!   and pointer types, repeated or not (ADR-2026-11-16-1546);
+//! - field addresses, `fieldaddr`, of the module's layout or of a symbol
+//!   that names none, of fields of any number, with or without an index
+//!   (`field_addr.rs`, #236).
 //!
 //! Each new op still decodes: its operands are values the function defines,
 //! somewhere, of the types its name and attributes need, and its results
@@ -53,6 +56,7 @@ use attr::attr;
 
 mod aggregate;
 mod attr;
+mod field_addr;
 mod layout;
 mod locs;
 
@@ -114,10 +118,15 @@ pub fn module(rng: &mut Rng, dialects: Dialects) -> Module {
     }
     let symbols: Vec<String> = m.funcs().map(|f| f.name.clone()).collect();
     let keys: Vec<LocRef> = m.locs.entries.iter().map(|(r, _)| *r).collect();
+    let aggregate = rng.one_in(3).then(|| aggregate::aggregate(rng));
+    let layouts: Vec<String> = aggregate.iter().map(|a| a.name.clone()).collect();
     for item in &mut m.items {
         let Item::Func(f) = item else { continue };
         let mut shaper = Shaper::new(f, &symbols, &keys, dialects == Dialects::CoreAndToy);
         shaper.reshape(rng, f);
+        if !f.body.blocks.is_empty() && !rng.one_in(3) {
+            shaper.add_field_addrs(rng, f, &layouts);
+        }
     }
     if rng.one_in(2) {
         locs::add_short_fused(rng, &mut m.locs);
@@ -131,9 +140,9 @@ pub fn module(rng: &mut Rng, dialects: Dialects) -> Module {
         let at = rng.below(m.items.len() as u64 + 1) as usize;
         m.items.insert(at, dialect_item(rng));
     }
-    if rng.one_in(3) {
+    if let Some(a) = aggregate {
         let at = rng.below(m.items.len() as u64 + 1) as usize;
-        m.items.insert(at, aggregate::aggregate(rng));
+        m.items.insert(at, Item::Aggregate(a));
     }
     if rng.one_in(4) {
         m.items.push(Item::Module(nested(rng, 3)));
@@ -176,7 +185,7 @@ fn nested(rng: &mut Rng, depth: u32) -> NestedModule {
         n.items.push(dialect_item(rng));
     }
     if rng.one_in(3) {
-        n.items.push(aggregate::aggregate(rng));
+        n.items.push(Item::Aggregate(aggregate::aggregate(rng)));
     }
     if depth > 1 && rng.one_in(3) {
         n.items.push(Item::Module(nested(rng, depth - 1)));
@@ -192,8 +201,11 @@ struct Shaper<'m> {
     keys: &'m [LocRef],
     /// Whether [`TOY_OP`] may be used.
     toy: bool,
-    /// Every value the function defines, at any depth, with its type.
+    /// Every value the function defines, at any depth, with its type, but
+    /// the pointers of `field_addr.rs`.
     values: Vec<(String, Type)>,
+    /// The pointers that `field_addr.rs` defines, with their memories.
+    pointers: Vec<(String, u32)>,
     /// Every value name taken: defined, or named as undefined.
     taken: Vec<String>,
     /// Every label taken: of a block at any depth, or named as undefined.
@@ -216,6 +228,7 @@ impl<'m> Shaper<'m> {
             toy,
             taken: values.iter().map(|(v, _)| v.clone()).collect(),
             values,
+            pointers: Vec::new(),
             labels: f.body.blocks.iter().map(|b| b.label.clone()).collect(),
         }
     }

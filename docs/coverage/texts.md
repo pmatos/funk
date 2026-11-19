@@ -287,3 +287,6 @@ backend does not realise stay interpreter-only.
 The texts of the float arithmetic, the remainders and the conversions,
 from #229's fourth stage on, are listed in
 [texts-floats.md](texts-floats.md).
+
+The texts of aggregates' layouts and the field address `fieldaddr`
+(#236) are listed in [texts-aggregates.md](texts-aggregates.md).

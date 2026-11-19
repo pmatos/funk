@@ -7,10 +7,12 @@
 
 use std::collections::HashSet;
 
+use funk_ir::dialects::core::float_format;
 use funk_ir::generate::Rng;
 use funk_ir::generate::wellformed::{self, Dialects, TOY_OP, WELL_FORMED_MODULES};
 use funk_ir::{
-    Attr, Block, Func, Item, LocTable, Location, Module, Op, Registry, parse, print, verify,
+    Aggregate, Attr, Block, Func, Item, LocTable, Location, Module, Op, Registry, parse, print,
+    verify,
 };
 
 /// The core dialect and the toy dialect of the generator.
@@ -155,6 +157,10 @@ struct Shapes {
     modules_in_modules: usize,
     dialect_items: usize,
     aggregates: usize,
+    float_fields: usize,
+    field_addrs: usize,
+    indexed_field_addrs: usize,
+    field_addrs_of_layouts: usize,
     rejected: usize,
 }
 
@@ -251,9 +257,34 @@ fn shapes(dialects: Dialects) -> Shapes {
             &mut n.dialect_items,
             m.items.iter().any(|i| matches!(i, Item::Dialect(_))),
         );
+        let layouts: Vec<&Aggregate> = m
+            .items
+            .iter()
+            .filter_map(|i| match i {
+                Item::Aggregate(a) => Some(a),
+                _ => None,
+            })
+            .collect();
+        has(&mut n.aggregates, !layouts.is_empty());
         has(
-            &mut n.aggregates,
-            m.items.iter().any(|i| matches!(i, Item::Aggregate(_))),
+            &mut n.float_fields,
+            layouts
+                .iter()
+                .flat_map(|a| a.types())
+                .any(|t| float_format(t).is_some()),
+        );
+        let field_addrs = all.iter().filter(|op| op.name == "fieldaddr");
+        has(&mut n.field_addrs, field_addrs.clone().next().is_some());
+        has(
+            &mut n.indexed_field_addrs,
+            field_addrs.clone().any(|op| op.operands.len() == 2),
+        );
+        has(
+            &mut n.field_addrs_of_layouts,
+            field_addrs.clone().any(|op| match op.attrs.first() {
+                Some(Attr::Sym(s)) => layouts.iter().any(|a| &a.name == s),
+                _ => false,
+            }),
         );
         has(&mut n.rejected, !verify(&m, &reg).is_empty());
     }
@@ -284,6 +315,10 @@ fn the_generator_covers_what_validation_rejects() {
             n.nested_modules,
             n.dialect_items,
             n.aggregates,
+            n.float_fields,
+            n.field_addrs,
+            n.indexed_field_addrs,
+            n.field_addrs_of_layouts,
         ];
         assert!(n.modules_in_modules > 0, "{dialects:?}: {n:?}");
         assert!(common.iter().all(|&k| k >= tenth), "{dialects:?}: {n:?}");
