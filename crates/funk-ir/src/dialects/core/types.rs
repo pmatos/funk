@@ -219,10 +219,11 @@ impl TypeSpec for CoreTypes {
         }
     }
 
-    /// `Core.Ty.fieldShape`: an integer or a pointer takes the units of its
-    /// bits, aligned to the least power of two that is at least those
-    /// units, but a pointer of the memory `n` itself to the alignment that
-    /// its entry gives its pointers. A float may not be a field yet (#264).
+    /// `Core.Ty.fieldShape`: an integer, a float or a pointer takes the
+    /// units of its bits, a float those of its `1 + e + m` bits, aligned to
+    /// the least power of two that is at least those units, but a pointer
+    /// of the memory `n` itself to the alignment that its entry gives its
+    /// pointers.
     fn field_shape(
         &self,
         ty: &Type,
@@ -230,30 +231,26 @@ impl TypeSpec for CoreTypes {
         n: u64,
     ) -> Option<(u128, u128)> {
         let ty = decode(ty)?.ok()?;
-        let e = entry(n);
+        let layout = entry(n);
         let units = |w: u32| {
-            if e.unit == 0 {
+            if layout.unit == 0 {
                 0
             } else {
-                u128::from(w.div_ceil(e.unit))
+                u128::from(w.div_ceil(layout.unit))
             }
         };
-        match ty {
-            CoreType::Int(w) => {
-                let u = units(w);
-                Some((u, u.next_power_of_two()))
-            }
+        let bits = match ty {
+            CoreType::Int(w) => w,
+            CoreType::Float { e, m } => 1 + e + m,
             // In its own memory a pointer is aligned as the entry aligns its
             // pointers, whose units are then these.
             CoreType::Ptr(m) if u64::from(m) == n => {
-                Some((units(e.pointer), u128::from(e.alignment())))
+                return Some((units(layout.pointer), u128::from(layout.alignment())));
             }
-            CoreType::Ptr(m) => {
-                let u = units(entry(u64::from(m)).pointer);
-                Some((u, u.next_power_of_two()))
-            }
-            CoreType::Float { .. } => None,
-        }
+            CoreType::Ptr(m) => entry(u64::from(m)).pointer,
+        };
+        let u = units(bits);
+        Some((u, u.next_power_of_two()))
     }
 }
 

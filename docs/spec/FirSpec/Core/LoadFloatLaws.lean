@@ -17,7 +17,7 @@ when the Lean changes under it.
 :::moduleDocs (fingerprint := "3358301174367549831")
 :::
 
-:::readable Fir.Core.loadFloat_denote Fir.Core.loadFloatRule_poison Fir.Core.loadFloatRule_value Fir.Core.loadFloat_ownRuleHas (pin := Fir.Core.loadFloatRule) (pin := Fir.Core.loadAccess) (pin := Fir.Core.memDenoteAt) (pin := Fir.OwnRuleHas) (fingerprint := "13402394669751527305")
+:::readable Fir.Core.loadFloat_denote Fir.Core.loadFloatRule_poison Fir.Core.loadFloatRule_value Fir.Core.loadFloat_ownRuleHas (pin := Fir.Core.loadFloatRule) (pin := Fir.Core.loadAccess) (pin := Fir.Core.memDenoteAt) (pin := Fir.OwnRuleHas) (fingerprint := "14417639714527983765")
 *Theorems: the load of a float with memory.* In the
 {ref "The-fir-specification--Memory--The-state-layer"}[state layer] over
 the set monad, at the layout entries $`\ell` and naming $`\rho`, the

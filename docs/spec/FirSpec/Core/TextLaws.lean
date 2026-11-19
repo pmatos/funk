@@ -14,7 +14,7 @@ fails when the Lean changes under it.
 
 #doc (Manual) "The core dialect's text is lawful: readable blocks" =>
 
-:::moduleDocs (fingerprint := "88123864055373757")
+:::moduleDocs (fingerprint := "4921898316165009198")
 :::
 
 :::readable Fir.Core.decodeWrap_attrs Fir.Core.attrs_of_decodeWrap Fir.Core.attrs_of_decodeExact (pin := Fir.Core.WrapFlags.attrs) (pin := Fir.Core.decodeWrap) (pin := Fir.Core.decodeExact) (fingerprint := "8508249869924011798")
@@ -40,14 +40,6 @@ predicate $`p`, looking $`\mathrm{name}(p)` up in the list of the ten
 predicates finds $`p`; and for every string $`s`, a predicate found by
 looking $`s` up has the name $`s`. The proofs of the laws for
 $`\mathsf{icmp}` use them.
-:::
-
-:::readable Fir.Core.find_fpred_name Fir.Core.name_of_find_fpred (pin := Fir.Core.FPred.name) (pin := Fir.Core.FPred.all) (fingerprint := "4595827450233367391")
-*Theorems: a float predicate is found by its name, and only by it.* For
-every float predicate $`p`, looking $`\mathrm{name}(p)` up in the list of
-the fourteen float predicates finds $`p`; and for every string $`s`, a
-float predicate found by looking $`s` up has the name $`s`. The proofs of
-the laws for $`\mathsf{fcmp}` use them.
 :::
 
 :::readable Fir.Core.constAttr_of_ne_one Fir.Core.bitVec_one_cases (pin := Fir.Core.constAttr) (fingerprint := "7069144073951225592")
@@ -79,16 +71,6 @@ They are the steps of the proof that an op reads back only from its own
 spelling.
 :::
 
-:::readable Fir.Core.decodeFcmpWith_eq Fir.Core.decodeFcmp_eq (pin := Fir.Core.decodeFcmp) (fingerprint := "5539919355558371046")
-*Theorems: a comparison of floats decodes only from its own spelling.*
-If $`\mathsf{fcmp}` decodes from the attributes $`a^*` and the types
-$`t^*` and $`r^*`, the op it gives has its name, the attributes $`a^*`
-and the operand and result types $`t^*` and $`r^*`. Its attributes are
-the words of its fast-math flags and then its predicate, and the words
-that reading takes back put the attributes back together. The proof of
-the next theorem uses them for this op.
-:::
-
 :::readable Fir.Core.decodePtrAdd_eq (pin := Fir.Core.decodePtrAdd) (fingerprint := "10693430974551034378")
 *Theorem: a pointer offset decodes only from its own spelling.* If
 $`\mathtt{ptradd}` decodes from the attributes $`a^*` and the types
@@ -98,7 +80,7 @@ $`t^*` and $`r^*`: a pointer and an integer, and a pointer of the same
 memory.
 :::
 
-:::readable Fir.Core.Op.decode_encode Fir.Core.Op.encode_decode (pin := Fir.Core.Op.sig) (pin := Fir.Core.Op.returnTypes) (fingerprint := "11356703310336137971")
+:::readable Fir.Core.Op.decode_encode Fir.Core.Op.encode_decode (pin := Fir.Core.Op.sig) (pin := Fir.Core.Op.returnTypes) (fingerprint := "16559956418603594998")
 *Theorems: every core op instance reads back from its spelling, and only
 from it.* For every core op instance $`o`, valid or not:
 
@@ -115,7 +97,8 @@ $`\mathrm{sig}(o) = t^*` and $`\mathrm{ret}(o) = r^*`.
 These are the first two laws of a lawful text for the core dialect. The
 proofs go op by op, for every width, flag, predicate, float format,
 float constant, float op of arithmetic, bit cast, conversion from or to
-an integer and between formats, pointer offset at every memory,
+an integer and between formats, pointer offset at every memory, field
+address of every symbol, field and memory, with and without an index,
 allocation of every kind, type, count and alignment, load and store of
 an integer, a pointer or a float of every ordering, width, format,
 alignment and memory, copy and move of every ordering, width and memory,
@@ -140,7 +123,7 @@ the last three laws: what the core dialect writes fits the grammar.
 *Theorems: the core dialect's text is lawful, and every valid core module
 is well formed.* The theorems above are the seven laws of a
 {ref "The-fir-specification--Text-format--Grammar"}[lawful text] for the
-core dialect, so its text is lawful, for all 47 ops and every type, and
+core dialect, so its text is lawful, for all 49 ops and every type, and
 the proofs about the parser use this proof for core modules. With it, every
 {ref "The-fir-specification--Validation--The-general-rules"}[valid] core
 module is

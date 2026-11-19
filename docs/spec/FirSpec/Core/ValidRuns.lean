@@ -14,10 +14,10 @@ when the Lean changes under it.
 
 #doc (Manual) "Core functions with calls: readable blocks" =>
 
-:::moduleDocs (fingerprint := "16257157132352493751")
+:::moduleDocs (fingerprint := "1070277723925419006")
 :::
 
-:::readable Fir.Core.Op.eq_call_of_callee (pin := Fir.Core.Op.callTarget?) (fingerprint := "16988546411456417932")
+:::readable Fir.Core.Op.eq_call_of_callee (pin := Fir.Core.Op.callTarget?) (fingerprint := "7819011101257309057")
 *Theorem: a core op that calls a function is $`\mathsf{call}` of that
 function.* For every core op $`o` and symbol $`g`: if
 $`\mathrm{callee}(o) = g`, then $`o` is $`\mathsf{call}~g : t^* \to r^*`
@@ -26,32 +26,34 @@ $`\mathsf{call}` applies to every op of the core dialect that calls a
 function.
 :::
 
-:::readable Fir.Core.Op.total_all (pin := Fir.OpTotal) (fingerprint := "857378940163898036")
+:::readable Fir.Core.Op.total_all (pin := Fir.OpTotal) (fingerprint := "12951336847760232201")
 *Theorem: every core terminator and every core op with no callee that
-touches no memory is total in the set monad.* For every core op $`o` that
-touches no memory and is a terminator, or for which
+touches no memory and reads no item is total in the set monad.* For every
+core op $`o` that touches no memory, reads no item of the run, and is a
+terminator, or for which
 $`\mathrm{callee}(o)` is none, $`o` is
 {ref "The-fir-specification--Execution--Poison-classes"}[total]: on every
 operand vector, its semantics, or its exit for a terminator, has some
 outcome. These are the core ops other than $`\mathsf{call}`,
-$`\mathsf{alloca}`, $`\mathsf{load}` and $`\mathsf{store}`, each total by
-the
+$`\mathsf{alloca}`, the loads and stores and $`\mathsf{fieldaddr}`, each
+total by the
 {ref "The-fir-specification--Execution--Core-functions-without-calls"}[previous section].
-With $`\mathsf{alloca}`, $`\mathsf{load}` and $`\mathsf{store}`, which
-are total with memory by their own rules
+With $`\mathsf{alloca}`, the loads and stores and $`\mathsf{fieldaddr}`,
+which are total with memory by their own rules
 ({ref "The-fir-specification--Memory--Stack-allocation-obligations"}[stack allocation obligations],
 {ref "The-fir-specification--Memory--Load-obligations"}[load obligations],
-{ref "The-fir-specification--Memory--Store-obligations"}[store obligations]),
+{ref "The-fir-specification--Memory--Store-obligations"}[store obligations],
+{ref "The-fir-specification--Memory--Field-address-obligations"}[field address obligations]),
 they are the ops that the progress theorem for modules asks to be total,
 the ops that the interpreter runs by their own rule.
 :::
 
-:::readable Fir.Core.inModule_of_valid (pin := Fir.Func.InModule) (pin := Fir.Core.Op.Valid) (pin := Fir.Core.Op.sig) (pin := Fir.Core.Op.returnTypes) (pin := Fir.Module.context) (fingerprint := "16332482451529263369")
+:::readable Fir.Core.inModule_of_valid (pin := Fir.Func.InModule) (pin := Fir.Core.Op.Valid) (pin := Fir.Core.Op.sig) (pin := Fir.Core.Op.returnTypes) (pin := Fir.Module.context) (fingerprint := "11022739256890602594")
 *Theorem: every core function valid in the context of a module runs
 within that module.* Let $`M` be a core module, and $`f` a core function
 {ref "The-fir-specification--Validation--The-general-rules"}[valid] in the
-context $`\mathrm{ctx}(M)` of $`M`, its symbol table and the references of
-its location table. Then $`f`
+context $`\mathrm{ctx}(M)` of $`M`, its symbol table, the references of
+its location table and the layouts of its own table. Then $`f`
 {ref "The-fir-specification--Execution--Progress-with-calls"}[runs within]
 $`M`:
 

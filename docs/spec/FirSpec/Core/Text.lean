@@ -15,7 +15,7 @@ when the Lean changes under it.
 
 #doc (Manual) "The core dialect in text: readable blocks" =>
 
-:::moduleDocs (fingerprint := "15581641902496573541")
+:::moduleDocs (fingerprint := "10771009960692224006")
 :::
 
 :::readable Fir.Core.Pred.name Fir.Core.Pred.all (pin := Fir.Core.Pred) (fingerprint := "1788544629891754135")
@@ -36,12 +36,13 @@ of $`\mathsf{fcmp}` is written as its name, as LLVM writes it: `oeq`,
 and the parser looks a name up in that list to read a predicate back.
 :::
 
-:::readable Fir.Core.Op.name (pin := Fir.Core.Op) (fingerprint := "16176692915922566047")
+:::readable Fir.Core.Op.name (pin := Fir.Core.Op) (fingerprint := "12889713196638458729")
 *Definition: the name of a core op instance.* $`\mathrm{opname}(o)` is
 the name of the op of $`o`, whatever its widths and attributes:
 $`\mathrm{opname}(\mathsf{add}_{32}~\mathsf{nsw})` is `add`. Each of the
-48 {ref "The-fir-specification--Abstract-syntax--Core-ops"}[core ops] is
-written with the name it has in the op set, except eleven. The conditional
+49 {ref "The-fir-specification--Abstract-syntax--Core-ops"}[core ops] is
+written with the name it has in the op set, except twelve. The field
+address, which the Lean spells `fieldAddr`, is written `fieldaddr`. The conditional
 branch $`\mathsf{cond\_br}`, which the Lean spells `condBr`, is written
 `cond_br`. The float constant, which the Lean spells `fconst`, is written
 `const`, as an integer constant is: the type of its result tells them
@@ -57,11 +58,11 @@ which the Lean spells `memCopy`, is written `memcpy` for a copy and
 `memmove` for a move.
 :::
 
-:::readable Fir.Core.WrapFlags.attrs Fir.Core.constAttr Fir.Core.Op.attrs (pin := Fir.Core.Op) (pin := Fir.Core.WrapFlags) (pin := Fir.Core.floatLit) (fingerprint := "3117215076066859153")
+:::readable Fir.Core.WrapFlags.attrs Fir.Core.constAttr Fir.Core.Op.attrs (pin := Fir.Core.Op) (pin := Fir.Core.WrapFlags) (pin := Fir.Core.floatLit) (fingerprint := "2167212286655088161")
 *Definition: the attributes of a core op instance.* The attributes
 $`\mathrm{opattrs}(o)` of a core op instance $`o` are:
 
-$$`\begin{aligned} \mathrm{opattrs}(\mathsf{const}_N~c) &= \mathrm{constattr}_N(c) \\ \mathrm{opattrs}(\mathsf{const}_{e,m}~v) &= \mathrm{floatlit}_{e,m}(v) \\ \mathrm{opattrs}(\mathsf{icmp}_N~p) &= \mathrm{name}(p) \\ \mathrm{opattrs}(\mathsf{fcmp}_{e,m}~\phi~p) &= \mathrm{fmf}(\phi)~\mathrm{name}(p) \\ \mathrm{opattrs}(\mathsf{fma}_{e,m}~\phi~r) &= \mathrm{fmf}(\phi)~\mathtt{round}(r) \\ \mathrm{opattrs}(\mathsf{sitofp}_{N,e,m}~r) = \mathrm{opattrs}(\mathsf{uitofp}_{N,e,m}~r) &= \mathtt{round}(r) \\ \mathrm{opattrs}(\mathsf{fptrunc}_{e,m,e',m'}~r) &= \mathtt{round}(r) \\ \mathrm{opattrs}(\mathit{fbin}_{e,m}~o~\phi) = \mathrm{opattrs}(\mathit{funary}_{e,m}~o~\phi) &= \mathrm{fmf}(\phi)~\mathrm{attrs}(o) \\ \mathrm{opattrs}(\mathsf{add}_N~\mathit{fl}) &= \mathrm{flags}(\mathit{fl}) \\ \mathrm{opattrs}(\mathsf{sdiv}_N~\mathit{ex}) &= \mathrm{exact}(\mathit{ex}) \\ \mathrm{opattrs}(\mathsf{call}~f : t^* \to r^*) &= \mathsf{sym}~f \\ \mathrm{opattrs}(\mathsf{alloca}_N~k~t~c~a) &= \mathrm{allocaattrs}(k, t, c, a) \\ \mathrm{opattrs}(\mathsf{load}_N~o~W~a) = \mathrm{opattrs}(\mathsf{store}_N~o~W~a) &= \mathrm{loadattrs}(o, a) \\ \mathrm{opattrs}(\mathsf{load}_N~o~\mathsf{ptr}\langle M \rangle~a) = \mathrm{opattrs}(\mathsf{store}_N~o~\mathsf{ptr}\langle M \rangle~a) &= \mathrm{loadattrs}(o, a) \\ \mathrm{opattrs}(\mathsf{load}_N~o~\mathsf{float}\langle e,m \rangle~a) = \mathrm{opattrs}(\mathsf{store}_N~o~\mathsf{float}\langle e,m \rangle~a) &= \mathrm{loadattrs}(o, a) \\ \mathrm{opattrs}(\mathsf{memcpy}_N~o~W) = \mathrm{opattrs}(\mathsf{memmove}_N~o~W) &= \mathrm{loadattrs}(o, \mathrm{none}) \\ \mathrm{opattrs}(o) &= \epsilon \quad \text{otherwise} \end{aligned}`
+$$`\begin{aligned} \mathrm{opattrs}(\mathsf{const}_N~c) &= \mathrm{constattr}_N(c) \\ \mathrm{opattrs}(\mathsf{const}_{e,m}~v) &= \mathrm{floatlit}_{e,m}(v) \\ \mathrm{opattrs}(\mathsf{icmp}_N~p) &= \mathrm{name}(p) \\ \mathrm{opattrs}(\mathsf{fcmp}_{e,m}~\phi~p) &= \mathrm{fmf}(\phi)~\mathrm{name}(p) \\ \mathrm{opattrs}(\mathsf{fma}_{e,m}~\phi~r) &= \mathrm{fmf}(\phi)~\mathtt{round}(r) \\ \mathrm{opattrs}(\mathsf{sitofp}_{N,e,m}~r) = \mathrm{opattrs}(\mathsf{uitofp}_{N,e,m}~r) &= \mathtt{round}(r) \\ \mathrm{opattrs}(\mathsf{fptrunc}_{e,m,e',m'}~r) &= \mathtt{round}(r) \\ \mathrm{opattrs}(\mathit{fbin}_{e,m}~o~\phi) = \mathrm{opattrs}(\mathit{funary}_{e,m}~o~\phi) &= \mathrm{fmf}(\phi)~\mathrm{attrs}(o) \\ \mathrm{opattrs}(\mathsf{add}_N~\mathit{fl}) &= \mathrm{flags}(\mathit{fl}) \\ \mathrm{opattrs}(\mathsf{sdiv}_N~\mathit{ex}) &= \mathrm{exact}(\mathit{ex}) \\ \mathrm{opattrs}(\mathsf{call}~f : t^* \to r^*) &= \mathsf{sym}~f \\ \mathrm{opattrs}(\mathsf{fieldaddr}_N~s~j) = \mathrm{opattrs}(\mathsf{fieldaddr}_{N,W}~s~j) &= \mathsf{sym}~s~j \\ \mathrm{opattrs}(\mathsf{alloca}_N~k~t~c~a) &= \mathrm{allocaattrs}(k, t, c, a) \\ \mathrm{opattrs}(\mathsf{load}_N~o~W~a) = \mathrm{opattrs}(\mathsf{store}_N~o~W~a) &= \mathrm{loadattrs}(o, a) \\ \mathrm{opattrs}(\mathsf{load}_N~o~\mathsf{ptr}\langle M \rangle~a) = \mathrm{opattrs}(\mathsf{store}_N~o~\mathsf{ptr}\langle M \rangle~a) &= \mathrm{loadattrs}(o, a) \\ \mathrm{opattrs}(\mathsf{load}_N~o~\mathsf{float}\langle e,m \rangle~a) = \mathrm{opattrs}(\mathsf{store}_N~o~\mathsf{float}\langle e,m \rangle~a) &= \mathrm{loadattrs}(o, a) \\ \mathrm{opattrs}(\mathsf{memcpy}_N~o~W) = \mathrm{opattrs}(\mathsf{memmove}_N~o~W) &= \mathrm{loadattrs}(o, \mathrm{none}) \\ \mathrm{opattrs}(o) &= \epsilon \quad \text{otherwise} \end{aligned}`
 
 and the same for $`\mathsf{sub}` and $`\mathsf{mul}` as for
 $`\mathsf{add}`, and for $`\mathsf{udiv}` as for $`\mathsf{sdiv}`. Here:
@@ -79,7 +80,9 @@ $`\mathsf{add}`, and for $`\mathsf{udiv}` as for $`\mathsf{sdiv}`. Here:
   so the flags come in this fixed order, each at most once;
 * $`\mathrm{exact}(\mathit{ex})` is the word `exact` when the flag is set,
   and nothing otherwise;
-* $`\mathsf{sym}~f` is the reference to the callee's symbol $`f`;
+* $`\mathsf{sym}~f` is the reference to the callee's symbol $`f`, and
+  $`\mathsf{sym}~s~j` the reference to a layout's symbol $`s` followed by
+  the integer $`j`, the number of its field;
 * $`\mathrm{allocaattrs}(k, t, c, a)` is the
   {ref "The-fir-specification--Text-format--Stack-allocation-in-text"}[attributes of an allocation]:
   the word of its kind, its type as a type is written, its count when it
@@ -102,7 +105,7 @@ An op's widths are not among its attributes: they are the widths of the
 types written where its operands and results are defined.
 :::
 
-:::readable Fir.Core.decodeWrap Fir.Core.decodeExact Fir.Core.binWidth Fir.Core.bare Fir.Core.decodeCast Fir.Core.decodePtrAdd Fir.Core.plainBinOps Fir.Core.decodeFcmpWith Fir.Core.decodeFcmp Fir.Core.Op.decode (pin := Fir.Core.Op) (pin := Fir.Text.decodeOps) (pin := Fir.Core.decodeFloatLit) (fingerprint := "11298533187730313257")
+:::readable Fir.Core.decodeWrap Fir.Core.decodeExact Fir.Core.binWidth Fir.Core.bare Fir.Core.decodeCast Fir.Core.decodePtrAdd Fir.Core.plainBinOps Fir.Core.decodeFcmpWith Fir.Core.decodeFcmp Fir.Core.Op.decode (pin := Fir.Core.Op) (pin := Fir.Text.decodeOps) (pin := Fir.Core.decodeFloatLit) (fingerprint := "382660804311872532")
 *Definition: reading a core op instance back.*
 $`\mathrm{decodeop}(n, a^*, t^*, r^*)` is the core op instance with the
 name $`n` and the attributes $`a^*`, whose operands have the types $`t^*`
@@ -174,6 +177,10 @@ $`\mathsf{i}W` are integer types.
   $`\mathsf{ptr}\langle N \rangle` and $`\mathsf{i}W`, in that order, and
   the one result type $`\mathsf{ptr}\langle N' \rangle` with $`N = N'`, it
   is $`\mathsf{ptradd}_{N,W}`; the Lean calls that reading `decodePtrAdd`.
+* `fieldaddr`: as the
+  {ref "The-fir-specification--Text-format--Field-addresses-in-text"}[section on field addresses in text]
+  reads it, from a layout's symbol and a field's number, a pointer and an
+  optional integer index, and a pointer of the same memory.
 * `fptosi` and `fptoui`: as the same section reads them, from no
   attributes, one float type and one integer type.
 * `freeze`: without attributes, from one operand type $`\mathsf{i}A` and

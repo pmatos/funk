@@ -4,6 +4,7 @@ import Fir.Core.FloatConvertLaws
 import Fir.Core.Alloca
 import Fir.Core.FloatAccess
 import Fir.Core.MemCopy
+import Fir.Core.FieldAddr
 import Fir.Core.Lawful
 import Fir.Execution.MemoryRuns
 
@@ -26,21 +27,25 @@ memory reads the entry `lay (ρ x)` of the memory it accesses
 result, `load`'s, `loadPtr`'s and `loadFloat`'s read the memory of their
 pointer, `store`'s, `storePtr`'s and `storeFloat`'s write it, and
 `memCopy`'s reads and writes the memory of its two pointers: each is its
-rule with memory alone, and has no rule in the set monad.
-Every other core op touches no memory, and its rule with memory is its
-rule. The core's semantics with memory runs those rules in the state layer
+rule with memory alone, and has no rule in the set monad. The run also
+gives each op the items of its module that ops read (the section on the
+items a run gives each op): `fieldAddr` touches no memory, but its rule
+reads the layout it names there, so it too has a rule with memory alone.
+Every other core op touches no memory and reads no item, and its rule with
+memory is its rule. The core's semantics with memory runs those rules in the state layer
 over the set monad, op by op; an op with no rule, as `call`, has no outcome
 there, as in the set monad.
 
 Lifting a computation of the set monad into the state layer keeps choice
 and UB, so it maps each rule in the set monad to the same rule with memory.
-So each core op but `alloca`, the loads and stores and `memCopy` is tied: it runs
-with memory by its rule in the set monad and keeps the memories. Each
-obligation with memory of a tied op follows from its own tie and its
-obligation in the set monad, and `alloca` and the loads and stores meet
-each by their own proofs (the sections on the stack allocation, load,
-store, pointer load, pointer store, float load, float store and copy and
-move obligations). No theorem asks that the whole core dialect lift the set monad.
+So each core op but `alloca`, the loads and stores, `fieldAddr` and
+`memCopy` is tied: it runs with memory by its rule in the set monad and
+keeps the memories. Each obligation with memory of a tied op follows from
+its own tie and its obligation in the set monad, and `alloca`, the loads
+and stores, `fieldAddr` and `memCopy` meet each by their own proofs (the
+sections on the stack allocation, load, store, pointer load, pointer
+store, float load, float store, field address and copy and move
+obligations). No theorem asks that the whole core dialect lift the set monad.
 -/
 
 namespace Fir.Core
@@ -117,7 +122,7 @@ theorem denoteIn_mapsDenote (zm : {α : Type} → Op → μ α) (zn : {α : Type
       | .urem _, args => ruleOfEv_map φ hk uremValues args
       | .br, _ | .condBr, _ | .ret _, _ | .unreachable, _ | .call .., _ | .alloca .., _
       | .load .., _ | .store .., _ | .loadPtr .., _ | .storePtr .., _ | .loadFloat .., _
-      | .storeFloat .., _ | .memCopy .., _ => hz _
+      | .storeFloat .., _ | .memCopy .., _ | .fieldAddr .., _ => hz _
     exit := fun
       | .br, _ | .ret _, _ => φ.map_pure _
       | .condBr, .cons c .nil => exitOfEv_map φ hk (condBrExit c)
@@ -130,7 +135,7 @@ theorem denoteIn_mapsDenote (zm : {α : Type} → Op → μ α) (zn : {α : Type
       | .sitofp .., _ | .uitofp .., _ | .fpext .., _ | .fptrunc .., _
       | .ptradd .., _ | .alloca .., _ | .load .., _ | .store .., _ | .loadPtr .., _
       | .storePtr .., _ | .loadFloat .., _ | .storeFloat .., _ | .fptosi .., _
-      | .fptoui .., _ | .memCopy .., _ => hz _ }
+      | .fptoui .., _ | .memCopy .., _ | .fieldAddr .., _ => hz _ }
 
 end
 
@@ -143,10 +148,12 @@ variable {N : Type} {m : Type → Type} [Monad m] [MonadChoice m] [MonadUB m]
 /-- The rule of each core op that is not a terminator, with memory: in any
 monad with choice, UB and the memory effect on the memories of a run whose
 layout entries are `lay`, where the run names the core's memory `x` as
-`ρ x`. `alloca` allocates, each load loads and each store stores, and
-`memCopy` copies or moves, by its rule;
+`ρ x` and gives each op the items `L`. `alloca` allocates, each load
+loads, each store stores, and `memCopy` copies or moves, by its rule;
+`fieldAddr` moves its pointer to the field of the layout that `L` gives;
 every other op's rule is its rule in `Op.denote?`. -/
-def Op.memDenote? (lay : N → MemLayout) (ρ : Mem → N) [MonadMemory N (unitsOf lay) m] :
+def Op.memDenote? (lay : N → MemLayout) (ρ : Mem → N) (L : RunItems)
+    [MonadMemory N (unitsOf lay) m] :
     (op : Op) → Option (HVector toType (Fir.sig (d := CoreDialect) op) →
       m (HVector toType (Fir.returnTypes (d := CoreDialect) op)))
   | .alloca k t c a n => some fun _ => allocaRule lay ρ k t c a n
@@ -164,6 +171,7 @@ def Op.memDenote? (lay : N → MemLayout) (ρ : Mem → N) [MonadMemory N (units
     | .cons v (.cons p .nil) => storeFloatRule lay ρ e m a n v p
   | .memCopy k _ w n => some fun
     | .cons d (.cons s (.cons l .nil)) => memCopyRule lay ρ k w n d s l
+  | .fieldAddr s i _ w => some fun args => pure (fieldAddrResult (L.layout? s) i w args)
   | op => op.denote? (m := m)
 
 /-- The rule of each core terminator, with memory: its rule in `Op.exit?`,
@@ -173,11 +181,12 @@ def Op.memExit? (lay : N → MemLayout) (_ : Mem → N) [MonadMemory N (unitsOf 
   op.exit? (m := m)
 
 /-- The core's semantics in a monad with memory, where a run's memories have
-the entries `lay` and the run names the core's memories by `ρ`: each op's
-rule with memory, and `z p` for an op `p` that has none. -/
-@[reducible] def memDenoteIn (lay : N → MemLayout) (ρ : Mem → N) [MonadMemory N (unitsOf lay) m]
-    (z : {α : Type} → Op → m α) : DialectDenote CoreDialect m :=
-  denoteWith (fun op => op.memDenote? lay ρ) (fun op => op.memExit? lay ρ) z
+the entries `lay`, the run names the core's memories by `ρ` and gives each
+op the items `L`: each op's rule with memory, and `z p` for an op `p` that
+has none. -/
+@[reducible] def memDenoteIn (lay : N → MemLayout) (ρ : Mem → N) (L : RunItems)
+    [MonadMemory N (unitsOf lay) m] (z : {α : Type} → Op → m α) : DialectDenote CoreDialect m :=
+  denoteWith (fun op => op.memDenote? lay ρ L) (fun op => op.memExit? lay ρ) z
 
 /-- A morphism that keeps choice, UB, loads and stores maps the rule of a
 copy or a move in the one monad to the same rule in the other. -/
@@ -215,12 +224,13 @@ theorem memCopyRule_map {μ ν : Type → Type} [Monad μ] [Monad ν] [MonadChoi
 allocation, loads and stores maps the core's semantics with memory in the
 one to its semantics with memory in the other, op by op, when it maps what
 an op with no rule does: `alloca` by its allocation, `load` by its UB and
-its load, `store` by its UB and its store, and every other op by its rule.
+its load, `store` by its UB and its store, `fieldAddr` by its result, and
+every other op by its rule.
 Lifting through the state layer keeps allocation, loads and stores
 (`MonadMorphism.state_alloc`, `MonadMorphism.state_load`,
 `MonadMorphism.state_store`). -/
 theorem memDenoteIn_mapsDenote {μ ν : Type → Type} [Monad μ] [Monad ν] [MonadChoice μ]
-    [MonadChoice ν] [MonadUB μ] [MonadUB ν] (lay : N → MemLayout) (ρ : Mem → N)
+    [MonadChoice ν] [MonadUB μ] [MonadUB ν] (lay : N → MemLayout) (ρ : Mem → N) (L : RunItems)
     [MonadMemory N (unitsOf lay) μ] [MonadMemory N (unitsOf lay) ν] (φ : MonadMorphism μ ν)
     (hk : φ.KeepsChoiceUB)
     (ha : ∀ x k size al, φ.map (MonadMemory.alloc (m := μ) x k size al) = MonadMemory.alloc x k size al)
@@ -228,13 +238,13 @@ theorem memDenoteIn_mapsDenote {μ ν : Type → Type} [Monad μ] [Monad ν] [Mo
     (hs : ∀ x p us al, φ.map (MonadMemory.store (m := μ) x p us al) = MonadMemory.store x p us al)
     (zm : {α : Type} → Op → μ α) (zn : {α : Type} → Op → ν α)
     (hz : ∀ {α : Type} (op : Op), φ.map (zm op : μ α) = zn op) :
-    letI := memDenoteIn lay ρ @zm
-    letI := memDenoteIn lay ρ @zn
+    letI := memDenoteIn lay ρ L @zm
+    letI := memDenoteIn lay ρ L @zn
     φ.MapsDenote (d := CoreDialect) :=
   have h : @MonadMorphism.MapsDenote μ ν _ _ φ CoreDialect _ _ (denoteIn @zm) (denoteIn @zn) :=
     denoteIn_mapsDenote φ hk @zm @zn hz
-  @MonadMorphism.MapsDenote.mk μ ν _ _ φ CoreDialect _ _ (memDenoteIn lay ρ @zm)
-    (memDenoteIn lay ρ @zn)
+  @MonadMorphism.MapsDenote.mk μ ν _ _ φ CoreDialect _ _ (memDenoteIn lay ρ L @zm)
+    (memDenoteIn lay ρ L @zn)
     (fun op args => by
       cases op with
       | alloca k t c a n => exact (φ.map_map _ _).trans (congrArg _ (ha _ _ _ _))
@@ -277,6 +287,7 @@ theorem memDenoteIn_mapsDenote {μ ν : Type → Type} [Monad μ] [Monad ν] [Mo
       | memCopy k o w n =>
         match args with
         | .cons d (.cons s (.cons l .nil)) => exact memCopyRule_map lay ρ φ hk hl hs k w n d s l
+      | fieldAddr => exact φ.map_pure _
       | _ =>
         exact @MonadMorphism.MapsDenote.denote μ ν _ _ φ CoreDialect _ _ (denoteIn @zm)
           (denoteIn @zn) h _ args)
@@ -285,9 +296,9 @@ theorem memDenoteIn_mapsDenote {μ ν : Type → Type} [Monad μ] [Monad ν] [Mo
 /-- The core's semantics with memory: in the state layer over the set monad,
 each op runs by its rule with memory, and an op with no rule has no
 outcome, as in the set monad. -/
-@[instance_reducible] def memDenoteAt [DecidableEq N] (lay : N → MemLayout) (ρ : Mem → N) :
-    DialectDenote CoreDialect (StateT (Memory.Memories N (unitsOf lay)) SetM) :=
-  memDenoteIn lay ρ fun _ _ _ => False
+@[instance_reducible] def memDenoteAt [DecidableEq N] (lay : N → MemLayout) (ρ : Mem → N)
+    (L : RunItems) : DialectDenote CoreDialect (StateT (Memory.Memories N (unitsOf lay)) SetM) :=
+  memDenoteIn lay ρ L fun _ _ _ => False
 
 end
 
@@ -298,16 +309,16 @@ namespace Fir
 /-- The core dialect's semantics with memory, at each layout and naming of
 its memories. -/
 instance Core.instDialectMemDenote : DialectMemDenote CoreDialect :=
-  ⟨fun lay ρ _ => Core.memDenoteAt lay ρ⟩
+  ⟨fun lay ρ L => Core.memDenoteAt lay ρ L⟩
 
 namespace Core
 
-/-- Each core op that touches no memory, every core op but `alloca`, the
-loads and stores and `memCopy`, runs
+/-- Each core op that touches no memory and reads no item of the run, every
+core op but `alloca`, the loads and stores, `fieldAddr` and `memCopy`, runs
 with memory by its rule in the set monad and keeps the memories, at every
-layout and naming. Lifting into the layer keeps choice and UB, and maps an
-op with no rule to one with no outcome. -/
-theorem Op.liftsSetM (op : Op) (hm : op.touchesMemory = false) :
+layout, naming and record of items. Lifting into the layer keeps choice and
+UB, and maps an op with no rule to one with no outcome. -/
+theorem Op.liftsSetM (op : Op) (hm : op.touchesMemory = false) (hi : op.readsItems = false) :
     OpLiftsSetM (d := CoreDialect) op := by
   intro N _ lay ρ L args
   have h := denoteIn_mapsDenote (MonadMorphism.liftState SetM (Memory.Memories N (unitsOf lay)))
@@ -318,6 +329,7 @@ theorem Op.liftsSetM (op : Op) (hm : op.touchesMemory = false) :
   obtain ⟨hd, he⟩ := h
   cases op with
   | alloca | load | store | loadPtr | storePtr | loadFloat | storeFloat | memCopy => cases hm
+  | fieldAddr => cases hi
   | _ => exact ⟨(hd _ args).symm, (he _ args).symm⟩
 
 end Core

@@ -20,6 +20,10 @@ every such record, with no hypothesis on it. So the items that later ops
 name, such as the address of a function (#235) or of a global (#237), are
 new fields of this record, which the run fills from its module, and the
 statements of those obligations and guarantees stay as they are.
+
+A run's record and validation read a table's layouts alike: each takes the
+first layout with a symbol, so an op that validation accepts finds, in
+every run, the layout it was checked against (`RunItems.ofTable_ref`).
 -/
 
 namespace Fir
@@ -74,5 +78,29 @@ def RunItems.ofTable (l : DataLayout) (t : SymbolTable d) : RunItems :=
 /-- The items that a run of a function of a module's own table gives each
 op. -/
 def Module.runItems (M : Module d) : RunItems := RunItems.ofTable M.layout M.table
+
+/-- What the rule of an op sees of a placed layout: its memory, and the
+count of each field, as validation sees an aggregate's layout. -/
+def LayoutPlace.ref (p : LayoutPlace) : LayoutRef := ⟨p.mem, p.fields.map (·.count)⟩
+
+/-- The run gives an op the layout that validation checks it against: the
+first layout of the table with each symbol, placed, and seen as the rule
+of an op sees it, is the table's layout of that symbol (`SymbolTable.layouts`).
+So an op that validation accepts in a table finds its layout, of the same
+memory and with the same fields, in each run of a function of the table. -/
+theorem RunItems.ofTable_ref (l : DataLayout) (t : SymbolTable d) (s : Name) :
+    ((RunItems.ofTable l t).layout? s).map LayoutPlace.ref = t.layouts s := by
+  show (List.lookup s (t.aggregates.map fun a => (a.name, a.place l))).map LayoutPlace.ref =
+    (t.aggregates.find? (·.name == s)).map Aggregate.ref
+  induction t.aggregates with
+  | nil => rfl
+  | cons a as ih =>
+    by_cases h : a.name = s
+    · subst h
+      simp [LayoutPlace.ref, Aggregate.ref, Aggregate.place, Field.place, Function.comp_def]
+    · have h' : (s == a.name) = false := by simp; exact fun e => h e.symm
+      have h'' : (a.name == s) = false := by simp; exact h
+      simp only [List.map_cons, List.lookup, h', List.find?, h'']
+      exact ih
 
 end Fir

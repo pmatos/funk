@@ -5,6 +5,7 @@ import Fir.Core.StoreText
 import Fir.Core.MemCopyText
 import Fir.Core.FloatText
 import Fir.Core.FloatOpText
+import Fir.Core.FieldAddrText
 import Fir.Text.Grammar
 
 /-!
@@ -60,6 +61,10 @@ results, which are written where those values are defined.
 * `ptradd` has no attributes. It takes a pointer and an integer of any
   width, and gives a pointer of the same memory:
   `%q: ptr = ptradd %p, %k @1` (#231).
+* `fieldAddr` is written `fieldaddr`, with the symbol of its layout and
+  the number of its field, and takes a pointer and, for an element of a
+  repeated field, an index: `%q: ptr = fieldaddr @pair 1 %p @1` and
+  `%e: ptr = fieldaddr @row 0 %p, %k @1` (#236).
 * `alloca` has its kind, the type it allocates, its count when it is not
   1, and `align(A)` when it gives an alignment, and gives a pointer of the
   memory it allocates in: `%p: ptr = alloca stack i32 4 @1`
@@ -110,8 +115,9 @@ results, which are written where those values are defined.
 The section on the core types in text gives how each type is written and
 read back, the section on stack allocation in text how `alloca` is, the
 section on loads in text how `load` is, the section on stores in text how
-`store` is, and the section on copies and moves in text how
-`memcpy` and `memmove` are.
+`store` is, the section on copies and moves in text how `memcpy` and
+`memmove` are, and the section on field addresses in text how
+`fieldaddr` is.
 
 The values of `fir-ref`'s arguments, the values in its JSON output and the
 choices that scripted mode follows (see the section "Exhaustive, scripted
@@ -162,7 +168,7 @@ def Op.name : Op → String
   | .zext .. => "zext" | .sext .. => "sext" | .trunc .. => "trunc"
   | .toBits .. | .ofBits .. => "bitcast" | .sitofp .. => "sitofp" | .uitofp .. => "uitofp"
   | .fpext .. => "fpext" | .fptrunc .. => "fptrunc"
-  | .ptradd .. => "ptradd" | .alloca .. => "alloca"
+  | .ptradd .. => "ptradd" | .fieldAddr .. => "fieldaddr" | .alloca .. => "alloca"
   | .load .. | .loadPtr .. | .loadFloat .. => "load"
   | .store .. | .storePtr .. | .storeFloat .. => "store"
   | .fptosi .. => "fptosi" | .fptoui .. => "fptoui" | .memCopy k .. => k.name
@@ -191,6 +197,7 @@ def Op.attrs : Op → List Attr
   | .add _ f | .sub _ f | .mul _ f => f.attrs
   | .sdiv _ e | .udiv _ e => if e then [.word "exact"] else []
   | .call f _ _ => [.sym f]
+  | .fieldAddr s i _ _ => fieldAddrAttrs s i
   | .alloca k t c a _ => allocaAttrs k t c a
   | .load o _ a _ | .store o _ a _ | .loadPtr o _ a _ | .storePtr o _ a _
   | .loadFloat o _ _ a _ | .storeFloat o _ _ a _ => loadAttrs o a
@@ -305,6 +312,7 @@ def Op.decode (n : String) (as : List Attr) (ts rs : List Ty) : Option Op :=
   | "fpext" => decodeFpext as ts rs
   | "fptrunc" => decodeFptrunc as ts rs
   | "ptradd" => decodePtrAdd as ts rs
+  | "fieldaddr" => decodeFieldAddr as ts rs
   | "alloca" => decodeAlloca as ts rs
   | "load" => decodeLoad as ts rs
   | "store" => decodeStore as ts rs

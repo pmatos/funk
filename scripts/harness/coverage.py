@@ -35,8 +35,9 @@ class Side(NamedTuple):
     """One side of the matrix: its key, its title, the widths, float
     formats and widths of a pointer op's integer that it has cells at,
     whether it has the cells of the `gpu` dialect, the float formats of
-    its loads, stores and allocations, and whether it has the cells of
-    `memcpy` and `memmove`."""
+    its loads, stores and allocations, the widths of `fieldaddr`'s index
+    that it has cells at, and whether it has the cells of `memcpy` and
+    `memmove`."""
 
     name: str
     title: str
@@ -45,6 +46,7 @@ class Side(NamedTuple):
     offsets: tuple[int, ...]
     gpu: bool = False
     memory: tuple[str, ...] = ()
+    fields: tuple[int, ...] = ()
     copies: bool = False
 
     def taxonomy(self) -> dict:
@@ -55,6 +57,7 @@ class Side(NamedTuple):
             "offsets": self.offsets,
             "gpu": self.gpu,
             "memory": self.memory,
+            "fields": self.fields,
             "copies": self.copies,
         }
 
@@ -73,6 +76,7 @@ SIDES = (
         cells.FLOAT_DIFFERENTIAL,
         cells.POINTER_DIFFERENTIAL,
         memory=MEMORY_FLOAT_DIFFERENTIAL,
+        fields=cells.FIELD_DIFFERENTIAL,
     ),
     Side(
         "interpreter",
@@ -82,6 +86,7 @@ SIDES = (
         cells.POINTER_INTERPRETER,
         gpu=True,
         memory=MEMORY_FLOAT_INTERPRETER,
+        fields=cells.FIELD_INTERPRETER,
         copies=True,
     ),
 )
@@ -151,6 +156,8 @@ def show(cell: Cell) -> str:
         return f"{cell.op} from {cell.row} to {cell.width}"
     if cell.table == "pointers":
         return f"{cell.op} {'by' if cell.op == 'ptradd' else 'of'} {cell.width}"
+    if cell.table == "fields":
+        return f"{cell.op} {'by ' + cell.width if cell.width else 'with no index'}"
     words = [cell.op, cell.row]
     if cell.table == "values" and cell.row != cells.NOTHING:
         words.append("at")
@@ -181,6 +188,7 @@ SECTIONS = {
         ("op",),
         "",
     ),
+    "fields": ("Field addresses, with no index or by an index", ("op",), "by "),
     "values": ("Passed and returned values", ("op", "what"), ""),
     "copies": ("Copies and moves, by the width of their length", ("op",), ""),
     "gpu": ("Ops of the gpu dialect in a dimension", ("op", "dimension"), ""),
@@ -231,6 +239,8 @@ def catalog_table(counts: Counter, spec: cells.Table) -> list[str]:
             if t
             else "tests"
             if spec.kind == "bitcasts"
+            else "no index"
+            if spec.kind == "fields"
             else "no value"
             for t in spec.columns
         ),
@@ -243,7 +253,7 @@ def catalog_row(counts: Counter, kind: str, row: cells.Row) -> list[str]:
     """Format a row's labels and cell counts, retaining applicability blanks."""
     if kind == "float_conversions":
         shown = [code(row.key)]
-    elif kind in ("pointers", "gpu_memory", "copies"):
+    elif kind in ("pointers", "fields", "gpu_memory", "copies"):
         shown = [code(row.op)]
     elif kind == "values":
         shown = [code(row.op), WHAT[row.op][row.key]]

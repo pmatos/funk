@@ -9,7 +9,7 @@ in the sum `CoreGpu`. A memory of the sum is named by the core's number.
 
 Each case names the set of the first op of the entry block of `@f`. A set
 is written `pure`, or as its effects joined by `,`, in the order of the
-fields of `Effects`. The cases pin all 48 core op names, every flag set of `add`,
+fields of `Effects`. The cases pin all 51 core op names, every flag set of `add`,
 `sub` and `mul`, and `exact` on `sdiv` and `udiv`, and the five ops of
 `gpu`; the Rust test checks that they cover each attribute that changes a
 set.
@@ -73,10 +73,10 @@ def Case.holds (c : Case) : Bool :=
 /-- The core op that a case pins, if it pins one. -/
 def Case.coreOp (c : Case) : Option Core.Op := c.op.bind Sum.getLeft?
 
-#guard cases.length == 108
+#guard cases.length == 110
 #guard (cases.filter (!·.holds)).map (·.name) == []
 -- The cases pin every core op, and every op of `gpu`.
-#guard ((cases.filterMap Case.coreOp).map Core.Op.name).eraseDups.length == 50
+#guard ((cases.filterMap Case.coreOp).map Core.Op.name).eraseDups.length == 51
 #guard (Core.samples.map Core.Op.name).all fun n =>
   (cases.filterMap Case.coreOp).any (·.name == n)
 #guard ((cases.filterMap (·.op.bind Sum.getRight?)).map Gpu.Op.name).eraseDups ==

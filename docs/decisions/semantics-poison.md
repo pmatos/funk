@@ -78,13 +78,14 @@ poison class through `DialectEffects`: `propagates` or `exception`
 (ADR-2026-10-29-2006). Rejected: propagation in prose only, as LLVM's reference
 states it. An op whose rules forget to propagate poison would go unnoticed.
 
-In the core dialect, 41 ops propagate and seven are exceptions. The 41 are
+In the core dialect, 42 ops propagate and seven are exceptions. The 42 are
 `const`, the float constant and `poison`, which have no operands, `add`, `sub`
 and `mul`, the four divisions, the bitwise ops and shifts, `icmp`, the width
 changes, `fcmp`, the three ops of float arithmetic, the two bit casts, the
 two conversions from integers, `sitofp` and `uitofp`, the two conversions
 between formats, `fpext` and `fptrunc` (ADR-2026-11-09-1549), the pointer
-offset `ptradd` (ADR-2026-11-13-0251), the two conversions to integers,
+offset `ptradd` (ADR-2026-11-13-0251), the field address `fieldaddr`
+(#236), the two conversions to integers,
 `fptosi` and `fptoui`, the stack allocation `alloca`, which has no operands
 (ADR-2026-11-14-0915), `load`, which is UB on a poison pointer, as some
 pointer in its place faults (ADR-2026-11-14-2316), and `store`, which is UB

@@ -48,7 +48,7 @@ it, so the obligations reject the declaration, over the core's own
 semantics with memory. -/
 theorem storeNoWrite_unlawful :
     ¬ @LawfulDialectEffects CoreDialect _ _ _ storeNoWrite _ _
-      (@DialectMemDenote.mk CoreDialect _ _ storeNoWrite fun lay ρ _ => Core.memDenoteAt lay ρ) :=
+      (@DialectMemDenote.mk CoreDialect _ _ storeNoWrite fun lay ρ L => Core.memDenoteAt lay ρ L) :=
           by
   intro h
   have hw := @LawfulDialectEffects.writesNot CoreDialect _ _ _ storeNoWrite _ _ _ h

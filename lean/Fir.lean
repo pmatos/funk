@@ -58,6 +58,8 @@ import Fir.Core.Load
 import Fir.Core.Store
 import Fir.Core.PtrAccess
 import Fir.Core.FloatAccess
+import Fir.Core.FieldAddr
+import Fir.Core.FieldAddrText
 import Fir.Core.FloatToInt
 import Fir.Core.Control
 import Fir.Core.Branch
@@ -150,6 +152,7 @@ import Fir.Core.StoreFloatLaws
 import Fir.Core.MemCopy
 import Fir.Core.MemCopyLaws
 import Fir.Core.MemCopyPoison
+import Fir.Core.FieldAddrLaws
 import Fir.Core.EffectLaws
 import Fir.Core.MemoryRuns
 import Fir.Core.MemoryCallRefine

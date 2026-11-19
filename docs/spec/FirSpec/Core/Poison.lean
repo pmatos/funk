@@ -14,15 +14,15 @@ when the Lean changes under it.
 
 #doc (Manual) "Core poison classes: readable blocks" =>
 
-:::moduleDocs (fingerprint := "13255812565144623774")
+:::moduleDocs (fingerprint := "8206253786194970924")
 :::
 
-:::readable Fir.Core.Op.poisonClass (fingerprint := "6526682539850505072")
-*Definition: the poison class of each core op.* Forty-one core ops
+:::readable Fir.Core.Op.poisonClass (fingerprint := "4878645018344458594")
+*Definition: the poison class of each core op.* Forty-two core ops
 {ref "The-fir-specification--Execution--Poison-classes"}[propagate poison],
 and seven are exceptions:
 
-$$`\begin{aligned} \mathsf{propagates}:\ & \mathsf{const}_N,\ \mathsf{const}_{e,m},\ \mathsf{poison},\ \mathsf{add}, \\ & \mathsf{sub},\ \mathsf{mul},\ \mathsf{sdiv},\ \mathsf{udiv}, \\ & \mathsf{srem},\ \mathsf{urem},\ \mathsf{and},\ \mathsf{or}, \\ & \mathsf{xor},\ \mathsf{shl},\ \mathsf{lshr},\ \mathsf{ashr}, \\ & \mathsf{icmp},\ \mathsf{fcmp},\ \mathsf{zext},\ \mathsf{sext},\ \mathsf{trunc}, \\ & \mathit{fbin},\ \mathit{funary},\ \mathsf{fma},\ \mathsf{bitcast}^{\to \mathsf{i}},\ \mathsf{bitcast}^{\mathsf{i} \to}, \\ & \mathsf{sitofp},\ \mathsf{uitofp},\ \mathsf{fpext},\ \mathsf{fptrunc},\ \mathsf{ptradd}, \\ & \mathsf{fptosi},\ \mathsf{fptoui},\ \mathsf{alloca}, \\ & \mathsf{load},\ \mathsf{store},\ \mathsf{load}~\mathsf{ptr},\ \mathsf{store}~\mathsf{ptr}, \\ & \mathsf{load}~\mathsf{float},\ \mathsf{store}~\mathsf{float},\ \mathsf{memcpy},\ \mathsf{memmove} \end{aligned}`
+$$`\begin{aligned} \mathsf{propagates}:\ & \mathsf{const}_N,\ \mathsf{const}_{e,m},\ \mathsf{poison},\ \mathsf{add}, \\ & \mathsf{sub},\ \mathsf{mul},\ \mathsf{sdiv},\ \mathsf{udiv}, \\ & \mathsf{srem},\ \mathsf{urem},\ \mathsf{and},\ \mathsf{or}, \\ & \mathsf{xor},\ \mathsf{shl},\ \mathsf{lshr},\ \mathsf{ashr}, \\ & \mathsf{icmp},\ \mathsf{fcmp},\ \mathsf{zext},\ \mathsf{sext},\ \mathsf{trunc}, \\ & \mathit{fbin},\ \mathit{funary},\ \mathsf{fma},\ \mathsf{bitcast}^{\to \mathsf{i}},\ \mathsf{bitcast}^{\mathsf{i} \to}, \\ & \mathsf{sitofp},\ \mathsf{uitofp},\ \mathsf{fpext},\ \mathsf{fptrunc},\ \mathsf{ptradd}, \\ & \mathsf{fieldaddr},\ \mathsf{fptosi},\ \mathsf{fptoui},\ \mathsf{alloca}, \\ & \mathsf{load},\ \mathsf{store},\ \mathsf{load}~\mathsf{ptr},\ \mathsf{store}~\mathsf{ptr}, \\ & \mathsf{load}~\mathsf{float},\ \mathsf{store}~\mathsf{float},\ \mathsf{memcpy},\ \mathsf{memmove} \end{aligned}`
 
 $$`\begin{aligned} \mathsf{exception}:\ & \mathsf{select},\ \mathsf{freeze},\ \mathsf{br}, \\ & \mathsf{cond\_br},\ \mathsf{ret},\ \mathsf{unreachable},\ \mathsf{call} \end{aligned}`
 

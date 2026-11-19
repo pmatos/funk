@@ -38,12 +38,13 @@ namespace Fir
 variable {d : Dialect} [DialectSignature d] [DialectValidation d]
 
 /--
-The context in which a module's functions are checked: its symbol table and
-the keys of its location table.
+The context in which a module's functions are checked: its symbol table,
+the keys of its location table, and the aggregates' layouts of its table.
 -/
 structure ModuleContext (d : Dialect) where
   symbols : Name → Option (FuncType d)
   locKeys : List LocRef
+  layouts : Name → Option LayoutRef
 
 /--
 A successor is valid when it names a block of the function other than the
@@ -95,7 +96,7 @@ def Func.OpValid (ctx : ModuleContext d) (f : Func d) (b : Block d) (i : Nat)
   (∀ s ∈ o.succs, f.SuccValid s) ∧
   (∀ x ∈ o.uses, f.InScope x b.label i) ∧
   (∀ g ∈ symbolRefs o.op, (ctx.symbols g).isSome) ∧
-  validOp ⟨ctx.symbols, f.results⟩ o.op ∧
+  validOp ⟨ctx.symbols, f.results, ctx.layouts⟩ o.op ∧
   o.loc ∈ ctx.locKeys
 
 /--
@@ -114,7 +115,7 @@ def Func.InnerOpValid (ctx : ModuleContext d) (f : Func d) (o : Operation d) : P
   (isTerminator o.op = false → o.succs = []) ∧
   (∀ s ∈ o.succs, isName s.label ∧ ∀ a ∈ s.args, (f.typeOf a).isSome) ∧
   (∀ g ∈ symbolRefs o.op, (ctx.symbols g).isSome) ∧
-  validOp ⟨ctx.symbols, f.results⟩ o.op ∧
+  validOp ⟨ctx.symbols, f.results, ctx.layouts⟩ o.op ∧
   o.loc ∈ ctx.locKeys
 
 /-- The ops of the regions of the op `o`: those of each block of each of its
@@ -262,13 +263,13 @@ structure Func.Valid (ctx : ModuleContext d) (f : Func d) : Prop where
 
 /-- The context in which a module's functions are checked. -/
 def Module.context (m : Module d) : ModuleContext d :=
-  ⟨m.symbols, m.locs.map (·.1)⟩
+  ⟨m.symbols, m.locs.map (·.1), m.table.layouts⟩
 
 /-- The context in which the functions of a symbol table are checked, in a
 module whose location table has the references `keys`: the table's own
-symbols, and the module's one location table. -/
+symbols, the module's one location table, and the table's own layouts. -/
 def SymbolTable.context (keys : List LocRef) (t : SymbolTable d) : ModuleContext d :=
-  ⟨t.symbols, keys⟩
+  ⟨t.symbols, keys, t.layouts⟩
 
 /--
 An item of a dialect's kind is valid, in the context of its table's

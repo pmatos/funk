@@ -202,6 +202,9 @@ import FirSpec.Core.LoadPtrLaws
 import FirSpec.Core.StorePtrLaws
 import FirSpec.Core.FloatAccess
 import FirSpec.Core.LoadFloatLaws
+import FirSpec.Core.FieldAddr
+import FirSpec.Core.FieldAddrLaws
+import FirSpec.Core.FieldAddrText
 import FirSpec.Core.StoreFloatLaws
 import FirSpec.Core.MemCopy
 import FirSpec.Core.MemCopyLaws

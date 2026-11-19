@@ -263,6 +263,10 @@ the items a run gives each op (`RunItems`, `lean/Fir/Execution/RunItems.lean`),
 with no hypothesis on it, and so do their `CoreGpu` counterparts. The human
 ruled on 2026-11-16, on #236 (Q1 A), that the run passes the module's
 layouts to every op's rule and that these guarantees gain that argument.
+`fieldaddr` is the first op that reads it (ADR-2026-11-18-2041): it has a
+rule only with memory, as `alloca` and the loads and stores do, and meets
+each obligation by its own proofs (`lean/Fir/Core/FieldAddrLaws.lean`), so
+the guarantees keep their statements with no new hypothesis.
 Rejected: the parser looking a layout up when it reads an op (Q1 B), which
 changes every dialect's text laws.
 

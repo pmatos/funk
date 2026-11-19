@@ -80,7 +80,7 @@ def OpOK (ctx : ModuleContext CoreDialect) (f : Func CoreDialect) (dom : List (N
     ∃ tgt ∈ (f.block? s.label).toList, s.args.map f.typeOf = tgt.params.map (some ·.2)) ∧
   (∀ x ∈ o.uses, ScopeOK f dom x b.label i) ∧
   (∀ g ∈ symbolRefs o.op, (ctx.symbols g).isSome) ∧
-  validOp ⟨ctx.symbols, f.results⟩ o.op ∧
+  validOp ⟨ctx.symbols, f.results, ctx.layouts⟩ o.op ∧
   o.loc ∈ ctx.locKeys
 
 instance (ctx : ModuleContext CoreDialect) (f : Func CoreDialect) (dom : List (Name × Name))

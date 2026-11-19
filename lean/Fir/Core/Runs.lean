@@ -50,7 +50,8 @@ theorem straight_of_tracer {ctx : ModuleContext CoreDialect} {f : Func CoreDiale
     | .freeze _ | .poison _ | .br | .condBr | .unreachable | .call .. | .fconst .. | .fcmp ..
     | .fbin .. | .funary .. | .fma .. | .toBits .. | .ofBits .. | .sitofp .. | .uitofp ..
     | .fpext .. | .fptrunc .. | .ptradd .. | .alloca .. | .load .. | .store .. | .loadPtr ..
-    | .storePtr .. | .loadFloat .. | .storeFloat .. | .fptosi .. | .fptoui .. | .memCopy .. =>
+    | .storePtr .. | .loadFloat .. | .storeFloat .. | .fptosi .. | .fptoui .. | .memCopy ..
+    | .fieldAddr .. =>
       intro h; exact False.elim h
   noJump b hb o ho args i h := by
     have hop := ht b hb o ho
@@ -61,7 +62,7 @@ theorem straight_of_tracer {ctx : ModuleContext CoreDialect} {f : Func CoreDiale
   returns b hb o ho hT := by
     obtain ⟨i, hi, rfl⟩ := List.getElem_of_mem ho
     have hov := hv.ops b hb i b.body[i] (List.getElem?_eq_getElem hi)
-    have hvalid : validOp ⟨ctx.symbols, f.results⟩ b.body[i].op := hov.2.2.2.2.2.2.2.2.2.1
+    have hvalid : validOp ⟨ctx.symbols, f.results, ctx.layouts⟩ b.body[i].op := hov.2.2.2.2.2.2.2.2.2.1
     have hop := ht b hb _ ho
     revert hT hvalid
     match b.body[i].op, hop with
