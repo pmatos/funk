@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Core effects: readable blocks" =>
 
-:::moduleDocs (fingerprint := "14253884279762886695")
+:::moduleDocs (fingerprint := "16349775817070580490")
 :::
 
 :::readable Fir.Core.Mem (fingerprint := "11401156343561318334")
@@ -30,11 +30,11 @@ $`\mathsf{load}` and $`\mathsf{store}` the memory of their pointer; no
 other core op names a memory.
 :::
 
-:::readable Fir.Core.Op.effects (fingerprint := "16981218494327732314")
+:::readable Fir.Core.Op.effects (fingerprint := "9298696204789597559")
 *Definition: the effects of each core op.* For each
 {ref "The-fir-specification--Abstract-syntax--Core-ops"}[core op instance]:
 
-$$`\begin{aligned} \emptyset:\ & \mathsf{const},\ \mathsf{and},\ \mathsf{or},\ \mathsf{xor},\ \mathsf{icmp}, \\ & \mathsf{select},\ \mathsf{zext},\ \mathsf{sext},\ \mathsf{trunc},\ \mathsf{freeze},\ \mathsf{call}, \\ & \mathsf{bitcast}^{\to \mathsf{i}},\ \mathsf{bitcast}^{\mathsf{i} \to},\ \mathsf{sitofp},\ \mathsf{uitofp}, \\ & \mathsf{fpext},\ \mathsf{fptrunc},\ \mathsf{ptradd} \end{aligned}`
+$$`\begin{aligned} \emptyset:\ & \mathsf{const},\ \mathsf{and},\ \mathsf{or},\ \mathsf{xor},\ \mathsf{icmp}, \\ & \mathsf{select},\ \mathsf{zext},\ \mathsf{sext},\ \mathsf{trunc},\ \mathsf{freeze},\ \mathsf{call}, \\ & \mathsf{bitcast}^{\to \mathsf{i}},\ \mathsf{bitcast}^{\mathsf{i} \to},\ \mathsf{sitofp},\ \mathsf{uitofp}, \\ & \mathsf{fpext},\ \mathsf{fptrunc},\ \mathsf{ptradd},\ \mathsf{fieldaddr} \end{aligned}`
 
 $$`\mathsf{fcmp}_\phi,\ \mathit{fbin}_\phi,\ \mathit{funary}_\phi,\ \mathsf{fma}_\phi:\ \{\mathsf{mayPoison}\} \text{ if } \phi \text{ sets } \mathsf{nnan} \text{ or } \mathsf{ninf}, \text{ else } \emptyset`
 

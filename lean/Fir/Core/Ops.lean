@@ -9,8 +9,8 @@ The core dialect's ops: constants, integer arithmetic, bitwise ops and
 shifts, comparison and selection, width changes, `freeze` and `poison`,
 branches and calls, the float constants, comparisons, arithmetic, bit
 casts, conversions from integers, conversions between formats and
-conversions to integers, pointer offsets, stack allocation, loads and
-stores, of integers, pointers and floats.
+conversions to integers, pointer offsets, field addresses, stack
+allocation, loads and stores, of integers, pointers and floats.
 Each op below is an op instance: it carries its
 attributes and the widths it is used at, so that its operand and result
 types follow from it.
@@ -171,6 +171,21 @@ Pointer offsets (#231):
   (ADR-2026-11-13-0251). It is never UB, and a poison operand gives
   poison.
 
+Field addresses (#236; the human's rulings of 2026-11-16 on #236):
+
+* `fieldAddr s i n w`: the address of the field `i` of the aggregate
+  layout with symbol `s`, from a pointer of `ptr<N>`, `N = n`, to the
+  start of the layout: the pointer moved by the field's offset. With
+  `w = some W`, it also takes an index of `iW`, read as signed, and gives
+  the address of that element of a repeated field: the field's offset
+  plus the index times the units from one element to the next, the
+  units of the field's type rounded up to its alignment. It reads the
+  layout from the items that the run gives each op (the section on the
+  items a run gives each op). It keeps the pointer's provenance, and an
+  index out of the field's elements moves the pointer as `ptradd` does:
+  only an access through the result must be in bounds. It is never UB,
+  and a poison operand gives poison.
+
 Stack allocation (#231; the human's ruling of 2026-11-14 on #378):
 
 * `alloca k t c a n`: allocates room for `c` values of the type `t` in the
@@ -307,6 +322,7 @@ inductive Op where
   | fpext (e m e' m' : Nat)
   | fptrunc (r : RoundingMode) (e m e' m' : Nat)
   | ptradd (n w : Nat)
+  | fieldAddr (s : String) (i : Nat) (n : Nat) (w : Option Nat)
   | alloca (k : Memory.AllocKind) (t : Ty) (c : Nat) (a : Option Nat) (n : Nat)
   | load (o : Memory.Ordering) (w : Nat) (a : Option Nat) (n : Nat)
   | store (o : Memory.Ordering) (w : Nat) (a : Option Nat) (n : Nat)

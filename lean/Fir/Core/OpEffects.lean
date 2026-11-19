@@ -19,8 +19,8 @@ frees its call's stack allocations when the call returns.
   `fdiv`, `frem`, `fmod`, `fneg`, `fabs`, `sqrt` and `fma`, without `nnan`
   and `ninf`, the bit casts, the conversions from integers, `sitofp` and
   `uitofp`, the conversions between formats, `fpext` and `fptrunc`, and
-  the pointer offset `ptradd`, which moves a pointer and keeps its
-  provenance. `nsz` alone keeps a float op pure: it chooses a zero's sign,
+  the pointer offset `ptradd` and the field address `fieldAddr`, which
+  move a pointer and keep its provenance. `nsz` alone keeps a float op pure: it chooses a zero's sign,
   a defined value, as `freeze` chooses bits. On operands
   with no poison each gives a defined result, and none hits UB. `select`
   gives poison only for a poison condition or a poison operand that it
@@ -75,7 +75,7 @@ on a division, and `nnan` or `ninf` on a float op, may produce poison. -/
 def Op.effects : Op → Effects Mem
   | .const .. | .fconst .. | .and _ | .or _ | .xor _ | .icmp .. | .select _ | .zext .. | .sext ..
   | .trunc .. | .freeze _ | .call .. | .toBits .. | .ofBits .. | .sitofp .. | .uitofp .. | .fpext ..
-  | .fptrunc .. | .ptradd .. => {}
+  | .fptrunc .. | .ptradd .. | .fieldAddr .. => {}
   | .fcmp _ fl .. | .fbin _ fl .. | .funary _ fl .. | .fma fl .. => { mayPoison := fl.mayPoison }
   | .add _ f | .sub _ f | .mul _ f => { mayPoison := f != {} }
   | .sdiv _ x | .udiv _ x => { mayUB := true, mayPoison := x }

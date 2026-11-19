@@ -15,9 +15,9 @@ Tier: direction; area: semantics
   up to that alignment: four `i24` take 16 units of memory 0 (the human's
   ruling of 2026-11-16 on #236, Q2 B).
 - **Validity.** The memory is declared, the alignment is valid, each field
-  is an integer or a pointer (floats wait for #264) at a multiple of its
-  alignment, which is at most the layout's, ends within the size and shares
-  no unit with another field.
+  is an integer, a float or a pointer at a multiple of its alignment,
+  which is at most the layout's, ends within the size and shares no unit
+  with another field.
 - **Reading.** A run gives every op's rule a record of its table's
   layouts, with each field's offset and element step (Q1 A). Every law holds
   for every record, so a function's (#235) or a global's (#237) address is

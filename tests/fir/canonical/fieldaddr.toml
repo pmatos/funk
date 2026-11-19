@@ -1,0 +1,18 @@
+# Tests of fieldaddr.fir: the field address moves a pointer to a field of
+# a named layout (#236). The fields of @pair are 8 units apart, and the
+# elements of @i24s 4 units apart, each `i24` rounded up to its alignment
+# (the human's ruling of 2026-11-16 on #236, Q2 B); @elements reaches them
+# by an index of each width. An index past the field's elements is an
+# address, as ptradd gives one: storing through it is UB only when it
+# leaves the allocation (Q3 A). @wide is a layout of a memory of 16-bit
+# units, where a pointer takes two units. The backend does not lower
+# fieldaddr yet, so each test is interpreter-only (stage 4 of #236).
+tests = [
+  { func = "@pair_fields", args = ["7", "-9"], expect = ["7", "-9"] },
+  { func = "@elements", expect = ["17", "16", "15", "14"] },
+  { func = "@element", args = ["5", "1"], expect = ["5"] },
+  { func = "@element", args = ["5", "0"], expect = ["poison"] },
+  { func = "@element", args = ["5", "4"], expect = "ub" },
+  { func = "@element", args = ["5", "-1"], expect = "ub" },
+  { func = "@wide_element", args = ["-300", "2"], expect = ["-300"] },
+]

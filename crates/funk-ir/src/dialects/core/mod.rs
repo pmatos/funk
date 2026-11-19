@@ -20,8 +20,8 @@
 //! `fpext` and `fptrunc`, and the conversions from floats to integers
 //! `fptosi` and `fptoui`. #231 adds the pointer offset `ptradd`, the
 //! stack allocation `alloca`, the load `load` and the store `store`, and
-//! #264 loads, stores and allocations of floats. A later family adds a file
-//! and a line here.
+//! #264 loads, stores and allocations of floats. #236 adds the field
+//! address `fieldaddr`. A later family adds a file and a line here.
 
 mod access;
 mod align;
@@ -36,6 +36,7 @@ mod constant;
 mod control;
 mod div;
 mod fast_math;
+mod field_addr;
 mod float_arith;
 mod float_convert;
 mod float_text;
@@ -114,6 +115,7 @@ pub fn dialect() -> Dialect {
         .op(float_convert::Convert("fpext"))
         .op(float_convert::Convert("fptrunc"))
         .op(pointer::PtrAdd)
+        .op(field_addr::FieldAddr)
         .op(alloca::Alloca)
         .op(load::LOAD)
         .op(store::STORE)

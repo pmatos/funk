@@ -167,11 +167,23 @@ theorem Module.symbols_replaceBody (M : Module d) (s : Name) (b : Region d) :
   simp only [Module.symbols, Module.funcs_replaceBody, List.find?_map, Option.map_map]
   rfl
 
+/-- Replacing a body keeps the aggregates' layouts of the module's own
+table. -/
+theorem Module.layouts_replaceBody (M : Module d) (s : Name) (b : Region d) :
+    (M.replaceBody s b).table.layouts = M.table.layouts := by
+  have h : (M.replaceBody s b).table.aggregates = M.table.aggregates := by
+    simp only [SymbolTable.aggregates, Module.table, Module.replaceBody, List.filterMap_map]
+    congr 1
+    funext i
+    cases i <;> rfl
+  funext x
+  simp only [SymbolTable.layouts, h]
+
 /-- Replacing a body keeps the context in which the module's functions are
 checked. -/
 theorem Module.context_replaceBody (M : Module d) (s : Name) (b : Region d) :
     (M.replaceBody s b).context = M.context := by
-  simp only [Module.context, Module.symbols_replaceBody]
+  simp only [Module.context, Module.symbols_replaceBody, Module.layouts_replaceBody]
   rfl
 
 /-- Replacing a body keeps every symbol of the module's own table. -/
