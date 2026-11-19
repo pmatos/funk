@@ -1,0 +1,22 @@
+# Tests of fieldaddr-programs-memories.fir: struct and array programs in a
+# declared memory of 16-bit units with 32-bit pointers (#236). There an i8
+# and an i16 take one unit, an i24, an i32, an f32 and a pointer of memory 1
+# two, and an f64 and a pointer of memory 0 four. @point_fields stores
+# fields of each size and a pointer to the struct itself, and reads them
+# back by their offsets in units. The elements of @row are two units apart:
+# @row_sum fills and sums them in a loop, and @row_at writes one by its
+# index and reads it back by ptradd, UB once it leaves the allocation.
+# @list_sum walks a linked list of two nodes, and @other_memory keeps a
+# pointer of memory 0 in a field of a layout of memory 1. Memory 1 is not
+# realised by the backend, so each test is interpreter-only.
+tests = [
+  { func = "@point_fields", args = ["-3", "1.5", "-2.25", "9"], expect = ["-3", "1.5", "-2.25", "9"] },
+  { func = "@row_sum", args = ["1"], expect = ["64"] },
+  { func = "@row_sum", args = ["-5"], expect = ["40"] },
+  { func = "@row_at", args = ["0"], expect = ["-7"] },
+  { func = "@row_at", args = ["3"], expect = ["-7"] },
+  { func = "@row_at", args = ["4"], expect = "ub" },
+  { func = "@row_at", args = ["-1"], expect = "ub" },
+  { func = "@list_sum", expect = ["42"] },
+  { func = "@other_memory", args = ["123456789012"], expect = ["123456789012"] },
+]

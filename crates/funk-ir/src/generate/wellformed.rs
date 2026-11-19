@@ -24,8 +24,11 @@
 //! - items of a kind from [`ITEM_KINDS`], with parameters, results and
 //!   attributes, which every reader decodes whichever dialect registers
 //!   the kind, and no registry here does (ADR-2026-11-09-1543);
-//! - aggregates' layouts of any numbers, with fields of core integer and
-//!   pointer types, repeated or not (ADR-2026-11-16-1546);
+//! - aggregates' layouts of any numbers, with fields of core integer, float
+//!   and pointer types, repeated or not (ADR-2026-11-16-1546);
+//! - field addresses, `fieldaddr`, of the module's layout or of a symbol
+//!   that names none, of fields of any number, with or without an index
+//!   (`field_addr.rs`, #236);
 //! - globals of any numbers, flags and initializers (ADR-2026-11-09-1546),
 //!   spelled as ADR-2026-11-19-0124 says.
 //!
@@ -47,15 +50,16 @@
 use super::{Rng, Widths, constant, name, symbol, width};
 use crate::dialects::core::{self, int_type};
 use crate::effects::Effects;
-use crate::ir::{
-    Attr, Block, Def, DialectItem, Func, Item, LocRef, Module, NestedModule, Op, Region, Succ, Type,
-};
+use crate::ir::{Attr, Block, Def, Func, Item, LocRef, Module, Op, Region, Succ, Type};
 use crate::registry::{Dialect, OpShape, OpSpec, OpTypes};
 use attr::attr;
+use items::{add_dialects, dialect_item, nested};
 
 mod aggregate;
 mod attr;
+mod field_addr;
 mod global;
+mod items;
 mod layout;
 mod locs;
 
@@ -117,10 +121,15 @@ pub fn module(rng: &mut Rng, dialects: Dialects) -> Module {
     }
     let symbols: Vec<String> = m.funcs().map(|f| f.name.clone()).collect();
     let keys: Vec<LocRef> = m.locs.entries.iter().map(|(r, _)| *r).collect();
+    let aggregate = rng.one_in(3).then(|| aggregate::aggregate(rng));
+    let layouts: Vec<String> = aggregate.iter().map(|a| a.name.clone()).collect();
     for item in &mut m.items {
         let Item::Func(f) = item else { continue };
         let mut shaper = Shaper::new(f, &symbols, &keys, dialects == Dialects::CoreAndToy);
         shaper.reshape(rng, f);
+        if !f.body.blocks.is_empty() && !rng.one_in(3) {
+            shaper.add_field_addrs(rng, f, &layouts);
+        }
     }
     if rng.one_in(2) {
         locs::add_short_fused(rng, &mut m.locs);
@@ -134,9 +143,9 @@ pub fn module(rng: &mut Rng, dialects: Dialects) -> Module {
         let at = rng.below(m.items.len() as u64 + 1) as usize;
         m.items.insert(at, dialect_item(rng));
     }
-    if rng.one_in(3) {
+    if let Some(a) = aggregate {
         let at = rng.below(m.items.len() as u64 + 1) as usize;
-        m.items.insert(at, aggregate::aggregate(rng));
+        m.items.insert(at, Item::Aggregate(a));
     }
     if rng.one_in(3) {
         let at = rng.below(m.items.len() as u64 + 1) as usize;
@@ -148,52 +157,6 @@ pub fn module(rng: &mut Rng, dialects: Dialects) -> Module {
     m
 }
 
-/// An item of a kind from [`ITEM_KINDS`], with up to two parameters, two
-/// results of core types and three attributes.
-fn dialect_item(rng: &mut Rng) -> Item {
-    let mut i = DialectItem::new(*rng.pick(&ITEM_KINDS), symbol(rng));
-    let mut taken = Vec::new();
-    for _ in 0..rng.below(3) {
-        let t = int_type(width(rng, Widths::Any));
-        i.params.push(Def::new(Shaper::fresh(rng, &mut taken), t));
-    }
-    i.results = (0..rng.below(3))
-        .map(|_| int_type(width(rng, Widths::Any)))
-        .collect();
-    i.attrs = (0..rng.below(4)).map(|_| attr(rng, 0)).collect();
-    Item::Dialect(i)
-}
-
-/// Names one to three dialects, drawn with repeats, in one draw of four.
-fn add_dialects(rng: &mut Rng, dialects: &mut Vec<String>) {
-    if rng.one_in(4) {
-        for _ in 0..=rng.below(3) {
-            dialects.push(rng.pick(&["toy", "gpu", "x_1"]).to_string());
-        }
-    }
-}
-
-/// A nested module at most `depth` deep: the functions of a valid module,
-/// then, in one draw of three, a module nested in it.
-fn nested(rng: &mut Rng, depth: u32) -> NestedModule {
-    let mut n = NestedModule::new(symbol(rng));
-    add_dialects(rng, &mut n.dialects);
-    n.items = super::module(rng).items;
-    if rng.one_in(3) {
-        n.items.push(dialect_item(rng));
-    }
-    if rng.one_in(3) {
-        n.items.push(aggregate::aggregate(rng));
-    }
-    if rng.one_in(3) {
-        n.items.push(global::global(rng));
-    }
-    if depth > 1 && rng.one_in(3) {
-        n.items.push(Item::Module(nested(rng, depth - 1)));
-    }
-    n
-}
-
 /// What a function defines, and what its new ops may name.
 struct Shaper<'m> {
     /// The symbols of the module's functions.
@@ -202,8 +165,11 @@ struct Shaper<'m> {
     keys: &'m [LocRef],
     /// Whether [`TOY_OP`] may be used.
     toy: bool,
-    /// Every value the function defines, at any depth, with its type.
+    /// Every value the function defines, at any depth, with its type, but
+    /// the pointers of `field_addr.rs`.
     values: Vec<(String, Type)>,
+    /// The pointers that `field_addr.rs` defines, with their memories.
+    pointers: Vec<(String, u32)>,
     /// Every value name taken: defined, or named as undefined.
     taken: Vec<String>,
     /// Every label taken: of a block at any depth, or named as undefined.
@@ -226,6 +192,7 @@ impl<'m> Shaper<'m> {
             toy,
             taken: values.iter().map(|(v, _)| v.clone()).collect(),
             values,
+            pointers: Vec::new(),
             labels: f.body.blocks.iter().map(|b| b.label.clone()).collect(),
         }
     }
@@ -400,18 +367,23 @@ impl<'m> Shaper<'m> {
             }
             _ => {
                 let w = width(rng, Widths::Any);
-                let op = Op::new("const", self.loc(rng)).attr(constant(rng, w));
-                let d = self.define(rng, int_type(w));
-                Op {
-                    results: vec![d],
-                    ..op
-                }
+                self.constant_op(rng, w)
             }
         };
         if depth < 3 && rng.one_in(4) {
             self.add_regions(rng, &mut op, depth + 1);
         }
         op
+    }
+
+    /// A `const` of a new value of `iW`.
+    fn constant_op(&mut self, rng: &mut Rng, w: u32) -> Op {
+        let op = Op::new("const", self.loc(rng)).attr(constant(rng, w));
+        let d = self.define(rng, int_type(w));
+        Op {
+            results: vec![d],
+            ..op
+        }
     }
 
     /// Up to two values the function defines, of any types.

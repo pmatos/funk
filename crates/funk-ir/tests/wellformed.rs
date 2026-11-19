@@ -7,10 +7,12 @@
 
 use std::collections::HashSet;
 
+use funk_ir::dialects::core::float_format;
 use funk_ir::generate::Rng;
 use funk_ir::generate::wellformed::{self, Dialects, TOY_OP, WELL_FORMED_MODULES};
 use funk_ir::{
-    Attr, Block, Func, Item, LocTable, Location, Module, Op, Registry, parse, print, verify,
+    Aggregate, Attr, Block, Func, Item, LocTable, Location, Module, Op, Registry, parse, print,
+    verify,
 };
 
 /// The core dialect and the toy dialect of the generator.
@@ -155,6 +157,13 @@ struct Shapes {
     modules_in_modules: usize,
     dialect_items: usize,
     aggregates: usize,
+    float_fields: usize,
+    field_addrs: usize,
+    indexed_field_addrs: usize,
+    field_addrs_of_layouts: usize,
+    chained_field_addrs: usize,
+    field_addrs_in_regions: usize,
+    nested_field_addrs: usize,
     globals: usize,
     rejected: usize,
 }
@@ -252,9 +261,59 @@ fn shapes(dialects: Dialects) -> Shapes {
             &mut n.dialect_items,
             m.items.iter().any(|i| matches!(i, Item::Dialect(_))),
         );
+        let layouts: Vec<&Aggregate> = m.items.iter().filter_map(Item::as_aggregate).collect();
+        has(&mut n.aggregates, !layouts.is_empty());
         has(
-            &mut n.aggregates,
-            m.items.iter().any(|i| matches!(i, Item::Aggregate(_))),
+            &mut n.float_fields,
+            layouts
+                .iter()
+                .flat_map(|a| a.types())
+                .any(|t| float_format(t).is_some()),
+        );
+        let field_addrs = all.iter().filter(|op| op.name == "fieldaddr");
+        has(&mut n.field_addrs, field_addrs.clone().next().is_some());
+        has(
+            &mut n.indexed_field_addrs,
+            field_addrs.clone().any(|op| op.operands.len() == 2),
+        );
+        let defined_by_field_addrs: HashSet<&str> = field_addrs
+            .clone()
+            .flat_map(|op| &op.results)
+            .map(|d| d.name.as_str())
+            .collect();
+        has(
+            &mut n.chained_field_addrs,
+            field_addrs
+                .clone()
+                .any(|op| defined_by_field_addrs.contains(op.operands[0].as_str())),
+        );
+        has(
+            &mut n.field_addrs_in_regions,
+            m.funcs().any(|f| {
+                let count = |b: &Block| b.ops.iter().filter(|op| op.name == "fieldaddr").count();
+                blocks(f).into_iter().map(count).sum::<usize>()
+                    > f.body.blocks.iter().map(count).sum::<usize>()
+            }),
+        );
+        has(
+            &mut n.nested_field_addrs,
+            m.items.iter().any(|i| match i {
+                Item::Module(nm) => nm
+                    .items
+                    .iter()
+                    .filter_map(Item::as_func)
+                    .flat_map(blocks)
+                    .flat_map(|b| &b.ops)
+                    .any(|op| op.name == "fieldaddr"),
+                _ => false,
+            }),
+        );
+        has(
+            &mut n.field_addrs_of_layouts,
+            field_addrs.clone().any(|op| match op.attrs.first() {
+                Some(Attr::Sym(s)) => layouts.iter().any(|a| &a.name == s),
+                _ => false,
+            }),
         );
         has(
             &mut n.globals,
@@ -289,6 +348,13 @@ fn the_generator_covers_what_validation_rejects() {
             n.nested_modules,
             n.dialect_items,
             n.aggregates,
+            n.float_fields,
+            n.field_addrs,
+            n.indexed_field_addrs,
+            n.field_addrs_of_layouts,
+            n.chained_field_addrs,
+            n.field_addrs_in_regions,
+            n.nested_field_addrs,
             n.globals,
         ];
         assert!(n.modules_in_modules > 0, "{dialects:?}: {n:?}");
