@@ -32,14 +32,14 @@ each rule has as its set what it is in the set monad, and `fir-ref run`'s
 modes give the spec's outcomes on the conversions.
 :::
 
-:::readable Fir.Core.intToFloatOp (pin := Fir.Core.Op) (fingerprint := "16023293347585021984")
+:::readable Fir.Core.intToFloatOp (pin := Fir.Core.Op) (fingerprint := "10096430678928869379")
 *Definition: the conversion of a signedness.* $`\mathrm{conv}^r_{N,e,m}(\mathit{true})`
 is $`\mathsf{sitofp}_{N,e,m}~r`, and $`\mathrm{conv}^r_{N,e,m}(\mathit{false})`
 is $`\mathsf{uitofp}_{N,e,m}~r`, so that the theorems below are stated once
 for both, and for every rounding mode $`r`.
 :::
 
-:::readable Fir.Core.intToFloat_propagatesPoison Fir.Core.intToFloat_returnsOnDefined Fir.Core.intToFloat_total Fir.Core.intToFloat_monotone Fir.Core.intToFloat_neverUB Fir.Core.intToFloat_makesNoPoison (pin := Fir.PropagatesPoison) (pin := Fir.ReturnsOnDefined) (pin := Fir.OpTotal) (pin := Fir.OpMonotone) (pin := Fir.NeverUBSetM) (pin := Fir.MakesNoPoisonSetM) (pin := Fir.Core.Op.denote?) (fingerprint := "6908650502738089080")
+:::readable Fir.Core.intToFloat_propagatesPoison Fir.Core.intToFloat_returnsOnDefined Fir.Core.intToFloat_total Fir.Core.intToFloat_monotone Fir.Core.intToFloat_neverUB Fir.Core.intToFloat_makesNoPoison (pin := Fir.PropagatesPoison) (pin := Fir.ReturnsOnDefined) (pin := Fir.OpTotal) (pin := Fir.OpMonotone) (pin := Fir.NeverUBSetM) (pin := Fir.MakesNoPoisonSetM) (pin := Fir.Core.Op.denote?) (fingerprint := "11863735091476085136")
 *Theorem: $`\mathsf{sitofp}` and $`\mathsf{uitofp}` are lawful, from every
 width to every format.* Under fir's execution rules, each meets every
 obligation of an op that

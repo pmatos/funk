@@ -188,8 +188,9 @@ trace. The access cannot be removed, duplicated or reordered with other events
 ## The memories of a run
 
 The spec gives one memory of this model, for a unit of any width, in
-`lean/Fir/Memory/`, with its accesses and their laws. `alloca`, `load` and
-`store` are the ops that use memory yet (#231). Memory is a state layer over the way of computing
+`lean/Fir/Memory/`, with its accesses and their laws. `alloca`, `load`,
+`store` (#231), `memcpy` and `memmove` (#234) are the ops that use memory
+yet. Memory is a state layer over the way of computing
 (ADR-2026-11-10-2350):
 
 - `Memories Mem unit`, in `lean/Fir/Memory/Frames.lean`, holds one memory for
@@ -231,9 +232,9 @@ to enumerate memory names, which may be infinite.
 ## The core's guarantees
 
 The semantics with memory carries the guarantees for the whole core
-dialect, `alloca`, `load` and `store` included. The statements without
-memory cover only the code that touches none: those over the set monad cover
-the ops other than `alloca`, `load` and `store`, and those that ask a
+dialect, `alloca`, the loads and stores, `memcpy` and `memmove` included.
+The statements without memory cover only the code that touches none: those
+over the set monad cover the ops other than those, and those that ask a
 function to reach no memory cover such
 functions. The human ruled this on 2026-11-14, on #384 (option A).
 Rejected: splitting out a memory-free core dialect, whose old statements
@@ -242,7 +243,7 @@ which changes the dialect's structure where the versions with memory
 already cover every op.
 
 These hold for every core op, and for every function of a valid core
-module, `alloca`, `load` and `store` included:
+module, `alloca`, the loads and stores, `memcpy` and `memmove` included:
 
 - the lawful classes with memory: `Core.lawfulDialectTotal`,
   `Core.lawfulDialectMonotone` and `Core.lawfulDialectMemPoison`

@@ -14,16 +14,17 @@ when the Lean changes under it.
 
 #doc (Manual) "Core op semantics: readable blocks" =>
 
-:::moduleDocs (fingerprint := "9905976552728297197")
+:::moduleDocs (fingerprint := "15080505812414711577")
 :::
 
-:::readable Fir.Core.Op.denote? (fingerprint := "8938338140038753053")
+:::readable Fir.Core.Op.denote? (fingerprint := "5278605459859931317")
 *Definition: the rule of each core op that is not a terminator.* For
 every way of computing with the
 {ref "The-fir-specification--Execution--Effects-and-op-semantics"}[choice and UB effects],
 each core op that is not a terminator, other than $`\mathsf{call}`,
 $`\mathsf{alloca}`, the loads and stores of an integer, a pointer or
-a float, and $`\mathsf{fieldaddr}`, has the rule of its family, which takes its operand values and gives its
+a float, $`\mathsf{fieldaddr}`, $`\mathsf{memcpy}` and
+$`\mathsf{memmove}`, has the rule of its family, which takes its operand values and gives its
 one result:
 
 * $`\mathsf{const}_N~c`, the float constant $`\mathsf{const}_{e,m}~v` and
@@ -72,10 +73,12 @@ the one mode that validation accepts.
 
 $`\mathsf{call}`, $`\mathsf{alloca}`, the loads and stores of an integer,
 a pointer or a float (`loadPtr`, `storePtr`, `loadFloat` and `storeFloat`
-in the Lean), $`\mathsf{fieldaddr}` and the terminators have none here: a
+in the Lean), $`\mathsf{fieldaddr}`, $`\mathsf{memcpy}` and
+$`\mathsf{memmove}` (`memCopy`) and the terminators have none here: a
 call's meaning is the run of its callee, $`\mathsf{alloca}` allocates,
-$`\mathsf{load}` reads, $`\mathsf{store}` writes and
-$`\mathsf{fieldaddr}` reads the layouts that the run gives, so each of
+$`\mathsf{load}` reads, $`\mathsf{store}` writes, $`\mathsf{memcpy}` and
+$`\mathsf{memmove}` read and write, and $`\mathsf{fieldaddr}` reads the
+layouts that the run gives, so each of
 their rules needs the run and is one of the
 {ref "The-fir-specification--Memory--The-core___s-rules-with-memory"}[core's rules with memory],
 and a terminator's rule says where control goes.
@@ -84,7 +87,7 @@ effects, so the spec's set of the ways a run may end and the tree of
 choices that `fir-ref run` walks share them.
 :::
 
-:::readable Fir.Core.Op.exit? (fingerprint := "7675665553149716347")
+:::readable Fir.Core.Op.exit? (fingerprint := "13694513045294113497")
 *Definition: the rule of each core terminator.* For every way of
 computing with the
 {ref "The-fir-specification--Execution--Effects-and-op-semantics"}[UB effect],
@@ -108,12 +111,13 @@ tree of choices and the state layer use the same tables, or tables with
 memory, with their own $`z`.
 :::
 
-:::readable Fir.Core.Op.hasRules Fir.Core.Op.touchesMemory Fir.Core.Op.readsItems (pin := Fir.instDialectDenoteCoreDialectSetM) (pin := Fir.instDialectCallCoreDialect) (pin := Fir.Core.Op.callTarget?) (pin := Fir.Core.Op.denote?) (pin := Fir.Core.Op.exit?) (fingerprint := "16967067471711093950")
+:::readable Fir.Core.Op.hasRules Fir.Core.Op.touchesMemory Fir.Core.Op.readsItems (pin := Fir.instDialectDenoteCoreDialectSetM) (pin := Fir.instDialectCallCoreDialect) (pin := Fir.Core.Op.callTarget?) (pin := Fir.Core.Op.denote?) (pin := Fir.Core.Op.exit?) (fingerprint := "4037948983156400307")
 *Definition: the core ops that touch memory.* $`\mathsf{alloca}`, which
 allocates, $`\mathsf{load}`, which reads, and $`\mathsf{store}`, which
 writes, an integer, a pointer or a float (`loadPtr`, `storePtr`,
-`loadFloat` and `storeFloat` in the Lean), touch memory, and no other core
-op does. Each rule needs the memory effect, so each has one only in a
+`loadFloat` and `storeFloat` in the Lean), and $`\mathsf{memcpy}` and
+$`\mathsf{memmove}` (`memCopy`), which read and write, touch memory, and
+no other core op does. Each rule needs the memory effect, so each has one only in a
 monad with memory.
 
 *Definition: the core ops that read the run's items.*
@@ -135,8 +139,8 @@ float op of arithmetic, both bit casts, both conversions from integers,
 both conversions between formats and both conversions to integers, among
 them;
 $`\mathsf{call}` counts through its callee, and $`\mathsf{alloca}`, the
-loads and stores and $`\mathsf{fieldaddr}` through their rules with
-memory.
+loads and stores, $`\mathsf{fieldaddr}` and the copies and moves through
+their rules with memory.
 
 *Definition: the core dialect's semantics.* In the
 {ref "The-fir-specification--Execution--Outcomes-and-behaviours"}[set monad], the
@@ -162,7 +166,7 @@ unless one of its operand types has no value
 $`\mathsf{call}` has no rule here, and its meaning has no outcome, but no
 run reaches it: the interpreter runs the callee of an op that has one
 instead. So a call has no op-level obligation (ADR-2026-10-29-2006).
-$`\mathsf{alloca}`, the loads and stores and $`\mathsf{fieldaddr}` have
-no rule here either: their meaning in the set monad has no outcome, and their rules and their
+$`\mathsf{alloca}`, the loads and stores, $`\mathsf{fieldaddr}` and the
+copies and moves have no rule here either: their meaning in the set monad has no outcome, and their rules and their
 obligations are those with memory.
 :::

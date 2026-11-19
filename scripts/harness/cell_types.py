@@ -1,14 +1,15 @@
-"""The cell of the coverage matrix and the type tests that every module of
-cells shares (ADR-2026-11-03-0557). `cells.py` gives the cell set,
-`pointer_cells.py` the cells of the pointer ops, and `gpu_cells.py` those of
-the `gpu` dialect."""
+"""The cell, row and table of the coverage matrix and the type tests that
+every module of cells shares (ADR-2026-11-03-0557). `cells.py` gives the cell set,
+`conversion_cells.py` the cells of the conversions, `pointer_cells.py`
+those of the pointer ops, `gpu_cells.py` those of the `gpu` dialect, and
+`copy_cells.py` those of `memcpy` and `memmove`."""
 
 from typing import NamedTuple
 
 
 class Cell(NamedTuple):
     """`table` is `ops`, `floats`, `casts`, `conversions`, `pointers`,
-    `fields`, `values` or `gpu`.
+    `fields`, `values`, `gpu` or `copies`.
     `row` is a flag set or predicate, the source type of a width change or a
     conversion, or what a value row passes, and empty for a pointer op;
     `width` is a width, a float format, the result type of a width change
@@ -18,7 +19,7 @@ class Cell(NamedTuple):
     allocates, a `load` loads or a `store` stores, or empty where nothing
     is passed. A `fieldaddr`'s `width` is the type of its index, empty
     with none. A `gpu` op's `row` is its dimension and its `width` the
-    `i32` it gives."""
+    `i32` it gives; a copy's `width` is the width of its length."""
 
     table: str
     op: str

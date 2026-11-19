@@ -14,7 +14,25 @@ pins their fingerprint; the build fails when the Lean changes under it.
 
 #doc (Manual) "The float ops read back: readable blocks" =>
 
-:::moduleDocs (fingerprint := "14909725246307615234")
+:::moduleDocs (fingerprint := "7467467483758013189")
+:::
+
+:::readable Fir.Core.find_fpred_name Fir.Core.name_of_find_fpred (pin := Fir.Core.FPred.name) (pin := Fir.Core.FPred.all) (fingerprint := "4595827450233367391")
+*Theorems: a float predicate is found by its name, and only by it.* For
+every float predicate $`p`, looking $`\mathrm{name}(p)` up in the list of
+the fourteen float predicates finds $`p`; and for every string $`s`, a
+float predicate found by looking $`s` up has the name $`s`. The proofs of
+the laws for $`\mathsf{fcmp}` use them.
+:::
+
+:::readable Fir.Core.decodeFcmpWith_eq Fir.Core.decodeFcmp_eq (pin := Fir.Core.decodeFcmp) (fingerprint := "5539919355558371046")
+*Theorems: a comparison of floats decodes only from its own spelling.*
+If $`\mathsf{fcmp}` decodes from the attributes $`a^*` and the types
+$`t^*` and $`r^*`, the op it gives has its name, the attributes $`a^*`
+and the operand and result types $`t^*` and $`r^*`. Its attributes are
+the words of its fast-math flags and then its predicate, and the words
+that reading takes back put the attributes back together. The proof
+that the core dialect's text is lawful uses them for this op.
 :::
 
 :::readable Fir.Core.decodeFBin_eq Fir.Core.decodeFUnary_eq Fir.Core.decodeFma_eq (pin := Fir.Core.decodeFBin) (pin := Fir.Core.decodeFUnary) (pin := Fir.Core.decodeFma) (fingerprint := "17736563499205844938")

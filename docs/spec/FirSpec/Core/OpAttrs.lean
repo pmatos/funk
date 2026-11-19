@@ -14,7 +14,7 @@ changes under it.
 
 #doc (Manual) "Core op attributes: readable blocks" =>
 
-:::moduleDocs (fingerprint := "15784081672852081284")
+:::moduleDocs (fingerprint := "2797424503112310986")
 :::
 
 :::readable Fir.Core.WrapFlags (fingerprint := "2440796118969772124")
@@ -126,4 +126,17 @@ fneg,fabs,sqrt   \mathsf{fneg} \mid \mathsf{fabs} \mid \mathsf{sqrt}~r
 * $`\mathsf{fneg}` negates and $`\mathsf{fabs}` gives the absolute value;
   neither rounds. $`\mathsf{sqrt}` gives the square root, rounded with its
   mode.
+:::
+
+:::readable Fir.Core.CopyKind (fingerprint := "15689562227995932481")
+*Copy kinds.* An op that carries units across memory is a copy or a move
+(ADR-2026-11-09-1551).
+
+```grammar Fir.Core.CopyKind
+\mathit{copykind}
+copy,move   \mathsf{copy} \mid \mathsf{move}
+```
+
+A copy, written `memcpy`, asks that its two ranges be equal or disjoint,
+and a move, written `memmove`, lets them overlap.
 :::

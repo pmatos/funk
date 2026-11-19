@@ -11,8 +11,9 @@ human's ruling of 2026-11-12 on #354), the rule that no float op
 carries a reserved word, `contract` or `reassoc` (ADR-2026-11-09-1549),
 the rule that a float op that rounds rounds with the mode `rne`
 (ADR-2026-11-11-1801), the rules of `alloca` (ADR-2026-11-14-0915), the
-rules of the loads and stores (ADR-2026-11-14-2316), the rule of
-`fieldAddr`, which reads the layouts of the op's table (#236), and the
+rules of the loads and stores (ADR-2026-11-14-2316), the rule of a copy
+or a move, `memCopy` (ADR-2026-11-18-2131), the rule of `fieldAddr`,
+which reads the layouts of the op's table (#236), and the
 units and alignment of a field of an aggregate's layout
 (ADR-2026-11-16-1546).
 The general rules of the previous sections already
@@ -221,6 +222,11 @@ The core rules of an op beyond its signature.
   index, which gives its first element. The index's value is not checked:
   an element out of the field's range is an address, as for `ptradd`
   (the human's ruling of 2026-11-16 on #236, Q3 A).
+* `memCopy`, a copy or a move, has the ordering `nonatomic`. Its two
+  pointers and its length are values of the function, so validation checks
+  that the module has their memory, and that the length's width is valid,
+  as it checks every type. Its text already asks that the two pointers be
+  of one memory.
 
 Every other op has no rule beyond its signature.
 -/
@@ -241,6 +247,7 @@ def Op.Valid (ctx : OpContext CoreDialect) : Op → Prop
   | .load o _ a _ | .store o _ a _ | .loadPtr o _ a _ | .storePtr o _ a _
   | .loadFloat o _ _ a _ | .storeFloat o _ _ a _ =>
     o = .nonatomic ∧ ∀ x ∈ a, MemLayout.ValidAlign x
+  | .memCopy _ o _ _ => o = .nonatomic
   | .fieldAddr s i n w => (ctx.layouts s).map (·.admits i n w.isSome) = some true
   | _ => True
 

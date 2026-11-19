@@ -3,10 +3,10 @@ import Fir.Core.Text
 /-!
 # The float ops read back from their spelling
 
-Each float op of arithmetic, each bit cast and each conversion decodes
-only from its own name, its attributes, its fast-math flags among them,
-and its operand and result types:
-`fadd` and the other ops of two operands, `fneg`, `fabs` and `sqrt`,
+Each float comparison, float op of arithmetic, bit cast and conversion
+decodes only from its own name, its attributes, its fast-math flags among
+them, and its operand and result types: `fcmp`, whose float predicate is
+found by its name and only by it, `fadd` and the other ops of two operands, `fneg`, `fabs` and `sqrt`,
 `fma`, `bitcast` in either direction, `sitofp` and `uitofp`, `fpext`,
 `fptrunc`, `fptosi` and `fptoui`. The proof that the core dialect's text
 is lawful, in the next section, uses these facts op by op; they are kept
@@ -126,5 +126,41 @@ theorem decodeFloatToInt_eq {signed : Bool} {as : List Attr} {ts rs : List Ty} {
       cases signed <;> exact ⟨rfl, (List.isEmpty_iff.mp ha).symm, rfl, rfl⟩
     · cases h
   · cases h
+
+/-- Each float predicate is found by its name. -/
+theorem find_fpred_name (p : FPred) : FPred.all.find? (·.name == p.name) = some p := by
+  cases p <;> rfl
+
+/-- A float predicate found by a name has that name. -/
+theorem name_of_find_fpred {s : String} {p : FPred} (h : FPred.all.find? (·.name == s) = some p) :
+    p.name = s := by
+  simpa using List.find?_some h
+
+/-- `fcmp` decodes under flags only from its own name, the flags' words
+before its other attributes, its operand types and its result type. -/
+theorem decodeFcmpWith_eq {fl : FastMath} {as : List Attr} {ts rs : List Ty} {op : Op}
+    (h : decodeFcmpWith fl as ts rs = some op) :
+    op.name = "fcmp" ∧ op.attrs = fl.attrs ++ as ∧ op.sig = ts ∧ op.returnTypes = rs := by
+  unfold decodeFcmpWith at h
+  split at h <;> (try cases h)
+  rename_i p _ _ _ _
+  cases hp : FPred.all.find? (·.name == p) with
+  | none => simp [hp] at h
+  | some pr =>
+    simp only [hp] at h
+    split at h
+    · cases h
+      rename_i hab
+      obtain ⟨rfl, rfl⟩ := hab
+      exact ⟨rfl, by simp [Op.attrs, name_of_find_fpred hp], rfl, rfl⟩
+    · cases h
+
+/-- `fcmp` decodes only from its own name, attributes, operand types and
+result type. -/
+theorem decodeFcmp_eq {as : List Attr} {ts rs : List Ty} {op : Op}
+    (h : decodeFcmp as ts rs = some op) :
+    op.name = "fcmp" ∧ op.attrs = as ∧ op.sig = ts ∧ op.returnTypes = rs := by
+  obtain ⟨h1, h2, h3, h4⟩ := decodeFcmpWith_eq h
+  exact ⟨h1, h2.trans (splitFlags_spec as), h3, h4⟩
 
 end Fir.Core
