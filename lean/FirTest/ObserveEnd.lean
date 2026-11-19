@@ -154,8 +154,14 @@ the list, or the one it already has. -/
 example : (TraceState.escape (⟨mems [byte 5, byte 6], []⟩ : TraceState Unit w) () 1).1 = some 0 ∧
     (escaped5.escape () 0).1 = some 0 := by decide
 
-/-- An id that the memory has not allocated cannot escape. -/
+/-- An id that the memory has not allocated cannot escape, and neither can a
+freed allocation, which a dangling pointer points into. -/
 example : (escaped5.escape () 1).1 = none ∧ (escaped5.escape () 1).2.escaped = [((), 0)] := by
+  decide
+example : (TraceState.escape (⟨mems [byte 5, (byte 6).kill], []⟩ : TraceState Unit w) () 1).1 =
+      none ∧
+    (TraceState.escape (⟨mems [byte 5, (byte 6).kill], []⟩ : TraceState Unit w) () 1).2.escaped =
+      [] := by
   decide
 
 /-! # The world's actions -/

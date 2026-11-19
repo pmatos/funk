@@ -14,7 +14,7 @@ fails when the Lean changes under it.
 
 #doc (Manual) "The world and escaped memory: readable blocks" =>
 
-:::moduleDocs (fingerprint := "6011687896530549781")
+:::moduleDocs (fingerprint := "7166734696564331001")
 :::
 
 :::readable Fir.TraceState Fir.TraceState.init (fingerprint := "3108308862273180019")
@@ -60,16 +60,17 @@ each maps the interpreter's run of a dialect to its run by the images of
 the dialect's rules.
 :::
 
-:::readable Fir.TraceState.escape Fir.TraceM.escape Fir.TraceM.handle (fingerprint := "10333419904712359159")
+:::readable Fir.TraceState.escape Fir.TraceM.escape Fir.TraceM.handle (fingerprint := "5306423327752119627")
 *Definition: escaping.* The allocation $`(x, a)` escapes from $`(S, E)`
 with the handle $`k` when $`E_k = (x, a)`; when it is not in $`E`, it joins
-it at the end, with the handle $`|E|`. An id that the memory has not
-allocated has no handle, and does not escape. The effect
+it at the end, with the handle $`|E|`. Only a live allocation escapes: an
+id that the memory has not allocated, or a freed allocation, which a
+dangling pointer points into, has no handle, and nothing escapes. The effect
 $`\mathrm{escape}(x, a)` lets it escape and gives its handle;
 $`\mathrm{handle}(k)` gives the allocation $`E_k`, if there is one. An op
 that hands an address to code outside the program lets each allocation that
-the address reaches escape, in an order that never depends on allocation
-ids.
+the address, or an allocation that already escaped, reaches escape, in an
+order that never depends on allocation ids.
 :::
 
 :::readable Fir.WUnit Fir.WorldAct Fir.WUnit.resolve (fingerprint := "11727295630581856659")

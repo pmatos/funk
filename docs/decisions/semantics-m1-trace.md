@@ -124,11 +124,14 @@ These are #233's choices of form, within the rules above.
   under which the world could tell source and target apart by an id.
 - **Who escapes what.** The layer gives the escape effect; the op that
   hands out an address escapes each allocation it reaches, so an external
-  call (#239) escapes the closure of its pointer arguments when it is made.
+  call (#239) escapes the closure of its pointer arguments and of the
+  allocations already escaped when it is made, since a pointer stored into
+  escaped memory is handed out too, as in LLVM's capture tracking.
   It escapes them in an order fixed by the arguments and by where each
   pointer is stored, never by allocation ids, so that source and target
-  give the same allocations the same handles. Only an allocation the memory
-  has can escape. The world's heap allocations are aligned to a power of
+  give the same allocations the same handles. Only a live allocation can
+  escape: a dangling pointer is poison in the comparison, so it escapes
+  nothing. The world's heap allocations are aligned to a power of
   two, as every allocation is (#231).
   The `export` globals (#237) and `ptr.expose` (#232) join the roots when
   they exist.

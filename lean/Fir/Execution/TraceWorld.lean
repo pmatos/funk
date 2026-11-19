@@ -17,10 +17,13 @@ nothing escaped.
 
 * An op that hands an address to code outside the program _escapes_ its
   allocation: the allocation joins the list, if it is not in it, and the op
-  gets its handle. Only an allocation that the memory has can escape.
+  gets its handle. Only a live allocation can escape: a dangling pointer
+  is poison in the comparison of two runs, so it hands out nothing.
   Which ops escape what is theirs to say: an external call escapes each
-  allocation that its pointer arguments reach when it is made, so that the
-  world can reach nothing that has not escaped, and in an order that
+  allocation that its pointer arguments, or the allocations that already
+  escaped, reach when it is made, since a pointer stored into escaped
+  memory is handed out too, as in LLVM's capture tracking; so the world
+  can reach nothing that has not escaped. It escapes them in an order that
   depends on the arguments and on where each pointer is stored, never on
   allocation ids, so that a source and a target give the same allocations
   the same handles.
@@ -28,7 +31,9 @@ nothing escaped.
   _actions_ on escaped memory, taken in order: it may write units into an
   escaped live allocation, inside it; create a heap allocation in a memory,
   aligned to a power of two, which escapes from the start; and free an
-  escaped live heap allocation.
+  escaped live heap allocation. An event that hands control to code that
+  may act on escaped memory, such as an external call, is shown by `ask`
+  below, not by the bare event effect, which lets the world take no action.
   A unit the world writes may hold a fragment of a pointer, which names its
   allocation by its handle. The act records the event, the result and the
   actions, so the world's actions are part of its answer.
@@ -189,18 +194,20 @@ theorem MonadMorphism.mapActs_mapsFrame (g : A → List B) :
 
 /-- The allocation `a` of the memory `x` escapes: its handle, its place in
 the list of escaped allocations, which it joins at the end when it is not
-in it yet. An id that the memory has not allocated has no handle, and
-nothing escapes. -/
+in it yet. Only a live allocation escapes: an id that the memory has not
+allocated, or a freed allocation, which a dangling pointer points into and
+which is poison in the comparison of two runs (ADR-2026-11-09-1540), has no
+handle, and nothing escapes. -/
 def TraceState.escape (s : TraceState Mem unit) (x : Mem) (a : AllocId) :
     Option Nat × TraceState Mem unit :=
-  if a < (s.mem.mem x).blocks.length then
+  if ((s.mem.mem x).blocks[a]?.map (·.live)) = some true then
     match s.escaped.idxOf? (x, a) with
     | some k => (some k, s)
     | none => (some s.escaped.length, { s with escaped := s.escaped ++ [(x, a)] })
   else (none, s)
 
 /-- The escape effect: `escape x a` lets the allocation `a` of the memory `x`
-escape, and gives its handle, if the memory has it. -/
+escape, and gives its handle, if it is live. -/
 def TraceM.escape (x : Mem) (a : AllocId) : TraceM A (TraceState Mem unit) (Option Nat) :=
   fun s e => e = .ok ((s.escape x a).1, [], (s.escape x a).2)
 
