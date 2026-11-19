@@ -3,8 +3,9 @@ import Fir.Core.Rounding
 /-!
 The attributes that core ops carry: the wrap flags of `add`, `sub` and
 `mul`, the predicates of the integer and float comparisons, the fast-math
-flags of float ops, and the float ops of two operands and of one, with the
-rounding mode of each op that rounds. The section on core ops uses them.
+flags of float ops, the float ops of two operands and of one, with the
+rounding mode of each op that rounds, and the kinds of an op that carries
+units across memory, a copy or a move. The section on core ops uses them.
 -/
 
 namespace Fir.Core
@@ -95,6 +96,15 @@ absolute value is a float of the format.
 -/
 inductive FUnary where
   | fneg | fabs | sqrt (r : RoundingMode)
+  deriving Repr, DecidableEq, Inhabited
+
+/--
+What an op that carries units across memory does with its two ranges
+(ADR-2026-11-09-1551): `copy`, written `memcpy`, asks that they be equal
+or disjoint, and `move`, written `memmove`, lets them overlap.
+-/
+inductive CopyKind where
+  | copy | move
   deriving Repr, DecidableEq, Inhabited
 
 end Fir.Core

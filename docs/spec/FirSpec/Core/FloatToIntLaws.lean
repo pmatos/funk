@@ -17,7 +17,7 @@ pins their fingerprint; the build fails when the Lean changes under it.
 :::moduleDocs (fingerprint := "4429898547962608621")
 :::
 
-:::readable Fir.Core.floatToIntOp (pin := Fir.Core.Op) (fingerprint := "2690863069612755015")
+:::readable Fir.Core.floatToIntOp (pin := Fir.Core.Op) (fingerprint := "4830963610239488940")
 *Definition: the conversion of a signedness.* $`\mathrm{conv}_{e,m,N}(\mathit{true})`
 is $`\mathsf{fptosi}_{e,m,N}`, and $`\mathrm{conv}_{e,m,N}(\mathit{false})`
 is $`\mathsf{fptoui}_{e,m,N}`, so that the theorems below are stated once
@@ -32,7 +32,7 @@ $`\mathsf{poison}`, as the
 do.
 :::
 
-:::readable Fir.Core.floatToInt_propagatesPoison Fir.Core.floatToInt_returnsOnDefined Fir.Core.floatToInt_total Fir.Core.floatToInt_monotone (pin := Fir.PropagatesPoison) (pin := Fir.PoisonOut) (pin := Fir.UBByOwnRules) (pin := Fir.ReturnsOnDefined) (pin := Fir.OpTotal) (pin := Fir.OpMonotone) (pin := Fir.Core.Op.denote?) (fingerprint := "5701445507199429495")
+:::readable Fir.Core.floatToInt_propagatesPoison Fir.Core.floatToInt_returnsOnDefined Fir.Core.floatToInt_total Fir.Core.floatToInt_monotone (pin := Fir.PropagatesPoison) (pin := Fir.PoisonOut) (pin := Fir.UBByOwnRules) (pin := Fir.ReturnsOnDefined) (pin := Fir.OpTotal) (pin := Fir.OpMonotone) (pin := Fir.Core.Op.denote?) (fingerprint := "18380502888502664207")
 *Theorem: $`\mathsf{fptosi}` and $`\mathsf{fptoui}` are lawful, from every
 format to every width.* Under fir's execution rules, each meets every
 obligation of an op that

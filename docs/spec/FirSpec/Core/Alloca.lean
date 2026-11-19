@@ -46,7 +46,7 @@ $`\mathsf{bf16}` are aligned to 2 units, $`\mathsf{f32}` to 4,
 $`\mathsf{f64}` to 8 and $`\mathsf{f128}` to 16.
 :::
 
-:::readable Fir.Core.Ty.defaultAlign Fir.Core.allocaShape Fir.Core.allocaRule (pin := Fir.MonadMemory) (pin := Fir.Core.Op) (fingerprint := "1359911096278148020")
+:::readable Fir.Core.Ty.defaultAlign Fir.Core.allocaShape Fir.Core.allocaRule (pin := Fir.MonadMemory) (pin := Fir.Core.Op) (fingerprint := "10100921805700597487")
 *Definition: the rule of $`\mathsf{alloca}`.* Let a run's memories have
 the layout entries $`\ell`, and let the run name the core's memory $`x`
 as $`\rho(x)`. For $`\mathsf{alloca}_N~k~t~c~a`, which allocates $`c`

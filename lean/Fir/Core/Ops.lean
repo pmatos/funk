@@ -10,7 +10,8 @@ shifts, comparison and selection, width changes, `freeze` and `poison`,
 branches and calls, the float constants, comparisons, arithmetic, bit
 casts, conversions from integers, conversions between formats and
 conversions to integers, pointer offsets, field addresses, stack
-allocation, loads and stores, of integers, pointers and floats.
+allocation, loads and stores, of integers, pointers and floats, and
+copies and moves of units.
 Each op below is an op instance: it carries its
 attributes and the widths it is used at, so that its operand and result
 types follow from it.
@@ -249,6 +250,23 @@ Loads and stores of floats (#264):
   `ptr<N>`, as `store` stores an integer of its `1 + e + m` bits: its bit
   pattern, or poison units for poison. Its effects are `store`'s.
 
+Copies and moves of units (#234; ADR-2026-11-09-1551 and the human's
+rulings of 2026-11-18 on #234):
+
+* `memCopy k o w n`: carries `len` units of the memory `N`, `N = n`, from
+  a pointer of `ptr<N>`, the source, to another, the destination, where
+  `len` is an `iW`, `W = w`, read as unsigned. Each unit comes across
+  exactly, bits, poison and pointer fragments alike, so a copied pointer
+  keeps its provenance. The kind `k` is `copy` or `move`: a move takes
+  what the source held before it began, whatever the ranges share, and a
+  copy whose ranges partly overlap is immediate UB, while equal ranges
+  are allowed. A length of 0 does nothing, whatever the pointers are,
+  poison included. Otherwise a poison pointer is immediate UB, and so is
+  an access that faults. A poison length runs as some length, chosen,
+  so it is UB wherever some length is. The op gives no result, reads and
+  writes the memory `N` and may be UB. M1's validation accepts only the
+  ordering `nonatomic`.
+
 Conversions from a float to an integer, by Lean's float model
 (ADR-2026-11-09-1549; the human's ruling of 2026-11-12 on #354):
 
@@ -330,6 +348,7 @@ inductive Op where
   | storePtr (o : Memory.Ordering) (m : Nat) (a : Option Nat) (n : Nat)
   | loadFloat (o : Memory.Ordering) (e m : Nat) (a : Option Nat) (n : Nat)
   | storeFloat (o : Memory.Ordering) (e m : Nat) (a : Option Nat) (n : Nat)
+  | memCopy (k : CopyKind) (o : Memory.Ordering) (w n : Nat)
   | fptosi (e m n : Nat)
   | fptoui (e m n : Nat)
   | freeze (w : Nat)

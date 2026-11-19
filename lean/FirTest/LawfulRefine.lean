@@ -241,8 +241,8 @@ theorem mem_argVectors : ∀ {ts : List CoreProbe.Ty} (h : ∀ t ∈ ts, Finite 
   | .inr t :: _, _, _ => t.elim
 
 /-- A core op of the sum that declares no memory effect touches no memory:
-`alloca` declares that it allocates, `load` that it reads, and `store` that
-it writes. -/
+`alloca` declares that it allocates, `load` that it reads, `store` that
+it writes, and `memCopy` that it reads and writes. -/
 theorem core_touchesMemory_false {o : Core.Op}
     (h : (effects (d := CoreProbe) (.inl o)).TouchesNoMemory) : o.touchesMemory = false := by
   cases o with
@@ -250,7 +250,8 @@ theorem core_touchesMemory_false {o : Core.Op}
   | load _ _ _ n => exact ((h (.inl n)).1 (List.mem_singleton_self _)).elim
   | store _ _ _ n | storePtr _ _ _ n | storeFloat _ _ _ _ n =>
     exact ((h (.inl n)).2.1 (List.mem_singleton_self _)).elim
-  | loadPtr _ _ _ n | loadFloat _ _ _ _ n => exact ((h (.inl n)).1 (List.mem_singleton_self _)).elim
+  | loadPtr _ _ _ n | loadFloat _ _ _ _ n | memCopy _ _ _ n =>
+    exact ((h (.inl n)).1 (List.mem_singleton_self _)).elim
   | _ => rfl
 
 /-- Each op of `CoreProbe` ignores the memories, at every layout and

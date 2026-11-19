@@ -6,9 +6,9 @@ import Fir.Core.OpEffects
 /-!
 # The poison classes of the core ops
 
-Every one of the 48 core ops has a class (ADR-2026-10-29-2006).
+Every one of the 49 core ops has a class (ADR-2026-10-29-2006).
 
-Forty-one ops propagate poison: `const`, the float constant `fconst`,
+Forty-two ops propagate poison: `const`, the float constant `fconst`,
 `poison`, `add`, `sub`, `mul`, `sdiv`, `udiv`, `srem`, `urem`, `and`, `or`,
 `xor`, `shl`, `lshr`, `ashr`, `icmp`, `fcmp`, `zext`, `sext`, `trunc`, the
 three ops of float arithmetic: `fbin` (`fadd`, `fsub`, `fmul`, `fdiv`,
@@ -22,7 +22,12 @@ load `load`, which is immediate UB on a poison pointer, as a defined
 pointer in its place may fault, and the store `store`, which is too, and
 which stores the poison units of a poison value and gives no result, and
 the loads and stores of a pointer and of a float, `loadPtr`, `storePtr`,
-`loadFloat` and `storeFloat`, which are as `load` and `store`.
+`loadFloat` and `storeFloat`, which are as `load` and `store`, and the
+copy or move of units `memCopy`, which gives no result and does nothing
+for a length of 0. With a length other than 0 it is immediate UB on a
+poison pointer, as a pointer with no provenance in its place faults, and
+a poison length runs as some length, chosen, so it is UB only where some
+length is.
 `const`, `fconst`, `poison` and `alloca` have no operands, so they
 propagate poison whatever their semantics. `poison` meets the
 obligation of a result on defined operands too: its one operand vector,
@@ -87,7 +92,7 @@ def Op.poisonClass : Op → PoisonClass
   | .fbin .. | .funary .. | .fma .. | .zext .. | .sext .. | .trunc .. | .poison _
   | .toBits .. | .ofBits .. | .sitofp .. | .uitofp .. | .fpext .. | .fptrunc .. | .ptradd ..
   | .fieldAddr .. | .fptosi .. | .fptoui .. | .alloca .. | .load .. | .store .. | .loadPtr .. | .storePtr ..
-  | .loadFloat .. | .storeFloat .. => .propagates
+  | .loadFloat .. | .storeFloat .. | .memCopy .. => .propagates
   | .select _ | .freeze _ | .br | .condBr | .ret _ | .unreachable | .call .. => .exception
 
 /-- A core value is poison when it is the poison of its type: `iN`, a

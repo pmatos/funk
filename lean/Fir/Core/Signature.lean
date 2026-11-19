@@ -42,6 +42,7 @@ def Op.sig : Op → List Ty
   | .store _ w _ n => [i w, .ptr n]
   | .storePtr _ m _ n => [.ptr m, .ptr n]
   | .storeFloat _ e m _ n => [.float e m, .ptr n]
+  | .memCopy _ _ w n => [.ptr n, .ptr n, i w]
   | .freeze w => [i w]
   | .condBr => [i 1]
   | .ret ts => ts
@@ -64,7 +65,8 @@ def Op.returnTypes : Op → List Ty
   | .load _ w _ _ => [i w]
   | .loadPtr _ m _ _ => [.ptr m]
   | .loadFloat _ e m _ _ => [.float e m]
-  | .br | .condBr | .ret _ | .unreachable | .store .. | .storePtr .. | .storeFloat .. => []
+  | .br | .condBr | .ret _ | .unreachable | .store .. | .storePtr .. | .storeFloat ..
+  | .memCopy .. => []
   | .call _ _ rs => rs
 
 /-- `br`, `cond_br`, `ret` and `unreachable` end a block. -/

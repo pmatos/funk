@@ -131,6 +131,8 @@ refinement of the traced runs of functions for every world
 
 {includeReadable "." Fir.Execution.MemoryCopyLaws "Copies of units in the state layer" FirSpec.Execution.MemoryCopyLaws (level := 1)}
 
+{includeReadable "." Fir.Execution.MemoryChoiceLaws "Choices in the state layer" FirSpec.Execution.MemoryChoiceLaws (level := 1)}
+
 {includeReadable "." Fir.Core.Alloca "Stack allocation rules" FirSpec.Core.Alloca (level := 1)}
 
 {includeReadable "." Fir.Core.Load "Load rules" FirSpec.Core.Load (level := 1)}
@@ -140,6 +142,8 @@ refinement of the traced runs of functions for every world
 {includeReadable "." Fir.Core.PtrAccess "Pointer load and store rules" FirSpec.Core.PtrAccess (level := 1)}
 
 {includeReadable "." Fir.Core.FloatAccess "Float load and store rules" FirSpec.Core.FloatAccess (level := 1)}
+
+{includeReadable "." Fir.Core.MemCopy "Copy and move rules" FirSpec.Core.MemCopy (level := 1)}
 
 {includeReadable "." Fir.Core.FieldAddr "Field address rules" FirSpec.Core.FieldAddr (level := 1)}
 
@@ -162,6 +166,10 @@ refinement of the traced runs of functions for every world
 {includeReadable "." Fir.Core.LoadFloatLaws "Float load obligations" FirSpec.Core.LoadFloatLaws (level := 1)}
 
 {includeReadable "." Fir.Core.StoreFloatLaws "Float store obligations" FirSpec.Core.StoreFloatLaws (level := 1)}
+
+{includeReadable "." Fir.Core.MemCopyLaws "Copy and move obligations" FirSpec.Core.MemCopyLaws (level := 1)}
+
+{includeReadable "." Fir.Core.MemCopyPoison "Copy and move poison obligations" FirSpec.Core.MemCopyPoison (level := 1)}
 
 {includeReadable "." Fir.Core.FieldAddrLaws "Field address obligations" FirSpec.Core.FieldAddrLaws (level := 1)}
 
