@@ -92,7 +92,8 @@ theorem memDenote_of {op : CoreDialect.Op} {args : HVector toType (sig (d := Cor
     DialectDenote.denote (m := StateT (Memory.Memories N (unitsOf lay)) SetM) op args S
       (.ok (a, S)) := by
   letI := DialectMemDenote.denoteAt (d := CoreDialect) lay ρ L
-  rw [((Op.liftsSetM op (Op.touchesMemory_false_of_denote h)) lay ρ L args).1]
+  rw [((Op.liftsSetM op (Op.touchesMemory_false_of_denote h) (Op.readsItems_false_of_denote h))
+    lay ρ L args).1]
   exact (SetM.lift_apply _ _ _).2 (.inl ⟨a, h, rfl⟩)
 
 /-- A core op that hits UB in the set monad hits it with memory, from any
@@ -104,7 +105,8 @@ theorem memDenote_ub {op : CoreDialect.Op} {args : HVector toType (sig (d := Cor
     DialectDenote.denote (m := StateT (Memory.Memories N (unitsOf lay)) SetM) op args S
       (.ub r) := by
   letI := DialectMemDenote.denoteAt (d := CoreDialect) lay ρ L
-  rw [((Op.liftsSetM op (Op.touchesMemory_false_of_denote h)) lay ρ L args).1]
+  rw [((Op.liftsSetM op (Op.touchesMemory_false_of_denote h) (Op.readsItems_false_of_denote h))
+    lay ρ L args).1]
   exact (SetM.lift_apply _ _ _).2 (.inr ⟨r, h, rfl⟩)
 
 /-- `@g` hits UB on every argument with memory, at two steps, wherever a

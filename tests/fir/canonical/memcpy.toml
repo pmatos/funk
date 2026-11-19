@@ -1,0 +1,39 @@
+# Tests of memcpy.fir: memcpy and memmove carry units of memory 0 exactly
+# (#234, ADR-2026-11-09-1551). An i32 and a stored pointer copied or moved
+# read back, and the pointer still accesses its allocation; part of a
+# pointer reads back as poison, and so do poison and fresh units. A move
+# whose ranges overlap takes what the source held before it began, in
+# either direction; a memcpy whose ranges partly overlap is UB, and one onto
+# its own range or a disjoint one is not (Q2 B). A length of 0 does nothing,
+# through poison and dangling pointers alike (Q1 B); another length through
+# them is UB, and so is a length past the allocation, however long. A
+# poison length chooses its value: an i1 over one unit is never UB, and an
+# i8 is UB where its value is. A length may be an integer of any width. The backend does not lower memcpy or memmove
+# until stage 4 of #234, so each test is interpreter-only.
+tests = [
+  { func = "@copy_int", args = ["-5"], expect = ["-5"] },
+  { func = "@copy_ptr", args = ["42"], expect = ["42"] },
+  { func = "@move_ptr", args = ["42"], expect = ["42"] },
+  { func = "@copy_part_ptr", args = ["8"], expect = ["ptr(0, 0)"] },
+  { func = "@copy_part_ptr", args = ["4"], expect = ["poison"] },
+  { func = "@copy_poison", expect = ["poison"] },
+  { func = "@copy_fresh", expect = ["poison"] },
+  { func = "@move_up", args = ["67305985"], expect = ["50462977"] },
+  { func = "@move_down", args = ["67305985"], expect = ["67371778"] },
+  { func = "@copy_at", args = ["1", "3"], expect = "ub" },
+  { func = "@copy_at", args = ["2", "4"], expect = "ub" },
+  { func = "@copy_from", args = ["1", "3"], expect = "ub" },
+  { func = "@copy_from", args = ["4", "4"], expect = ["4"] },
+  { func = "@copy_at", args = ["0", "4"], expect = ["67305985"] },
+  { func = "@copy_at", args = ["4", "4"], expect = ["67305985"] },
+  { func = "@through", args = ["poison", "poison", "0"], expect = ["0"] },
+  { func = "@through", args = ["poison", "poison", "1"], expect = "ub" },
+  { func = "@dangling", args = ["0"], expect = ["0"] },
+  { func = "@dangling", args = ["1"], expect = "ub" },
+  { func = "@huge", expect = "ub" },
+  { func = "@poison_length", args = ["poison"], choices = ["false"], expect = ["7"] },
+  { func = "@poison_length", args = ["poison"], choices = ["true"], expect = ["7"] },
+  { func = "@poison_length_ub", args = ["poison"], choices = ["0"], expect = ["7"] },
+  { func = "@poison_length_ub", args = ["poison"], choices = ["5"], expect = "ub" },
+  { func = "@lengths", args = ["-5"], expect = ["-5"] },
+]

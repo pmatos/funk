@@ -10,7 +10,7 @@ table, each item of a dialect's kind, then its dialect set; then its data
 layout, the memories that each table's types name, each table's
 aggregates' layouts, and each table's globals. It builds the
 set of the module's location references once, and each table's symbols
-once, as hash tables, and every function looks them up.
+and layouts once, as hash tables, and every function looks them up.
 
 # The location table
 
@@ -180,11 +180,12 @@ nested module, at any depth, each with its own symbols and dialect set, and
 all with the module's one set of location references.
 -/
 
-/-- The lookup of a symbol table: its symbols, as a hash table, and the
-references `held` of the module's location table. -/
+/-- The lookup of a symbol table: its symbols and its layouts, each as a
+hash table, and the references `held` of the module's location table. -/
 def SymbolTable.lookup (held : Std.HashSet LocRef) (t : SymbolTable d) : Lookup d :=
   let symbols := firsts (t.funcs.map fun f => (f.name, f.type))
-  ⟨fun s => symbols[s]?, held.contains⟩
+  let layouts := firsts (t.aggregates.map fun a => (a.name, a.ref))
+  ⟨fun s => symbols[s]?, held.contains, fun s => layouts[s]?⟩
 
 theorem SymbolTable.lookup_agrees (keys : List LocRef) (t : SymbolTable d) :
     (t.lookup (Std.HashSet.ofList keys)).Agrees (t.context keys) where
@@ -193,6 +194,10 @@ theorem SymbolTable.lookup_agrees (keys : List LocRef) (t : SymbolTable d) :
     simp [SymbolTable.lookup, SymbolTable.context, SymbolTable.symbols, getElem?_firsts,
       List.find?_map, Function.comp_def]
   hasLoc r := by simp [SymbolTable.lookup, SymbolTable.context]
+  layouts := by
+    funext s
+    simp [SymbolTable.lookup, SymbolTable.context, SymbolTable.layouts, getElem?_firsts,
+      List.find?_map, Function.comp_def]
 
 variable [DialectSignature d] [DialectValidation d] [DecidableEq d.Ty]
   [DecidableDialectValidation d]
@@ -243,7 +248,7 @@ theorem Module.problems_eq_nil_iff (m : Module d) : m.problems = [] ↔ m.Valid 
 instance (m : Module d) : Decidable m.Valid := decidable_of_iff _ m.problems_eq_nil_iff
 
 instance (ctx : ModuleContext d) (f : Func d) : Decidable (f.Valid ctx) :=
-  decidable_of_iff _ (Func.problems_eq_nil (lk := ⟨ctx.symbols, fun r => decide (r ∈ ctx.locKeys)⟩)
-    ⟨rfl, by simp⟩)
+  decidable_of_iff _ (Func.problems_eq_nil (lk := ⟨ctx.symbols, fun r => decide (r ∈ ctx.locKeys), ctx.layouts⟩)
+    ⟨rfl, by simp, rfl⟩)
 
 end Fir

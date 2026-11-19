@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Core rules: readable blocks" =>
 
-:::moduleDocs (fingerprint := "5137340132006099769")
+:::moduleDocs (fingerprint := "15090636179746196943")
 :::
 
 :::readable Fir.Core.Ty.Valid Fir.Core.Ty.memory (pin := Fir.Core.maxWidth) (pin := Fir.Core.floatWidth) (fingerprint := "744407091263889301")
@@ -50,10 +50,11 @@ in every module, and $`\mathsf{ptr}\langle N \rangle` with $`N \ge 1` is in
 a module whose layout declares memory $`N` (ADR-2026-11-12-1821).
 :::
 
-:::readable Fir.Core.Op.symbolRefs (fingerprint := "9169673307230543629")
+:::readable Fir.Core.Op.symbolRefs (fingerprint := "9502815346640795917")
 *Definition: the symbols a core op refers to.* $`\mathsf{call}~f : t^* \to r^*`
 refers to the symbol $`f` of its callee: its list of symbols is the
-one-element sequence $`(f)`. No other core op refers to a symbol.
+one-element sequence $`(f)`. No other core op refers to a function:
+$`\mathsf{fieldaddr}` names a layout, which its own rule checks.
 
 $$`\mathrm{refs}(\mathsf{call}~f : t^* \to r^*) = (f)`
 
@@ -75,7 +76,7 @@ that $`\mathsf{alloca}` allocates takes. A float type is not yet a field
 of every valid type, a float's included (#264).
 :::
 
-:::readable Fir.Core.Op.attrTypes (fingerprint := "14541402550165652625")
+:::readable Fir.Core.Op.attrTypes (fingerprint := "13099989219528477479")
 *Definition: the types a core op carries.* $`\mathsf{alloca}_N~k~t~c~a`
 carries the type $`t` that it allocates values of in its attributes, when
 $`t` is valid:
@@ -100,7 +101,7 @@ and $`n` doublings reach $`n`. It is written as a loop of at most $`n`
 steps, by structural recursion, so the rules that use it rest on no axiom.
 :::
 
-:::readable Fir.Core.Ty.fieldShape (fingerprint := "15071636215976170057")
+:::readable Fir.Core.Ty.fieldShape (fingerprint := "10495742630897003574")
 *Definition: a core field's units and alignment.* In the memory $`n` of a
 module whose memories have the entries $`\ell`, with $`e = \ell(n)`, a field
 of a core type takes (ADR-2026-11-16-1546):
@@ -109,12 +110,14 @@ $$`\begin{aligned} \mathrm{shape}(\mathsf{i}W) &= (u_W,~\mathrm{pow2}(u_W)) \\ \
 
 where $`u_W` is $`W` bits in whole units of $`e`, and $`a` is the alignment
 that $`e` gives its pointers when $`M = n` and it writes one, and
-$`\mathrm{pow2}(u_P)` otherwise. A float type has its units but is not yet
-a field: #264 makes floats fields of aggregates. These are the units and the
+$`\mathrm{pow2}(u_P)` otherwise. A float type $`\mathsf{float}\langle e,m \rangle`
+takes the units of its $`1 + e + m` bits, as $`\mathsf{i}(1+e+m)` does:
+$`\mathrm{shape}(\mathsf{float}\langle e,m \rangle) = (u_{1+e+m},~\mathrm{pow2}(u_{1+e+m}))`.
+So every core type may be a field (#236). These are the units and the
 alignment that $`\mathsf{alloca}` gives one value of a field's type.
 :::
 
-:::readable Fir.Core.FBin.mode Fir.Core.FUnary.mode Fir.Core.Op.Valid (pin := Fir.isPowerOfTwo) (pin := Fir.MemLayout.limit) (pin := Fir.MemLayout.ValidAlign) (fingerprint := "7601155670973002638")
+:::readable Fir.Core.FBin.mode Fir.Core.FUnary.mode Fir.LayoutRef.admits Fir.Core.Op.Valid (pin := Fir.isPowerOfTwo) (pin := Fir.MemLayout.limit) (pin := Fir.MemLayout.ValidAlign) (fingerprint := "2583066181618405553")
 *Definition: the core rules of an op.* Beyond its signature, which the
 {ref "The-fir-specification--Validation--The-general-rules"}[general rules]
 check, a core op obeys these rules in its op context $`C`:
@@ -165,11 +168,17 @@ $`\mathsf{store}_{N}~o~\mathsf{ptr}\langle M \rangle~a`, and of a float,
 $`\mathsf{load}_{N}~o~\mathsf{float}\langle e,m \rangle~a` and
 $`\mathsf{store}_{N}~o~\mathsf{float}\langle e,m \rangle~a`.
 
+$$`\frac{o = \mathsf{nonatomic}}{C \vdash \mathsf{memcpy}_{N}~o~W~\text{valid}} \qquad \frac{o = \mathsf{nonatomic}}{C \vdash \mathsf{memmove}_{N}~o~W~\text{valid}}`
+
+$$`\frac{\mathrm{layouts}_C(s) = l \qquad \mathrm{mem}(l) = N \qquad j < |\mathrm{fields}(l)| \qquad \text{the field } j \text{ of } l \text{ is repeated, when } W \text{ is given}}{C \vdash \mathsf{fieldaddr}_{N(,W)}~s~j~\text{valid}}`
+
 $$`\frac{\mathit{op} \text{ is another core op}}{C \vdash \mathit{op}~\text{valid}}`
 
 Here $`\mathrm{results}_C` is the result types of the function that holds
-the op, and $`\mathrm{symtab}_C` the module's
-{ref "The-fir-specification--Validation--Scope-and-symbols"}[symbol table].
+the op, $`\mathrm{symtab}_C` the module's
+{ref "The-fir-specification--Validation--Scope-and-symbols"}[symbol table],
+and $`\mathrm{layouts}_C` the aggregates' layouts of the op's table, each
+as its memory and whether each of its fields is repeated.
 
 * $`\mathsf{ret}` returns values of the function's result types, any number
   of them.
@@ -245,6 +254,11 @@ the op, and $`\mathrm{symtab}_C` the module's
   natural alignment of the float's size in its memory, that of
   $`\mathsf{i}(1+e+m)`. The float type is a value's type, checked as every
   type is: a valid format.
+* $`\mathsf{fieldaddr}` names a layout of its own table, of its pointer's
+  memory, and one of that layout's fields, and takes an index only for a
+  repeated field (#236). The index's value is not checked: an element out
+  of the field's range is an address, as for $`\mathsf{ptradd}` (the
+  human's ruling of 2026-11-16 on #236, Q3 A).
 
 Every other op has no rule beyond its signature. These definitions
 are what the core dialect

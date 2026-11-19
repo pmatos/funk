@@ -241,8 +241,8 @@ theorem mem_argVectors : ∀ {ts : List CoreProbe.Ty} (h : ∀ t ∈ ts, Finite 
   | .inr t :: _, _, _ => t.elim
 
 /-- A core op of the sum that declares no memory effect touches no memory:
-`alloca` declares that it allocates, `load` that it reads, and `store` that
-it writes. -/
+`alloca` declares that it allocates, `load` that it reads, `store` that
+it writes, and `memCopy` that it reads and writes. -/
 theorem core_touchesMemory_false {o : Core.Op}
     (h : (effects (d := CoreProbe) (.inl o)).TouchesNoMemory) : o.touchesMemory = false := by
   cases o with
@@ -250,19 +250,26 @@ theorem core_touchesMemory_false {o : Core.Op}
   | load _ _ _ n => exact ((h (.inl n)).1 (List.mem_singleton_self _)).elim
   | store _ _ _ n | storePtr _ _ _ n | storeFloat _ _ _ _ n =>
     exact ((h (.inl n)).2.1 (List.mem_singleton_self _)).elim
-  | loadPtr _ _ _ n | loadFloat _ _ _ _ n => exact ((h (.inl n)).1 (List.mem_singleton_self _)).elim
+  | loadPtr _ _ _ n | loadFloat _ _ _ _ n | memCopy _ _ _ n =>
+    exact ((h (.inl n)).1 (List.mem_singleton_self _)).elim
   | _ => rfl
 
 /-- Each op of `CoreProbe` ignores the memories, at every layout and
 naming: a core op and a probe op each run by their rule in the set monad and
-keep the memories. -/
+keep the memories, and `fieldAddr` gives its result at once and keeps
+them. -/
 theorem coreProbe_opsIgnoreMemory {N : Type} [DecidableEq N] (lay : N → MemLayout)
     (ρ : DialectEffects.Mem CoreProbe → N) (L : RunItems) :
     letI := DialectMemDenote.denoteAt (d := CoreProbe) lay ρ L
     OpsIgnoreMemory CoreProbe N (unitsOf lay)
-  | .inl o, _, h => Dialect.sum.ownRuleHas_inl lay ρ L (fun f _ h => IgnoresMemory.map f h)
-      (OwnRuleHas.ofLifts (Core.Op.liftsSetM o (core_touchesMemory_false h)) lay _
-        L IgnoresMemory.lift)
+  | .inl o, _, h => Dialect.sum.ownRuleHas_inl lay ρ L (fun f _ h => IgnoresMemory.map f h) (by
+      cases hi : o.readsItems with
+      | false =>
+        exact OwnRuleHas.ofLifts (Core.Op.liftsSetM o (core_touchesMemory_false h) hi) lay _
+          L IgnoresMemory.lift
+      | true =>
+        cases o <;> try cases hi
+        exact Core.fieldAddr_ignoresMemory _ _ _ _ lay _ L)
   | .inr o, _, _ => Dialect.sum.ownRuleHas_inr lay ρ
       L (OwnRuleHas.ofLifts (LiftsSetM.opLifts (d := ProbeDialect) o) lay ρ L IgnoresMemory.lift)
 

@@ -37,7 +37,8 @@ has neither operands nor attributes, is a cell at each width of its result
   takes: `fpext` to a format with at least as many exponent bits and as
   many mantissa bits, and `fptrunc` to every other (#241, the human's
   ruling of 2026-11-12 on #354); `fptosi` and `fptoui`, with no attribute,
-  from each float format of the side to each of its widths (#241).
+  from each float format of the side to each of its widths
+  (`conversion_cells.py`, #241).
 - The pointer offset `ptradd` is a cell for each width of its integer,
   the stack allocation `alloca` for each width of the integer type it
   allocates, whatever its kind, count and alignment, and `load` and
@@ -57,11 +58,28 @@ has neither operands nor attributes, is a cell at each width of its result
   on a side that has them, the interpreter-only one (`gpu_cells.py`, #406),
   and `gpu.work_group_alloca` a cell for each type it allocates, as
   `alloca` (stage 3 of #212), its floats included (#432).
+- The field address `fieldaddr` is a cell for each width of its index,
+  and one with no index, at the side's field widths
+  (`pointer_cells.py`, #236).
+- `memcpy` and `memmove` are a cell for each width of their length, on
+  the interpreter-only side (`copy_cells.py`, #234).
 """
 
-from typing import NamedTuple
-
-from cell_types import Cell, CellError
+from cell_types import Cell, CellError, Row, Table
+from conversion_cells import (
+    CONVERSIONS,
+    FLOAT_CONVERSIONS,
+    FLOAT_TO_INT,
+    INT_TO_FLOAT,
+    ROUND,
+    bitcast,
+    conversion,
+    float_conversion,
+    float_to_int,
+    int_to_float,
+    is_float,
+)
+from copy_cells import COPY_OPS, copies_table, copy_cell
 from firtext import Op
 from gpu_cells import (
     GPU,
@@ -73,8 +91,15 @@ from gpu_cells import (
     gpu_cells,
     work_group_cell,
 )
-from pointer_cells import POINTER, POINTER_OPS, pointer_cell
-from refine import bits_of, float_format
+from pointer_cells import (
+    FIELD_ADDR,
+    POINTER,
+    POINTER_OPS,
+    field_address,
+    field_table,
+    pointer_cell,
+)
+from refine import bits_of
 
 DIFFERENTIAL = (1, 8, 16, 32, 64, 128)
 INTERPRETER = (1, 7, 8, 16, 32, 33, 64, 128)
@@ -84,6 +109,10 @@ FLOAT_INTERPRETER = ("f16", "bf16", "f32", "f64", "f128")
 # and of `store`'s value on each side (#231).
 POINTER_DIFFERENTIAL = DIFFERENTIAL
 POINTER_INTERPRETER = INTERPRETER
+# The widths of `fieldaddr`'s index on each side. The backend does not lower
+# it yet, so the differential side has no cell of it (stage 4 of #236).
+FIELD_DIFFERENTIAL: tuple[int, ...] = ()
+FIELD_INTERPRETER = INTERPRETER
 
 WRAP = ("", "nuw", "nsw", "nuw nsw")
 EXACT = ("", "exact")
@@ -127,9 +156,6 @@ AT_WIDTH = {
     "freeze": ("",),
     "poison": ("",),
 }
-# The attribute of a float op that rounds in a valid module (`roundAttr`):
-# every other mode decodes and fails validation, so it is not a cell.
-ROUND = ("round(rne)",)
 # The float ops at a format, in the order of `Op`, with the attributes
 # that are cells.
 AT_FORMAT = {
@@ -157,19 +183,6 @@ FLOAT_ROWS = {
     op: attrs + (FAST_MATH if op in FLAGGED else ()) for op, attrs in AT_FORMAT.items()
 }
 CASTS = ("zext", "sext", "trunc")
-# The conversions between a float and another type, which have no
-# attributes: a cell for each pair of types, at the side's float formats.
-CONVERSIONS = ("bitcast",)
-# The conversions from an integer to a float, which carry `round(rne)`: a
-# cell for each width and float format of the side.
-INT_TO_FLOAT = ("sitofp", "uitofp")
-# The conversions between float formats: `fpext`, which has no attribute,
-# and `fptrunc`, which carries `round(rne)`. A cell for each ordered pair of
-# two float formats of the side that the op takes.
-FLOAT_CONVERSIONS = {"fpext": ("",), "fptrunc": ROUND}
-# The conversions from a float to an integer, which have no attributes: a
-# cell for each float format and width of the side.
-FLOAT_TO_INT = ("fptosi", "fptoui")
 NOTHING, PASSED, ONE, SEVERAL = "nothing", "values", "one", "several"
 # The rows of passed and returned values: an op, and what it passes,
 # returns or gives.
@@ -190,6 +203,7 @@ OPS = (
     *FLOAT_CONVERSIONS,
     *FLOAT_TO_INT,
     *POINTER_OPS,
+    FIELD_ADDR,
     *(op for op, _ in VALUES if op != "func"),
 )
 
@@ -198,33 +212,14 @@ def ty(w: int) -> str:
     return f"i{w}"
 
 
-class Row(NamedTuple):
-    """A labelled row; `None` entries are not cells, even at a zero count."""
-
-    op: str
-    key: str
-    entries: tuple[Cell | None, ...]
-
-
-class Table(NamedTuple):
-    """An ordered matrix section, with one entry per column in every row.
-
-    `kind` distinguishes display sections, including the four conversion
-    sections whose cells all have table `conversions`. Columns are type
-    names; the empty name is the scalar or no-value column.
-    """
-
-    kind: str
-    columns: tuple[str, ...]
-    rows: tuple[Row, ...]
-
-
 def catalog(
     widths: tuple[int, ...],
     formats: tuple[str, ...] = (),
     offsets: tuple[int, ...] = (),
     gpu: bool = False,
     memory: tuple[str, ...] = (),
+    fields: tuple[int, ...] = (),
+    copies: bool = False,
 ) -> tuple[Table, ...]:
     """One side's taxonomy, expanded once for enumeration and display.
 
@@ -368,6 +363,10 @@ def catalog(
             tuple(Cell(GPU_MEMORY, WORK_GROUP_ALLOCA, "", t) for t in elements),
         )
         tables.append(Table(GPU_MEMORY, elements, (row,)))
+    if fields:
+        tables.append(field_table(tuple(map(ty, fields))))
+    if copies:
+        tables.append(copies_table(tuple(map(ty, offsets))))
     return tuple(tables)
 
 
@@ -377,11 +376,13 @@ def cells(
     offsets: tuple[int, ...] = (),
     gpu: bool = False,
     memory: tuple[str, ...] = (),
+    fields: tuple[int, ...] = (),
+    copies: bool = False,
 ) -> list[Cell]:
     """Every actual cell of one side, in catalog order."""
     return [
         cell
-        for table in catalog(widths, formats, offsets, gpu, memory)
+        for table in catalog(widths, formats, offsets, gpu, memory, fields, copies)
         for row in table.rows
         for cell in row.entries
         if cell is not None
@@ -403,12 +404,6 @@ def float_flags(op: Op) -> tuple[tuple[str, ...], str]:
     return tuple(flags), " ".join(rest)
 
 
-def is_float(t: str) -> bool:
-    """Whether `t` is a float type: an alias or `float(e, m)`."""
-    b = bits_of(t)
-    return b is not None and not b[1]
-
-
 def bits_type(f: str) -> str:
     """The integer type of the width of the float type `f`."""
     return ty(bits_of(f)[0])
@@ -417,67 +412,6 @@ def bits_type(f: str) -> str:
 def allowed(op: str, m: int, n: int) -> bool:
     """Whether the spec has the width change `op` from `iM` to `iN`."""
     return n < m if op == "trunc" else m < n
-
-
-def conversion(a: str, b: str) -> str:
-    """The op that converts from the float format `a` to another, `b`:
-    `fpext` when `b` holds every value of `a`, with at least as many
-    exponent bits and as many mantissa bits, and `fptrunc` otherwise."""
-    (e, m), (e2, m2) = float_format(a), float_format(b)
-    return "fpext" if e <= e2 and m <= m2 else "fptrunc"
-
-
-def bitcast(op: Op) -> Cell:
-    """The cell of a `bitcast`: from a float to the integer of its width, or
-    back. Any other text of it does not decode, so it is not a cell."""
-    if not op.attrs and len(op.operands) == len(op.results) == 1:
-        [a], [b] = op.operands, op.results
-        for f, i in ((a, b), (b, a)):
-            if is_float(f) and bits_of(i) == (bits_of(f)[0], True):
-                return Cell("conversions", "bitcast", a, b)
-    raise CellError(f"bitcast from {op.operands} to {op.results} is not a cell")
-
-
-def int_to_float(op: Op) -> Cell:
-    """The cell of a `sitofp` or `uitofp`: from an integer to a float, with
-    `round(rne)`. Any other text of it does not decode or does not
-    validate, so it is not a cell."""
-    if op.attrs == ROUND and len(op.operands) == len(op.results) == 1:
-        [a], [b] = op.operands, op.results
-        operand = bits_of(a)
-        if operand is not None and operand[1] and is_float(b):
-            return Cell("conversions", op.name, a, b)
-    raise CellError(
-        f"{op.name} {' '.join(op.attrs)} from {op.operands} to {op.results} is not a cell"
-    )
-
-
-def float_conversion(op: Op) -> Cell:
-    """The cell of an `fpext` or `fptrunc`: from a float format to another
-    that the op takes, with its attribute. Any other text of it does not
-    decode or validate, so it is not a cell."""
-    attr = " ".join(op.attrs)
-    if attr in FLOAT_CONVERSIONS[op.name] and len(op.operands) == len(op.results) == 1:
-        [a], [b] = op.operands, op.results
-        if is_float(a) and is_float(b) and a != b and conversion(a, b) == op.name:
-            return Cell("conversions", op.name, a, b)
-    raise CellError(
-        f"{op.name} {attr} from {op.operands} to {op.results} is not a cell"
-    )
-
-
-def float_to_int(op: Op) -> Cell:
-    """The cell of an `fptosi` or `fptoui`: from a float to an integer, with
-    no attribute. Any other text of it does not decode, so it is not a
-    cell."""
-    if not op.attrs and len(op.operands) == len(op.results) == 1:
-        [a], [b] = op.operands, op.results
-        result = bits_of(b)
-        if is_float(a) and result is not None and result[1]:
-            return Cell("conversions", op.name, a, b)
-    raise CellError(
-        f"{op.name} {' '.join(op.attrs)} from {op.operands} to {op.results} is not a cell"
-    )
 
 
 def results(op: str, types: tuple[str, ...]) -> set[Cell]:
@@ -505,6 +439,10 @@ def of_op(op: Op) -> set[Cell]:
         return {float_to_int(op)}
     if op.name in POINTER_OPS:
         return {pointer_cell(op)}
+    if op.name == FIELD_ADDR:
+        return {field_address(op)}
+    if op.name in COPY_OPS:
+        return {copy_cell(op)}
     if op.name in GPU_OPS:
         return {gpu_cell(op)}
     if op.name == WORK_GROUP_ALLOCA:

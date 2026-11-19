@@ -158,7 +158,7 @@ block, the first block of the function, and to pass one value of the right
 type for each of that block's arguments.
 :::
 
-:::readable Fir.Operation Fir.Block Fir.Region (pin := Fir.Func.OpValid) (pin := Fir.Func.Valid) (fingerprint := "2216873348528431298")
+:::readable Fir.Operation Fir.Block Fir.Region (pin := Fir.Func.OpValid) (pin := Fir.Func.Valid) (fingerprint := "11265272785410075814")
 *Definition: operations, blocks and regions.* An _operation_ is one use of
 an op in a block: it names the op's results, gives its op instance, names
 its operands, and holds its successors, regions and location reference. A

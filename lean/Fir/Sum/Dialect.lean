@@ -49,7 +49,8 @@ the sum, by routing each op and each type to the side it belongs to:
 
 An op of the base sees the context of a function only when the base can
 write it: the symbols whose types are all the base's, and the function's
-result types when they are all the base's. In a function whose result
+result types when they are all the base's. A layout names no type, so it
+sees every layout of the op's table. In a function whose result
 types the base cannot write, no op of the base is valid, since the base has
 no rule that could judge it. That is a limit of this sum: a base's ops
 carry the base's types only, so the core's `br`, `ret` and `call` cannot
@@ -209,11 +210,11 @@ def baseSymbols (s : Name → Option (FuncType (base ⊞ e))) : Name → Option 
 /-- The context of an op of the sum, as the base sees it, when the base can
 write the function's result types. -/
 def baseContext (ctx : OpContext (base ⊞ e)) : Option (OpContext base) :=
-  (ctx.results.mapM Sum.getLeft?).map fun rs => ⟨baseSymbols ctx.symbols, rs⟩
+  (ctx.results.mapM Sum.getLeft?).map fun rs => ⟨baseSymbols ctx.symbols, rs, ctx.layouts⟩
 
 /-- The context of an op of the sum, as `e` sees it: all of it. -/
 def extContext (ctx : OpContext (base ⊞ e)) : OpContext (base.over e) :=
-  ⟨fun g => (ctx.symbols g).map fun t => ⟨t.params, t.results⟩, ctx.results⟩
+  ⟨fun g => (ctx.symbols g).map fun t => ⟨t.params, t.results⟩, ctx.results, ctx.layouts⟩
 
 /-- How the base sees a host that holds the sum: the sum's view, with the
 base's ops and types only. -/

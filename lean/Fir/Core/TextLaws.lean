@@ -5,12 +5,13 @@ import Fir.Text.RoundTrip
 import Fir.Core.TypeTextLaws
 import Fir.Core.AllocaTextLaws
 import Fir.Core.StoreTextLaws
+import Fir.Core.MemCopyTextLaws
 import Fir.Core.FloatTextLaws
 import Fir.Core.FloatOpTextLaws
 
 /-!
 The core dialect's text is lawful: it meets the seven laws of a lawful
-text, for all 45 of its ops and every type. The laws are proved for every
+text, for all 49 of its ops and every type. The laws are proved for every
 op instance, valid or not: every width, `0` included, every predicate, every
 combination of flags, `true` and `false` at `i1`, every float constant at
 every format, and `ret` and `call` with any number of operands and results. A type reads back from how it is
@@ -63,15 +64,6 @@ theorem find_pred_name (p : Pred) : Pred.all.find? (·.name == p.name) = some p 
 
 /-- A predicate found by a name has that name. -/
 theorem name_of_find_pred {s : String} {p : Pred} (h : Pred.all.find? (·.name == s) = some p) :
-    p.name = s := by
-  simpa using List.find?_some h
-
-/-- Each float predicate is found by its name. -/
-theorem find_fpred_name (p : FPred) : FPred.all.find? (·.name == p.name) = some p := by
-  cases p <;> rfl
-
-/-- A float predicate found by a name has that name. -/
-theorem name_of_find_fpred {s : String} {p : FPred} (h : FPred.all.find? (·.name == s) = some p) :
     p.name = s := by
   simpa using List.find?_some h
 
@@ -160,33 +152,6 @@ theorem decodePtrAdd_eq {as : List Attr} {ts rs : List Ty} {op : Op}
     · cases h
   · cases h
 
-/-- `fcmp` decodes under flags only from its own name, the flags' words
-before its other attributes, its operand types and its result type. -/
-theorem decodeFcmpWith_eq {fl : FastMath} {as : List Attr} {ts rs : List Ty} {op : Op}
-    (h : decodeFcmpWith fl as ts rs = some op) :
-    op.name = "fcmp" ∧ op.attrs = fl.attrs ++ as ∧ op.sig = ts ∧ op.returnTypes = rs := by
-  unfold decodeFcmpWith at h
-  split at h <;> (try cases h)
-  rename_i p _ _ _ _
-  cases hp : FPred.all.find? (·.name == p) with
-  | none => simp [hp] at h
-  | some pr =>
-    simp only [hp] at h
-    split at h
-    · cases h
-      rename_i hab
-      obtain ⟨rfl, rfl⟩ := hab
-      exact ⟨rfl, by simp [Op.attrs, name_of_find_fpred hp], rfl, rfl⟩
-    · cases h
-
-/-- `fcmp` decodes only from its own name, attributes, operand types and
-result type. -/
-theorem decodeFcmp_eq {as : List Attr} {ts rs : List Ty} {op : Op}
-    (h : decodeFcmp as ts rs = some op) :
-    op.name = "fcmp" ∧ op.attrs = as ∧ op.sig = ts ∧ op.returnTypes = rs := by
-  obtain ⟨h1, h2, h3, h4⟩ := decodeFcmpWith_eq h
-  exact ⟨h1, h2.trans (splitFlags_spec as), h3, h4⟩
-
 /-- Every core op decodes from its name and attributes, at its operand and
 result types. -/
 theorem Op.decode_encode (o : Op) : Op.decode o.name o.attrs o.sig o.returnTypes = some o := by
@@ -226,6 +191,8 @@ theorem Op.decode_encode (o : Op) : Op.decode o.name o.attrs o.sig o.returnTypes
     simp [Op.name, Op.attrs, Op.sig, Op.returnTypes, Op.decode, decodeFptrunc,
       decodeRound_roundAttr]
   | ptradd n w => simp [Op.name, Op.attrs, Op.sig, Op.returnTypes, Op.decode, decodePtrAdd, bare, i]
+  | fieldAddr s j n w =>
+    simpa [Op.name, Op.attrs, Op.returnTypes, Op.decode] using decodeFieldAddr_attrs s j n w
   | alloca k t c a n =>
     simpa [Op.name, Op.attrs, Op.sig, Op.returnTypes, Op.decode] using
       decodeAlloca_allocaAttrs k t c a n
@@ -242,6 +209,9 @@ theorem Op.decode_encode (o : Op) : Op.decode o.name o.attrs o.sig o.returnTypes
   | storeFloat o e m a n =>
     simpa [Op.name, Op.attrs, Op.sig, Op.returnTypes, Op.decode] using
       decodeStore_storeFloat o e m a n
+  | memCopy k o w n =>
+    cases k <;> simpa [Op.name, CopyKind.name, Op.attrs, Op.sig, Op.returnTypes, Op.decode] using
+      decodeMemCopy_loadAttrs _ o w n
   | fptosi e m n | fptoui e m n =>
     simp [Op.name, Op.attrs, Op.sig, Op.returnTypes, Op.decode, decodeFloatToInt, i]
   | _ =>
@@ -375,9 +345,13 @@ theorem Op.encode_decode {n : String} {as : List Attr} {ts rs : List Ty} {o : Op
   · exact decodeFpext_eq h -- fpext
   · exact decodeFptrunc_eq h -- fptrunc
   · exact decodePtrAdd_eq h -- ptradd
+  · obtain ⟨_, _, _, _, rfl, ha, hs, hr⟩ := decodeFieldAddr_eq h -- fieldaddr
+    exact ⟨rfl, ha, hs, hr⟩
   · exact decodeAlloca_eq h -- alloca
   · exact decodeLoad_eq h -- load
   · exact decodeStore_eq h -- store
+  · exact decodeMemCopy_eq h -- memcpy
+  · exact decodeMemCopy_eq h -- memmove
   · exact decodeFloatToInt_eq (signed := true) h -- fptosi
   · exact decodeFloatToInt_eq (signed := false) h -- fptoui
   · -- srem, urem, and, or, xor, shl, lshr and ashr
@@ -396,6 +370,7 @@ theorem Op.name_isWord (o : Op) : isWord o.name := by
   cases o <;> first
     | (simp only [Op.name]; decide)
     | (rename_i o _ _ _; cases o <;> simp only [Op.name, FBin.name, FUnary.name] <;> decide)
+    | (rename_i k _ _ _; exact k.name_isWord)
 
 /-- Every predicate's name is a word. -/
 theorem Pred.name_isWord (p : Pred) : isWord p.name := by
@@ -449,9 +424,11 @@ theorem Op.attrs_writable (o : Op) : Attr.AllWritable o.attrs := by
   | sdiv _ e | udiv _ e =>
     cases e <;> simp [Op.attrs, Attr.AllWritable, Attr.Writable] <;> decide
   | call => exact ⟨trivial, trivial⟩
+  | fieldAddr => exact ⟨trivial, trivial, trivial⟩
   | alloca k t c a => exact allocaAttrs_writable k t c a
   | load o _ a | store o _ a | loadPtr o _ a | storePtr o _ a | loadFloat o _ _ a
   | storeFloat o _ _ a => exact loadAttrs_writable o a
+  | memCopy _ o => exact loadAttrs_writable o none
   | _ => trivial
 
 end Fir.Core
@@ -460,7 +437,7 @@ namespace Fir
 
 /-! # The laws -/
 
-/-- The core dialect's text meets the seven laws, for all 45 core ops and
+/-- The core dialect's text meets the seven laws, for all 49 core ops and
 every core type. -/
 theorem Core.lawfulDialectText : LawfulDialectText CoreDialect where
   decodeOp_encode := Core.Op.decode_encode

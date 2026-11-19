@@ -9,7 +9,8 @@ effects are `pure`, or a comma-separated list in this order: `reads(M)`,
 The cases cover every core op, each flag set of `add`, `sub` and `mul`, and
 `exact` on `sdiv` and `udiv`: the attributes that change an op's set; and
 every op of `gpu`: a question's set is empty, and `gpu.work_group_alloca`
-allocates in its result's memory, as `alloca` does.
+allocates in its result's memory, as `alloca` does. `memcpy` and `memmove`
+read and write the memory of their pointers, a `gpu` memory included.
 
 === const pure
 func @f(%a: i8, %b: i8, %c: i1) -> i8 {
@@ -669,6 +670,36 @@ locs {
   @0 = unknown
 }
 
+=== fieldaddr pure
+aggregate @pair() memory(0) size(16) align(8) field(0, i64) field(8, ptr) {
+}
+
+func @f(%a: ptr, %b: i64, %c: i1) -> ptr {
+^entry:
+  %r: ptr = fieldaddr @pair 1 %a @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+
+=== fieldaddr-element-memory-1 pure
+layout memory(1, unit(16), pointer(32), little)
+
+aggregate @row() memory(1) size(8) align(1) field(0, i16, 8) {
+}
+
+func @f(%a: ptr(1), %b: i8, %c: i1) -> ptr(1) {
+^entry:
+  %r: ptr(1) = fieldaddr @row 0 %a, %b @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+
 === alloca allocates(0)
 func @f(%a: i8, %b: i8, %c: i1) -> ptr {
 ^entry:
@@ -831,6 +862,54 @@ func @f(%p: ptr(1), %g: f128, %c: i1) -> i1 {
 ^entry:
   store nonatomic align(8) %g, %p @0
   ret %c @0
+}
+
+locs {
+  @0 = unknown
+}
+
+=== memcpy reads(0),writes(0),may-ub
+func @f(%p: ptr, %q: ptr, %n: i64) -> i64 {
+^entry:
+  memcpy nonatomic %p, %q, %n @0
+  ret %n @0
+}
+
+locs {
+  @0 = unknown
+}
+
+=== memmove reads(0),writes(0),may-ub
+func @f(%p: ptr, %q: ptr, %n: i8) -> i8 {
+^entry:
+  memmove nonatomic %p, %q, %n @0
+  ret %n @0
+}
+
+locs {
+  @0 = unknown
+}
+
+=== memcpy-memory-1 reads(1),writes(1),may-ub
+layout memory(1, unit(16), pointer(32), little)
+
+func @f(%p: ptr(1), %q: ptr(1), %n: i32) -> i32 {
+^entry:
+  memcpy nonatomic %p, %q, %n @0
+  ret %n @0
+}
+
+locs {
+  @0 = unknown
+}
+
+=== memmove-memory-1 reads(1),writes(1),may-ub
+layout memory(1, unit(16), pointer(32), little)
+
+func @f(%p: ptr(1), %q: ptr(1), %n: i1) -> i1 {
+^entry:
+  memmove nonatomic %p, %q, %n @0
+  ret %n @0
 }
 
 locs {
@@ -1158,6 +1237,21 @@ func @f(%a: i8, %b: i8, %c: i1) -> i32 {
 ^entry:
   %r: i32 = gpu.num_work_groups gpu.x @0
   ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+
+=== gpu-memcpy reads(3),writes(3),may-ub
+dialects gpu
+
+layout memory(3, unit(16), pointer(32), little)
+
+func @f(%p: ptr(3), %q: ptr(3), %n: i32) -> i32 {
+^entry:
+  memcpy nonatomic %p, %q, %n @0
+  ret %n @0
 }
 
 locs {

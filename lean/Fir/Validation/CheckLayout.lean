@@ -110,7 +110,7 @@ not be a field, or else each rule of a placed field that it breaks. -/
 def Field.problems (l : DataLayout) (a : Aggregate d) (f : Field d) : List Problem :=
   let at_ := "the field at offset " ++ toString f.offset
   match f.shape l a.mem with
-  | none => [a.problem (at_ ++ " has a type that may not be a field: an integer or a pointer")]
+  | none => [a.problem (at_ ++ " has a type that may not be a field: an integer, a float or a pointer")]
   | some (u, al) =>
     need (al ∣ f.offset) (a.problem (at_ ++ " is not a multiple of its type's alignment, " ++
       toString al)) ++

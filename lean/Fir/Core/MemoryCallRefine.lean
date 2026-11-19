@@ -57,18 +57,19 @@ stuck path (the section on core functions with memory).
 
 namespace Fir.Core
 
-/-- A core op that touches no memory, every core op but `alloca` and the
+/-- A core op that touches no memory, every core op but `alloca`, the
 loads and stores, `load`, `store`, `loadPtr`, `storePtr`, `loadFloat` and
-`storeFloat`, declares no memory effect. -/
+`storeFloat`, and `memCopy`, declares no memory effect. -/
 theorem Op.effects_touchesNoMemory (op : Op) (hm : op.touchesMemory = false) :
     (Fir.effects (d := CoreDialect) op).TouchesNoMemory := fun _ => by
   cases op with
-  | alloca | load | store | loadPtr | storePtr | loadFloat | storeFloat => cases hm
+  | alloca | load | store | loadPtr | storePtr | loadFloat | storeFloat | memCopy => cases hm
   | _ => exact ⟨nofun, nofun, nofun⟩
 
 /-- A core op that declares no memory effect touches no memory: `alloca`
 declares that it allocates in the memory of its result, each load that it
-reads the memory of its pointer, and each store that it writes it. -/
+reads the memory of its pointer, each store that it writes it, and
+`memCopy` that it reads it. -/
 theorem Op.touchesMemory_false {op : Op} (h : (Fir.effects (d := CoreDialect) op).TouchesNoMemory) :
     op.touchesMemory = false := by
   cases op with
@@ -76,7 +77,8 @@ theorem Op.touchesMemory_false {op : Op} (h : (Fir.effects (d := CoreDialect) op
   | load _ _ _ n => exact ((h n).1 (List.mem_singleton_self n)).elim
   | store _ _ _ n | storePtr _ _ _ n | storeFloat _ _ _ _ n =>
     exact ((h n).2.1 (List.mem_singleton_self n)).elim
-  | loadPtr _ _ _ n | loadFloat _ _ _ _ n => exact ((h n).1 (List.mem_singleton_self n)).elim
+  | loadPtr _ _ _ n | loadFloat _ _ _ _ n | memCopy _ _ _ n =>
+    exact ((h n).1 (List.mem_singleton_self n)).elim
   | _ => rfl
 
 /-- A function of a core table reaches no memory when no function that its
@@ -98,12 +100,18 @@ variable {N : Type} [DecidableEq N] (lay : N → MemLayout)
 
 /-- Each core op ignores the memories where it declares no memory effect,
 at every layout and naming: it runs by its rule in the set monad and keeps
-the memories. -/
+the memories, or, for `fieldAddr`, gives its result at once and keeps
+them. -/
 theorem opsIgnoreMemory :
     letI := DialectMemDenote.denoteAt (d := CoreDialect) lay ρ L
-    OpsIgnoreMemory CoreDialect N (unitsOf lay) := fun op _ h =>
-  OwnRuleHas.ofLifts (Op.liftsSetM op (Op.touchesMemory_false h)) lay ρ L (P := IgnoresMemory)
-    IgnoresMemory.lift
+    OpsIgnoreMemory CoreDialect N (unitsOf lay) := fun op _ h => by
+  cases hi : op.readsItems with
+  | false =>
+    exact OwnRuleHas.ofLifts (Op.liftsSetM op (Op.touchesMemory_false h) hi) lay ρ L
+      (P := IgnoresMemory) IgnoresMemory.lift
+  | true =>
+    cases op <;> try cases hi
+    exact fieldAddr_ignoresMemory _ _ _ _ lay ρ L
 
 variable {M : Module CoreDialect} {f : Func CoreDialect}
 
@@ -124,10 +132,16 @@ theorem opsFinite :
     · exact ⟨fun _ => storePtr_finitelyMany _ _ _ _ lay ρ L args, fun h => nomatch h⟩
     · exact ⟨fun _ => loadFloat_finitelyMany _ _ _ _ _ lay ρ L args, fun h => nomatch h⟩
     · exact ⟨fun _ => storeFloat_finitelyMany _ _ _ _ _ lay ρ L args, fun h => nomatch h⟩
+    · exact ⟨fun _ => memCopy_finitelyMany _ _ _ _ lay ρ L args, fun h => nomatch h⟩
+  | false => ?_
+  cases hi : op.readsItems with
+  | true =>
+    cases op <;> try cases hi
+    exact ⟨fun _ => fieldAddr_finitelyMany _ _ _ _ lay ρ L args, fun h => nomatch h⟩
   | false => ?_
   have hm := denoteIn_mapsDenote (ChoiceTree.toSetMorphism (ε := Op)) ChoiceTree.toSet_keeps
     (fun op => .noOutcome op) (fun _ _ => False) fun _ => rfl
-  rw [(Op.liftsSetM op hmem lay ρ L args).1, (Op.liftsSetM op hmem lay ρ L args).2]
+  rw [(Op.liftsSetM op hmem hi lay ρ L args).1, (Op.liftsSetM op hmem hi lay ρ L args).2]
   refine ⟨fun _ => FinitelyMany.lift ?_, fun _ => FinitelyMany.lift ?_⟩
   · rw [← hm.denote op args]
     exact ChoiceTree.toSet_finitelyMany _

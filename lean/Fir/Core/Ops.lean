@@ -9,8 +9,9 @@ The core dialect's ops: constants, integer arithmetic, bitwise ops and
 shifts, comparison and selection, width changes, `freeze` and `poison`,
 branches and calls, the float constants, comparisons, arithmetic, bit
 casts, conversions from integers, conversions between formats and
-conversions to integers, pointer offsets, stack allocation, loads and
-stores, of integers, pointers and floats.
+conversions to integers, pointer offsets, field addresses, stack
+allocation, loads and stores, of integers, pointers and floats, and
+copies and moves of units.
 Each op below is an op instance: it carries its
 attributes and the widths it is used at, so that its operand and result
 types follow from it.
@@ -171,6 +172,21 @@ Pointer offsets (#231):
   (ADR-2026-11-13-0251). It is never UB, and a poison operand gives
   poison.
 
+Field addresses (#236; the human's rulings of 2026-11-16 on #236):
+
+* `fieldAddr s i n w`: the address of the field `i` of the aggregate
+  layout with symbol `s`, from a pointer of `ptr<N>`, `N = n`, to the
+  start of the layout: the pointer moved by the field's offset. With
+  `w = some W`, it also takes an index of `iW`, read as signed, and gives
+  the address of that element of a repeated field: the field's offset
+  plus the index times the units from one element to the next, the
+  units of the field's type rounded up to its alignment. It reads the
+  layout from the items that the run gives each op (the section on the
+  items a run gives each op). It keeps the pointer's provenance, and an
+  index out of the field's elements moves the pointer as `ptradd` does:
+  only an access through the result must be in bounds. It is never UB,
+  and a poison operand gives poison.
+
 Stack allocation (#231; the human's ruling of 2026-11-14 on #378):
 
 * `alloca k t c a n`: allocates room for `c` values of the type `t` in the
@@ -233,6 +249,23 @@ Loads and stores of floats (#264):
 * `storeFloat o e m a n`: stores a `float<e,m>` through a pointer of
   `ptr<N>`, as `store` stores an integer of its `1 + e + m` bits: its bit
   pattern, or poison units for poison. Its effects are `store`'s.
+
+Copies and moves of units (#234; ADR-2026-11-09-1551 and the human's
+rulings of 2026-11-18 on #234):
+
+* `memCopy k o w n`: carries `len` units of the memory `N`, `N = n`, from
+  a pointer of `ptr<N>`, the source, to another, the destination, where
+  `len` is an `iW`, `W = w`, read as unsigned. Each unit comes across
+  exactly, bits, poison and pointer fragments alike, so a copied pointer
+  keeps its provenance. The kind `k` is `copy` or `move`: a move takes
+  what the source held before it began, whatever the ranges share, and a
+  copy whose ranges partly overlap is immediate UB, while equal ranges
+  are allowed. A length of 0 does nothing, whatever the pointers are,
+  poison included. Otherwise a poison pointer is immediate UB, and so is
+  an access that faults. A poison length runs as some length, chosen,
+  so it is UB wherever some length is. The op gives no result, reads and
+  writes the memory `N` and may be UB. M1's validation accepts only the
+  ordering `nonatomic`.
 
 Conversions from a float to an integer, by Lean's float model
 (ADR-2026-11-09-1549; the human's ruling of 2026-11-12 on #354):
@@ -307,6 +340,7 @@ inductive Op where
   | fpext (e m e' m' : Nat)
   | fptrunc (r : RoundingMode) (e m e' m' : Nat)
   | ptradd (n w : Nat)
+  | fieldAddr (s : String) (i : Nat) (n : Nat) (w : Option Nat)
   | alloca (k : Memory.AllocKind) (t : Ty) (c : Nat) (a : Option Nat) (n : Nat)
   | load (o : Memory.Ordering) (w : Nat) (a : Option Nat) (n : Nat)
   | store (o : Memory.Ordering) (w : Nat) (a : Option Nat) (n : Nat)
@@ -314,6 +348,7 @@ inductive Op where
   | storePtr (o : Memory.Ordering) (m : Nat) (a : Option Nat) (n : Nat)
   | loadFloat (o : Memory.Ordering) (e m : Nat) (a : Option Nat) (n : Nat)
   | storeFloat (o : Memory.Ordering) (e m : Nat) (a : Option Nat) (n : Nat)
+  | memCopy (k : CopyKind) (o : Memory.Ordering) (w n : Nat)
   | fptosi (e m n : Nat)
   | fptoui (e m n : Nat)
   | freeze (w : Nat)

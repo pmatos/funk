@@ -8,8 +8,9 @@ memory): its rules with memory in the state layer over the tree of choices
 (the section on the core dialect in the tree of choices), from the empty
 memories. A mode runs a module with its own layout: each memory of the run
 has its entry in the module's data layout, which gives its unit, its byte
-order and the width of its pointers, and the run names the core's memories
-by themselves, by their numbers. So the theorems of exhaustive and scripted
+order and the width of its pointers, the run names the core's memories
+by themselves, by their numbers, and it gives each op the items of the
+module's own table (the section on the items a run gives each op). So the theorems of exhaustive and scripted
 modes hold of the runs with memory of every core function, on every
 argument vector, at every fuel budget. `fir-ref` computes the exhaustive,
 scripted and sampled modes defined below on the sum of the core and `gpu`,
@@ -40,7 +41,7 @@ memories named by themselves, by their numbers. -/
 def modeTree (M : Module CoreDialect) (f : Func CoreDialect)
     (args : HVector toType (f.params.map (·.2))) (fuel : Nat) :
     ChoiceTree Op (Except Stuck (Result Obs)) :=
-  letI := memTreeDenote M.layout.entry id
+  letI := memTreeDenote M.layout.entry id M.runItems
   f.memTree (unitsOf M.layout.entry) M args fuel
 
 /-- Exhaustive mode on the core function `f` of the module `M`: every path
@@ -88,7 +89,7 @@ theorem exhaustive_memOutcomes (M : Module CoreDialect) (f : Func CoreDialect)
     Run.outcomes (f.memRuns M.layout.entry id M.runItems M args fuel) o ↔
       ∃ p ∈ ls, p.1.pathEnd = .outcome o := by
   -- Elaborated apart from the goal: checked against it, the run unfolds.
-  have h := (letI := memTreeDenote M.layout.entry id
+  have h := (letI := memTreeDenote M.layout.entry id M.runItems
     Func.memExplore_outcomes M.layout.entry id M.runItems (memMapsDenote M.layout.entry id
         M.runItems) M f args fuel
       budget hx o)
@@ -103,7 +104,7 @@ theorem exhaustive_memStuck (M : Module CoreDialect) (f : Func CoreDialect)
     Run.IsStuck (f.memRuns M.layout.entry id M.runItems M args fuel) ↔
       ∃ p ∈ ls, ∃ st, p.1.pathEnd = .stuck st := by
   -- Elaborated apart from the goal: checked against it, the run unfolds.
-  have h := (letI := memTreeDenote M.layout.entry id
+  have h := (letI := memTreeDenote M.layout.entry id M.runItems
     Func.memExplore_stuck M.layout.entry id M.runItems (memMapsDenote M.layout.entry id M.runItems)
         M f args fuel budget
       hx)
@@ -118,7 +119,7 @@ theorem scripted_memOutcomes {σ : Type} (read : (w : Nat) → σ → Option (Bi
     (ho : l.pathEnd = .outcome o) : Run.outcomes (f.memRuns M.layout.entry id M.runItems M args
         fuel) o := by
   -- Elaborated apart from the goal: checked against it, the run unfolds.
-  have h := (letI := memTreeDenote M.layout.entry id
+  have h := (letI := memTreeDenote M.layout.entry id M.runItems
     Func.memScript_outcomes M.layout.entry id M.runItems (memMapsDenote M.layout.entry id
         M.runItems) read M f args fuel
       cs hs ho)
@@ -133,7 +134,7 @@ theorem scripted_memStuck {σ : Type} (read : (w : Nat) → σ → Option (BitVe
     (hst : l.pathEnd = .stuck st) : Run.IsStuck (f.memRuns M.layout.entry id M.runItems M args
         fuel) := by
   -- Elaborated apart from the goal: checked against it, the run unfolds.
-  have h := (letI := memTreeDenote M.layout.entry id
+  have h := (letI := memTreeDenote M.layout.entry id M.runItems
     Func.memScript_stuck M.layout.entry id M.runItems (memMapsDenote M.layout.entry id M.runItems)
         read M f args fuel cs
       hs hst)

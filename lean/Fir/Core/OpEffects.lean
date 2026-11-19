@@ -9,7 +9,8 @@ terminator, as its rules say (ADR-2026-11-09-1541). The core dialect names
 the memories of a module by their numbers, as a pointer type `ptr<N>` names
 memory `N`, and the module's data layout says which of them it has. The
 stack allocation `alloca` allocates in the memory of its result, `load`
-reads the memory of its pointer and `store` writes it. No core op frees
+reads the memory of its pointer, `store` writes it, and a copy or a move,
+`memCopy`, reads and writes it. No core op frees
 memory, or adds an event to the trace: M0's runs have no trace. A frame
 frees its call's stack allocations when the call returns.
 
@@ -19,8 +20,8 @@ frees its call's stack allocations when the call returns.
   `fdiv`, `frem`, `fmod`, `fneg`, `fabs`, `sqrt` and `fma`, without `nnan`
   and `ninf`, the bit casts, the conversions from integers, `sitofp` and
   `uitofp`, the conversions between formats, `fpext` and `fptrunc`, and
-  the pointer offset `ptradd`, which moves a pointer and keeps its
-  provenance. `nsz` alone keeps a float op pure: it chooses a zero's sign,
+  the pointer offset `ptradd` and the field address `fieldAddr`, which
+  move a pointer and keep its provenance. `nsz` alone keeps a float op pure: it chooses a zero's sign,
   a defined value, as `freeze` chooses bits. On operands
   with no poison each gives a defined result, and none hits UB. `select`
   gives poison only for a poison condition or a poison operand that it
@@ -49,6 +50,11 @@ frees its call's stack allocations when the call returns.
   faults depends on the allocations of its memory, not on what their units
   hold. Each gives no result, so it makes no poison, though it may store a
   poison value's units.
+* Reads and writes memory `N`, and may-UB: `memCopy`, a copy or a move,
+  over a pointer of `ptr<N>`. It reads the units it carries and writes
+  them, and is UB on a poison pointer, on an access that faults and, for a
+  copy, on ranges that partly overlap, unless its length is 0. It gives no
+  result, so it makes no poison, though it may carry poison units.
 * Control: the terminators `br`, `ret`, `cond_br` and `unreachable`.
   `cond_br` may hit UB too, on a poison condition, and `unreachable` hits
   UB whenever a run reaches it (ADR-2026-11-09-1548).
@@ -75,7 +81,7 @@ on a division, and `nnan` or `ninf` on a float op, may produce poison. -/
 def Op.effects : Op → Effects Mem
   | .const .. | .fconst .. | .and _ | .or _ | .xor _ | .icmp .. | .select _ | .zext .. | .sext ..
   | .trunc .. | .freeze _ | .call .. | .toBits .. | .ofBits .. | .sitofp .. | .uitofp .. | .fpext ..
-  | .fptrunc .. | .ptradd .. => {}
+  | .fptrunc .. | .ptradd .. | .fieldAddr .. => {}
   | .fcmp _ fl .. | .fbin _ fl .. | .funary _ fl .. | .fma fl .. => { mayPoison := fl.mayPoison }
   | .add _ f | .sub _ f | .mul _ f => { mayPoison := f != {} }
   | .sdiv _ x | .udiv _ x => { mayUB := true, mayPoison := x }
@@ -88,5 +94,6 @@ def Op.effects : Op → Effects Mem
     { reads := .these [n], mayUB := true, mayPoison := true }
   | .store _ _ _ n | .storePtr _ _ _ n | .storeFloat _ _ _ _ n =>
     { writes := .these [n], mayUB := true }
+  | .memCopy _ _ _ n => { reads := .these [n], writes := .these [n], mayUB := true }
 
 end Fir.Core

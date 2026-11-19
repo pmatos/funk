@@ -36,11 +36,13 @@ def Op.sig : Op → List Ty
   | .ofBits e m => [i (floatWidth e m)]
   | .sitofp _ n .. | .uitofp _ n .. => [i n]
   | .fpext e m .. | .fptrunc _ e m .. | .fptosi e m _ | .fptoui e m _ => [.float e m]
-  | .ptradd n w => [.ptr n, i w]
+  | .ptradd n w | .fieldAddr _ _ n (some w) => [.ptr n, i w]
+  | .fieldAddr _ _ n none => [.ptr n]
   | .load _ _ _ n | .loadPtr _ _ _ n | .loadFloat _ _ _ _ n => [.ptr n]
   | .store _ w _ n => [i w, .ptr n]
   | .storePtr _ m _ n => [.ptr m, .ptr n]
   | .storeFloat _ e m _ n => [.float e m, .ptr n]
+  | .memCopy _ _ w n => [.ptr n, .ptr n, i w]
   | .freeze w => [i w]
   | .condBr => [i 1]
   | .ret ts => ts
@@ -58,12 +60,13 @@ def Op.returnTypes : Op → List Ty
   | .ofBits e m => [.float e m]
   | .sitofp _ _ e m | .uitofp _ _ e m => [.float e m]
   | .fpext _ _ e' m' | .fptrunc _ _ _ e' m' => [.float e' m']
-  | .ptradd n _ | .alloca _ _ _ _ n => [.ptr n]
+  | .ptradd n _ | .fieldAddr _ _ n _ | .alloca _ _ _ _ n => [.ptr n]
   | .fptosi _ _ n | .fptoui _ _ n => [i n]
   | .load _ w _ _ => [i w]
   | .loadPtr _ m _ _ => [.ptr m]
   | .loadFloat _ e m _ _ => [.float e m]
-  | .br | .condBr | .ret _ | .unreachable | .store .. | .storePtr .. | .storeFloat .. => []
+  | .br | .condBr | .ret _ | .unreachable | .store .. | .storePtr .. | .storeFloat ..
+  | .memCopy .. => []
   | .call _ _ rs => rs
 
 /-- `br`, `cond_br`, `ret` and `unreachable` end a block. -/

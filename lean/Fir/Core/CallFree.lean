@@ -24,10 +24,11 @@ its runs with memory, branches and loops included, on every argument
 vector of its parameter types, poison included (the section on core
 functions with memory):
 
-* _every core op but `call`, `alloca` and the loads and stores is
-  total_, by the obligations that each family proves of its ops, and
-  `alloca` and the loads and stores, of an integer, a pointer or a float,
-  are total with memory, each by its own rule;
+* _every core op but `call`, `alloca`, the loads and stores,
+  `fieldAddr` and `memCopy` is total_, by the obligations that each family
+  proves of its ops, and `alloca`, the loads and stores, of an integer, a
+  pointer or a float, `fieldAddr` and `memCopy` are total with memory, each
+  by its own rule;
 * _every valid core function without calls runs within itself_: none of
   its ops calls a function; `br` and `cond_br` go only to successors they
   have and give no results; and `ret`, the only core op whose exit
@@ -56,55 +57,58 @@ def CallFree (f : Func CoreDialect) : Prop :=
 instance (f : Func CoreDialect) : Decidable (CallFree f) :=
   inferInstanceAs (Decidable (∀ b ∈ f.blocks, ∀ o ∈ b.body, o.op.isCall = false))
 
-/-- Every core op but `call`, `alloca` and the loads and stores is total in
-the set monad. `alloca` and the loads and stores, of an integer or a
-pointer, have no rule there: each is total with memory, by its own rule
-(the sections on the stack allocation, load, store, pointer load and
-pointer store obligations). -/
+/-- Every core op but `call`, `alloca`, the loads and stores, `fieldAddr`
+and `memCopy` is total in the set monad. `alloca`, the loads and stores,
+`fieldAddr` and `memCopy` have no rule there: each is total with memory, by
+its own rule (the sections on the stack allocation, load, store, pointer
+load, pointer store, float load, float store, field address and copy and
+move obligations). -/
 theorem Op.total : (op : Op) → op.isCall = false → op.touchesMemory = false →
-    OpTotal (d := CoreDialect) op
-  | .const w v, _, _ => const_total w v
-  | .fconst e m v, _, _ => fconst_total e m v
-  | .add w f, _, _ => add_total w f
-  | .sub w f, _, _ => sub_total w f
-  | .mul w f, _, _ => mul_total w f
-  | .sdiv w x, _, _ => sdiv_total w x
-  | .udiv w x, _, _ => udiv_total w x
-  | .srem w, _, _ => srem_total w
-  | .urem w, _, _ => urem_total w
-  | .and w, _, _ => and_total w
-  | .or w, _, _ => or_total w
-  | .xor w, _, _ => xor_total w
-  | .shl w, _, _ => shl_total w
-  | .lshr w, _, _ => lshr_total w
-  | .ashr w, _, _ => ashr_total w
-  | .icmp p w, _, _ => icmp_total p w
-  | .fcmp p fl e m, _, _ => fcmp_total p fl e m
-  | .fbin o fl e m, _, _ => fbin_total o fl e m
-  | .funary o fl e m, _, _ => funary_total o fl e m
-  | .fma fl r e m, _, _ => fma_total fl r e m
-  | .select w, _, _ => select_total w
-  | .zext m n, _, _ => zext_total m n
-  | .sext m n, _, _ => sext_total m n
-  | .trunc m n, _, _ => trunc_total m n
-  | .toBits e m, _, _ => toBits_total e m
-  | .ofBits e m, _, _ => ofBits_total e m
-  | .sitofp r n e m, _, _ => intToFloat_total r n e m true
-  | .uitofp r n e m, _, _ => intToFloat_total r n e m false
-  | .fpext e m e' m', _, _ => convertFloat_total e m e' m' none
-  | .fptrunc r e m e' m', _, _ => convertFloat_total e m e' m' (some r)
-  | .ptradd n w, _, _ => ptradd_total n w
-  | .fptosi e m n, _, _ => floatToInt_total e m n true
-  | .fptoui e m n, _, _ => floatToInt_total e m n false
-  | .freeze w, _, _ => freeze_total w
-  | .poison w, _, _ => poison_total w
-  | .br, _, _ => br_total
-  | .condBr, _, _ => condBr_total
-  | .ret ts, _, _ => ret_total ts
-  | .unreachable, _, _ => unreachable_total
-  | .call .., h, _ => nomatch h
-  | .alloca .., _, h | .load .., _, h | .store .., _, h | .loadPtr .., _, h
-  | .storePtr .., _, h | .loadFloat .., _, h | .storeFloat .., _, h => nomatch h
+    op.readsItems = false → OpTotal (d := CoreDialect) op
+  | .const w v, _, _, _ => const_total w v
+  | .fconst e m v, _, _, _ => fconst_total e m v
+  | .add w f, _, _, _ => add_total w f
+  | .sub w f, _, _, _ => sub_total w f
+  | .mul w f, _, _, _ => mul_total w f
+  | .sdiv w x, _, _, _ => sdiv_total w x
+  | .udiv w x, _, _, _ => udiv_total w x
+  | .srem w, _, _, _ => srem_total w
+  | .urem w, _, _, _ => urem_total w
+  | .and w, _, _, _ => and_total w
+  | .or w, _, _, _ => or_total w
+  | .xor w, _, _, _ => xor_total w
+  | .shl w, _, _, _ => shl_total w
+  | .lshr w, _, _, _ => lshr_total w
+  | .ashr w, _, _, _ => ashr_total w
+  | .icmp p w, _, _, _ => icmp_total p w
+  | .fcmp p fl e m, _, _, _ => fcmp_total p fl e m
+  | .fbin o fl e m, _, _, _ => fbin_total o fl e m
+  | .funary o fl e m, _, _, _ => funary_total o fl e m
+  | .fma fl r e m, _, _, _ => fma_total fl r e m
+  | .select w, _, _, _ => select_total w
+  | .zext m n, _, _, _ => zext_total m n
+  | .sext m n, _, _, _ => sext_total m n
+  | .trunc m n, _, _, _ => trunc_total m n
+  | .toBits e m, _, _, _ => toBits_total e m
+  | .ofBits e m, _, _, _ => ofBits_total e m
+  | .sitofp r n e m, _, _, _ => intToFloat_total r n e m true
+  | .uitofp r n e m, _, _, _ => intToFloat_total r n e m false
+  | .fpext e m e' m', _, _, _ => convertFloat_total e m e' m' none
+  | .fptrunc r e m e' m', _, _, _ => convertFloat_total e m e' m' (some r)
+  | .ptradd n w, _, _, _ => ptradd_total n w
+  | .fptosi e m n, _, _, _ => floatToInt_total e m n true
+  | .fptoui e m n, _, _, _ => floatToInt_total e m n false
+  | .freeze w, _, _, _ => freeze_total w
+  | .poison w, _, _, _ => poison_total w
+  | .br, _, _, _ => br_total
+  | .condBr, _, _, _ => condBr_total
+  | .ret ts, _, _, _ => ret_total ts
+  | .unreachable, _, _, _ => unreachable_total
+  | .call .., h, _, _ => nomatch h
+  | .alloca .., _, h, _ | .load .., _, h, _ | .store .., _, h, _ | .loadPtr .., _, h, _
+  | .storePtr .., _, h, _ | .loadFloat .., _, h, _ | .storeFloat .., _, h, _
+  | .memCopy .., _, h, _ => nomatch h
+  | .fieldAddr .., _, _, h => nomatch h
 
 /-- A core terminator that jumps goes to a successor that it has, and gives
 no results. -/
@@ -151,7 +155,7 @@ theorem local_of_valid {ctx : ModuleContext CoreDialect} {f : Func CoreDialect}
   returns b hb o ho _ args h := by
     obtain ⟨ts, hts⟩ := Op.exit_ret o.op args h
     obtain ⟨i, hi, rfl⟩ := List.getElem_of_mem ho
-    have hvalid : validOp ⟨ctx.symbols, f.results⟩ b.body[i].op :=
+    have hvalid : validOp ⟨ctx.symbols, f.results, ctx.layouts⟩ b.body[i].op :=
       (hv.ops b hb i b.body[i] (List.getElem?_eq_getElem hi)).2.2.2.2.2.2.2.2.2.1
     rw [hts] at hvalid ⊢
     exact hvalid

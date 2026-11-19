@@ -14,10 +14,10 @@ when the Lean changes under it.
 
 #doc (Manual) "The core dialect's modes: readable blocks" =>
 
-:::moduleDocs (fingerprint := "17786559211700772819")
+:::moduleDocs (fingerprint := "9400045757668067221")
 :::
 
-:::readable Fir.Core.modeTree Fir.Core.exhaustive Fir.Core.scripted (pin := Fir.ChoiceTree.explore) (pin := Fir.ChoiceTree.script) (pin := Fir.Func.memTree) (fingerprint := "4497826646937963846")
+:::readable Fir.Core.modeTree Fir.Core.exhaustive Fir.Core.scripted (pin := Fir.ChoiceTree.explore) (pin := Fir.ChoiceTree.script) (pin := Fir.Func.memTree) (fingerprint := "5987483451217847632")
 *Definition: exhaustive and scripted mode on a core function.* For a core
 function $`f` of a module $`M`, arguments $`\vec{v}` of its parameter
 types and fuel $`k`, let
@@ -25,8 +25,10 @@ $`T = \mathrm{tree}^{\mathrm{mem}}_{M,f}(\vec{v}, k)` be the
 {ref "The-fir-specification--Memory--Modes-with-memory"}[tree of its run with memory],
 from the empty memories, where each memory $`n` of the run has
 $`\ell_M(n)`, its entry in $`M`'s
-{ref "The-fir-specification--Abstract-syntax--Data-layouts"}[data layout], and
-the run names the core's memories by themselves:
+{ref "The-fir-specification--Abstract-syntax--Data-layouts"}[data layout],
+the run names the core's memories by themselves, and it gives each op the
+{ref "The-fir-specification--Memory--The-items-a-run-gives-each-op"}[items]
+of $`M`'s own table:
 
 * $`\mathrm{exhaustive}(M, f, \vec{v}, k, B)` is exhaustive mode, with
   the choice budget $`B`, on $`T`: every path's leaf and number of

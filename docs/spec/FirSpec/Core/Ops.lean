@@ -14,15 +14,15 @@ pins their fingerprint; the build fails when the Lean changes under it.
 
 #doc (Manual) "Core ops: readable blocks" =>
 
-:::moduleDocs (fingerprint := "3726621739230790826")
+:::moduleDocs (fingerprint := "12653311029240902648")
 :::
 
-:::readable Fir.Core.Op (pin := Fir.Core.Op.Valid) (fingerprint := "3961360518786788184")
+:::readable Fir.Core.Op (pin := Fir.Core.Op.Valid) (fingerprint := "1416819811864249766")
 *Ops.* An op of the core dialect carries the width $`N` of the integers it
 works on, or the format $`\mathsf{float}\langle e,m \rangle` of the floats
 it works on, so the types of its operands and results follow from it.
 Below, $`c` is a constant of type $`\mathsf{i}N`, $`v` a vector of
-$`1+e+m` bits, $`t` and $`r` are types, and $`f` is a function's symbol. The ops come in seventeen families.
+$`1+e+m` bits, $`t` and $`r` are types, and $`f` is a function's symbol. The ops come in nineteen families.
 
 *Constants* put a fixed value in the program.
 
@@ -221,6 +221,27 @@ ptradd \mathsf{ptradd}_{N,W}
   (ADR-2026-11-13-0251). It is never UB, and a poison operand gives
   poison.
 
+*Field addresses* move a pointer to a field of an aggregate's layout
+(#236).
+
+```grammar Fir.Core.Op
+\mathit{op}
+-         \dots
+fieldAddr \mathsf{fieldaddr}_{N}~s~j \mid \mathsf{fieldaddr}_{N,W}~s~j
+```
+
+* $`\mathsf{fieldaddr}_{N}~s~j` moves a pointer of
+  $`\mathsf{ptr}\langle N \rangle` to the field $`j`, counted from 0, of
+  the aggregate's layout with symbol $`s`: by the field's offset, which it
+  reads in the layouts that the run gives every op.
+  $`\mathsf{fieldaddr}_{N,W}~s~j` also takes an index of $`\mathsf{i}W`,
+  read as signed, and moves the pointer to that element of a repeated
+  field: by the field's offset plus the index times the element's units
+  rounded up to its alignment. The move is $`\mathsf{ptradd}`'s: it keeps
+  the provenance, and an index outside the field's elements is an address
+  (ADR-2026-11-18-2041). It is never UB, and a poison operand gives
+  poison.
+
 *Stack allocation* makes room in a memory for the current call (#231; the
 human's ruling of 2026-11-14 on #378).
 
@@ -292,6 +313,31 @@ storeFloat \mathsf{store}_{N}~o~\mathsf{float}\langle e,m \rangle~a
 * $`\mathsf{store}_{N}~o~\mathsf{float}\langle e,m \rangle~a`
   (`storeFloat`) stores a float as $`\mathsf{store}_{N}~o~(1+e+m)~a`
   stores the integer of its bits.
+
+*Copies and moves* carry units from one place of a memory to another
+(#234; ADR-2026-11-09-1551; the human's rulings of 2026-11-18 on #234).
+
+```grammar Fir.Core.Op
+\mathit{op}
+-       \dots
+memCopy \mathsf{memcpy}_{N}~o~W \mid \mathsf{memmove}_{N}~o~W
+```
+
+* $`\mathsf{memcpy}_{N}~o~W` (`memCopy` of the kind $`\mathsf{copy}`)
+  takes a destination and a source of $`\mathsf{ptr}\langle N \rangle` and
+  a length of $`\mathsf{i}W`, read as unsigned, and carries that many units
+  of the memory $`N` from the source to the destination, each exactly:
+  bits, poison and pointer fragments alike, so a copied pointer keeps its
+  provenance. It gives no result. A length of 0 does nothing, whatever the
+  pointers are. Otherwise a poison pointer is immediate UB, and so are
+  ranges that partly overlap, while equal ranges are allowed, and an
+  access that faults. A poison length runs as some length, chosen, so it
+  is UB wherever some length is.
+* $`\mathsf{memmove}_{N}~o~W` (the kind $`\mathsf{move}`) does the same,
+  and allows any overlap: it writes what the source held before it began.
+
+The {ref "The-fir-specification--Validation--Core-rules"}[core rules]
+accept only the ordering $`\mathsf{nonatomic}`.
 
 *Conversions to integers* give a float's number truncated toward zero as
 an integer (ADR-2026-11-09-1549; the human's ruling of 2026-11-12 on #354).
@@ -384,6 +430,9 @@ validation ask:
   $`\mathsf{fcmp}`, $`\mathit{fbin}`, $`\mathit{funary}` and
   $`\mathsf{fma}` carry fast-math flags that set neither of the reserved
   words $`\mathsf{contract}` and $`\mathsf{reassoc}`;
+* $`\mathsf{fieldaddr}_N~s~j` names a layout $`s` of its own table in the
+  memory $`N`, which has a field $`j`, and takes an index only when that
+  field is repeated;
 * $`\mathsf{alloca}`, and $`\mathsf{load}` and $`\mathsf{store}` of an
   integer, a pointer or a float, have the rules given with them above.
 

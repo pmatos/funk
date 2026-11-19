@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Modes of the core and gpu: readable blocks" =>
 
-:::moduleDocs (fingerprint := "1212278537580134786")
+:::moduleDocs (fingerprint := "5622276945017590031")
 :::
 
 :::readable Fir.Gpu.memName (fingerprint := "9143936946335769858")
@@ -24,29 +24,32 @@ it by its number, as the core's modes do. Work-group memory is the memory
 of the host's layout that an allocation's result names.
 :::
 
-:::readable Fir.Gpu.treeDenote Fir.Gpu.memTreeDenote (fingerprint := "8396692771373994944")
+:::readable Fir.Gpu.treeDenote Fir.Gpu.memTreeDenote (fingerprint := "13793003816320139418")
 *Definition: the sum's rules in the tree of choices.* In the state layer
 over the tree of choices, a question of `gpu` gives its results and keeps
 the memories, and an allocation allocates for the whole run by its rule
 with memory. A core op runs by the core's rules with memory in the tree, where
-the run names each core memory as the sum does; an op with no rule ends its
-path with no outcome, naming that op.
+the run names each core memory as the sum does and gives each op the items
+it gives the sum's ops; an op with no rule ends its path with no outcome,
+naming that op.
 :::
 
-:::readable Fir.Gpu.treeMapsDenote Fir.Gpu.memMapsDenote (fingerprint := "4366114471396580295")
+:::readable Fir.Gpu.treeMapsDenote Fir.Gpu.memMapsDenote (fingerprint := "3656392835769362579")
 *Theorems: the tree denotes the runs with memory.* Taking the set of each
 path through the state layer keeps a result, the memories and an
 allocation, so it maps the rules of `gpu` in the tree to its rules with
 memory, and so, with the core's, the sum's rules in the tree to
-its rules with memory, at every layout and naming of the sum's memories.
+its rules with memory, at every layout and naming of the sum's memories
+and every record of items.
 :::
 
-:::readable Fir.Gpu.modeTree Fir.Gpu.Leaf Fir.Gpu.exhaustive Fir.Gpu.scripted Fir.Gpu.sampled (pin := Fir.ChoiceTree.explore) (pin := Fir.ChoiceTree.script) (pin := Fir.ChoiceTree.sample) (pin := Fir.Func.memTree) (fingerprint := "9581748472841987171")
+:::readable Fir.Gpu.modeTree Fir.Gpu.Leaf Fir.Gpu.exhaustive Fir.Gpu.scripted Fir.Gpu.sampled (pin := Fir.ChoiceTree.explore) (pin := Fir.ChoiceTree.script) (pin := Fir.ChoiceTree.sample) (pin := Fir.Func.memTree) (fingerprint := "17133013276353764724")
 *Definition: the modes on a function of the sum.* At a work-item, for a
 function $`f` of a module $`M` of the sum, arguments $`\vec{v}` and fuel
 $`k`, the tree of $`f`'s run is its run with memory in the tree of choices,
 from the empty memories, where each memory has its entry in $`M`'s data
-layout and the run names the sum's memories by their numbers. A leaf of the
+layout, the run names the sum's memories by their numbers, and it gives
+each op the items of $`M`'s own table. A leaf of the
 tree is how a path ends. Exhaustive, scripted and sampled mode walk the
 tree as they walk the core's. `fir-ref run` computes these three, and the
 walk that tries a few NaNs below, on a function of the module or a kernel

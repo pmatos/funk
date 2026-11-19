@@ -76,7 +76,7 @@ the pointers
 ({ref "The-fir-specification--Execution--Core-values"}[core values]).
 :::
 
-:::readable Fir.DialectSignature (pin := Fir.Func.OpValid) (fingerprint := "11992914690758339057")
+:::readable Fir.DialectSignature (pin := Fir.Func.OpValid) (fingerprint := "17911239915517791957")
 *Definition: the signature of a dialect.* The signature of a dialect $`D`
 gives five facts about each op instance $`o \in \mathrm{Op}_D`:
 

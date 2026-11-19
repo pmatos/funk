@@ -1,0 +1,188 @@
+# Must-reject texts of memcpy and memmove (#234, ADR-2026-11-18-2131). Each
+# takes two pointers of one memory, the destination and the source, then an
+# integer length of any width, and defines nothing; its one attribute is its
+# ordering. Every ordering decodes, and validation accepts only nonatomic
+# (ADR-2026-11-09-1542). There is no align(A) in M1, so one does not
+# decode, and neither do pointers of two memories, a length that is not an
+# integer or any other shape. A pointer of a memory that the module does
+# not declare is rejected by validation, as for every pointer type.
+
+[[reject]]
+verdict = "validation-error"
+rule = "memcpy is nonatomic in M1: the ordering seq_cst decodes and is rejected"
+text = '''
+func @f(%p: ptr, %q: ptr, %n: i64) -> i64 {
+^e:
+  memcpy seq_cst %p, %q, %n @0
+  ret %n @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "memmove is nonatomic in M1: the ordering unordered decodes and is rejected"
+text = '''
+func @f(%p: ptr, %q: ptr, %n: i64) -> i64 {
+^e:
+  memmove unordered %p, %q, %n @0
+  ret %n @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "memcpy writes its ordering: a memcpy with none does not decode"
+text = '''
+func @f(%p: ptr, %q: ptr, %n: i64) -> i64 {
+^e:
+  memcpy %p, %q, %n @0
+  ret %n @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "memmove's ordering is one of seven words: relaxed does not decode"
+text = '''
+func @f(%p: ptr, %q: ptr, %n: i64) -> i64 {
+^e:
+  memmove relaxed %p, %q, %n @0
+  ret %n @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "memcpy has no alignment in M1: align(4) does not decode"
+text = '''
+func @f(%p: ptr, %q: ptr, %n: i64) -> i64 {
+^e:
+  memcpy nonatomic align(4) %p, %q, %n @0
+  ret %n @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "memcpy takes two pointers of one memory: ptr and ptr(1) do not decode"
+text = '''
+func @f(%p: ptr, %q: ptr(1), %n: i64) -> i64 {
+^e:
+  memcpy nonatomic %p, %q, %n @0
+  ret %n @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "memmove takes two pointers then an integer: an integer in the destination's place does not decode"
+text = '''
+func @f(%p: ptr, %q: ptr, %n: i64) -> i64 {
+^e:
+  memmove nonatomic %n, %q, %n @0
+  ret %n @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "memcpy's length is an integer: a pointer in its place does not decode"
+text = '''
+func @f(%p: ptr, %q: ptr, %n: i64) -> i64 {
+^e:
+  memcpy nonatomic %p, %q, %q @0
+  ret %n @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "memcpy's length is an integer: a float in its place does not decode"
+text = '''
+func @f(%p: ptr, %q: ptr, %x: f64) -> f64 {
+^e:
+  memcpy nonatomic %p, %q, %x @0
+  ret %x @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "memmove takes three operands: one without a length does not decode"
+text = '''
+func @f(%p: ptr, %q: ptr, %n: i64) -> i64 {
+^e:
+  memmove nonatomic %p, %q @0
+  ret %n @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "memcpy defines nothing: one with a result does not decode"
+text = '''
+func @f(%p: ptr, %q: ptr, %n: i64) -> i64 {
+^e:
+  %r: i64 = memcpy nonatomic %p, %q, %n @0
+  ret %n @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "no pointer of an undeclared memory reaches a memcpy: its definition, here a parameter of ptr(1) without memory 1 in the layout, is rejected"
+text = '''
+func @f(%p: ptr(1), %q: ptr(1), %n: i64) -> i64 {
+^e:
+  memcpy nonatomic %p, %q, %n @0
+  ret %n @0
+}
+
+locs {
+  @0 = unknown
+}
+'''

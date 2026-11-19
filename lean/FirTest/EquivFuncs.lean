@@ -149,8 +149,8 @@ theorem unary_isRefinedBy_iff {M M' : Module CoreDialect} {n n' : Name}
   | .cons x .nil => exact (obs_isRefinedBy_iff _ _).2 (h' x)
 
 /-- A refinement of two such functions, whose run lemmas hold at every
-layout and naming, at one layout and naming holds at every other: the value
-each returns does not depend on them. -/
+layout, naming and record of items, at one of each holds at every other:
+the value each returns does not depend on them. -/
 theorem unary_isRefinedBy_transfer {M M' : Module CoreDialect} {n n' : Name}
     {os os' : List (Operation CoreDialect)} {Nf Ng : Nat}
     {vf vg : PoisonOr (BitVec w) → PoisonOr (BitVec w)}
@@ -163,10 +163,10 @@ theorem unary_isRefinedBy_transfer {M M' : Module CoreDialect} {n n' : Name}
       (unary n' w os').memRuns lay ρ L M' (.cons x .nil) Ng =
         (pure (.ret [⟨i w, vg x⟩]) : ExceptT Stuck SetM (Result Core.Obs)))
     {N₀ : Type} [DecidableEq N₀] {lay₀ : N₀ → MemLayout}
-    {ρ₀ : DialectEffects.Mem CoreDialect → N₀}
-    (h : (unary n w os).memRuns lay₀ ρ₀ L M ⊑ (unary n' w os').memRuns lay₀ ρ₀ L M') :
+    {ρ₀ : DialectEffects.Mem CoreDialect → N₀} {L₀ : RunItems}
+    (h : (unary n w os).memRuns lay₀ ρ₀ L₀ M ⊑ (unary n' w os').memRuns lay₀ ρ₀ L₀ M') :
     (unary n w os).memRuns lay ρ L M ⊑ (unary n' w os').memRuns lay ρ L M' :=
   (unary_isRefinedBy_iff lay ρ L (hf lay ρ L) (hg lay ρ L)).2
-    ((unary_isRefinedBy_iff lay₀ ρ₀ L (hf lay₀ ρ₀ L) (hg lay₀ ρ₀ L)).1 h)
+    ((unary_isRefinedBy_iff lay₀ ρ₀ L₀ (hf lay₀ ρ₀ L₀) (hg lay₀ ρ₀ L₀)).1 h)
 
 end FirTest.Equiv

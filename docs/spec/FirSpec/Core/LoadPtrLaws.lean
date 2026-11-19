@@ -17,7 +17,7 @@ when the Lean changes under it.
 :::moduleDocs (fingerprint := "4149560778941201635")
 :::
 
-:::readable Fir.Core.loadPtrAccess Fir.Core.loadPtr_denote Fir.Core.loadPtr_ownRuleHas (pin := Fir.Core.loadPtrRule) (pin := Fir.Core.memDenoteAt) (pin := Fir.OwnRuleHas) (fingerprint := "3083137036737846683")
+:::readable Fir.Core.loadPtrAccess Fir.Core.loadPtr_denote Fir.Core.loadPtr_ownRuleHas (pin := Fir.Core.loadPtrRule) (pin := Fir.Core.memDenoteAt) (pin := Fir.OwnRuleHas) (fingerprint := "1354253532443310279")
 *Definitions and theorems: the load of a pointer with memory.* In the
 {ref "The-fir-specification--Memory--The-state-layer"}[state layer] over
 the set monad, at the layout entries $`\ell` and naming $`\rho`, the

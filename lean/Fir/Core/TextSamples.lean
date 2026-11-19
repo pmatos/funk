@@ -38,6 +38,7 @@ def samples : List Op :=
   [.fpext 8 23 11 52, .fptrunc .rne 11 52 8 23, .fpext 5 10 15 112, .fptrunc .rtn 8 7 5 10,
    .fptrunc .rtz 5 10 8 7] ++
   [.ptradd 0 64, .ptradd 1 8, .ptradd maxMemory 1] ++
+  [.fieldAddr "pair" 1 0 none, .fieldAddr "row" 0 1 (some 64), .fieldAddr "a b" 3 maxMemory (some 1)] ++
   [.alloca .stack (.int 32) 1 none 0, .alloca .stack (.int 8) 12 (some 4) 1,
    .alloca .heap (.ptr 2) 0 (some 3) maxMemory, .alloca .global (.float 8 23) 2 none 0] ++
   [.load .nonatomic 32 none 0, .load .nonatomic 1 (some 4) 1, .load .seqCst 128 (some 3) maxMemory,
@@ -50,7 +51,9 @@ def samples : List Op :=
   [.loadFloat .nonatomic 8 23 none 0, .loadFloat .nonatomic 2 1 (some 4) 1,
    .loadFloat .seqCst 15 112 (some 3) maxMemory, .storeFloat .nonatomic 11 52 none 0,
    .storeFloat .nonatomic 5 10 (some 2) 1, .storeFloat .release 1 0 none maxMemory] ++
-  [.fptosi 8 23 32, .fptoui 11 52 64, .fptosi 5 10 1, .fptoui 15 112 128, .fptosi 2 1 7]
+  [.fptosi 8 23 32, .fptoui 11 52 64, .fptosi 5 10 1, .fptoui 15 112 128, .fptosi 2 1 7] ++
+  [.memCopy .copy .nonatomic 64 0, .memCopy .move .nonatomic 8 1,
+   .memCopy .copy .seqCst 1 maxMemory, .memCopy .move .acquire 128 0]
 
 -- Decoding an op's encoding, at its own types, gives the op back.
 #guard samples.all fun o => Op.decode o.name o.attrs o.sig o.returnTypes == some o

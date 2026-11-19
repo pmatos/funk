@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Replacing a callee: readable blocks" =>
 
-:::moduleDocs (fingerprint := "7050287008689973659")
+:::moduleDocs (fingerprint := "16770542132220142336")
 :::
 
 :::readable Fir.Func.replaceBody Fir.Item.replaceBody Fir.Module.replaceBody (fingerprint := "9923372320846237749")
@@ -66,15 +66,16 @@ with $`g`'s body replaced by $`b`, $`s` finds $`g` with the body $`b`, and
 every other symbol finds what it finds in $`M`.
 :::
 
-:::readable Fir.Module.symbols_replaceBody Fir.Module.context_replaceBody Fir.Module.dialectItems_replaceBody Fir.Module.aggregates_replaceBody Fir.Module.globals_replaceBody (pin := Fir.Module.symbols) (pin := Fir.Module.context) (fingerprint := "18259976350888895931")
+:::readable Fir.Module.symbols_replaceBody Fir.Module.context_replaceBody Fir.Module.dialectItems_replaceBody Fir.Module.aggregates_replaceBody Fir.Module.layouts_replaceBody Fir.Module.globals_replaceBody (pin := Fir.Module.symbols) (pin := Fir.Module.context) (fingerprint := "9592506478367900578")
 *Theorems: a replacement keeps the symbol table and the context of
 validation.* For every module $`M`, symbol $`s` and region $`b`, the
 {ref "The-fir-specification--Validation--Scope-and-symbols"}[symbol table]
 of $`M[s \leftarrow b]` is that of $`M`, since every function keeps its
 symbol and its type; so is the context in which validation checks its
-functions, which is the symbol table and the keys of the location table.
-The items of a dialect's kind of its own table, its aggregates' layouts
-and its globals are those of $`M`.
+functions, which is the symbol table, the keys of the location table and
+the layouts of its own table. The items of a dialect's kind of its own
+table, its aggregates' layouts and its globals are those of $`M`, and so
+are the layouts as the rule of an op sees them.
 :::
 
 :::readable Fir.Item.name_replaceBody Fir.Item.tablesIn_replaceBody (fingerprint := "3259367735023084775")

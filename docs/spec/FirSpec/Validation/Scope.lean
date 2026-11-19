@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Scope and symbols: readable blocks" =>
 
-:::moduleDocs (fingerprint := "11164049892021904109")
+:::moduleDocs (fingerprint := "9489635421931241664")
 :::
 
 :::readable Fir.Func.blocks Fir.Region.allBlocks Fir.Block.allBlocks Fir.Operation.regionBlocks Fir.Func.allBlocks (fingerprint := "9127946111391752751")
@@ -161,14 +161,20 @@ symbol table: $`\mathrm{funcs}(\mathrm{table}(M)) = \mathrm{funcs}(M)` and
 $`\mathrm{symtab}_{\mathrm{table}(M)} = \mathrm{symtab}_M`.
 :::
 
-:::readable Fir.OpContext (fingerprint := "11106651158325661476")
+:::readable Fir.LayoutRef Fir.Aggregate.ref Fir.SymbolTable.layouts Fir.OpContext (fingerprint := "14317796907801914433")
 *Definition: the context of an op.* A dialect's rule for an op may look at
-two things beyond the op itself, and at nothing else: the module's symbol
-table, and the result types of the function that holds the op. An _op
-context_ $`C` holds them: $`\mathrm{symtab}_C(s)` gives the function type
-of the symbol $`s`, or is undefined, and $`\mathrm{results}_C` is the list
-of result types. The core dialect reads the first for $`\mathsf{call}` and
-the second for $`\mathsf{ret}`.
+three things beyond the op itself, and at nothing else: the module's symbol
+table, the result types of the function that holds the op, and the
+aggregates' layouts of the op's table. An _op context_ $`C` holds them:
+$`\mathrm{symtab}_C(s)` gives the function type of the symbol $`s`, or is
+undefined, $`\mathrm{results}_C` is the list of result types, and
+$`\mathrm{layouts}_C(s)` gives the layout with the symbol $`s`, or is
+undefined. The rule of an op sees a layout as its memory and, for each of
+its fields in order, its count, or none for a field that is not repeated;
+a table gives each symbol its first layout with that symbol, as a
+{ref "The-fir-specification--Memory--The-items-a-run-gives-each-op"}[run]
+does. The core dialect reads the first for $`\mathsf{call}`, the second
+for $`\mathsf{ret}` and the third for $`\mathsf{fieldaddr}` (#236).
 :::
 
 :::readable Fir.FuncContext Fir.DialectView Fir.DialectView.id (fingerprint := "5122442552274979552")
@@ -237,9 +243,9 @@ these for the core dialect: for example, $`\mathsf{ret}` must return the
 function's result types, and $`\mathsf{call}` must match its callee's type.
 The core dialect has no rule over a whole function. Its pointer type
 $`\mathsf{ptr}\langle N \rangle` names the memory $`N`, and the one op
-that carries a type is $`\mathsf{alloca}`. Its integer and pointer types
-may be fields, with the units and alignment that $`\mathsf{alloca}` gives
-one value of them. It registers no kind of item: its kinds, `func`,
+that carries a type is $`\mathsf{alloca}`. Each of its types, an integer,
+a float or a pointer, may be a field, with the units and alignment that
+$`\mathsf{alloca}` gives one value of it. It registers no kind of item: its kinds, `func`,
 `module` and `aggregate`, have rules of their own in the next sections. It registers no region kind either: the rule of its own kind, a
 control-flow graph, is the rule of a function's body.
 :::

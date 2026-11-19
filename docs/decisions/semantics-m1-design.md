@@ -7,7 +7,8 @@ wins, and the ADR is fixed or deleted (ADR-2026-11-09-1610).
 These are decided designs, and the spec and the tools implement only some of
 them yet: `ptr` has values (ADR-2026-11-09-1542), and its ops so far are
 `ptradd` (ADR-2026-11-13-0251), `alloca` (ADR-2026-11-14-0915), `load`
-and `store` (ADR-2026-11-14-2316). M0 has no
+and `store` (ADR-2026-11-14-2316), and `memcpy` and `memmove`
+(ADR-2026-11-18-2131). M0 has no
 global data (ADR-2026-11-09-1546). `funk`, `fir-ref fmt`, `fir-ref
 validate` and `fir-ref run` read the core and the second dialect, `gpu`
 (ADR-2026-11-09-1545; semantics-m1-dialects.md). Each M1 feature goes through every layer
@@ -170,15 +171,17 @@ Three ops copy, move and set memory, over one memory and a length in its units
 (ADR-2026-11-09-1551):
 
 - Copy carries each unit across exactly: bits, poison and pointer fragments
-  alike. So a copied pointer keeps its provenance. Overlapping source and
-  destination is UB.
+  alike. So a copied pointer keeps its provenance. Its source and
+  destination must be equal or disjoint: a partial overlap is UB.
 - Move does the same and allows overlap.
+- A length of 0 is a no-op, whatever the pointers are, a dangling, null or
+  poison one included.
 - Set writes one unit value into each unit. The value is sized to the memory's
   unit: an `i8` on the default memory, whose unit is an 8-bit byte unless the
   layout says otherwise, and an integer of the unit's width on any other.
 
 Copy and move read the source memory and write the destination. Set writes. All
-three may be UB, for out-of-bounds access. A frontend lowers a C call to
+three may be UB, for out-of-bounds access, unless the length is 0. A frontend lowers a C call to
 `memcpy` to the copy op, not to an external call. The naive backend lowers them
 to funk's own runtime routines `memcpy`, `memmove` and `memset`, not the C
 library's, so a program that only copies, moves or sets memory keeps the
@@ -187,24 +190,42 @@ static link without the C library (ADR-2026-11-09-1551).
 The human ruled these ops on 2026-11-09, on #220. On 2026-11-11 the human ruled
 on #251 that set writes one unit value, not a byte, and on #274 that funk's
 runtime carries its own routines, in place of the C library's that #220 named;
-#234 builds them. Rejected: calls to external functions with known meanings,
-which lose provenance and make every copy an event.
+#234 builds them. On 2026-11-18 the human ruled on #234 that a length of 0 is
+a no-op whatever the pointers are (Q1 B), and that a copy onto its own range
+is allowed, only a partial overlap being UB (Q2 B), both as in LLVM.
+Rejected: calls to external functions with known meanings, which lose
+provenance and make every copy an event; a zero length that is an access, as
+in C17, which makes the zero-length copies of Rust and C2y frontends UB; and
+any shared unit UB, as in C, which would forbid lowering `*a = *b` to the
+copy op.
 
-The spec does not have the ops yet. It has the step that copy and move
-share once their own checks pass, the copy of units: a load of `n` units
-of one memory through the source, then a store of them through the
-destination (`lean/Fir/Execution/MemoryCopyLaws.lean`, stage 1 of #234).
-It is an access through both pointers, so it faults through a dangling
-pointer even for `n = 0`; whether the ops reach it for a zero length, and
-whether a copy onto its own range is UB, wait for the human's rulings on
-#234. The load leaves the memories as they were, so overlapping ranges get
-what the source held before the copy. In the state layer the copy of units
-has one outcome. It writes, reads and allocates in no other memory,
-allocates nothing in its own, and refines from refining memories: the
-obligations of an op that reads and writes one memory. Each but the read
-follows from the load's and the store's through the laws of sequences
-(`lean/Fir/Execution/MemoryBindLaws.lean`). This paragraph records agent
-work, not a ruling.
+Copy and move are written `memcpy ORDERING %d, %s, %n` and
+`memmove ORDERING %d, %s, %n`, destination, source and length in C's order,
+with no result (ADR-2026-11-18-2131). Both pointers are of one memory, the
+length is a run-time integer of any width, read as unsigned, that counts the
+memory's units, and the ordering is always written, `nonatomic` alone valid.
+There is no `align(A)` in M1: each access is aligned to one unit. With a
+length other than 0, a poison pointer is UB, as for a load. A poison length
+runs as some length, chosen as `freeze` chooses bits, so it is UB wherever
+some length is, and the op stays in the `propagates` class
+(ADR-2026-10-29-2006). Rejected: a poison length always UB, as in LLVM's
+LangRef, which the `propagates` class forbids, since with an `i1` length over
+a one-unit allocation no length is UB; it would need the class `exception`.
+This paragraph records agent work, not a ruling, and the poison length waits
+for the human's ruling on #234.
+
+The spec has both ops, `Core.Op.memCopy` with a `CopyKind`
+(`lean/Fir/Core/MemCopy.lean`), through every layer but native code (stage 2
+of #234); `memset` is stage 3, and native code and funk's runtime routines
+stage 4. The rule takes the length first: 0 does nothing; otherwise a poison
+pointer is UB, then a `memcpy` whose ranges partly overlap, then the copy of
+units of stage 1 (`lean/Fir/Execution/MemoryCopyLaws.lean`): a load of the
+units through the source, then a store of them through the destination, so
+a move whose ranges overlap writes what the source held before it began.
+Every law of the op comes from the copy of units, through the laws of a
+choice in the state layer (`lean/Fir/Execution/MemoryChoiceLaws.lean`), and
+joins the core's guarantees through `Core.Op.memCases`, whose statements
+gain no hypothesis.
 
 ## Aggregates
 
@@ -220,17 +241,28 @@ and `}`, with `field(O, T, C)` for a repeated field of `C` elements. A field
 takes the units of its type in the layout's memory, aligned as `alloca` aligns
 it; a repeated field's elements are rounded up to that alignment, so four `i24`
 in memory 0 take 16 units. A valid layout names a declared memory and a
-power-of-two alignment, and places each field of an integer or pointer type at
-a multiple of its alignment, no larger than the layout's, within the size and
-apart from every other field. Float fields wait for #264, though floats now
-have their units. The human ruled on 2026-11-16, on #236: repeated elements
+power-of-two alignment, and places each field of an integer, float or pointer
+type at a multiple of its alignment, no larger than the layout's, within the
+size and apart from every other field. A float takes the units of its bits at
+the natural alignment of its size, as #264 gives them (#236). The human ruled on 2026-11-16, on #236: repeated elements
 are rounded up to their alignment (Q2 B); the run passes the module's layouts
 to every op's rule (Q1 A); and an element index out of range behaves as
 `ptradd` (Q3 A).
 Rejected: elements spaced by the type's units alone, which misaligns arrays of
 `i24` and C's `long double`.
 
-One op computes the address of a field or element from a pointer and a layout.
+One op computes the address of a field or element from a pointer and a layout:
+`fieldaddr` (ADR-2026-11-18-2041), as in `%q: ptr = fieldaddr @pair 1 %p` and
+`%e: ptr = fieldaddr @row 0 %p, %k`. It names the layout of its own table and a
+field by its number, and moves the pointer by the field's offset plus the
+index, read as signed, times the element's step. Like `ptradd` it keeps the
+pointer's provenance, is never UB and gives poison only for a poison operand;
+an index out of the field's elements is an address, and only an access through
+it must be in bounds. Validation requires the layout to be in the pointer's
+memory, the field to exist, and an index only on a repeated field. The rule
+holds for every record of items the run may give, with no hypothesis: one
+without the layout or field moves the pointer by 0. Rejected: the offset and
+type written at each use, two parts that must agree with the layout.
 Data moves through the scalar loads and stores. No op makes an aggregate value,
 or extracts from or inserts into one. Each unit of an aggregate in memory may be
 poison, so nothing extra is needed for poison (ADR-2026-11-09-1550).
