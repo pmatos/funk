@@ -1,0 +1,476 @@
+# Must-reject texts of the field address fieldaddr (#236,
+# ADR-2026-11-18-2041). fieldaddr writes a layout's symbol and a field's
+# number that is not negative, takes a pointer of memory N and an integer
+# index of any width after it when it takes one, and defines a pointer of
+# memory N; any other shape does not decode. Validation accepts it when its
+# symbol names an aggregate's layout of its own module, in the memory of
+# its pointer, its number names one of the layout's fields, and only a
+# repeated field takes an index.
+
+[[reject]]
+verdict = "parse-error"
+rule = "fieldaddr's field number is not negative: -1 does not decode"
+text = '''
+aggregate @pair() memory(0) size(16) align(8) field(0, i64) field(8, ptr) {
+}
+
+aggregate @i24s() memory(0) size(16) align(4) field(0, i24, 4) {
+}
+
+func @f(%p: ptr, %k: i32) -> ptr {
+^e:
+  %q: ptr = fieldaddr @pair -1 %p @0
+  ret %q @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "fieldaddr writes a layout's symbol and a field's number: one with no number does not decode"
+text = '''
+aggregate @pair() memory(0) size(16) align(8) field(0, i64) field(8, ptr) {
+}
+
+aggregate @i24s() memory(0) size(16) align(4) field(0, i24, 4) {
+}
+
+func @f(%p: ptr, %k: i32) -> ptr {
+^e:
+  %q: ptr = fieldaddr @pair %p @0
+  ret %q @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "fieldaddr writes the symbol before the number: 1 @pair does not decode"
+text = '''
+aggregate @pair() memory(0) size(16) align(8) field(0, i64) field(8, ptr) {
+}
+
+aggregate @i24s() memory(0) size(16) align(4) field(0, i24, 4) {
+}
+
+func @f(%p: ptr, %k: i32) -> ptr {
+^e:
+  %q: ptr = fieldaddr 1 @pair %p @0
+  ret %q @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "fieldaddr has two attributes: a third does not decode"
+text = '''
+aggregate @pair() memory(0) size(16) align(8) field(0, i64) field(8, ptr) {
+}
+
+aggregate @i24s() memory(0) size(16) align(4) field(0, i24, 4) {
+}
+
+func @f(%p: ptr, %k: i32) -> ptr {
+^e:
+  %q: ptr = fieldaddr @pair 1 2 %p @0
+  ret %q @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "fieldaddr names its layout by a symbol: the word pair does not decode"
+text = '''
+aggregate @pair() memory(0) size(16) align(8) field(0, i64) field(8, ptr) {
+}
+
+aggregate @i24s() memory(0) size(16) align(4) field(0, i24, 4) {
+}
+
+func @f(%p: ptr, %k: i32) -> ptr {
+^e:
+  %q: ptr = fieldaddr pair 1 %p @0
+  ret %q @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "fieldaddr defines a pointer of its pointer's memory: a ptr(1) from a ptr does not decode"
+text = '''
+layout memory(1, unit(16), pointer(32), little)
+
+aggregate @pair() memory(0) size(16) align(8) field(0, i64) field(8, ptr) {
+}
+
+aggregate @i24s() memory(0) size(16) align(4) field(0, i24, 4) {
+}
+
+func @f(%p: ptr, %k: i32) -> ptr(1) {
+^e:
+  %q: ptr(1) = fieldaddr @pair 1 %p @0
+  ret %q @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "fieldaddr defines a pointer: an i64 result does not decode"
+text = '''
+aggregate @pair() memory(0) size(16) align(8) field(0, i64) field(8, ptr) {
+}
+
+aggregate @i24s() memory(0) size(16) align(4) field(0, i24, 4) {
+}
+
+func @f(%p: ptr, %k: i32) -> i64 {
+^e:
+  %q: i64 = fieldaddr @pair 1 %p @0
+  ret %q @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "fieldaddr takes a pointer first: an integer does not decode"
+text = '''
+aggregate @pair() memory(0) size(16) align(8) field(0, i64) field(8, ptr) {
+}
+
+aggregate @i24s() memory(0) size(16) align(4) field(0, i24, 4) {
+}
+
+func @f(%p: i64, %k: i32) -> ptr {
+^e:
+  %q: ptr = fieldaddr @pair 1 %p @0
+  ret %q @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "fieldaddr's index is an integer: an f32 does not decode"
+text = '''
+aggregate @pair() memory(0) size(16) align(8) field(0, i64) field(8, ptr) {
+}
+
+aggregate @i24s() memory(0) size(16) align(4) field(0, i24, 4) {
+}
+
+func @f(%p: ptr, %k: f32) -> ptr {
+^e:
+  %q: ptr = fieldaddr @i24s 0 %p, %k @0
+  ret %q @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "fieldaddr's index is an integer: a pointer does not decode"
+text = '''
+aggregate @pair() memory(0) size(16) align(8) field(0, i64) field(8, ptr) {
+}
+
+aggregate @i24s() memory(0) size(16) align(4) field(0, i24, 4) {
+}
+
+func @f(%p: ptr, %k: i32) -> ptr {
+^e:
+  %q: ptr = fieldaddr @i24s 0 %p, %p @0
+  ret %q @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "fieldaddr takes one index at most: two do not decode"
+text = '''
+aggregate @pair() memory(0) size(16) align(8) field(0, i64) field(8, ptr) {
+}
+
+aggregate @i24s() memory(0) size(16) align(4) field(0, i24, 4) {
+}
+
+func @f(%p: ptr, %k: i32) -> ptr {
+^e:
+  %q: ptr = fieldaddr @i24s 0 %p, %k, %k @0
+  ret %q @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "fieldaddr takes a pointer: one with no operand does not decode"
+text = '''
+aggregate @pair() memory(0) size(16) align(8) field(0, i64) field(8, ptr) {
+}
+
+aggregate @i24s() memory(0) size(16) align(4) field(0, i24, 4) {
+}
+
+func @f(%p: ptr, %k: i32) -> ptr {
+^e:
+  %q: ptr = fieldaddr @pair 1 @0
+  ret %q @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "fieldaddr names a layout: @none names no item"
+text = '''
+aggregate @pair() memory(0) size(16) align(8) field(0, i64) field(8, ptr) {
+}
+
+aggregate @i24s() memory(0) size(16) align(4) field(0, i24, 4) {
+}
+
+func @f(%p: ptr, %k: i32) -> ptr {
+^e:
+  %q: ptr = fieldaddr @none 0 %p @0
+  ret %q @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "fieldaddr names a layout: @f is a function"
+text = '''
+aggregate @pair() memory(0) size(16) align(8) field(0, i64) field(8, ptr) {
+}
+
+aggregate @i24s() memory(0) size(16) align(4) field(0, i24, 4) {
+}
+
+func @f(%p: ptr, %k: i32) -> ptr {
+^e:
+  %q: ptr = fieldaddr @f 0 %p @0
+  ret %q @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "fieldaddr names a field of its layout: @pair has two, so field 2 is none"
+text = '''
+aggregate @pair() memory(0) size(16) align(8) field(0, i64) field(8, ptr) {
+}
+
+aggregate @i24s() memory(0) size(16) align(4) field(0, i24, 4) {
+}
+
+func @f(%p: ptr, %k: i32) -> ptr {
+^e:
+  %q: ptr = fieldaddr @pair 2 %p @0
+  ret %q @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "fieldaddr names a field of its layout: 18446744073709551616 is none of @pair's"
+text = '''
+aggregate @pair() memory(0) size(16) align(8) field(0, i64) field(8, ptr) {
+}
+
+aggregate @i24s() memory(0) size(16) align(4) field(0, i24, 4) {
+}
+
+func @f(%p: ptr, %k: i32) -> ptr {
+^e:
+  %q: ptr = fieldaddr @pair 18446744073709551616 %p @0
+  ret %q @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "only a repeated field takes an index: field 1 of @pair is one pointer"
+text = '''
+aggregate @pair() memory(0) size(16) align(8) field(0, i64) field(8, ptr) {
+}
+
+aggregate @i24s() memory(0) size(16) align(4) field(0, i24, 4) {
+}
+
+func @f(%p: ptr, %k: i32) -> ptr {
+^e:
+  %q: ptr = fieldaddr @pair 1 %p, %k @0
+  ret %q @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "fieldaddr's layout is of its pointer's memory: @wide is of memory 1, the pointer of memory 0"
+text = '''
+layout memory(1, unit(16), pointer(32), little)
+
+aggregate @pair() memory(0) size(16) align(8) field(0, i64) field(8, ptr) {
+}
+
+aggregate @i24s() memory(0) size(16) align(4) field(0, i24, 4) {
+}
+
+aggregate @wide() memory(1) size(4) align(2) field(0, ptr(1)) field(2, i16, 1) {
+}
+
+func @f(%p: ptr, %k: i32) -> ptr {
+^e:
+  %q: ptr = fieldaddr @wide 0 %p @0
+  ret %q @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "fieldaddr's layout is of its pointer's memory: @pair is of memory 0, the pointer of memory 1"
+text = '''
+layout memory(1, unit(16), pointer(32), little)
+
+aggregate @pair() memory(0) size(16) align(8) field(0, i64) field(8, ptr) {
+}
+
+aggregate @i24s() memory(0) size(16) align(4) field(0, i24, 4) {
+}
+
+func @f(%p: ptr(1), %k: i32) -> ptr(1) {
+^e:
+  %q: ptr(1) = fieldaddr @pair 0 %p @0
+  ret %q @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "fieldaddr names a layout of its own module: @in is a nested module's"
+text = '''
+aggregate @out() memory(0) size(8) align(8) field(0, i64) {
+}
+
+module @dev() {
+  aggregate @in() memory(0) size(4) align(4) field(0, i32) {
+  }
+
+  func @g(%p: ptr) -> ptr {
+  ^entry:
+    %q: ptr = fieldaddr @in 0 %p @0
+    ret %q @0
+  }
+
+}
+
+func @f(%p: ptr) -> ptr {
+^entry:
+  %q: ptr = fieldaddr @in 0 %p @0
+  ret %q @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "fieldaddr in a nested module names a layout of that module: @out is the outer module's"
+text = '''
+aggregate @out() memory(0) size(8) align(8) field(0, i64) {
+}
+
+module @dev() {
+  aggregate @in() memory(0) size(4) align(4) field(0, i32) {
+  }
+
+  func @g(%p: ptr) -> ptr {
+  ^entry:
+    %q: ptr = fieldaddr @out 0 %p @0
+    ret %q @0
+  }
+
+}
+
+func @f(%p: ptr) -> ptr {
+^entry:
+  %q: ptr = fieldaddr @out 0 %p @0
+  ret %q @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
