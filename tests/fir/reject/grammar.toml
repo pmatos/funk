@@ -134,7 +134,7 @@ locs {
 
 [[reject]]
 verdict = "parse-error"
-rule = "an item's kind is func, module, aggregate, global or a word of a dialect: struct is none"
+rule = "an item's kind is func, module, aggregate, data or a word of a dialect: struct is none"
 text = '''
 struct @g() {
 }

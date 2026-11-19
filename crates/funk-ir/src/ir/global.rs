@@ -12,6 +12,7 @@
 //! with `K` not 0. Every number but a unit's is at most `2^64 - 1`, so it is
 //! a `u64` here; a unit is any natural number, kept as its spelling.
 
+use super::aggregate::{applied, number};
 use super::attr::Attr;
 use super::int::Int;
 
@@ -129,23 +130,6 @@ pub enum GlobalFault {
     Align(usize),
     /// This one is not a piece of an initializer.
     Piece(usize),
-}
-
-/// The number of `head(n)`, `n` from 0 to `2^64 - 1`
-/// (`Aggregate.decodeNumber`).
-fn applied(a: &Attr, head: &str) -> Option<u64> {
-    match a {
-        Attr::App(h, args) if h == head => match args.as_slice() {
-            [Attr::Int(n)] => number(n),
-            _ => None,
-        },
-        _ => None,
-    }
-}
-
-/// An integer from 0 to `2^64 - 1` (`Aggregate.number`).
-fn number(n: &Int) -> Option<u64> {
-    n.as_str().parse::<u64>().ok()
 }
 
 /// The piece that an attribute writes (`InitPiece.decode`).

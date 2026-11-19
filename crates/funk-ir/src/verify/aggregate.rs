@@ -28,7 +28,7 @@ pub(super) fn check(t: Table<'_>, layout: &[MemLayout], reg: &Registry, out: &mu
 }
 
 /// The entry of memory `n` (`DataLayout.memory?`), if the module has it.
-fn declared(layout: &[MemLayout], n: u64) -> Option<MemLayout> {
+pub(super) fn declared(layout: &[MemLayout], n: u64) -> Option<MemLayout> {
     u32::try_from(n).ok().and_then(|n| memory(layout, n))
 }
 

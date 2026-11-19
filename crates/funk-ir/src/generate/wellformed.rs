@@ -26,7 +26,8 @@
 //!   the kind, and no registry here does (ADR-2026-11-09-1543);
 //! - aggregates' layouts of any numbers, with fields of core integer and
 //!   pointer types, repeated or not (ADR-2026-11-16-1546);
-//! - globals of any numbers, flags and initializers (ADR-2026-11-09-1546).
+//! - globals of any numbers, flags and initializers (ADR-2026-11-09-1546),
+//!   spelled as ADR-2026-11-19-0124 says.
 //!
 //! Each new op still decodes: its operands are values the function defines,
 //! somewhere, of the types its name and attributes need, and its results
