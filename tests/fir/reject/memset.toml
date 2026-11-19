@@ -1,0 +1,192 @@
+# Must-reject texts of memset (#234, ADR-2026-11-18-2131). It takes a
+# pointer, the destination, then an integer value and an integer length of
+# any width, and defines nothing; its one attribute is its ordering. Every
+# ordering decodes, and validation accepts only nonatomic
+# (ADR-2026-11-09-1542). There is no align(A) in M1, so one does not
+# decode, and neither does a value or a length that is not an integer or
+# any other shape. A value of any width decodes, and the data layout
+# rejects one that is not as wide as a unit of the pointer's memory. A
+# pointer of a memory that the module does not declare is rejected by
+# validation, as for every pointer type.
+
+[[reject]]
+verdict = "validation-error"
+rule = "memset is nonatomic in M1: the ordering seq_cst decodes and is rejected"
+text = '''
+func @f(%p: ptr, %v: i8, %n: i64) -> i64 {
+^e:
+  memset seq_cst %p, %v, %n @0
+  ret %n @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "memset writes its ordering: a memset with none does not decode"
+text = '''
+func @f(%p: ptr, %v: i8, %n: i64) -> i64 {
+^e:
+  memset %p, %v, %n @0
+  ret %n @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "memset has no alignment in M1: align(4) does not decode"
+text = '''
+func @f(%p: ptr, %v: i8, %n: i64) -> i64 {
+^e:
+  memset nonatomic align(4) %p, %v, %n @0
+  ret %n @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "memset's value is an integer: a pointer in its place does not decode"
+text = '''
+func @f(%p: ptr, %v: ptr, %n: i64) -> i64 {
+^e:
+  memset nonatomic %p, %v, %n @0
+  ret %n @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "memset's value is an integer: a float in its place does not decode"
+text = '''
+func @f(%p: ptr, %v: f32, %n: i64) -> i64 {
+^e:
+  memset nonatomic %p, %v, %n @0
+  ret %n @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "memset takes a pointer then two integers: an integer in the destination's place does not decode"
+text = '''
+func @f(%p: i64, %v: i8, %n: i64) -> i64 {
+^e:
+  memset nonatomic %p, %v, %n @0
+  ret %n @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "memset's length is an integer: a pointer in its place does not decode"
+text = '''
+func @f(%p: ptr, %v: i8, %n: ptr) -> i8 {
+^e:
+  memset nonatomic %p, %v, %n @0
+  ret %v @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "memset takes three operands: one without a length does not decode"
+text = '''
+func @f(%p: ptr, %v: i8, %n: i64) -> i64 {
+^e:
+  memset nonatomic %p, %v @0
+  ret %n @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "memset defines nothing: one with a result does not decode"
+text = '''
+func @f(%p: ptr, %v: i8, %n: i64) -> i64 {
+^e:
+  %r: i64 = memset nonatomic %p, %v, %n @0
+  ret %n @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "memset's value is as wide as a unit of its memory: an i16 into memory 0, of 8-bit units, is rejected"
+text = '''
+func @f(%p: ptr, %v: i16, %n: i64) -> i64 {
+^e:
+  memset nonatomic %p, %v, %n @0
+  ret %n @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "memset's value is as wide as a unit of its memory: an i8 into memory 1, of 16-bit units, is rejected"
+text = '''
+layout memory(1, unit(16), pointer(32), little)
+
+func @f(%p: ptr(1), %v: i8, %n: i64) -> i64 {
+^e:
+  memset nonatomic %p, %v, %n @0
+  ret %n @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "no pointer of an undeclared memory reaches a memset: its definition, here a parameter of ptr(1) without memory 1 in the layout, is rejected"
+text = '''
+func @f(%p: ptr(1), %v: i8, %n: i64) -> i64 {
+^e:
+  memset nonatomic %p, %v, %n @0
+  ret %n @0
+}
+
+locs {
+  @0 = unknown
+}
+'''

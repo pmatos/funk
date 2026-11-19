@@ -349,14 +349,16 @@ theorem Module.dialectItems_of_flat {m : Module d} (flat : ∀ i ∈ m.items, i.
 
 /-- A module with no nested module is valid when its location table, its
 own table and its layout are, and the layout declares the memories of its
-functions' types and of the types that their ops carry. -/
+functions' types and of the types that their ops carry, and gives units
+as wide as the values that their ops write into them. -/
 theorem Module.valid_of_flat {m : Module d} (flat : ∀ i ∈ m.items, i.func?.isSome)
     (symbolsUnique : (m.items.map Item.name).Nodup) (locs : LocTable.Valid m.locs)
     (funcs : ∀ f ∈ m.funcs, f.Valid m.context) (dialectNames : ∀ x ∈ m.dialects, isWord x)
     (dialectsUnique : m.dialects.Nodup) (layout : m.layout.Valid := by decide)
     (memories : ∀ f ∈ m.funcs, ∀ ty ∈ f.types, m.layout.HasMemoryOf ty := by decide +kernel)
     (attrMemories : ∀ f ∈ m.funcs, ∀ ty ∈ f.attrTypes, m.layout.HasMemoryOf ty := by
-      decide +kernel) :
+      decide +kernel)
+    (units : ∀ f ∈ m.funcs, ∀ q ∈ f.unitWidths, m.layout.HasUnits q := by decide +kernel) :
     m.Valid := by
   have hd := Module.dialectItems_of_flat flat
   have ha : m.table.aggregates = [] := List.filterMap_eq_nil_iff.mpr fun j hj => by
@@ -368,7 +370,7 @@ theorem Module.valid_of_flat {m : Module d} (flat : ∀ i ∈ m.items, i.func?.i
     exact ⟨symbolsUnique, funcs, fun i hi => by simp [hd] at hi, dialectNames, dialectsUnique⟩
   · simp only [Module.tables, Item.tablesIn_eq_nil flat, List.mem_singleton] at ht
     subst ht
-    exact ⟨memories, fun i hi => by simp [hd] at hi, attrMemories⟩
+    exact ⟨memories, fun i hi => by simp [hd] at hi, attrMemories, units⟩
   · simp only [Module.tables, Item.tablesIn_eq_nil flat, List.mem_singleton] at ht
     subst ht
     exact fun a h => by simp [ha] at h

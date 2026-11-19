@@ -10,8 +10,8 @@ shifts, comparison and selection, width changes, `freeze` and `poison`,
 branches and calls, the float constants, comparisons, arithmetic, bit
 casts, conversions from integers, conversions between formats and
 conversions to integers, pointer offsets, field addresses, stack
-allocation, loads and stores, of integers, pointers and floats, and
-copies and moves of units.
+allocation, loads and stores, of integers, pointers and floats,
+copies and moves of units, and fills of units.
 Each op below is an op instance: it carries its
 attributes and the widths it is used at, so that its operand and result
 types follow from it.
@@ -267,6 +267,21 @@ rulings of 2026-11-18 on #234):
   writes the memory `N` and may be UB. M1's validation accepts only the
   ordering `nonatomic`.
 
+Fills of units (#234; ADR-2026-11-09-1551 and the human's rulings of
+2026-11-18 and 2026-11-19 on #234):
+
+* `memSet o v w n`: writes `len` copies of one unit of the memory `N`,
+  `N = n`, through a pointer of `ptr<N>`, where the unit is a value of
+  `iV`, `V = v`, and `len` is an `iW`, `W = w`, read as unsigned. The
+  module's data layout asks that `V` be the width of a unit of memory
+  `N`. A poison value writes poison units, as a store of poison does, and
+  is not UB. A length of 0 does nothing, whatever the pointer is, poison
+  included. Otherwise a poison pointer is immediate UB, and so is an
+  access that faults. A poison length runs as some length, chosen, so it
+  is UB wherever some length is. The op gives no result, writes the
+  memory `N` and may be UB. M1's validation accepts only the ordering
+  `nonatomic`.
+
 Conversions from a float to an integer, by Lean's float model
 (ADR-2026-11-09-1549; the human's ruling of 2026-11-12 on #354):
 
@@ -349,6 +364,7 @@ inductive Op where
   | loadFloat (o : Memory.Ordering) (e m : Nat) (a : Option Nat) (n : Nat)
   | storeFloat (o : Memory.Ordering) (e m : Nat) (a : Option Nat) (n : Nat)
   | memCopy (k : CopyKind) (o : Memory.Ordering) (w n : Nat)
+  | memSet (o : Memory.Ordering) (v w n : Nat)
   | fptosi (e m n : Nat)
   | fptoui (e m n : Nat)
   | freeze (w : Nat)

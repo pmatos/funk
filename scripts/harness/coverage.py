@@ -190,7 +190,7 @@ SECTIONS = {
     ),
     "fields": ("Field addresses, with no index or by an index", ("op",), "by "),
     "values": ("Passed and returned values", ("op", "what"), ""),
-    "copies": ("Copies and moves, by the width of their length", ("op",), ""),
+    "copies": ("Copies, moves and fills, by the width of their length", ("op",), ""),
     "gpu": ("Ops of the gpu dialect in a dimension", ("op", "dimension"), ""),
     "gpu_memory": (
         "Work-group allocation of the gpu dialect, of one, of a float or of a pointer",

@@ -132,6 +132,8 @@ import FirSpec.Core.StoreText
 import FirSpec.Core.StoreTextLaws
 import FirSpec.Core.MemCopyText
 import FirSpec.Core.MemCopyTextLaws
+import FirSpec.Core.MemSetText
+import FirSpec.Core.MemSetTextLaws
 import FirSpec.Core.TextSamples
 import FirSpec.Text.Print
 import FirSpec.Text.RoundTrip
@@ -209,6 +211,9 @@ import FirSpec.Core.StoreFloatLaws
 import FirSpec.Core.MemCopy
 import FirSpec.Core.MemCopyLaws
 import FirSpec.Core.MemCopyPoison
+import FirSpec.Core.MemSet
+import FirSpec.Core.MemSetLaws
+import FirSpec.Core.MemSetPoison
 import FirSpec.Memory.Ordering
 import FirSpec.Execution.MemoryCallSteps
 import FirSpec.Execution.MemoryProgress

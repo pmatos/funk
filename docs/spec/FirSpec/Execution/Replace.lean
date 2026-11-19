@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Replacing a callee: readable blocks" =>
 
-:::moduleDocs (fingerprint := "6879808702729859679")
+:::moduleDocs (fingerprint := "14298113886478897057")
 :::
 
 :::readable Fir.Func.replaceBody Fir.Item.replaceBody Fir.Module.replaceBody (fingerprint := "9888802993431548961")
@@ -87,18 +87,21 @@ the body replaced hold the same
 a function holds none, and a nested module is unchanged.
 :::
 
-:::readable Fir.Module.valid_replaceBody (pin := Fir.Module.Valid) (fingerprint := "17845541104556441495")
+:::readable Fir.Module.valid_replaceBody (pin := Fir.Module.Valid) (fingerprint := "15594991824877539945")
 *Theorem: a valid module stays valid when the new function is valid.* For
 every dialect with its validation rules, let $`M` be a
 {ref "The-fir-specification--Validation--The-general-rules"}[valid module],
 $`s` a symbol and $`b` a region, and let each function $`g` of $`M` with
 the symbol $`s`, given the body $`b`, be valid in the context of $`M`, with
 each of its types, and each type that its ops carry in their attributes,
-naming a memory that the layout of $`M` declares. Then
+naming a memory that the layout of $`M` declares, and each pair
+$`(N, V)` that its ops ask, $`\mathrm{opunits}`, naming a memory whose
+units in the layout of $`M` are $`V` bits wide. Then
 $`M[s \leftarrow b]` is valid: the symbols of its own table are those of
 $`M`, so still unique; its location table, its dialect set and its layout
 are those of $`M`; each of its functions is valid in its context, which is
-that of $`M`, and its types name memories of the layout; its aggregates'
+that of $`M`, its types name memories of the layout, and its ops' values
+are as wide as their memories' units; its aggregates'
 layouts are those of $`M`, so still valid; and its nested modules, and so
 the tables they hold, are those of $`M`.
 

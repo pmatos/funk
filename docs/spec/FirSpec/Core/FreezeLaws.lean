@@ -17,7 +17,7 @@ when the Lean changes under it.
 :::moduleDocs (fingerprint := "12474189112956974592")
 :::
 
-:::readable Fir.Core.freeze_denote (pin := Fir.Core.freezeValue) (pin := Fir.Core.Op.denote?) (pin := Fir.instDialectDenoteCoreDialectSetM) (fingerprint := "9548963332883888699")
+:::readable Fir.Core.freeze_denote (pin := Fir.Core.freezeValue) (pin := Fir.Core.Op.denote?) (pin := Fir.instDialectDenoteCoreDialectSetM) (fingerprint := "17463643168100677361")
 *Theorem: what $`\mathsf{freeze}` may give.* For every width $`w`, every
 $`a \in \llbracket \mathsf{i}w \rrbracket` and every way $`e` to end,
 $`\mathsf{freeze}_w` on $`a` may end with $`e` exactly when $`e` is

@@ -223,19 +223,22 @@ variable [DialectSignature d] [DialectValidation d]
 /-- A valid module with a body replaced is valid when its function `@s`
 with the new body is valid in the module's context, which the replacement
 keeps, and the module's layout declares the memories of its types and of
-the types that its ops carry. -/
+the types that its ops carry, and gives units as wide as the values that
+its ops write into them. -/
 theorem Module.valid_replaceBody {M : Module d} (hM : M.Valid) {s : Name} {b : Region d}
     (h : ∀ g ∈ M.funcs, g.name = s → ({ g with body := b } : Func d).Valid M.context)
     (hm : ∀ g ∈ M.funcs, g.name = s →
       ∀ ty ∈ ({ g with body := b } : Func d).types, M.layout.HasMemoryOf ty)
     (ha : ∀ g ∈ M.funcs, g.name = s →
-      ∀ ty ∈ ({ g with body := b } : Func d).attrTypes, M.layout.HasMemoryOf ty) :
+      ∀ ty ∈ ({ g with body := b } : Func d).attrTypes, M.layout.HasMemoryOf ty)
+    (hu : ∀ g ∈ M.funcs, g.name = s →
+      ∀ q ∈ ({ g with body := b } : Func d).unitWidths, M.layout.HasUnits q) :
     (M.replaceBody s b).Valid := by
   refine ⟨hM.locs, fun t ht => ?_, hM.layout, fun t ht => ?_, fun t ht => ?_⟩
   rotate_left
   · simp only [Module.tables, Module.replaceBody, Item.tablesIn_replaceBody, List.mem_cons] at ht
     rcases ht with rfl | ht
-    · refine ⟨fun f hf => ?_, fun i hi => ?_, fun f hf => ?_⟩
+    · refine ⟨fun f hf => ?_, fun i hi => ?_, fun f hf => ?_, fun f hf => ?_⟩
       · have hf' : f ∈ (M.replaceBody s b).funcs := hf
         rw [Module.funcs_replaceBody] at hf'
         obtain ⟨g, hg, rfl⟩ := List.mem_map.1 hf'
@@ -253,6 +256,14 @@ theorem Module.valid_replaceBody {M : Module d} (hM : M.Valid) {s : Name} {b : R
           exact ha g hg hs
         · rw [Func.replaceBody_of_ne hs]
           exact (hM.memories _ (List.mem_cons_self ..)).attrs g hg
+      · have hf' : f ∈ (M.replaceBody s b).funcs := hf
+        rw [Module.funcs_replaceBody] at hf'
+        obtain ⟨g, hg, rfl⟩ := List.mem_map.1 hf'
+        by_cases hs : g.name = s
+        · rw [Func.replaceBody_of_eq hs]
+          exact hu g hg hs
+        · rw [Func.replaceBody_of_ne hs]
+          exact (hM.memories _ (List.mem_cons_self ..)).units g hg
       · have hi' : i ∈ (M.replaceBody s b).table.dialectItems := hi
         rw [Module.dialectItems_replaceBody] at hi'
         exact (hM.memories _ (List.mem_cons_self ..)).dialectItems i hi'

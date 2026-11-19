@@ -61,8 +61,8 @@ has neither operands nor attributes, is a cell at each width of its result
 - The field address `fieldaddr` is a cell for each width of its index,
   and one with no index, at the side's field widths
   (`pointer_cells.py`, #236).
-- `memcpy` and `memmove` are a cell for each width of their length, on
-  the interpreter-only side (`copy_cells.py`, #234).
+- `memcpy`, `memmove` and `memset` are a cell for each width of their
+  length, on the interpreter-only side (`copy_cells.py`, #234).
 """
 
 from cell_types import Cell, CellError, Row, Table
@@ -79,7 +79,7 @@ from conversion_cells import (
     int_to_float,
     is_float,
 )
-from copy_cells import COPY_OPS, copies_table, copy_cell
+from copy_cells import MEM_OPS, copies_table, copy_cell
 from firtext import Op
 from gpu_cells import (
     GPU,
@@ -441,7 +441,7 @@ def of_op(op: Op) -> set[Cell]:
         return {pointer_cell(op)}
     if op.name == FIELD_ADDR:
         return {field_address(op)}
-    if op.name in COPY_OPS:
+    if op.name in MEM_OPS:
         return {copy_cell(op)}
     if op.name in GPU_OPS:
         return {gpu_cell(op)}

@@ -14,15 +14,18 @@
 //! diagnostic, which names the first such memory in the order of
 //! `Func.types`: its results, its parameters, then the values that each
 //! block defines; and then of `Func.attrTypes`: the types that its ops
-//! carry in their attributes, op by op.
+//! carry in their attributes, op by op. Last, a function an op of which
+//! writes values into the units of a memory whose units are not as wide,
+//! such as a `memset` of an `i16` into memory 0, gets one diagnostic, which
+//! names the first such memory (`unitsProblem`).
 
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 
 use super::Diagnostic;
 use crate::ir::Part;
 use crate::ir::layout::memory;
-use crate::ir::{ByteOrder, MemLayout, Table, Type};
-use crate::registry::Registry;
+use crate::ir::{ByteOrder, Func, MemLayout, Table, Type};
+use crate::registry::{OpTypes, Registry};
 
 /// The rules of the layout's entries (`DataLayout.problems`): each entry's
 /// problems in order, then each memory declared more than once.
@@ -102,6 +105,60 @@ pub(super) fn check_memories(
             out.push(problem(&i.name, n));
         }
     }
+    for f in t.funcs() {
+        if let Some((n, w)) = first_unit_width(f, layout, reg) {
+            let unit = memory(layout, n).unwrap_or(MemLayout::DEFAULT).unit;
+            out.push(Diagnostic::at_block(
+                &f.name,
+                None,
+                format!(
+                    "an op writes values of {w} bits into memory {n}, whose units have {unit} bits"
+                ),
+            ));
+        }
+    }
+}
+
+/// The first memory, with the width of the values written into it, whose
+/// units an op of `f` writes values of that are not as wide as them
+/// (`unitsProblem` over `Func.unitWidths`). An op whose operands are not
+/// defined, or which does not decode, asks for none: the rules of ops
+/// report it.
+fn first_unit_width(f: &Func, layout: &[MemLayout], reg: &Registry) -> Option<(u32, u32)> {
+    let mut types: HashMap<&str, &Type> = HashMap::new();
+    let defs = f.body.parts().flat_map(|part| match part {
+        Part::Block(b) => b
+            .params
+            .iter()
+            .chain(b.ops.iter().flat_map(|o| &o.results))
+            .collect(),
+        _ => Vec::new(),
+    });
+    for d in f.params.iter().chain(defs) {
+        types.entry(d.name.as_str()).or_insert(&d.ty);
+    }
+    let ops = f.body.parts().filter_map(|part| match part {
+        Part::Block(b) => Some(&b.ops),
+        _ => None,
+    });
+    ops.flatten().find_map(|o| {
+        let spec = reg.op(&o.name)?;
+        let operands: Vec<Type> = o
+            .operands
+            .iter()
+            .map(|x| types.get(x.as_str()).map(|t| (*t).clone()))
+            .collect::<Option<_>>()?;
+        let results: Vec<Type> = o.results.iter().map(|d| d.ty.clone()).collect();
+        let op = OpTypes {
+            attrs: &o.attrs,
+            operands: &operands,
+            results: &results,
+        };
+        spec.decode(&op).ok()?;
+        spec.unit_widths(&op)
+            .into_iter()
+            .find(|&(n, w)| memory(layout, n).unwrap_or(MemLayout::DEFAULT).unit != w)
+    })
 }
 
 fn problem(sym: &str, n: u32) -> Diagnostic {

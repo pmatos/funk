@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Scope and symbols: readable blocks" =>
 
-:::moduleDocs (fingerprint := "10270739387761515840")
+:::moduleDocs (fingerprint := "17717603102485184470")
 :::
 
 :::readable Fir.Func.blocks Fir.Region.allBlocks Fir.Block.allBlocks Fir.Operation.regionBlocks Fir.Func.allBlocks (fingerprint := "9127946111391752751")
@@ -190,11 +190,11 @@ operands and the results of such an op stay visible. A dialect sees its own
 functions through the identity view.
 :::
 
-:::readable Fir.DialectValidation (fingerprint := "11932845281982970259")
+:::readable Fir.DialectValidation (fingerprint := "4291639524394663917")
 *Definition: what a dialect adds to validation.* The general rules of the
 next sections hold for every
 {ref "The-fir-specification--Abstract-syntax--Dialects"}[dialect]. Each
-dialect $`d` adds nine things of its own:
+dialect $`d` adds ten things of its own:
 
 * which of its types are valid, written $`\vdash_d t~\text{valid}`;
 * $`\mathrm{refs}_d(\mathit{op})`, the symbols that the op instance
@@ -231,6 +231,11 @@ dialect $`d` adds nine things of its own:
   values of. Validation checks the memory that each names, as it checks
   that of every type a function states. An op that carries no type has
   none, the default;
+* $`\mathrm{opunits}_d(\mathit{op})`, the memories whose units the op
+  instance $`\mathit{op}` writes values of, each with the width of those
+  values, such as the core's $`\mathsf{memset}`. Validation checks that the
+  module's data layout gives each memory units of that width. An op that
+  writes no values into units has none, the default;
 * $`\mathrm{shape}_d(\ell, n, t)`, the units that a value of its type $`t`
   takes as a field of an aggregate's layout in the memory $`n` of a module
   whose memories have the entries $`\ell`, and its alignment there, in
@@ -242,7 +247,8 @@ these for the core dialect: for example, $`\mathsf{ret}` must return the
 function's result types, and $`\mathsf{call}` must match its callee's type.
 The core dialect has no rule over a whole function. Its pointer type
 $`\mathsf{ptr}\langle N \rangle` names the memory $`N`, and the one op
-that carries a type is $`\mathsf{alloca}`. Each of its types, an integer,
+that carries a type is $`\mathsf{alloca}`; the one op that asks a unit's
+width is $`\mathsf{memset}`. Each of its types, an integer,
 a float or a pointer, may be a field, with the units and alignment that
 $`\mathsf{alloca}` gives one value of it. It registers no kind of item: its kinds, `func`,
 `module` and `aggregate`, have rules of their own in the next sections. It registers no region kind either: the rule of its own kind, a

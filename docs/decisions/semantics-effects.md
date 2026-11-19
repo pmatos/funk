@@ -30,7 +30,8 @@ first ops that use them are `alloca`, which allocates in the memory of its
 result (ADR-2026-11-14-0915), `load`, which reads the memory of its
 pointer, and `store`, which writes it and reads no memory
 (ADR-2026-11-14-2316). `memcpy` and `memmove` read and write the memory of
-their pointers and may be UB (ADR-2026-11-09-1551, ADR-2026-11-18-2131).
+their pointers and may be UB, and `memset` writes the memory of its pointer
+and may be UB, as `store` does (ADR-2026-11-09-1551, ADR-2026-11-18-2131).
 
 An external call, an indirect call to an unknown function and inline assembly
 without a narrower declaration carry every effect on every memory that can have

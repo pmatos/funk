@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Core rules: readable blocks" =>
 
-:::moduleDocs (fingerprint := "15090636179746196943")
+:::moduleDocs (fingerprint := "17323455731464846767")
 :::
 
 :::readable Fir.Core.Ty.Valid Fir.Core.Ty.memory (pin := Fir.Core.maxWidth) (pin := Fir.Core.floatWidth) (fingerprint := "744407091263889301")
@@ -50,7 +50,7 @@ in every module, and $`\mathsf{ptr}\langle N \rangle` with $`N \ge 1` is in
 a module whose layout declares memory $`N` (ADR-2026-11-12-1821).
 :::
 
-:::readable Fir.Core.Op.symbolRefs (fingerprint := "9502815346640795917")
+:::readable Fir.Core.Op.symbolRefs (fingerprint := "17705138793972318009")
 *Definition: the symbols a core op refers to.* $`\mathsf{call}~f : t^* \to r^*`
 refers to the symbol $`f` of its callee: its list of symbols is the
 one-element sequence $`(f)`. No other core op refers to a function:
@@ -76,7 +76,7 @@ that $`\mathsf{alloca}` allocates takes. A float type is not yet a field
 of every valid type, a float's included (#264).
 :::
 
-:::readable Fir.Core.Op.attrTypes (fingerprint := "13099989219528477479")
+:::readable Fir.Core.Op.attrTypes (fingerprint := "16621200450031835539")
 *Definition: the types a core op carries.* $`\mathsf{alloca}_N~k~t~c~a`
 carries the type $`t` that it allocates values of in its attributes, when
 $`t` is valid:
@@ -90,6 +90,20 @@ such as a pointer of a memory above the bound, breaks the op's own rule and
 names no memory to check, as no type written for a value can. No other
 core op carries a type of its own: $`\mathsf{call}`'s are its callee's, and
 $`\mathsf{ret}`'s the function's results.
+:::
+
+:::readable Fir.Core.Op.unitWidths (fingerprint := "7024771246569661941")
+*Definition: the unit widths a core op asks.* $`\mathsf{memset}_N~o~V~W`
+writes values of $`\mathsf{i}V` in the units of memory $`N`, so it asks
+that they be $`V` bits wide (the human's ruling on #251: a fill writes
+one unit value, sized to the memory's unit):
+
+$$`\mathrm{opunits}(\mathsf{memset}_N~o~V~W) = ((N, V)) \qquad \mathrm{opunits}(\mathit{op}) = \epsilon \ \text{ for every other op}`
+
+The {ref "The-fir-specification--Validation--The-data-layout___s-rules"}[data layout's rules]
+check it, as they check the memories that types name: a
+$`\mathsf{memset}` of an $`\mathsf{i16}` into memory 0, of bytes, is not
+valid.
 :::
 
 :::readable Fir.Core.pow2AtLeast Fir.Core.pow2AtLeast.go Fir.Core.pow2AtLeast.two_mul_le Fir.Core.pow2AtLeast.go_spec Fir.Core.pow2AtLeast_eq (fingerprint := "14321921282438045218")
@@ -117,7 +131,7 @@ So every core type may be a field (#236). These are the units and the
 alignment that $`\mathsf{alloca}` gives one value of a field's type.
 :::
 
-:::readable Fir.Core.FBin.mode Fir.Core.FUnary.mode Fir.LayoutRef.admits Fir.Core.Op.Valid (pin := Fir.isPowerOfTwo) (pin := Fir.MemLayout.limit) (pin := Fir.MemLayout.ValidAlign) (fingerprint := "2583066181618405553")
+:::readable Fir.Core.FBin.mode Fir.Core.FUnary.mode Fir.LayoutRef.admits Fir.Core.Op.Valid (pin := Fir.isPowerOfTwo) (pin := Fir.MemLayout.limit) (pin := Fir.MemLayout.ValidAlign) (fingerprint := "8033722880951947079")
 *Definition: the core rules of an op.* Beyond its signature, which the
 {ref "The-fir-specification--Validation--The-general-rules"}[general rules]
 check, a core op obeys these rules in its op context $`C`:
@@ -168,7 +182,7 @@ $`\mathsf{store}_{N}~o~\mathsf{ptr}\langle M \rangle~a`, and of a float,
 $`\mathsf{load}_{N}~o~\mathsf{float}\langle e,m \rangle~a` and
 $`\mathsf{store}_{N}~o~\mathsf{float}\langle e,m \rangle~a`.
 
-$$`\frac{o = \mathsf{nonatomic}}{C \vdash \mathsf{memcpy}_{N}~o~W~\text{valid}} \qquad \frac{o = \mathsf{nonatomic}}{C \vdash \mathsf{memmove}_{N}~o~W~\text{valid}}`
+$$`\frac{o = \mathsf{nonatomic}}{C \vdash \mathsf{memcpy}_{N}~o~W~\text{valid}} \qquad \frac{o = \mathsf{nonatomic}}{C \vdash \mathsf{memmove}_{N}~o~W~\text{valid}} \qquad \frac{o = \mathsf{nonatomic}}{C \vdash \mathsf{memset}_{N}~o~V~W~\text{valid}}`
 
 $$`\frac{\mathrm{layouts}_C(s) = l \qquad \mathrm{mem}(l) = N \qquad j < |\mathrm{fields}(l)| \qquad \text{the field } j \text{ of } l \text{ is repeated, when } W \text{ is given}}{C \vdash \mathsf{fieldaddr}_{N(,W)}~s~j~\text{valid}}`
 
@@ -259,6 +273,10 @@ as its memory and whether each of its fields is repeated.
   repeated field (#236). The index's value is not checked: an element out
   of the field's range is an address, as for $`\mathsf{ptradd}` (the
   human's ruling of 2026-11-16 on #236, Q3 A).
+* $`\mathsf{memcpy}`, $`\mathsf{memmove}` and $`\mathsf{memset}` have the
+  ordering $`\mathsf{nonatomic}`. Their operand types are checked as every
+  type is, and the data layout checks that a $`\mathsf{memset}`'s value
+  is as wide as a unit of its memory ($`\mathrm{opunits}`).
 
 Every other op has no rule beyond its signature. These definitions
 are what the core dialect

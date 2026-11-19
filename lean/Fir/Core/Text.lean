@@ -3,6 +3,7 @@ import Fir.Core.AllocaText
 import Fir.Core.LoadText
 import Fir.Core.StoreText
 import Fir.Core.MemCopyText
+import Fir.Core.MemSetText
 import Fir.Core.FloatText
 import Fir.Core.FloatOpText
 import Fir.Core.FieldAddrText
@@ -81,6 +82,9 @@ results, which are written where those values are defined.
 * `memCopy` is written `memcpy` for a copy and `memmove` for a move. Its
   one attribute is its ordering, and it takes the destination, the source
   and the length, and gives no result: `memcpy nonatomic %d, %s, %n @1`.
+* `memSet` is written `memset`. Its one attribute is its ordering, and it
+  takes the destination, the value and the length, and gives no result:
+  `memset nonatomic %d, %v, %n @1`.
 * `fptosi` and `fptoui` have no attributes, since they truncate and do not
   round, and take a float of any format to an integer of any width:
   `%i: i32 = fptosi %f @1`.
@@ -116,7 +120,7 @@ The section on the core types in text gives how each type is written and
 read back, the section on stack allocation in text how `alloca` is, the
 section on loads in text how `load` is, the section on stores in text how
 `store` is, the section on copies and moves in text how `memcpy` and
-`memmove` are, and the section on field addresses in text how
+`memmove` are, the section on fills in text how `memset` is, and the section on field addresses in text how
 `fieldaddr` is.
 
 The values of `fir-ref`'s arguments, the values in its JSON output and the
@@ -172,6 +176,7 @@ def Op.name : Op → String
   | .load .. | .loadPtr .. | .loadFloat .. => "load"
   | .store .. | .storePtr .. | .storeFloat .. => "store"
   | .fptosi .. => "fptosi" | .fptoui .. => "fptoui" | .memCopy k .. => k.name
+  | .memSet .. => "memset"
   | .freeze _ => "freeze" | .poison _ => "poison" | .br => "br" | .condBr => "cond_br"
   | .ret _ => "ret" | .unreachable => "unreachable" | .call .. => "call"
 
@@ -201,7 +206,7 @@ def Op.attrs : Op → List Attr
   | .alloca k t c a _ => allocaAttrs k t c a
   | .load o _ a _ | .store o _ a _ | .loadPtr o _ a _ | .storePtr o _ a _
   | .loadFloat o _ _ a _ | .storeFloat o _ _ a _ => loadAttrs o a
-  | .memCopy _ o _ _ => loadAttrs o none
+  | .memCopy _ o _ _ | .memSet o _ _ _ => loadAttrs o none
   | _ => []
 
 /-- Reads the flags of `add`, `sub` or `mul`. -/
@@ -318,6 +323,7 @@ def Op.decode (n : String) (as : List Attr) (ts rs : List Ty) : Option Op :=
   | "store" => decodeStore as ts rs
   | "memcpy" => decodeMemCopy .copy as ts rs
   | "memmove" => decodeMemCopy .move as ts rs
+  | "memset" => decodeMemSet as ts rs
   | "fptosi" => decodeFloatToInt true as ts rs
   | "fptoui" => decodeFloatToInt false as ts rs
   | _ => if let some mk := plainBinOps.lookup n then bare as ((binWidth ts rs).map mk) else none
