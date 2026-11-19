@@ -1,21 +1,64 @@
 //! Field addresses that the text writes and reads back, whether or not
 //! validation accepts them (#236): `fieldaddr` of a layout of the module or
 //! of a symbol that names none, a field of any number, a pointer of any
-//! memory, and an index of any width or none.
+//! memory, and an index of any width or none, in blocks at any depth, of
+//! the module's functions and of its nested modules'.
 //!
 //! Each pointer comes from an `alloca` of its memory, or from an earlier
 //! `fieldaddr`, so its type is known wherever the op stands. Pointers are
 //! kept apart from the function's other values, which the generator also
 //! passes to integer ops.
 
-use super::super::{Rng, Widths, constant, symbol, width};
+use super::super::{Rng, Widths, symbol, width};
 use super::{Shaper, insert};
-use crate::dialects::core::{MAX_MEMORY, int_type, int_width, ptr_type};
-use crate::ir::{Attr, Def, Func, Op};
+use crate::dialects::core::{MAX_MEMORY, int_width, ptr_type};
+use crate::ir::{Attr, Block, Def, Func, Item, Op};
+
+/// Adds `fieldaddr` ops to two in three of the functions of `items`, a
+/// nested module's, which may name the layouts of `items`.
+pub(super) fn add_to_items(rng: &mut Rng, items: &mut [Item]) {
+    let symbols: Vec<String> = items
+        .iter()
+        .filter_map(Item::as_func)
+        .map(|f| f.name.clone())
+        .collect();
+    let layouts: Vec<String> = items
+        .iter()
+        .filter_map(Item::as_aggregate)
+        .map(|a| a.name.clone())
+        .collect();
+    for item in items {
+        let Item::Func(f) = item else { continue };
+        if !f.body.blocks.is_empty() && !rng.one_in(3) {
+            let mut shaper = Shaper::new(f, &symbols, &[], false);
+            shaper.add_field_addrs(rng, f, &layouts);
+        }
+    }
+}
+
+/// A block of `blocks`, which must not be empty: one of them, or in one
+/// draw of two a block of a region of one of its ops, at any depth.
+fn any_block<'b>(rng: &mut Rng, blocks: &'b mut [Block]) -> &'b mut Block {
+    let b = rng.below(blocks.len() as u64) as usize;
+    let block = &mut blocks[b];
+    let owners: Vec<usize> = (0..block.ops.len())
+        .filter(|&k| block.ops[k].regions.iter().any(|r| !r.blocks.is_empty()))
+        .collect();
+    if owners.is_empty() || rng.one_in(2) {
+        return block;
+    }
+    let op = &mut block.ops[*rng.pick(&owners)];
+    let regions: Vec<usize> = (0..op.regions.len())
+        .filter(|&k| !op.regions[k].blocks.is_empty())
+        .collect();
+    let r = *rng.pick(&regions);
+    any_block(rng, &mut op.regions[r].blocks)
+}
 
 impl Shaper<'_> {
-    /// Adds one to three `fieldaddr` ops to blocks of `f`, which must have
-    /// one, with the `alloca` that defines each new pointer.
+    /// Adds one to three `fieldaddr` ops to blocks of `f` at any depth, with
+    /// the `alloca` that defines each new pointer and the `const` of each
+    /// new index; `f` must have a block.
     pub(super) fn add_field_addrs(&mut self, rng: &mut Rng, f: &mut Func, layouts: &[String]) {
         for _ in 0..1 + rng.below(3) {
             let mut ops = Vec::new();
@@ -23,8 +66,8 @@ impl Shaper<'_> {
             let op = self.field_addr(rng, pointer, layouts, &mut ops);
             ops.push(op);
             for op in ops {
-                let b = rng.below(f.body.blocks.len() as u64) as usize;
-                insert(rng, &mut f.body.blocks[b].ops, op);
+                let block = any_block(rng, &mut f.body.blocks);
+                insert(rng, &mut block.ops, op);
             }
         }
     }
@@ -43,9 +86,11 @@ impl Shaper<'_> {
         let mut op = Op::new("alloca", self.loc(rng))
             .attr(Attr::word("stack"))
             .attr(Attr::word("i8"));
-        op.results.push(self.define_pointer(rng, n));
+        let d = self.define_pointer(rng, n);
+        let name = d.name.clone();
+        op.results.push(d);
         ops.push(op);
-        (op_result(ops), n)
+        (name, n)
     }
 
     /// `fieldaddr` of `pointer`: of a layout from `layouts` three times in
@@ -94,13 +139,9 @@ impl Shaper<'_> {
             return rng.pick(&ints).to_string();
         }
         let w = width(rng, Widths::Any);
-        let op = Op::new("const", self.loc(rng)).attr(constant(rng, w));
-        let d = self.define(rng, int_type(w));
-        let name = d.name.clone();
-        ops.push(Op {
-            results: vec![d],
-            ..op
-        });
+        let op = self.constant_op(rng, w);
+        let name = op.results[0].name.clone();
+        ops.push(op);
         name
     }
 
@@ -110,9 +151,4 @@ impl Shaper<'_> {
         self.pointers.push((name.clone(), n));
         Def::new(name, ptr_type(n))
     }
-}
-
-/// The name of the one result of the last op of `ops`.
-fn op_result(ops: &[Op]) -> String {
-    ops.last().expect("an op").results[0].name.clone()
 }

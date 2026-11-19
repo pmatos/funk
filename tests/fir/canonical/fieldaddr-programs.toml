@@ -3,8 +3,8 @@
 # @point_fields stores an integer, two floats and a pointer to itself in a
 # struct, and reads them back by their offsets. @row_sum fills a row of
 # four i64 in a loop and sums it, and @row_at reads an element by an index:
-# the fourth element's index, 4, is one past the end, an address that
-# ptradd could give, and reading it leaves the allocation, so it is UB, as
+# index 4, one past the last element, 3, is an address that ptradd could
+# give, and reading it leaves the allocation, so it is UB, as
 # is reading by a poison index (the human's ruling of 2026-11-16 on #236,
 # Q3 A). @one_past steps back from that address to the last element.
 # @list_sum walks a linked list of three nodes. @vec_push appends to an

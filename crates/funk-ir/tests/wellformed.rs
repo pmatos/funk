@@ -161,6 +161,9 @@ struct Shapes {
     field_addrs: usize,
     indexed_field_addrs: usize,
     field_addrs_of_layouts: usize,
+    chained_field_addrs: usize,
+    field_addrs_in_regions: usize,
+    nested_field_addrs: usize,
     rejected: usize,
 }
 
@@ -279,6 +282,39 @@ fn shapes(dialects: Dialects) -> Shapes {
             &mut n.indexed_field_addrs,
             field_addrs.clone().any(|op| op.operands.len() == 2),
         );
+        let defined_by_field_addrs: HashSet<&str> = field_addrs
+            .clone()
+            .flat_map(|op| &op.results)
+            .map(|d| d.name.as_str())
+            .collect();
+        has(
+            &mut n.chained_field_addrs,
+            field_addrs
+                .clone()
+                .any(|op| defined_by_field_addrs.contains(op.operands[0].as_str())),
+        );
+        has(
+            &mut n.field_addrs_in_regions,
+            m.funcs().any(|f| {
+                let top: Vec<&Op> = f.body.blocks.iter().flat_map(|b| &b.ops).collect();
+                let all = blocks(f).into_iter().flat_map(|b| &b.ops);
+                all.filter(|op| op.name == "fieldaddr").count()
+                    > top.iter().filter(|op| op.name == "fieldaddr").count()
+            }),
+        );
+        has(
+            &mut n.nested_field_addrs,
+            m.items.iter().any(|i| match i {
+                Item::Module(nm) => nm
+                    .items
+                    .iter()
+                    .filter_map(Item::as_func)
+                    .flat_map(blocks)
+                    .flat_map(|b| &b.ops)
+                    .any(|op| op.name == "fieldaddr"),
+                _ => false,
+            }),
+        );
         has(
             &mut n.field_addrs_of_layouts,
             field_addrs.clone().any(|op| match op.attrs.first() {
@@ -319,6 +355,9 @@ fn the_generator_covers_what_validation_rejects() {
             n.field_addrs,
             n.indexed_field_addrs,
             n.field_addrs_of_layouts,
+            n.chained_field_addrs,
+            n.field_addrs_in_regions,
+            n.nested_field_addrs,
         ];
         assert!(n.modules_in_modules > 0, "{dialects:?}: {n:?}");
         assert!(common.iter().all(|&k| k >= tenth), "{dialects:?}: {n:?}");

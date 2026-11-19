@@ -29,20 +29,22 @@ pub(super) fn aggregate(rng: &mut Rng) -> Aggregate {
     a
 }
 
-/// A float type that decodes: a named format, or `float(e, m)` of any
-/// numbers of bits, those that validation rejects among them, such as
-/// `float(0, 0)`, and C's `long double`, `float(15, 64)`.
+/// A float type that decodes: a named format, C's `long double`,
+/// `float(15, 64)`, or `float(e, m)` of any numbers of bits, those that
+/// validation rejects among them, such as `float(0, 0)`: most often small,
+/// now and then as wide as the text allows.
 fn float(rng: &mut Rng) -> Type {
-    let (e, m) = match rng.below(4) {
+    let (e, m) = match rng.below(5) {
         0 => {
             let (_, e, m) = *rng.pick(&FLOAT_ALIASES);
             (e, m)
         }
         1 => (15, 64),
         2 => (rng.below(3) as u32, rng.below(3) as u32),
+        3 => (rng.below(20) as u32, rng.below(120) as u32),
         _ => {
             let e = rng.below(20) as u32;
-            (e, rng.below(u64::from(MAX_WIDTH - e)) as u32)
+            (e, MAX_WIDTH - 1 - e)
         }
     };
     float_type(e, m)

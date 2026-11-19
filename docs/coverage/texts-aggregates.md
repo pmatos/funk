@@ -11,8 +11,9 @@ placed fields
 `aggregates` places integer, pointer and float fields in the default
 memory, a repeated `i24` field whose elements are rounded up to their
 alignment, a flexible array member of no elements and an empty layout;
-`aggregates-memories` places them in a memory of 16-bit units, and in a
-nested module. `reject/aggregate.toml` holds the layouts that do not
+`aggregates-memories` places integer and pointer fields in a memory of
+16-bit units, and in a nested module. Float fields in such a memory are
+in `fieldaddr-programs-memories`, below. `reject/aggregate.toml` holds the layouts that do not
 decode and those that validation rejects: overlapping fields, misaligned
 ones, a field past the size, an alignment that is not a power of two, a
 memory the module does not declare, and float fields that are misaligned,

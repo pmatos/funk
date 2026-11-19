@@ -187,6 +187,7 @@ fn nested(rng: &mut Rng, depth: u32) -> NestedModule {
     if rng.one_in(3) {
         n.items.push(Item::Aggregate(aggregate::aggregate(rng)));
     }
+    field_addr::add_to_items(rng, &mut n.items);
     if depth > 1 && rng.one_in(3) {
         n.items.push(Item::Module(nested(rng, depth - 1)));
     }
@@ -403,18 +404,23 @@ impl<'m> Shaper<'m> {
             }
             _ => {
                 let w = width(rng, Widths::Any);
-                let op = Op::new("const", self.loc(rng)).attr(constant(rng, w));
-                let d = self.define(rng, int_type(w));
-                Op {
-                    results: vec![d],
-                    ..op
-                }
+                self.constant_op(rng, w)
             }
         };
         if depth < 3 && rng.one_in(4) {
             self.add_regions(rng, &mut op, depth + 1);
         }
         op
+    }
+
+    /// A `const` of a new value of `iW`.
+    fn constant_op(&mut self, rng: &mut Rng, w: u32) -> Op {
+        let op = Op::new("const", self.loc(rng)).attr(constant(rng, w));
+        let d = self.define(rng, int_type(w));
+        Op {
+            results: vec![d],
+            ..op
+        }
     }
 
     /// Up to two values the function defines, of any types.
