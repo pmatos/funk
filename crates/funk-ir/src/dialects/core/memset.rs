@@ -77,6 +77,10 @@ impl OpSpec for MemSet {
     fn unit_widths(&self, op: &OpTypes<'_>) -> Vec<(u32, u32)> {
         shape(op).into_iter().collect()
     }
+
+    fn asks_unit_widths(&self) -> bool {
+        true
+    }
 }
 
 #[cfg(test)]

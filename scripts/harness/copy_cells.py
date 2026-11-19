@@ -4,9 +4,10 @@ ADR-2026-11-03-0557).
 `memcpy`, `memmove` and `memset` are each a cell for each width of their
 length's integer, whatever their memory, at the side's pointer widths, in a
 table of their own, `copies`. A fill's value is as wide as a unit of its
-memory, which the data layout fixes, so its width is not part of a cell. The ordering is not part of a cell: validation accepts
-only `nonatomic`, so another ordering is not a cell, as a rounding mode
-other than `rne` is not.
+memory, which the data layout fixes, so its width is not part of a cell.
+The ordering is not part of a cell: validation accepts only `nonatomic`,
+so another ordering is not a cell, as a rounding mode other than `rne` is
+not.
 
 The cells are on the interpreter-only side alone, until the backend lowers
 the three ops to funk's own runtime routines (stage 4 of #234).

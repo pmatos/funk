@@ -9,7 +9,8 @@
 //! alignment that `check_align` accepts, as `alloca`'s is. Each access says
 //! which shape it takes, how that shape names its memory, what it does to
 //! that memory and whether it takes `align(A)`; [`Access`] does the rest.
-//! `memcpy` and `memmove` take an ordering alone (ADR-2026-11-18-2131).
+//! `memcpy`, `memmove` and `memset` take an ordering alone
+//! (ADR-2026-11-18-2131).
 
 use super::align::{check_align, decode_align};
 use super::type_list;

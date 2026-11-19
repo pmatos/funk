@@ -92,6 +92,14 @@ pub trait OpSpec: Send + Sync {
         Vec::new()
     }
 
+    /// Whether [`OpSpec::unit_widths`] may give a pair for some instance, so
+    /// that the verifier types the operands of this op's instances to ask
+    /// it. An op that writes no values into units gives `false`, the
+    /// default, and the verifier skips it.
+    fn asks_unit_widths(&self) -> bool {
+        false
+    }
+
     /// The symbol of the function that the op instance used at `op` calls,
     /// or `None` for an op that calls none (`callee?`, `DialectCall`). The
     /// interpreter runs the callee of an op that is not a terminator, and

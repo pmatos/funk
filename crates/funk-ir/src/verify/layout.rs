@@ -71,7 +71,8 @@ pub(super) fn check_entries(layout: &[MemLayout], out: &mut Vec<Diagnostic>) {
 }
 
 /// The rule that `layout` declares each memory that a type of the table
-/// `t` names (`SymbolTable.MemoriesIn`).
+/// `t` names, and gives units as wide as the values that its functions' ops
+/// write into them (`SymbolTable.MemoriesIn`).
 pub(super) fn check_memories(
     t: Table<'_>,
     layout: &[MemLayout],
@@ -79,25 +80,24 @@ pub(super) fn check_memories(
     out: &mut Vec<Diagnostic>,
 ) {
     let missing = |ty: &Type| reg.type_memory(ty).filter(|&n| memory(layout, n).is_none());
+    let mut asking = Vec::new();
     for f in t.funcs() {
-        let first = f.types().find_map(missing).or_else(|| {
-            f.body
-                .parts()
-                .filter_map(|part| match part {
-                    Part::Block(b) => Some(&b.ops),
-                    _ => None,
-                })
-                .flatten()
-                .filter(|o| !o.attrs.is_empty())
-                .find_map(|o| {
-                    reg.op(&o.name)?
-                        .attr_types(&o.attrs)
-                        .iter()
-                        .find_map(missing)
-                })
-        });
+        let mut first = f.types().find_map(missing);
+        let mut asks = false;
+        for o in attr_ops(f) {
+            let Some(spec) = reg.op(&o.name) else {
+                continue;
+            };
+            asks |= spec.asks_unit_widths();
+            if first.is_none() {
+                first = spec.attr_types(&o.attrs).iter().find_map(missing);
+            }
+        }
         if let Some(n) = first {
             out.push(problem(&f.name, n));
+        }
+        if asks {
+            asking.push(f);
         }
     }
     for i in t.dialect_items() {
@@ -105,7 +105,7 @@ pub(super) fn check_memories(
             out.push(problem(&i.name, n));
         }
     }
-    for f in t.funcs() {
+    for f in asking {
         if let Some((n, w)) = first_unit_width(f, layout, reg) {
             let unit = memory(layout, n).unwrap_or(MemLayout::DEFAULT).unit;
             out.push(Diagnostic::at_block(
@@ -123,7 +123,8 @@ pub(super) fn check_memories(
 /// units an op of `f` writes values of that are not as wide as them
 /// (`unitsProblem` over `Func.unitWidths`). An op whose operands are not
 /// defined, or which does not decode, asks for none: the rules of ops
-/// report it.
+/// report it. Only a function with an op whose spec asks unit widths gets
+/// here, and only those ops have their operands typed.
 fn first_unit_width(f: &Func, layout: &[MemLayout], reg: &Registry) -> Option<(u32, u32)> {
     let mut types: HashMap<&str, &Type> = HashMap::new();
     let defs = f.body.parts().flat_map(|part| match part {
@@ -137,12 +138,8 @@ fn first_unit_width(f: &Func, layout: &[MemLayout], reg: &Registry) -> Option<(u
     for d in f.params.iter().chain(defs) {
         types.entry(d.name.as_str()).or_insert(&d.ty);
     }
-    let ops = f.body.parts().filter_map(|part| match part {
-        Part::Block(b) => Some(&b.ops),
-        _ => None,
-    });
-    ops.flatten().find_map(|o| {
-        let spec = reg.op(&o.name)?;
+    attr_ops(f).find_map(|o| {
+        let spec = reg.op(&o.name).filter(|s| s.asks_unit_widths())?;
         let operands: Vec<Type> = o
             .operands
             .iter()
@@ -159,6 +156,19 @@ fn first_unit_width(f: &Func, layout: &[MemLayout], reg: &Registry) -> Option<(u
             .into_iter()
             .find(|&(n, w)| memory(layout, n).unwrap_or(MemLayout::DEFAULT).unit != w)
     })
+}
+
+/// The ops of `f`'s blocks that have attributes: the only ones that may
+/// carry a type or ask a unit width.
+fn attr_ops(f: &Func) -> impl Iterator<Item = &crate::ir::Op> {
+    f.body
+        .parts()
+        .filter_map(|part| match part {
+            Part::Block(b) => Some(&b.ops),
+            _ => None,
+        })
+        .flatten()
+        .filter(|o| !o.attrs.is_empty())
 }
 
 fn problem(sym: &str, n: u32) -> Diagnostic {

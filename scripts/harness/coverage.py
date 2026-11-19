@@ -36,8 +36,8 @@ class Side(NamedTuple):
     formats and widths of a pointer op's integer that it has cells at,
     whether it has the cells of the `gpu` dialect, the float formats of
     its loads, stores and allocations, the widths of `fieldaddr`'s index
-    that it has cells at, and whether it has the cells of `memcpy` and
-    `memmove`."""
+    that it has cells at, and whether it has the cells of `memcpy`,
+    `memmove` and `memset`."""
 
     name: str
     title: str

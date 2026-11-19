@@ -197,7 +197,7 @@ first. Rejected: a poison length always UB, as in LLVM's LangRef, which the
 allocation no length is UB; it would need the class `exception`. The rest of
 this paragraph records agent work, not a ruling.
 
-Set is written `memset ORDERING %d, %v, %n` (ADR-2026-11-18-2131), with the
+A fill, the set op, is written `memset ORDERING %d, %v, %n` (ADR-2026-11-18-2131), with the
 rules of copy for its pointer, length and ordering. Its value `%v` is an
 `iV` as wide as a unit of the pointer's memory (#251). The module's
 data-layout rule checks it, as it checks the memories that types name: each
