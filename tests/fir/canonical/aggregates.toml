@@ -2,8 +2,10 @@
 # (ADR-2026-11-16-1546) sit beside a function, which runs on fir-ref and as
 # native code as it would without them. The elements of @i24s are rounded
 # up to their alignment, 4 units each (the human's ruling of 2026-11-16 on
-# #236), and @flex ends in a field of no elements, as a C flexible array
-# member does.
+# #236), @flex ends in a field of no elements, as a C flexible array
+# member does, and @floats has float fields, each at the natural alignment
+# of its size: each of the two 80-bit `float(15, 64)` takes 10 units and
+# is aligned to 16 in memory 0.
 tests = [
   { func = "@pair_size" },
 ]

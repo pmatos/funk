@@ -14,10 +14,10 @@ fingerprint; the build fails when the Lean changes under it.
 
 #doc (Manual) "The core dialect's effect obligations: readable blocks" =>
 
-:::moduleDocs (fingerprint := "1808800050713880090")
+:::moduleDocs (fingerprint := "5574389792640272002")
 :::
 
-:::readable Fir.Core.Op.neverUB_all (pin := Fir.Core.Op.effects) (pin := Fir.NeverUBSetM) (fingerprint := "1260851317332000110")
+:::readable Fir.Core.Op.neverUB_all (pin := Fir.Core.Op.effects) (pin := Fir.NeverUBSetM) (fingerprint := "703223447857156391")
 *Theorem: each core op that does not declare may-UB never ends in UB in
 the set monad.*
 Every core op but $`\mathsf{sdiv}`, $`\mathsf{udiv}`, $`\mathsf{srem}`,
@@ -30,7 +30,8 @@ $`\mathsf{freeze}`, the float arithmetic and the conversions from
 integers and between formats after choosing bits, and $`\mathsf{br}` and
 $`\mathsf{ret}` go to their successor or return. $`\mathsf{call}` has no
 rule of its own, and
-$`\mathsf{alloca}` none in the set monad, so neither has an outcome by one.
+$`\mathsf{alloca}` and $`\mathsf{fieldaddr}` none in the set monad, so
+none of them has an outcome by one.
 :::
 
 :::readable Fir.Core.defined₁ Fir.Core.defined₂ Fir.Core.not_any_of_ne (pin := Fir.HVector.Any) (pin := Fir.Core.Ty.IsPoison) (fingerprint := "17464123918340822883")
@@ -63,7 +64,7 @@ $`\mathsf{mul}` that does not declare $`\mathsf{mayPoison}` has no flags.*
 Its flags $`f` are neither $`\mathsf{nuw}` nor $`\mathsf{nsw}`.
 :::
 
-:::readable Fir.Core.Op.makesNoPoison_all (pin := Fir.Core.Op.effects) (pin := Fir.MakesNoPoisonSetM) (fingerprint := "475077136999421960")
+:::readable Fir.Core.Op.makesNoPoison_all (pin := Fir.Core.Op.effects) (pin := Fir.MakesNoPoisonSetM) (fingerprint := "15657250340664723273")
 *Theorem: each core op that does not declare $`\mathsf{mayPoison}` makes no
 poison in the set monad.* On operands with no poison, $`\mathsf{const}`, $`\mathsf{add}`,
 $`\mathsf{sub}` and $`\mathsf{mul}` without flags, $`\mathsf{sdiv}` and
@@ -75,13 +76,14 @@ $`\mathsf{nnan}` and $`\mathsf{ninf}`, the bit casts, the conversions from integ
 $`\mathsf{freeze}` gives bits, and a float op's NaN, and a zero of either
 sign under $`\mathsf{nsz}`, are defined bits too: without those two
 flags no operand breaks a flag. $`\mathsf{call}` gives no result by a rule
-of its own, $`\mathsf{alloca}` and the stores of an integer, a pointer or
-a float none in the set monad, and the terminators give none. The loads of
+of its own, $`\mathsf{alloca}`, the stores of an integer, a pointer or
+a float and $`\mathsf{fieldaddr}` none in the set monad, and the
+terminators give none. The loads of
 an integer, a pointer or a float declare $`\mathsf{mayPoison}`, so the
 obligation asks nothing of them.
 :::
 
-:::readable Fir.Core.Op.notControl_all (pin := Fir.Core.Op.effects) (fingerprint := "18395830240190614090")
+:::readable Fir.Core.Op.notControl_all (pin := Fir.Core.Op.effects) (fingerprint := "17553797527302532711")
 *Theorem: each core op that does not declare $`\mathsf{control}` is not a
 terminator.* The core terminators are $`\mathsf{br}`,
 $`\mathsf{cond\_br}`, $`\mathsf{ret}` and $`\mathsf{unreachable}`, and each
@@ -92,8 +94,8 @@ $`\mathsf{control}`.
 :::readable Fir.Core.lawfulDialectEffects (pin := Fir.LawfulDialectEffects) (fingerprint := "172079627767923088")
 *Theorem: the core dialect is lawful in its effects.* Every effect that a
 core op leaves out, it does not have. Every core op but
-$`\mathsf{alloca}`, $`\mathsf{load}` and $`\mathsf{store}` touches no
-memory: each is
+$`\mathsf{alloca}`, the loads and stores and $`\mathsf{fieldaddr}`
+touches no memory and reads no item: each is
 {ref "The-fir-specification--Memory--The-core___s-rules-with-memory"}[tied],
 running with memory by its rule in the set monad and keeping the memories.
 So for each such op, the three theorems above carry from the set monad to
@@ -111,11 +113,15 @@ meets each by
 {ref "The-fir-specification--Memory--Store-obligations"}[its own rule with memory]:
 it writes only the memory of its pointer, reads none, its own included,
 allocates in none, makes no poison, since it gives no result, and declares
-may-UB. So a pass may rely on the core ops' effect sets
+may-UB. $`\mathsf{fieldaddr}` meets each by
+{ref "The-fir-specification--Memory--Field-address-obligations"}[its own rule with memory]:
+it is never UB, its result is poison only on a poison operand, and it
+writes, reads and allocates in no memory, as its empty effect set
+declares. So a pass may rely on the core ops' effect sets
 (ADR-2026-11-09-1541).
 :::
 
-:::readable Fir.Core.Unlawful.sdivNoUB Fir.Core.Unlawful.sdivNoUB_unlawful (pin := Fir.Core.Op.effects) (pin := Fir.NeverUB) (pin := Fir.Core.memDenoteAt) (fingerprint := "4669650355519170038")
+:::readable Fir.Core.Unlawful.sdivNoUB Fir.Core.Unlawful.sdivNoUB_unlawful (pin := Fir.Core.Op.effects) (pin := Fir.NeverUB) (pin := Fir.Core.memDenoteAt) (fingerprint := "2802446972170468999")
 *Definition and theorem: the obligations reject a wrong declaration.* The
 declaration $`\mathrm{eff}'` gives each core op its set but
 $`\mathsf{sdiv}`, which it declares without $`\mathsf{mayUB}`, keeping

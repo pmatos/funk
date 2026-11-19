@@ -31,7 +31,10 @@ Between the model and the effect, it says which addresses an exposed
 allocation may be given and which one `fir-ref` gives, how a run's address
 policy picks one, and how a value of
 an integer, a float or a pointer type becomes units of a memory, and units
-a value again, at every byte order.
+a value again, at every byte order. It ends with traces: the events that a
+run shows to the world outside it, the layer in which a run shows them, and
+refinement of the traced runs of functions for every world
+(ADR-2026-11-09-1540).
 
 {includeReadable "." Fir.Memory.Model "The memory model" FirSpec.Memory.Model (level := 1)}
 
@@ -147,6 +150,8 @@ a value again, at every byte order.
 
 {includeReadable "." Fir.Core.FloatAccess "Float load and store rules" FirSpec.Core.FloatAccess (level := 1)}
 
+{includeReadable "." Fir.Core.FieldAddr "Field address rules" FirSpec.Core.FieldAddr (level := 1)}
+
 {includeReadable "." Fir.Core.MemRules "The core's rules with memory" FirSpec.Core.MemRules (level := 1)}
 
 {includeReadable "." Fir.Core.AllocaLaws "Stack allocation obligations" FirSpec.Core.AllocaLaws (level := 1)}
@@ -167,6 +172,8 @@ a value again, at every byte order.
 
 {includeReadable "." Fir.Core.StoreFloatLaws "Float store obligations" FirSpec.Core.StoreFloatLaws (level := 1)}
 
+{includeReadable "." Fir.Core.FieldAddrLaws "Field address obligations" FirSpec.Core.FieldAddrLaws (level := 1)}
+
 {includeReadable "." Fir.Core.TreeRules "The core dialect in the tree of choices" FirSpec.Core.TreeRules (level := 1)}
 
 {includeReadable "." Fir.Core.Modes "The core dialect's modes" FirSpec.Core.Modes (level := 1)}
@@ -174,3 +181,11 @@ a value again, at every byte order.
 {includeReadable "." Fir.Core.MemoryRuns "Core functions with memory" FirSpec.Core.MemoryRuns (level := 1)}
 
 {includeReadable "." Fir.Core.MemoryCallRefine "Congruence in a core callee" FirSpec.Core.MemoryCallRefine (level := 1)}
+
+{includeReadable "." Fir.Execution.Trace "Traces of events" FirSpec.Execution.Trace (level := 1)}
+
+{includeReadable "." Fir.Execution.TraceMonad "The traced layer" FirSpec.Execution.TraceMonad (level := 1)}
+
+{includeReadable "." Fir.Execution.TraceRuns "Traced runs" FirSpec.Execution.TraceRuns (level := 1)}
+
+{includeReadable "." Fir.Execution.TraceDialect "A dialect's traced runs" FirSpec.Execution.TraceDialect (level := 1)}

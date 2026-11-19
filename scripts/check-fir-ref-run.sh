@@ -21,7 +21,10 @@
 # 100,000 parameters (#405). The ret after that call reads 100,000 values
 # bound long before, which took 33 seconds per mode before #413; the check
 # compares results and sets no limit on time. With --nans, exhaustive mode
-# tries a few NaNs at each NaN choice (#219).
+# tries a few NaNs at each NaN choice (#219). It stores through the address of
+# a struct's field and of an array's element that fieldaddr gives, and loads
+# each back, and an element past the array is UB only when it is accessed
+# (#236).
 set -euo pipefail
 
 if [[ $# -ne 1 ]]; then
@@ -291,6 +294,45 @@ runs "$tmp/freeze.fir" 2 'fir-ref: @f: the choices do not fit the run: choice 1,
 printf 'func @p(%%x: ptr) -> ptr {\n^e:\n  ret %%x @0\n}\n\nlocs {\n  @0 = unknown\n}\n' >"$tmp/ptr.fir"
 runs "$tmp/ptr.fir" 0 "${ret}[\"poison\"]$none" @p poison || status=1
 runs "$tmp/ptr.fir" 2 'fir-ref: 0 is not a value of type ptr' @p 0 || status=1
+cat >"$tmp/fieldaddr.fir" <<'END'
+aggregate @two() memory(0) size(16) align(8) field(0, i64) field(8, i64) {
+}
+
+aggregate @i24s() memory(0) size(16) align(4) field(0, i24, 4) {
+}
+
+func @pair(%a: i64, %b: i64) -> i64 {
+^e:
+  %p: ptr = alloca stack i64 2 @0
+  %f: ptr = fieldaddr @two 1 %p @0
+  store nonatomic %a, %p @0
+  store nonatomic %b, %f @0
+  %eight: i64 = const 8 @0
+  %q: ptr = ptradd %p, %eight @0
+  %x: i64 = load nonatomic %q @0
+  ret %x @0
+}
+
+func @elem(%v: i24, %k: i8) -> i24 {
+^e:
+  %p: ptr = alloca stack i32 4 @0
+  %e: ptr = fieldaddr @i24s 0 %p, %k @0
+  store nonatomic %v, %e @0
+  %four: i64 = const 4 @0
+  %q: ptr = ptradd %p, %four @0
+  %x: i24 = load nonatomic %q @0
+  ret %x @0
+}
+
+locs {
+  @0 = unknown
+}
+END
+runs "$tmp/fieldaddr.fir" 0 "${ret}[\"-9\"]$none" @pair 7 -9 || status=1
+runs "$tmp/fieldaddr.fir" 0 "${ret}[\"5\"]$none" @elem 5 1 || status=1
+runs "$tmp/fieldaddr.fir" 0 "${ret}[\"poison\"]$none" @elem 5 2 || status=1
+runs "$tmp/fieldaddr.fir" 0 '{"kind":"ub","reason":"an access out of bounds","choices":0}' \
+    @elem 5 4 || status=1
 runs $c/add.fir 2 'fir-ref: @add3 takes 3 arguments, not 2' @add3 1 2 || status=1
 runs $c/empty.fir 2 "fir-ref: $c/empty.fir has no function @f" @f || status=1
 # A kernel of a device module runs as one work-item, named by the path of

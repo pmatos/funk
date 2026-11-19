@@ -58,6 +58,8 @@ import Fir.Core.Load
 import Fir.Core.Store
 import Fir.Core.PtrAccess
 import Fir.Core.FloatAccess
+import Fir.Core.FieldAddr
+import Fir.Core.FieldAddrText
 import Fir.Core.FloatToInt
 import Fir.Core.Control
 import Fir.Core.Branch
@@ -148,6 +150,7 @@ import Fir.Core.LoadPtrLaws
 import Fir.Core.StorePtrLaws
 import Fir.Core.LoadFloatLaws
 import Fir.Core.StoreFloatLaws
+import Fir.Core.FieldAddrLaws
 import Fir.Core.EffectLaws
 import Fir.Core.MemoryRuns
 import Fir.Core.MemoryCallRefine
@@ -161,6 +164,10 @@ import Fir.Execution.SummarySound
 import Fir.Execution.MemoryFree
 import Fir.Execution.MemoryFreeRuns
 import Fir.Execution.MemoryFreeReplace
+import Fir.Execution.Trace
+import Fir.Execution.TraceMonad
+import Fir.Execution.TraceRuns
+import Fir.Execution.TraceDialect
 import Fir.Memory.Model
 import Fir.Memory.Ordering
 import Fir.Memory.Laws

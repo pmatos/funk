@@ -39,8 +39,8 @@ natural alignment of the float's size, as the human ruled on 2026-11-15
 (#397). In memory 0, `f16` and `bf16` have 2, `f32` 4, `f64` 8 and `f128`
 16.
 
-A field of an integer or a pointer type in an aggregate's layout of memory
-`N` takes the units and the alignment of one value that `alloca` makes
+A field of any core type, an integer, a float or a pointer, in an
+aggregate's layout of memory `N` takes the units and the alignment of one value that `alloca` makes
 there with no alignment of its own (`Ty.fieldShape_eq_allocaShape`,
 ADR-2026-11-16-1546).
 -/
@@ -104,7 +104,7 @@ def allocaShape (lay : N → MemLayout) (ρ : Mem → N) (t : Ty) (c : Nat) (a :
 `alloca` allocates, aligned as `alloca` aligns it when the op gives no
 alignment (ADR-2026-11-16-1546): a layout of the memory `n` and an
 allocation in it count the same units. -/
-theorem Ty.fieldShape_eq_allocaShape (lay : Nat → MemLayout) (n : Nat) {t : Ty} (h : t.IsElem) :
+theorem Ty.fieldShape_eq_allocaShape (lay : Nat → MemLayout) (n : Nat) (t : Ty) :
     t.fieldShape lay n = some (allocaShape lay id t 1 none n) := by
   cases t with
   | int w => simp [Ty.fieldShape, allocaShape, Ty.units, Ty.defaultAlign, Ty.naturalAlign,
@@ -116,7 +116,8 @@ theorem Ty.fieldShape_eq_allocaShape (lay : Nat → MemLayout) (n : Nat) {t : Ty
         MemLayout.naturalAlign, MemLayout.pointerUnits_eq, pow2AtLeast_eq]
     · simp [Ty.fieldShape, allocaShape, Ty.units, Ty.defaultAlign, Ty.naturalAlign, hm,
         pow2AtLeast_eq]
-  | float => exact absurd h id
+  | float fe fm => simp [Ty.fieldShape, allocaShape, Ty.units, Ty.defaultAlign, Ty.naturalAlign,
+      pow2AtLeast_eq]
 
 /-- The rule of `alloca k t c a n`, in a monad with the memory effect on the
 memories of a run whose layout entries are `lay`, where the run names the

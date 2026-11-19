@@ -201,6 +201,9 @@ import FirSpec.Core.LoadPtrLaws
 import FirSpec.Core.StorePtrLaws
 import FirSpec.Core.FloatAccess
 import FirSpec.Core.LoadFloatLaws
+import FirSpec.Core.FieldAddr
+import FirSpec.Core.FieldAddrLaws
+import FirSpec.Core.FieldAddrText
 import FirSpec.Core.StoreFloatLaws
 import FirSpec.Memory.Ordering
 import FirSpec.Execution.MemoryCallSteps
@@ -228,6 +231,10 @@ import FirSpec.Execution.MemoryFiniteReplace
 import FirSpec.Execution.MemoryFree
 import FirSpec.Execution.MemoryFreeRuns
 import FirSpec.Execution.MemoryFreeReplace
+import FirSpec.Execution.Trace
+import FirSpec.Execution.TraceMonad
+import FirSpec.Execution.TraceRuns
+import FirSpec.Execution.TraceDialect
 import FirSpec.Execution.MemoryModes
 import FirSpec.Execution.NaNModes
 import FirSpec.Core.MemoryRuns

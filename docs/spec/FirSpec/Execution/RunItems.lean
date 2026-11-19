@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "The items a run gives each op: readable blocks" =>
 
-:::moduleDocs (fingerprint := "1979299776556337382")
+:::moduleDocs (fingerprint := "17615802389443933027")
 :::
 
 :::readable Fir.FieldPlace Fir.LayoutPlace Fir.RunItems Fir.RunItems.empty Fir.RunItems.withAddrs (pin := Fir.Memory.Policy.canonical) (fingerprint := "17370728466934174662")
@@ -62,4 +62,17 @@ layout of $`T` with each symbol, placed, under the canonical policy. A
 module's own items,
 $`\mathrm{items}(M)`, are those of its own table, in its data layout:
 the items that the runs the modes report give each op.
+:::
+
+:::readable Fir.LayoutPlace.ref Fir.RunItems.ofTable_ref (pin := Fir.SymbolTable.layouts) (pin := Fir.LayoutRef) (fingerprint := "10020164216687375419")
+*Definition and theorem: a run gives an op the layout that validation
+checks it against.* What the rule of an op sees of a placed layout is its
+memory and the count of each of its fields. For every data layout $`l`,
+table $`T` and symbol $`s`, the layout that a run of a function of $`T`
+gives an op for $`s`, seen so, is the layout of $`s` that
+{ref "The-fir-specification--Validation--Scope-and-symbols"}[validation]
+reads, $`\mathrm{layouts}_T(s)`: both are the first layout of $`T` with
+that symbol, or none. So an op that validation accepts in $`T` finds, in
+every run, a layout of $`s` of the memory and with the fields it was
+checked against.
 :::

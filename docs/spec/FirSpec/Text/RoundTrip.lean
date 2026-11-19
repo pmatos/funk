@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Round trips: readable blocks" =>
 
-:::moduleDocs (fingerprint := "5056643367855155288")
+:::moduleDocs (fingerprint := "615574060081526085")
 :::
 
 :::readable Fir.Func.OpWellFormed (pin := Fir.Func.typeOf) (pin := Fir.DialectSignature) (pin := Fir.Location.limit) (fingerprint := "12115051900375411089")
@@ -144,7 +144,7 @@ and two different valid modules never print the same text. The next block
 shows that every dialect whose text is lawful meets it.
 :::
 
-:::readable Fir.Func.Valid.wellFormed Fir.SymbolTable.Valid.itemsWellFormed Fir.MemLayout.Valid.inLimits Fir.validIsWellFormed (pin := Fir.Func.Valid) (pin := Fir.LocTable.Valid) (pin := Fir.Module.Valid) (pin := Fir.SymbolTable.Valid) (pin := Fir.Location.limit) (fingerprint := "6346721430650771500")
+:::readable Fir.Func.Valid.wellFormed Fir.SymbolTable.Valid.itemsWellFormed Fir.MemLayout.Valid.inLimits Fir.validIsWellFormed (pin := Fir.Func.Valid) (pin := Fir.LocTable.Valid) (pin := Fir.Module.Valid) (pin := Fir.SymbolTable.Valid) (pin := Fir.Location.limit) (fingerprint := "12947254260534717789")
 *Theorems: a valid function is well formed, and so is every valid module.*
 Let $`d` be a dialect with a signature, a text and validation rules, whose
 text is {ref "The-fir-specification--Text-format--Grammar"}[lawful]. Then:

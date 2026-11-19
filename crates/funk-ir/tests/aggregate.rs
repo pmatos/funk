@@ -208,12 +208,17 @@ fn validation_checks_the_memories_and_types() {
         messages(&agg("memory(0) size(4) align(4) field(0, i0)")),
         ["a type of the layout is not valid"]
     );
+    // A float takes the units of its bits, at the natural alignment of its
+    // size, as `alloca` places it.
+    assert!(
+        messages(&agg(
+            "memory(0) size(16) align(8) field(0, f32) field(4, f16, 2) field(8, f64)"
+        ))
+        .is_empty()
+    );
     assert_eq!(
-        messages(&agg("memory(0) size(4) align(4) field(0, f32)")),
-        [field_at(
-            0,
-            "has a type that may not be a field: an integer or a pointer"
-        )]
+        messages(&agg("memory(0) size(8) align(4) field(2, f32)")),
+        [field_at(2, "is not a multiple of its type's alignment, 4")]
     );
     assert_eq!(
         messages(&one_func(&format!(

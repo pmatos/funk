@@ -64,7 +64,7 @@ theorem call_typesValid : TypesValid (d := CoreDialect) (.call "f" [] [i 8]) := 
 
 /-- Its obligations give `udiv` at `i8` a result on defined operands. -/
 theorem udiv8_returnsOnDefined : ReturnsOnDefined (d := CoreDialect) (.udiv 8 false) :=
-  Op.returnsOnDefined_valid _ rfl udiv8_typesValid rfl
+  Op.returnsOnDefined_valid _ rfl rfl udiv8_typesValid rfl
 
 /-- `udiv` at `i0` has none: every divisor is zero. -/
 theorem udiv0_noResult : ¬ ReturnsOnDefined (d := CoreDialect) (.udiv 0 false) :=
@@ -129,7 +129,7 @@ example : MemTotal (d := CoreDialect) (.alloca .stack (i 32) 4 none 0) :=
 `i8`. -/
 theorem udiv8_total_monotone :
     OpTotal (d := CoreDialect) (.udiv 8 false) ∧ OpMonotone (d := CoreDialect) (.udiv 8 false) :=
-  ⟨Op.total_all _ (.inr rfl) rfl, Op.monotone_all _ (.inr rfl)⟩
+  ⟨Op.total_all _ (.inr rfl) rfl rfl, Op.monotone_all _ (.inr rfl)⟩
 
 /-! # Generic theorems for the core dialect -/
 

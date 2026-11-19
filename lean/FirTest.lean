@@ -67,6 +67,8 @@ import FirTest.EffectCases
 import FirTest.SummaryCases
 import FirTest.Memory
 import FirTest.MemoryRuns
+import FirTest.Trace
+import FirTest.TraceDialect
 import FirTest.MemoryPoison
 import FirTest.MemoryObligations
 import FirTest.MemoryRefine
@@ -79,6 +81,7 @@ import FirTest.Store
 import FirTest.MemoryCopy
 import FirTest.PointerAccess
 import FirTest.FloatAccess
+import FirTest.FieldAddr
 import FirTest.PrintParse
 import FirTest.ParseWellFormed
 import FirTest.G0

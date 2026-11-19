@@ -106,8 +106,12 @@ def fieldAt (o : Nat) (s : String) : String := "the field at offset " ++ toStrin
   ["a type names memory 1, which the data layout does not declare"]
 #guard checks (agg "memory(0) size(4) align(4) field(0, i0)")
   ["a type of the layout is not valid"]
-#guard checks (agg "memory(0) size(4) align(4) field(0, f32)")
-  [fieldAt 0 "has a type that may not be a field: an integer or a pointer"]
+-- A float takes the units of its bits, at the natural alignment of its
+-- size, as `alloca` places it: `f32` takes 4 units aligned to 4, and `f16`
+-- two aligned to 2.
+#guard valid (agg "memory(0) size(16) align(8) field(0, f32) field(4, f16, 2) field(8, f64)")
+#guard checks (agg "memory(0) size(8) align(4) field(2, f32)")
+  [fieldAt 2 "is not a multiple of its type's alignment, 4"]
 -- Two items share no symbol.
 #guard checks (oneFunc ("aggregate @f() " ++ pair ++ " {\n}\n\nfunc @f() {\n^e:\n  ret @0\n}\n"))
   ["the symbol @f names more than one item"]
@@ -138,7 +142,8 @@ example : roundUp 3 4 = 4 := by decide
 -- A field takes the units and alignment of one value that `alloca` makes.
 example : Core.Ty.fieldShape (DataLayout.entry []) 0 (.ptr 0) =
     some (Core.allocaShape (DataLayout.entry []) id (.ptr 0) 1 none 0) :=
-  Core.Ty.fieldShape_eq_allocaShape _ _ trivial
+  Core.Ty.fieldShape_eq_allocaShape _ _ _
+example : Core.Ty.fieldShape (DataLayout.entry []) 0 (.float 15 64) = some (10, 16) := by decide
 
 /-! # The layouts a run gives each op -/
 

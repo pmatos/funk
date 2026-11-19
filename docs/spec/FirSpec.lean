@@ -172,6 +172,8 @@ functions, blocks and ops.
 
 {includeReadable "." Fir.Core.StoreText "Stores in text" FirSpec.Core.StoreText (level := 2)}
 
+{includeReadable "." Fir.Core.FieldAddrText "Field addresses in text" FirSpec.Core.FieldAddrText (level := 2)}
+
 {includeReadable "." Fir.Core.TextSamples "The core dialect's text, checked" FirSpec.Core.TextSamples (level := 2)}
 
 {includeReadable "." Fir.Core.FloatText "Float constants in text" FirSpec.Core.FloatText (level := 2)}

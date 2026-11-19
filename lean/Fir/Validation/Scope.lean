@@ -143,6 +143,23 @@ function with that symbol. -/
 def SymbolTable.symbols (t : SymbolTable d) (s : Name) : Option (FuncType d) :=
   (t.funcs.find? (·.name == s)).map Func.type
 
+/-- What the rule of an op sees of an aggregate's layout of its table: the
+layout's memory, and the count of each field, in order, `none` for a field
+that is not repeated. -/
+structure LayoutRef where
+  mem : Nat
+  counts : List (Option Nat)
+  deriving DecidableEq
+
+/-- What the rule of an op sees of an aggregate's layout. -/
+def Aggregate.ref (a : Aggregate d) : LayoutRef := ⟨a.mem, a.fields.map (·.count)⟩
+
+/-- The layout of an aggregate that each symbol of a table names, as the
+rule of an op sees it: its first layout with that symbol, as the run gives
+it to an op (`RunItems.ofTable`). -/
+def SymbolTable.layouts (t : SymbolTable d) (s : Name) : Option LayoutRef :=
+  (t.aggregates.find? (·.name == s)).map Aggregate.ref
+
 mutual
 /-- The symbol tables that an item holds, at any depth: none for a
 function, an item of a dialect's kind or an aggregate's layout, and a nested
@@ -200,12 +217,15 @@ theorem Item.mem_tablesIn {i : Item d} : ∀ {is : List (Item d)}, i ∈ is →
 @[simp] theorem Module.table_symbols (m : Module d) : m.table.symbols = m.symbols := rfl
 
 /--
-What a dialect's op rules may look at: the module's symbol table and the
-result types of the enclosing function.
+What a dialect's op rules may look at: the module's symbol table, the
+result types of the enclosing function, and the aggregates' layouts of the
+table, as the rule of an op sees them, for an op that names a layout, as
+the core's `fieldAddr` does (#236).
 -/
 structure OpContext (d : Dialect) where
   symbols : Name → Option (FuncType d)
   results : List d.Ty
+  layouts : Name → Option LayoutRef
 
 /--
 What a dialect's function rule may look at beside the function: the module's
@@ -265,8 +285,8 @@ The rules a dialect adds to validation.
 * `fieldShape` gives the units that a value of a type takes as a field of
   an aggregate's layout, and its alignment, in units, in the memory `n` of
   a module whose memories have the entries `lay`, and `none` for a type
-  that may not be a field (ADR-2026-11-16-1546). The core gives one to its
-  integer and pointer types. A dialect whose types may not be fields gives
+  that may not be a field (ADR-2026-11-16-1546). The core gives one to each
+  of its types: an integer, a float or a pointer. A dialect whose types may not be fields gives
   none, the default.
 * `opTypes` lists the types that an op carries in its attributes, beyond
   the types of its operands and results, such as the type of the values
