@@ -28,7 +28,8 @@ its semantics, progress with memory, which asks each op to be total from
 any memories, and refinement with memory, which refines memories unit by
 unit and asks each op to be monotone from memories that refine others.
 Between the model and the effect, it says which addresses an exposed
-allocation may be given and which one `fir-ref` gives, and how a value of
+allocation may be given and which one `fir-ref` gives, how a run's address
+policy picks one, and how a value of
 an integer, a float or a pointer type becomes units of a memory, and units
 a value again, at every byte order.
 
@@ -53,6 +54,10 @@ a value again, at every byte order.
 {includeReadable "." Fir.Memory.CanonicalLaws "Canonical layout laws" FirSpec.Memory.CanonicalLaws (level := 1)}
 
 {includeReadable "." Fir.Memory.ExposeLaws "Exposure laws" FirSpec.Memory.ExposeLaws (level := 1)}
+
+{includeReadable "." Fir.Memory.Policy "Address policies" FirSpec.Memory.Policy (level := 1)}
+
+{includeReadable "." Fir.Memory.PolicyLaws "Address policy laws" FirSpec.Memory.PolicyLaws (level := 1)}
 
 {includeReadable "." Fir.Memory.Encode "Values in units" FirSpec.Memory.Encode (level := 1)}
 
@@ -127,6 +132,10 @@ a value again, at every byte order.
 {includeReadable "." Fir.Execution.MemoryBindLaws "Sequences in the state layer" FirSpec.Execution.MemoryBindLaws (level := 1)}
 
 {includeReadable "." Fir.Execution.MemoryCopyLaws "Copies of units in the state layer" FirSpec.Execution.MemoryCopyLaws (level := 1)}
+
+{includeReadable "." Fir.Execution.MemoryExposeLaws "Exposing in the state layer" FirSpec.Execution.MemoryExposeLaws (level := 1)}
+
+{includeReadable "." Fir.Execution.MemoryPolicyRuns "Runs under every address policy" FirSpec.Execution.MemoryPolicyRuns (level := 1)}
 
 {includeReadable "." Fir.Core.Alloca "Stack allocation rules" FirSpec.Core.Alloca (level := 1)}
 

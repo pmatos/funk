@@ -72,6 +72,7 @@ import FirTest.MemoryObligations
 import FirTest.MemoryRefine
 import FirTest.MemoryEncode
 import FirTest.Address
+import FirTest.Expose
 import FirTest.Alloca
 import FirTest.Load
 import FirTest.Store

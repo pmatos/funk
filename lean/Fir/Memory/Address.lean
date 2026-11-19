@@ -18,11 +18,11 @@ data layout. An allocation of `n` units given the address `x` takes the
 addresses from `x` to `x + n`, and the address `x + n` is one past its end.
 The model takes the range of addresses an allocation may take as two
 bounds, `lo` and `hi`: an allocation at `x` must have `lo ≤ x` and
-`x + n ≤ hi`. Whether the address 0 and the top of the address space may be
-given is a question for the human (#232). Under the strictest reading, `lo`
-is 1 and `hi` is `2 ^ P - 1`, so that no allocation is at 0 and the address
-one past every allocation's end is an address of the memory and not 0; the
-loosest is 0 and `2 ^ P`. Every law below holds at every bound. The address
+`x + n ≤ hi`. Every law below holds at every bound. A run exposes with
+`lo = 1` and `hi = 2 ^ P - 1` (the human's ruling of 2026-11-18 on #232,
+Q4; the section on address policies): no allocation is at 0, and the
+address one past every allocation's end is an address of the memory and
+not 0. The address
 `x` _fits_ the allocation when:
 
 * `lo ≤ x` and `x + n ≤ hi`;

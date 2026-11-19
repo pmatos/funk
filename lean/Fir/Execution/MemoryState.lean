@@ -16,7 +16,8 @@ keeps the effects of the monad below it, and adds two:
 * the memory effect runs the memory model's operations on the memories,
   each load and store an aligned access, and an access that faults,
   misaligned included, is the monad's UB, with the fault's reason
-  (ADR-2026-11-09-1542);
+  (ADR-2026-11-09-1542). Exposing a pointer that no address fits is the
+  monad's UB too;
 * a frame enters a call before its computation and leaves it after, so a
   call's stack allocations are freed when it returns
   (ADR-2026-11-09-1548).
@@ -66,6 +67,9 @@ instance instMonadMemoryStateT [Monad m] [MonadUB m] :
   store x p us al S := match S.store x p us al with
     | .ok S' => pure ((), S')
     | .error f => MonadUB.ub f.reason
+  expose x g P p S := match S.expose x g P p with
+    | some r => pure r
+    | none => MonadUB.ub noAddressReason
 
 /-!
 # Morphisms through the layer
@@ -178,6 +182,20 @@ theorem MonadMorphism.state_store (x : Mem) (p : Pointer) (us : List (MemUnit (u
     | .error f => MonadUB.ub f.reason) = match S.store x p us al with
     | .ok S' => pure ((), S')
     | .error f => MonadUB.ub f.reason
+  split
+  · exact φ.map_pure _
+  · exact h _
+
+/-- A morphism that keeps UB keeps exposing through the layer. -/
+theorem MonadMorphism.state_expose (x : Mem) (g : Policy) (P : Nat) (p : Pointer) :
+    (φ.state (Memories Mem unit)).map (MonadMemory.expose x g P p) =
+      MonadMemory.expose (m := StateT (Memories Mem unit) n) x g P p := by
+  funext S
+  show φ.map (match S.expose x g P p with
+    | some r => pure r
+    | none => MonadUB.ub noAddressReason) = match S.expose x g P p with
+    | some r => pure r
+    | none => MonadUB.ub noAddressReason
   split
   · exact φ.map_pure _
   · exact h _
