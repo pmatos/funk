@@ -30,7 +30,10 @@ unit and asks each op to be monotone from memories that refine others.
 Between the model and the effect, it says which addresses an exposed
 allocation may be given and which one `fir-ref` gives, and how a value of
 an integer, a float or a pointer type becomes units of a memory, and units
-a value again, at every byte order.
+a value again, at every byte order. It ends with traces: the events that a
+run shows to the world outside it, the layer in which a run shows them, and
+refinement of the traced runs of functions for every world
+(ADR-2026-11-09-1540).
 
 {includeReadable "." Fir.Memory.Model "The memory model" FirSpec.Memory.Model (level := 1)}
 
@@ -169,3 +172,11 @@ a value again, at every byte order.
 {includeReadable "." Fir.Core.MemoryRuns "Core functions with memory" FirSpec.Core.MemoryRuns (level := 1)}
 
 {includeReadable "." Fir.Core.MemoryCallRefine "Congruence in a core callee" FirSpec.Core.MemoryCallRefine (level := 1)}
+
+{includeReadable "." Fir.Execution.Trace "Traces of events" FirSpec.Execution.Trace (level := 1)}
+
+{includeReadable "." Fir.Execution.TraceMonad "The traced layer" FirSpec.Execution.TraceMonad (level := 1)}
+
+{includeReadable "." Fir.Execution.TraceRuns "Traced runs" FirSpec.Execution.TraceRuns (level := 1)}
+
+{includeReadable "." Fir.Execution.TraceDialect "A dialect's traced runs" FirSpec.Execution.TraceDialect (level := 1)}
