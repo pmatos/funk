@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "The core's rules with memory: readable blocks" =>
 
-:::moduleDocs (fingerprint := "5331535549836484411")
+:::moduleDocs (fingerprint := "4188306835094998737")
 :::
 
 :::readable Fir.Core.freezeValue_map Fir.Core.ruleOfEv_map Fir.Core.exitOfEv_map (pin := Fir.MonadMorphism.KeepsChoiceUB) (pin := Fir.Core.freezeValue) (pin := Fir.Core.ruleOfEv) (pin := Fir.Core.exitOfEv) (fingerprint := "2405690779588688594")
@@ -52,14 +52,16 @@ keeps UB; and an op with no rule, as $`\mathsf{call}`, maps by the
 hypothesis on $`z_m` and $`z_n`.
 :::
 
-:::readable Fir.Core.Op.memDenote? Fir.Core.Op.memExit? Fir.Core.memDenoteIn (pin := Fir.Core.denoteWith) (pin := Fir.MonadMemory) (pin := Fir.Core.allocaRule) (fingerprint := "5937747185782789596")
+:::readable Fir.Core.Op.memDenote? Fir.Core.Op.memExit? Fir.Core.memDenoteIn (pin := Fir.Core.denoteWith) (pin := Fir.MonadMemory) (pin := Fir.Core.allocaRule) (fingerprint := "12341926236577463974")
 *Definition: the core's rules with memory.* Let $`m` be a monad with
 choice, UB and the
 {ref "The-fir-specification--Memory--The-memory-effect"}[memory effect] on
 the memories of a run, where each memory $`y` of the run has the layout
-entry $`\ell(y)` and the run names the core's memory $`x` as $`\rho(x)`.
-The core's rules with memory are its rules in $`m`, at $`\ell` and
-$`\rho`: an op that accesses the core's memory $`x` accesses the run's
+entry $`\ell(y)`, the run names the core's memory $`x` as $`\rho(x)`, and
+it gives each op the
+{ref "The-fir-specification--Memory--The-items-a-run-gives-each-op"}[items]
+$`L`. The core's rules with memory are its rules in $`m`, at $`\ell`,
+$`\rho` and $`L`: an op that accesses the core's memory $`x` accesses the run's
 memory $`\rho(x)` and reads its unit, byte order and pointer width from the
 entry $`\ell(\rho(x))` (ADR-2026-11-13-0906). The rule with memory of
 $`\mathsf{alloca}` is its
@@ -75,25 +77,31 @@ store of a pointer their
 and those of the load and store of a float their
 {ref "The-fir-specification--Memory--Float-load-and-store-rules"}[float load and store rules];
 these are the core ops
-that touch memory, and none has a rule without memory. Every other op touches no memory, so its
+that touch memory, and none has a rule without memory. The rule with
+memory of $`\mathsf{fieldaddr}~s~j` is its
+{ref "The-fir-specification--Memory--Field-address-rules"}[result] in the
+layout $`L.\mathrm{layout}(s)`, given at once: it touches no memory, but
+it reads an item, so it too has no rule without memory. Every other op
+touches no memory and reads no item, so its
 rule with memory, as an op that is not a terminator and as a terminator,
 is its
 {ref "The-fir-specification--Execution--Core-op-semantics"}[rule].
 
-The core's semantics in $`m` at $`\ell` and $`\rho`, with $`z` for an op
+The core's semantics in $`m` at $`\ell`, $`\rho` and $`L`, with $`z` for an op
 with no rule, gives each op its rule with memory, and $`z(p)` to an op
 $`p` that has none.
 :::
 
-:::readable Fir.Core.memDenoteIn_mapsDenote (fingerprint := "10134910643586977856")
+:::readable Fir.Core.memDenoteIn_mapsDenote (fingerprint := "6804150442267968037")
 *Theorem: the core's rules with memory mean the same in both monads.* For
 monads $`m` and $`n` with choice, UB and the memory effect, a morphism
 $`\varphi` from $`m` to $`n` that keeps choice, UB, allocation, loads and
 stores
-maps the core's semantics with memory in $`m` at $`\ell` and $`\rho` to
-its semantics with memory in $`n`, op by op, when it maps what an op with
-no rule does. Every op but $`\mathsf{alloca}`, $`\mathsf{load}` and
-$`\mathsf{store}` follows from the theorem above; $`\mathsf{alloca}` maps because
+maps the core's semantics with memory in $`m` at $`\ell`, $`\rho` and
+$`L` to its semantics with memory in $`n`, op by op, when it maps what an
+op with no rule does. $`\mathsf{fieldaddr}` maps because its rule gives
+its result at once, and $`\varphi(\mathsf{pure}~r) = \mathsf{pure}~r`.
+Every other op but $`\mathsf{alloca}`, the loads and the stores follows from the theorem above; $`\mathsf{alloca}` maps because
 $`\varphi` maps its allocation to the same allocation in $`n`, and
 mapping the pointer to the result comes after it in both.
 $`\mathsf{load}` maps because $`\varphi` maps the UB of a poison pointer
@@ -105,9 +113,9 @@ gives no result in both. The
 keeps allocation, loads and stores.
 :::
 
-:::readable Fir.Core.memDenoteAt Fir.Core.instDialectMemDenote (pin := Fir.DialectMemDenote) (fingerprint := "1738503314275530218")
+:::readable Fir.Core.memDenoteAt Fir.Core.instDialectMemDenote (pin := Fir.DialectMemDenote) (fingerprint := "6916432413964910533")
 *Definition: the core's semantics with memory.* At the layout entries
-$`\ell` and the naming $`\rho`, the core's
+$`\ell`, the naming $`\rho` and the items $`L`, the core's
 {ref "The-fir-specification--Memory--Memory-obligations"}[semantics with memory]
 runs each op by its rule with memory in the
 {ref "The-fir-specification--Memory--The-state-layer"}[state layer] over
@@ -117,11 +125,11 @@ monad, so an op that touches memory joins it with its own rule, as
 $`\mathsf{alloca}`, $`\mathsf{load}` and $`\mathsf{store}` do.
 :::
 
-:::readable Fir.Core.Op.liftsSetM (pin := Fir.OpLiftsSetM) (fingerprint := "4896862432120104633")
-*Theorem: every core op that touches no memory is tied.* For every core op
-$`p` but $`\mathsf{alloca}`, $`\mathsf{load}` and $`\mathsf{store}`, at
-every layout
-$`\ell` and naming $`\rho`, on every operand vector, $`p`'s meaning with
+:::readable Fir.Core.Op.liftsSetM (pin := Fir.OpLiftsSetM) (fingerprint := "6022338225824521883")
+*Theorem: every core op that touches no memory and reads no item is tied.*
+For every core op $`p` but $`\mathsf{alloca}`, the loads, the stores and
+$`\mathsf{fieldaddr}`, at every layout $`\ell`, naming $`\rho` and
+record of items $`L`, on every operand vector, $`p`'s meaning with
 memory is its meaning in the set monad, lifted into the state layer: it
 keeps the memories. Lifting
 {ref "The-fir-specification--Memory--Runs-with-memory"}[keeps choice and UB],
@@ -136,4 +144,8 @@ memory by its own rule
 ({ref "The-fir-specification--Memory--Stack-allocation-obligations"}[stack allocation obligations],
 {ref "The-fir-specification--Memory--Load-obligations"}[load obligations],
 {ref "The-fir-specification--Memory--Store-obligations"}[store obligations]).
+$`\mathsf{fieldaddr}` is not tied either: its rule reads the layout that
+$`L` gives, so it has no rule in the set monad, and it meets each
+obligation with memory by its own rule
+({ref "The-fir-specification--Memory--Field-address-obligations"}[field address obligations]).
 :::

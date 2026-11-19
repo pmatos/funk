@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Stack allocation rules: readable blocks" =>
 
-:::moduleDocs (fingerprint := "6084653289318863074")
+:::moduleDocs (fingerprint := "17066033896169891471")
 :::
 
 :::readable Fir.Core.Ty.units Fir.Core.Ty.units?_int Fir.Core.Ty.units?_float (pin := Fir.MemLayout.bitsUnits) (pin := Fir.Core.Ty.units?) (fingerprint := "8017750107794323725")
@@ -46,7 +46,7 @@ $`\mathsf{bf16}` are aligned to 2 units, $`\mathsf{f32}` to 4,
 $`\mathsf{f64}` to 8 and $`\mathsf{f128}` to 16.
 :::
 
-:::readable Fir.Core.Ty.defaultAlign Fir.Core.allocaShape Fir.Core.allocaRule (pin := Fir.MonadMemory) (pin := Fir.Core.Op) (fingerprint := "8437890601133121693")
+:::readable Fir.Core.Ty.defaultAlign Fir.Core.allocaShape Fir.Core.allocaRule (pin := Fir.MonadMemory) (pin := Fir.Core.Op) (fingerprint := "1359911096278148020")
 *Definition: the rule of $`\mathsf{alloca}`.* Let a run's memories have
 the layout entries $`\ell`, and let the run name the core's memory $`x`
 as $`\rho(x)`. For $`\mathsf{alloca}_N~k~t~c~a`, which allocates $`c`
@@ -85,10 +85,10 @@ The count $`c`, and so $`n`, has no bound, as the human ruled on
 error of the run, as a deep recursion is, and not a rule of the spec.
 :::
 
-:::readable Fir.Core.Ty.fieldShape_eq_allocaShape (pin := Fir.Core.Ty.fieldShape) (fingerprint := "13421257978643998545")
+:::readable Fir.Core.Ty.fieldShape_eq_allocaShape (pin := Fir.Core.Ty.fieldShape) (fingerprint := "13248221461977826623")
 *Theorem: a field takes what one allocated value takes.* For every map
 $`\ell` from memories to their layout entries, every memory $`n` and every
-integer or pointer type $`t`, the units and the alignment that a field of
+core type $`t`, an integer, a float or a pointer, the units and the alignment that a field of
 type $`t` takes in an aggregate's layout of memory $`n`
 ({ref "The-fir-specification--Validation--Core-rules"}[the core's field shape])
 are those of $`\mathsf{alloca}_n~k~t~1` with no alignment, in a run that

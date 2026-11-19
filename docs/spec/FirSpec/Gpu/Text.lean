@@ -14,7 +14,7 @@ changes under it.
 
 #doc (Manual) "The GPU dialect in text: readable blocks" =>
 
-:::moduleDocs (fingerprint := "4337651137589824036")
+:::moduleDocs (fingerprint := "15367316954614514119")
 :::
 
 :::readable Fir.Gpu.Dim.word Fir.Gpu.Dim.decode Fir.Gpu.Query.name Fir.Gpu.Query.decode (fingerprint := "10132642262867413315")
@@ -27,7 +27,7 @@ Reading goes the other way: a word in the table gives its dimension or
 question, and every other word gives none.
 :::
 
-:::readable Fir.Gpu.allocName Fir.Gpu.Op.name Fir.Gpu.Op.attrs Fir.Gpu.decodeAlloc Fir.Gpu.Op.decode (fingerprint := "12023490568658626712")
+:::readable Fir.Gpu.allocName Fir.Gpu.Op.name Fir.Gpu.Op.attrs Fir.Gpu.decodeAlloc Fir.Gpu.Op.decode (fingerprint := "9078665443127708543")
 *Definition: the text of an op of `gpu`.* $`\mathsf{query}_N~q~d` is
 written as the name of $`q`, then the word of $`d` as its one attribute,
 with its result type $`\mathsf{i}N`:

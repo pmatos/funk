@@ -14,7 +14,7 @@ fails when the Lean changes under it.
 
 #doc (Manual) "Checking the data layout: readable blocks" =>
 
-:::moduleDocs (fingerprint := "11164250426651830568")
+:::moduleDocs (fingerprint := "12980656044469884037")
 :::
 
 :::readable Fir.need Fir.need_eq_nil (fingerprint := "7722159485140472772")
@@ -58,11 +58,11 @@ declare". The check gives no problem exactly when the memories of $`T` are
 in $`L`.
 :::
 
-:::readable Fir.Aggregate.decidableInLimits Fir.Aggregate.problem Fir.Field.problems Fir.Field.problems_eq_nil (fingerprint := "12681125869588812337")
+:::readable Fir.Aggregate.decidableInLimits Fir.Aggregate.problem Fir.Field.problems Fir.Field.problems_eq_nil (fingerprint := "5817582713345187724")
 *Definition: the check of a field.* Whether a layout is within its limits
 can be decided. A problem about the layout $`A` names its symbol. The
 problems of a field $`F` at the offset $`o` of $`A` are one, "the field at
-offset $`o` has a type that may not be a field: an integer or a pointer",
+offset $`o` has a type that may not be a field: an integer, a float or a pointer",
 when its type has no shape; and otherwise, in order, "the field at offset
 $`o` is not a multiple of its type's alignment, $`a`", "the field at offset
 $`o` has a type aligned to $`a` units, more than the layout's $`A`" and

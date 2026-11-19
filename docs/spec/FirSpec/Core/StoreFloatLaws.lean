@@ -17,7 +17,7 @@ when the Lean changes under it.
 :::moduleDocs (fingerprint := "11807418051268259110")
 :::
 
-:::readable Fir.Core.storeFloat_denote Fir.Core.storeFloatRule_poison Fir.Core.storeFloatRule_value Fir.Core.storeFloat_ownRuleHas (pin := Fir.Core.storeFloatRule) (pin := Fir.Core.storeAccess) (pin := Fir.Core.memDenoteAt) (pin := Fir.OwnRuleHas) (fingerprint := "12086484347473594091")
+:::readable Fir.Core.storeFloat_denote Fir.Core.storeFloatRule_poison Fir.Core.storeFloatRule_value Fir.Core.storeFloat_ownRuleHas (pin := Fir.Core.storeFloatRule) (pin := Fir.Core.storeAccess) (pin := Fir.Core.memDenoteAt) (pin := Fir.OwnRuleHas) (fingerprint := "9571552216175554295")
 *Theorems: the store of a float with memory.* In the
 {ref "The-fir-specification--Memory--The-state-layer"}[state layer] over
 the set monad, at the layout entries $`\ell` and naming $`\rho`, the

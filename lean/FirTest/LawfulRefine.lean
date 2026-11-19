@@ -255,14 +255,20 @@ theorem core_touchesMemory_false {o : Core.Op}
 
 /-- Each op of `CoreProbe` ignores the memories, at every layout and
 naming: a core op and a probe op each run by their rule in the set monad and
-keep the memories. -/
+keep the memories, and `fieldAddr` gives its result at once and keeps
+them. -/
 theorem coreProbe_opsIgnoreMemory {N : Type} [DecidableEq N] (lay : N → MemLayout)
     (ρ : DialectEffects.Mem CoreProbe → N) (L : RunItems) :
     letI := DialectMemDenote.denoteAt (d := CoreProbe) lay ρ L
     OpsIgnoreMemory CoreProbe N (unitsOf lay)
-  | .inl o, _, h => Dialect.sum.ownRuleHas_inl lay ρ L (fun f _ h => IgnoresMemory.map f h)
-      (OwnRuleHas.ofLifts (Core.Op.liftsSetM o (core_touchesMemory_false h)) lay _
-        L IgnoresMemory.lift)
+  | .inl o, _, h => Dialect.sum.ownRuleHas_inl lay ρ L (fun f _ h => IgnoresMemory.map f h) (by
+      cases hi : o.readsItems with
+      | false =>
+        exact OwnRuleHas.ofLifts (Core.Op.liftsSetM o (core_touchesMemory_false h) hi) lay _
+          L IgnoresMemory.lift
+      | true =>
+        cases o <;> try cases hi
+        exact Core.fieldAddr_ignoresMemory _ _ _ _ lay _ L)
   | .inr o, _, _ => Dialect.sum.ownRuleHas_inr lay ρ
       L (OwnRuleHas.ofLifts (LiftsSetM.opLifts (d := ProbeDialect) o) lay ρ L IgnoresMemory.lift)
 

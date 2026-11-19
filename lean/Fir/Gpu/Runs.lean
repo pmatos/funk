@@ -78,7 +78,7 @@ theorem inModule_of_valid {M : Module CoreGpu} {f : Func CoreGpu} (hv : f.Valid 
     f.InModule M where
   calls b hb o ho _ s h := by
     obtain ⟨i, hi, rfl⟩ := List.getElem_of_mem ho
-    have hvalid : validOp ⟨M.context.symbols, f.results⟩ b.body[i].op :=
+    have hvalid : validOp ⟨M.context.symbols, f.results, M.context.layouts⟩ b.body[i].op :=
       (hv.ops b hb i b.body[i] (List.getElem?_eq_getElem hi)).2.2.2.2.2.2.2.2.2.1
     generalize b.body[i].op = op at h hvalid ⊢
     rcases op with op | op
@@ -109,7 +109,7 @@ theorem inModule_of_valid {M : Module CoreGpu} {f : Func CoreGpu} (hv : f.Valid 
     · cases op <;> cases hT
   returns b hb o ho hT args h := by
     obtain ⟨i, hi, rfl⟩ := List.getElem_of_mem ho
-    have hvalid : validOp ⟨M.context.symbols, f.results⟩ b.body[i].op :=
+    have hvalid : validOp ⟨M.context.symbols, f.results, M.context.layouts⟩ b.body[i].op :=
       (hv.ops b hb i b.body[i] (List.getElem?_eq_getElem hi)).2.2.2.2.2.2.2.2.2.1
     generalize b.body[i].op = op at hT args h hvalid ⊢
     rcases op with op | op

@@ -103,7 +103,7 @@ theorem Op.monotone_all : (op : Op) →
   | .unreachable, _ => unreachable_monotone
   | .call .., h => by rcases h with h | h <;> cases h
   | .alloca .., _ | .load .., _ | .store .., _ | .loadPtr .., _ | .storePtr .., _
-  | .loadFloat .., _ | .storeFloat .., _ =>
+  | .loadFloat .., _ | .storeFloat .., _ | .fieldAddr .., _ =>
     fun _ _ _ => ⟨fun _ _ he => he.elim, fun h => nomatch h⟩
 
 /-- Every terminator and every op with no callee of every core function is
