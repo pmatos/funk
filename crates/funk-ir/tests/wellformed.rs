@@ -260,14 +260,7 @@ fn shapes(dialects: Dialects) -> Shapes {
             &mut n.dialect_items,
             m.items.iter().any(|i| matches!(i, Item::Dialect(_))),
         );
-        let layouts: Vec<&Aggregate> = m
-            .items
-            .iter()
-            .filter_map(|i| match i {
-                Item::Aggregate(a) => Some(a),
-                _ => None,
-            })
-            .collect();
+        let layouts: Vec<&Aggregate> = m.items.iter().filter_map(Item::as_aggregate).collect();
         has(&mut n.aggregates, !layouts.is_empty());
         has(
             &mut n.float_fields,
@@ -296,10 +289,9 @@ fn shapes(dialects: Dialects) -> Shapes {
         has(
             &mut n.field_addrs_in_regions,
             m.funcs().any(|f| {
-                let top: Vec<&Op> = f.body.blocks.iter().flat_map(|b| &b.ops).collect();
-                let all = blocks(f).into_iter().flat_map(|b| &b.ops);
-                all.filter(|op| op.name == "fieldaddr").count()
-                    > top.iter().filter(|op| op.name == "fieldaddr").count()
+                let count = |b: &Block| b.ops.iter().filter(|op| op.name == "fieldaddr").count();
+                blocks(f).into_iter().map(count).sum::<usize>()
+                    > f.body.blocks.iter().map(count).sum::<usize>()
             }),
         );
         has(
