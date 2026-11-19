@@ -31,8 +31,10 @@ not 0. The address
 * no other live allocation that has an address takes any address that this
   one would take.
 
-The spec allows any address that fits. A freed allocation is not compared,
-so its addresses may be given again: a later allocation may get exactly the
+The spec allows any address that fits, and a freed allocation also any
+address in range that is a multiple of its alignment (the section on
+address policies). A freed allocation is not compared, so its addresses
+may be given again: a later allocation may get exactly the
 address of one that was freed, as native stack slots are reused. No law may
 assume fresh addresses (the human's ruling of 2026-11-10 on #232). An
 allocation keeps the address it was given for as long as the run lasts,

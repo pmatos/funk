@@ -65,9 +65,11 @@ $$`lo \le z \;\land\; \alpha \mid z \;\land\; z + |\vec{x}| \le hi`
 
 and every other block of $`M` leaves room for $`|\vec{x}|` units from
 $`z`. No address fits an allocation that $`M` does not have. The spec
-allows any address that fits. Every law holds at every bound, and a run
-exposes in a memory of $`P`-bit pointers with $`lo = 1` and
-$`hi = 2^P - 1` (the human's ruling of 2026-11-18 on #232, Q4): no
+allows any address that fits, and a freed allocation also any aligned
+address between the bounds (the section on address policies). Every law
+holds at every bound, and a run exposes in a memory of $`P`-bit pointers
+with $`lo = 1` and $`hi = 2^P - 1` (the human's ruling of 2026-11-18 on
+#232, Q4): no
 allocation is at 0, and the address one past its end is an address of the
 memory and not 0.
 :::

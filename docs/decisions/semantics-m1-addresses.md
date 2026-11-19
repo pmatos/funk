@@ -36,7 +36,9 @@ fits an allocation of `n` units, aligned to `A` (`Memory.fits`), when:
   every address a block may be given;
 - no other live allocation that has an address overlaps `x` to `x + n`.
 
-The spec allows any address that fits. Only live allocations are compared,
+The spec allows any address that fits, and a freed allocation also any
+aligned address in range (see "Exposing a pointer" below). Only live
+allocations are compared,
 so a freed allocation's addresses may be given again: the human ruled on
 2026-11-10, on #232, that no law may assume fresh addresses, since native
 stack slots are reused and `fir-ref`'s single layout cannot show it.
