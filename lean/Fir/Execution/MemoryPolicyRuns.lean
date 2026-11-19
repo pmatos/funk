@@ -43,9 +43,6 @@ def Func.memBehaviour (M : Module d) (f : Func d) (a : HVector toType (f.params.
     Behaviour (List (DVal d)) :=
   fun o => ∃ g, observable (f.memRuns lay ρ (L.withAddrs g) M a) o
 
-/-- The items under their own address policies are the items. -/
-theorem RunItems.withAddrs_addrs : L.withAddrs L.addrs = L := rfl
-
 /-- Each outcome of a run under one policy, the canonical layout of
 `fir-ref` included, is an outcome of the runs under every policy. -/
 theorem Func.memBehaviour_of_observable {M : Module d} {f : Func d}

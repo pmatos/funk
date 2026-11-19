@@ -14,7 +14,7 @@ build fails when the Lean changes under it.
 
 #doc (Manual) "Runs under every address policy: readable blocks" =>
 
-:::moduleDocs (fingerprint := "16836117604326163763")
+:::moduleDocs (fingerprint := "5911238001146547632")
 :::
 
 :::readable Fir.Func.memBehaviour (pin := Fir.RunItems.withAddrs) (pin := Fir.observable) (fingerprint := "9249040135317576477")
@@ -28,10 +28,11 @@ the outcomes of its runs with memory under some address policy $`g` for
 each memory, chosen once for every budget of fuel.
 :::
 
-:::readable Fir.RunItems.withAddrs_addrs Fir.Func.memBehaviour_of_observable (fingerprint := "5200476199081464115")
-*Theorems: a run under one policy.* Items under their own policies are the
-items, so each outcome of a run under one policy, the canonical layout that
-`fir-ref` runs included, is an outcome of the behaviour under every policy.
+:::readable Fir.Func.memBehaviour_of_observable (fingerprint := "597765761385849776")
+*Theorem: a run under one policy.* Each outcome of a run under one policy,
+the canonical layout that `fir-ref` runs included, is an outcome of the
+behaviour under every policy: the items under their own policies are the
+items.
 :::
 
 :::readable Fir.Func.memBehaviour_isRefinedBy (fingerprint := "14339623532216338174")
