@@ -25,16 +25,17 @@ never reads the trace shown before it.
 
 The layer has the effects of the state layer: a choice, of bits or of a
 NaN, UB, and frames, which enter a call before its computation and leave it
-after. It adds the _event effect_: `emit e` shows the event `e` to the
+after; frames act on the memories of the traced state
+(`Fir.Execution.TraceWorld`). It adds the _event effect_: `emit e` shows the event `e` to the
 world, and goes on with the world's answer. Every world counts, so in the layer an event may
 get any answer, and the computation shows the act that holds the event and
 its answer.
 
 A computation of the state layer runs in the traced layer by showing
-nothing. This _lift_ is a monad morphism, keeps choice and UB, and keeps
-frames. Mapping the acts of every trace, each act to a list of acts, is a
-monad morphism too, since it maps a concatenation to the concatenation of
-the images; it keeps choice, UB and frames.
+nothing. This _lift_ is a monad morphism, and keeps choice and UB. Mapping
+the acts of every trace, each act to a list of acts, is a monad morphism
+too, since it maps a concatenation to the concatenation of the images; it
+keeps choice and UB.
 -/
 
 namespace Fir
@@ -365,45 +366,5 @@ theorem MonadMorphism.mapActs_keeps (g : A → List B) :
   ub r := by
     funext s e
     exact propext ⟨fun ⟨_, h, he⟩ => by cases (h : _ = _); exact he, fun h => ⟨_, rfl, h⟩⟩
-
-/-! # Frames -/
-
-variable {Mem : Type} {unit : Mem → Nat} [DecidableEq Mem]
-
-/-- A frame in the traced layer enters a call before its computation and
-leaves the call after. -/
-instance : MonadFrame (TraceM A (Memories Mem unit)) :=
-  ⟨fun x S e => ∃ e', x S.enter e' ∧ e = e'.map fun r => (r.1, r.2.1, r.2.2.exit)⟩
-
-/-- The lift keeps frames. -/
-theorem MonadMorphism.trace_mapsFrame :
-    (MonadMorphism.trace A (Memories Mem unit)).MapsFrame := by
-  intro α x
-  funext S e
-  apply propext
-  constructor
-  · rintro (⟨a, s', ⟨⟨a₀, s₀⟩, hx, h⟩ | ⟨_, _, h⟩, rfl⟩ | ⟨r, ⟨_, _, h⟩ | ⟨r', hx, h⟩, rfl⟩)
-    · cases h
-      exact ⟨_, .inl ⟨a₀, s₀, hx, rfl⟩, rfl⟩
-    · cases h
-    · cases h
-    · injection h with h
-      subst h
-      exact ⟨_, .inr ⟨r, hx, rfl⟩, rfl⟩
-  · rintro ⟨_, (⟨a, s', hx, rfl⟩ | ⟨r', hx, rfl⟩), rfl⟩
-    · exact .inl ⟨a, s'.exit, .inl ⟨(a, s'), hx, rfl⟩, rfl⟩
-    · exact .inr ⟨r', .inr ⟨r', hx, rfl⟩, rfl⟩
-
-/-- Mapping acts keeps frames. -/
-theorem MonadMorphism.mapActs_mapsFrame (g : A → List B) :
-    (MonadMorphism.mapActs (Memories Mem unit) g).MapsFrame := by
-  intro α x
-  funext S e
-  apply propext
-  constructor
-  · rintro ⟨_, ⟨e', hx, rfl⟩, rfl⟩
-    exact ⟨_, ⟨e', hx, rfl⟩, by cases e' <;> rfl⟩
-  · rintro ⟨_, ⟨e', hx, rfl⟩, rfl⟩
-    exact ⟨_, ⟨e', hx, rfl⟩, by cases e' <;> rfl⟩
 
 end Fir

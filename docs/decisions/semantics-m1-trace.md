@@ -7,10 +7,11 @@ fixed or deleted (ADR-2026-11-09-1610). ADR-2026-11-09-1540 holds the
 direction decision.
 
 These are decided designs. The spec defines traces, worlds and traced
-refinement (`lean/Fir/Execution/Trace*.lean`); what an observer sees of
-memory at a return, the world's writes, and `fir-ref`'s scripted worlds are
-not implemented yet (#233). semantics-refinement.md says what a run shows in
-M0.
+refinement (`lean/Fir/Execution/Trace*.lean`), and what an observer sees at
+a return and the world's actions on escaped memory
+(`lean/Fir/Execution/Observe*.lean`, `TraceWorld.lean`). Congruence over
+traces and `fir-ref`'s scripted worlds are not implemented yet (#233).
+semantics-refinement.md says what a run shows in M0.
 
 ## What a run shows
 
@@ -109,6 +110,43 @@ on #233 that a dangling pointer is poison in returned values and external-call
 arguments too. Rejected: exact match outside observed memory, so a target would
 keep a dangling pointer in a return or a call that neither side can use without
 UB.
+
+## How the spec states the end of a return
+
+These are #233's choices of form, within the rules above.
+
+- **Handles.** The world never sees an allocation id. A traced run keeps
+  the list of the allocations that escaped, in the order they escaped, and
+  the world names each by its place in that list, its handle
+  (`TraceState`). Source and target answered at the same world then get
+  the same answers, by handle, though their ids differ. Rejected: answers
+  that name allocation ids, compared up to a renaming of the whole trace,
+  under which the world could tell source and target apart by an id.
+- **Who escapes what.** The layer gives the escape effect; the op that
+  hands out an address escapes each allocation it reaches, so an external
+  call (#239) escapes the closure of its pointer arguments when it is made.
+  The `export` globals (#237) and `ptr.expose` (#232) join the roots when
+  they exist.
+- **The renaming.** One-to-one, partial, and closed under the live
+  pointers of the allocations it relates, driven from the source's side
+  (`End.SeenUnder`): it renames each allocation that the observer reaches
+  (`End.SeenUnder.reachable`), and no other needs comparing. The escaped
+  allocations keep their handles, so the renaming is fixed on them. An id
+  that the source never allocated is renamed to one the target never
+  allocated. Each fragment of a pointer holds the whole pointer, so a
+  single fragment in observed memory makes its allocation reachable.
+- **Where the world acts.** `TraceM.ask` applies the world's actions: a
+  write inside an escaped live allocation, a heap allocation that escapes
+  at once, and a free of an escaped live heap allocation. The act records
+  them beside the result.
+- **Addresses.** Whether the end of a run compares the addresses of
+  exposed allocations is open for the human: the comparison takes an
+  address rule, and every law holds for each of `AddrRule.ignore`, `same`
+  and `exposed`.
+
+When the source returns no pointer and nothing escaped, the end of its
+return is refined exactly when its returned values are
+(`End.isRefinedBy_iff_vals`), so M0's tests keep their results.
 
 ## The world
 
