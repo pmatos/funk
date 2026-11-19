@@ -155,6 +155,7 @@ struct Shapes {
     modules_in_modules: usize,
     dialect_items: usize,
     aggregates: usize,
+    globals: usize,
     rejected: usize,
 }
 
@@ -255,6 +256,10 @@ fn shapes(dialects: Dialects) -> Shapes {
             &mut n.aggregates,
             m.items.iter().any(|i| matches!(i, Item::Aggregate(_))),
         );
+        has(
+            &mut n.globals,
+            m.items.iter().any(|i| matches!(i, Item::Global(_))),
+        );
         has(&mut n.rejected, !verify(&m, &reg).is_empty());
     }
     n
@@ -284,6 +289,7 @@ fn the_generator_covers_what_validation_rejects() {
             n.nested_modules,
             n.dialect_items,
             n.aggregates,
+            n.globals,
         ];
         assert!(n.modules_in_modules > 0, "{dialects:?}: {n:?}");
         assert!(common.iter().all(|&k| k >= tenth), "{dialects:?}: {n:?}");

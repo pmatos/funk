@@ -1,5 +1,6 @@
 import Fir.Validation.Dominance
 import Fir.Validation.Layout
+import Fir.Validation.Global
 import Fir.Validation.LocTable
 
 /-!
@@ -10,7 +11,8 @@ its functions is valid, each of its items of a dialect's kind is valid, and
 its dialect set names each dialect once, by a word, and its data layout is
 valid and declares each memory that a type of the module names, the types
 that its ops carry in their attributes included (ADR-2026-11-12-1821), and
-each of its aggregates' layouts is valid in it (ADR-2026-11-16-1546). A function is valid
+each of its aggregates' layouts is valid in it (ADR-2026-11-16-1546), as
+is each of its globals (ADR-2026-11-09-1546). A function is valid
 when its blocks, its ops and its successors obey the rules below, and each
 op obeys its dialect's rule.
 
@@ -307,7 +309,8 @@ A module is valid when its location table is well formed, each of its
 symbol tables is valid, its own and that of each module nested in it, at
 any depth (ADR-2026-11-10-1510), its data layout is valid, and the layout
 declares each memory that its types name (ADR-2026-11-12-1821), and each
-aggregate's layout of each table is valid in it (ADR-2026-11-16-1546). One
+aggregate's layout of each table is valid in it (ADR-2026-11-16-1546), as
+is each global of each table, in its own table (ADR-2026-11-09-1546). One
 location table and one layout serve every table.
 -/
 structure Module.Valid (m : Module d) : Prop where
@@ -316,6 +319,7 @@ structure Module.Valid (m : Module d) : Prop where
   layout : m.layout.Valid
   memories : m.MemoriesDeclared
   aggregates : m.AggregatesValid
+  globals : m.GlobalsValid
 
 /-- A valid module's own table is valid. -/
 theorem Module.Valid.table {m : Module d} (h : m.Valid) : m.table.Valid (m.locs.map (·.1)) :=
@@ -361,7 +365,10 @@ theorem Module.valid_of_flat {m : Module d} (flat : ∀ i ∈ m.items, i.func?.i
   have ha : m.table.aggregates = [] := List.filterMap_eq_nil_iff.mpr fun j hj => by
     have := flat j hj
     cases j <;> simp_all [Item.func?, Item.aggregate?]
-  refine ⟨locs, fun t ht => ?_, layout, fun t ht => ?_, fun t ht => ?_⟩
+  have hg : m.table.globals = [] := List.filterMap_eq_nil_iff.mpr fun j hj => by
+    have := flat j hj
+    cases j <;> simp_all [Item.func?, Item.global?]
+  refine ⟨locs, fun t ht => ?_, layout, fun t ht => ?_, fun t ht => ?_, fun t ht => ?_⟩
   · simp only [Module.tables, Item.tablesIn_eq_nil flat, List.mem_singleton] at ht
     subst ht
     exact ⟨symbolsUnique, funcs, fun i hi => by simp [hd] at hi, dialectNames, dialectsUnique⟩
@@ -371,6 +378,9 @@ theorem Module.valid_of_flat {m : Module d} (flat : ∀ i ∈ m.items, i.func?.i
   · simp only [Module.tables, Item.tablesIn_eq_nil flat, List.mem_singleton] at ht
     subst ht
     exact fun a h => by simp [ha] at h
+  · simp only [Module.tables, Item.tablesIn_eq_nil flat, List.mem_singleton] at ht
+    subst ht
+    exact fun g h => by simp [hg] at h
 
 /-!
 # Valid op instances

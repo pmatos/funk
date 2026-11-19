@@ -187,7 +187,8 @@ def moduleProblems (m : Module d) : List Problem :=
   let held := Std.HashSet.ofList (m.locs.map (·.1))
   m.locs.problems ++ m.tables.flatMap (·.problems held) ++ m.layout.problems ++
     m.tables.flatMap (·.memoryProblems m.layout) ++
-    m.tables.flatMap (·.aggregates.flatMap (·.problems m.layout))
+    m.tables.flatMap (·.aggregates.flatMap (·.problems m.layout)) ++
+    m.tables.flatMap (·.globalProblems m.layout)
 
 @[csimp] theorem problems_eq_moduleProblems : @Module.problems = @moduleProblems := rfl
 

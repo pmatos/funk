@@ -96,6 +96,7 @@ The last column is what holds now: the ADR and every ADR that its
 | [ADR-2026-11-16-0855](2026-11-16-0855-fir-ref-tries-a-few-nans-at-each-nan-choice.md) | [fir-ref](../decisions/fir-ref.md) | fir-ref tries a few NaNs at each NaN choice and lists a proved subset of the outcomes | this ADR |
 | [ADR-2026-11-16-1546](2026-11-16-1546-an-aggregate-s-layout-is-a-core-item-of-placed-fields.md) | [semantics](../decisions/semantics.md) | An aggregate's layout is a core item of placed fields, counted in the units of its memory | this ADR |
 | [ADR-2026-11-16-1630](2026-11-16-1630-the-harness-judges-native-nans-on-the-nans-fir-ref-tries.md) | [testing-and-harness](../decisions/testing-and-harness.md) | The harness judges a native NaN on the part of the set that fir-ref lists when it tries native code's NaNs | this ADR |
+| [ADR-2026-11-19-0124](2026-11-19-0124-a-global-is-a-core-item-of-units-and-addresses.md) | [semantics](../decisions/semantics.md) | A global is a core item `data` of units and addresses, valid in its own table | this ADR |
 
 ## Implementation
 

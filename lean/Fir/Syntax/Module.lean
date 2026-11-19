@@ -1,10 +1,12 @@
 import Fir.Syntax.Dialect
 import Fir.Syntax.Location
 import Fir.Syntax.Layout
+import Fir.Syntax.Global
 
 /-!
-A module holds items: functions, modules nested in it, and items of the
-kinds that its dialects register. A function is a
+A module holds items: functions, modules nested in it, items of the
+kinds that its dialects register, aggregates' layouts and globals. A
+function is a
 control-flow graph of blocks (ADR-2026-10-29-2005). A block declares typed arguments and holds a list of
 ops that ends with a terminator. Every op has the same shape, whatever its
 dialect, so that a new dialect needs no new syntax (ADR-2026-10-29-2016):
@@ -19,8 +21,8 @@ validation says which terms are valid.
 
 This section gives names first, then float literals and attributes, then
 the terms from the inside out: a successor, an op with blocks and regions, a
-function, an item of a dialect's kind, an aggregate's layout, an item and a
-module.
+function, an item of a dialect's kind, an aggregate's layout, a global, an
+item and a module.
 -/
 
 namespace Fir
@@ -289,10 +291,25 @@ def Aggregate.InLimits (a : Aggregate d) : Prop :=
   a.mem ≤ Aggregate.limit ∧ a.size ≤ Aggregate.limit ∧ a.align ≤ Aggregate.limit ∧
     ∀ f ∈ a.fields, f.offset ≤ Aggregate.limit ∧ ∀ c ∈ f.count, c ≤ Aggregate.limit
 
+/-- A piece of an initializer is within the limit of the numbers of an
+aggregate's layout, `2^64 - 1`: its count of zeros and its offset. A unit
+has no limit here: validation bounds it by its memory's unit width. -/
+def InitPiece.InLimits : InitPiece → Prop
+  | .units _ => True
+  | .zeros n => n ≤ Aggregate.limit
+  | .addr _ k => k ≤ Aggregate.limit
+
+/-- The numbers of a global are within the limit: its memory, size and
+alignment, and each piece of its initializer. -/
+def Global.InLimits (g : Global) : Prop :=
+  g.mem ≤ Aggregate.limit ∧ g.size ≤ Aggregate.limit ∧ g.align ≤ Aggregate.limit ∧
+    ∀ p ∈ g.init, p.InLimits
+
 /--
 An item of a module: a function, a nested module (ADR-2026-11-10-1510),
-an item of a kind that a dialect registers (ADR-2026-11-09-1543), or the
-layout of an aggregate (ADR-2026-11-16-1546).
+an item of a kind that a dialect registers (ADR-2026-11-09-1543), the
+layout of an aggregate (ADR-2026-11-16-1546), or a global
+(ADR-2026-11-09-1546).
 
 A module is a symbol table, and G0 requires that symbol tables can nest, for
 example a device module inside a host module. A `module` item is such a
@@ -301,14 +318,15 @@ not its parent's, and its symbols are its own: an op refers by symbol only
 to an item of its own table. The text format writes every item with one
 generic production (N2), so a nested module needs no new production, only
 the dialect set that may start its body. An item of a dialect's kind is
-written with the same production too, and so is an aggregate's layout, a
-kind of item of the core.
+written with the same production too, and so are an aggregate's layout
+and a global, kinds of item of the core.
 -/
 inductive Item (d : Dialect) where
   | func (f : Func d)
   | module (name : Name) (dialects : List Name) (items : List (Item d))
   | dialect (i : DialectItem d)
   | aggregate (a : Aggregate d)
+  | global (g : Global)
 
 /--
 A module: its dialect set, its data layout, its items, then its location
@@ -336,6 +354,7 @@ def Item.name : Item d → Name
   | .module n .. => n
   | .dialect i => i.name
   | .aggregate a => a.name
+  | .global g => g.name
 
 /-- The function that an item is, if it is one. -/
 def Item.func? : Item d → Option (Func d)
@@ -347,6 +366,7 @@ def Item.func? : Item d → Option (Func d)
     (Item.module n ds is).func? = none := rfl
 @[simp] theorem Item.func?_dialect (i : DialectItem d) : (Item.dialect i).func? = none := rfl
 @[simp] theorem Item.func?_aggregate (a : Aggregate d) : (Item.aggregate a).func? = none := rfl
+@[simp] theorem Item.func?_global (g : Global) : (Item.global (d := d) g).func? = none := rfl
 
 /-- The item of a dialect's kind that an item is, if it is one. -/
 def Item.dialect? : Item d → Option (DialectItem d)
@@ -356,6 +376,11 @@ def Item.dialect? : Item d → Option (DialectItem d)
 /-- The aggregate's layout that an item is, if it is one. -/
 def Item.aggregate? : Item d → Option (Aggregate d)
   | .aggregate a => some a
+  | _ => none
+
+/-- The global that an item is, if it is one. -/
+def Item.global? : Item d → Option Global
+  | .global g => some g
   | _ => none
 
 /-- The functions of a module's own table, in order. The functions of a

@@ -106,6 +106,8 @@ functions, blocks and ops.
 
 {includeReadable "." Fir.Syntax.Layout "Data layouts" FirSpec.Syntax.Layout (level := 2)}
 
+{includeReadable "." Fir.Syntax.Global "Globals" FirSpec.Syntax.Global (level := 2)}
+
 {includeReadable "." Fir.Core.Types "Core types" FirSpec.Core.Types (level := 2)}
 
 {includeReadable "." Fir.Core.Rounding "Rounding modes" FirSpec.Core.Rounding (level := 2)}
@@ -123,6 +125,8 @@ functions, blocks and ops.
 {includeReadable "." Fir.Validation.Dominance "Dominance" FirSpec.Validation.Dominance (level := 2)}
 
 {includeReadable "." Fir.Validation.Layout "The data layout's rules" FirSpec.Validation.Layout (level := 2)}
+
+{includeReadable "." Fir.Validation.Global "A global's rules" FirSpec.Validation.Global (level := 2)}
 
 {includeReadable "." Fir.Validation.LocTable "The location table's rule" FirSpec.Validation.LocTable (level := 2)}
 
@@ -146,6 +150,8 @@ functions, blocks and ops.
 
 {includeReadable "." Fir.Validation.CheckLayout "Checking the data layout" FirSpec.Validation.CheckLayout (level := 2)}
 
+{includeReadable "." Fir.Validation.CheckGlobal "Checking globals" FirSpec.Validation.CheckGlobal (level := 2)}
+
 {includeReadable "." Fir.Validation.CheckModule "Checking modules" FirSpec.Validation.CheckModule (level := 2)}
 
 {includeReadable "." Fir.Core.Check "The core dialect's rules, decided" FirSpec.Core.Check (level := 2)}
@@ -161,6 +167,10 @@ functions, blocks and ops.
 {includeReadable "." Fir.Text.Grammar "Grammar" FirSpec.Text.Grammar (level := 2)}
 
 {includeReadable "." Fir.Text.LayoutLaws "The data layout's text, proved" FirSpec.Text.LayoutLaws (level := 2)}
+
+{includeReadable "." Fir.Text.GlobalText "Globals in text" FirSpec.Text.GlobalText (level := 2)}
+
+{includeReadable "." Fir.Text.GlobalLaws "Globals in text, proved" FirSpec.Text.GlobalLaws (level := 2)}
 
 {includeReadable "." Fir.Core.TypeText "The core types in text" FirSpec.Core.TypeText (level := 2)}
 

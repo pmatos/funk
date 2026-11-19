@@ -134,9 +134,9 @@ locs {
 
 [[reject]]
 verdict = "parse-error"
-rule = "M0 has one item kind, func: global is not one"
+rule = "an item's kind is func, module, aggregate, global or a word of a dialect: struct is none"
 text = '''
-global @g() {
+struct @g() {
 }
 
 locs {

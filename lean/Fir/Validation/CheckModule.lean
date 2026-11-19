@@ -1,13 +1,14 @@
 import Fir.Validation.CheckFuncs
 import Fir.Validation.CheckLayout
+import Fir.Validation.CheckGlobal
 
 /-!
 The check of a module follows the rule of a valid module: its location
 table, then each of its symbol tables, its own and that of each nested
 module: the symbols of its items, each function, in the context of the
 table, each item of a dialect's kind, then its dialect set; then its data
-layout, the memories that each table's types name, and each table's
-aggregates' layouts. It builds the
+layout, the memories that each table's types name, each table's
+aggregates' layouts, and each table's globals. It builds the
 set of the module's location references once, and each table's symbols
 once, as hash tables, and every function looks them up.
 
@@ -221,21 +222,23 @@ theorem SymbolTable.problems_eq_nil_iff (keys : List LocRef) (t : SymbolTable d)
 /-- The problems of a module: those of its location table, then those of
 each of its symbol tables, in order, then those of its data layout, then
 those of the memories that each table's types name, then those of each
-table's aggregates' layouts. -/
+table's aggregates' layouts, then those of each table's globals. -/
 def Module.problems (m : Module d) : List Problem :=
   let held := Std.HashSet.ofList (m.locs.map (·.1))
   m.locs.problems ++ m.tables.flatMap (·.problems held) ++ m.layout.problems ++
     m.tables.flatMap (·.memoryProblems m.layout) ++
-    m.tables.flatMap (·.aggregates.flatMap (·.problems m.layout))
+    m.tables.flatMap (·.aggregates.flatMap (·.problems m.layout)) ++
+    m.tables.flatMap (·.globalProblems m.layout)
 
 /-- The validation check decides `Module.Valid`: a module has no problems
 exactly when it is valid. -/
 theorem Module.problems_eq_nil_iff (m : Module d) : m.problems = [] ↔ m.Valid := by
   simp only [Module.problems, List.append_eq_nil_iff, LocTable.problems_eq_nil,
     List.flatMap_eq_nil_iff, SymbolTable.problems_eq_nil_iff, DataLayout.problems_eq_nil,
-    SymbolTable.memoryProblems_eq_nil, Aggregate.problems_eq_nil]
-  exact ⟨fun ⟨⟨⟨⟨a, b⟩, c⟩, e⟩, g⟩ => ⟨a, b, c, e, g⟩,
-    fun ⟨a, b, c, e, g⟩ => ⟨⟨⟨⟨a, b⟩, c⟩, e⟩, g⟩⟩
+    SymbolTable.memoryProblems_eq_nil, Aggregate.problems_eq_nil,
+    SymbolTable.globalProblems_eq_nil]
+  exact ⟨fun ⟨⟨⟨⟨⟨a, b⟩, c⟩, e⟩, g⟩, k⟩ => ⟨a, b, c, e, g, k⟩,
+    fun ⟨a, b, c, e, g, k⟩ => ⟨⟨⟨⟨⟨a, b⟩, c⟩, e⟩, g⟩, k⟩⟩
 
 instance (m : Module d) : Decidable m.Valid := decidable_of_iff _ m.problems_eq_nil_iff
 

@@ -17,7 +17,7 @@ the Lean changes under it.
 
 #doc (Manual) "Modules, functions, blocks and ops: readable blocks" =>
 
-:::moduleDocs (fingerprint := "5598977903389090342")
+:::moduleDocs (fingerprint := "2659651780551536934")
 :::
 
 :::readable Fir.Name (pin := Fir.Func.Valid) (fingerprint := "11509972817217138124")
@@ -295,11 +295,19 @@ whose numbers are all within it is within its limits, and only such a
 layout can be written.
 :::
 
-:::readable Fir.Item Fir.Item.name Fir.Item.func? Fir.Item.func?_func Fir.Item.func?_module Fir.Item.func?_dialect Fir.Item.func?_aggregate Fir.Item.dialect? Fir.Item.aggregate? (fingerprint := "16161428770469696969")
+:::readable Fir.InitPiece.InLimits Fir.Global.InLimits (fingerprint := "13179149203291508932")
+*Definition: a global within its limits.* The numbers of a
+{ref "The-fir-specification--Abstract-syntax--Globals"}[global] are within
+its limits when its memory, size and alignment, each count of zeros and
+each offset of an address are at most $`2^{64} - 1`, an aggregate's limit.
+A unit has no limit here: validation bounds it by its memory's unit width.
+:::
+
+:::readable Fir.Item Fir.Item.name Fir.Item.func? Fir.Item.func?_func Fir.Item.func?_module Fir.Item.func?_dialect Fir.Item.func?_aggregate Fir.Item.func?_global Fir.Item.dialect? Fir.Item.aggregate? Fir.Item.global? (fingerprint := "3806920177862569462")
 *Definition: an item.* An item is one entry of a module: a function, a
 module nested in it (ADR-2026-11-10-1510), an item of a kind that a
-dialect registers (ADR-2026-11-09-1543), or an aggregate's layout
-(ADR-2026-11-16-1546):
+dialect registers (ADR-2026-11-09-1543), an aggregate's layout
+(ADR-2026-11-16-1546), or a global (ADR-2026-11-09-1546):
 
 ```grammar Fir.Item
 \mathit{item}
@@ -307,6 +315,7 @@ func \mathsf{func}~\mathit{func}
 module \mathsf{module}~s~\mathit{name}^*~\mathit{item}^*
 dialect \mathsf{dialect}~\mathit{ditem}
 aggregate \mathsf{aggregate}~\mathit{aggregate}
+global \mathsf{global}~\mathit{global}
 ```
 
 A module is a table of symbols, and fir lets such tables nest, as a device
@@ -318,15 +327,16 @@ table. In text it is written `module @s() { … }`, with its dialect set and
 its items between the braces.
 
 The symbol of an item, $`\mathrm{sym}(i)`, is the symbol of its function,
-of its module, of its item of a dialect's kind or of its layout.
-$`\mathrm{func?}(i)` is the function $`f` when $`i` is
+of its module, of its item of a dialect's kind, of its layout or of its
+global. $`\mathrm{func?}(i)` is the function $`f` when $`i` is
 $`\mathsf{func}~f`, and none otherwise; $`\mathrm{dialect?}(i)` is the
-item $`d` when $`i` is $`\mathsf{dialect}~d`, and $`\mathrm{aggregate?}(i)`
-the layout $`A` when $`i` is $`\mathsf{aggregate}~A`, each none
-otherwise.
+item $`d` when $`i` is $`\mathsf{dialect}~d`, $`\mathrm{aggregate?}(i)`
+the layout $`A` when $`i` is $`\mathsf{aggregate}~A`, and
+$`\mathrm{global?}(i)` the global $`G` when $`i` is $`\mathsf{global}~G`,
+each none otherwise.
 :::
 
-:::readable Fir.Module Fir.Module.funcs (pin := Fir.Module.Valid) (pin := Fir.Module.print) (pin := Fir.LocTable.print) (fingerprint := "17123371513117714081")
+:::readable Fir.Module Fir.Module.funcs (pin := Fir.Module.Valid) (pin := Fir.Module.print) (pin := Fir.LocTable.print) (fingerprint := "15819456145575854113")
 *Definition: a module.* A module is its dialect set, its
 {ref "The-fir-specification--Abstract-syntax--Data-layouts"}[data layout],
 its items, then its
@@ -358,6 +368,7 @@ requires the location table to be well formed, each symbol table of the
 module, its own and each nested module's, to be valid: each symbol names
 one item of its table, and each function, and each item of a dialect's
 kind, is valid in the context of its table; the layout to be valid and to
-declare each memory that a type of the module names; and each aggregate's
-layout of each table to be valid in the layout.
+declare each memory that a type of the module names; each aggregate's
+layout of each table to be valid in the layout; and each global of each
+table to be valid in its own table.
 :::

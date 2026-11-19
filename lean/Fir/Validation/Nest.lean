@@ -78,6 +78,7 @@ theorem Module.Valid.nest {M : Module d} (hM : M.Valid) {t : SymbolTable d} (ht 
     (M.nest t).Valid :=
   ⟨hM.locs, fun v hv => hM.tables v (Module.tables_nest ht v hv), hM.layout,
     fun v hv => hM.memories v (Module.tables_nest ht v hv),
-    fun v hv => hM.aggregates v (Module.tables_nest ht v hv)⟩
+    fun v hv => hM.aggregates v (Module.tables_nest ht v hv),
+    fun v hv => hM.globals v (Module.tables_nest ht v hv)⟩
 
 end Fir

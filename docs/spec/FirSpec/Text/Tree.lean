@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "The tree that the grammar reads: readable blocks" =>
 
-:::moduleDocs (fingerprint := "7040699683104393747")
+:::moduleDocs (fingerprint := "7209390980010047372")
 :::
 
 :::readable Fir.TextPos.zero (pin := Fir.TextPos) (fingerprint := "10810081565763310123")
@@ -101,7 +101,7 @@ holds its label, the trees of its arguments and the trees of its ops. The
 tree of a list is the tree of each element.
 :::
 
-:::readable Fir.Func.tree Fir.moduleBody Fir.DialectItem.tree Fir.Item.tree Fir.Item.treeList Fir.Item.treeList_eq_map (pin := Fir.Func) (pin := Fir.Item) (pin := Fir.DialectText) (fingerprint := "3184866101238770496")
+:::readable Fir.Func.tree Fir.moduleBody Fir.DialectItem.tree Fir.Item.tree Fir.Item.treeList Fir.Item.treeList_eq_map (pin := Fir.Func) (pin := Fir.Item) (pin := Fir.DialectText) (fingerprint := "12595538112197267500")
 *Definitions: the tree of a function, and of an item.* The tree of a
 function $`f` is the item of kind `func`, at $`p_0`, with:
 
@@ -120,7 +120,8 @@ The tree of an item that is a function is the tree of its function, the
 tree of an item of a dialect's kind is the tree of that item, and the tree
 of an aggregate's layout is the tree of the item that writes it: of kind
 `aggregate`, with its symbol, no parameters or results, its attributes and
-an empty body. The
+an empty body; the tree of a global is likewise the tree of the item of
+kind `data` that writes it. The
 tree of a nested module with the symbol $`s`, the dialect set $`x^*` and
 the items $`i^*` is the item of kind `module`, at $`p_0`, with the symbol
 $`s`, no parameters, results or attributes, and as its body the dialect set

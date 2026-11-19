@@ -18,8 +18,8 @@ use std::fmt::{self, Display, Write};
 use super::chars::{print_symbol, quote};
 use crate::ir::tree::{Step, walk};
 use crate::ir::{
-    Aggregate, Attr, Block, Def, DialectItem, Func, Item, LocTable, Location, MemLayout, Module,
-    Op, Part, Succ, Type,
+    Aggregate, Attr, Block, Def, DialectItem, Func, Global, InitPiece, Item, Linkage, LocTable,
+    Location, MemLayout, Module, Op, Part, Succ, Type,
 };
 
 impl Display for MemLayout {
@@ -272,6 +272,35 @@ fn write_aggregate(out: &mut impl Write, a: &Aggregate, n: usize) -> fmt::Result
     out.write_str("}\n")
 }
 
+/// A global at indentation `n`, with its line feed (`Global.attrs`,
+/// ADR-2026-11-09-1546): the header of an item of kind `data`, its memory
+/// when it is not 0, its size and alignment, `constant` and `export` when
+/// they hold, the pieces of its initializer, then its empty body.
+fn write_global(out: &mut impl Write, g: &Global, n: usize) -> fmt::Result {
+    write_header(out, "data", &g.name, &[], &[], n)?;
+    if g.memory != 0 {
+        write!(out, " memory({})", g.memory)?;
+    }
+    write!(out, " size({}) align({})", g.size, g.align)?;
+    if g.constant {
+        out.write_str(" constant")?;
+    }
+    if g.linkage == Linkage::Exported {
+        out.write_str(" export")?;
+    }
+    for p in &g.init {
+        match p {
+            InitPiece::Units(us) => write!(out, " units({})", Commas(us))?,
+            InitPiece::Zeros(k) => write!(out, " zeros({k})")?,
+            InitPiece::Addr(s, 0) => write!(out, " addr({})", print_symbol(s))?,
+            InitPiece::Addr(s, k) => write!(out, " addr({}, {k})", print_symbol(s))?,
+        }
+    }
+    out.write_str(" {\n")?;
+    indent(out, n)?;
+    out.write_str("}\n")
+}
+
 /// A dialect set at indentation `n`, then an empty line, or nothing when it
 /// names no dialect.
 fn write_dialects(out: &mut impl Write, names: &[String], n: usize) -> fmt::Result {
@@ -310,6 +339,10 @@ fn write_items(out: &mut impl Write, items: &[Item], n: usize) -> fmt::Result {
             }
             Some(Item::Aggregate(a)) => {
                 write_aggregate(out, a, n)?;
+                out.write_char('\n')?;
+            }
+            Some(Item::Global(g)) => {
+                write_global(out, g, n)?;
                 out.write_char('\n')?;
             }
             Some(Item::Module(m)) => {

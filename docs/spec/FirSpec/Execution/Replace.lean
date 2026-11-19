@@ -14,17 +14,17 @@ when the Lean changes under it.
 
 #doc (Manual) "Replacing a callee: readable blocks" =>
 
-:::moduleDocs (fingerprint := "8475040577907242256")
+:::moduleDocs (fingerprint := "7050287008689973659")
 :::
 
-:::readable Fir.Func.replaceBody Fir.Item.replaceBody Fir.Module.replaceBody (fingerprint := "9888802993431548961")
+:::readable Fir.Func.replaceBody Fir.Item.replaceBody Fir.Module.replaceBody (fingerprint := "9923372320846237749")
 *Definition: replacing the body of the function with a symbol.* For a
 symbol $`s` and a region $`b`, $`f[s \leftarrow b]` is the function $`f`
 with the body $`b` when the symbol of $`f` is $`s`, and $`f` unchanged
 otherwise. An item that is a function $`f` becomes $`f[s \leftarrow b]`,
 and a nested module is unchanged, since its functions are in its own
-symbol table. An item of a dialect's kind and an aggregate's layout are
-unchanged too. For a
+symbol table. An item of a dialect's kind, an aggregate's layout and a
+global are unchanged too. For a
 {ref "The-fir-specification--Abstract-syntax--Modules___-functions___-blocks-and-ops"}[module]
 $`M`, $`M[s \leftarrow b]` replaces each item of $`M` so, in the same
 order, and keeps the dialect set, the data layout and the location table.
@@ -66,15 +66,15 @@ with $`g`'s body replaced by $`b`, $`s` finds $`g` with the body $`b`, and
 every other symbol finds what it finds in $`M`.
 :::
 
-:::readable Fir.Module.symbols_replaceBody Fir.Module.context_replaceBody Fir.Module.dialectItems_replaceBody Fir.Module.aggregates_replaceBody (pin := Fir.Module.symbols) (pin := Fir.Module.context) (fingerprint := "2621460965151490828")
+:::readable Fir.Module.symbols_replaceBody Fir.Module.context_replaceBody Fir.Module.dialectItems_replaceBody Fir.Module.aggregates_replaceBody Fir.Module.globals_replaceBody (pin := Fir.Module.symbols) (pin := Fir.Module.context) (fingerprint := "18259976350888895931")
 *Theorems: a replacement keeps the symbol table and the context of
 validation.* For every module $`M`, symbol $`s` and region $`b`, the
 {ref "The-fir-specification--Validation--Scope-and-symbols"}[symbol table]
 of $`M[s \leftarrow b]` is that of $`M`, since every function keeps its
 symbol and its type; so is the context in which validation checks its
 functions, which is the symbol table and the keys of the location table.
-The items of a dialect's kind of its own table, and its aggregates'
-layouts, are those of $`M`.
+The items of a dialect's kind of its own table, its aggregates' layouts
+and its globals are those of $`M`.
 :::
 
 :::readable Fir.Item.name_replaceBody Fir.Item.tablesIn_replaceBody (fingerprint := "3259367735023084775")
@@ -86,7 +86,7 @@ the body replaced hold the same
 a function holds none, and a nested module is unchanged.
 :::
 
-:::readable Fir.Module.valid_replaceBody (pin := Fir.Module.Valid) (fingerprint := "17845541104556441495")
+:::readable Fir.Module.valid_replaceBody (pin := Fir.Module.Valid) (fingerprint := "986058880324372759")
 *Theorem: a valid module stays valid when the new function is valid.* For
 every dialect with its validation rules, let $`M` be a
 {ref "The-fir-specification--Validation--The-general-rules"}[valid module],
@@ -98,7 +98,7 @@ $`M[s \leftarrow b]` is valid: the symbols of its own table are those of
 $`M`, so still unique; its location table, its dialect set and its layout
 are those of $`M`; each of its functions is valid in its context, which is
 that of $`M`, and its types name memories of the layout; its aggregates'
-layouts are those of $`M`, so still valid; and its nested modules, and so
+layouts and its globals are those of $`M`, so still valid; and its nested modules, and so
 the tables they hold, are those of $`M`.
 
 So the new body needs to be checked alone, against the old module's

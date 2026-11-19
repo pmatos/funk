@@ -138,6 +138,10 @@ def SymbolTable.dialectItems (t : SymbolTable d) : List (DialectItem d) :=
 def SymbolTable.aggregates (t : SymbolTable d) : List (Aggregate d) :=
   t.items.filterMap Item.aggregate?
 
+/-- The globals of a symbol table, in order. -/
+def SymbolTable.globals (t : SymbolTable d) : List Global :=
+  t.items.filterMap Item.global?
+
 /-- The type of the function that each symbol of a table names: its first
 function with that symbol. -/
 def SymbolTable.symbols (t : SymbolTable d) (s : Name) : Option (FuncType d) :=
@@ -145,10 +149,10 @@ def SymbolTable.symbols (t : SymbolTable d) (s : Name) : Option (FuncType d) :=
 
 mutual
 /-- The symbol tables that an item holds, at any depth: none for a
-function, an item of a dialect's kind or an aggregate's layout, and a nested
+function, an item of a dialect's kind, an aggregate's layout or a global, and a nested
 module's own, then those its items hold. -/
 def Item.tables : Item d → List (SymbolTable d)
-  | .func _ | .dialect _ | .aggregate _ => []
+  | .func _ | .dialect _ | .aggregate _ | .global _ => []
   | .module _ ds is => ⟨ds, is⟩ :: Item.tablesIn is
 
 /-- The symbol tables that a list of items holds, at any depth, in order. -/
@@ -173,6 +177,7 @@ theorem funcNames_sublist : ∀ is : List (Item d),
   | .module .. :: is => .cons _ (funcNames_sublist is)
   | .dialect _ :: is => .cons _ (funcNames_sublist is)
   | .aggregate _ :: is => .cons _ (funcNames_sublist is)
+  | .global _ :: is => .cons _ (funcNames_sublist is)
 
 /-- Items that are all functions hold no symbol table. -/
 theorem Item.tablesIn_eq_nil : ∀ {is : List (Item d)}, (∀ i ∈ is, i.func?.isSome) →
@@ -184,6 +189,7 @@ theorem Item.tablesIn_eq_nil : ∀ {is : List (Item d)}, (∀ i ∈ is, i.func?.
   | .module .. :: _, h => absurd (h _ (List.mem_cons_self ..)) (by simp [Item.func?])
   | .dialect _ :: _, h => absurd (h _ (List.mem_cons_self ..)) (by simp [Item.func?])
   | .aggregate _ :: _, h => absurd (h _ (List.mem_cons_self ..)) (by simp [Item.func?])
+  | .global _ :: _, h => absurd (h _ (List.mem_cons_self ..)) (by simp [Item.func?])
 
 /-- The tables that an item of a list holds are tables of the list. -/
 theorem Item.mem_tablesIn {i : Item d} : ∀ {is : List (Item d)}, i ∈ is →

@@ -11,6 +11,7 @@ use std::collections::HashMap;
 
 use super::aggregate::Aggregate;
 use super::attr::{Attr, Type};
+use super::global::Global;
 use super::layout::MemLayout;
 use super::location::{LocRef, LocTable};
 use super::nested::NestedModule;
@@ -202,8 +203,9 @@ impl DialectItem {
 
 /// An item of a module. Every item is written
 /// `kind @sym(params) -> results attrs { body }` (N2). The core's kinds are
-/// `func`, `module` (ADR-2026-11-10-1510) and `aggregate`
-/// (ADR-2026-11-16-1546), and a dialect registers kinds of its own
+/// `func`, `module` (ADR-2026-11-10-1510), `aggregate`
+/// (ADR-2026-11-16-1546) and `data`, a global (ADR-2026-11-19-0124), and a
+/// dialect registers kinds of its own
 /// (ADR-2026-11-09-1543).
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 #[non_exhaustive]
@@ -216,6 +218,8 @@ pub enum Item {
     Dialect(DialectItem),
     /// The layout of an aggregate.
     Aggregate(Aggregate),
+    /// A global.
+    Global(Global),
 }
 
 impl Item {
@@ -226,6 +230,7 @@ impl Item {
             Item::Module(m) => &m.name,
             Item::Dialect(i) => &i.name,
             Item::Aggregate(a) => &a.name,
+            Item::Global(g) => &g.name,
         }
     }
 
@@ -257,6 +262,14 @@ impl Item {
     pub fn as_aggregate(&self) -> Option<&Aggregate> {
         match self {
             Item::Aggregate(a) => Some(a),
+            _ => None,
+        }
+    }
+
+    /// The global that this item is, if it is one.
+    pub fn as_global(&self) -> Option<&Global> {
+        match self {
+            Item::Global(g) => Some(g),
             _ => None,
         }
     }

@@ -52,6 +52,24 @@ hold a fir value, which would tie globals to the shape of aggregates while a C
 frontend lays out bytes anyway. Rejected too: every global exported, which is
 wrong for C's `static`.
 
+A global is an item of the core's kind `data` (ADR-2026-11-19-0124):
+`data @msg() size(8) align(1) constant units(104, 105, 0) {` and `}`, with
+`memory(N)` first when `N` is not 0, the words `constant` and `export` in
+that order, and the initializer's pieces `units(U, ...)`, `zeros(N)`,
+`addr(@s)` and `addr(@s, K)`, which fill the units in order. An address
+takes the units of one pointer of `@s`'s memory. A valid global names a
+declared memory and a power-of-two alignment, gives units that fit its
+memory's unit, takes addresses of globals of its own table only, and has
+an initializer no larger than its size. The spec, `fir-ref fmt` and
+`validate`, and `funk-ir` read, print and check globals; they have no run
+meaning yet, and the backend leaves them out, until #237's later stages.
+The words `data` and `constant` are the agent's choice: the ADR's `global`
+and `const` are words of the core's text, which the G0 check keeps out of
+generic code. A global's allocation keeps the kind `global`; a function's
+address is an allocation of kind `function` (the human's ruling of
+2026-11-19 on #235), so `addr(@f)` waits until runs make those. Rejected:
+units and relocations at explicit offsets, two parts that must agree.
+
 ## External declarations
 
 An external declaration gives a symbol and a signature, and no body. A call to

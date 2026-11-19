@@ -25,7 +25,8 @@
 //!   attributes, which every reader decodes whichever dialect registers
 //!   the kind, and no registry here does (ADR-2026-11-09-1543);
 //! - aggregates' layouts of any numbers, with fields of core integer and
-//!   pointer types, repeated or not (ADR-2026-11-16-1546).
+//!   pointer types, repeated or not (ADR-2026-11-16-1546);
+//! - globals of any numbers, flags and initializers (ADR-2026-11-09-1546).
 //!
 //! Each new op still decodes: its operands are values the function defines,
 //! somewhere, of the types its name and attributes need, and its results
@@ -53,6 +54,7 @@ use attr::attr;
 
 mod aggregate;
 mod attr;
+mod global;
 mod layout;
 mod locs;
 
@@ -135,6 +137,10 @@ pub fn module(rng: &mut Rng, dialects: Dialects) -> Module {
         let at = rng.below(m.items.len() as u64 + 1) as usize;
         m.items.insert(at, aggregate::aggregate(rng));
     }
+    if rng.one_in(3) {
+        let at = rng.below(m.items.len() as u64 + 1) as usize;
+        m.items.insert(at, global::global(rng));
+    }
     if rng.one_in(4) {
         m.items.push(Item::Module(nested(rng, 3)));
     }
@@ -177,6 +183,9 @@ fn nested(rng: &mut Rng, depth: u32) -> NestedModule {
     }
     if rng.one_in(3) {
         n.items.push(aggregate::aggregate(rng));
+    }
+    if rng.one_in(3) {
+        n.items.push(global::global(rng));
     }
     if depth > 1 && rng.one_in(3) {
         n.items.push(Item::Module(nested(rng, depth - 1)));
