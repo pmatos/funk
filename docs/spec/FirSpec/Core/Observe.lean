@@ -27,6 +27,6 @@ poison, for a pointer, and leaves every other value as it is.
 :::readable Fir.Core.instTyPointers Fir.Core.instHasPtrs (fingerprint := "12370704274255137694")
 *Theorem: the core's values hold pointers.* The pointers of the core's
 values, and their replacement, meet the laws of values that hold pointers:
-replacing a pointer by itself changes nothing, a pointer refines only
-itself, and poison refines everything.
+replacing a pointer by itself changes nothing, a pointer is refined only by
+itself, and poison is refined by every value.
 :::

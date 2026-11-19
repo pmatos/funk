@@ -17,13 +17,19 @@ nothing escaped.
 
 * An op that hands an address to code outside the program _escapes_ its
   allocation: the allocation joins the list, if it is not in it, and the op
-  gets its handle. Which ops escape what is theirs to say: an external call
-  escapes each allocation that its pointer arguments reach when it is made,
-  so that the world can reach nothing that has not escaped.
+  gets its handle. Only an allocation that the memory has can escape.
+  Which ops escape what is theirs to say: an external call escapes each
+  allocation that its pointer arguments reach when it is made, so that the
+  world can reach nothing that has not escaped, and in an order that
+  depends on the arguments and on where each pointer is stored, never on
+  allocation ids, so that a source and a target give the same allocations
+  the same handles.
 * An op shows an event, and the world answers it with a result and with
   _actions_ on escaped memory, taken in order: it may write units into an
   escaped live allocation, inside it; create a heap allocation in a memory,
-  which escapes from the start; and free an escaped live heap allocation.
+  aligned to a power of two, which escapes from the start; and free an
+  escaped live heap allocation. When the module has constant globals
+  (#237), they will be among the allocations the world may not write.
   A unit the world writes may hold a fragment of a pointer, which names its
   allocation by its handle. The act records the event, the result and the
   actions, so the world's actions are part of its answer.
@@ -184,16 +190,19 @@ theorem MonadMorphism.mapActs_mapsFrame (g : A → List B) :
 
 /-- The allocation `a` of the memory `x` escapes: its handle, its place in
 the list of escaped allocations, which it joins at the end when it is not
-in it yet. -/
+in it yet. An id that the memory has not allocated has no handle, and
+nothing escapes. -/
 def TraceState.escape (s : TraceState Mem unit) (x : Mem) (a : AllocId) :
-    Nat × TraceState Mem unit :=
-  match s.escaped.idxOf? (x, a) with
-  | some k => (k, s)
-  | none => (s.escaped.length, { s with escaped := s.escaped ++ [(x, a)] })
+    Option Nat × TraceState Mem unit :=
+  if a < (s.mem.mem x).blocks.length then
+    match s.escaped.idxOf? (x, a) with
+    | some k => (some k, s)
+    | none => (some s.escaped.length, { s with escaped := s.escaped ++ [(x, a)] })
+  else (none, s)
 
 /-- The escape effect: `escape x a` lets the allocation `a` of the memory `x`
-escape, and gives its handle. -/
-def TraceM.escape (x : Mem) (a : AllocId) : TraceM A (TraceState Mem unit) Nat :=
+escape, and gives its handle, if the memory has it. -/
+def TraceM.escape (x : Mem) (a : AllocId) : TraceM A (TraceState Mem unit) (Option Nat) :=
   fun s e => e = .ok ((s.escape x a).1, [], (s.escape x a).2)
 
 /-- The allocation that the handle `k` names, if any. -/
@@ -213,11 +222,12 @@ inductive WUnit where
 
 /-- An action of the world on escaped memory: write units into the escaped
 allocation of handle `h`, from the offset `o`; create a heap allocation of
-`n` units aligned to `al` in the memory numbered `m`; or free the escaped
-allocation of handle `h`. -/
+`n` units aligned to `2 ^ k` in the memory numbered `m`, as every
+allocation's alignment is a power of two (the human's ruling of 2026-11-11
+on #231); or free the escaped allocation of handle `h`. -/
 inductive WorldAct where
   | store (h o : Nat) (us : List WUnit)
-  | alloc (m n al : Nat)
+  | alloc (m n k : Nat)
   | free (h : Nat)
   deriving Repr, DecidableEq
 
@@ -246,8 +256,9 @@ def WorldAct.apply (μ : Nat → Mem) : WorldAct → TraceState Mem unit → Opt
     match s.mem.store x ⟨some a, o⟩ us' 1 with
     | .ok S => some { s with mem := S }
     | .error _ => none
-  | .alloc m n al, s =>
-    some ⟨(s.mem.alloc (μ m) .heap n al).2, s.escaped ++ [(μ m, (s.mem.mem (μ m)).blocks.length)]⟩
+  | .alloc m n k, s =>
+    some ⟨(s.mem.alloc (μ m) .heap n (2 ^ k)).2,
+      s.escaped ++ [(μ m, (s.mem.mem (μ m)).blocks.length)]⟩
   | .free h, s => do
     let (x, a) ← s.escaped[h]?
     let b ← (s.mem.mem x).blocks[a]?

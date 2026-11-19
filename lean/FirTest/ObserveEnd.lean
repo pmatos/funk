@@ -151,8 +151,12 @@ def escaped5 : TraceState Unit w := ⟨mems [byte 5], [((), 0)]⟩
 
 /-- Letting an allocation escape gives its handle: a new one at the end of
 the list, or the one it already has. -/
-example : (TraceState.escape (⟨mems [byte 5, byte 6], []⟩ : TraceState Unit w) () 1).1 = 0 ∧
-    (escaped5.escape () 0).1 = 0 ∧ (escaped5.escape () 1).1 = 1 := by decide
+example : (TraceState.escape (⟨mems [byte 5, byte 6], []⟩ : TraceState Unit w) () 1).1 = some 0 ∧
+    (escaped5.escape () 0).1 = some 0 := by decide
+
+/-- An id that the memory has not allocated cannot escape. -/
+example : (escaped5.escape () 1).1 = none ∧ (escaped5.escape () 1).2.escaped = [((), 0)] := by
+  decide
 
 /-! # The world's actions -/
 
@@ -171,11 +175,11 @@ example : blocksOf ((WorldAct.store 0 1 [.bits 7]).apply (fun _ => ()) escaped5)
   decide
 example : blocksOf ((WorldAct.store 1 0 [.bits 7]).apply (fun _ => ()) escaped5) = none := by
   decide
--- An allocation it creates is on the heap and escapes at once, and it may
--- free it; it cannot free a stack allocation.
-example : ((WorldAct.alloc 0 4 4).apply (fun _ => ()) escaped5).map (·.escaped) =
+-- An allocation it creates is on the heap, aligned to a power of two, and
+-- escapes at once, and it may free it; it cannot free a stack allocation.
+example : ((WorldAct.alloc 0 4 2).apply (fun _ => ()) escaped5).map (·.escaped) =
     some [((), 0), ((), 1)] := by decide
-example : blocksOf (WorldAct.applyAll (fun _ => ()) [.alloc 0 1 1, .free 1] escaped5) =
+example : blocksOf (WorldAct.applyAll (fun _ => ()) [.alloc 0 1 0, .free 1] escaped5) =
     some [byte 5, (⟨.heap, 1, [.poison], true, none⟩ : Block 8).kill] := by decide
 example : blocksOf ((WorldAct.free 0).apply (fun _ => ()) escaped5) = none := by decide
 

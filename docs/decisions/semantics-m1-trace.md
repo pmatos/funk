@@ -125,6 +125,11 @@ These are #233's choices of form, within the rules above.
 - **Who escapes what.** The layer gives the escape effect; the op that
   hands out an address escapes each allocation it reaches, so an external
   call (#239) escapes the closure of its pointer arguments when it is made.
+  It escapes them in an order fixed by the arguments and by where each
+  pointer is stored, never by allocation ids, so that source and target
+  give the same allocations the same handles. Only an allocation the memory
+  has can escape. The world's heap allocations are aligned to a power of
+  two, as every allocation is (#231).
   The `export` globals (#237) and `ptr.expose` (#232) join the roots when
   they exist.
 - **The renaming.** One-to-one, partial, and closed under the live
@@ -145,8 +150,9 @@ These are #233's choices of form, within the rules above.
   and `exposed`.
 
 When the source returns no pointer and nothing escaped, the end of its
-return is refined exactly when its returned values are
-(`End.isRefinedBy_iff_vals`), so M0's tests keep their results.
+return is refined exactly when its returned values are and nothing escaped
+in the target (`End.isRefinedBy_iff_vals`), so M0's tests keep their
+results.
 
 ## The world
 

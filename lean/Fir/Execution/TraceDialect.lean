@@ -94,7 +94,9 @@ in the traced layer of marked traces, each op that runs by the dialect's
 rule showing a step before it, from the empty memories with nothing
 escaped, at each budget, on each argument vector of its parameter types. An
 observer sees the acts of the trace and the end of each return, where the
-memory numbered `n` is `μ n` and addresses are compared by `ar`. -/
+memory numbered `n` is `μ n` and addresses are compared by `ar`. The run's
+`μ n` is the name that `ρ` gives the dialect's memory of the number `n`,
+as `ρ n` for the core, whose memories are their numbers. -/
 def Func.traceRuns (M : Module d) (f : Func d) :
     FuncTraceRuns (HVector toType (f.params.map (·.2))) (DialectTrace.Acts d)
       (End (unitsOf lay) μ ar (List (DVal d))) :=

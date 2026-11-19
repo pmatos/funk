@@ -46,7 +46,8 @@ escaped. An observer sees the acts of the trace and, at a return of the
 values $`\vec{v}'` in the traced state $`(S, E)`, the
 {ref "The-fir-specification--Memory--The-end-of-a-return"}[end of the return]
 $`\langle \vec{v}', S, E\rangle`, which names the memory numbered $`n` as
-$`\mu(n)` and compares addresses by the rule $`r`.
+$`\mu(n)`, the name $`\rho` gives the dialect's memory of that number, and
+compares addresses by the rule $`r`.
 
 *Theorem: erasing the steps.* Mapping each step to no act and each act to
 itself maps the traced run of a function to its run in the traced layer by
@@ -70,9 +71,9 @@ of a function of such a dialect show no act, let nothing escape, and end as
 its runs with memory, each return seen at its end: erasing their steps
 gives the lift of those runs. So its traced observable behaviour is its
 observable behaviour with memory, each return seen at its end, each outcome
-with an empty trace. When it returns no pointer, the
+with an empty trace. When it returns no pointer and nothing escaped, the
 {ref "The-fir-specification--Memory--Laws-of-the-end-of-a-return"}[end of its return]
-is refined exactly when its returned values are, so a dialect whose traced
-semantics lifts its semantics with memory, and whose functions return no
-pointer, keeps the results of its tests.
+is refined exactly when its returned values are and nothing escaped in the
+other, so a dialect whose traced semantics lifts its semantics with memory,
+and whose functions return no pointer, keeps the results of its tests.
 :::

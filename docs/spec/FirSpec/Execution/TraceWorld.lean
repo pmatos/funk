@@ -14,7 +14,7 @@ fails when the Lean changes under it.
 
 #doc (Manual) "The world and escaped memory: readable blocks" =>
 
-:::moduleDocs (fingerprint := "8588953052935225759")
+:::moduleDocs (fingerprint := "6011687896530549781")
 :::
 
 :::readable Fir.TraceState Fir.TraceState.init (fingerprint := "3108308862273180019")
@@ -60,13 +60,16 @@ each maps the interpreter's run of a dialect to its run by the images of
 the dialect's rules.
 :::
 
-:::readable Fir.TraceState.escape Fir.TraceM.escape Fir.TraceM.handle (fingerprint := "10296003894736486434")
+:::readable Fir.TraceState.escape Fir.TraceM.escape Fir.TraceM.handle (fingerprint := "10333419904712359159")
 *Definition: escaping.* The allocation $`(x, a)` escapes from $`(S, E)`
 with the handle $`k` when $`E_k = (x, a)`; when it is not in $`E`, it joins
-it at the end, with the handle $`|E|`. The effect $`\mathrm{escape}(x, a)`
-lets it escape and gives its handle; $`\mathrm{handle}(k)` gives the
-allocation $`E_k`, if there is one. An op that hands an address to code
-outside the program lets each allocation that the address reaches escape.
+it at the end, with the handle $`|E|`. An id that the memory has not
+allocated has no handle, and does not escape. The effect
+$`\mathrm{escape}(x, a)` lets it escape and gives its handle;
+$`\mathrm{handle}(k)` gives the allocation $`E_k`, if there is one. An op
+that hands an address to code outside the program lets each allocation that
+the address reaches escape, in an order that never depends on allocation
+ids.
 :::
 
 :::readable Fir.WUnit Fir.WorldAct Fir.WUnit.resolve (fingerprint := "11727295630581856659")
@@ -75,24 +78,24 @@ poison, or the fragment $`i` of a pointer of the memory numbered $`m`, into
 the escaped allocation of handle $`h`, if any, at the offset $`o`. An
 action of the world is one of:
 
-$$`\mathsf{store}~h~o~\vec{u} \qquad \mathsf{alloc}~m~n~\alpha \qquad \mathsf{free}~h`
+$$`\mathsf{store}~h~o~\vec{u} \qquad \mathsf{alloc}~m~n~k \qquad \mathsf{free}~h`
 
 a write of the units $`\vec{u}` into the escaped allocation of handle $`h`
-from the offset $`o`; a heap allocation of $`n` units aligned to $`\alpha`
-in the memory numbered $`m`; and the freeing of the escaped allocation of
-handle $`h`. A unit the world writes becomes a unit of a memory whose units
+from the offset $`o`; a heap allocation of $`n` units aligned to $`2^k`
+in the memory numbered $`m`, since every alignment is a power of two; and
+the freeing of the escaped allocation of handle $`h`. A unit the world writes becomes a unit of a memory whose units
 are $`w` bits wide: its bits taken modulo $`2^w`, or the fragment of a
 pointer into $`E_h`, which must belong to the pointer's memory.
 :::
 
-:::readable Fir.WorldAct.apply Fir.WorldAct.applyAll Fir.TraceM.ask (fingerprint := "12775051696891419633")
+:::readable Fir.WorldAct.apply Fir.WorldAct.applyAll Fir.TraceM.ask (fingerprint := "14959616505777134246")
 *Definition: the world takes its actions.* On $`(S, E)`, where the memory
 numbered $`n` is $`\mu(n)`:
 
 * $`\mathsf{store}~h~o~\vec{u}` stores $`\vec{u}` through the pointer to
   the offset $`o` of $`E_h`, which must not fault: the allocation is live,
   and the units are inside it;
-* $`\mathsf{alloc}~m~n~\alpha` allocates $`n` units aligned to $`\alpha` on
+* $`\mathsf{alloc}~m~n~k` allocates $`n` units aligned to $`2^k` on
   the heap of $`\mu(m)`, and the allocation escapes at once;
 * $`\mathsf{free}~h` frees $`E_h`, which must be a live heap allocation.
 
