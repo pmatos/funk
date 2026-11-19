@@ -20,10 +20,11 @@ immediate UB, for the reason of its fault, a misaligned access included
 pointer turns it into an integer of the memory's pointer width, and gives
 its allocation an address if it has none, under the address policy that the
 op passes from its run (the section on address policies). When no address
-fits, it is immediate UB (the human's ruling of 2026-11-18 on #232, Q5). The frames of calls are the frame effect's
-(the section on the frame effect), which an op never asks for. The state
-layer of the next section adds the memories of a run to a monad with no
-memory, and gives both effects.
+may be given, it is immediate UB (the human's ruling of 2026-11-18 on #232,
+Q5). The frames of calls are the frame effect's (the section on the frame
+effect), which an op never asks for. The state layer of the next section
+adds the memories of a run to a monad with no memory, and gives both
+effects.
 -/
 
 namespace Fir
@@ -33,7 +34,8 @@ open Memory
 /-- The memory effect, on memories named by `Mem` whose units are `unit x`
 bits wide for the memory `x`: five operations of the memory model. A
 load or a store is aligned to a number of units, and one that faults,
-misaligned or not, is immediate UB. Exposing is UB when no address fits. -/
+misaligned or not, is immediate UB. Exposing is UB when no address may be
+given. -/
 class MonadMemory (Mem : outParam Type) (unit : outParam (Mem → Nat)) (m : Type → Type) where
   /-- Allocates `n` units of the kind `k`, aligned to `al` units, in the
   memory `x`, and gives the pointer to the first one. -/

@@ -3,8 +3,9 @@ import Fir.Memory.PolicyLaws
 /-!
 Tests of exposing a pointer in the memories of a run (#232): the integer it
 gives under the canonical layout and under other address policies, the
-fallback when a policy proposes an address that does not fit, a second
-exposure, the wrap at the pointer width, and UB when no address fits.
+fallback when a policy proposes an address that may not be given, a second
+exposure, the wrap at the pointer width, UB when no address fits, and the
+addresses of freed allocations.
 -/
 
 namespace FirTest.Expose
@@ -45,7 +46,30 @@ def propose (y : Nat) : Policy := fun _ _ => some y
 #guard int one Policy.canonical 64 ⟨none, 42⟩ == some 42
 -- No address fits 300 bytes with 8-bit pointers, below `2 ^ 8 - 1`: UB.
 #guard int ((Memories.empty : Mems).alloc 0 .stack 300 1).2 Policy.canonical 8 ⟨some 0, 0⟩ == none
--- A pointer whose allocation the memory does not have has no address.
-#guard int one Policy.canonical 64 ⟨some 1, 0⟩ == none
+-- A pointer whose allocation the memory does not have gives its offset.
+#guard int one Policy.canonical 64 ⟨some 1, 7⟩ == some 7
+
+/-- The memories after exposing the allocation `a` of memory 0 under the
+policy that proposes `y`, if it has an outcome. -/
+def exposeAt (S : Mems) (a y : Nat) : Option Mems :=
+  (S.expose 0 (propose y) 64 ⟨some a, 0⟩).map (·.2)
+
+/-- Two allocations of 4 bytes, aligned to 4, the first exposed at 4. -/
+def two : Option Mems := exposeAt ((one.alloc 0 .stack 4 4).2) 0 4
+
+-- A proposal that overlaps a live allocation with an address does not fit,
+-- and the second allocation gets its canonical address, 12, past the gap.
+#guard (two.bind fun S => int S (propose 4) 64 ⟨some 1, 0⟩) == some 12
+#guard (two.bind fun S => int S (propose 8) 64 ⟨some 1, 0⟩) == some 8
+-- A live allocation may get the address of a freed one.
+#guard ((exposeAt one 0 4).bind fun S =>
+  int ((S.free 0 0).alloc 0 .stack 4 4).2 (propose 4) 64 ⟨some 1, 0⟩) == some 4
+-- A freed allocation may get the address of a live one, as a dangling
+-- pointer to a reused stack slot does.
+#guard ((exposeAt (((one.alloc 0 .stack 4 4).2).free 0 0) 1 4).bind fun S =>
+  int S (propose 4) 64 ⟨some 0, 0⟩) == some 4
+-- A live one may not: the proposal falls back to the canonical address.
+#guard ((exposeAt ((one.alloc 0 .stack 4 4).2) 1 4).bind fun S =>
+  int S (propose 4) 64 ⟨some 0, 0⟩) == some 8
 
 end FirTest.Expose

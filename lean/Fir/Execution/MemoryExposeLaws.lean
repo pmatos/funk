@@ -1,4 +1,5 @@
 import Fir.Execution.MemoryStoreLaws
+import Fir.Execution.MemoryBindLaws
 import Fir.Memory.PolicyLaws
 
 /-!
@@ -7,7 +8,7 @@ import Fir.Memory.PolicyLaws
 The memory effect's exposure, in the state layer over the set monad, has one
 outcome from any memories, under any address policy: the integer of the
 pointer, with the memories in which its allocation has an address, or UB
-when no address fits. So:
+when no address may be given. So:
 
 * it always has an outcome, and it has finitely many;
 * it writes no unit of any memory, and keeps the kind, alignment, size and
@@ -20,10 +21,11 @@ What it changes is an address. The effect obligations compare units and
 shapes, not addresses, so they cannot tell exposing from doing nothing.
 Giving no allocation of a memory an address is its own property, _exposes
 nothing in x_: on each path that ends, every allocation of `x` keeps its
-address, and a new one has none. Allocating, freeing, loading and storing
-expose nothing in any memory, and exposing exposes nothing in any memory but
-its own. Which declared effect covers exposing is not settled yet: an op
-that exposes comes with it (#232).
+address, and a new one has none. A computation with no memory exposes
+nothing, and mapping results and sequencing keep it. Allocating, freeing,
+loading and storing expose nothing in any memory, and exposing exposes
+nothing in any memory but its own. Which declared effect covers exposing is
+not settled yet: an op that exposes comes with it (#232).
 -/
 
 namespace Fir
@@ -40,10 +42,38 @@ new one has none. -/
 def ExposesNot (x : Mem) (c : StateT (Memories Mem unit) SetM α) : Prop :=
   ∀ S a S', c S (.ok (a, S')) → ∀ b, (S'.mem x).addrOf b = (S.mem x).addrOf b
 
+section
+
+variable {x : Mem} {β : Type}
+
+/-- A computation with no memory exposes nothing. -/
+theorem exposesNot_lift (c : SetM α) : ExposesNot (unit := unit) x (StateT.lift c) := by
+  intro S a S' h b
+  rcases (SetM.lift_apply c S _).1 h with ⟨_, -, he⟩ | ⟨_, -, he⟩ <;> cases he
+  rfl
+
+/-- Mapping the results keeps a computation that exposes nothing. -/
+theorem ExposesNot.map {c : StateT (Memories Mem unit) SetM α} (f : α → β)
+    (h : ExposesNot x c) : ExposesNot x (f <$> c) := by
+  intro S b S' hc
+  rcases (SetM.stateMap_apply f c S _).1 hc with ⟨a, S'', hc, he⟩ | ⟨_, -, he⟩ <;> cases he
+  exact h S a S' hc
+
+/-- A sequence exposes nothing when its parts expose nothing. -/
+theorem ExposesNot.bind {c : StateT (Memories Mem unit) SetM α}
+    {f : α → StateT (Memories Mem unit) SetM β} (hc : ExposesNot x c)
+    (hf : ∀ a, ExposesNot x (f a)) : ExposesNot x (c >>= f) := by
+  intro S b S' h a'
+  rcases (SetM.stateBind_apply c f S _).1 h with ⟨a, S₁, hc', hf'⟩ | ⟨_, _, he⟩
+  · exact (hf a S₁ b S' hf' a').trans (hc S a S₁ hc' a')
+  · cases he
+
+end
+
 variable (x : Mem) (g : Policy) (P : Nat) (p : Pointer)
 
 /-- The ways an exposure may end: with the integer and memories it gives,
-or in UB when no address fits. -/
+or in UB when no address may be given. -/
 theorem expose_apply (S : Memories Mem unit) (e : Ev (BitVec P × Memories Mem unit)) :
     MonadMemory.expose (m := SM) x g P p S e ↔
       (∃ r, S.expose x g P p = some r ∧ e = .ok r) ∨
@@ -55,12 +85,12 @@ theorem expose_apply (S : Memories Mem unit) (e : Ev (BitVec P × Memories Mem u
   | some r => exact ⟨fun h => .inl ⟨r, rfl, h⟩, by rintro (⟨_, ⟨⟩, rfl⟩ | ⟨⟨⟩, _⟩); rfl⟩
   | none => exact ⟨fun h => .inr ⟨rfl, h⟩, by rintro (⟨_, ⟨⟩, _⟩ | ⟨_, rfl⟩); rfl⟩
 
-/-- An exposure ends in UB exactly when its allocation has no address and
-no address fits it. -/
+/-- An exposure ends in UB exactly when its allocation is one of its
+memory, has no address, and no address may be given to it. -/
 theorem expose_ub (S : Memories Mem unit) (r : String) :
     MonadMemory.expose (m := SM) x g P p S (.ub r) ↔
-      r = noAddressReason ∧ ∃ a, p.prov = some a ∧ (S.mem x).addrOf a = none ∧
-        ∀ y, (S.mem x).fits 1 (addrHi P) a y = false := by
+      r = noAddressReason ∧ ∃ a b, p.prov = some a ∧ (S.mem x).blocks[a]? = some b ∧
+        b.addr = none ∧ ∀ y, (S.mem x).admits 1 (addrHi P) a y = false := by
   rw [expose_apply, ← Memories.expose_eq_none]
   constructor
   · rintro (⟨_, _, ⟨⟩⟩ | ⟨h, ⟨⟩⟩)
@@ -133,48 +163,40 @@ theorem ReadsNot.match_ok {y : Mem} {S S₁ S₂ : Memories Mem unit} {m : Memor
   ⟨rfl, ⟨hf, hz, by rw [h₁, h₂, hm]⟩, fun _ _ => .inr ⟨by rw [h₁], by rw [h₂]⟩⟩
 
 /-- An exposure does not read another memory: replacing it changes neither
-the integer nor whether no address fits. -/
+the integer nor whether no address may be given. -/
 theorem expose_readsNot_ne {y : Mem} (hy : x ≠ y) :
     ReadsNot y (MonadMemory.expose (m := SM) x g P p) := by
   intro S m hm e he
   have hx : (S.set y m).mem x = S.mem x := Memories.set_mem_ne _ _ (Ne.symm hy)
-  have hkeep : ∀ v : BitVec P, ReadsNot.Match y S m (.ok (v, S)) (.ok (v, S.set y m)) := fun v =>
-    ReadsNot.match_ok hm v rfl (Memories.set_mem_self _ _ _) rfl
-      fun z hz => (Memories.set_mem_ne _ _ (Ne.symm hz)).symm
+  have ht := Memories.expose_transfer hx g P p
   rcases (expose_apply x g P p S e).1 he with ⟨r, h, rfl⟩ | ⟨h, rfl⟩
-  · obtain ⟨prov, o⟩ := p
-    cases prov with
-    | none =>
-      simp only [Memories.expose, Option.some.injEq] at h
-      subst h
-      exact ⟨_, (expose_apply x g P _ _ _).2 (.inl ⟨_, rfl, rfl⟩), hkeep _⟩
-    | some a =>
-      cases ha : (S.mem x).addrOf a with
-      | some w =>
-        rw [Memories.expose_of_some S x g P o ha] at h
-        cases h
-        exact ⟨_, (expose_apply x g P _ _ _).2
-          (.inl ⟨_, Memories.expose_of_some _ x g P o (by rw [hx]; exact ha), rfl⟩), hkeep _⟩
-      | none =>
-        rw [Memories.expose_of_none S x g P o ha] at h
-        cases hc : (S.mem x).choose 1 (addrHi P) a (g (S.mem x).places a) with
-        | none => rw [hc] at h; cases h
-        | some w =>
-          rw [hc] at h
-          cases h
-          refine ⟨.ok (BitVec.ofInt P (w + o), (S.set y m).set x ((S.mem x).expose a w)),
-            (expose_apply x g P _ _ _).2 (.inl ⟨_, by
-            rw [Memories.expose_of_none _ x g P o (by rw [hx]; exact ha), hx, hc]; rfl, rfl⟩),
-            ReadsNot.match_ok hm _ (Memories.set_mem_ne _ _ hy)
-              (by rw [Memories.set_mem_ne _ _ hy, Memories.set_mem_self]) rfl fun z hz => ?_⟩
+  · rw [h] at ht
+    cases hT : (S.set y m).expose x g P p with
+    | none => rw [hT] at ht; cases ht
+    | some r' =>
+      rw [hT] at ht
+      cases ht with
+      | some hr =>
+        obtain ⟨v, S₁⟩ := r
+        obtain ⟨v', S₂⟩ := r'
+        obtain ⟨hv, hst⟩ := hr
+        dsimp only at hv hst
+        subst hv
+        refine ⟨.ok (v, S₂), (expose_apply x g P p _ _).2 (.inl ⟨_, hT, rfl⟩), ?_⟩
+        rcases hst with ⟨rfl, rfl⟩ | ⟨M, rfl, rfl⟩
+        · exact ReadsNot.match_ok hm v rfl (Memories.set_mem_self _ _ _) rfl
+            fun z hz => (Memories.set_mem_ne _ _ (Ne.symm hz)).symm
+        · refine ReadsNot.match_ok hm v (Memories.set_mem_ne _ _ hy)
+            (by rw [Memories.set_mem_ne _ _ hy, Memories.set_mem_self]) rfl fun z hz => ?_
           by_cases hzx : x = z
           · subst hzx
             simp only [Memories.set_mem_self]
           · rw [Memories.set_mem_ne _ _ hzx, Memories.set_mem_ne _ _ hzx,
               Memories.set_mem_ne _ _ (Ne.symm hz)]
-  · refine ⟨.ub noAddressReason, (expose_apply x g P p _ _).2 (.inr ⟨?_, rfl⟩), rfl⟩
-    rw [Memories.expose_eq_none, hx]
-    exact (Memories.expose_eq_none S x g P p).1 h
+  · rw [h] at ht
+    cases hT : (S.set y m).expose x g P p with
+    | none => exact ⟨.ub noAddressReason, (expose_apply x g P p _ _).2 (.inr ⟨hT, rfl⟩), rfl⟩
+    | some r' => rw [hT] at ht; cases ht
 
 /-- Exposing in memories that refine others gives the same integer, or UB
 in both, and memories that refine the others'. -/

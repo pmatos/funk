@@ -79,18 +79,33 @@ The memory effect's `expose` turns a pointer of the memory `x`, whose
 pointers are `P` bits wide, into the integer of its allocation's address
 plus its offset, wrapped at `P` bits, the width the human ruled on
 2026-11-18 (Q2). An allocation with no address is given one first. A
-pointer with no provenance gives its offset. Exposing an allocation again
-gives the same address and changes nothing.
+pointer with no provenance gives its offset, and so does one whose
+provenance names no allocation of `x`, which no run makes. Exposing an
+allocation again gives the same address and changes nothing.
+
+A live allocation may be given an address that fits. A freed one may also
+be given any address in range that is a multiple of its alignment, a live
+allocation's included (`Memory.admits`): no access reaches it, and the
+stack slot that a dangling pointer names may hold a live allocation by the
+time the pointer is exposed. Rejected: asking a freed allocation to fit,
+under which exposing a dangling pointer after its slot's new tenant could
+never give the address that native code gives.
 
 Which address an allocation gets is the run's _address policy_: for each
 memory, by its number in the data layout, a function from the shape and
-address of each of its blocks to a proposed address. It sees nothing that
-refinement may change, so memories that refine each other get the same
-address. The effect takes the proposal when it fits, and the canonical
-address otherwise, so the address always fits whatever the policy, and
-every address that fits is given by the policy that proposes it
-(`Memories.expose_of_fits`). The canonical layout is the policy that
-proposes nothing, `Policy.canonical`.
+address of each of its blocks to a proposed address. An op passes the
+policy and the pointer width of the memory it exposes in, both from that
+memory's layout entry, as it passes the unit width. The policy sees nothing
+that refinement may change, so memories that refine each other get the
+same address. The effect takes the proposal when it may be given, and else
+the canonical address, or for a freed allocation the first aligned address
+from `lo`. So the address may always be given whatever the policy, and at
+each exposure every address that may be given is the one given under the
+policy that proposes it (`Memories.expose_of_admits`). That the union over
+policies holds every assignment along a path is an argument, not a
+theorem: a policy sees the places, which each exposure that gives an
+address changes. The canonical layout is the policy that proposes nothing,
+`Policy.canonical`.
 
 The policy travels in the record that a run gives each op (`RunItems`,
 field `addrs`), beside the module's items. A run made from its module, as
@@ -105,11 +120,10 @@ a type class argument of the state layer, which would give every statement
 over a core run a new argument; and a policy that sees the units of a
 memory, under which refinement would need a hypothesis on it.
 
-No address fits when the memory has run out of addresses. The spec has no
-outcome for that, as allocating has none, so exposing is then immediate UB,
-with the reason "an exposure that no address fits" (the human's ruling of
-2026-11-18, Q5). A pointer whose provenance names no allocation of the
-memory has no address either, and is UB for the same reason.
+No address may be given when the memory has run out of addresses. The
+spec has no outcome for that, as allocating has none, so exposing is then
+immediate UB, with the reason "an exposure that no address fits" (the
+human's ruling of 2026-11-18, Q5).
 
 ## The canonical layout
 

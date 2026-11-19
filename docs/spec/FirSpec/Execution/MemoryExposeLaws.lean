@@ -14,7 +14,7 @@ fails when the Lean changes under it.
 
 #doc (Manual) "Exposing in the state layer: readable blocks" =>
 
-:::moduleDocs (fingerprint := "8705589762971732313")
+:::moduleDocs (fingerprint := "17601671934197644979")
 :::
 
 :::readable Fir.ExposesNot (pin := Fir.Memory.Memory.addrOf) (fingerprint := "1474577921688200755")
@@ -25,7 +25,13 @@ address in $`S'(x)` as in $`S(x)`: $`\mathrm{addr}_{S'(x)}(b) = \mathrm{addr}_{S
 A new allocation has none, as an id that $`S(x)` does not have.
 :::
 
-:::readable Fir.expose_apply Fir.expose_ub Fir.expose_ok (pin := Fir.instMonadMemoryStateT) (pin := Fir.Memory.Memories.expose) (fingerprint := "2832463624541034580")
+:::readable Fir.exposesNot_lift Fir.ExposesNot.map Fir.ExposesNot.bind (fingerprint := "17042838722037613372")
+*Theorems: building computations that expose nothing.* A computation with
+no memory exposes nothing, and mapping the results of one that exposes
+nothing, or sequencing two that expose nothing, exposes nothing.
+:::
+
+:::readable Fir.expose_apply Fir.expose_ub Fir.expose_ok (pin := Fir.instMonadMemoryStateT) (pin := Fir.Memory.Memories.expose) (fingerprint := "13406363034743534662")
 *Theorems: how an exposure ends.* In the
 {ref "The-fir-specification--Memory--The-state-layer"}[state layer] over
 the set monad, the
@@ -34,7 +40,8 @@ exposure of $`p` in the memory $`x` ends from the memories $`S` in one of
 two ways: with the integer and memories that
 {ref "The-fir-specification--Memory--Address-policies"}[exposing] gives, or
 in UB, for the reason that no address fits. It ends in UB exactly when the
-pointer's allocation has no address and no address fits it. The memories it
+pointer's allocation is one of $`x`, has no address, and no address may be
+given to it. The memories it
 ends with are $`S`, or $`S` with an allocation of $`x` that had no address
 exposed.
 :::
@@ -62,7 +69,7 @@ the memory $`y`, as it was in one and replaced in the other, match. So for
 every memory $`y \ne x`, an exposure in $`x` meets the
 {ref "The-fir-specification--Memory--Memory-obligations"}[obligation] that
 it does not read $`y`: replacing $`y` changes neither the integer nor
-whether no address fits. It reads its own memory: the address it gives
+whether no address may be given. It reads its own memory: the address it gives
 depends on the addresses there.
 :::
 

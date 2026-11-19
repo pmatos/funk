@@ -16,7 +16,7 @@ keeps the effects of the monad below it, and adds two:
 * the memory effect runs the memory model's operations on the memories,
   each load and store an aligned access, and an access that faults,
   misaligned included, is the monad's UB, with the fault's reason
-  (ADR-2026-11-09-1542). Exposing a pointer that no address fits is the
+  (ADR-2026-11-09-1542). Exposing a pointer that no address may be given is the
   monad's UB too;
 * a frame enters a call before its computation and leaves it after, so a
   call's stack allocations are freed when it returns

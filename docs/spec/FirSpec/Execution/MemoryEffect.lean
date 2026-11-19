@@ -39,6 +39,6 @@ it gives five operations of the memory model, each on a named memory:
 The alignment of a load or a store is the op's promise that its address
 is a multiple of $`\alpha`. A load or a store that faults, misaligned
 included, is immediate UB (ADR-2026-11-09-1542; the human's ruling of
-2026-11-11 on #231). An exposure that no address fits is immediate UB too
+2026-11-11 on #231). An exposure when no address may be given is immediate UB too
 (the human's ruling of 2026-11-18 on #232, Q5).
 :::
