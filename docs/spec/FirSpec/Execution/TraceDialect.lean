@@ -46,8 +46,10 @@ escaped. An observer sees the acts of the trace and, at a return of the
 values $`\vec{v}'` in the traced state $`(S, E)`, the
 {ref "The-fir-specification--Memory--The-end-of-a-return"}[end of the return]
 $`\langle \vec{v}', S, E\rangle`, which names the memory numbered $`n` as
-$`\mu(n)`, the name $`\rho` gives the dialect's memory of that number, and
-compares addresses by the rule $`r`.
+$`\mu(n)` and compares addresses by the rule $`r`. The caller gives
+$`\mu`, which should name the memory numbered $`n` as $`\rho` names the
+dialect's memory of that number: for the core, whose memories are their
+numbers, $`\mu = \rho`.
 
 *Theorem: erasing the steps.* Mapping each step to no act and each act to
 itself maps the traced run of a function to its run in the traced layer by

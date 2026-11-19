@@ -28,8 +28,7 @@ nothing escaped.
   _actions_ on escaped memory, taken in order: it may write units into an
   escaped live allocation, inside it; create a heap allocation in a memory,
   aligned to a power of two, which escapes from the start; and free an
-  escaped live heap allocation. When the module has constant globals
-  (#237), they will be among the allocations the world may not write.
+  escaped live heap allocation.
   A unit the world writes may hold a fragment of a pointer, which names its
   allocation by its handle. The act records the event, the result and the
   actions, so the world's actions are part of its answer.
