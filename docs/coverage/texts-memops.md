@@ -35,8 +35,8 @@ fill past their buffer. `reject/memset.toml` holds the texts that do not
 decode, and those that validation rejects, such as a value that is not as
 wide as a unit of its memory. Every test of these texts and of the second
 stage's is interpreter-only. `funk build` builds a module all or nothing
-([the corpus README](../../tests/fir/README.md)), and a different reason
-stops each text. `memcpy` and `memset` do not build: their `@lengths`
+([the corpus README](../../tests/fir/README.md)), and each pair of texts
+is interpreter-only for its own reason. `memcpy` and `memset` do not build: their `@lengths`
 takes lengths of `i7` and `i33`, widths the backend does not lower. So
 even a test such as `@copy_int`, which native code could run alone, is
 interpreter-only. `memcpy-memories` and `memset-memories` do not build
