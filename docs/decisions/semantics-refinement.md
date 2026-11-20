@@ -259,9 +259,10 @@ pointer-parameter condition, through
 `Func.memRuns_replaceBody_isRefinedBy_of_opsFinite_memRuns`: for a callee
 that reaches no memory before and after, refinement with memory is
 refinement from given memories (`Func.memRunsFrom_isRefinedBy_of_memRuns`),
-and congruence with ops of finitely many outcomes applies. `alloca`,
-`load` and `store` declare memory effects, so a core function reaches no
-memory only when none is in its reach (`Core.reachesNoMemory`), and these two
+and congruence with ops of finitely many outcomes applies. The ops that
+touch memory, `alloca`, the loads and stores, `memCopy` and `memSet`,
+declare memory effects, so a core function reaches no memory only when
+none is in its reach (`Core.reachesNoMemory`), and these two
 theorems cover such a `@g`; for the whole core,
 `Core.replaceBody_isRefinedBy_of_from` asks nothing of it
 ([semantics-m1-memory.md](semantics-m1-memory.md#the-cores-guarantees)).
