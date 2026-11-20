@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "The traced layer: readable blocks" =>
 
-:::moduleDocs (fingerprint := "11965682499170283813")
+:::moduleDocs (fingerprint := "16127750939844578303")
 :::
 
 :::readable Fir.Paths Fir.Paths.pure_bind Fir.Paths.bind_pure Fir.Paths.bind_assoc (pin := Fir.Paths.instMonad) (pin := Fir.Paths.instLawfulMonad) (fingerprint := "8066813908157793877")
@@ -100,17 +100,4 @@ changes nothing.
 *Theorem: mapping acts keeps choice and UB.* A lift shows nothing, so its
 image is itself. A choice, of bits or of a NaN, is a lift, and UB shows
 nothing either, so their images are themselves.
-:::
-
-:::readable Fir.MonadMorphism.trace_mapsFrame Fir.MonadMorphism.mapActs_mapsFrame (pin := Fir.instMonadFrameTraceMMemories) (fingerprint := "2848511684395890237")
-*Definition: frames in the traced layer.* A frame enters a call before its
-computation and leaves it after, as in the state layer, and shows what the
-computation shows.
-
-*Theorem: the lift and mapping acts keep frames.* The image of a
-computation run as a call's frame is its image run as a call's frame. So,
-by the
-{ref "The-fir-specification--Execution--Monad-morphisms"}[interpreter's morphism theorem],
-each maps the interpreter's run of a dialect to its run by the images of
-the dialect's rules.
 :::

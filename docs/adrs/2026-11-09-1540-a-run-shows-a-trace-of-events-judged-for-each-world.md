@@ -16,7 +16,7 @@ Tier: direction; area: semantics
   not observed, so a store to it can be removed.
 - **Up to renaming.** Two ends of a run match when some one-to-one renaming of
   allocations makes their observed memory equal. Raw addresses are never
-  compared. In the comparison of two runs, a pointer into a freed allocation
+  compared, not even an exposed allocation's at the end of a return. In the comparison of two runs, a pointer into a freed allocation
   is poison wherever the source has it: in observed memory, in returned
   values and in the arguments of an external call. Any value in the target
   refines it.
@@ -36,7 +36,8 @@ world. The human ruled this on 2026-11-09, on #207, and on 2026-11-11 on #251
 (what an observer sees, heap from the world) and on #299 (escape, live memory
 only), and on 2026-11-15 on #309 (a dangling pointer in observed memory is
 poison) and on #233 (in returned values and call arguments too), and on
-2026-11-18 on #233 (poison in an event).
+2026-11-18 on #233 (poison in an event), and on 2026-11-20 on #233 (no
+address compared at the end of a return).
 
 ## Why
 
@@ -65,6 +66,9 @@ outside code can read.
 - **Exact match outside observed memory.** A dangling pointer in a returned
   value or a call argument would have to match exactly, so a target would
   keep a pointer there that neither side can use without UB.
+- **Related allocations keep the same address at the end of a return.** A
+  pass could not move an exposed allocation, though only the integers a run
+  shows carry its address.
 - **A world that answers poison and a value apart.** A function that returns
   the world's answer to its argument would return different values on poison
   and on 5, so refined arguments would no longer refine its runs.
