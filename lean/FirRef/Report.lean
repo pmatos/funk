@@ -349,16 +349,18 @@ def endJson {ar : AddrRule} {V : Type} [HRefinement V V] [HasPtrs V] (e : End un
 (`Gpu.RunEnd`): those of `pathFields`, with the trace of every path after
 its values or its reason, and at a return the allocations that escaped and
 the memory that an observer reaches. -/
-def endFields [Gpu.WorkItem] {M : Module CoreGpu} : Fields (Gpu.RunEnd M)
-  | .outcome (.ret e) => (pathFields (V := DVal CoreGpu) (.outcome (.ret e.vals))).map
-    fun (fs, st) => (fs ++ endJson e, st)
-  | .outcome (.ub r) => (pathFields (V := DVal CoreGpu) (.outcome (.ub r))).map withTrace
-  | .outcome .fuelExhausted => (pathFields (V := DVal CoreGpu) (.outcome .fuelExhausted)).map withTrace
-  | .stuck st => (pathFields (V := DVal CoreGpu) (.stuck st)).map withTrace
-  | .noOutcome op => .error op
+def endFields [Gpu.WorkItem] {M : Module CoreGpu} : Fields (Gpu.RunEnd M) := fun p =>
+  (pathFields (V := DVal CoreGpu) (vals p)).map fun (fs, st) => (fs ++ more p, st)
 where
-  withTrace (p : List (String × String) × Bool) : List (String × String) × Bool :=
-    (p.1 ++ [("trace", "[]")], p.2)
+  vals : PathEnd (Gpu.RunEnd M) Core.Op → PathEnd (List (DVal CoreGpu)) Core.Op
+    | .outcome (.ret e) => .outcome (.ret e.vals)
+    | .outcome (.ub r) => .outcome (.ub r)
+    | .outcome .fuelExhausted => .outcome .fuelExhausted
+    | .stuck st => .stuck st
+    | .noOutcome op => .noOutcome op
+  more : PathEnd (Gpu.RunEnd M) Core.Op → List (String × String)
+    | .outcome (.ret e) => endJson e
+    | _ => [("trace", "[]")]
 
 /-- Why a scripted world does not fit a run that shows no event: it
 answers some. -/

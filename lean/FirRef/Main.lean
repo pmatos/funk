@@ -142,6 +142,18 @@ def validateFile (file : String) : IO UInt32 := do
     IO.println line
     return status
 
+/-- The scripted world that the file `p` holds, or `-` for standard input
+(`readWorld`), or why it cannot be read. -/
+def worldFile (p : String) : IO (Except String (List WorldAnswer)) := do
+  let what := if p == "-" then "standard input" else shown p
+  match ← (readInput p).toBaseIO with
+  | .error e =>
+    let why := ((toString e).splitOn "\n").headD ""
+    pure (.error s!"cannot read {what}: {why}")
+  | .ok bytes => match String.fromUTF8? bytes with
+    | none => pure (.error s!"{what}: the world's script is not UTF-8")
+    | some t => pure ((readWorld t).mapError (s!"{what}: " ++ ·))
+
 /-- What `run` reports on its arguments, and its exit status. -/
 def runFile (a : RunArgs) : IO UInt32 := do
   match ← (readInput a.file).toBaseIO with
@@ -153,15 +165,7 @@ def runFile (a : RunArgs) : IO UInt32 := do
   | .ok bytes =>
     let world ← match a.world with
       | none => pure (.ok none)
-      | some p => do
-        let what := if p == "-" then "standard input" else shown p
-        match ← (readInput p).toBaseIO with
-        | .error e =>
-          let why := ((toString e).splitOn "\n").headD ""
-          pure (.error s!"cannot read {what}: {why}")
-        | .ok wb => match String.fromUTF8? wb with
-          | none => pure (.error s!"{what}: the world's script is not UTF-8")
-          | some t => pure ((readWorld t).map some |>.mapError (s!"{what}: " ++ ·))
+      | some p => (·.map some) <$> worldFile p
     match world with
     | .error why =>
       IO.eprintln s!"fir-ref: {why}"
