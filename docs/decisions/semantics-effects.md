@@ -81,9 +81,10 @@ its constructor, with no case for the rest. `scripts/check_g0.py` checks that,
 as it checks `Core.Op.poisonClass` (ADR-2026-11-03-0600). The sets
 (ADR-2026-11-09-1541):
 
-- Pure: `const`, a float's included, `and`, `or`, `xor`, `icmp`, `fcmp`,
+- Pure: `const`, a float's included, `and`, `or`, `xor`, `icmp`,
   `select`, the width changes, `freeze`, `add`, `sub` and `mul` without
-  flags, the float arithmetic, whose NaN results are defined values, the
+  flags, `fcmp` and the float arithmetic without `nnan` and `ninf`, whose
+  NaN results are defined values (`nsz` alone keeps them pure), the
   bit casts, the conversions from integers, `sitofp` and `uitofp`, the
   conversions between formats, `fpext` and `fptrunc`, whose NaN results are
   defined values too (ADR-2026-11-09-1549), the pointer offset `ptradd`
@@ -91,9 +92,10 @@ as it checks `Core.Op.poisonClass` (ADR-2026-11-03-0600). The sets
   pointer and keep its provenance. `call`'s own set is empty: its callee's
   summary carries its effects (ADR-2026-11-09-1541).
 - May produce poison: `poison`, the shifts, `add`, `sub` and `mul` with a
-  flag, `sdiv` and `udiv` with `exact`, and the conversions to integers,
-  `fptosi` and `fptoui`, which give poison for an integer out of range, an
-  infinity or a NaN (#241).
+  flag, `sdiv` and `udiv` with `exact`, `fcmp` and the float arithmetic
+  with `nnan` or `ninf`, which give poison on a NaN or an infinity, and the
+  conversions to integers, `fptosi` and `fptoui`, which give poison for an
+  integer out of range, an infinity or a NaN (#241).
 - May-UB: the four divisions, `cond_br` and `unreachable`.
 - Allocates in memory `N`: `alloca` with a result of `ptr<N>`.
 - Reads memory `N`, may-UB and may produce poison: the loads `load`,

@@ -313,10 +313,11 @@ example : allocMain ∈ allocModule.funcs := by simp [allocModule, Module.funcs]
 
 /-! # A run that touches no memory
 
-Every core op but `alloca`, `load` and `store` touches no memory: a core
-function that reaches none of them reaches no memory, so it returns from given memories what it
-returns with memory, with the memories it started from (the section on runs
-that touch no memory). -/
+Every core op touches no memory but those that `Core.Op.touchesMemory`
+marks, the ops that touch memory in `docs/decisions/semantics-effects.md#soundness`:
+a core function that reaches none of them reaches no memory, so it returns
+from given memories what it returns with memory, with the memories it
+started from (the section on runs that touch no memory). -/
 
 example (M : Module CoreDialect) {s : Name} {f : Func CoreDialect} (hf : M.func? s = some f)
     (hno : ∀ g ∈ M.funcs, ∀ o ∈ g.allOps, o.op.touchesMemory = false)
