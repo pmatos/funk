@@ -86,14 +86,22 @@ as it checks `Core.Op.poisonClass` (ADR-2026-11-03-0600). The sets
   flags, the float arithmetic, whose NaN results are defined values, the
   bit casts, the conversions from integers, `sitofp` and `uitofp`, the
   conversions between formats, `fpext` and `fptrunc`, whose NaN results are
-  defined values too (ADR-2026-11-09-1549), and the pointer offset `ptradd`
-  (ADR-2026-11-13-0251). `call`'s own set is empty: its callee's summary
-  carries its effects (ADR-2026-11-09-1541).
+  defined values too (ADR-2026-11-09-1549), the pointer offset `ptradd`
+  (ADR-2026-11-13-0251) and the field address `fieldAddr`, which move a
+  pointer and keep its provenance. `call`'s own set is empty: its callee's
+  summary carries its effects (ADR-2026-11-09-1541).
 - May produce poison: `poison`, the shifts, `add`, `sub` and `mul` with a
   flag, `sdiv` and `udiv` with `exact`, and the conversions to integers,
   `fptosi` and `fptoui`, which give poison for an integer out of range, an
   infinity or a NaN (#241).
 - May-UB: the four divisions, `cond_br` and `unreachable`.
+- Allocates in memory `N`: `alloca` with a result of `ptr<N>`.
+- Reads memory `N`, may-UB and may produce poison: the loads `load`,
+  `loadPtr` and `loadFloat` through a pointer of `ptr<N>`.
+- Writes memory `N` and may-UB: the stores `store`, `storePtr` and
+  `storeFloat`, and the fill `memSet`, through a pointer of `ptr<N>`.
+- Reads and writes memory `N`, and may-UB: `memCopy`, a copy or a move,
+  over pointers of `ptr<N>`.
 - Control: `br`, `cond_br`, `ret` and `unreachable`.
 
 ## Soundness

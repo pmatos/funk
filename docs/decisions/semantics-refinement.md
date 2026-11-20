@@ -152,15 +152,20 @@ to the memories (`Func.memRunsFrom_replaceBody_isRefinedBy_of_opsFinite`, in
 `Func.memOps_notExhausted_of_finite`, in
 `lean/Fir/Execution/MemoryFiniteDown.lean`). The argument is by budgets and
 needs no infinite path. Every core op has finitely many outcomes
-(`Core.opsFinite`): an op that touches no memory is the set of its rule in
-the tree of choices, whose choices of _w_ bits have 2 to the power _w_
-options, and `alloca`, `load` and `store` have at most one by their own
-rules (`Core.alloca_finitelyMany`, `Core.load_finitelyMany`,
-`Core.store_finitelyMany`). So
+(`Core.opsFinite`): an op that touches no memory and reads no item of the
+run is the set of its rule in the tree of choices, whose choices of _w_
+bits have 2 to the power _w_ options. The ops that have their own rules with memory, the ones
+`Core.Op.memCases` names (semantics-effects.md#soundness), count by them:
+`alloca` and `fieldAddr` have one outcome, the loads `load`, `loadPtr` and
+`loadFloat` and the stores `store`, `storePtr` and `storeFloat` at most one
+that ends, and `memCopy` and `memSet` at most one that ends for each
+length, of which a poison length chooses one of finitely many
+(`Core.alloca_finitelyMany` and its siblings in each op's laws file). So
 `Core.replaceBody_isRefinedBy_of_from` holds for every core callee,
 pointers and memory included, and `Core.replaceBody_isRefinedBy` for every
-core callee that reaches no memory, pointers included: one with no
-`alloca`, `load` or `store` in its reach (`Core.reachesNoMemory`).
+core callee that reaches no memory, pointers included: one with no op
+that touches memory in its reach, no `alloca`, load, store, `memCopy` or
+`memSet` (`Core.reachesNoMemory`).
 Nothing asks that every core function reach no memory. The hypothesis is passed to the theorems, as
 `OpsIgnoreMemory` is, not added to a lawful class, so no dialect's
 obligations change. Refined arguments need no finiteness, since they

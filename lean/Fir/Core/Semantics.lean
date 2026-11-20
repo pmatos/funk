@@ -117,9 +117,10 @@ def Op.readsItems : Op → Bool
 
 /-- The rule of each core op that is not a terminator, in any monad with
 the choice and UB effects; `none` for `call`, whose meaning is its
-callee's run, for `alloca`, `load` and `store`, whose rules need memory,
-for `fieldAddr`, whose rule needs the run's items, and for the
-terminators. -/
+callee's run, for `alloca`, the loads `load`, `loadPtr` and `loadFloat`,
+the stores `store`, `storePtr` and `storeFloat`, `memCopy` and `memSet`,
+whose rules need memory, for `fieldAddr`, whose rule needs the run's items,
+and for the terminators. -/
 def Op.denote? [MonadChoice m] [MonadUB m] : (op : Op) →
     Option (HVector toType (Fir.sig (d := CoreDialect) op) →
       m (HVector toType (Fir.returnTypes (d := CoreDialect) op)))
@@ -224,8 +225,9 @@ def Op.hasRules (op : Op) : Bool :=
 
 -- Every core op has rules: one instance of each, `add` with each of its
 -- flags, and `icmp` and `fcmp` with each of their predicates among them. `call`'s are
--- its callee's run, and `alloca`'s, `load`'s and `store`'s are their rules
--- with memory: none of them has an entry in `Op.denote?`.
+-- its callee's run, and those of `alloca`, the loads and stores, `fieldAddr`,
+-- `memCopy` and `memSet` are their rules with memory: none of them has an
+-- entry in `Op.denote?`.
 #guard (samples.filter Op.hasRules).map Op.name == samples.map Op.name
 #guard WrapFlags.all.all fun f => (Op.add 1 f).hasRules && (Op.sub 7 f).hasRules
 #guard Pred.all.all fun p => (Op.icmp p 1).hasRules

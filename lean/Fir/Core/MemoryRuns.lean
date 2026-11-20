@@ -7,18 +7,22 @@ import Fir.Execution.MemoryPoison
 /-!
 # Every valid core function, with memory
 
-Every core op but `alloca`, the loads and stores, `memCopy` and `memSet`
-touches no memory: each
-runs with memory by its rule in the set monad and keeps the memories, so it
-is tied (the section on the core's rules with memory). So the core's
-obligations with memory follow op by op, each from the op's own tie and
-what the op meets in the set monad, and for `alloca`, `load` and `store`
-from their own rules with memory (the sections on the stack allocation,
-load and store obligations):
+Every core op but `alloca`, the loads `load`, `loadPtr` and `loadFloat`,
+the stores `store`, `storePtr` and `storeFloat`, `memCopy` and `memSet`
+touches no memory, and of those every op but `fieldAddr` reads no item of
+the run either. Each op that touches no memory and reads no item runs with
+memory by its rule in the set monad and keeps the memories, so it is tied
+(the section on the core's rules with memory). So the core's obligations
+with memory follow op by op (`Core.Op.memCases`), each from the op's own
+tie and what the op meets in the set monad, and for `alloca`, the loads and
+stores, `fieldAddr`, `memCopy` and `memSet` from their own rules with
+memory (the sections on the stack allocation, load, store, pointer load,
+pointer store, float load, float store, field address, copy and move, and
+fill obligations):
 
 * _the core dialect is lawful in its totality_: each core terminator and
   each core op with no callee is total with memory: total in the set monad
-  and tied, or `alloca`, `load` or `store`;
+  and tied, or one of the ops with their own rules, each total by it;
 * it is lawful in its poison with memory: each valid core op that
   propagates poison propagates it with memory, from any memories, and
   returns a result on some defined operands;
@@ -30,9 +34,10 @@ _Every core function valid in the context of a module runs within that
 module with memory_, wherever a run names the core's memories: it runs
 within the module, and each core terminator is tied. Every core op that runs
 by its own rule is monotone with memory at every width, valid or not. No
-theorem below asks that the core lift the set monad: `alloca`, `load` and
-`store`, which touch memory and are not terminators, join them with their
-own cases of monotonicity with memory and their own totality.
+theorem below asks that the core lift the set monad: `alloca`, the loads
+and stores, `fieldAddr`, `memCopy` and `memSet`, which have no tie and are
+not terminators, join them with their own cases of monotonicity with memory
+and their own totality.
 
 The runs of a core function are its runs with memory at its module's
 layout, where each memory of the core is the module's memory of the same
@@ -60,9 +65,10 @@ callee: every core op has finitely many outcomes (the section on congruence
 in a core callee).
 
 These are the core's guarantees, for the whole core dialect, `alloca`, the
-loads and stores and `fieldAddr` included: the three lawful classes with memory and the lawful class of its
-effects, progress and no stuck path, refined arguments, and congruence in
-the callee from given memories. The statements without memory cover only
+loads and stores, `fieldAddr`, `memCopy` and `memSet` included: the three
+lawful classes with memory and the lawful class of its effects, progress
+and no stuck path, refined arguments, and congruence in the callee from
+given memories. The statements without memory cover only
 the code that touches none: the obligations of the core's ops over the set
 monad cover the ops that touch no memory, and congruence with memory for a
 callee that reaches no memory covers such callees. The theorems of the
