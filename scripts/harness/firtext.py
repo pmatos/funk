@@ -196,7 +196,7 @@ class Reader:
         while self.at("word") and self.peek().text != "locs":
             if self.peek().text == "module":
                 found += self.nested(scope)
-            elif self.peek().text in ("aggregate", "data"):
+            elif self.peek().text in ("aggregate", "global"):
                 self.empty_item()
             else:
                 found.append(self.item(scope))

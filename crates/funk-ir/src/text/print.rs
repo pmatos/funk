@@ -273,17 +273,17 @@ fn write_aggregate(out: &mut impl Write, a: &Aggregate, n: usize) -> fmt::Result
 }
 
 /// A global at indentation `n`, with its line feed (`Global.attrs`,
-/// ADR-2026-11-09-1546): the header of an item of kind `data`, its memory
-/// when it is not 0, its size and alignment, `constant` and `export` when
+/// ADR-2026-11-09-1546): the header of an item of kind `global`, its memory
+/// when it is not 0, its size and alignment, `const` and `export` when
 /// they hold, the pieces of its initializer, then its empty body.
 fn write_global(out: &mut impl Write, g: &Global, n: usize) -> fmt::Result {
-    write_header(out, "data", &g.name, &[], &[], n)?;
+    write_header(out, "global", &g.name, &[], &[], n)?;
     if g.memory != 0 {
         write!(out, " memory({})", g.memory)?;
     }
     write!(out, " size({}) align({})", g.size, g.align)?;
     if g.constant {
-        out.write_str(" constant")?;
+        out.write_str(" const")?;
     }
     if g.linkage == Linkage::Exported {
         out.write_str(" export")?;

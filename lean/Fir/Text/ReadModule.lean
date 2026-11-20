@@ -7,7 +7,7 @@ import Fir.Text.ReadTable
 A module's dialect set reads back first, then its items before the word
 `locs`, which starts its location table, and the table before `eof`. A
 function, an item of a dialect's kind, an aggregate's layout and a global,
-which are written as such items of kind `aggregate` and `data`, read back
+which are written as such items of kind `aggregate` and `global`, read back
 as the previous sections show. A nested module reads
 back the same way as a module, its dialect set and then its items, before
 the `}` that closes its body; the reader of items and the reader of an item
@@ -95,7 +95,7 @@ def Item.kind : Item d → String
   | .module .. => "module"
   | .dialect i => i.kind
   | .aggregate _ => "aggregate"
-  | .global _ => "data"
+  | .global _ => "global"
 
 theorem Item.tokens_eq (i : Item d) : i.tokens = .word i.kind :: i.tokens.tail := by
   cases i <;> rfl
@@ -124,7 +124,7 @@ theorem Item.typesWritableList_iff : ∀ is : List (Item d),
 /-- The tokens of items, then tokens that start with `P`, start with a word
 that is the kind of an item, or with `P`. -/
 theorem head_items (is : List (Item d)) (rest : List Tok) (P : Tok → Prop)
-    (hk : P (.word "func") ∧ P (.word "module") ∧ P (.word "aggregate") ∧ P (.word "data") ∧
+    (hk : P (.word "func") ∧ P (.word "module") ∧ P (.word "aggregate") ∧ P (.word "global") ∧
       ∀ w, isDialectWord w → P (.word w))
     (hw : ∀ i ∈ is.head?, i.TypesWritable) (hr : ∀ t ∈ rest.head?, P t) :
     ∀ t ∈ (Item.tokensList is ++ rest).head?, P t := by

@@ -26,7 +26,8 @@
 #               checks that may each leave for one shared exit within 240
 #               (#55). On a 256 KiB stack, it accepts a location table of
 #               a million entries and a fused location of a million
-#               references (#136). check-fir-ref-run.sh checks fir-ref run.
+#               references (#136). check-fir-ref-run.sh checks fir-ref run,
+#               and check-fir-ref-world.sh fir-ref run --world.
 #   round-trip  Rust prints every text of tests/fir/ and modules from its
 #               generator; fir-ref parses and reprints each one, and the
 #               bytes must match. fir-ref validate accepts each one: the
@@ -305,8 +306,10 @@ case "$1" in
             fi
         fi
         # fir-ref run runs functions and prints their results (#10, #14 to
-        # #20); check-fir-ref-run.sh holds those checks.
+        # #20); check-fir-ref-run.sh holds those checks, and
+        # check-fir-ref-world.sh those of fir-ref run --world (#233).
         scripts/check-fir-ref-run.sh "$fir_ref" || status=1
+        scripts/check-fir-ref-world.sh "$fir_ref" || status=1
         # In CI, the counts also go to the job summary (ADR-2026-11-05-1408).
         if [[ -n "${GITHUB_STEP_SUMMARY:-}" ]]; then
             same=(tests/fir/canonical/*.fir tests/fir/llvm/*.fir)

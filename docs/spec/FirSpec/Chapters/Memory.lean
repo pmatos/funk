@@ -206,6 +206,8 @@ event.
 
 {includeReadable "." Fir.Execution.TraceWorld "The world and escaped memory" FirSpec.Execution.TraceWorld (level := 1)}
 
+{includeReadable "." Fir.Execution.TraceScript "Scripted worlds" FirSpec.Execution.TraceScript (level := 1)}
+
 {includeReadable "." Fir.Execution.Observe "Pointers under a renaming" FirSpec.Execution.Observe (level := 1)}
 
 {includeReadable "." Fir.Core.Observe "The pointers of the core's values" FirSpec.Core.Observe (level := 1)}
@@ -221,3 +223,5 @@ event.
 {includeReadable "." Fir.Execution.TraceRefine "Refinement over the traced runs of a dialect with no event" FirSpec.Execution.TraceRefine (level := 1)}
 
 {includeReadable "." Fir.Core.Trace "The core's traced runs" FirSpec.Core.Trace (level := 1)}
+
+{includeReadable "." Fir.Execution.MemoryEndModes "Modes that see the end of a return" FirSpec.Execution.MemoryEndModes (level := 1)}

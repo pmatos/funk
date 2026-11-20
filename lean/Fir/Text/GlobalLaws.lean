@@ -47,7 +47,7 @@ theorem Global.attr_writable (g : Global) : ∀ a ∈ g.attrs, a.Writable := by
   · split at ha
     · rw [List.mem_singleton] at ha
       subst ha
-      exact (by decide : isWord "constant")
+      exact (by decide : isWord "const")
     · cases ha
   rcases List.mem_append.mp ha with ha | ha
   · split at ha
@@ -172,8 +172,8 @@ theorem Global.inLimits_of_decodePieces {as : List Attr} {i : Nat} {ps : List In
 
 /-- The words that a global may write after its alignment read back. -/
 theorem Global.decodeFlag_const (c : Bool) (rest : List Attr)
-    (hr : ∀ w r, rest = .word w :: r → w ≠ "constant") :
-    Global.decodeFlag "constant" ((if c then [.word "constant"] else []) ++ rest) = (c, rest) := by
+    (hr : ∀ w r, rest = .word w :: r → w ≠ "const") :
+    Global.decodeFlag "const" ((if c then [.word "const"] else []) ++ rest) = (c, rest) := by
   cases c with
   | true => simp [Global.decodeFlag]
   | false =>
@@ -227,7 +227,7 @@ theorem Global.decodeAttrs_attrs {g : Global} (h : g.InLimits) :
     | .internal => ⟨false, rfl, rfl⟩
   obtain ⟨e, he, hlk⟩ := hE
   have hc : ∀ w r, (if e then [Attr.word "export"] else []) ++ init.map InitPiece.attr =
-      .word w :: r → w ≠ "constant" := by
+      .word w :: r → w ≠ "const" := by
     intro w r hw
     cases e with
     | true =>
@@ -237,7 +237,7 @@ theorem Global.decodeAttrs_attrs {g : Global} (h : g.InLimits) :
       simp only [ne_eq, String.reduceEq, not_false_eq_true]
     | false => exact (InitPiece.map_attr_head _ w r hw).elim
   have hrest : ∀ i, (do
-      let (c', rest) := Global.decodeFlag "constant" ((if c then [Attr.word "constant"] else []) ++
+      let (c', rest) := Global.decodeFlag "const" ((if c then [Attr.word "const"] else []) ++
         ((if lk = .exported then [Attr.word "export"] else []) ++ init.map InitPiece.attr))
       let (e', rest) := Global.decodeFlag "export" rest
       let init' ← Global.decodePieces (i + 2 + c'.toNat + e'.toNat) rest

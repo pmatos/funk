@@ -1,7 +1,6 @@
 import Fir
 import FirRef.Utf8
 import FirRef.Report
-import FirRef.Run
 import FirRef.RunArgs
 
 /-!
@@ -37,7 +36,7 @@ def usage : String := "usage: fir-ref fmt [--check] FILE...
        fir-ref run [--fuel N] [--choices C,... | --exhaustive [--choice-bits B]
                    [--nans V,...] | --seed S] [--work-item-id X,Y,Z] [--work-group-id X,Y,Z]
                    [--work-group-size X,Y,Z] [--num-work-groups X,Y,Z]
-                   FILE @FUNC [ARG...]
+                   [--world WORLD] FILE @FUNC [ARG...]
 
   fmt       Parse each FILE with the core and gpu dialects and print it
             in canonical form, as the spec's printer writes it. fmt does
@@ -86,6 +85,10 @@ def usage : String := "usage: fir-ref fmt [--check] FILE...
               --num-work-groups X,Y,Z  the work-groups (default 1,1,1)
                                 each a number below 2^32; each id must be
                                 below its size
+              --world WORLD     run at the scripted world that the file
+                                WORLD holds, and print with each outcome
+                                its trace and, at a return, the memory
+                                that escaped and that an observer reaches
   -h, --help  Print this help.
 
 A FILE of - is standard input; -- ends the options.
@@ -139,6 +142,18 @@ def validateFile (file : String) : IO UInt32 := do
     IO.println line
     return status
 
+/-- The scripted world that the file `p` holds, or `-` for standard input
+(`readWorld`), or why it cannot be read. -/
+def worldFile (p : String) : IO (Except String (List WorldAnswer)) := do
+  let what := if p == "-" then "standard input" else shown p
+  match ← (readInput p).toBaseIO with
+  | .error e =>
+    let why := ((toString e).splitOn "\n").headD ""
+    pure (.error s!"cannot read {what}: {why}")
+  | .ok bytes => match String.fromUTF8? bytes with
+    | none => pure (.error s!"{what}: the world's script is not UTF-8")
+    | some t => pure ((readWorld t).mapError (s!"{what}: " ++ ·))
+
 /-- What `run` reports on its arguments, and its exit status. -/
 def runFile (a : RunArgs) : IO UInt32 := do
   match ← (readInput a.file).toBaseIO with
@@ -148,10 +163,18 @@ def runFile (a : RunArgs) : IO UInt32 := do
     IO.eprintln s!"fir-ref: cannot read {what}: {why}"
     return 2
   | .ok bytes =>
-    let r := runBytes a.file bytes a.fuel a.func a.args a.mode a.workItem
-    if !r.out.isEmpty then IO.println r.out
-    if !r.err.isEmpty then IO.eprintln r.err
-    return r.status
+    let world ← match a.world with
+      | none => pure (.ok none)
+      | some p => (·.map some) <$> worldFile p
+    match world with
+    | .error why =>
+      IO.eprintln s!"fir-ref: {why}"
+      return 2
+    | .ok world =>
+      let r := runBytes a.file bytes a.fuel a.func a.args a.mode a.workItem world
+      if !r.out.isEmpty then IO.println r.out
+      if !r.err.isEmpty then IO.eprintln r.err
+      return r.status
 
 /-- The files that `validate` is given. `--` ends the options, and it has
 none. -/
@@ -212,7 +235,10 @@ def run (args : List String) : IO UInt32 := do
   | "run" :: rest =>
     match runArgs rest with
     | .error why => fail why
-    | .ok a => runFile a
+    | .ok a =>
+      if a.file == "-" && a.world == some "-" then
+        fail "- may be given once: standard input can be read only once"
+      else runFile a
   | cmd :: _ => fail s!"unknown command {cmd}"
 
 end FirRef
