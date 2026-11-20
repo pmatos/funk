@@ -16,7 +16,8 @@ mod g0_scan;
 use std::path::Path;
 
 use funk_ir::dialects::core::{
-    self, FAST_MATH_FLAGS, FLOAT_PREDICATES, ORDERINGS, PREDICATES, ROUNDING_MODES, WRAP_FLAG_SETS,
+    self, ALLOC_KINDS, FAST_MATH_FLAGS, FLOAT_PREDICATES, ORDERINGS, PREDICATES, ROUNDING_MODES,
+    WRAP_FLAG_SETS,
 };
 use funk_ir::dialects::gpu;
 use funk_ir::{Block, Func, LocRef, Location, Module, Op, Registry, parse, print, verify};
@@ -40,6 +41,7 @@ fn core_words() -> Vec<String> {
     words.extend(FAST_MATH_FLAGS.iter().map(|f| f.to_string()));
     words.extend(ORDERINGS.iter().map(|o| o.to_string()));
     words.extend(ROUNDING_MODES.iter().map(|r| r.to_string()));
+    words.extend(ALLOC_KINDS.iter().map(|k| k.to_string()));
     words.extend(
         WRAP_FLAG_SETS
             .iter()
@@ -191,7 +193,7 @@ fn the_check_covers_the_ir_the_parser_the_printer_and_the_verifier() {
     assert!(files.iter().all(|f| !f.starts_with("src/dialects/")));
     assert!(core_ops().len() >= 25, "{:?}", core_ops());
     for w in [
-        "add", "cond_br", "poison", "slt", "nsw", "exact", "true", "ptr",
+        "add", "cond_br", "poison", "slt", "nsw", "exact", "true", "ptr", "stack", "heap",
     ] {
         assert!(is_core_word(&core_words(), w), "{w}");
     }
@@ -302,6 +304,30 @@ fn a_word_that_names_a_core_op_and_a_generic_term_is_a_core_word() {
         r#"fn why() -> &'static str { "poison: deferred UB" }"#,
         "// \"poison\" in a comment\nfn f() {}",
         r#"#[cfg(test)] mod t { fn f() { let _ = "poison"; } }"#,
+    ] {
+        assert!(written(src).is_empty(), "{src}");
+    }
+}
+
+/// The kinds of an `alloca` are words of the core dialect, as on the Lean
+/// side (`scripts/check_g0.py`): generic code does not write `stack` or
+/// `heap` alone, and may write a message that holds one.
+#[test]
+fn an_alloca_kind_written_alone_is_a_core_word() {
+    let words = core_words();
+    let written = |src: &str| core_words_written(&words, src);
+    assert_eq!(
+        written(r#"fn kind() -> &'static str { "stack" }"#),
+        ["stack"]
+    );
+    assert_eq!(
+        written(r#"fn f(k: &str) -> bool { k == "heap" }"#),
+        ["heap"]
+    );
+    for src in [
+        r#"fn why() -> &'static str { "a stack slot" }"#,
+        "// \"stack\" in a comment\nfn f() {}",
+        r#"#[cfg(test)] mod t { fn f() { let _ = "heap"; } }"#,
     ] {
         assert!(written(src).is_empty(), "{src}");
     }
