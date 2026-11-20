@@ -18,7 +18,8 @@
 //! a slot's bits above a value's width are unspecified. An `i128` length
 //! whose high half is not zero saturates to `2^64 - 1`, as an `alloca`'s
 //! count past 64 bits does: no native allocation holds 2^64 bytes, so
-//! such a length is UB, and the routine faults rather than copy a part. A
+//! such a length is UB, and the routine runs until it faults rather than
+//! copy the length's low half and return. A
 //! poison length is whatever bits the slot holds, one of the lengths that
 //! the spec chooses from (the human's ruling of 2026-11-19 on #234), and a
 //! poison `memset` value writes whatever byte it holds, which refines
@@ -168,6 +169,7 @@ mod tests {
             ("\tmovzbl\t%dl, %edx\n", "memmove"),
             ("\tmovzwl\t%dx, %edx\n", "memset"),
             ("\tmovl\t%edx, %edx\n", "memcpy"),
+            ("\tmovq\t-64(%rbp), %rdx\n", "memmove"),
         ] {
             let call = format!("{ext}\tcall\t__funk_rt_{routine}\n");
             assert!(asm.contains(&call), "{call}\n{asm}");

@@ -5,7 +5,9 @@
 # lowers, read as unsigned, a copy carries the low bytes of an i64, and a
 # copy onto its own range leaves it; a move whose ranges overlap, 3 bytes up
 # or down, or none, takes what the source held before it began; and a set
-# writes copies of an i8. A length of 0 does nothing. A poison length is a
+# writes copies of an i8. A length of 0 does nothing. A length made by trunc
+# has bits above its width in native code's slot, which the call must not
+# read. A poison length is a
 # length that fir-ref chooses (the ruling of 2026-11-19), so native code's
 # stand-ins for it must each give one of fir-ref's outcomes, and a poison
 # value writes poison bytes. Each test without poison declares its result,
@@ -175,6 +177,11 @@ tests = [
   { func = "@set_i128", args = ["-128", "3"], results = [{ values = ["-8355712"], witness = [] }] },
   { func = "@set_i128", args = ["-128", "8"], results = [{ values = ["-9187201950435737472"], witness = [] }] },
   { func = "@set_i128", args = ["poison", "1"] },
+  { func = "@trunc_i1", args = ["578437695752307201", "10"], results = [{ values = ["0"], witness = [] }] },
+  { func = "@trunc_i1", args = ["578437695752307201", "11"], results = [{ values = ["1"], witness = [] }] },
+  { func = "@trunc_i8", args = ["578437695752307201", "1283"], results = [{ values = ["197121"], witness = [] }] },
+  { func = "@trunc_i16", args = ["578437695752307201", "327683"], results = [{ values = ["197121"], witness = [] }] },
+  { func = "@trunc_i32", args = ["578437695752307201", "21474836483"], results = [{ values = ["65793"], witness = [] }] },
   { func = "@poison_move", args = ["poison"] },
   { func = "@poison_set", args = ["poison"] },
 ]

@@ -102,7 +102,8 @@ otherwise, so it writes what the source held before it began.
 The length is read as unsigned: zero-extended from its width, and an `i128`
 whose high half is not zero saturates to `2^64 - 1`, as an `alloca` count
 does, since no allocation the backend makes holds 2^64 bytes and such a length
-is UB. A poison length is the bits its slot holds, one of the lengths the spec
+is UB: the routine runs until it faults, rather than copy the length's low half
+and return. A poison length is the bits its slot holds, one of the lengths the spec
 chooses from (the human's ruling of 2026-11-19 on #234), and a poison value
 writes the byte its slot holds, which refines poison units. A pointer of a
 memory of wider units is reported where it is defined, as for every op, so

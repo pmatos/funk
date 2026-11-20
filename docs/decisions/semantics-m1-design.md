@@ -185,7 +185,8 @@ three may be UB, for out-of-bounds access, unless the length is 0. A frontend lo
 `memcpy` to the copy op, not to an external call. The naive backend lowers them
 to funk's own runtime routines `memcpy`, `memmove` and `memset`, not the C
 library's, so a program that only copies, moves or sets memory keeps the
-static link without the C library (ADR-2026-11-09-1551).
+static link without the C library (ADR-2026-11-09-1551). Their symbols are
+funk-private, so they never clash with the C library's.
 
 The human ruled these ops on 2026-11-09, on #220. On 2026-11-11 the human ruled
 on #251 that set writes one unit value, not a byte, and on #274 that funk's

@@ -273,25 +273,85 @@ func @set_i128(%v: i8, %n: i128) -> i64 {
   ret %w @19
 }
 
+func @trunc_i1(%v: i64, %m: i64) -> i64 {
+^entry:
+  %p: ptr = alloca stack i64 2 @20
+  store nonatomic %v, %p @20
+  %eight: i64 = const 8 @20
+  %q: ptr = ptradd %p, %eight @20
+  %zero: i64 = const 0 @20
+  store nonatomic %zero, %q @20
+  %x: i8 = trunc %v @20
+  %n: i1 = trunc %m @20
+  memset nonatomic %q, %x, %n @20
+  %w: i64 = load nonatomic %q @20
+  ret %w @20
+}
+
+func @trunc_i8(%v: i64, %m: i64) -> i64 {
+^entry:
+  %p: ptr = alloca stack i64 2 @21
+  store nonatomic %v, %p @21
+  %eight: i64 = const 8 @21
+  %q: ptr = ptradd %p, %eight @21
+  %zero: i64 = const 0 @21
+  store nonatomic %zero, %q @21
+  %x: i8 = trunc %v @21
+  %n: i8 = trunc %m @21
+  memcpy nonatomic %q, %p, %n @21
+  %w: i64 = load nonatomic %q @21
+  ret %w @21
+}
+
+func @trunc_i16(%v: i64, %m: i64) -> i64 {
+^entry:
+  %p: ptr = alloca stack i64 2 @22
+  store nonatomic %v, %p @22
+  %eight: i64 = const 8 @22
+  %q: ptr = ptradd %p, %eight @22
+  %zero: i64 = const 0 @22
+  store nonatomic %zero, %q @22
+  %x: i8 = trunc %v @22
+  %n: i16 = trunc %m @22
+  memmove nonatomic %q, %p, %n @22
+  %w: i64 = load nonatomic %q @22
+  ret %w @22
+}
+
+func @trunc_i32(%v: i64, %m: i64) -> i64 {
+^entry:
+  %p: ptr = alloca stack i64 2 @23
+  store nonatomic %v, %p @23
+  %eight: i64 = const 8 @23
+  %q: ptr = ptradd %p, %eight @23
+  %zero: i64 = const 0 @23
+  store nonatomic %zero, %q @23
+  %x: i8 = trunc %v @23
+  %n: i32 = trunc %m @23
+  memset nonatomic %q, %x, %n @23
+  %w: i64 = load nonatomic %q @23
+  ret %w @23
+}
+
 func @poison_move(%n: i1) -> i8 {
 ^entry:
-  %p: ptr = alloca stack i8 @20
-  %v: i8 = const 7 @20
-  store nonatomic %v, %p @20
-  memmove nonatomic %p, %p, %n @20
-  %w: i8 = load nonatomic %p @20
-  ret %w @20
+  %p: ptr = alloca stack i8 @24
+  %v: i8 = const 7 @24
+  store nonatomic %v, %p @24
+  memmove nonatomic %p, %p, %n @24
+  %w: i8 = load nonatomic %p @24
+  ret %w @24
 }
 
 func @poison_set(%n: i1) -> i8 {
 ^entry:
-  %p: ptr = alloca stack i8 @21
-  %v: i8 = const 7 @21
-  store nonatomic %v, %p @21
-  %nine: i8 = const 9 @21
-  memset nonatomic %p, %nine, %n @21
-  %w: i8 = load nonatomic %p @21
-  ret %w @21
+  %p: ptr = alloca stack i8 @25
+  %v: i8 = const 7 @25
+  store nonatomic %v, %p @25
+  %nine: i8 = const 9 @25
+  memset nonatomic %p, %nine, %n @25
+  %w: i8 = load nonatomic %p @25
+  ret %w @25
 }
 
 locs {
@@ -317,4 +377,8 @@ locs {
   @19 = unknown
   @20 = unknown
   @21 = unknown
+  @22 = unknown
+  @23 = unknown
+  @24 = unknown
+  @25 = unknown
 }

@@ -142,12 +142,32 @@ fn a_program_that_copies_moves_and_sets_stays_static_and_runs() {
     check_runs(&exe);
 }
 
+/// The global symbols that the object file `object` defines, as GNU `nm`
+/// lists them.
+fn globals(object: &Path) -> Vec<String> {
+    let out = Command::new("nm")
+        .args(["-g", "--defined-only", "--format=just-symbols"])
+        .arg(object)
+        .output()
+        .unwrap();
+    assert!(out.status.success(), "{out:?}");
+    let text = String::from_utf8(out.stdout).unwrap();
+    text.lines().map(str::to_string).collect()
+}
+
+/// A global `memcpy` of the module would interpose on glibc's with no link
+/// error, so the object file is checked for one: it defines only the
+/// module's functions and the hand-written one, and the routines stay
+/// local.
 #[test]
 fn funk_s_routines_link_beside_the_c_library_s() {
     let mut program = compile(&module()).unwrap();
     program.module.push_str(CALLS_LIBC);
     let exe = fresh("libc");
-    build_program(&program, &exe).unwrap();
+    let outputs = build_program(&program, &exe).unwrap();
     assert!(holds(&exe, LOADER));
+    let mut defined = globals(&outputs.object);
+    defined.sort();
+    assert_eq!(defined, ["back", "copy", "funk_test_libc", "move", "set"]);
     check_runs(&exe);
 }

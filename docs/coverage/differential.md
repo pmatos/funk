@@ -7,7 +7,7 @@ says how to read it.
 
 | op | flags or predicate | `i1` | `i8` | `i16` | `i32` | `i64` | `i128` |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| `const` |  | 517 | 786 | 445 | 803 | 848 | 639 |
+| `const` |  | 517 | 786 | 445 | 803 | 853 | 639 |
 | `add` |  | 205 | 359 | 311 | 299 | 434 | 534 |
 | `add` | `nuw` | 8 | 29 | 29 | 31 | 29 | 35 |
 | `add` | `nsw` | 211 | 225 | 206 | 218 | 205 | 107 |
@@ -129,7 +129,7 @@ says how to read it.
 | `trunc` | `i8` | 7 |  |  |  |  |  |
 | `trunc` | `i16` | 6 | 5 |  |  |  |  |
 | `trunc` | `i32` | 8 | 9 | 5 |  |  |  |
-| `trunc` | `i64` | 6 | 5 | 5 | 18 |  |  |
+| `trunc` | `i64` | 8 | 10 | 6 | 19 |  |  |
 | `trunc` | `i128` | 13 | 89 | 12 | 12 | 60 |  |
 
 ## Conversions
@@ -178,10 +178,10 @@ says how to read it.
 
 | op | `i1` | `i8` | `i16` | `i32` | `i64` | `i128` | `ptr` | `f32` | `f64` |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `ptradd` | 2 | 4 | 4 | 4 | 129 | 4 |  |  |  |
-| `alloca` | 2 | 14 | 6 | 50 | 174 | 5 | 8 | 20 | 17 |
-| `load` | 2 | 39 | 7 | 29 | 176 | 5 | 8 | 15 | 16 |
-| `store` | 4 | 11 | 6 | 50 | 174 | 5 | 8 | 20 | 19 |
+| `ptradd` | 2 | 4 | 4 | 4 | 134 | 4 |  |  |  |
+| `alloca` | 2 | 14 | 6 | 50 | 179 | 5 | 8 | 20 | 17 |
+| `load` | 2 | 39 | 7 | 29 | 181 | 5 | 8 | 15 | 16 |
+| `store` | 4 | 11 | 6 | 50 | 179 | 5 | 8 | 20 | 19 |
 
 ## Passed and returned values
 
@@ -192,20 +192,20 @@ says how to read it.
 | `cond_br` | a successor passes nothing | 858 |  |  |  |  |  |  |  |  |
 | `cond_br` | a successor passes values |  | 58 | 140 | 132 | 160 | 132 | 153 | 9 | 7 |
 | `ret` | returns no value | 73 |  |  |  |  |  |  |  |  |
-| `ret` | returns one value |  | 2947 | 1626 | 1276 | 1713 | 1630 | 2490 | 546 | 473 |
+| `ret` | returns one value |  | 2947 | 1626 | 1276 | 1713 | 1635 | 2490 | 546 | 473 |
 | `ret` | returns several values |  | 282 | 432 | 266 | 249 | 399 | 539 | 11 | 11 |
 | `unreachable` | ends a block | 38 |  |  |  |  |  |  |  |  |
 | `call` | gives no result | 35 |  |  |  |  |  |  |  |  |
 | `call` | gives one result |  | 89 | 87 | 80 | 87 | 93 | 130 | 2 | 2 |
 | `call` | gives several results |  | 171 | 220 | 126 | 111 | 191 | 279 | 3 | 4 |
 | `func` | returns no value | 41 |  |  |  |  |  |  |  |  |
-| `func` | returns one value |  | 2947 | 1626 | 1276 | 1713 | 1630 | 2490 | 544 | 471 |
+| `func` | returns one value |  | 2947 | 1626 | 1276 | 1713 | 1635 | 2490 | 544 | 471 |
 | `func` | returns several values |  | 282 | 432 | 266 | 240 | 399 | 503 | 11 | 11 |
 
 ## Copies, moves and fills, by the width of their length
 
 | op | `i1` | `i8` | `i16` | `i32` | `i64` | `i128` |
 | --- | --- | --- | --- | --- | --- | --- |
-| `memcpy` | 2 | 4 | 4 | 4 | 6 | 4 |
-| `memmove` | 7 | 12 | 12 | 12 | 14 | 12 |
-| `memset` | 8 | 13 | 13 | 13 | 13 | 13 |
+| `memcpy` | 2 | 5 | 4 | 4 | 6 | 4 |
+| `memmove` | 7 | 12 | 13 | 12 | 14 | 12 |
+| `memset` | 10 | 13 | 13 | 14 | 13 | 13 |
