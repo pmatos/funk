@@ -28,7 +28,7 @@ is:
   (ADR-2026-11-09-1543), and an aggregate's layout written in the same way,
   with the kind `aggregate`, no parameters or results, and its memory,
   size, alignment and fields as attributes (ADR-2026-11-16-1546), and a
-  global with the kind `data`, its attributes as `Global.attrs` writes
+  global with the kind `global`, its attributes as `Global.attrs` writes
   them (ADR-2026-11-09-1546);
 * one empty line after each item, then the location table, its entries
   indented by two spaces, in the order they are stored;

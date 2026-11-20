@@ -18,9 +18,10 @@ its command line) and of G0's Lean tests must not:
   files it writes types, `alloca`, `load`, `store`, rounding modes and the
   float ops' fast-math flags with, `TypeText.lean`, `AllocaText.lean`,
   `LoadText.lean`, `StoreText.lean`, `RoundingText.lean` and
-  `FloatOpText.lean`, but `align`, which the data layout's generic grammar
-  writes too. The Rust side, `crates/funk-ir/tests/g0.rs`, checks the same
-  words.
+  `FloatOpText.lean`, but the shared words: `align`, which the data
+  layout's generic grammar writes too, and `global` and `const`, a global's
+  item kind and flag (the human's ruling of 2026-11-20, #237 Q4). The Rust
+  side, `crates/funk-ir/tests/g0.rs`, checks the same words.
 
 The same holds of every other dialect in tree, so the same code must not
 name the second dialect, `gpu` (ADR-2026-11-09-1545), nor import its
@@ -53,7 +54,10 @@ CORE_TEXT_PARTS = (
     "lean/Fir/Core/RoundingText.lean",
     "lean/Fir/Core/FloatOpText.lean",
 )
-SHARED_WORDS = frozenset({"align"})
+# The shared words: `align`, which the data layout line writes (the human's
+# ruling of 2026-11-14, #382), and `global` and `const`, a global's item
+# kind and flag (the human's ruling of 2026-11-20, #237 Q4).
+SHARED_WORDS = frozenset({"align", "global", "const"})
 CORE_POISON = "lean/Fir/Core/Poison.lean"
 POISON_DEF = "def Op.poisonClass"
 CORE_EFFECTS = "lean/Fir/Core/OpEffects.lean"

@@ -24,9 +24,12 @@ Tier: direction; area: semantics
   else it means. Generic code does not write it alone as a string; it names
   the concept with the spec's definitions, such as `PoisonOr.poison`, and
   leaves the spelling to code that may name ops. A string that holds the word
-  among other text stays allowed. Neither check exempts an op's name;
-  `check_g0.py` leaves out the attribute word `align`, which the generic
-  data layout line writes too (the human's ruling of 2026-11-14, #382).
+  among other text stays allowed. Both checks leave out the words that a
+  global's generic text writes, its kind `global` and its flag `const`,
+  though `const` names an op (the human's ruling of 2026-11-20, #237 Q4);
+  `check_g0.py` also leaves out the attribute word `align`, which the
+  generic data layout line writes too (the human's ruling of 2026-11-14,
+  #382). No other op's name is exempt.
 - **Every op declares its poison class and effects.** The core lists each op
   by its constructor in `Core.Op.poisonClass` and `Core.Op.effects`, with no
   case for the rest, so a new core op does not build until it declares them.

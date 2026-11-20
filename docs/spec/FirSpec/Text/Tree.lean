@@ -121,7 +121,7 @@ tree of an item of a dialect's kind is the tree of that item, and the tree
 of an aggregate's layout is the tree of the item that writes it: of kind
 `aggregate`, with its symbol, no parameters or results, its attributes and
 an empty body; the tree of a global is likewise the tree of the item of
-kind `data` that writes it. The
+kind `global` that writes it. The
 tree of a nested module with the symbol $`s`, the dialect set $`x^*` and
 the items $`i^*` is the item of kind `module`, at $`p_0`, with the symbol
 $`s`, no parameters, results or attributes, and as its body the dialect set

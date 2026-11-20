@@ -14,7 +14,7 @@ second decodes each op in that scope.
 A text that follows the grammar but does not decode is rejected, with the
 position of the part that does not decode (ADR-2026-10-29-2014):
 
-* an item whose kind is neither `func`, `module`, `aggregate`, `data`
+* an item whose kind is neither `func`, `module`, `aggregate`, `global`
   nor a word of a dialect, at its kind. An item of a dialect's kind decodes whichever
   dialect registers it: that is validation's question (ADR-2026-11-09-1543);
 * a `func` with attributes, at its first attribute; a `func` whose body
@@ -238,10 +238,10 @@ def decodeItem : SItem → Except ParseError (Item d)
       | .blocks (_ :: _) => errorAt kindPos "a module's body holds items, not blocks"
       | .items ds is => do pure (.module name ds (← decodeItems is))
     else if kind = "aggregate" then decodeAggregate kindPos name params results attrs body
-    else if kind = "data" then decodeGlobal kindPos name params results attrs body
+    else if kind = "global" then decodeGlobal kindPos name params results attrs body
     else if isDialectWord kind then decodeDialectItem kind kindPos name params results attrs body
     else errorAt kindPos ("unknown item kind " ++ kind ++
-      ": the kinds are func, module, aggregate, data and the words of dialects")
+      ": the kinds are func, module, aggregate, global and the words of dialects")
 
 /-- Decodes items, in order. -/
 def decodeItems : List SItem → Except ParseError (List (Item d))

@@ -230,7 +230,7 @@ theorem decodeItem_wellFormed : ∀ {si : SItem} {i : Item d}, decodeItem si = .
         · simp only [hg, ↓reduceIte] at h
           exact decodeAggregate_wellFormed h ha
         simp only [hg, ↓reduceIte] at h
-        by_cases hgl : kind = "data"
+        by_cases hgl : kind = "global"
         · simp only [hgl, ↓reduceIte] at h
           exact decodeGlobal_wellFormed h
         simp only [hgl, ↓reduceIte] at h
@@ -257,7 +257,7 @@ theorem decodeItem_wellFormed : ∀ {si : SItem} {i : Item d}, decodeItem si = .
         · simp only [hg, ↓reduceIte] at h
           exact decodeAggregate_wellFormed h ha
         simp only [hg, ↓reduceIte] at h
-        by_cases hgl : kind = "data"
+        by_cases hgl : kind = "global"
         · simp only [hgl, ↓reduceIte] at h
           exact decodeGlobal_wellFormed h
         simp only [hgl, ↓reduceIte] at h

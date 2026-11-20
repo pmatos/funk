@@ -6,8 +6,9 @@
 //! (ADR-2026-10-29-2016, ADR-2026-10-30-1146). The tests check it two ways.
 //! An empty registry knows no op, so nothing outside the registry knows
 //! one. And the code of every module but the dialects, the module generator
-//! and the unit tests writes no word of the core dialect's text, names the
-//! core dialect only to register it, and declares no `enum` with two or
+//! and the unit tests writes no word of the core dialect's text but the
+//! words a global's text shares with it, names the core dialect only to
+//! register it, and declares no `enum` with two or
 //! more variants named after core ops. It writes no word of the second
 //! dialect in tree, `gpu`, either (ADR-2026-11-09-1545).
 
@@ -214,10 +215,19 @@ fn strings_written(src: &str, is_word: impl Fn(&str) -> bool) -> Vec<String> {
         .collect()
 }
 
+/// The core's words that generic code writes too: `global` and `const`, a
+/// global's item kind and flag (the human's ruling of 2026-11-20, #237 Q4).
+/// Both are words of [`core_words`]: `const` an op and `global` a kind of
+/// `alloca`. `scripts/check_g0.py` leaves out `align` as well, which
+/// [`core_words`] does not hold.
+const SHARED_WORDS: [&str; 2] = ["global", "const"];
+
 /// The strings of the code of `src` that are words of the core dialect,
-/// each written alone.
+/// each written alone, but the shared words.
 fn core_words_written(words: &[String], src: &str) -> Vec<String> {
-    strings_written(src, |s| is_core_word(words, s))
+    strings_written(src, |s| {
+        is_core_word(words, s) && !SHARED_WORDS.contains(&s)
+    })
 }
 
 #[test]
@@ -309,6 +319,30 @@ fn a_word_that_names_a_core_op_and_a_generic_term_is_a_core_word() {
     ] {
         assert!(written(src).is_empty(), "{src}");
     }
+}
+
+/// `const` names a core op and `global` an `alloca` kind, and generic code
+/// writes them alone as a global's flag and kind (#237 Q4): both stay core
+/// words, the scan passes them, and `poison` beside them is found all the
+/// same.
+#[test]
+fn the_shared_words_are_not_found_and_another_core_op_is() {
+    let words = core_words();
+    assert!(
+        core_ops().iter().any(|op| op == "const"),
+        "{:?}",
+        core_ops()
+    );
+    for w in SHARED_WORDS {
+        assert!(is_core_word(&words, w), "{w}: {words:?}");
+    }
+    assert_eq!(
+        core_words_written(
+            &words,
+            r#"fn f() -> [&'static str; 3] { ["global", "const", "poison"] }"#
+        ),
+        ["poison"]
+    );
 }
 
 /// The kinds of an `alloca` are words of the core dialect, as on the Lean

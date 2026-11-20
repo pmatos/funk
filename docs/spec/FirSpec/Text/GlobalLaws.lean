@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Globals in text, proved: readable blocks" =>
 
-:::moduleDocs (fingerprint := "13668561535012406255")
+:::moduleDocs (fingerprint := "14092443460801952774")
 :::
 
 :::readable Fir.InitPiece.units_writable Fir.InitPiece.attr_writable Fir.Global.attr_writable (fingerprint := "14020469643648516491")
@@ -37,8 +37,8 @@ any index, when their numbers are within the limit, and pieces that read
 have their numbers within the limit.
 :::
 
-:::readable Fir.Global.decodeFlag_const Fir.Global.decodeFlag_export Fir.InitPiece.map_attr_head Fir.Global.decodeMem_size Fir.Global.decodeMem_memory (fingerprint := "5446604386067953319")
-*Theorems: the header reads back.* The flag `constant` reads back as
+:::readable Fir.Global.decodeFlag_const Fir.Global.decodeFlag_export Fir.InitPiece.map_attr_head Fir.Global.decodeMem_size Fir.Global.decodeMem_memory (fingerprint := "9067414941689210058")
+*Theorems: the header reads back.* The flag `const` reads back as
 written when what follows starts with no such word, and so does `export`;
 what pieces write starts with no word. A global of memory 0 writes no
 memory and reads as one, and a global of any other memory within the limit

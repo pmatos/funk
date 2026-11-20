@@ -1,4 +1,4 @@
-# A global is a core item `data` of units and addresses, valid in its own table
+# A global is a core item `global` of units and addresses, valid in its own table
 
 Status: accepted
 Tier: direction; area: semantics
@@ -6,10 +6,10 @@ Tier: direction; area: semantics
 ## Decision
 
 - **The item.** A global (ADR-2026-11-09-1546) is an item of the core's
-  kind `data`, written with the generic item production and an empty body:
-  `data @msg() size(8) align(1) constant units(104, 105, 0) {` and `}`.
+  kind `global`, written with the generic item production and an empty body:
+  `global @msg() size(8) align(1) const units(104, 105, 0) {` and `}`.
   Its attributes are, in order: `memory(N)` only when `N` is not 0,
-  `size(S)`, `align(A)`, the word `constant`, the word `export`, then the
+  `size(S)`, `align(A)`, the word `const`, the word `export`, then the
   initializer's pieces. Every other order does not decode, so a global has
   one spelling.
 - **The initializer.** Pieces fill the global's units in order from its
@@ -24,12 +24,11 @@ Tier: direction; area: semantics
   width `U`, each `addr` names a global of the item's own table, and the
   initializer takes at most the size. A nested module's globals are its
   own.
-- **The words.** The item is `data` and the flag `constant`, not the
-  ADR's `global` and `const`: the core's text already writes those
-  (`alloca`'s kind `global`, the op `const`), and the G0 check keeps the
-  core's words out of generic code. The words are the agent's choice;
-  keeping the ADR's would need the human to widen that check (asked on
-  #237).
+- **The words.** The item is `global` and the flag `const`, the words of
+  ADR-2026-11-09-1546, as the human ruled on 2026-11-20 (#237 Q4). The
+  core's text writes them too (`alloca`'s kind `global`, the op `const`),
+  so the G0 check lists both, with `align`, among the words generic code
+  shares with the core, on the Lean and the Rust side.
 - **What it leaves to the run.** A global is still one allocation of
   kind `global` (ADR-2026-11-09-1546), apart from the kind `function`
   that the human ruled for a function's address on 2026-11-19 (#235).

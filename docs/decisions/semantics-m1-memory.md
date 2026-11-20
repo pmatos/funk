@@ -170,7 +170,9 @@ capping the natural alignment at the pointer's.
 - The G0 check reads the words of `AllocaText.lean` and `TypeText.lean` as
   core words, but leaves out `align` by name (`SHARED_WORDS` in
   `scripts/check_g0.py`), since the data layout's generic grammar writes it
-  too. The human ruled this on 2026-11-14 (#382). Rejected: reading only
+  too. The human ruled this on 2026-11-14 (#382). It leaves out `global`
+  too, which a global's generic text writes, as the human ruled on
+  2026-11-20 (#237 Q4; semantics-m1-design.md). Rejected: reading only
   `Text.lean` and `TypeText.lean`, which checks no `alloca` word.
 - It is never UB, its result is never poison, and its effect set is
   "allocates in memory `N`". It has no rule in the set monad, so the core

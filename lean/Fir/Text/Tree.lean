@@ -32,7 +32,7 @@ items, or no blocks when it has neither, since its tokens after its `{` are
 then its `}`. An item of a dialect's kind is an item of its kind with its
 symbol, its parameters, its result types and its attributes, and its body
 is no blocks, and an aggregate's layout and a global are the items of kind
-`aggregate` and `data` that write them. Each op is its results, its name
+`aggregate` and `global` that write them. Each op is its results, its name
 and attributes as the dialect writes them, its operands, its successors, its regions and its
 location reference. Each type is the attribute that writes it, and so is
 each entry of the data layout. The dialect set and the location table are
