@@ -16,12 +16,15 @@ second for a callee that reaches no memory:
 * from given memories, for every callee `@g`, whatever its parameter types,
   pointers included, and whatever its new body does to the memories. Every
   core op has finitely many outcomes with memory: each op that touches no
-  memory runs by its rule in the set monad and keeps the memories, and its
-  rule in the set monad is the set of its rule in the tree of choices,
-  whose choices of _w_ bits have 2 to the power _w_ options; `alloca`,
-  `load` and `store`, which have no tie, have at most one outcome that
-  ends, each by its own rule, since an allocation, a load and a store are
-  deterministic. So congruence with ops of finitely many outcomes applies
+  memory and reads no item of the run runs by its rule in the set monad
+  and keeps the memories, and its rule in the set monad is the set of its
+  rule in the tree of choices, whose choices of _w_ bits have 2 to the
+  power _w_ options. The ops with no tie count by their own rules:
+  `alloca` and `fieldAddr` have one outcome, the loads `load`, `loadPtr`
+  and `loadFloat` and the stores `store`, `storePtr` and `storeFloat` at
+  most one that ends, and `memCopy` and `memSet` at most one that ends for
+  each length, of which a poison length chooses one of finitely many. So
+  congruence with ops of finitely many outcomes applies
   (#214, `docs/decisions/semantics-refinement.md#congruence-in-the-callee`);
 * with memory, for a callee that reaches no memory in the module where it
   runs, nor in the new one: no function that its run may reach declares a
@@ -35,13 +38,15 @@ second for a callee that reaches no memory:
 
 The core dialect meets what the general theorems ask:
 
-* no core op but `alloca`, `load` and `store` declares a memory effect, so
-  a function of a core module reaches no memory when no function that its
-  run may reach has an `alloca`, a `load` or a `store`. The form with
-  memory asks it of `@g`;
+* no core op but `alloca`, the loads `load`, `loadPtr` and `loadFloat`,
+  the stores `store`, `storePtr` and `storeFloat`, `memCopy` and `memSet`
+  declares a memory effect, so a function of a core module reaches no
+  memory when no function that its run may reach has one of them. The form
+  with memory asks it of `@g`;
 * each core op that declares no memory effect ignores the memories, since
-  it touches none. `alloca`, `load` and `store`, the ops that touch memory,
-  declare that they allocate, read and write, so none is asked;
+  it touches none: it is tied, or it is `fieldAddr`, which reads an item of
+  the run, not memory, and gives its result at once. The ops that touch
+  memory declare that they allocate, read or write it, so none is asked;
 * the core dialect is lawful in its monotonicity, the refinement of core
   values is reflexive and transitive, and the symbols of a valid module are
   unique.
@@ -117,9 +122,12 @@ theorem opsIgnoreMemory :
 variable {M : Module CoreDialect} {f : Func CoreDialect}
 
 /-- Each core op that runs by its own rule has finitely many outcomes with
-memory, at every layout and naming: it runs by its rule in the set monad and
-keeps the memories, and its rule in the set monad is the set of its rule in
-the tree of choices, whose choices of bits have finitely many options. -/
+memory, at every layout and naming. An op that touches no memory and reads
+no item of the run runs by its rule in the set monad and keeps the
+memories, and its rule in the set monad is the set of its rule in the tree
+of choices, whose choices of bits have finitely many options. `alloca`, the
+loads and stores, `fieldAddr`, `memCopy` and `memSet` have finitely many by
+their own rules. -/
 theorem opsFinite :
     letI := DialectMemDenote.denoteAt (d := CoreDialect) lay ρ L
     OpsFinite CoreDialect N (unitsOf lay) := fun op _ args => by
