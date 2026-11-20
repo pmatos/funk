@@ -286,7 +286,9 @@ The modules of `lean/FirRef/` fall in the same classes:
   no swap of its own.
 - **Depth:** the loops of `Bindings` (`zipRev`, `zipRevH`, `zipParams`, `values`), since
   the spec's `Env.bind` and `Func.enter` use `List.zip`; `Machine`,
-  `MachineTree`, `RunAt`, `Steps`, `RunModes` and `Run`; `HVector` and
+  `MachineTree`, `MachineModes`, `RunAt`, `Steps`, `RunModes` and `Run`;
+  `Reach`, whose walk of the memory an observer reaches takes no stack per
+  allocation or unit (#233); `HVector` and
   `HVectorSum`, and the loops of `args`, `readArgs` and
   `readGpuArgs`, for wide values (#405); `RunText`, whose
   `findFunc` finds a kernel through its modules in a loop (#212); `Read/*` but

@@ -9,7 +9,7 @@
 # shows no event yet, so an empty script fits it and a script that answers
 # an event does not; a script that does not read is an error. On a 256 KiB
 # stack, it reports a chain of 10,000 work-group allocations, each holding a
-# pointer into the one before it.
+# pointer into the one before it, and an allocation of 100,000 units.
 set -euo pipefail
 
 if [[ $# -ne 1 ]]; then
@@ -126,4 +126,15 @@ n=10000
 # shellcheck disable=SC2086
 (ulimit -c 0 && LEAN_STACK_SIZE_KB=256 runs 0 "$(<"$tmp/chain.want")" $w "$tmp/chain.fir" @dev::@chain) ||
     status=1
+# A work-group allocation of 100,000 units is reported with no stack per
+# unit, on a 256 KiB stack.
+{
+    printf 'module @dev() {\n  dialects gpu\n\n  func @wide() -> ptr {\n  ^e:\n'
+    printf '    %%p: ptr = gpu.work_group_alloca i8 100000 @0\n    ret %%p @0\n  }\n}\n'
+    printf '\nlocs {\n  @0 = unknown\n}\n'
+} >"$tmp/wide.fir"
+units=$(printf '"poison",%.0s' $(seq 100000))
+wide='{"kind":"return","values":["ptr(0, 0)"],"trace":[],"escaped":[],"memory":[{"memory":0,"alloc":0,"kind":"global","align":1,"size":100000,"live":true,"units":['"${units%,}"']}],"choices":0}'
+# shellcheck disable=SC2086
+(ulimit -c 0 && LEAN_STACK_SIZE_KB=256 runs 0 "$wide" $w "$tmp/wide.fir" @dev::@wide) || status=1
 exit "$status"
