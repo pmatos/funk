@@ -34,10 +34,11 @@ one-to-one renaming `R` _shows_ `s` in `t`:
 A freed allocation that the observer reaches is seen in a freed one, and
 its contents are not compared: only live allocations are.
 
-Whether the end of a run compares the addresses of exposed allocations is
-open for the human (#233): this section takes the rule as a parameter, an
-`AddrRule`, and every law holds for each rule that is reflexive and
-transitive.
+How the end of a run compares the addresses of exposed allocations is a
+parameter of this section, an `AddrRule`, and every law holds for each rule
+that is reflexive and transitive. The spec compares none
+(`AddrRule.ignore`, `ObservedEnd`): an address is seen only through the
+integers a run shows. The human ruled this on 2026-11-20, on #233.
 
 Refinement of the ends of runs is reflexive and transitive. When the source
 returns no pointer and nothing escaped, it is the refinement of the
@@ -58,9 +59,9 @@ structure AddrRule where
   refl : ∀ a, rel a a
   trans : ∀ {a b c}, rel a b → rel b c → rel a c
 
-/-- The candidate rules, of which the human picks one (#233). `ignore`: the
-end of a run does not compare addresses, as raw addresses are never compared
-(ADR-2026-11-09-1540), and only the integers a run shows carry them. -/
+/-- `ignore`, the spec's rule (#233): the end of a run does not compare
+addresses, as raw addresses are never compared (ADR-2026-11-09-1540), and
+only the integers a run shows carry them. -/
 def AddrRule.ignore : AddrRule := ⟨fun _ _ => True, fun _ => trivial, fun _ _ => trivial⟩
 
 /-- `same`: two allocations that the renaming relates have the same address,
@@ -100,6 +101,11 @@ structure End {Mem : Type} (unit : Mem → Nat) (μ : Nat → Mem) (ar : AddrRul
   vals : V
   mem : Memories Mem unit
   escaped : List (Mem × AllocId)
+
+/-- The end of a return as the spec compares it: by the rule `ignore`, so
+the addresses of the allocations it relates are not compared. -/
+abbrev ObservedEnd {Mem : Type} (unit : Mem → Nat) (μ : Nat → Mem) (V : Type) : Type :=
+  End unit μ AddrRule.ignore V
 
 variable {Mem : Type} {unit : Mem → Nat} [DecidableEq Mem] {μ : Nat → Mem} {ar : AddrRule}
   {V : Type} [HRefinement V V] [HasPtrs V]

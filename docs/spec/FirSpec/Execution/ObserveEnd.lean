@@ -14,20 +14,25 @@ when the Lean changes under it.
 
 #doc (Manual) "The end of a return: readable blocks" =>
 
-:::moduleDocs (fingerprint := "12640316486195657284")
+:::moduleDocs (fingerprint := "17526751156748906447")
 :::
 
 :::readable Fir.AddrRule Fir.AddrRule.ignore Fir.AddrRule.same Fir.AddrRule.exposed (fingerprint := "15094722826430448788")
 *Definition: an address rule.* An address rule $`\approx` is a reflexive
 and transitive relation on the addresses of two allocations that the
-renaming relates, each $`\bot` until its allocation is exposed. Which rule
-the end of a run takes is open for the human (#233). The candidates:
+renaming relates, each $`\bot` until its allocation is exposed. The laws
+of the end of a return hold for each such rule. Three rules are defined:
 
 * $`\mathsf{ignore}`: every two addresses match;
 * $`\mathsf{same}`: two addresses match when they are equal, as
   refinement of blocks compares them;
 * $`\mathsf{exposed}`: two addresses match when both are $`\bot` or
   neither is.
+
+The spec takes $`\mathsf{ignore}`: the end of a return does not compare
+addresses, and an address is seen only through the integers a run shows.
+The human ruled this on 2026-11-20, on #233. Rejected: $`\mathsf{same}`,
+under which a pass could not move an exposed allocation.
 :::
 
 :::readable Fir.Memory.Block.SeenIn Fir.Memory.Block.OptSeenIn (fingerprint := "2603236812975412409")
@@ -60,6 +65,12 @@ renaming $`R` shows the first in the second:
 So the world's handles keep their places, a dangling pointer of the source
 is poison wherever it is, and the memory that no observer reaches is never
 compared.
+:::
+
+:::readable Fir.ObservedEnd (fingerprint := "3012597159288658516")
+*Definition: the end of a return, as the spec compares it.* The spec
+compares the ends of returns by the address rule $`\mathsf{ignore}`, so
+the addresses of the allocations the renaming relates are never compared.
 :::
 
 :::readable Fir.End.Reachable Fir.End.SeenUnder.reachable (fingerprint := "3270551615548019583")

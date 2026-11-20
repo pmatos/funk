@@ -62,9 +62,9 @@ address, the same addresses fit, and the canonical layout gives the same.
 `Block.shape`, which the effect obligations compare, leaves the address
 out, so the obligations cannot yet tell an op that exposes from one that
 does nothing. Stage 2, which makes exposure an effect, decides how they
-see it. Whether the end of a return compares the addresses of the
-allocations it observes is open for the human (#233,
-[semantics-m1-trace.md](semantics-m1-trace.md#how-the-spec-states-the-end-of-a-return)).
+see it. The end of a return does not compare the addresses of the
+allocations it observes: the human ruled this on 2026-11-20, on #233
+([semantics-m1-trace.md](semantics-m1-trace.md#how-the-spec-states-the-end-of-a-return)).
 
 ## The canonical layout
 

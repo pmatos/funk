@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "A dialect's traced runs: readable blocks" =>
 
-:::moduleDocs (fingerprint := "6799622968869713480")
+:::moduleDocs (fingerprint := "4193867457959602704")
 :::
 
 :::readable Fir.DialectTrace Fir.DialectTrace.Acts (pin := Fir.instHRefinementEvent) (fingerprint := "16873117125355051426")
@@ -35,7 +35,7 @@ runs by that rule, each act of its traces an act of the marked trace. A
 call shows no step of its own: the ops of its callee show theirs.
 :::
 
-:::readable Fir.TraceState.endOf Fir.Func.traceRuns Fir.Func.run_eraseSteps (pin := Fir.TraceState.init) (fingerprint := "4193805551193429398")
+:::readable Fir.TraceState.endOf Fir.Func.traceRuns Fir.Func.observedRuns Fir.Func.run_eraseSteps (pin := Fir.TraceState.init) (fingerprint := "10032265652291617458")
 *Definition: the traced runs of a function.* Where a run names the
 dialect's memory $`x` as $`\rho(x)`, whose layout entry is
 $`\ell(\rho(x))`, and gives each op the items $`L`, the traced run of the
@@ -50,6 +50,12 @@ $`\mu(n)` and compares addresses by the rule $`r`. The caller gives
 $`\mu`, which should name the memory numbered $`n` as $`\rho` names the
 dialect's memory of that number: for the core, whose memories are their
 numbers, $`\mu = \rho`.
+
+*Definition: the spec's traced runs.* The spec's traced runs of a function
+are its traced runs whose ends of returns compare addresses by the rule
+$`\mathsf{ignore}`: no address is compared at the end of a return, and an
+address is seen only through the integers a run shows. The human ruled this
+on 2026-11-20, on #233.
 
 *Theorem: erasing the steps.* Mapping each step to no act and each act to
 itself maps the traced run of a function to its run in the traced layer by

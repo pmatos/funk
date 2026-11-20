@@ -4,7 +4,8 @@ import Fir
 Tests of what an observer sees at a return (ADR-2026-11-09-1540, #233): the
 returned values and the memory reachable from them and from what escaped,
 compared up to a one-to-one renaming of allocations, with a dangling pointer
-poison wherever the source has it; and the world's actions on escaped
+poison wherever the source has it, and their addresses not compared (the
+human's ruling of 2026-11-20 on #233); and the world's actions on escaped
 memory. Each run here has one memory of bytes, and the core's values.
 -/
 
@@ -15,9 +16,9 @@ open Fir Fir.Memory
 /-- One memory, of bytes. -/
 abbrev w : Unit → Nat := fun _ => 8
 
-/-- The end of a return, with the core's values, the one memory and the
-address rule `same`. -/
-abbrev E := End w (fun _ => ()) AddrRule.same (List (DVal CoreDialect))
+/-- The end of a return as the spec compares it, with the core's values and
+the one memory. -/
+abbrev E := ObservedEnd w (fun _ => ()) (List (DVal CoreDialect))
 
 /-- A live stack block of one byte holding `b`. -/
 def byte (b : Nat) : Block 8 := ⟨.stack, 1, [.bits (BitVec.ofNat 8 b)], true, none⟩
@@ -69,7 +70,7 @@ example : (⟨[ptr 1], mems [byte 9, byte 5], []⟩ : E) ⊑ (⟨[ptr 0], mems [
     match a, ha with
     | 1, ha =>
       cases ha
-      refine ⟨⟨rfl, rfl, rfl, rfl, rfl, fun _ => ⟨rfl, trivial⟩⟩, fun b hb _ n p hp => ?_⟩
+      refine ⟨⟨rfl, rfl, rfl, rfl, trivial, fun _ => ⟨rfl, trivial⟩⟩, fun b hb _ n p hp => ?_⟩
       cases hb
       simp [HasPtrs.ptrs, MemUnit.ptrs, byte] at hp
     | 0, ha | a + 2, ha => simp [ren] at ha
@@ -91,6 +92,69 @@ example : ¬ (⟨[ptr 0, ptr 1], mems [byte 5, byte 5], []⟩ : E) ⊑
     TyRefinement.IsRefinedBy, Core.Ty.IsRefinedBy, PoisonOr.IsRefinedBy] at hv
   obtain ⟨rfl, rfl⟩ := hv
   exact absurd (hi () 0 1 0 h₀ h₁) (by decide)
+
+/-! # Addresses -/
+
+/-- A live stack block of one byte holding 5, with the address `x`. -/
+def at5 (x : Option Nat) : Block 8 := ⟨.stack, 1, [.bits (BitVec.ofNat 8 5)], true, x⟩
+
+/-- The spec does not compare addresses: an allocation the source exposed at
+64 is seen in one the target exposed elsewhere, or did not expose. -/
+example (y : Option Nat) :
+    (⟨[ptr 0], mems [at5 (some 64)], []⟩ : E) ⊑ (⟨[ptr 0], mems [at5 y], []⟩ : E) := by
+  refine ⟨ren [some 0], ?_, rfl, fun i e h => by simp at h, ?_, ⟨⟨rfl, rfl⟩, trivial⟩, ?_⟩
+  · intro _ a b c ha hb
+    match a, b, ha, hb with
+    | 0, 0, _, _ => rfl
+    | a + 1, _, ha, _ | _, b + 1, _, ha => simp [ren] at ha
+  · intro n p hp
+    simp [HasPtrs.ptrs, TyPointers.ptrs, Core.Ty.ptrs, PoisonOr.ptrsOf, ptr] at hp
+    obtain ⟨rfl, rfl⟩ := hp
+    intro a ha _
+    cases ha
+    rfl
+  · intro _ a a' ha
+    match a, ha with
+    | 0, ha =>
+      cases ha
+      refine ⟨⟨rfl, rfl, rfl, rfl, trivial, fun _ => ⟨rfl, trivial⟩⟩, fun b hb _ n p hp => ?_⟩
+      cases hb
+      simp [HasPtrs.ptrs, MemUnit.ptrs, at5] at hp
+    | a + 1, ha => simp [ren] at ha
+
+/-- The end of a return under the rejected rule `same`. -/
+abbrev Es := End w (fun _ => ()) AddrRule.same (List (DVal CoreDialect))
+
+/-- The end of a return under the rejected rule `exposed`. -/
+abbrev Ex := End w (fun _ => ()) AddrRule.exposed (List (DVal CoreDialect))
+
+/-- The rejected rule `same` would compare them: there, an allocation exposed
+at 64 is not seen in one exposed at 128. -/
+example :
+    ¬ (⟨[ptr 0], mems [at5 (some 64)], []⟩ : Es) ⊑ (⟨[ptr 0], mems [at5 (some 128)], []⟩ : Es) := by
+  rintro ⟨R, -, -, -, hc, hv, hb⟩
+  obtain ⟨c₀, h₀⟩ := Option.isSome_iff_exists.1 <| hc 0 ⟨some 0, 0⟩
+    (by simp [HasPtrs.ptrs, TyPointers.ptrs, Core.Ty.ptrs, PoisonOr.ptrsOf, ptr]) 0 rfl rfl
+  simp [HasPtrs.map, TyPointers.map, Core.Ty.mapPtrs, PoisonOr.mapPtr, Renaming.ptr, ptr,
+    Memories.freed, mems, at5, h₀, HRefinement.IsRefinedBy, List.IsRefinedBy,
+    TyRefinement.IsRefinedBy, Core.Ty.IsRefinedBy, PoisonOr.IsRefinedBy] at hv
+  subst hv
+  have hs := (hb () 0 0 h₀).1
+  simp [Block.OptSeenIn, Block.SeenIn, mems, at5, AddrRule.same] at hs
+
+/-- The rejected rule `exposed` would see an exposure dropped: there, an
+allocation exposed at 64 is not seen in one that was never exposed. -/
+example :
+    ¬ (⟨[ptr 0], mems [at5 (some 64)], []⟩ : Ex) ⊑ (⟨[ptr 0], mems [at5 none], []⟩ : Ex) := by
+  rintro ⟨R, -, -, -, hc, hv, hb⟩
+  obtain ⟨c₀, h₀⟩ := Option.isSome_iff_exists.1 <| hc 0 ⟨some 0, 0⟩
+    (by simp [HasPtrs.ptrs, TyPointers.ptrs, Core.Ty.ptrs, PoisonOr.ptrsOf, ptr]) 0 rfl rfl
+  simp [HasPtrs.map, TyPointers.map, Core.Ty.mapPtrs, PoisonOr.mapPtr, Renaming.ptr, ptr,
+    Memories.freed, mems, at5, h₀, HRefinement.IsRefinedBy, List.IsRefinedBy,
+    TyRefinement.IsRefinedBy, Core.Ty.IsRefinedBy, PoisonOr.IsRefinedBy] at hv
+  subst hv
+  have hs := (hb () 0 0 h₀).1
+  simp [Block.OptSeenIn, Block.SeenIn, mems, at5, AddrRule.exposed] at hs
 
 /-! # Dangling pointers -/
 

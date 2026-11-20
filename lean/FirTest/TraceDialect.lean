@@ -72,11 +72,11 @@ def emitModule : Module EmitDialect := { items := [.func emitMain], locs := [(0,
 memory of its own. -/
 abbrev lay : Unit → MemLayout := fun _ => MemLayout.default
 
-/-- The traced runs of `emitMain`, with no memory of its own, each return
-seen at its end. -/
+/-- The spec's traced runs of `emitMain`, with no memory of its own, each
+return seen at its end. -/
 abbrev runs : FuncTraceRuns (HVector toType ([] : List Core.Ty)) (DialectTrace.Acts EmitDialect)
-    (End (unitsOf lay) (fun _ => ()) AddrRule.same (List (DVal EmitDialect))) :=
-  emitMain.traceRuns lay Empty.elim RunItems.empty (fun _ => ()) AddrRule.same emitModule
+    (ObservedEnd (unitsOf lay) (fun _ => ()) (List (DVal EmitDialect))) :=
+  emitMain.observedRuns lay Empty.elim RunItems.empty (fun _ => ()) emitModule
 
 /-- The traced state inside the call of `emitMain`: a frame entered, and
 nothing escaped. -/

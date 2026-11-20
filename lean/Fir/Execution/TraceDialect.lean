@@ -16,7 +16,8 @@ first shows a step. A call shows no step of its own: the ops of its callee
 show theirs. Erasing the steps maps the traced runs to the runs by the
 dialect's rules alone. An observer sees the acts of the trace and, at a
 return, the end of the return: the returned values, the memories and what
-escaped (`Fir.Execution.ObserveEnd`).
+escaped (`Fir.Execution.ObserveEnd`). The spec's traced runs compare no
+addresses at the end of a return (`Func.observedRuns`).
 
 A dialect whose ops show no event has, in the traced layer, its semantics
 with memory, lifted onto the memories of the traced state: its traced runs
@@ -105,6 +106,15 @@ def Func.traceRuns (M : Module d) (f : Func d) :
   fun args fuel e => ∃ e',
     (f.run M (m := TraceM (Step (DialectTrace.Acts d)) (TraceState N (unitsOf lay))) args fuel).run
       TraceState.init e' ∧ e = e'.map fun p => (p.2.2.endOf μ ar p.1, p.2.1)
+
+/-- The spec's traced runs of the function `f`: its traced runs, where the
+end of each return compares no addresses (`AddrRule.ignore`). An address is
+seen only through the integers a run shows. The human ruled this on
+2026-11-20, on #233. -/
+abbrev Func.observedRuns (M : Module d) (f : Func d) :
+    FuncTraceRuns (HVector toType (f.params.map (·.2))) (DialectTrace.Acts d)
+      (ObservedEnd (unitsOf lay) μ (List (DVal d))) :=
+  f.traceRuns lay ρ L μ AddrRule.ignore M
 
 /-- Erasing the steps of the traced runs of a function gives its runs in the
 traced layer by the dialect's rules alone. -/

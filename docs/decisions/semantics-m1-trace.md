@@ -147,10 +147,15 @@ These are #233's choices of form, within the rules above.
   write inside an escaped live allocation, a heap allocation that escapes
   at once, and a free of an escaped live heap allocation. The act records
   them beside the result.
-- **Addresses.** Whether the end of a run compares the addresses of
-  exposed allocations is open for the human: the comparison takes an
-  address rule, and every law holds for each of `AddrRule.ignore`, `same`
-  and `exposed`.
+- **Addresses.** The end of a return does not compare the numeric
+  addresses of the allocations it relates: an address is seen only through
+  the integers a run shows, as raw addresses are never compared
+  (ADR-2026-11-09-1540). The spec's end of a return and traced runs fix the
+  rule `AddrRule.ignore` (`ObservedEnd`, `Func.observedRuns`); the
+  comparison still takes an address rule, and every law holds for each of
+  `ignore`, `same` and `exposed`. The human ruled this on 2026-11-20, on
+  #233. Rejected: `AddrRule.same`, under which related allocations keep the
+  same address, which forbids a pass to move an exposed allocation.
 
 When the source returns no pointer and nothing escaped, the end of its
 return is refined exactly when its returned values are and nothing escaped
