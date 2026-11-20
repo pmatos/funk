@@ -328,6 +328,8 @@ extensions written apart combine in one sum.
 
 {includeReadable "." Fir.Sum.RunLaws "Runs of a sum, op by op" FirSpec.Sum.RunLaws (level := 2)}
 
+{includeReadable "." Fir.Sum.Pointers "The pointers of a sum's values" FirSpec.Sum.Pointers (level := 2)}
+
 # The GPU dialect
 
 The second dialect in tree, `gpu`, is shaped like a GPU kernel language
@@ -363,6 +365,8 @@ module's kernels included, and the modes that `fir-ref run` walks.
 {includeReadable "." Fir.Gpu.Runs "Runs of the core and gpu" FirSpec.Gpu.Runs (level := 2)}
 
 {includeReadable "." Fir.Gpu.Modes "Modes of the core and gpu" FirSpec.Gpu.Modes (level := 2)}
+
+{includeReadable "." Fir.Gpu.Trace "Traced runs of the core and gpu" FirSpec.Gpu.Trace (level := 2)}
 
 # Architecture decision records
 %%%

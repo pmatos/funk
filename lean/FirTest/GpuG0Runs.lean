@@ -160,6 +160,35 @@ theorem memRunsFrom_isRefinedBy_of_opsFinite {M M' : Module CoreGpu}
   G0.memRunsFrom_isRefinedBy_of_opsFinite CoreGpu (fun g _ => memOpsMonotone lay ρ L g)
     (opsFinite lay ρ L) hcalls f (memOpsMonotone lay ρ L f) ha hS
 
+/-! # Refinement over traced runs -/
+
+/-- Refined arguments over traced runs, at every world, for every function of
+each table of a valid module of the sum, in the module of its table: the sum
+shows no event, and its traced semantics lifts its semantics with
+memory. -/
+theorem traceRuns_args_isRefinedBy (μ : Nat → N) (ar : AddrRule) (hM : M.Valid)
+    (ht : t ∈ M.tables) (hf : f ∈ t.funcs) {a a' : HVector toType (f.params.map (·.2))}
+    (ha : a.Forall₂ TyRefinement.IsRefinedBy a') :
+    ∀ w t', (traceObservable (f.traceRuns lay ρ L μ ar (M.nest t) a')).atWorld w t' →
+      ∃ s, traceObservable (f.traceRuns lay ρ L μ ar (M.nest t) a) s ∧ s ⊑ t' :=
+  G0.traceRuns_args_isRefinedBy CoreGpu lay ρ L μ ar isRefinedBy_trans (hM.nest ht).funcs hf ha
+
+/-- Congruence in the callee over traced runs, with no budget, at every
+world, in the module of each table of a valid module of the sum: every op of
+the sum has finitely many outcomes. -/
+theorem traceRuns_replaceBody_isRefinedBy_of_opsFinite (μ : Nat → N) (ar : AddrRule)
+    (hM : M.Valid) (ht : t ∈ M.tables) {g : Func CoreGpu} (hg : g ∈ t.funcs) (b : Region CoreGpu)
+    (h : letI := DialectMemDenote.denoteAt (d := CoreGpu) lay ρ L
+      g.memRunsFrom (Mem := N) (unit := unitsOf lay) (M.nest t) ⊑
+        (g.replaceBody g.name b).memRunsFrom (Mem := N) (unit := unitsOf lay)
+          ((M.nest t).replaceBody g.name b))
+    (hf : f ∈ t.funcs) :
+    ∀ a w t', (traceObservable ((f.replaceBody g.name b).traceRuns lay ρ L μ ar
+        ((M.nest t).replaceBody g.name b) a)).atWorld w t' →
+      ∃ s, traceObservable (f.traceRuns lay ρ L μ ar (M.nest t) a) s ∧ s ⊑ t' :=
+  G0.traceRuns_replaceBody_isRefinedBy_of_opsFinite CoreGpu lay ρ L μ ar isRefinedBy_refl
+    isRefinedBy_trans (opsFinite lay ρ L) (hM.nest ht) hg b h hf
+
 /-! # The obligations -/
 
 /-- The sum of the core and `gpu` is lawful in its monotonicity, by the

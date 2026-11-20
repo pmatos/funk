@@ -34,7 +34,9 @@ an integer, a float or a pointer type becomes units of a memory, and units
 a value again, at every byte order. It ends with traces: the events that a
 run shows to the world outside it, the layer in which a run shows them, and
 refinement of the traced runs of functions for every world
-(ADR-2026-11-09-1540).
+(ADR-2026-11-09-1540), and the core's traced runs, on which refined
+arguments and congruence in the callee hold while the core shows no
+event.
 
 {includeReadable "." Fir.Memory.Model "The memory model" FirSpec.Memory.Model (level := 1)}
 
@@ -207,3 +209,9 @@ refinement of the traced runs of functions for every world
 {includeReadable "." Fir.Execution.ObserveEndLaws "Laws of the end of a return" FirSpec.Execution.ObserveEndLaws (level := 1)}
 
 {includeReadable "." Fir.Execution.TraceDialect "A dialect's traced runs" FirSpec.Execution.TraceDialect (level := 1)}
+
+{includeReadable "." Fir.Execution.TraceLift "Traced runs of a dialect with no event" FirSpec.Execution.TraceLift (level := 1)}
+
+{includeReadable "." Fir.Execution.TraceRefine "Refinement over the traced runs of a dialect with no event" FirSpec.Execution.TraceRefine (level := 1)}
+
+{includeReadable "." Fir.Core.Trace "The core's traced runs" FirSpec.Core.Trace (level := 1)}
