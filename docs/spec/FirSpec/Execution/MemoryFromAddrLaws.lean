@@ -14,23 +14,23 @@ pins their fingerprint; the build fails when the Lean changes under it.
 
 #doc (Manual) "Turning integers into pointers in the state layer: readable blocks" =>
 
-:::moduleDocs (fingerprint := "9309025559490801763")
+:::moduleDocs (fingerprint := "3454506214840747177")
 :::
 
-:::readable Fir.RebuildsNot (pin := Fir.Memory.Memories) (fingerprint := "13186335698839882115")
-*Definition: counts no rebuild.* A computation $`c` of the state layer over
-the set monad counts no rebuild when, on each path that ends, from $`S` to
-$`S'`, the count of integers turned back into pointers is the same in
-$`S'` as in $`S`.
+:::readable Fir.RebuildsNot (pin := Fir.Memory.Memories) (fingerprint := "13845233358157139347")
+*Definition: counts no rebuild in a memory.* A computation of the state
+layer over the set monad counts no rebuild in the memory $`x` when, on
+each path that ends, from $`S` to $`S'`, the count of integers turned back
+into pointers of $`x` is the same in $`S'` as in $`S`.
 :::
 
-:::readable Fir.rebuildsNot_lift Fir.RebuildsNot.map Fir.RebuildsNot.bind (fingerprint := "6310577601562523244")
+:::readable Fir.rebuildsNot_lift Fir.RebuildsNot.map Fir.RebuildsNot.bind (fingerprint := "3894228700581537210")
 *Theorems: building computations that count no rebuild.* A computation
 with no memory counts none, and mapping the results of one that counts
 none, or sequencing two that count none, counts none.
 :::
 
-:::readable Fir.fromAddr_apply Fir.fromAddr_keeps Fir.fromAddr_counts (pin := Fir.instMonadMemoryStateT) (pin := Fir.Memory.Memories.fromAddr) (fingerprint := "15734745923515872297")
+:::readable Fir.fromAddr_apply Fir.fromAddr_keeps Fir.fromAddr_counts (pin := Fir.instMonadMemoryStateT) (pin := Fir.Memory.Memories.fromAddr) (fingerprint := "3392382673551480135")
 *Theorems: how turning an integer into a pointer ends.* In the
 {ref "The-fir-specification--Memory--The-state-layer"}[state layer] over
 the set monad, the
@@ -39,7 +39,7 @@ turning of $`i` of the memory $`x` back into a pointer ends from the
 memories $`S` in one way: with the pointer and memories that
 {ref "The-fir-specification--Memory--Address-resolvers"}[turning it back]
 gives. Those memories have every memory and the frames of $`S`, and count
-one more call.
+one more call in $`x`.
 :::
 
 :::readable Fir.fromAddr_hasOutcome Fir.fromAddr_finitelyMany Fir.fromAddr_noUB (pin := Fir.HasOutcome) (pin := Fir.FinitelyMany) (pin := Fir.NoUB) (fingerprint := "7379676401177828433")
@@ -72,8 +72,9 @@ that refine others, it gives the same pointer and memories that refine
 the others'.
 :::
 
-:::readable Fir.alloc_rebuildsNot Fir.free_rebuildsNot Fir.load_rebuildsNot Fir.store_rebuildsNot Fir.expose_rebuildsNot (fingerprint := "4730638851404470219")
-*Theorems: the other operations count no rebuild.* Allocating, freeing,
-loading, storing and exposing count no rebuild: only turning an integer
-back into a pointer changes the count.
+:::readable Fir.fromAddr_rebuildsNot Fir.alloc_rebuildsNot Fir.free_rebuildsNot Fir.load_rebuildsNot Fir.store_rebuildsNot Fir.expose_rebuildsNot (fingerprint := "13005366979752908330")
+*Theorems: what counts a rebuild.* Allocating, freeing, loading, storing
+and exposing count no rebuild in any memory, and turning an integer back
+into a pointer of $`x` counts none in any memory $`y \ne x`: only it
+changes a count, and only its own memory's.
 :::

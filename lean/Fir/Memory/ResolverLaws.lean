@@ -13,7 +13,7 @@ Memories that refine each other have the same places and hold the same
 addresses, so every resolver picks the same allocation in both, and turning
 the same integer into a pointer in both gives the same pointer and memories
 that refine each other. Turning an integer into a pointer changes no memory
-and no frame: it only counts the call.
+and no frame: it only counts the call, in its own memory.
 
 A pointer exposed and turned back, under the resolver that proposes its
 allocation, is the pointer again, while its allocation is live and the
@@ -145,9 +145,17 @@ variable {Mem : Type} {unit : Mem → Nat} [DecidableEq Mem]
 @[simp] theorem fromAddr_frames (S : Memories Mem unit) (x : Mem) (k : Resolver) (P : Nat)
     (i : BitVec P) : (S.fromAddr x k P i).2.frames = S.frames := rfl
 
-/-- Turning an integer back into a pointer counts one more call. -/
-@[simp] theorem fromAddr_rebuilds (S : Memories Mem unit) (x : Mem) (k : Resolver) (P : Nat)
-    (i : BitVec P) : (S.fromAddr x k P i).2.rebuilds = S.rebuilds + 1 := rfl
+/-- Turning an integer back into a pointer counts one more call in its
+memory. -/
+@[simp] theorem fromAddr_rebuilds_self (S : Memories Mem unit) (x : Mem) (k : Resolver) (P : Nat)
+    (i : BitVec P) : (S.fromAddr x k P i).2.rebuilds x = S.rebuilds x + 1 := by
+  simp [Memories.fromAddr]
+
+/-- Turning an integer back into a pointer of one memory keeps the count of
+every other. -/
+theorem fromAddr_rebuilds_ne (S : Memories Mem unit) {x y : Mem} (h : y ≠ x) (k : Resolver)
+    (P : Nat) (i : BitVec P) : (S.fromAddr x k P i).2.rebuilds y = S.rebuilds y := by
+  simp [Memories.fromAddr, h]
 
 /-- The pointer that an integer is turned into has the provenance of an
 allocation that holds its address, or none, and then no allocation holds
@@ -156,7 +164,7 @@ theorem fromAddr_prov (S : Memories Mem unit) (x : Mem) (k : Resolver) (P : Nat)
     (∃ a, (S.fromAddr x k P i).1.prov = some a ∧ (S.mem x).holds i.toNat a = true) ∨
       ((S.fromAddr x k P i).1.prov = none ∧ ∀ a, (S.mem x).holds i.toNat a = false) := by
   unfold Memories.fromAddr
-  cases h : (S.mem x).resolve i.toNat (k S.rebuilds (S.mem x).places i.toNat) with
+  cases h : (S.mem x).resolve i.toNat (k (S.rebuilds x) (S.mem x).places i.toNat) with
   | some a => exact .inl ⟨a, rfl, Memory.resolve_holds h⟩
   | none => exact .inr ⟨rfl, Memory.resolve_eq_none.1 h⟩
 
@@ -175,14 +183,18 @@ theorem IsRefinedBy.fromAddr {S S' : Memories Mem unit} (h : S ⊑ S') (x : Mem)
     (P : Nat) (i : BitVec P) : (S.fromAddr x k P i).1 = (S'.fromAddr x k P i).1 ∧
       (S.fromAddr x k P i).2 ⊑ (S'.fromAddr x k P i).2 := by
   have hx := h.2.1 x
-  refine ⟨?_, h.1, h.2.1, congrArg (· + 1) h.2.2⟩
-  simp only [Memories.fromAddr, Memory.IsRefinedBy.places hx, Memory.IsRefinedBy.resolve hx,
-    Memory.IsRefinedBy.rebuild hx, h.2.2]
+  refine ⟨?_, h.1, h.2.1, ?_⟩
+  · simp only [Memories.fromAddr, Memory.IsRefinedBy.places hx, Memory.IsRefinedBy.resolve hx,
+      Memory.IsRefinedBy.rebuild hx, h.2.2]
+  · show (fun y => if y = x then S.rebuilds y + 1 else S.rebuilds y) =
+      fun y => if y = x then S'.rebuilds y + 1 else S'.rebuilds y
+    rw [h.2.2]
 
 /-- Turning an integer back into a pointer in memories whose memory `x` is
-the same and that have counted as many calls gives the same pointer. -/
+the same and that have counted as many calls in it gives the same
+pointer. -/
 theorem fromAddr_transfer {S T : Memories Mem unit} {x : Mem} (h : T.mem x = S.mem x)
-    (hr : T.rebuilds = S.rebuilds) (k : Resolver) (P : Nat) (i : BitVec P) :
+    (hr : T.rebuilds x = S.rebuilds x) (k : Resolver) (P : Nat) (i : BitVec P) :
     (T.fromAddr x k P i).1 = (S.fromAddr x k P i).1 := by
   simp only [Memories.fromAddr, h, hr]
 

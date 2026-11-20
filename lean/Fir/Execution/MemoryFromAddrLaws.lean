@@ -7,7 +7,7 @@ import Fir.Memory.ResolverLaws
 The memory effect's turning of an integer back into a pointer, in the state
 layer over the set monad, has one outcome from any memories, under any
 address resolver: the pointer, with the memories in which one more call is
-counted. So:
+counted in its memory. So:
 
 * it always has an outcome, has finitely many, and never ends in UB;
 * it writes no unit of any memory, keeps the kind, alignment, size and
@@ -16,12 +16,14 @@ counted. So:
 * from memories that refine others it gives the same pointer, and memories
   that refine the others'.
 
-What it changes is the count of calls, which the resolver sees. Keeping the
-count is its own property, _counts no rebuild_: on each path that ends, the
-count is what it was. A computation with no memory counts none, and
-mapping results and sequencing keep it. Allocating, freeing, loading,
-storing and exposing count none. The effect obligations do not see the
-count. Which declared effect covers turning an integer back into a pointer
+What it changes is its memory's count of calls, which that memory's
+resolver sees. Keeping the count of a memory `x` is its own property,
+_counts no rebuild in x_: on each path that ends, the count of `x` is what
+it was. A computation with no memory counts none, and mapping results and
+sequencing keep it. Allocating, freeing, loading, storing and exposing
+count none in any memory, and turning an integer back into a pointer
+counts none in any memory but its own. The effect obligations do not see
+the count. Which declared effect covers turning an integer back into a pointer
 comes with the op that does it.
 -/
 
@@ -33,18 +35,18 @@ variable {Mem : Type} {unit : Mem → Nat} [DecidableEq Mem] {α : Type}
 
 local notation "SM" => StateT (Memories Mem unit) SetM
 
-/-- The computation `c` counts no integer turned back into a pointer: on
-each path that ends, the count is what it was. -/
-def RebuildsNot (c : StateT (Memories Mem unit) SetM α) : Prop :=
-  ∀ S a S', c S (.ok (a, S')) → S'.rebuilds = S.rebuilds
+/-- The computation `c` counts no integer turned back into a pointer of the
+memory `x`: on each path that ends, the count of `x` is what it was. -/
+def RebuildsNot (x : Mem) (c : StateT (Memories Mem unit) SetM α) : Prop :=
+  ∀ S a S', c S (.ok (a, S')) → S'.rebuilds x = S.rebuilds x
 
 section
 
-variable {β : Type}
+variable {x : Mem} {β : Type}
 
 omit [DecidableEq Mem] in
 /-- A computation with no memory counts no rebuild. -/
-theorem rebuildsNot_lift (c : SetM α) : RebuildsNot (Mem := Mem) (unit := unit) (StateT.lift c) := by
+theorem rebuildsNot_lift (c : SetM α) : RebuildsNot (unit := unit) x (StateT.lift c) := by
   intro S a S' h
   rcases (SetM.lift_apply c S _).1 h with ⟨_, -, he⟩ | ⟨_, -, he⟩ <;> cases he
   rfl
@@ -52,7 +54,7 @@ theorem rebuildsNot_lift (c : SetM α) : RebuildsNot (Mem := Mem) (unit := unit)
 omit [DecidableEq Mem] in
 /-- Mapping the results keeps a computation that counts no rebuild. -/
 theorem RebuildsNot.map {c : StateT (Memories Mem unit) SetM α} (f : α → β)
-    (h : RebuildsNot c) : RebuildsNot (f <$> c) := by
+    (h : RebuildsNot x c) : RebuildsNot x (f <$> c) := by
   intro S b S' hc
   rcases (SetM.stateMap_apply f c S _).1 hc with ⟨a, S'', hc, he⟩ | ⟨_, -, he⟩ <;> cases he
   exact h S a S' hc
@@ -60,8 +62,8 @@ theorem RebuildsNot.map {c : StateT (Memories Mem unit) SetM α} (f : α → β)
 omit [DecidableEq Mem] in
 /-- A sequence counts no rebuild when its parts count none. -/
 theorem RebuildsNot.bind {c : StateT (Memories Mem unit) SetM α}
-    {f : α → StateT (Memories Mem unit) SetM β} (hc : RebuildsNot c)
-    (hf : ∀ a, RebuildsNot (f a)) : RebuildsNot (c >>= f) := by
+    {f : α → StateT (Memories Mem unit) SetM β} (hc : RebuildsNot x c)
+    (hf : ∀ a, RebuildsNot x (f a)) : RebuildsNot x (c >>= f) := by
   intro S b S' h
   rcases (SetM.stateBind_apply c f S _).1 h with ⟨a, S₁, hc', hf'⟩ | ⟨_, _, he⟩
   · exact (hf a S₁ b S' hf').trans (hc S a S₁ hc')
@@ -139,20 +141,29 @@ theorem fromAddr_refines :
   cases (fromAddr_apply x k P i S' _).1 he
   exact ⟨_, (fromAddr_apply x k P i S _).2 rfl, Memories.IsRefinedBy.fromAddr hS x k P i⟩
 
-/-- Turning an integer back into a pointer counts the call. -/
+/-- Turning an integer back into a pointer counts the call in its memory. -/
 theorem fromAddr_counts {S S' : Memories Mem unit} {p : Pointer}
-    (h : MonadMemory.fromAddr (m := SM) x k P i S (.ok (p, S'))) : S'.rebuilds = S.rebuilds + 1 := by
+    (h : MonadMemory.fromAddr (m := SM) x k P i S (.ok (p, S'))) :
+    S'.rebuilds x = S.rebuilds x + 1 := by
   cases (fromAddr_apply x k P i S _).1 h
-  rfl
+  exact Memories.fromAddr_rebuilds_self S x k P i
+
+/-- Turning an integer back into a pointer counts no rebuild in any other
+memory. -/
+theorem fromAddr_rebuildsNot {y : Mem} (hy : x ≠ y) :
+    RebuildsNot y (MonadMemory.fromAddr (m := SM) x k P i) := by
+  intro S _ S' h
+  cases (fromAddr_apply x k P i S _).1 h
+  exact Memories.fromAddr_rebuilds_ne S (Ne.symm hy) k P i
 
 /-! # Ops that count no rebuild -/
 
 /-- An allocation counts no rebuild. -/
-theorem alloc_rebuildsNot (kd : AllocKind) (n al : Nat) :
-    RebuildsNot (MonadMemory.alloc (m := SM) x kd n al) := by
+theorem alloc_rebuildsNot (kd : AllocKind) (n al : Nat) (y : Mem) :
+    RebuildsNot y (MonadMemory.alloc (m := SM) x kd n al) := by
   intro S _ S' h
   cases h
-  show (S.alloc x kd n al).2.rebuilds = _
+  show (S.alloc x kd n al).2.rebuilds y = _
   unfold Memories.alloc
   dsimp only
   split
@@ -161,20 +172,21 @@ theorem alloc_rebuildsNot (kd : AllocKind) (n al : Nat) :
   · rfl
 
 /-- Freeing counts no rebuild. -/
-theorem free_rebuildsNot (a : AllocId) : RebuildsNot (MonadMemory.free (m := SM) x a) := by
+theorem free_rebuildsNot (a : AllocId) (y : Mem) :
+    RebuildsNot y (MonadMemory.free (m := SM) x a) := by
   intro S _ S' h
   cases h
   rfl
 
 /-- A load counts no rebuild. -/
-theorem load_rebuildsNot (p : Pointer) (n al : Nat) :
-    RebuildsNot (MonadMemory.load (m := SM) x p n al) := by
+theorem load_rebuildsNot (p : Pointer) (n al : Nat) (y : Mem) :
+    RebuildsNot y (MonadMemory.load (m := SM) x p n al) := by
   intro S _ S' h
   rw [load_keeps x p n al h]
 
 /-- A store counts no rebuild. -/
-theorem store_rebuildsNot (p : Pointer) (us : List (MemUnit (unit x))) (al : Nat) :
-    RebuildsNot (MonadMemory.store (m := SM) x p us al) := by
+theorem store_rebuildsNot (p : Pointer) (us : List (MemUnit (unit x))) (al : Nat) (y : Mem) :
+    RebuildsNot y (MonadMemory.store (m := SM) x p us al) := by
   intro S _ S' h
   rcases (store_apply x p us al S _).1 h with ⟨S'', hs, he⟩ | ⟨_, _, he⟩ <;> cases he
   unfold Memories.store at hs
@@ -183,8 +195,8 @@ theorem store_rebuildsNot (p : Pointer) (us : List (MemUnit (unit x))) (al : Nat
   | ok N => rw [hm] at hs; cases hs; rfl
 
 /-- An exposure counts no rebuild. -/
-theorem expose_rebuildsNot (g : Policy) (p : Pointer) :
-    RebuildsNot (MonadMemory.expose (m := SM) x g P p) := by
+theorem expose_rebuildsNot (g : Policy) (p : Pointer) (y : Mem) :
+    RebuildsNot y (MonadMemory.expose (m := SM) x g P p) := by
   intro S _ S' h
   rcases expose_ok x g P p h with rfl | ⟨a, z, -, rfl⟩ <;> rfl
 

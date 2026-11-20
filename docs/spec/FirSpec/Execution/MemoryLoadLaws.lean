@@ -55,7 +55,7 @@ $`x` is the same; each run ends with the memories it started from, which
 agree off $`y`, and whose units of $`y` are those each run had.
 :::
 
-:::readable Fir.load_refines (pin := Fir.StateRefinedBy) (pin := Fir.Memory.Memories.IsRefinedBy) (fingerprint := "8348987303647131590")
+:::readable Fir.load_refines (pin := Fir.StateRefinedBy) (pin := Fir.Memory.Memories.IsRefinedBy) (fingerprint := "2745685152072682073")
 *Theorem: a load is monotone.* From memories $`S'` that
 {ref "The-fir-specification--Memory--Refining-memories"}[refine] $`S`, a
 load faults for the same reason as from $`S`, or loads units that refine

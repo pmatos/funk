@@ -59,7 +59,10 @@ def perCall : Resolver := fun c _ _ => if c = 0 then some 0 else some 1
 -- Each call counts, and a resolver may pick differently at each one: two
 -- calls on the address 8 in the same memories give pointers of different
 -- allocations, as question A of #232 asks.
-#guard (two.fromAddr 0 perCall 64 8).2.rebuilds == 1
+#guard (two.fromAddr 0 perCall 64 8).2.rebuilds 0 == 1
+-- The count is per memory: a call in memory 1 leaves memory 0's count.
+#guard (two.fromAddr 1 perCall 64 8).2.rebuilds 0 == 0
+#guard (((two.fromAddr 1 perCall 64 8).2.fromAddr 0 perCall 64 8).1) == ⟨some 0, 4⟩
 #guard (two.fromAddr 0 perCall 64 8).1 == ⟨some 0, 4⟩
 #guard ((two.fromAddr 0 perCall 64 8).2.fromAddr 0 perCall 64 8).1 == ⟨some 1, 0⟩
 -- Through the first, the unit at 7 loads; through the second, the unit at 8.
@@ -69,8 +72,9 @@ def perCall : Resolver := fun c _ _ => if c = 0 then some 0 else some 1
 -- A freed allocation never counts, even when a resolver proposes it.
 #guard back (two.free 0 0) (toAlloc 0) 5 == ⟨none, 5⟩
 #guard back (two.free 0 0) (toAlloc 0) 8 == ⟨some 1, 0⟩
--- An allocation with no address never counts.
-#guard back (((Memories.empty : Mems).alloc 0 .stack 4 4).2) (toAlloc 0) 0 == ⟨none, 0⟩
+-- An allocation with no address never counts, not even at the address
+-- the canonical layout would give it, 4.
+#guard back (((Memories.empty : Mems).alloc 0 .stack 4 4).2) (toAlloc 0) 4 == ⟨none, 4⟩
 -- Another memory's allocations never count.
 #guard (two.fromAddr 1 Resolver.canonical 64 5).1 == ⟨none, 5⟩
 

@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Address resolver laws: readable blocks" =>
 
-:::moduleDocs (fingerprint := "4710939361799039348")
+:::moduleDocs (fingerprint := "2564905609020490607")
 :::
 
 :::readable Fir.Memory.Memory.lt_of_holds Fir.Memory.Memory.holds_iff (pin := Fir.Memory.Memory.holds) (fingerprint := "8474854142891744067")
@@ -38,20 +38,21 @@ each other hold the same addresses, resolve an address to the same
 allocation on the same proposal, and rebuild the same pointer.
 :::
 
-:::readable Fir.Memory.Memories.fromAddr_mem Fir.Memory.Memories.fromAddr_frames Fir.Memory.Memories.fromAddr_rebuilds Fir.Memory.Memories.fromAddr_prov (pin := Fir.Memory.Memories.fromAddr) (fingerprint := "8324485030589785943")
+:::readable Fir.Memory.Memories.fromAddr_mem Fir.Memory.Memories.fromAddr_frames Fir.Memory.Memories.fromAddr_rebuilds_self Fir.Memory.Memories.fromAddr_rebuilds_ne Fir.Memory.Memories.fromAddr_prov (pin := Fir.Memory.Memories.fromAddr) (fingerprint := "963373018726342531")
 *Theorems: what turning an integer into a pointer changes.* It keeps every
-memory and the frames, and counts one more call. The pointer has the
+memory and the frames, and counts one more call in its own memory, and
+none in any other. The pointer has the
 provenance of an allocation that holds the address, or none, and then no
 allocation holds it.
 :::
 
-:::readable Fir.Memory.Memories.fromAddr_of_holds Fir.Memory.Memories.fromAddr_transfer (fingerprint := "7925678079977762550")
+:::readable Fir.Memory.Memories.fromAddr_of_holds Fir.Memory.Memories.fromAddr_transfer (fingerprint := "6911018940815718850")
 *Theorems: every allocation that holds the address.* At each call, every
 allocation $`a` with the address $`y` that holds the address $`z` is the
 one picked under the resolver that proposes $`a`, which gives
 $`(a, z - y)`. So the union over resolvers holds every choice at each call.
-Two memories of a run with the same memory $`x` and the same count give
-the same pointer.
+Two memories of a run with the same memory $`x` and the same count of
+$`x` give the same pointer.
 :::
 
 :::readable Fir.Memory.Memories.IsRefinedBy.fromAddr (fingerprint := "9142005874307699130")

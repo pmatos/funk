@@ -181,9 +181,9 @@ cannot access memory. `fromAddr` itself never fails.
 Two allocations may hold one address, one ending where the next starts,
 and the choice between them is angelic. It is stated by a _resolver per
 call_ (`Memory.Resolver`), as the human ruled on 2026-11-20, on #232
-(question A): the memories of a run count the integers turned back into
-pointers (`Memories.rebuilds`), and the run's resolver for each memory sees
-that count, the places of the memory's blocks and the address, and
+(question A): the memories of a run count, for each memory, the integers
+turned back into pointers of it (`Memories.rebuilds`), and the run's
+resolver for each memory sees that memory's count, the places of the memory's blocks and the address, and
 proposes an allocation. The effect takes the proposal when it holds the
 address, and else the memory model's own pick (`Memory.pick`): the first
 allocation whose units hold the address, and else the first whose end it
@@ -201,13 +201,17 @@ pick. The pick is `fir-ref`'s choice, not a rule of the spec. Every
 obligation and guarantee over the semantics with memory holds for every
 record, so for every resolver, with no new hypothesis.
 
-Memories refine each other only when they have counted as many calls
-(`Memories.IsRefinedBy`), so turning an integer back in memories that
+Memories refine each other only when they have counted as many calls in
+each memory (`Memories.IsRefinedBy`), so turning an integer back in memories that
 refine each other gives the same pointer. The effect obligations do not
 see the count: turning an integer back writes, allocates and exposes
 nothing. Which declared effect covers the count comes with
-`ptr_from_int` in stage 3. _Counts no rebuild_ (`RebuildsNot`) is its own
-property, which every other operation of the effect has.
+`ptr_from_int` in stage 3. _Counts no rebuild in x_ (`RebuildsNot`) is its
+own property: every other operation of the effect has it in every memory,
+and turning an integer back into a pointer in every memory but its own, so
+calls in different memories do not change each other's picks. Rejected:
+one count shared by every memory, under which reordering calls in two
+memories would change what each picks.
 
 A step cannot look ahead at what the program does with the pointer, so the
 angel chooses over whole runs. `Func.angelicBehaviour` is the spec's

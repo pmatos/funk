@@ -12,8 +12,8 @@ and a step cannot look ahead at what the program does with the pointer, so
 the choice is stated outside the step: the run's _resolver_.
 
 A resolver is chosen per call (the human's ruling of 2026-11-20 on #232,
-question A): the run counts the integers it turns back into pointers, and
-the resolver sees that count, the places of the memory's blocks and the
+question A): the run counts, for each memory, the integers it turns back
+into pointers of it, and the memory's resolver sees that count, the places of the memory's blocks and the
 address, and proposes an allocation, or none. So each call may pick
 differently. The memory model takes the proposal when it holds the
 address, and otherwise its own pick. The section on runs under every
@@ -40,7 +40,7 @@ namespace Fir.Memory
 variable {u : Nat}
 
 /-- An address resolver for one memory: from the number of integers the
-run has turned back into pointers, the places of the memory's blocks and
+run has turned back into pointers of it, the places of the memory's blocks and
 the address, the allocation it proposes, or none. -/
 abbrev Resolver := Nat → List Place → Nat → Option AllocId
 
@@ -94,11 +94,12 @@ variable {Mem : Type} {unit : Mem → Nat} [DecidableEq Mem]
 /-- Turns the integer `i` of the memory `x`, whose pointers are `P` bits
 wide, back into a pointer under the resolver `k`: the allocation that its
 address resolves to, from the proposal of `k` at this call, and the
-memories with one more call counted. It never fails. -/
+memories with one more call counted in `x`. It never fails. -/
 def fromAddr (S : Memories Mem unit) (x : Mem) (k : Resolver) (P : Nat) (i : BitVec P) :
     Pointer × Memories Mem unit :=
-  ((S.mem x).rebuild i.toNat ((S.mem x).resolve i.toNat (k S.rebuilds (S.mem x).places i.toNat)),
-    { S with rebuilds := S.rebuilds + 1 })
+  ((S.mem x).rebuild i.toNat
+      ((S.mem x).resolve i.toNat (k (S.rebuilds x) (S.mem x).places i.toNat)),
+    { S with rebuilds := fun y => if y = x then S.rebuilds y + 1 else S.rebuilds y })
 
 end Memories
 

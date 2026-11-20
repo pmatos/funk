@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Refining memories: readable blocks" =>
 
-:::moduleDocs (fingerprint := "12449435311160166700")
+:::moduleDocs (fingerprint := "83951791229914239")
 :::
 
 :::readable Fir.Memory.MemUnit.IsRefinedBy Fir.Memory.Block.IsRefinedBy Fir.Memory.Memory.IsRefinedBy (fingerprint := "15233952586122848034")
@@ -81,11 +81,11 @@ others faults for the same reason in both, or gives memories that refine
 each other.
 :::
 
-:::readable Fir.Memory.Memories.IsRefinedBy Fir.Memory.Memories.isRefinedBy_refl Fir.Memory.Memories.isRefinedBy_trans (fingerprint := "17857734809133270860")
+:::readable Fir.Memory.Memories.IsRefinedBy Fir.Memory.Memories.isRefinedBy_refl Fir.Memory.Memories.isRefinedBy_trans (fingerprint := "5114394441370221315")
 *Definition: refining the memories of a run.* The memories $`S'` of a
 run refine $`S` when they have the same frames, the memory of each name
 in $`S'` refines the memory of that name in $`S`, and both have turned as
-many integers back into pointers:
+many integers back into pointers of each memory:
 
 $$`S \sqsubseteq S' \iff \mathit{frames}(S) = \mathit{frames}(S') \land \forall x.\ \mathit{mem}_S(x) \sqsubseteq \mathit{mem}_{S'}(x) \land c_S = c_{S'}`
 

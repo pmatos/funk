@@ -17,7 +17,7 @@ when the Lean changes under it.
 :::moduleDocs (fingerprint := "15890923018081308940")
 :::
 
-:::readable Fir.Func.memTree (pin := Fir.Memory.Memories.empty) (fingerprint := "18103371297515318226")
+:::readable Fir.Func.memTree (pin := Fir.Memory.Memories.empty) (fingerprint := "16055256910905379209")
 *Definition: the tree of a run with memory.* Where the units of the memory
 $`x` are $`u(x)` bits wide, the tree of a run with memory of the function
 $`f` of the module $`M` on $`\vec{v}` with $`k` steps is its run in the

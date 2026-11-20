@@ -20,7 +20,7 @@ section says when the memories of one run refine those of another:
   its kind, alignment, size, liveness and address;
 * the memories of a run are refined by memories with the same frames, in
   which each memory refines the memory of the same name, and which have
-  turned as many integers back into pointers.
+  turned as many integers back into pointers of each memory.
 
 Refinement of memories is reflexive and transitive. What a run does to its
 memories keeps it:
@@ -230,7 +230,7 @@ variable {Mem : Type} {unit : Mem → Nat} [DecidableEq Mem]
 
 /-- The memories of a run are refined by memories with the same frames, in
 which each memory refines the memory of the same name, and with the same
-count of integers turned back into pointers. -/
+count of integers turned back into pointers of each memory. -/
 def Memories.IsRefinedBy (S S' : Memories Mem unit) : Prop :=
   S.frames = S'.frames ∧ (∀ x, S.mem x ⊑ S'.mem x) ∧ S.rebuilds = S'.rebuilds
 

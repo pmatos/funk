@@ -14,10 +14,10 @@ changes under it.
 
 #doc (Manual) "The memories of a run: readable blocks" =>
 
-:::moduleDocs (fingerprint := "6562166534593156726")
+:::moduleDocs (fingerprint := "11102810991945992361")
 :::
 
-:::readable Fir.Memory.Memories (fingerprint := "171359015064015987")
+:::readable Fir.Memory.Memories (fingerprint := "16888250131718672919")
 *Definition: the memories of a run.* For memories named by $`X`, where the
 memory $`x` has units of $`u(x)` bits, the memories of a run are a triple
 $`(T, \mathit{fr}^*, c)`:
@@ -35,10 +35,10 @@ table,frames,rebuilds   (T, \mathit{fr}^*, c)
 * $`\mathit{fr}^*` is a stack of frames, the innermost first, one for each
   call that has not returned. A frame is a list of pairs $`(x, a)`: the
   stack allocation $`a` of the memory $`x`, made by its call;
-* $`c` counts the integers the run has turned back into pointers, in every
-  memory, which the
+* $`c` counts, for each memory $`x`, the integers the run has turned back
+  into pointers of $`x`, $`c(x)`, which the
   {ref "The-fir-specification--Memory--Address-resolvers"}[resolver] of
-  each call sees.
+  $`x` sees at each call.
 
 No width is fixed here: the module's data layout gives each memory its
 unit, and the memories are written for any. The table holds each name at
@@ -46,10 +46,10 @@ most once, so finding a memory looks at no more entries than the run has
 memories, however many updates came before.
 :::
 
-:::readable Fir.Memory.Memories.empty (fingerprint := "8602404548704993625")
+:::readable Fir.Memory.Memories.empty (fingerprint := "13971899226138868642")
 *Definition: no memory yet.* Before a run starts, the table is empty, so
 every memory is empty, there is no frame, and no integer has been turned
-back into a pointer: $`(\epsilon, \epsilon, 0)`.
+back into a pointer: $`(\epsilon, \epsilon, x \mapsto 0)`.
 :::
 
 :::readable Fir.Memory.Memories.enter (fingerprint := "6877764141344344430")

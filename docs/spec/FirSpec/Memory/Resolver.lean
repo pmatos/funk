@@ -14,13 +14,13 @@ when the Lean changes under it.
 
 #doc (Manual) "Address resolvers: readable blocks" =>
 
-:::moduleDocs (fingerprint := "4017797863689267341")
+:::moduleDocs (fingerprint := "8200240555650958190")
 :::
 
 :::readable Fir.Memory.Resolver Fir.Memory.Resolver.canonical (pin := Fir.Memory.Place) (fingerprint := "1042354504430014978")
 *Definition: an address resolver.* An address resolver $`k` for a memory
-maps the number $`c` of integers the run has turned back into pointers
-before, the places of the memory's blocks and an address $`z` to the
+maps the number $`c` of integers the run has turned back into pointers of
+that memory before, the places of the memory's blocks and an address $`z` to the
 allocation it proposes, $`k(c, \mathrm{places}(M), z)`, or to none. It
 sees the count, so each call may pick differently (the human's ruling of
 2026-11-20 on #232, question A). The canonical resolver, which `fir-ref`
@@ -55,11 +55,12 @@ and with no allocation $`(\bot, z)`: a pointer with no provenance, through
 which every access is UB.
 :::
 
-:::readable Fir.Memory.Memories.fromAddr (pin := Fir.Memory.Memories) (fingerprint := "11215263979195153777")
+:::readable Fir.Memory.Memories.fromAddr (pin := Fir.Memory.Memories) (fingerprint := "12310229800578758250")
 *Definition: turning an integer back into a pointer.* Turning the integer
 $`i` of $`P` bits of the memory $`x` of $`S` back into a pointer, under the
-resolver $`k`, with $`z` the value of $`i` and $`c` the count of $`S`,
+resolver $`k`, with $`z` the value of $`i` and $`c` the counts of $`S`,
 gives the pointer that $`z` becomes in
-$`\mathrm{resolve}_{S(x)}(z, k(c, \mathrm{places}(S(x)), z))`, and the
-memories $`S` with the count $`c + 1`. It never fails.
+$`\mathrm{resolve}_{S(x)}(z, k(c(x), \mathrm{places}(S(x)), z))`, and
+the memories $`S` with the count of $`x` raised to $`c(x) + 1`, every
+other count as it was. It never fails.
 :::
