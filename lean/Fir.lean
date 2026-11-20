@@ -141,6 +141,7 @@ import Fir.Execution.MemoryBindLaws
 import Fir.Execution.MemoryCopyLaws
 import Fir.Execution.MemoryExposeLaws
 import Fir.Execution.MemoryPolicyRuns
+import Fir.Execution.MemoryChoiceLaws
 import Fir.Core.AllocaLaws
 import Fir.Core.LoadLaws
 import Fir.Core.LoadReads
@@ -150,6 +151,9 @@ import Fir.Core.LoadPtrLaws
 import Fir.Core.StorePtrLaws
 import Fir.Core.LoadFloatLaws
 import Fir.Core.StoreFloatLaws
+import Fir.Core.MemCopy
+import Fir.Core.MemCopyLaws
+import Fir.Core.MemCopyPoison
 import Fir.Core.FieldAddrLaws
 import Fir.Core.EffectLaws
 import Fir.Core.MemoryRuns
@@ -205,6 +209,8 @@ import Fir.Core.TypeTextLaws
 import Fir.Core.AllocaTextLaws
 import Fir.Core.LoadTextLaws
 import Fir.Core.StoreTextLaws
+import Fir.Core.MemCopyText
+import Fir.Core.MemCopyTextLaws
 import Fir.Core.FloatOpTextLaws
 import Fir.Core.TextLaws
 import Fir.Text.Example

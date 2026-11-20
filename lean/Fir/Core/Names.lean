@@ -31,6 +31,7 @@ theorem opName_bare (o : Op) : wordDialect (opName (d := CoreDialect) o) = none 
   cases o <;> first
     | (simp only [opName, Op.name]; decide)
     | (rename_i o _ _ _; cases o <;> simp only [opName, Op.name, FBin.name, FUnary.name] <;> decide)
+    | (rename_i k _ _ _; cases k <;> simp only [opName, Op.name, CopyKind.name] <;> decide)
 
 /-- The dialects that attributes name, of two lists one after the other. -/
 theorem Attr.dialectsAll_append (as bs : List Attr) :
@@ -110,6 +111,9 @@ theorem opAttrs_bare (o : Op) : Attr.dialectsAll (opAttrs (d := CoreDialect) o) 
   | storeFloat o _ _ a =>
     have ho : '.' ∉ o.word.toList := by cases o <;> decide
     cases a <;> simp [opAttrs, Op.attrs, loadAttrs, Attr.dialectsAll, Attr.dialects, ho, wordDialect]
+  | memCopy _ o =>
+    have ho : '.' ∉ o.word.toList := by cases o <;> decide
+    simp [opAttrs, Op.attrs, loadAttrs, Attr.dialectsAll, Attr.dialects, ho, wordDialect]
   | _ => rfl
 
 /-- The core dialect's words name no dialect. -/

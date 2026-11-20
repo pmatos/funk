@@ -17,7 +17,7 @@ when the Lean changes under it.
 :::moduleDocs (fingerprint := "3066211476097927592")
 :::
 
-:::readable Fir.Core.Rejects.deadBlock_problems (pin := Fir.Core.Ty.Valid) (pin := Fir.Core.maxWidth) (pin := Fir.Core.Op.Valid) (fingerprint := "9732961468362179724")
+:::readable Fir.Core.Rejects.deadBlock_problems (pin := Fir.Core.Ty.Valid) (pin := Fir.Core.maxWidth) (pin := Fir.Core.Op.Valid) (fingerprint := "16478353650928986260")
 *Theorem: the check finds a problem in the rejected function, in every
 module.* For every module context $`C` and every lookup that agrees with
 $`C`, the check of the function `@f` of the section on
@@ -38,7 +38,8 @@ $`2^{24} - 1` for $`\mathsf{ptr}\langle N \rangle`. Whether a core op obeys the
 context compares types, widths, float formats, rounding modes, the
 reserved fast-math flags, the symbol table's answer, the memory and the
 fields of the layout that a $`\mathsf{fieldaddr}` names, or the kind, type,
-count and alignment of an $`\mathsf{alloca}` and the ordering and
+count and alignment of an $`\mathsf{alloca}`, the ordering of a
+$`\mathsf{memcpy}` or a $`\mathsf{memmove}`, and the ordering and
 alignment of a load or a store of an integer, a pointer or a float, whose
 alignment is a power of two when it has no bit in common with the number
 below it, and is compared with $`2^{24} - 1`.

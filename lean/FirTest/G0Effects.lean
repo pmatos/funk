@@ -207,22 +207,24 @@ theorem summary_noPoison (d : Dialect) [TyDenote d.Ty] [DecidableEq d.Ty] [TyPoi
 The core dialect declares a class and a set of effects for each of its ops,
 case by case: `Core.Op.poisonClass` and `Core.Op.effects` have no case for
 the rest, so a new core op does not build until it has both, and
-`scripts/check_g0.py` fails if a case for the rest comes back. Thirty-six
+`scripts/check_g0.py` fails if a case for the rest comes back. Forty-two
 ops propagate poison and seven are exceptions (ADR-2026-10-29-2006). The
-samples of the core ops name all 49 of their names, the float constant
-sharing `const`'s and the two bit casts `bitcast`, and the checks below pin both on them.
+samples of the core ops name all 51 of their names, the float constant
+sharing `const`'s, the two bit casts `bitcast`, and a copy and a move
+`memcpy` and `memmove`, and the checks below pin both on them.
 `alloca` allocates in the memory of its result, `load` reads the memory of
-its pointer and `store` writes it; no other core op declares an effect on
-memory, and no core op is observable, since the core dialect has no trace
+its pointer, `store` writes it, and `memcpy` and `memmove` read and write
+it; no other core op declares an effect on memory, and no core op is observable, since the core dialect has no trace
 yet (ADR-2026-11-09-1541).
 -/
 
-#guard (Core.samples.map Core.Op.name).eraseDups.length == 49
+#guard (Core.samples.map Core.Op.name).eraseDups.length == 51
 #guard ((Core.samples.filter (Core.Op.poisonClass · == .propagates)).map Core.Op.name).eraseDups ==
   ["const", "add", "sub", "mul", "sdiv", "udiv", "srem", "urem", "and", "or", "xor", "shl", "lshr",
    "ashr", "zext", "sext", "trunc", "poison", "icmp", "fcmp", "fadd", "fsub", "fmul", "fdiv", "fneg",
    "fabs", "sqrt", "fma", "frem", "fmod", "bitcast", "sitofp", "uitofp",
-   "fpext", "fptrunc", "ptradd", "fieldaddr", "alloca", "load", "store", "fptosi", "fptoui"]
+   "fpext", "fptrunc", "ptradd", "fieldaddr", "alloca", "load", "store", "fptosi", "fptoui",
+   "memcpy", "memmove"]
 #guard ((Core.samples.filter (Core.Op.poisonClass · == .exception)).map Core.Op.name).eraseDups ==
   ["select", "freeze", "br", "cond_br", "ret", "unreachable", "call"]
 #guard ((Core.samples.filter (Core.Op.effects · == {})).map Core.Op.name).eraseDups ==
@@ -230,7 +232,7 @@ yet (ADR-2026-11-09-1541).
    "fcmp", "fadd", "fdiv", "fneg", "fabs", "bitcast", "sitofp", "uitofp", "fpext", "fptrunc",
    "ptradd", "fieldaddr"]
 #guard ((Core.samples.filter (·.effects.mayUB)).map Core.Op.name).eraseDups ==
-  ["sdiv", "udiv", "srem", "urem", "cond_br", "unreachable", "load", "store"]
+  ["sdiv", "udiv", "srem", "urem", "cond_br", "unreachable", "load", "store", "memcpy", "memmove"]
 #guard ((Core.samples.filter (·.effects.mayPoison)).map Core.Op.name).eraseDups ==
   ["add", "sub", "mul", "sdiv", "shl", "lshr", "ashr", "poison", "fcmp", "fsub", "fmul", "sqrt",
    "fma", "frem", "fmod", "load", "fptosi", "fptoui"]
@@ -252,9 +254,9 @@ yet (ADR-2026-11-09-1541).
     .fma fl .rne 8 23].all (·.effects == { mayPoison := true })
 #guard Core.samples.all fun o => !o.effects.observable
 #guard ((Core.samples.filter (·.effects.writes != .these [])).map Core.Op.name).eraseDups ==
-  ["store"]
+  ["store", "memcpy", "memmove"]
 #guard ((Core.samples.filter (·.effects.reads != .these [])).map Core.Op.name).eraseDups ==
-  ["load"]
+  ["load", "memcpy", "memmove"]
 #guard ((Core.samples.filter (·.effects.allocates != .these [])).map Core.Op.name).eraseDups ==
   ["alloca"]
 #guard (Core.samples.filter (·.touchesMemory)).all fun o =>
@@ -264,6 +266,10 @@ yet (ADR-2026-11-09-1541).
       o.effects.allocates == .these [] && !o.effects.control
   else if o.name == "store" then
     o.effects == { writes := .these ((o.sig.getLast?.bind Core.Ty.memory).toList), mayUB := true } &&
+      o.effects.writes != .these []
+  else if o.name == "memcpy" || o.name == "memmove" then
+    let m := (o.sig.head?.bind Core.Ty.memory).toList
+    o.effects == { reads := .these m, writes := .these m, mayUB := true } &&
       o.effects.writes != .these []
   else o.effects == { allocates := .these (o.returnTypes.filterMap Core.Ty.memory) }
 

@@ -42,6 +42,7 @@ $$`lo \le z \;\land\; \alpha \mid z \;\land\; z + |\vec{x}| \le hi`
 No access reaches a freed allocation, and a live one may take its
 addresses, so a freed one takes room from none: a dangling pointer may be
 given the address of a live allocation, as a native stack slot is reused.
+The human ruled this on 2026-11-20 (#232).
 
 The fallback is the canonical address, or, when there is none, the first
 multiple $`\lceil lo \rceil_\alpha` of $`\alpha` from $`lo`, when it may be

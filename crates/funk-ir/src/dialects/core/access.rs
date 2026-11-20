@@ -7,8 +7,9 @@
 //! Validation accepts only the ordering `nonatomic`, the other orderings
 //! being hooks for a concurrency model (ADR-2026-11-09-1542), and an
 //! alignment that `check_align` accepts, as `alloca`'s is. Each access says
-//! which shape it takes, how that shape names its memory, and what it does
-//! to that memory; [`Access`] does the rest.
+//! which shape it takes, how that shape names its memory, what it does to
+//! that memory and whether it takes `align(A)`; [`Access`] does the rest.
+//! `memcpy` and `memmove` take an ordering alone (ADR-2026-11-18-2131).
 
 use super::align::{check_align, decode_align};
 use super::type_list;
@@ -27,16 +28,20 @@ pub const ORDERINGS: [&str; 7] = [
     "seq_cst",
 ];
 
-/// Reads the attributes of an access: its ordering and its alignment, or
-/// `None` when they do not decode.
-fn access_attrs(attrs: &[Attr]) -> Option<(&str, Option<&Int>)> {
+/// Reads the attributes of an access: its ordering and, when it `aligns`,
+/// its alignment, or `None` when they do not decode.
+fn access_attrs(attrs: &[Attr], aligns: bool) -> Option<(&str, Option<&Int>)> {
     let [Attr::Word(ordering), rest @ ..] = attrs else {
         return None;
     };
     if !ORDERINGS.contains(&ordering.as_str()) {
         return None;
     }
-    Some((ordering, decode_align(rest)?))
+    match rest {
+        [] => Some((ordering, None)),
+        _ if aligns => Some((ordering, decode_align(rest)?)),
+        _ => None,
+    }
 }
 
 /// Checks the ordering and the alignment that the access `op` writes,
@@ -54,13 +59,14 @@ fn check_access(op: &str, ordering: &str, align: Option<&Int>) -> Result<(), Str
 }
 
 /// An access of a memory: its name, the shape it takes in words, the memory
-/// of a shape it takes (`None` for any other), and its effects given the
-/// memory it uses.
+/// of a shape it takes (`None` for any other), its effects given the
+/// memory it uses, and whether it takes `align(A)`.
 pub(super) struct Access {
     pub(super) name: &'static str,
     pub(super) shape: &'static str,
     pub(super) memory: fn(&OpTypes<'_>) -> Option<u32>,
     pub(super) effects: fn(MemSet) -> Effects,
+    pub(super) aligns: bool,
 }
 
 impl OpSpec for Access {
@@ -78,17 +84,19 @@ impl OpSpec for Access {
                 type_list(op.results)
             ));
         }
-        if access_attrs(op.attrs).is_none() {
-            return Err(format!(
-                "{} takes an ordering, then align(A) when given",
-                self.name
-            ));
+        if access_attrs(op.attrs, self.aligns).is_none() {
+            let attrs = if self.aligns {
+                "an ordering, then align(A) when given"
+            } else {
+                "an ordering alone"
+            };
+            return Err(format!("{} takes {attrs}", self.name));
         }
         Ok(OpShape::default())
     }
 
     fn check(&self, _cx: &OpContext<'_>, op: &OpTypes<'_>) -> Result<(), String> {
-        match access_attrs(op.attrs) {
+        match access_attrs(op.attrs, self.aligns) {
             Some((ordering, align)) => check_access(self.name, ordering, align),
             None => Ok(()),
         }
@@ -143,10 +151,16 @@ pub(super) mod tests {
     #[test]
     fn every_ordering_decodes_with_or_without_an_alignment() {
         for o in ORDERINGS {
-            assert_eq!(access_attrs(&[Attr::word(o)]), Some((o, None)), "{o}");
-            let attrs = [Attr::word(o), align(4)];
+            assert_eq!(access_attrs(&[Attr::word(o)], true), Some((o, None)), "{o}");
             assert_eq!(
-                access_attrs(&attrs).map(|(o, a)| (o, a.map(Int::as_str))),
+                access_attrs(&[Attr::word(o)], false),
+                Some((o, None)),
+                "{o}"
+            );
+            let attrs = [Attr::word(o), align(4)];
+            assert_eq!(access_attrs(&attrs, false), None, "{o}");
+            assert_eq!(
+                access_attrs(&attrs, true).map(|(o, a)| (o, a.map(Int::as_str))),
                 Some((o, Some("4"))),
                 "{o}"
             );
@@ -163,7 +177,7 @@ pub(super) mod tests {
             vec![Attr::word("nonatomic"), align(-4)],
             vec![Attr::word("nonatomic"), Attr::int(4)],
         ] {
-            assert_eq!(access_attrs(&bad), None, "{bad:?}");
+            assert_eq!(access_attrs(&bad, true), None, "{bad:?}");
         }
     }
 

@@ -1,0 +1,18 @@
+# Tests of memcpy-memories.fir: in memory 1, of 16-bit units, the length of
+# memcpy and memmove counts those units, not bytes (#234). An i32 takes two
+# units, so a length of 2 copies it and a length of 1 leaves its high unit
+# fresh, which reads back as poison. In an alloca of four units, ranges
+# of 3 units 1 apart partly overlap, which is UB for memcpy, and ranges of
+# one unit 1 apart do not. A move of two units up one keeps the i32. An
+# i32 alloca holds two units, so a length of 3 is out of bounds.
+# The backend does not realise a memory of 16-bit units, so each test is
+# interpreter-only.
+tests = [
+  { func = "@two_units", args = ["67305985", "2"], expect = ["67305985"] },
+  { func = "@two_units", args = ["67305985", "1"], expect = ["poison"] },
+  { func = "@move_unit", args = ["67305985"], expect = ["67305985"] },
+  { func = "@past", args = ["2"], expect = ["2"] },
+  { func = "@past", args = ["3"], expect = "ub" },
+  { func = "@overlap", args = ["3"], expect = "ub" },
+  { func = "@overlap", args = ["1"], expect = ["1"] },
+]

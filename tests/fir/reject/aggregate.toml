@@ -443,3 +443,124 @@ locs {
   @0 = unknown
 }
 '''
+
+[[reject]]
+verdict = "validation-error"
+rule = "a float field's offset is a multiple of its alignment: an f64 at 4"
+text = '''
+aggregate @s() memory(0) size(16) align(8) field(4, f64) {
+}
+
+func @f() {
+^e:
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "a float(15, 64) takes 10 units aligned to 16: at offset 8 it is misaligned"
+text = '''
+aggregate @s() memory(0) size(32) align(16) field(8, float(15, 64)) {
+}
+
+func @f() {
+^e:
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "a float field's type is aligned no more than the layout: an f64 in a layout aligned to 4"
+text = '''
+aggregate @s() memory(0) size(8) align(4) field(0, f64) {
+}
+
+func @f() {
+^e:
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "two float(15, 64) take 32 units, each rounded up to its alignment, not 20"
+text = '''
+aggregate @s() memory(0) size(20) align(16) field(0, float(15, 64), 2) {
+}
+
+func @f() {
+^e:
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "no two fields share a unit: an f16 at 2 overlaps an f32 at 0"
+text = '''
+aggregate @s() memory(0) size(8) align(4) field(0, f32) field(2, f16) {
+}
+
+func @f() {
+^e:
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "a field's float format is valid: float(1, 1) has too few exponent bits"
+text = '''
+aggregate @s() memory(0) size(8) align(4) field(0, float(1, 1)) {
+}
+
+func @f() {
+^e:
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "in a memory of 16-bit units an f32 takes 2 units aligned to 2: at offset 1 it is misaligned"
+text = '''
+layout memory(1, unit(16), pointer(32), little)
+
+aggregate @s() memory(1) size(4) align(2) field(1, f32) {
+}
+
+func @f() {
+^e:
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''

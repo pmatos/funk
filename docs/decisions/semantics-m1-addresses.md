@@ -89,9 +89,10 @@ A live allocation may be given an address that fits. A freed one may also
 be given any address in range that is a multiple of its alignment, a live
 allocation's included (`Memory.admits`): no access reaches it, and the
 stack slot that a dangling pointer names may hold a live allocation by the
-time the pointer is exposed. Rejected: asking a freed allocation to fit,
-under which exposing a dangling pointer after its slot's new tenant could
-never give the address that native code gives.
+time the pointer is exposed. The human ruled this on 2026-11-20, on #232
+(question C): keep. Rejected: asking a freed allocation to fit, so that it
+may not overlap a live one, under which exposing a dangling pointer after
+its slot's new tenant could never give the address that native code gives.
 
 Which address an allocation gets is the run's _address policy_: for each
 memory, by its number in the data layout, a function from the shape and

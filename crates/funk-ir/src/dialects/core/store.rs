@@ -56,6 +56,7 @@ pub(super) const STORE: Access = Access {
     shape: "an integer, a pointer or a float and then a pointer, and defines nothing",
     memory,
     effects,
+    aligns: true,
 };
 
 #[cfg(test)]
