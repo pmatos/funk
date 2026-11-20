@@ -277,10 +277,13 @@ for the functions of every table of a valid module, a device module's
 kernels included (`lean/Fir/Gpu/Runs.lean`, #212; semantics-m1-dialects.md).
 
 Each new memory op keeps every one of them holding, with its own rule with
-memory and its own proofs, as `alloca`, `load` and `store` do
-(`lean/Fir/Core/AllocaLaws.lean`, `LoadLaws.lean`, `StoreLaws.lean`,
-`LoadPtrLaws.lean`, `StorePtrLaws.lean`, joined to the tied ops by
-`Core.Op.memCases`).
+memory and its own proofs, as `alloca`, the loads and stores, `memCopy` and
+`memSet` do (`lean/Fir/Core/AllocaLaws.lean`, `LoadLaws.lean`,
+`StoreLaws.lean`, `LoadPtrLaws.lean`, `StorePtrLaws.lean`,
+`LoadFloatLaws.lean`, `StoreFloatLaws.lean`, `MemCopyLaws.lean`,
+`MemCopyPoison.lean`, `MemSetLaws.lean`, `MemSetPoison.lean`), and as
+`fieldAddr`, which reads items, does (`FieldAddrLaws.lean`), joined to the
+tied ops by `Core.Op.memCases` (semantics-effects.md#soundness).
 
 PR #382 narrowed these statements, which now cover memory-free code; beside
 each is what covers the whole core:
