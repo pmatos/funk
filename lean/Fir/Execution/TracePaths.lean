@@ -45,6 +45,17 @@ theorem TraceEnd.notStuck_ok (a : α) (t : List B) (s : σ) :
     TraceEnd.NotStuck (Except.ok (Except.ok a, t, s) : TraceEnd B σ (Except ε α)) :=
   fun _ _ _ h => by cases h
 
+/-- A way of ending that allows another is not stuck, when the relation on
+what they give relates no stuck path to anything. -/
+theorem TraceEnd.Allows.notStuck [HRefinement B B] [HRefinement σ σ] {γ : Type}
+    {r : Except ε α → γ → Prop} (hr : ∀ er b, ¬ r (.error er) b) :
+    ∀ {e : TraceEnd B σ (Except ε α)} {e' : TraceEnd B σ γ}, TraceEnd.Allows r e e' →
+      TraceEnd.NotStuck e
+  | .error _, _, _ => TraceEnd.notStuck_error _ _
+  | .ok (.ok _, _, _), _, _ => TraceEnd.notStuck_ok _ _ _
+  | .ok (.error _, _, _), .ok (_, _, _), h => (hr _ _ h.1).elim
+  | .ok (.error _, _, _), .error _, h => h.elim
+
 namespace TraceM
 
 /-- The ways a sequence of the interpreter ends in the traced layer: each way

@@ -55,15 +55,6 @@ def Result.InStep : Except Stuck (Result (List (DVal d) × Nat)) →
   | .ok .fuelExhausted, .ok .fuelExhausted => True
   | _, _ => False
 
-/-- A way of ending that allows another in step is not stuck. -/
-theorem TraceEnd.Allows.notStuck :
-    ∀ {e e' : TraceEnd B (TraceState Mem unit) (Except Stuck (Result (List (DVal d) × Nat)))},
-      TraceEnd.Allows Result.InStep e e' → TraceEnd.NotStuck e
-  | .error _, _, _ => TraceEnd.notStuck_error _ _
-  | .ok (.ok _, _, _), _, _ => TraceEnd.notStuck_ok _ _ _
-  | .ok (.error _, _, _), .ok (_, _, _), h => h.1.elim
-  | .ok (.error _, _, _), .error _, h => h.elim
-
 /-- Leaving a frame keeps a way of ending allowing another. -/
 theorem TraceEnd.Allows.exitFrame {γ γ' : Type} {r : γ → γ' → Prop} :
     ∀ {e : TraceEnd B (TraceState Mem unit) γ} {e' : TraceEnd B (TraceState Mem unit) γ'},
@@ -138,6 +129,21 @@ theorem Func.traceOps_allowed {M : Module d}
       have ub : ∀ {r : String} {t : List B}, Func.TStepPath M n f env o os s (.error (r, t)) →
           Func.traceOps B M (n + 1) f env (o :: os) s (.error (r, t)) :=
         fun h => src (TraceEnd.notStuck_error _ _) h
+      have callee : ∀ {args' : HVector toType (sig o.op)} {sym : Name} {g : Func d}
+          {body : List (Operation d)} {genv' : Env d} {e₁'},
+          env'.operands (sig o.op) o.operands = .ok args' → M.func? sym = some g →
+          g.enter args'.toDVals = .ok (body, genv') → Func.traceCall B M n g genv' body s' e₁' →
+          TraceEnd.NotStuck e₁' → ∃ (args : HVector toType (sig o.op)) (genv : Env d) (e₀ : _),
+            env.operands (sig o.op) o.operands = .ok args ∧ g.enter args.toDVals = .ok (body, genv) ∧
+            Func.traceCall B M n g genv body s e₀ ∧ TraceEnd.Allows Result.InStep e₀ e₁' := by
+        intro args' sym g body genv' e₁' hargs' hg hen' hx hne₁
+        obtain ⟨args, hargs, hr⟩ := henv.operands hargs'
+        obtain ⟨genv, hen, hgenv⟩ := Func.enter_isRefinedBy (HVector.toDVals_isRefinedBy hr) hen'
+        have hgm := hmono _ (List.mem_of_find?_eq_some hg)
+        obtain ⟨e₀, he₀, hle⟩ := Func.traceCall_allowed (fun e₂' he₂' hne₂ =>
+          ihn _ genv _ _ _ _ hgm (hgm.enter hen') hgenv (TraceState.IsRefinedBy.enter hS) e₂' he₂'
+            hne₂) hx hne₁
+        exact ⟨args, genv, e₀, hargs, hen, he₀, hle⟩
       cases (Func.tStepPath_iff hne).1 he' with
       | exitUB hreg hargs' hT hos hx =>
         obtain ⟨args, hargs, hr⟩ := henv.operands hargs'
@@ -162,7 +168,7 @@ theorem Func.traceOps_allowed {M : Module d}
           obtain ⟨env₁, hj₁, henv₁⟩ := henv.jump hj
           obtain ⟨e₁, he₁, hle₁⟩ := ihn f env₁ _ _ s₀ _ hf (hf.jump hj₁) henv₁ hs₀ _ he
             (TraceEnd.NotStuck.of_after hne)
-          exact ⟨_, src ((hle₁.after ht).notStuck) (.goto hreg hargs hT hos he₀ hj₁ he₁),
+          exact ⟨_, src ((hle₁.after ht).notStuck fun _ _ h => h) (.goto hreg hargs hT hos he₀ hj₁ he₁),
             hle₁.after ht⟩
       | denoteUB hreg hargs' hT hc hx =>
         obtain ⟨args, hargs, hr⟩ := henv.operands hargs'
@@ -180,25 +186,15 @@ theorem Func.traceOps_allowed {M : Module d}
           have hlen := hlen'.trans (DVals.length_eq_of_isRefinedBy hvs).symm
           obtain ⟨e₁, he₁, hle₁⟩ := ihn f _ _ os s₀ _ hf hops' (henv.zip_append _ hvs) hs₀ _ he
             (TraceEnd.NotStuck.of_after hne)
-          exact ⟨_, src ((hle₁.after ht).notStuck) (.denote hreg hargs hT hc he₀ hlen he₁),
+          exact ⟨_, src ((hle₁.after ht).notStuck fun _ _ h => h) (.denote hreg hargs hT hc he₀ hlen he₁),
             hle₁.after ht⟩
       | callUB hreg hargs' hT hc hg hen' hx =>
-        obtain ⟨args, hargs, hr⟩ := henv.operands hargs'
-        obtain ⟨genv, hen, hgenv⟩ := Func.enter_isRefinedBy (HVector.toDVals_isRefinedBy hr) hen'
-        have hgm := hmono _ (List.mem_of_find?_eq_some hg)
-        obtain ⟨e₀, he₀, hle⟩ := Func.traceCall_allowed (fun e₁' he₁' hne₁ =>
-          ihn _ genv _ _ _ _ hgm (hgm.enter hen') hgenv (TraceState.IsRefinedBy.enter hS) e₁' he₁' hne₁) hx
-          (TraceEnd.notStuck_error _ _)
+        obtain ⟨args, genv, e₀, hargs, hen, he₀, hle⟩ := callee hargs' hg hen' hx (TraceEnd.notStuck_error _ _)
         rcases e₀ with ⟨r₀, t₀⟩ | ⟨_, _, _⟩
         · exact ⟨_, ub (.callUB hreg hargs hT hc hg hen he₀), hle⟩
         · exact hle.elim
       | callExh hreg hargs' hT hc hg hen' hx =>
-        obtain ⟨args, hargs, hr⟩ := henv.operands hargs'
-        obtain ⟨genv, hen, hgenv⟩ := Func.enter_isRefinedBy (HVector.toDVals_isRefinedBy hr) hen'
-        have hgm := hmono _ (List.mem_of_find?_eq_some hg)
-        obtain ⟨e₀, he₀, hle⟩ := Func.traceCall_allowed (fun e₁' he₁' hne₁ =>
-          ihn _ genv _ _ _ _ hgm (hgm.enter hen') hgenv (TraceState.IsRefinedBy.enter hS) e₁' he₁' hne₁) hx
-          (TraceEnd.notStuck_ok _ _ _)
+        obtain ⟨args, genv, e₀, hargs, hen, he₀, hle⟩ := callee hargs' hg hen' hx (TraceEnd.notStuck_ok _ _ _)
         rcases e₀ with ⟨r₀, t₀⟩ | ⟨x, t₀, s₀⟩
         · exact ⟨_, ub (.callUB hreg hargs hT hc hg hen he₀), hle⟩
         · rcases x with _ | (_ | _) <;> obtain ⟨hx₀, ht, hs₀⟩ := hle
@@ -207,12 +203,7 @@ theorem Func.traceOps_allowed {M : Module d}
           · exact ⟨_, src (TraceEnd.notStuck_ok _ _ _) (.callExh hreg hargs hT hc hg hen he₀),
               trivial, ht, hs₀⟩
       | callRet hreg hargs' hT hc hg hen' hx hty' hlen' he =>
-        obtain ⟨args, hargs, hr⟩ := henv.operands hargs'
-        obtain ⟨genv, hen, hgenv⟩ := Func.enter_isRefinedBy (HVector.toDVals_isRefinedBy hr) hen'
-        have hgm := hmono _ (List.mem_of_find?_eq_some hg)
-        obtain ⟨e₀, he₀, hle⟩ := Func.traceCall_allowed (fun e₁' he₁' hne₁ =>
-          ihn _ genv _ _ _ _ hgm (hgm.enter hen') hgenv (TraceState.IsRefinedBy.enter hS) e₁' he₁' hne₁) hx
-          (TraceEnd.notStuck_ok _ _ _)
+        obtain ⟨args, genv, e₀, hargs, hen, he₀, hle⟩ := callee hargs' hg hen' hx (TraceEnd.notStuck_ok _ _ _)
         rcases e₀ with ⟨r₀, t₀⟩ | ⟨x, t₀, s₀⟩
         · exact ⟨_, ub (.callUB hreg hargs hT hc hg hen he₀), TraceEnd.Allows.ub_prefix hle _⟩
         · rcases x with _ | (⟨vs, k⟩ | _) <;> obtain ⟨hx₀, ht, hs₀⟩ := hle
@@ -222,7 +213,7 @@ theorem Func.traceOps_allowed {M : Module d}
             have hlen := hlen'.trans (DVals.length_eq_of_isRefinedBy hvs).symm
             obtain ⟨e₁, he₁, hle₁⟩ := ih _ (Nat.lt_succ_of_le (Nat.min_le_right _ _)) f _ _ os s₀ _
               hf hops' (henv.zip_append _ hvs) hs₀ _ he (TraceEnd.NotStuck.of_after hne)
-            exact ⟨_, src ((hle₁.after ht).notStuck)
+            exact ⟨_, src ((hle₁.after ht).notStuck fun _ _ h => h)
               (.callRet hreg hargs hT hc hg hen he₀ hty hlen he₁), hle₁.after ht⟩
           · exact hx₀.elim
 

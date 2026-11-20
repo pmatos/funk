@@ -14,13 +14,15 @@ when the Lean changes under it.
 
 #doc (Manual) "Paths of the interpreter in the traced layer: readable blocks" =>
 
-:::moduleDocs (fingerprint := "12353548014313633144")
+:::moduleDocs (fingerprint := "12585337159390945984")
 :::
 
-:::readable Fir.TraceEnd.NotStuck Fir.TraceEnd.NotStuck.of_after Fir.TraceEnd.notStuck_error Fir.TraceEnd.notStuck_ok (fingerprint := "15834025458919229021")
+:::readable Fir.TraceEnd.NotStuck Fir.TraceEnd.NotStuck.of_after Fir.TraceEnd.notStuck_error Fir.TraceEnd.notStuck_ok Fir.TraceEnd.Allows.notStuck (fingerprint := "4952022327716549937")
 *Definition: a way of ending that is not stuck.* A way that a computation of
 the interpreter ends in the traced layer is not stuck when it is UB or a
-value. One that is not stuck after a trace is not stuck before it.
+value. One that is not stuck after a trace is not stuck before it. A way
+of ending that allows another is not stuck when the relation on what they
+give relates no stuck path to anything.
 :::
 
 :::readable Fir.TraceM.run_except_bind Fir.TraceM.run_except_pure Fir.TraceM.run_liftExcept Fir.TraceM.run_lift (fingerprint := "13754838662293161135")

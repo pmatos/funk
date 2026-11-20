@@ -14,18 +14,17 @@ when the Lean changes under it.
 
 #doc (Manual) "Refined arguments over traced runs: returns, UB and each budget: readable blocks" =>
 
-:::moduleDocs (fingerprint := "4396090715667913137")
+:::moduleDocs (fingerprint := "8788149785860377095")
 :::
 
-:::readable Fir.Result.Finished Fir.Result.finishEnd Fir.TraceEnd.Allows.finishEnd Fir.TraceEnd.Allows.notStuck_finished (fingerprint := "15629357235452581033")
+:::readable Fir.Result.Finished Fir.Result.finishEnd Fir.TraceEnd.Allows.finishEnd (fingerprint := "3788084618345794415")
 *Definition: finished runs.* A run of a function finishes a run of its
 entry block's ops: a return gives back its values, without the steps
 left. What a source's run of a function ends with allows what the
 target's ends with when both return, the second's values refining the
 first's, or both run out of fuel.
 
-*Theorems.* Finishing keeps one way of ending allowing another in step,
-and a way of ending that allows another, finished, is not stuck.
+*Theorem.* Finishing keeps one way of ending allowing another in step.
 :::
 
 :::readable Fir.Func.traceRun_iff Fir.Func.traceRun_allowed (fingerprint := "8379465532877309952")

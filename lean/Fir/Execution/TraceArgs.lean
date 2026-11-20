@@ -76,15 +76,6 @@ theorem TraceEnd.Allows.finishEnd :
   | .ok (.ok .fuelExhausted, _, _), .ok (.error _, _, _), h => h.1.elim
   | .ok _, .error _, h => h.elim
 
-/-- A way of ending that allows another, finished, is not stuck. -/
-theorem TraceEnd.Allows.notStuck_finished :
-    ∀ {e e' : TraceEnd B (TraceState Mem unit) (Except Stuck (Result (List (DVal d))))},
-      TraceEnd.Allows Result.Finished e e' → TraceEnd.NotStuck e
-  | .error _, _, _ => TraceEnd.notStuck_error _ _
-  | .ok (.ok _, _, _), _, _ => TraceEnd.notStuck_ok _ _ _
-  | .ok (.error _, _, _), .ok (_, _, _), h => h.1.elim
-  | .ok (.error _, _, _), .error _, h => h.elim
-
 variable [DecidableEq d.Ty] [DialectSignature d] [DialectCall d]
   [DialectDenote d (TraceM B (TraceState Mem unit))]
 
@@ -149,7 +140,7 @@ theorem Func.traceRun_allowed {M : Module d}
     Func.traceOps_allowed hmono n f env env' body _ _ hf (hf.enter hen') henv
       (TraceState.IsRefinedBy.enter hS) e₁' he₁' hne₁) h₀' hne₀
   have hfin := hle.finishEnd
-  exact ⟨_, (Func.traceRun_iff (hfin.notStuck_finished)).2 ⟨body, env, hen, e₀, he₀, rfl⟩, hfin⟩
+  exact ⟨_, (Func.traceRun_iff (hfin.notStuck fun _ _ h => h)).2 ⟨body, env, hen, e₀, he₀, rfl⟩, hfin⟩
 
 end
 

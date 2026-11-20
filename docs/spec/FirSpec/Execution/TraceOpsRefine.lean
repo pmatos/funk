@@ -14,16 +14,15 @@ when the Lean changes under it.
 
 #doc (Manual) "A traced run of ops on refined environments and states: readable blocks" =>
 
-:::moduleDocs (fingerprint := "5299400044278541242")
+:::moduleDocs (fingerprint := "13385020937265988547")
 :::
 
-:::readable Fir.Result.InStep Fir.TraceEnd.Allows.notStuck Fir.TraceEnd.Allows.exitFrame Fir.TraceEnd.Allows.ub_prefix (fingerprint := "12769115554527881692")
+:::readable Fir.Result.InStep Fir.TraceEnd.Allows.exitFrame Fir.TraceEnd.Allows.ub_prefix (fingerprint := "15489573539634553777")
 *Definition: in step.* What a source's run of ops ends with allows, in
 step, what the target's ends with when both return, the second values
 refining the first's, with the same steps left, or both run out of fuel.
 
-*Theorems.* A way of ending that allows another in step is not stuck.
-Leaving a frame keeps one way of ending allowing another. UB after acts
+*Theorems.* Leaving a frame keeps one way of ending allowing another. UB after acts
 $`t` that are a refined prefix of $`t'` allows every way that the target
 ends after $`t'`.
 :::
