@@ -191,6 +191,8 @@ import Fir.Execution.TracePaths
 import Fir.Execution.TraceStepPaths
 import Fir.Execution.TraceOpsRefine
 import Fir.Execution.TraceArgs
+import Fir.Execution.TraceScript
+import Fir.Execution.MemoryEndModes
 import Fir.Core.Observe
 import Fir.Core.Trace
 import Fir.Memory.Model
@@ -296,3 +298,4 @@ import Fir.Gpu.WorkGroup
 import Fir.Gpu.Runs
 import Fir.Gpu.Modes
 import Fir.Gpu.Trace
+import Fir.Gpu.EndModes

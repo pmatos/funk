@@ -3,7 +3,7 @@ import Fir
 import FirRef.Utf8
 import FirRef.Report
 import FirRef.Sample
-import FirRef.RunModes
+import FirRef.MachineModes
 import FirRef.HVectorSum
 import FirRef.RunNaN
 import FirRef.RunText
@@ -49,8 +49,8 @@ that does not fit the run.
 Arguments, choices and values are spelled as constants are in text: `true`
 and `false` at `i1`, signed decimal at every other width, and the one
 float literal of a float's bits at a float type (ADR-2026-11-11-1438), read
-with the spec's lexer and checked with `Core.Op.decode`. `fir-ref` runs the spec's
-lexer here as `argAttrP`, which lexes at most two tokens over the text's
+with the spec's lexer and checked with `Core.Op.decode` (`FirRef.readArg`,
+in `FirRef.RunArgs`). `fir-ref` runs the spec's lexer as `argAttrP`, which lexes at most two tokens over the text's
 positions, with no stack per character (`argAttr_eq_argAttrP`). A value or
 an argument may also be `poison`, at any `iN` or float type, so that a run may start from
 poison, as the runs of `Core.FuncRuns` do (#123). A choice may not:
@@ -60,75 +60,6 @@ poison, as the runs of `Core.FuncRuns` do (#123). A choice may not:
 namespace FirRef
 
 open Fir
-
-/-- The `const` op that the text `s` spells at the type `t`: the spec's
-lexer reads `s` as one token (`argAttr`, which `fir-ref` runs as
-`argAttrP`, over positions), `Core.Op.decode` reads that as a `const`, and
-the token is spelled exactly `s`, with nothing around it. -/
-def constOpOf (t : Core.Ty) (s : String) : Option Core.Op := do
-  let attr ← argAttr s
-  if attr.print != s then none
-  Core.Op.decode "const" [attr] [] [t]
-
-/-- The constant that the text `s` spells at the type `iN` (`constOpOf`). -/
-def constOf (w : Nat) (s : String) : Option (BitVec w) :=
-  match constOpOf (.int w) s with
-  | some (.const w' v) => if h : w' = w then some (h ▸ v) else none
-  | _ => none
-
-/-- The constant that the text `s` spells at the float type `float<e,m>`
-(`constOpOf`): the one float literal of its bits. -/
-def floatConstOf (e m : Nat) (s : String) : Option (BitVec (Core.floatWidth e m)) :=
-  match constOpOf (.float e m) s with
-  | some (.fconst e' m' v) => if h : e' = e ∧ m' = m then some (h.1 ▸ h.2 ▸ v) else none
-  | _ => none
-
-/-- An argument of type `t`: `poison` at any `iN`, any float type and any
-`ptr<N>`, or a constant of an `iN` or a float type, spelled as `valueText`
-spells it. At `ptr<N>`, `poison` is the only argument: a run starts with no
-allocation, so no pointer has provenance for one. A pointer that
-`valueText` writes, `ptr(A, O)` or `ptr(none, O)`, is the one value of the
-output that is no argument. -/
-def readArg : (t : Core.Ty) → String → Except String ⟦t⟧
-  | .int w, "poison" => pure (.poison : PoisonOr (BitVec w))
-  | .int w, s => match constOf w s with
-    | some v => pure (.value v : PoisonOr (BitVec w))
-    | none => .error s!"{shown s} is not a value of type {tyText (.int w)}"
-  | .float e m, "poison" => pure (.poison : PoisonOr (BitVec (Core.floatWidth e m)))
-  | .float e m, s => match floatConstOf e m s with
-    | some v => pure (.value v : PoisonOr (BitVec (Core.floatWidth e m)))
-    | none => .error s!"{shown s} is not a value of type {tyText (.float e m)}"
-  | .ptr _, "poison" => pure (.poison : PoisonOr Memory.Pointer)
-  | .ptr n, s => .error s!"{shown s} is not a value of type {tyText (.ptr n)}"
-
-/-- One argument for each type of `ts`. It reads them in a loop of tail
-calls, with the values read so far in `acc`, the last first, so it takes no
-stack per argument (#405). -/
-def readArgs (ts : List Core.Ty) (as : List String) : Except String (HVector toType ts) :=
-  go ts as [] rfl
-where
-  go : (rest : List Core.Ty) → List String → (acc : List ((t : Core.Ty) × ⟦t⟧)) →
-      (acc.map (·.1)).reverse ++ rest = ts → Except String (HVector toType ts)
-    | [], [], acc, h => pure (ofRev acc (by simpa using h))
-    | t :: rest, a :: as, acc, h => match readArg t a with
-      | .ok v => go rest as (⟨t, v⟩ :: acc) (by simpa using h)
-      | .error why => .error why
-    | rest, as, _, _ => .error s!"{as.length} arguments are given for {rest.length} parameters"
-
-/-- One argument for each type of `ts`, types of the sum of the core and
-`gpu`, which are the core's, read as `readArgs` reads them. -/
-def readGpuArgs (ts : List CoreGpu.Ty) (as : List String) : Except String (HVector toType ts) :=
-  go ts as [] rfl
-where
-  go : (rest : List CoreGpu.Ty) → List String → (acc : List ((t : CoreGpu.Ty) × ⟦t⟧)) →
-      (acc.map (·.1)).reverse ++ rest = ts → Except String (HVector toType ts)
-    | [], [], acc, h => pure (ofRev acc (by simpa using h))
-    | .inl t :: rest, a :: as, acc, h => match readArg t a with
-      | .ok v => go rest as (⟨.inl t, v⟩ :: acc)
-        (by rw [← h, List.map_cons, List.reverse_cons, List.append_assoc]; rfl)
-      | .error why => .error why
-    | .inr e :: _, _ :: _, _, _ => e.elim
-    | rest, as, _, _ => .error s!"{as.length} arguments are given for {rest.length} parameters"
 
 /-! # Fills
 
@@ -353,35 +284,90 @@ inductive Mode where
   | sampled (seed : Nat)
   deriving DecidableEq, Repr
 
-/-- What `fir-ref run` reports on the bytes of `file`: it runs the function
-that `func` names, a function of the module or a kernel of one of its
-nested modules (`findFunc`), as the work-item `w`, on the arguments `args`,
-with `fuel` steps, in the mode `mode`. -/
-def runBytes (file : String) (bytes : ByteArray) (fuel : Nat) (func : String)
-    (args : List String) (mode : Mode := .scripted []) (w : Gpu.WorkItem := .single) :
-    RunReport :=
-  letI := w
-  match parseBytes (d := CoreGpu) bytes with
-  | .error e => { err := s!"{file}:{e.pos.line}:{e.pos.col}: parse error: {e.reason}", status := 1 }
-  | .ok m =>
-    let what := if file == "-" then "standard input" else shown file
-    match findFunc m func with
-    | none => { err := s!"fir-ref: {what} has no function {shown func}", status := 2 }
-    | some (n, f) =>
-      let ts := f.params.map (·.2)
-      let name := func
-      if ts.length ≠ args.length then
-        { err := s!"fir-ref: {shown func} takes {arguments ts.length}, not {args.length}",
-          status := 2 }
-      else match readGpuArgs ts args, mode with
-        | .error why, _ => { err := s!"fir-ref: {why}", status := 2 }
-        | .ok vs, .scripted cs =>
-          scriptedReport name (Gpu.scripted constOf n f vs fuel cs)
-        | .ok vs, .exhaustive b =>
-          exhaustiveReport name b (Gpu.exhaustive n f vs fuel b)
-        | .ok vs, .exhaustiveNaN b nans =>
-          exhaustiveNaNReport name b (Gpu.exhaustiveNaN n f vs fuel b nans)
-        | .ok vs, .sampled s =>
-          sampledReport name (Gpu.sampled draw n f vs fuel ⟨s.toUInt64⟩)
+/-! # The modes that see the end of a return, by the machine
+
+`fir-ref run --world` calls the spec's `Gpu.scriptedEnd`, `Gpu.exhaustiveEnd`,
+`Gpu.exhaustiveNaNEnd` and `Gpu.sampledEnd`
+(`docs/decisions/fir-ref-run-end.md`). The machine sees a return of the
+values `vs` with the memories `S` at the end of its path as the end
+`⟨vs, S, []⟩`: nothing escapes, since neither the core nor `gpu` shows an
+event. The theorems below make Lean compile calls of those modes as calls of
+the machine's walks, as the ones above do for the modes that see a return
+as its values.
+-/
+
+/-- How the machine sees a return of a function of the module `M`: at its
+end, the returned values `vs` with the memories `S` and nothing escaped. -/
+def endOfRet [Gpu.WorkItem] (M : Module CoreGpu) (vs : List (DVal CoreGpu))
+    (S : Memory.Memories Nat (unitsOf M.layout.entry)) : Gpu.RunEnd M :=
+  ⟨vs, S, []⟩
+
+/-- The spec's tree that sees each return at its end is the machine's, with
+returns seen by `endOfRet`. -/
+theorem endTree_eq [Gpu.WorkItem] (M : Module CoreGpu) (f : Func CoreGpu)
+    (args : HVector toType (f.params.map (·.2))) (fuel : Nat) :
+    Gpu.endTree M f args fuel =
+      letI := gpuTreeDenote M.layout.entry Gpu.memName M.runItems
+      Machine.endTree (ε := Core.Op) (unit := unitsOf M.layout.entry) M (endOfRet M) f args fuel := by
+  show _ <$> _ = Machine.endWith _ <$> _
+  congr 1
+  funext p
+  rcases p with ⟨_ | _ | _, _⟩ <;> rfl
+
+/-- `Gpu.scriptedEnd`, by the machine. -/
+def runGpuScriptedEnd [Gpu.WorkItem] {σ : Type} (read : (w : Nat) → σ → Option (BitVec w)) (M : Module CoreGpu)
+    (f : Func CoreGpu) (args : HVector toType (f.params.map (·.2))) (fuel : Nat) (cs : List σ) :
+    Except (ChoiceTree.Misfit σ) (Gpu.EndLeaf M × Nat) :=
+  letI := gpuTreeDenote M.layout.entry Gpu.memName M.runItems
+  Machine.scriptedWith (unit := unitsOf M.layout.entry) M (endOfRet M) read f args fuel cs
+
+@[csimp] theorem gpuScriptedEnd_eq : @Gpu.scriptedEnd = @runGpuScriptedEnd := by
+  funext w σ read M f args fuel cs
+  letI := gpuTreeDenote M.layout.entry Gpu.memName M.runItems
+  show (Gpu.endTree M f args fuel).script read cs 0 = _
+  rw [endTree_eq]
+  exact (Machine.scriptedWith_eq M _ read f args fuel cs).symm
+
+/-- `Gpu.exhaustiveEnd`, by the machine. -/
+def runGpuExhaustiveEnd [Gpu.WorkItem] (M : Module CoreGpu) (f : Func CoreGpu)
+    (args : HVector toType (f.params.map (·.2))) (fuel budget : Nat) :
+    Option (List (Gpu.EndLeaf M × Nat)) :=
+  letI := gpuTreeDenote M.layout.entry Gpu.memName M.runItems
+  Machine.exhaustiveWith (unit := unitsOf M.layout.entry) M (endOfRet M) f args fuel budget
+
+@[csimp] theorem gpuExhaustiveEnd_eq : @Gpu.exhaustiveEnd = @runGpuExhaustiveEnd := by
+  funext w M f args fuel budget
+  letI := gpuTreeDenote M.layout.entry Gpu.memName M.runItems
+  show (Gpu.endTree M f args fuel).explore budget = _
+  rw [endTree_eq]
+  exact (Machine.exhaustiveWith_eq M _ f args fuel budget).symm
+
+/-- `Gpu.exhaustiveNaNEnd`, by the machine. -/
+def runGpuExhaustiveNaNEnd [Gpu.WorkItem] (M : Module CoreGpu) (f : Func CoreGpu)
+    (args : HVector toType (f.params.map (·.2))) (fuel budget : Nat) (nans : List Nat) :
+    Option (List (Gpu.EndLeaf M × Nat × Nat)) :=
+  letI := gpuTreeDenote M.layout.entry Gpu.memName M.runItems
+  Machine.exhaustiveNaNWith (unit := unitsOf M.layout.entry) M (endOfRet M) f args fuel budget nans
+
+@[csimp] theorem gpuExhaustiveNaNEnd_eq : @Gpu.exhaustiveNaNEnd = @runGpuExhaustiveNaNEnd := by
+  funext w M f args fuel budget nans
+  letI := gpuTreeDenote M.layout.entry Gpu.memName M.runItems
+  show (Gpu.endTree M f args fuel).exploreNaN nans budget = _
+  rw [endTree_eq]
+  exact (Machine.exhaustiveNaNWith_eq M _ f args fuel budget nans).symm
+
+/-- `Gpu.sampledEnd`, by the machine. -/
+def runGpuSampledEnd [Gpu.WorkItem] {γ : Type} (draw : (w : Nat) → γ → BitVec w × γ) (M : Module CoreGpu)
+    (f : Func CoreGpu) (args : HVector toType (f.params.map (·.2))) (fuel : Nat) (g : γ) :
+    Gpu.EndLeaf M × List ChoiceTree.Chosen :=
+  letI := gpuTreeDenote M.layout.entry Gpu.memName M.runItems
+  Machine.sampledWith (unit := unitsOf M.layout.entry) M (endOfRet M) draw f args fuel g
+
+@[csimp] theorem gpuSampledEnd_eq : @Gpu.sampledEnd = @runGpuSampledEnd := by
+  funext w γ draw M f args fuel g
+  letI := gpuTreeDenote M.layout.entry Gpu.memName M.runItems
+  show (Gpu.endTree M f args fuel).sample draw g = _
+  rw [endTree_eq]
+  exact (Machine.sampledWith_eq M _ draw f args fuel g).symm
 
 end FirRef

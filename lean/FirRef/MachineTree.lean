@@ -74,59 +74,60 @@ theorem afterCall_same {n : Nat} {f : Func d} {e₁ e₂ : Env d} (h : Same e₁
 
 /-- What the machine gives where it stops stands for the spec's tree of the
 rest of the run. -/
-theorem advance_tree (c : Cur d ε (Memories N unit)) (st : List (Frame d)) :
-    (advance M c st).tree M = tree M c st := by
-  fun_induction advance M c st with
+theorem advance_tree {R : Type} (fin : List (DVal d) → Memories N unit → R)
+    (c : Cur d ε (Memories N unit)) (st : List (Frame d)) :
+    (advance M fin c st).tree M fin = tree M fin c st := by
+  fun_induction advance M fin c st with
   | case1 f env os S st =>
-    show _ = Prod.fst <$> kont M st (runAt (Func.runOps M 0 f env.toEnv os) S)
-    rw [runOps_zero]; exact (kont_fuel M st S).symm
+    show _ = endWith fin <$> kont M st (runAt (Func.runOps M 0 f env.toEnv os) S)
+    rw [runOps_zero]; exact (kont_fuel M fin st S).symm
   | case2 n f env S st =>
-    show _ = Prod.fst <$> kont M st (runAt (Func.runOps M (n + 1) f env.toEnv []) S)
-    rw [runOps_nil]; exact (kont_error M st _ S).symm
+    show _ = endWith fin <$> kont M st (runAt (Func.runOps M (n + 1) f env.toEnv []) S)
+    rw [runOps_nil]; exact (kont_error M fin st _ S).symm
   | case3 n f env o os S st h =>
-    show _ = Prod.fst <$> kont M st (runAt (Func.runOps M (n + 1) f env.toEnv (o :: os)) S)
-    rw [runOps_region h]; exact (kont_error M st _ S).symm
+    show _ = endWith fin <$> kont M st (runAt (Func.runOps M (n + 1) f env.toEnv (o :: os)) S)
+    rw [runOps_region h]; exact (kont_error M fin st _ S).symm
   | case4 n f env o os S st h e ha =>
-    show _ = Prod.fst <$> kont M st (runAt (Func.runOps M (n + 1) f env.toEnv (o :: os)) S)
+    show _ = endWith fin <$> kont M st (runAt (Func.runOps M (n + 1) f env.toEnv (o :: os)) S)
     rw [runOps_operands (Bool.of_not_eq_true h) (args_error ha)]
-    exact (kont_error M st _ S).symm
+    exact (kont_error M fin st _ S).symm
   | case5 n f env o os S st h args env' ha hT hos =>
-    show _ = Prod.fst <$> kont M st (runAt (Func.runOps M (n + 1) f env.toEnv (o :: os)) S)
+    show _ = endWith fin <$> kont M st (runAt (Func.runOps M (n + 1) f env.toEnv (o :: os)) S)
     rw [runOps_follows (Bool.of_not_eq_true h) (args_ok ha).1 hT hos]
-    exact (kont_error M st _ S).symm
+    exact (kont_error M fin st _ S).symm
   | case6 n f env o os S st h args env' ha hT hos ih =>
     rw [ih]
-    show Prod.fst <$> kont M st (ChoiceTree.bind _ fun p : Exit × Memories N unit =>
+    show endWith fin <$> kont M st (ChoiceTree.bind _ fun p : Exit × Memories N unit =>
         runAt (afterExit M n f env'.toEnv o args p.1) p.2) =
-      Prod.fst <$> kont M st (runAt (Func.runOps M (n + 1) f env.toEnv (o :: os)) S)
+      endWith fin <$> kont M st (runAt (Func.runOps M (n + 1) f env.toEnv (o :: os)) S)
     rw [runOps_exit (Bool.of_not_eq_true h) (args_ok ha).1 hT (Bool.of_not_eq_true hos),
       runAt_lift_bind, afterExit_same (args_ok ha).2]
   | case7 n f env o os S st h args env' ha hT hc ih =>
     rw [ih]
-    show Prod.fst <$> kont M st
+    show endWith fin <$> kont M st
         (ChoiceTree.bind _ fun p : HVector toType (returnTypes o.op) × Memories N unit =>
           runAt (afterDenote M n f env'.toEnv o os p.1) p.2) =
-      Prod.fst <$> kont M st (runAt (Func.runOps M (n + 1) f env.toEnv (o :: os)) S)
+      endWith fin <$> kont M st (runAt (Func.runOps M (n + 1) f env.toEnv (o :: os)) S)
     rw [runOps_denote (Bool.of_not_eq_true h) (args_ok ha).1 (Bool.of_not_eq_true hT) hc,
       runAt_lift_bind, afterDenote_same (args_ok ha).2]
   | case8 n f env o os S st h args env' ha hT s hc hg =>
-    show _ = Prod.fst <$> kont M st (runAt (Func.runOps M (n + 1) f env.toEnv (o :: os)) S)
+    show _ = endWith fin <$> kont M st (runAt (Func.runOps M (n + 1) f env.toEnv (o :: os)) S)
     rw [runOps_noFunc (Bool.of_not_eq_true h) (args_ok ha).1 (Bool.of_not_eq_true hT) hc hg]
-    exact (kont_error M st _ S).symm
+    exact (kont_error M fin st _ S).symm
   | case9 n f env o os S st h args env' ha hT s hc g hg e he =>
-    show _ = Prod.fst <$> kont M st (runAt (Func.runOps M (n + 1) f env.toEnv (o :: os)) S)
+    show _ = endWith fin <$> kont M st (runAt (Func.runOps M (n + 1) f env.toEnv (o :: os)) S)
     have hf := enter_fits g args
     rw [he] at hf
     rw [runOps_enter (Bool.of_not_eq_true h) (args_ok ha).1 (Bool.of_not_eq_true hT) hc hg hf.error]
-    exact (kont_error M st _ S).symm
+    exact (kont_error M fin st _ S).symm
   | case10 n f env o os S st h args env' ha hT s hc g hg body genv he ih =>
     rw [ih]
     have hf := enter_fits g args
     rw [he] at hf
     obtain ⟨G, hG, hag⟩ := hf.ok
-    show Prod.fst <$> kont M st ((runAt (Func.runOps M n g genv.toEnv body) S.enter).bind
+    show endWith fin <$> kont M st ((runAt (Func.runOps M n g genv.toEnv body) S.enter).bind
         (Frame.cont M ⟨n, f, env', o, os, s⟩)) =
-      Prod.fst <$> kont M st (runAt (Func.runOps M (n + 1) f env.toEnv (o :: os)) S)
+      endWith fin <$> kont M st (runAt (Func.runOps M (n + 1) f env.toEnv (o :: os)) S)
     rw [runOps_call (Bool.of_not_eq_true h) (args_ok ha).1 (Bool.of_not_eq_true hT) hc hg hG,
       runAt_bind, runAt_inFrame, ChoiceTree.bind_assoc, runOps_congr n g _ _ body (same_toEnv hag)]
     rw [← afterCall_same (args_ok ha).2]
@@ -134,68 +135,68 @@ theorem advance_tree (c : Cur d ε (Memories N unit)) (st : List (Frame d)) :
   | case11 n f env o os st rs S env' hb ih =>
     rw [ih]
     obtain ⟨hE, hag⟩ := bindResults_ok (agrees_toEnv env) hb
-    show Prod.fst <$> kont M st (runAt (Func.runOps M n f env'.toEnv os) S) =
-      Prod.fst <$> kont M st (runAt (afterDenote M n f env.toEnv o os rs) S)
+    show endWith fin <$> kont M st (runAt (Func.runOps M n f env'.toEnv os) S) =
+      endWith fin <$> kont M st (runAt (afterDenote M n f env.toEnv o os rs) S)
     rw [afterDenote, hE, liftExcept_ok_bind, runOps_congr n f _ _ os (same_toEnv hag)]
   | case12 n f env o os st rs S e hb =>
-    show _ = Prod.fst <$> kont M st (runAt (afterDenote M n f env.toEnv o os rs) S)
+    show _ = endWith fin <$> kont M st (runAt (afterDenote M n f env.toEnv o os rs) S)
     rw [afterDenote, bindResults_error hb, liftExcept_error_bind]
-    exact (kont_error M st _ S).symm
+    exact (kont_error M fin st _ S).symm
   | case13 n f env o os st r =>
-    show _ = Prod.fst <$> kont M st (.ub r)
+    show _ = endWith fin <$> kont M st (.ub r)
     rw [kont_ub]; rfl
   | case14 n f env o os st e =>
-    show _ = Prod.fst <$> kont M st (.noOutcome e)
+    show _ = endWith fin <$> kont M st (.noOutcome e)
     rw [kont_noOutcome]; rfl
   | case15 n f env o os st w c k =>
-    show _ = Prod.fst <$> kont M st (.choose w c fun b => _)
+    show _ = endWith fin <$> kont M st (.choose w c fun b => _)
     rw [kont_choose]; rfl
   | case16 n f env o args st S h ih =>
     rw [ih]
-    show _ = Prod.fst <$> kont M st (runAt (afterExit M n f env.toEnv o args .ret) S)
+    show _ = endWith fin <$> kont M st (runAt (afterExit M n f env.toEnv o args .ret) S)
     rw [afterExit, ite_eq_left h]; rfl
   | case17 n f env o args st S h =>
-    show _ = Prod.fst <$> kont M st (runAt (afterExit M n f env.toEnv o args .ret) S)
-    rw [afterExit, ite_eq_right h]; exact (kont_error M st _ S).symm
+    show _ = endWith fin <$> kont M st (runAt (afterExit M n f env.toEnv o args .ret) S)
+    rw [afterExit, ite_eq_right h]; exact (kont_error M fin st _ S).symm
   | case18 n f env o args st i S b env' hj ih =>
     rw [ih]
     have hf := jump_fits (agrees_toEnv env) f o.succs i
     rw [hj] at hf
     obtain ⟨E, hE, hag⟩ := hf.ok
-    show Prod.fst <$> kont M st (runAt (Func.runOps M n f env'.toEnv b.body) S) =
-      Prod.fst <$> kont M st (runAt (afterExit M n f env.toEnv o args (.goto i)) S)
+    show endWith fin <$> kont M st (runAt (Func.runOps M n f env'.toEnv b.body) S) =
+      endWith fin <$> kont M st (runAt (afterExit M n f env.toEnv o args (.goto i)) S)
     rw [afterExit, hE, liftExcept_ok_bind, runOps_congr n f _ _ b.body (same_toEnv hag)]
   | case19 n f env o args st i S e hj =>
     have hf := jump_fits (agrees_toEnv env) f o.succs i
     rw [hj] at hf
-    show _ = Prod.fst <$> kont M st (runAt (afterExit M n f env.toEnv o args (.goto i)) S)
-    rw [afterExit, hf.error, liftExcept_error_bind]; exact (kont_error M st _ S).symm
+    show _ = endWith fin <$> kont M st (runAt (afterExit M n f env.toEnv o args (.goto i)) S)
+    rw [afterExit, hf.error, liftExcept_error_bind]; exact (kont_error M fin st _ S).symm
   | case20 n f env o args st r =>
-    show _ = Prod.fst <$> kont M st (.ub r)
+    show _ = endWith fin <$> kont M st (.ub r)
     rw [kont_ub]; rfl
   | case21 n f env o args st e =>
-    show _ = Prod.fst <$> kont M st (.noOutcome e)
+    show _ = endWith fin <$> kont M st (.noOutcome e)
     rw [kont_noOutcome]; rfl
   | case22 n f env o args st w c k =>
-    show _ = Prod.fst <$> kont M st (.choose w c fun b => _)
+    show _ = endWith fin <$> kont M st (.choose w c fun b => _)
     rw [kont_choose]; rfl
   | case23 vs k S => rfl
   | case24 vs k S fr st h env' hb ih =>
     rw [ih]
     obtain ⟨hE, hag⟩ := bind_ok (agrees_toEnv fr.env) hb
-    show Prod.fst <$> kont M st (runAt (Func.runOps M (min k fr.n) fr.f env'.toEnv fr.os) S.exit) =
-      Prod.fst <$> kont M st (runAt (afterCall M fr.n fr.f fr.env.toEnv fr.o fr.os fr.s
+    show endWith fin <$> kont M st (runAt (Func.runOps M (min k fr.n) fr.f env'.toEnv fr.os) S.exit) =
+      endWith fin <$> kont M st (runAt (afterCall M fr.n fr.f fr.env.toEnv fr.o fr.os fr.s
         (.ret (vs, k))) S.exit)
     rw [afterCall, ite_eq_left h, hE, liftExcept_ok_bind,
       runOps_congr _ fr.f _ _ fr.os (same_toEnv hag)]
   | case25 vs k S fr st h e hb =>
-    show _ = Prod.fst <$> kont M st (runAt (afterCall M fr.n fr.f fr.env.toEnv fr.o fr.os fr.s
+    show _ = endWith fin <$> kont M st (runAt (afterCall M fr.n fr.f fr.env.toEnv fr.o fr.os fr.s
       (.ret (vs, k))) S.exit)
     rw [afterCall, ite_eq_left h, bind_error hb, liftExcept_error_bind]
-    exact (kont_error M st _ _).symm
+    exact (kont_error M fin st _ _).symm
   | case26 vs k S fr st h =>
-    show _ = Prod.fst <$> kont M st (runAt (afterCall M fr.n fr.f fr.env.toEnv fr.o fr.os fr.s
+    show _ = endWith fin <$> kont M st (runAt (afterCall M fr.n fr.f fr.env.toEnv fr.o fr.os fr.s
       (.ret (vs, k))) S.exit)
-    rw [afterCall, ite_eq_right h]; exact (kont_error M st _ _).symm
+    rw [afterCall, ite_eq_right h]; exact (kont_error M fin st _ _).symm
 
 end FirRef.Machine

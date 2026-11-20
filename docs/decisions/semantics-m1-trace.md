@@ -12,13 +12,16 @@ a return and the world's actions on escaped memory
 (`lean/Fir/Execution/Observe*.lean`, `TraceWorld.lean`), and the core's and
 CoreGpu's traced runs, with refined arguments and congruence in the callee
 over them while they show no event (`lean/Fir/Execution/TraceLift.lean`,
-`TraceRefine.lean`, `lean/Fir/Core/Trace.lean`, `lean/Fir/Gpu/Trace.lean`).
+`TraceRefine.lean`, `lean/Fir/Core/Trace.lean`, `lean/Fir/Gpu/Trace.lean`),
+and scripted worlds (`lean/Fir/Execution/TraceScript.lean`), which
+`fir-ref run --world` takes, reporting the end of each return
+(`lean/Fir/Gpu/EndModes.lean`, [fir-ref-run-end.md](fir-ref-run-end.md)).
 For a dialect that shows events, the spec defines the obligation of its
 ops and proves that refined arguments allow each return, each UB and each
 path out of fuel at its budget (`lean/Fir/Execution/TraceObligations.lean`
-to `TraceArgs.lean`). Divergence for such a dialect, congruence in the
-callee over its traced runs, and `fir-ref`'s scripted worlds are not
-implemented yet (#233, stages 3b-2, 3c and 4).
+to `TraceArgs.lean`). Divergence for such a dialect and congruence in the
+callee over its traced runs are not implemented yet (#233, stages 3b-2
+and 3c).
 semantics-refinement.md says what a run shows in M0.
 
 ## What a run shows
@@ -302,7 +305,14 @@ assembly block in trace order, and one without observable by the block, its
 operands and the contents of the memories it declares it reads
 (ADR-2026-11-09-1540, ADR-2026-11-09-1552). A test that calls an external
 function must come with its script. `fir-ref run` reports the trace and the end
-of the run (ADR-2026-11-09-1540).
+of the run (ADR-2026-11-09-1540). In the spec, a script is the list of the
+answers, each with the world's actions, and it is the world that answers
+the event after `k` acts with its answer at place `k`
+(`WorldScript.world`). A finite outcome fits the script when the answers of
+its trace are the script (`TOutcome.Follows`), which is being shown at that
+world with as many acts as the script has answers (`TOutcome.follows_iff`).
+[fir-ref-run-end.md](fir-ref-run-end.md) records the script's text and what
+`fir-ref run --world` reports.
 
 For a native run, the harness generates a stub library from the same script. It
 is linked in place of the external functions. It records each call (symbol,
