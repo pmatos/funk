@@ -5,9 +5,8 @@ Tests of the core's traced runs (#233, stage 3a), and the axioms of their
 proofs. The core shows no event yet, so its traced semantics is its
 semantics with memory, lifted:
 
-* the traced behaviour of a core function is its behaviour with memory,
-  each return seen at its end, with an empty trace, so M0's tests, which
-  return no pointer, keep their results (`End.isRefinedBy_iff_vals`);
+* the traced behaviour of `@fact` is its behaviour with memory, each return
+  seen at its end, with an empty trace;
 * refined arguments over traced runs: `@fact`, which calls itself, on a
   poison argument is refined by `@fact` on `5`, and so at every world;
 * congruence in the callee over traced runs: `@count` is refined by itself
@@ -97,5 +96,32 @@ theorem count_traceIsRefinedBy_world (L : RunItems) :
 
 /-- info: 'FirTest.count_traceIsRefinedBy' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms FirTest.count_traceIsRefinedBy
+
+/-- info: 'FirTest.fact_traceArgs_world' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in #print axioms FirTest.fact_traceArgs_world
+
+/-- info: 'FirTest.count_traceIsRefinedBy_world' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in #print axioms FirTest.count_traceIsRefinedBy_world
+
+/-- info: 'Fir.Func.traceRuns_args_isRefinedBy_of_lawful' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in #print axioms Fir.Func.traceRuns_args_isRefinedBy_of_lawful
+
+/-- info: 'Fir.Func.traceRuns_replaceBody_isRefinedBy_of_bound' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in #print axioms Fir.Func.traceRuns_replaceBody_isRefinedBy_of_bound
+
+/-- info: 'Fir.Func.traceRuns_replaceBody_isRefinedBy_of_opsFinite' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in #print axioms Fir.Func.traceRuns_replaceBody_isRefinedBy_of_opsFinite
+
+/-- info: 'Fir.Gpu.trace_args_isRefinedBy' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in #print axioms Fir.Gpu.trace_args_isRefinedBy
+
+/-- info: 'Fir.Gpu.trace_args_isRefinedBy_world' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in #print axioms Fir.Gpu.trace_args_isRefinedBy_world
+
+/-- info: 'Fir.Gpu.trace_replaceBody_isRefinedBy_of_from' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in #print axioms Fir.Gpu.trace_replaceBody_isRefinedBy_of_from
+
+/-- info: 'Fir.Gpu.trace_replaceBody_isRefinedBy_of_from_world' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in #print axioms Fir.Gpu.trace_replaceBody_isRefinedBy_of_from_world
 
 end FirTest

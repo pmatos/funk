@@ -18,7 +18,7 @@ when the Lean changes under it.
 :::
 
 :::readable Fir.instTyPointersEmpty Fir.instTyPointersSum Fir.instTyPointersSumTy (fingerprint := "16661022798378911552")
-*Theorem: a sum's values hold pointers.* A value of a summed type holds the
+*Definition: the pointers of a sum's values.* A value of a summed type holds the
 pointers it holds on its own side, and replacing them acts on its own side,
 so the laws of values that hold pointers hold for the sum when they hold
 for both sides. `Empty` has no value, so its values hold no pointer.

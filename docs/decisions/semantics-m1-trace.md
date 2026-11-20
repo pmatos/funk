@@ -249,18 +249,20 @@ above.
   congruence in the callee from given memories hold over its traced runs
   and at every world (`Fir.Execution.TraceRefine`). The core and CoreGpu
   state both over the spec's traced runs (`Func.observedRuns`), with no
-  hypothesis beyond those they have with memory.
+  hypothesis beyond those they have with memory. Rejected: keep the core's
+  guarantees over its runs with memory alone until the traced layer's own
+  theorems exist, so the spec's traced runs would have none meanwhile.
 - **A dialect with events.** Its refined arguments and congruence in the
   callee need the traced layer's own theorems (#233, stages 3b and 3c),
-  which prove the core's statements again, unchanged, once the core shows
-  events. Divergence there needs one source trace at every budget: an op
-  with infinitely many outcomes `c` can show, on a poison argument, an
-  event that differs with each `c` and is refined by the target's, then
-  take `c` silent steps and return. The target then falls silent after its
-  event, and no source outcome allows it. So those theorems are to ask
-  that each op have finitely many outcomes, given the world's answers, as
-  congruence with memory asks with `OpsFinite`; the core and CoreGpu meet
-  this.
+  which are to prove the core's statements again, unchanged, once the core
+  shows events. Not a rule yet, a fact for those stages: divergence needs
+  one source trace at every budget, and an op with infinitely many
+  outcomes `c` can show, on a poison argument, an event that differs with
+  each `c` and is refined by the target's, then take `c` silent steps and
+  return. The target then falls silent after its event, and no source
+  outcome allows it. So refined arguments over traces cannot hold for
+  every dialect with no hypothesis; which hypothesis, or a change to how
+  divergence is judged, is for stage 3b to propose.
 
 ## Scripts and native runs
 
