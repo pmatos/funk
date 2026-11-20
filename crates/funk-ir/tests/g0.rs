@@ -6,8 +6,9 @@
 //! (ADR-2026-10-29-2016, ADR-2026-10-30-1146). The tests check it two ways.
 //! An empty registry knows no op, so nothing outside the registry knows
 //! one. And the code of every module but the dialects, the module generator
-//! and the unit tests writes no word of the core dialect's text, names the
-//! core dialect only to register it, and declares no `enum` with two or
+//! and the unit tests writes no word of the core dialect's text but the
+//! words a global's text shares with it, names the core dialect only to
+//! register it, and declares no `enum` with two or
 //! more variants named after core ops. It writes no word of the second
 //! dialect in tree, `gpu`, either (ADR-2026-11-09-1545).
 
@@ -211,8 +212,10 @@ fn strings_written(src: &str, is_word: impl Fn(&str) -> bool) -> Vec<String> {
 }
 
 /// The core's words that generic code writes too: `global` and `const`, a
-/// global's item kind and flag (the human's ruling of 2026-11-20, #237 Q4),
-/// as `SHARED_WORDS` in `scripts/check_g0.py` says.
+/// global's item kind and flag (the human's ruling of 2026-11-20, #237 Q4).
+/// `scripts/check_g0.py` leaves out `align` as well, which [`core_words`]
+/// does not hold; it holds no kind of `alloca` either, so of these only
+/// `const` is one of its words today.
 const SHARED_WORDS: [&str; 2] = ["global", "const"];
 
 /// The strings of the code of `src` that are words of the core dialect,
@@ -325,6 +328,7 @@ fn the_shared_words_are_not_found_and_another_core_op_is() {
         "{:?}",
         core_ops()
     );
+    assert!(!is_core_word(&words, "global"), "{words:?}");
     assert_eq!(
         core_words_written(
             &words,

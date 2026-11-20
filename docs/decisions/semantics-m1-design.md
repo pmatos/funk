@@ -70,9 +70,10 @@ the Lean and the Rust side, lists both with `align` among the words generic
 code shares with the core, since the core's text writes them too
 (`alloca`'s kind `global`, the op `const`). Rejected: `data` and
 `constant`, which stage 1 shipped so that no check changed, but which are
-not what the ADR and its readers call a global. A global's allocation keeps the kind `global`; a function's
-address is an allocation of kind `function` (the human's ruling of
-2026-11-19 on #235), so `addr(@f)` waits until runs make those. Rejected:
+not what the ADR and its readers call a global. A global's allocation keeps
+the kind `global`; a function's address is an allocation of kind `function`
+(the human's ruling of 2026-11-19 on #235), so `addr(@f)` waits until runs
+make those. Rejected:
 units and relocations at explicit offsets, two parts that must agree.
 
 ## External declarations

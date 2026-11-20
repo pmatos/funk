@@ -53,6 +53,10 @@ def beside : String :=
 #guard roundTrips beside
 #guard checks beside
   ["the op breaks its dialect's own rule"]
+-- With `alloca stack`, the module is valid.
+#guard valid (oneFunc ("global @g() size(4) align(4) const units(1, 0, 0, 0) {\n}\n\n" ++
+    "func @f() -> i32 {\n^e:\n  %p: ptr = alloca stack i32 @0\n" ++
+    "  %c: i32 = const 1 @0\n  ret %c @0\n}\n"))
 
 -- Attributes that do not decode, at the attribute; too few, at the kind.
 #guard rejectedAt (glob "memory(0) size(1) align(1)") 1 13 "writes memory(N) first"

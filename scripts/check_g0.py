@@ -17,8 +17,10 @@ its command line) and of G0's Lean tests must not:
   `"i32"`. The words are those of `lean/Fir/Core/Text.lean` and of the
   files it writes types, `alloca`, `load`, `store` and rounding modes
   with, `TypeText.lean`, `AllocaText.lean`, `LoadText.lean`,
-  `StoreText.lean` and `RoundingText.lean`, but `align`, which the data
-  layout's generic grammar writes too.
+  `StoreText.lean` and `RoundingText.lean`, but the shared words: `align`,
+  which the data layout's generic grammar writes too, and `global` and
+  `const`, a global's item kind and flag (the human's ruling of
+  2026-11-20, #237 Q4).
 
 The same holds of every other dialect in tree, so the same code must not
 name the second dialect, `gpu` (ADR-2026-11-09-1545), nor import its

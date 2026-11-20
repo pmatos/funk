@@ -228,13 +228,14 @@ class Rules(unittest.TestCase):
 
     def test_the_shared_words_pass_and_another_core_op_does_not(self):
         # `global` and `const` are core words that a global's generic text
-        # writes too (the human's ruling of 2026-11-20, #237 Q4); `poison`
-        # stays a core word.
+        # writes too (the human's ruling of 2026-11-20, #237 Q4), as is
+        # `align`; `poison` stays a core word.
         core = CORE_TEXT_SAMPLE.replace(
             '"ret"', '"ret" | .const _ => "const" | .poison _ => "poison"'
-        ).replace('"nsw"', '"global"')
-        generic = 'def item : List String := ["global", "const", "poison"]\n'
+        ).replace('[.word "nsw"]', '[.word "nsw", .word "global", .word "align"]')
+        generic = 'def item : List String := ["global", "const", "align", "poison"]\n'
         root = tree(self, {CORE_TEXT: core, "lean/Fir/Text/GlobalText.lean": generic})
+        self.assertLessEqual({"nsw", "poison"}, core_words(root))
         self.assertEqual(
             problems(root),
             [

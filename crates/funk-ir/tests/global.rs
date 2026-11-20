@@ -106,6 +106,10 @@ fn a_global_sits_beside_the_core_words_it_shares() {
         messages(&text),
         ["alloca allocates on the stack in M1, not as global: global and heap are hooks"]
     );
+    // With `alloca stack`, the module is valid.
+    let valid = text.replace("alloca global", "alloca stack");
+    round_trips(&valid);
+    assert!(messages(&valid).is_empty(), "{:?}", messages(&valid));
 }
 
 #[test]

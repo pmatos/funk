@@ -50,6 +50,3 @@ the table keeps an item naming only items of its own table
 - **A negative offset in `addr`:** no C address constant needs one.
 - **`addr` of a function now:** a function's address is an allocation
   of kind `function` (#235, ruled 2026-11-19), which no run makes yet.
-- **The words `data` and `constant`,** which stage 1 shipped so that no
-  check changed: neither is a core word, but neither is what the ADR and
-  every reader call a global and its flag.
