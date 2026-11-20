@@ -1,0 +1,481 @@
+# Must-reject texts of globals (ADR-2026-11-09-1546, ADR-2026-11-19-0124).
+# A global is an item `data @g()` with `memory(N)` when N is not 0, then
+# `size(S)` and `align(A)`, the words `const` and `export` in that order
+# when they hold, and the pieces of its initializer: `units(U, ...)`,
+# `zeros(N)`, `addr(@s)` and `addr(@s, K)` with K not 0; no parameters or
+# results, and an empty body. A valid global lives in a declared memory,
+# has an alignment that is a power of two, gives units that fit its
+# memory's unit, takes addresses of globals of its own table only, and has
+# an initializer no larger than its size.
+
+[[reject]]
+verdict = "parse-error"
+rule = "memory 0 is the default and is not written: memory(0) does not decode"
+text = '''
+data @g() memory(0) size(1) align(1) {
+}
+
+func @f() {
+^e:
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "a global writes size(S) before align(A)"
+text = '''
+data @g() align(1) size(1) {
+}
+
+func @f() {
+^e:
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "a global's numbers are not negative: size(-1) does not decode"
+text = '''
+data @g() size(-1) align(1) {
+}
+
+func @f() {
+^e:
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "a global's numbers are at most 2^64 - 1: align(18446744073709551616) does not decode"
+text = '''
+data @g() size(1) align(18446744073709551616) {
+}
+
+func @f() {
+^e:
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "a global writes size(S) and align(A): one without align does not decode"
+text = '''
+data @g() size(1) {
+}
+
+func @f() {
+^e:
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "constant comes before export"
+text = '''
+data @g() size(1) align(1) export constant {
+}
+
+func @f() {
+^e:
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "the pieces of an initializer come after constant and export"
+text = '''
+data @g() size(1) align(1) units(1) constant {
+}
+
+func @f() {
+^e:
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "addr(@s, K) has K not 0: addr(@g, 0) is written addr(@g)"
+text = '''
+data @g() size(8) align(8) addr(@g, 0) {
+}
+
+func @f() {
+^e:
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "a unit is a natural number: units(-1) does not decode"
+text = '''
+data @g() size(1) align(1) units(-1) {
+}
+
+func @f() {
+^e:
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "bytes(...) is not a piece of an initializer"
+text = '''
+data @g() size(1) align(1) bytes(1) {
+}
+
+func @f() {
+^e:
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "addr takes a symbol: addr(g) does not decode"
+text = '''
+data @g() size(8) align(8) addr(g) {
+}
+
+func @f() {
+^e:
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "a global has no parameters"
+text = '''
+data @g(%x: i8) size(1) align(1) {
+}
+
+func @f() {
+^e:
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "a global has no results"
+text = '''
+data @g() -> i8 size(1) align(1) {
+}
+
+func @f() {
+^e:
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "a global has an empty body"
+text = '''
+data @g() size(1) align(1) {
+^e:
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "an initializer is no larger than the global's size"
+text = '''
+data @g() size(2) align(1) units(1, 2, 3) {
+}
+
+func @f() {
+^e:
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "zeros count toward the initializer's units"
+text = '''
+data @g() size(4) align(4) zeros(5) {
+}
+
+func @f() {
+^e:
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "an address in memory 0 takes 8 units"
+text = '''
+data @g() size(8) align(8) units(1) addr(@g) {
+}
+
+func @f() {
+^e:
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "a unit of memory 0 is below 256"
+text = '''
+data @g() size(1) align(1) units(256) {
+}
+
+func @f() {
+^e:
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "a global lives in a declared memory"
+text = '''
+data @g() memory(1) size(1) align(1) {
+}
+
+func @f() {
+^e:
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "a global's alignment is a power of two"
+text = '''
+data @g() size(1) align(3) {
+}
+
+func @f() {
+^e:
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "an initializer's address names a global of its table: @h names none"
+text = '''
+data @g() size(8) align(8) addr(@h) {
+}
+
+func @f() {
+^e:
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "an initializer's address names a global, not a function (a function's address, ruled on #235, waits for #237's last stage)"
+text = '''
+data @g() size(8) align(8) addr(@f) {
+}
+
+func @f() {
+^e:
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "an initializer's address names an item of its own table, not of its parent's"
+text = '''
+data @a() size(1) align(1) {
+}
+
+module @dev() {
+  data @g() size(8) align(8) addr(@a) {
+  }
+
+}
+
+func @f() {
+^e:
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "an initializer's address names a global, not an aggregate's layout"
+text = '''
+aggregate @s() memory(0) size(1) align(1) {
+}
+
+data @g() size(8) align(8) addr(@s) {
+}
+
+func @f() {
+^e:
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "a global shares its symbol with no other item"
+text = '''
+data @f() size(1) align(1) {
+}
+
+func @f() {
+^e:
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "a unit of a memory of 16-bit units is below 65536"
+text = '''
+layout memory(1, unit(16), pointer(32), little)
+
+data @g() memory(1) size(1) align(1) units(65536) {
+}
+
+func @f() {
+^e:
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "a pointer of memory 0 takes four units of a memory of 16-bit units"
+text = '''
+layout memory(1, unit(16), pointer(32), little)
+
+data @a() size(1) align(1) {
+}
+
+data @g() memory(1) size(3) align(1) addr(@a) {
+}
+
+func @f() {
+^e:
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''

@@ -2,6 +2,7 @@ import FirSpec.Syntax.Dialect
 import FirSpec.Syntax.Location
 import FirSpec.Syntax.Module
 import FirSpec.Syntax.Layout
+import FirSpec.Syntax.Global
 import FirSpec.Core.Types
 import FirSpec.Core.Rounding
 import FirSpec.Core.OpAttrs
@@ -36,6 +37,7 @@ import FirSpec.Execution.Calls
 import FirSpec.Validation.Scope
 import FirSpec.Validation.Dominance
 import FirSpec.Validation.Layout
+import FirSpec.Validation.Global
 import FirSpec.Validation.LocTable
 import FirSpec.Validation.Rules
 import FirSpec.Core.Validation
@@ -47,6 +49,7 @@ import FirSpec.Validation.Graph
 import FirSpec.Validation.CheckOps
 import FirSpec.Validation.CheckFuncs
 import FirSpec.Validation.CheckLayout
+import FirSpec.Validation.CheckGlobal
 import FirSpec.Validation.CheckModule
 import FirSpec.Core.Check
 import FirSpec.Core.Runs
@@ -115,6 +118,7 @@ import FirSpec.Execution.BlackBox
 import FirSpec.Execution.RefineUp
 import FirSpec.Execution.RefineDown
 import FirSpec.Execution.RefineRuns
+import FirSpec.Execution.ReplaceBody
 import FirSpec.Execution.Replace
 import FirSpec.Core.CallRefine
 import FirSpec.Execution.Lawful
@@ -122,6 +126,8 @@ import FirSpec.Core.Lawful
 import FirSpec.Text.Lexical
 import FirSpec.Text.Grammar
 import FirSpec.Text.LayoutLaws
+import FirSpec.Text.GlobalText
+import FirSpec.Text.GlobalLaws
 import FirSpec.Core.TypeText
 import FirSpec.Core.Text
 import FirSpec.Core.AllocaText

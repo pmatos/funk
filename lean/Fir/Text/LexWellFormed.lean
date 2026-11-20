@@ -1,4 +1,5 @@
 import Fir.Text.LexModule
+import Fir.Text.GlobalLaws
 
 /-!
 # Well-formed modules lex
@@ -383,12 +384,20 @@ theorem Aggregate.WellFormed.tokens {a : Aggregate d} (h : a.WellFormed) :
     (fun _ h => by cases h)
     (fun _ h => by simp [Aggregate.item, DialectItem.types] at h) h.attrs
 
+omit [DialectSignature d] in
+/-- Every token of a global can be written. -/
+theorem Global.tokens_writable (g : Global) : ∀ t ∈ (g.item (d := d)).tokens, t.Writable :=
+  DialectItem.tokens_writable (i := g.item) (by show isWord "data"; decide) (fun _ h => by cases h)
+    (fun _ h => by simp [Global.item, DialectItem.types] at h)
+    (Attr.AllWritable.of_mem g.attr_writable)
+
 mutual
 /-- Every token of a well-formed item can be written. -/
 theorem Item.WellFormed.tokens : ∀ {i : Item d}, i.WellFormed → ∀ t ∈ i.tokens, t.Writable
   | .func _, h => Func.WellFormed.tokens h
   | .dialect _, h => DialectItem.WellFormed.tokens h
   | .aggregate _, h => Aggregate.WellFormed.tokens h
+  | .global g, _ => Global.tokens_writable g
   | .module _ _ is, h => by
     have his := Item.WellFormed.tokensList (is := is) h.2
     simp only [Item.tokens]

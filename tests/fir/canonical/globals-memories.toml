@@ -1,0 +1,9 @@
+# Tests of globals-memories.fir: globals in a declared memory of 16-bit
+# units with 32-bit pointers (ADR-2026-11-09-1546). A unit of memory 1
+# holds up to 65535, a pointer of memory 1 takes two of its units and one
+# of memory 0 four; a nested module holds a global of its own, which names
+# only its own table's globals. The backend does not realise memory 1, so
+# the test is interpreter-only.
+tests = [
+  { func = "@wide_size", expect = ["8"] },
+]

@@ -112,8 +112,10 @@ $`M`, whatever the new body. Calls and recursion are included.
 
 Here $`M[s \leftarrow b]` is $`M` with the body $`b` in place of the body
 of its function $`s`, as in the section on
-{ref "The-fir-specification--Execution--Replacing-a-callee"}[replacing a callee].
-That section asks monotone ops only of the old module's functions, which
+{ref "The-fir-specification--Execution--Replacing-a-body"}[replacing a body].
+The section on
+{ref "The-fir-specification--Execution--Replacing-a-callee"}[replacing a callee]
+asks monotone ops only of the old module's functions, which
 are valid, so the class gives them, and the new body need not be valid.
 
 For the core dialect, which is not lawful in the set monad, congruence in

@@ -13,8 +13,9 @@ This chapter gives the rules that hold for every dialect: types, scoping,
 SSA dominance, block arguments, successors, terminators, symbols, isolation
 from above and locations. Each dialect adds rules for its own ops and types,
 a rule over a whole function, rules for the kinds of region and of item
-that it registers, the memory that each of its pointer types names and the
-types that each of its ops carries in its attributes, as the last
+that it registers, the memory that each of its pointer types names, the
+types that each of its ops carries in its attributes and the widths of the
+values that each of its ops writes into a memory's units, as the last
 definition of this section says; the core dialect's rules have a section of their own. A text that does not decode is rejected before
 validation, by the parser (see the text format chapter).
 
@@ -138,6 +139,10 @@ def SymbolTable.dialectItems (t : SymbolTable d) : List (DialectItem d) :=
 def SymbolTable.aggregates (t : SymbolTable d) : List (Aggregate d) :=
   t.items.filterMap Item.aggregate?
 
+/-- The globals of a symbol table, in order. -/
+def SymbolTable.globals (t : SymbolTable d) : List Global :=
+  t.items.filterMap Item.global?
+
 /-- The type of the function that each symbol of a table names: its first
 function with that symbol. -/
 def SymbolTable.symbols (t : SymbolTable d) (s : Name) : Option (FuncType d) :=
@@ -162,10 +167,10 @@ def SymbolTable.layouts (t : SymbolTable d) (s : Name) : Option LayoutRef :=
 
 mutual
 /-- The symbol tables that an item holds, at any depth: none for a
-function, an item of a dialect's kind or an aggregate's layout, and a nested
+function, an item of a dialect's kind, an aggregate's layout or a global, and a nested
 module's own, then those its items hold. -/
 def Item.tables : Item d → List (SymbolTable d)
-  | .func _ | .dialect _ | .aggregate _ => []
+  | .func _ | .dialect _ | .aggregate _ | .global _ => []
   | .module _ ds is => ⟨ds, is⟩ :: Item.tablesIn is
 
 /-- The symbol tables that a list of items holds, at any depth, in order. -/
@@ -190,6 +195,7 @@ theorem funcNames_sublist : ∀ is : List (Item d),
   | .module .. :: is => .cons _ (funcNames_sublist is)
   | .dialect _ :: is => .cons _ (funcNames_sublist is)
   | .aggregate _ :: is => .cons _ (funcNames_sublist is)
+  | .global _ :: is => .cons _ (funcNames_sublist is)
 
 /-- Items that are all functions hold no symbol table. -/
 theorem Item.tablesIn_eq_nil : ∀ {is : List (Item d)}, (∀ i ∈ is, i.func?.isSome) →
@@ -201,6 +207,7 @@ theorem Item.tablesIn_eq_nil : ∀ {is : List (Item d)}, (∀ i ∈ is, i.func?.
   | .module .. :: _, h => absurd (h _ (List.mem_cons_self ..)) (by simp [Item.func?])
   | .dialect _ :: _, h => absurd (h _ (List.mem_cons_self ..)) (by simp [Item.func?])
   | .aggregate _ :: _, h => absurd (h _ (List.mem_cons_self ..)) (by simp [Item.func?])
+  | .global _ :: _, h => absurd (h _ (List.mem_cons_self ..)) (by simp [Item.func?])
 
 /-- The tables that an item of a list holds are tables of the list. -/
 theorem Item.mem_tablesIn {i : Item d} : ∀ {is : List (Item d)}, i ∈ is →

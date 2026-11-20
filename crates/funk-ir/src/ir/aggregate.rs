@@ -117,7 +117,7 @@ pub enum AggregateFault {
 
 /// The number of `head(n)`, `n` from 0 to `2^64 - 1`
 /// (`Aggregate.decodeNumber`).
-fn applied(a: &Attr, head: &str) -> Option<u64> {
+pub(super) fn applied(a: &Attr, head: &str) -> Option<u64> {
     match a {
         Attr::App(h, args) if h == head => match args.as_slice() {
             [Attr::Int(n)] => number(n),
@@ -128,7 +128,7 @@ fn applied(a: &Attr, head: &str) -> Option<u64> {
 }
 
 /// An integer from 0 to `2^64 - 1` (`Aggregate.number`).
-fn number(n: &Int) -> Option<u64> {
+pub(super) fn number(n: &Int) -> Option<u64> {
     n.as_str().parse::<u64>().ok()
 }
 

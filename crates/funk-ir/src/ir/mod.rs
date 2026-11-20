@@ -5,6 +5,7 @@ mod aggregate;
 mod attr;
 mod build;
 mod debug;
+mod global;
 mod int;
 pub mod layout;
 mod location;
@@ -16,6 +17,7 @@ pub(crate) mod tree;
 
 pub use aggregate::{Aggregate, AggregateFault, Field};
 pub use attr::{Attr, Type};
+pub use global::{Global, GlobalFault, InitPiece, Linkage};
 pub use int::{Int, Nat};
 pub use layout::{ByteOrder, MemLayout};
 pub use location::{LocRef, LocTable, Location};

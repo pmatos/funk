@@ -13,6 +13,7 @@ mod aggregate;
 mod cfg;
 mod dialect_set;
 mod func;
+mod global;
 mod items;
 mod layout;
 mod locs;
@@ -121,7 +122,8 @@ impl fmt::Display for Diagnostic {
 /// each table's problems (`SymbolTable.problems`), the layout's entries
 /// (`DataLayout.problems`), the memories that each table's types name
 /// (`SymbolTable.memoryProblems`), each table's aggregates' layouts
-/// (`Aggregate.problems`), then each table's dialect set
+/// (`Aggregate.problems`), each table's globals (`Global.problems`), then
+/// each table's dialect set
 /// (`SymbolTable.setProblems`). A problem in a nested module names its
 /// function, as one at the top level does.
 pub fn verify(m: &Module, reg: &Registry) -> Vec<Diagnostic> {
@@ -140,6 +142,9 @@ pub fn verify(m: &Module, reg: &Registry) -> Vec<Diagnostic> {
     }
     for &t in &tables {
         aggregate::check(t, &m.layout, reg, &mut out);
+    }
+    for &t in &tables {
+        global::check(t, &m.layout, &mut out);
     }
     for &t in &tables {
         dialect_set::check_words(t, reg, &mut out);
