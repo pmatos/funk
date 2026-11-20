@@ -316,12 +316,6 @@ def unitText {u : Nat} : MemUnit u → String
   | .poison => "poison"
   | .frag m p i => s!"frag({m}, {ptrText p}, {i})"
 
-/-- The kind of an allocation, as `fir-ref run --world` spells it. -/
-def kindText : AllocKind → String
-  | .stack => "stack"
-  | .global => "global"
-  | .heap => "heap"
-
 /-- An allocation, by its memory and its id. -/
 def allocRef (xa : Nat × AllocId) : List (String × String) :=
   [("memory", toString xa.1), ("alloc", toString xa.2)]
@@ -335,7 +329,7 @@ def allocJson (S : Memories Nat unit) (xa : Nat × AllocId) : String :=
   match (S.mem xa.1).blocks[xa.2]? with
   | none => jsonObject (allocRef xa ++ [("kind", "null")])
   | some b =>
-    jsonObject (allocRef xa ++ [("kind", jsonString (kindText b.kind)),
+    jsonObject (allocRef xa ++ [("kind", jsonString b.kind.word),
       ("align", toString b.align), ("size", toString b.units.length),
       ("live", if b.live then "true" else "false")] ++
       if b.live then [("units", jsonArray (b.units.map (jsonString ∘ unitText)))] else [])
@@ -343,7 +337,7 @@ def allocJson (S : Memories Nat unit) (xa : Nat × AllocId) : String :=
 /-- The fields that report the end of a return, after its values: its trace,
 which is empty, the allocations that escaped, and the memory that an
 observer reaches, or `null` when the walk runs out of steps, which its
-bound rules out (`FirRef.Reach`). -/
+bound is argued, not proved, to rule out (`FirRef.Reach`). -/
 def endJson {ar : AddrRule} {V : Type} [HRefinement V V] [HasPtrs V] (e : End unit id ar V) :
     List (String × String) :=
   [("trace", "[]"), ("escaped", jsonArray (e.escaped.map (jsonObject ∘ allocRef))),

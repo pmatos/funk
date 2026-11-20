@@ -117,8 +117,9 @@ at any budget. Its frames and environments are on the heap, so a deep
 recursion costs memory, not stack.
 
 The evidence that `fir-ref` runs the machine is in what its `main` reaches:
-`lean/.lake/build/ir/FirRef/Run.c` calls the four walkers, and no copy of
-`Func.runOps`, `Func.run` or the spec's modes. `Machine.c` also compiles
+`lean/.lake/build/ir/FirRef/Run.c` calls the four walkers, and
+`RunArgs.c`, where `runBytes` lives, calls the machine's modes of `Run.c`
+and no copy of `Func.runOps`, `Func.run` or the spec's modes. `Machine.c` also compiles
 `Cur.denote` and `kont` for the proofs; `fir-ref` never calls them.
 `lean/FirTest/RunSteps.lean` runs each mode for 1,000,000 steps on a loop and
 on a recursion that never end. The modes and the machine run with memory;
@@ -157,8 +158,8 @@ its own, `HVector.toSum` and `HVector.ofSum` (`toSum_eq_toSumFast` and
 spec's moves, so `FirRef.sumDenote` copies them after the swaps, and
 `FirRef.gpuTreeDenote` builds `Gpu.memTreeDenote` from that copy; each is
 proved equal by `rfl`, and the three walks of the core and `gpu` run over
-`gpuTreeDenote`. `lean/.lake/build/ir/FirRef/Run.c` calls no
-`HVector.toDVals`, `toSum`, `ofSum` or `List.zip`.
+`gpuTreeDenote`. `lean/.lake/build/ir/FirRef/Run.c` and `RunArgs.c` call
+no `HVector.toDVals`, `toSum`, `ofSum` or `List.zip`.
 
 `scripts/check-fir-ref-run.sh` checks it on a 256 KiB stack: a `ret` of
 100,000 values in each mode, a call that returns 100,000 values, a call of

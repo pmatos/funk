@@ -18,7 +18,8 @@ entry of the work list, and the entries it pushes are the roots and the
 pointers of the units of the allocations it sees, each seen once, so
 `endReachFuel` steps, the roots and every unit of every memory, are enough.
 That bound is argued here, not proved: a walk that runs out of steps gives
-`none`, and `fir-ref` reports it as an error, never as a result.
+`none`, and `fir-ref` then reports `null` in place of the memory, never a
+partial list.
 `reach_iff` proves that when the walk ends, it lists exactly the
 allocations of `End.Reachable`.
 -/

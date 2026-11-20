@@ -27,8 +27,8 @@ unset GH_TOKEN GITHUB_TOKEN
 status=0
 tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
-# runs FILE STATUS OUTPUT ARGS...: fir-ref run ARGS... FILE... exits with
-# STATUS and prints OUTPUT, a JSON result on standard output or a message on
+# runs STATUS OUTPUT ARGS...: fir-ref run ARGS... exits with STATUS and
+# prints OUTPUT, a JSON result on standard output or a message on
 # standard error, and nothing on the other stream.
 runs() {
     local want_rc=$1 want=$2 rc=0 out err want_out want_err
@@ -51,6 +51,7 @@ c=tests/fir/canonical
 printf '# This script answers no event.\n\n' >"$tmp/quiet.world"
 printf 'answer 5\nstore 0 0 0x07\n' >"$tmp/one.world"
 printf 'answer\nfree x\n' >"$tmp/bad.world"
+printf '# CRLF line ends and tabs read as LF and spaces.\r\n\t\r\n' >"$tmp/crlf.world"
 w="--world $tmp/none.world"
 end='"trace":[],"escaped":[],"memory":[]'
 # A run with no pointer: what fir-ref run reports, with an empty trace and no
@@ -58,8 +59,10 @@ end='"trace":[],"escaped":[],"memory":[]'
 # shellcheck disable=SC2086 # $w is two words.
 runs 0 "{\"kind\":\"return\",\"values\":[\"6\"],$end,\"choices\":0}" $w $c/add.fir @add3 1 2 3 ||
     status=1
-runs 0 "{\"kind\":\"return\",\"values\":[\"6\"],$end,\"choices\":0}" \
-    --world "$tmp/quiet.world" $c/add.fir @add3 1 2 3 || status=1
+for quiet in quiet crlf; do
+    runs 0 "{\"kind\":\"return\",\"values\":[\"6\"],$end,\"choices\":0}" \
+        --world "$tmp/$quiet.world" $c/add.fir @add3 1 2 3 || status=1
+done
 # shellcheck disable=SC2086
 runs 0 "{\"kind\":\"outcomes\",\"choices\":0,\"outcomes\":[{\"kind\":\"return\",\"values\":[\"poison\"],$end}]}" \
     $w --exhaustive $c/add.fir @double poison || status=1
@@ -83,8 +86,11 @@ runs 0 '{"kind":"ub","reason":"a misaligned access","trace":[],"choices":0}' \
     $w $c/gpu-work-group.fir @dev::@misaligned || status=1
 # A script that answers an event fits no run of the core and gpu, and a
 # script that does not read is an error.
-runs 2 'fir-ref: @add3: the world'"'"'s script does not fit the run: the run shows no event, and the script answers 1' \
-    --world "$tmp/one.world" $c/add.fir @add3 1 2 3 || status=1
+printf 'answer\t5\r\nstore 0 0 0x07\r\n' >"$tmp/crlf-one.world"
+for one in one crlf-one; do
+    runs 2 'fir-ref: @add3: the world'"'"'s script does not fit the run: the run shows no event, and the script answers 1' \
+        --world "$tmp/$one.world" $c/add.fir @add3 1 2 3 || status=1
+done
 runs 2 "fir-ref: $tmp/bad.world: line 2: free x is not an answer or an action of the world" \
     --world "$tmp/bad.world" $c/add.fir @add3 1 2 3 || status=1
 rc=0

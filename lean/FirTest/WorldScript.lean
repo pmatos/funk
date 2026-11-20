@@ -199,6 +199,8 @@ def read (t : String) : Option (List WorldAnswer) ⊕ String :=
 #guard read "answer 5 poison\nstore 0 2 0x7f poison frag(0,1,-3,7)\nalloc 3 16 2\nanswer\nfree 1\n" ==
   .inl (some [⟨["5", "poison"], [.store 0 2 [.bits 0x7f, .poison, .frag 0 (some 1) (-3) 7], .alloc 3 16 2]⟩,
     ⟨[], [.free 1]⟩])
+-- CRLF line ends and tabs read as LF and spaces.
+#guard read "answer\t5\r\nfree 0\r\n" == .inl (some [⟨["5"], [.free 0]⟩])
 #guard read "store 0 0 0x1" == .inr "line 1: an action of the world comes before any answer"
 #guard read "answer\nfree x" == .inr "line 2: free x is not an answer or an action of the world"
 #guard read "answer\nstore 0 0 frag(0,none,0)" ==

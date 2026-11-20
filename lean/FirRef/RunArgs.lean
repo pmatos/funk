@@ -7,7 +7,7 @@ The command line of `fir-ref run`
 `fir-ref run [--fuel N] [--choices C,C,... | --exhaustive [--choice-bits B] [--nans V,V,...]
 | --seed S]
 [--work-item-id X,Y,Z] [--work-group-id X,Y,Z] [--work-group-size X,Y,Z]
-[--num-work-groups X,Y,Z] [--world FILE] FILE @FUNC [ARG...]`
+[--num-work-groups X,Y,Z] [--world WORLD] FILE @FUNC [ARG...]`
 
 Options may come anywhere before `--`, which ends them, and each takes the
 next argument as its value. An argument such as `-5` is not an option.
@@ -27,7 +27,7 @@ next argument as its value. An argument such as `-5` is not an option.
   hexadecimal digits, separated by commas, with no spaces; the empty text gives none.
 * `--seed S`: sampled mode instead of scripted mode: each choice is drawn
   from a generator seeded with S, from 0 to 2^64 - 1.
-* `--world FILE`: the scripted world that FILE holds
+* `--world WORLD`: the scripted world that the file WORLD holds
   (`FirRef.readWorld`): the run reports the trace of each path and, at a
   return, what escaped and the memory an observer reaches
   (`docs/decisions/fir-ref-run-end.md`).
@@ -165,7 +165,7 @@ where
           | "--choice-bits" => "--choice-bits takes a number of bits"
           | "--seed" => "--seed takes a number below 2^64"
           | "--nans" => "--nans takes a list of bit patterns"
-          | "--world" => "--world takes a FILE"
+          | "--world" => "--world takes a file, WORLD"
           | _ => "--choices takes a list of choices")
       else if options && a.startsWith "--" then .error s!"unknown option {shown a}"
       else go options o (a :: pos) rest
@@ -254,9 +254,10 @@ structure WorldAnswer where
   acts : List WorldAct
   deriving DecidableEq, Repr
 
-/-- The words of a line, between spaces. -/
+/-- The words of a line, between spaces, tabs and a carriage return, so that
+a script with CRLF line ends reads as one with LF. -/
 def words (l : String) : List String :=
-  (l.splitOn " ").filter (!·.isEmpty)
+  ((l.map fun c => if c == '\t' || c == '\r' then ' ' else c).splitOn " ").filter (!·.isEmpty)
 
 /-- A number spelled in ASCII decimal digits. -/
 def natWord (w : String) : Option Nat := if w.all Char.isDigit then w.toNat? else none
