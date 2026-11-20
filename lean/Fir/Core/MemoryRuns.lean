@@ -16,8 +16,9 @@ memory by its rule in the set monad and keeps the memories, so it is tied
 with memory follow op by op (`Core.Op.memCases`), each from the op's own
 tie and what the op meets in the set monad, and for `alloca`, the loads and
 stores, `fieldAddr`, `memCopy` and `memSet` from their own rules with
-memory (the sections on the stack allocation, load, store, field address,
-copy and move, and fill obligations):
+memory (the sections on the stack allocation, load, store, pointer load,
+pointer store, float load, float store, field address, copy and move, and
+fill obligations):
 
 * _the core dialect is lawful in its totality_: each core terminator and
   each core op with no callee is total with memory: total in the set monad
@@ -64,9 +65,10 @@ callee: every core op has finitely many outcomes (the section on congruence
 in a core callee).
 
 These are the core's guarantees, for the whole core dialect, `alloca`, the
-loads and stores and `fieldAddr` included: the three lawful classes with memory and the lawful class of its
-effects, progress and no stuck path, refined arguments, and congruence in
-the callee from given memories. The statements without memory cover only
+loads and stores, `fieldAddr`, `memCopy` and `memSet` included: the three
+lawful classes with memory and the lawful class of its effects, progress
+and no stuck path, refined arguments, and congruence in the callee from
+given memories. The statements without memory cover only
 the code that touches none: the obligations of the core's ops over the set
 monad cover the ops that touch no memory, and congruence with memory for a
 callee that reaches no memory covers such callees. The theorems of the

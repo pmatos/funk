@@ -122,9 +122,12 @@ theorem opsIgnoreMemory :
 variable {M : Module CoreDialect} {f : Func CoreDialect}
 
 /-- Each core op that runs by its own rule has finitely many outcomes with
-memory, at every layout and naming: it runs by its rule in the set monad and
-keeps the memories, and its rule in the set monad is the set of its rule in
-the tree of choices, whose choices of bits have finitely many options. -/
+memory, at every layout and naming. An op that touches no memory and reads
+no item of the run runs by its rule in the set monad and keeps the
+memories, and its rule in the set monad is the set of its rule in the tree
+of choices, whose choices of bits have finitely many options. `alloca`, the
+loads and stores, `fieldAddr`, `memCopy` and `memSet` have finitely many by
+their own rules. -/
 theorem opsFinite :
     letI := DialectMemDenote.denoteAt (d := CoreDialect) lay ρ L
     OpsFinite CoreDialect N (unitsOf lay) := fun op _ args => by

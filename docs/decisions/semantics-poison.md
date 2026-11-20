@@ -193,11 +193,12 @@ of the progress proof with calls (`Module.calls_hasPath`,
 them). `Core.Op.monotone_all` holds for every core op that meets the guard:
 every core op but `call`. `Core.Op.total_all` holds for those that also
 touch no memory and read no item of the run (`Core.Op.touchesMemory`,
-`Core.Op.readsItems`): every one but `call`, `alloca`, the loads `load`,
-`loadPtr` and `loadFloat`, the stores `store`, `storePtr` and `storeFloat`,
-`fieldAddr`, `memCopy` and `memSet`, the ops that `Core.Op.memCases` gives
-their own rules (semantics-effects.md#soundness). With memory every core op
-that meets the guard is total (`Core.lawfulDialectTotal`). Rejected: a stand-in rule
+`Core.Op.readsItems`): every one but `call` and the ten ops that
+`Core.Op.memCases` gives their own rules (semantics-effects.md#soundness),
+`alloca`, the loads `load`, `loadPtr` and `loadFloat`, the stores `store`,
+`storePtr` and `storeFloat`, `fieldAddr`, `memCopy` and `memSet`. With
+memory every core op that meets the guard is total
+(`Core.lawfulDialectTotal`). Rejected: a stand-in rule
 for `call`, immediate UB in the set monad, so that it would meet the op-level
 obligations. It claimed a meaning that a call does not have, and as a source it
 was refined by every computation, so a statement proved op by op would hold for
