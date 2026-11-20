@@ -217,14 +217,14 @@ says how to read it.
 | `cond_br` | a successor passes nothing | 441 |  |  |  |  |  |  |  |  |  |  |  |  |  |
 | `cond_br` | a successor passes values |  | 13 | 138 | 16 | 14 | 14 | 136 | 13 | 11 | 5 | 5 | 7 | 5 | 5 |
 | `ret` | returns no value | 26 |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| `ret` | returns one value |  | 2570 | 1583 | 848 | 835 | 1002 | 1609 | 841 | 1083 | 830 | 782 | 709 | 612 | 533 |
+| `ret` | returns one value |  | 2570 | 1583 | 848 | 835 | 1001 | 1609 | 841 | 1083 | 830 | 782 | 709 | 612 | 533 |
 | `ret` | returns several values |  | 56 | 189 | 43 | 29 | 33 | 189 | 52 | 50 | 5 | 6 | 6 | 8 | 5 |
 | `unreachable` | ends a block | 16 |  |  |  |  |  |  |  |  |  |  |  |  |  |
 | `call` | gives no result | 14 |  |  |  |  |  |  |  |  |  |  |  |  |  |
 | `call` | gives one result |  | 74 | 92 | 28 | 23 | 24 | 92 | 23 | 19 | 2 | 2 | 2 | 2 | 2 |
 | `call` | gives several results |  | 41 | 92 | 17 | 11 | 11 | 92 | 25 | 27 | 2 | 3 | 2 | 3 | 2 |
 | `func` | returns no value | 23 |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| `func` | returns one value |  | 2569 | 1583 | 849 | 835 | 1002 | 1609 | 841 | 1083 | 828 | 780 | 707 | 610 | 531 |
+| `func` | returns one value |  | 2569 | 1583 | 849 | 835 | 1001 | 1609 | 841 | 1083 | 828 | 780 | 707 | 610 | 531 |
 | `func` | returns several values |  | 56 | 189 | 43 | 29 | 33 | 189 | 52 | 48 | 5 | 6 | 6 | 8 | 5 |
 
 ## Ops of the gpu dialect in a dimension
