@@ -122,12 +122,12 @@ fn item(mut s: SItem, reg: &Registry) -> Result<Decoded, ParseError> {
             Ok(Decoded::Module(m, body))
         }
         "aggregate" => aggregate_item(s, reg).map(Decoded::Item),
-        "data" => global_item(s).map(Decoded::Item),
+        "global" => global_item(s).map(Decoded::Item),
         kind if is_dialect_word(kind) => dialect_item(s, reg).map(Decoded::Item),
         _ => err(
             s.kind_pos,
             format!(
-                "unknown item kind {}: the kinds are func, module, aggregate, data and the words of dialects",
+                "unknown item kind {}: the kinds are func, module, aggregate, global and the words of dialects",
                 s.kind
             ),
         ),
@@ -206,7 +206,7 @@ fn global_item(mut s: SItem) -> Result<Item, ParseError> {
         Ok(g) => Ok(Item::Global(g)),
         Err(GlobalFault::Header) => err(
             s.kind_pos,
-            "a global writes size(S) and align(A), then constant, export and its initializer",
+            "a global writes size(S) and align(A), then const, export and its initializer",
         ),
         Err(GlobalFault::Memory) => err(
             at(0),

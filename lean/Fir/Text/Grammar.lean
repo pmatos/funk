@@ -16,7 +16,7 @@ symbol reference needs a new token: a change to the tokens of the previous
 section.
 
 * An item's kind says what it is. The core's kinds are `func`, `module`,
-  `aggregate`, an aggregate's layout (below), and `data`, a global
+  `aggregate`, an aggregate's layout (below), and `global`, a global
   (`Fir.Text.GlobalText`), so a function is written
   as `func @sum(%n: i32) -> i32 { ... }` and a nested module as
   `module @dev() { ... }`. A `func` has no

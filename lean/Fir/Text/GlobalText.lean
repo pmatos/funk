@@ -3,7 +3,7 @@ import Fir.Text.Grammar
 /-!
 # Globals in text
 
-A global is an item of the core's kind `data`, written with the one
+A global is an item of the core's kind `global`, written with the one
 production of an item, with no parameters, no results and an empty body
 (ADR-2026-11-09-1546; ADR-2026-11-19-0124 gives the spelling). Its
 attributes come in this order:
@@ -12,20 +12,21 @@ attributes come in this order:
   0: a global of the default memory writes none, so `memory(0)` does not
   decode;
 * `size(S)` and `align(A)`;
-* the word `constant` for a constant global, then the word `export` for an
+* the word `const` for a constant global, then the word `export` for an
   exported one;
 * the pieces of its initializer, in order: `units(U, …)` for units given
   one by one, `zeros(N)` for `N` zero units, and `addr(@s)` or `addr(@s, K)`
   for the address of the global `@s` plus `K` units, `K` not 0.
 
-For example `data @msg() size(8) align(1) constant units(104, 105, 0) {`,
+For example `global @msg() size(8) align(1) const units(104, 105, 0) {`,
 then `}` on the next line. Every number but a unit's is at most
 `2^64 - 1`. A unit is any natural number: validation bounds it by its
 memory's unit width. Every other attribute, and these in another order, do
-not decode, so each global has one spelling. The words `data` and
-`constant` are the agent's choice: ADR-2026-11-09-1546 writes `global` and
-`const`, which the core's text already writes (`alloca`'s kind hook and an
-op), so the G0 check keeps them out of generic code.
+not decode, so each global has one spelling. The words `global` and
+`const` are ADR-2026-11-09-1546's, as the human ruled on 2026-11-20 (#237
+Q4). The core's text writes them too, as `alloca`'s kind hook and as an
+op, so the G0 check lists them among the words generic code shares with
+the core.
 -/
 
 namespace Fir
@@ -37,17 +38,17 @@ def InitPiece.attr : InitPiece → Attr
   | .addr s k => .app "addr" (.sym s :: if k = 0 then [] else [.int k])
 
 /-- How a global writes its attributes: its memory when it is not 0, its
-size and alignment, `constant` and `export` when they hold, then the pieces
+size and alignment, `const` and `export` when they hold, then the pieces
 of its initializer. -/
 def Global.attrs (g : Global) : List Attr :=
   (if g.mem = 0 then [] else [.app "memory" [.int g.mem]]) ++
     .app "size" [.int g.size] :: .app "align" [.int g.align] ::
-    ((if g.const then [.word "constant"] else []) ++
+    ((if g.const then [.word "const"] else []) ++
       ((if g.linkage = .exported then [.word "export"] else []) ++ g.init.map InitPiece.attr))
 
 /-- A global as the one production of an item writes it: the kind
-`data`, its symbol, no parameters or results, and its attributes. -/
-def Global.item {d : Dialect} (g : Global) : DialectItem d := ⟨"data", g.name, [], [], g.attrs⟩
+`global`, its symbol, no parameters or results, and its attributes. -/
+def Global.item {d : Dialect} (g : Global) : DialectItem d := ⟨"global", g.name, [], [], g.attrs⟩
 
 /-- The unit that an integer of `units(…)` writes: any natural number. -/
 def InitPiece.decodeUnit : Attr → Option Nat
@@ -109,21 +110,21 @@ def Global.decodePieces (i : Nat) (as : List Attr) : Except GlobalFault (List In
         "2^64 - 1 and K not 0")
 
 /-- Reads the global `name` from its attributes (ADR-2026-11-19-0124): its
-memory, its size and alignment, `constant`, `export`, then its pieces. -/
+memory, its size and alignment, `const`, `export`, then its pieces. -/
 def Global.decodeAttrs (name : Name) (as : List Attr) : Except GlobalFault Global := do
   let (mem, i, as) ← Global.decodeMem as
   match as with
   | s :: a :: rest =>
     match Aggregate.decodeNumber "size" s, Aggregate.decodeNumber "align" a with
     | some size, some align =>
-      let (c, rest) := Global.decodeFlag "constant" rest
+      let (c, rest) := Global.decodeFlag "const" rest
       let (e, rest) := Global.decodeFlag "export" rest
       let init ← Global.decodePieces (i + 2 + c.toNat + e.toNat) rest
       pure ⟨name, mem, size, align, c, if e then .exported else .internal, init⟩
     | none, _ => .error (some i, "a global writes size(S) after its memory, S at most 2^64 - 1")
     | _, none => .error (some (i + 1), "a global writes align(A) after its size, " ++
         "A at most 2^64 - 1")
-  | _ => .error (none, "a global writes size(S) and align(A), then constant, export and its " ++
+  | _ => .error (none, "a global writes size(S) and align(A), then const, export and its " ++
       "initializer")
 
 end Fir

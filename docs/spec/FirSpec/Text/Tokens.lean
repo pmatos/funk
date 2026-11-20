@@ -168,7 +168,7 @@ $`\texttt{->}` followed by the tokens of $`\mathrm{attr}(T_1), \dots, \mathrm{at
 separated by $`\texttt{,}`. An item that is a function has the tokens of
 its function, an item of a dialect's kind those of that item, and an
 aggregate's layout those of the item of kind `aggregate` that writes it,
-and a global those of the item of kind `data` that writes it. A nested
+and a global those of the item of kind `global` that writes it. A nested
 module with the symbol $`s`, the dialect set $`x^*`
 and the items $`i^*` has the tokens:
 

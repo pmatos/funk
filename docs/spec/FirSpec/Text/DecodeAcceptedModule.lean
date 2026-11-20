@@ -85,7 +85,7 @@ as types and decode back. So an aggregate's layout decoded from
 attributes that can be written is well formed.
 :::
 
-:::readable Fir.decodeFuncItem_wellFormed Fir.decodeItem_wellFormed Fir.decodeItems_wellFormed Fir.decodeGlobal_wellFormed (pin := Fir.Text.decodeFuncItem) (pin := Fir.Text.decodeItem) (pin := Fir.Text.decodeItems) (pin := Fir.Text.SItem.Writable) (fingerprint := "5399718469718795377")
+:::readable Fir.decodeFuncItem_wellFormed Fir.decodeItem_wellFormed Fir.decodeItems_wellFormed Fir.decodeGlobal_wellFormed (pin := Fir.Text.decodeFuncItem) (pin := Fir.Text.decodeItem) (pin := Fir.Text.decodeItems) (pin := Fir.Text.SItem.Writable) (fingerprint := "9757308709303783635")
 *Theorems: items decoded from a tree that can be written are well formed.*
 Let $`d` be a dialect with a signature, validation rules and a text, whose
 text is lawful:
@@ -104,7 +104,7 @@ them. A `module` decodes only when it has no parameters, results or
 attributes; its body then holds no blocks, or a dialect set whose names are
 words and items that can be written, which decode to well-formed items in
 turn. An `aggregate`, and an item whose kind is a word of a dialect,
-decode by the theorems above, and a `data` item decodes only as a global
+decode by the theorems above, and a `global` item decodes only as a global
 whose attributes read, so whose numbers are within the limit. The last two theorems call one another, and are proved together by
 induction on the items.
 :::

@@ -1,7 +1,7 @@
 //! Globals that the text writes and reads back, whether or not validation
 //! accepts them (ADR-2026-11-09-1546, spelled as ADR-2026-11-19-0124 says):
 //! every number but a unit's from 0 to `2^64 - 1`, any natural number as a
-//! unit, `constant` and `export` or not, and the address of the global
+//! unit, `const` and `export` or not, and the address of the global
 //! itself or of any other symbol.
 
 use super::super::{Rng, symbol};

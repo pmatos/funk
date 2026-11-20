@@ -140,11 +140,24 @@ class Tests(unittest.TestCase):
 
     def test_a_global_is_skipped(self):
         text = (
-            "data @g() size(16) align(8) constant export addr(@g) units(1, 2) "
+            "global @g() size(16) align(8) const export addr(@g) units(1, 2) "
             "zeros(6) {\n}\n\n"
             "func @f(%p: ptr) {\n^e:\n  ret @0\n}\n\nlocs {\n  @0 = unknown\n}\n"
         )
         self.assertEqual(list(read(text)), ["@f"])
+
+    def test_a_global_sits_beside_the_core_words_it_shares(self):
+        # `alloca`'s kind `global` and the op `const` are words of a
+        # function's ops, not items (#237 Q4).
+        text = (
+            "global @g() size(4) align(4) const units(1, 0, 0, 0) {\n}\n\n"
+            "func @f() -> i32 {\n^e:\n  %p: ptr = alloca global i32 @0\n"
+            "  %c: i32 = const 1 @0\n  ret %c @0\n}\n\nlocs {\n  @0 = unknown\n}\n"
+        )
+        self.assertEqual(list(read(text)), ["@f"])
+        self.assertEqual(
+            [op.name for op in read(text)["@f"].ops], ["alloca", "const", "ret"]
+        )
 
     def test_texts_it_cannot_read(self):
         for text, needle in [

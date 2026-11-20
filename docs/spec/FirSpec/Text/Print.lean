@@ -124,7 +124,7 @@ $`k = 0`.
 An item that is a function is written as that function, an item of a
 dialect's kind as that item, and an aggregate's layout as the item of kind
 `aggregate` that writes it, with no parameters or results and its
-attributes, and a global as the item of kind `data` that writes it, in the
+attributes, and a global as the item of kind `global` that writes it, in the
 same way. A nested module
 with the symbol $`s`, the dialect set $`x^*` and the items $`i^*`, at the
 indentation $`n`, is written as $`n` spaces, `module `,

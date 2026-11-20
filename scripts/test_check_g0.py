@@ -226,6 +226,22 @@ class Rules(unittest.TestCase):
         moved = {CORE_TEXT: core, "lean/Fir/Core/Report.lean": generic}
         self.assertEqual(problems(tree(self, moved)), [])
 
+    def test_the_shared_words_pass_and_another_core_op_does_not(self):
+        # `global` and `const` are core words that a global's generic text
+        # writes too (the human's ruling of 2026-11-20, #237 Q4); `poison`
+        # stays a core word.
+        core = CORE_TEXT_SAMPLE.replace(
+            '"ret"', '"ret" | .const _ => "const" | .poison _ => "poison"'
+        ).replace('"nsw"', '"global"')
+        generic = 'def item : List String := ["global", "const", "poison"]\n'
+        root = tree(self, {CORE_TEXT: core, "lean/Fir/Text/GlobalText.lean": generic})
+        self.assertEqual(
+            problems(root),
+            [
+                'lean/Fir/Text/GlobalText.lean:1: writes the core dialect\'s word "poison"'
+            ],
+        )
+
     def test_corollary_files_may_name_the_core_dialect_but_not_write_its_words(self):
         text = 'import Fir.Core.TextLaws\ntheorem Core.x : "add" = "add" := rfl\n'
         found = problems(tree(self, {"lean/Fir/Text/PrintParse.lean": text}))
@@ -363,7 +379,8 @@ class Repository(unittest.TestCase):
         self.assertIn("lean/FirTest/G0/Regions.lean", generic_files())
 
     def test_the_core_words_hold_every_core_op(self):
-        self.assertLessEqual(set(CORE_OPS), core_words())
+        # `const` is the one op name that generic code shares (#237 Q4).
+        self.assertLessEqual(set(CORE_OPS) - {"const"}, core_words())
         self.assertLessEqual(
             {
                 "nsw",
@@ -382,6 +399,8 @@ class Repository(unittest.TestCase):
             core_words(),
         )
         self.assertNotIn("align", core_words())
+        self.assertNotIn("global", core_words())
+        self.assertNotIn("const", core_words())
 
     def test_the_gpu_words_hold_every_gpu_op_and_dimension(self):
         self.assertEqual(

@@ -210,10 +210,17 @@ fn strings_written(src: &str, is_word: impl Fn(&str) -> bool) -> Vec<String> {
         .collect()
 }
 
+/// The core's words that generic code writes too: `global` and `const`, a
+/// global's item kind and flag (the human's ruling of 2026-11-20, #237 Q4),
+/// as `SHARED_WORDS` in `scripts/check_g0.py` says.
+const SHARED_WORDS: [&str; 2] = ["global", "const"];
+
 /// The strings of the code of `src` that are words of the core dialect,
-/// each written alone.
+/// each written alone, but the shared words.
 fn core_words_written(words: &[String], src: &str) -> Vec<String> {
-    strings_written(src, |s| is_core_word(words, s))
+    strings_written(src, |s| {
+        is_core_word(words, s) && !SHARED_WORDS.contains(&s)
+    })
 }
 
 #[test]
@@ -305,6 +312,26 @@ fn a_word_that_names_a_core_op_and_a_generic_term_is_a_core_word() {
     ] {
         assert!(written(src).is_empty(), "{src}");
     }
+}
+
+/// `const` names a core op, and generic code writes it alone as a global's
+/// flag, as it writes `global` as its kind (#237 Q4); `poison` beside them
+/// is found all the same.
+#[test]
+fn the_shared_words_are_not_found_and_another_core_op_is() {
+    let words = core_words();
+    assert!(
+        core_ops().iter().any(|op| op == "const"),
+        "{:?}",
+        core_ops()
+    );
+    assert_eq!(
+        core_words_written(
+            &words,
+            r#"fn f() -> [&'static str; 3] { ["global", "const", "poison"] }"#
+        ),
+        ["poison"]
+    );
 }
 
 #[test]

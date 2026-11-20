@@ -12,7 +12,7 @@ use common::{diagnostics, one_func, parse_err, parse_ok};
 use funk_ir::{Global, InitPiece, Int, Item, Linkage, print};
 
 fn glob(attrs: &str) -> String {
-    one_func(&format!("data @g() {attrs} {{\n}}\n"))
+    one_func(&format!("global @g() {attrs} {{\n}}\n"))
 }
 
 fn glob_in(layout: &str, attrs: &str) -> String {
@@ -20,7 +20,9 @@ fn glob_in(layout: &str, attrs: &str) -> String {
 }
 
 fn globs(a: &str, g: &str) -> String {
-    one_func(&format!("data @a() {a} {{\n}}\n\ndata @g() {g} {{\n}}\n"))
+    one_func(&format!(
+        "global @a() {a} {{\n}}\n\nglobal @g() {g} {{\n}}\n"
+    ))
 }
 
 const MEM16: &str = "memory(1, unit(16), pointer(32), little)";
@@ -45,9 +47,9 @@ fn size_over(units: u64, size: u64) -> String {
 
 #[test]
 fn globals_read_back_as_written() {
-    round_trips(&glob("size(8) align(1) constant units(104, 105, 0)"));
+    round_trips(&glob("size(8) align(1) const units(104, 105, 0)"));
     round_trips(&glob("size(0) align(1)"));
-    round_trips(&glob("size(4) align(4) constant export units(1, 0, 0, 0)"));
+    round_trips(&glob("size(4) align(4) const export units(1, 0, 0, 0)"));
     round_trips(&glob("size(16) align(8) export zeros(8) addr(@g)"));
     round_trips(&globs(
         "size(4) align(4) units(7) zeros(3)",
@@ -62,18 +64,16 @@ fn globals_read_back_as_written() {
     ));
     round_trips(&glob("size(18446744073709551615) align(1)"));
     round_trips(&format!(
-        "data @\"a b\"() size(8) align(8) addr(@\"a b\") {{\n}}\n\n{}",
+        "global @\"a b\"() size(8) align(8) addr(@\"a b\") {{\n}}\n\n{}",
         one_func("func @f() {\n^e:\n  ret @0\n}\n")
     ));
     round_trips(&one_func(
-        "module @dev() {\n  data @g() size(1) align(1) units(1) {\n  }\n\n}\n",
+        "module @dev() {\n  global @g() size(1) align(1) units(1) {\n  }\n\n}\n",
     ));
     let m = parse_ok(&glob("size(2) align(2)"));
     let mut want = Global::new("g", 0, 2, 2);
     assert_eq!(m.items, [Item::Global(want.clone())]);
-    let m = parse_ok(&glob(
-        "size(4) align(4) constant export units(1) addr(@g, 2)",
-    ));
+    let m = parse_ok(&glob("size(4) align(4) const export units(1) addr(@g, 2)"));
     want = Global::new("g", 0, 4, 4);
     want.constant = true;
     want.linkage = Linkage::Exported;
@@ -84,38 +84,54 @@ fn globals_read_back_as_written() {
     assert_eq!(m.items, [Item::Global(want)]);
 }
 
+/// The global's words are the core's too (#237 Q4): a global sits beside
+/// `alloca`'s kind `global` and the op `const` in one module, and each
+/// reads back as itself (`beside` in `lean/FirTest/Global.lean`).
+#[test]
+fn a_global_sits_beside_the_core_words_it_shares() {
+    let text = one_func(concat!(
+        "global @g() size(4) align(4) const units(1, 0, 0, 0) {\n}\n\n",
+        "func @f() -> i32 {\n^e:\n  %p: ptr = alloca global i32 @0\n",
+        "  %c: i32 = const 1 @0\n  ret %c @0\n}\n",
+    ));
+    round_trips(&text);
+    let m = parse_ok(&text);
+    let mut want = Global::new("g", 0, 4, 4);
+    want.constant = true;
+    want.init = vec![InitPiece::Units(
+        [1, 0, 0, 0].into_iter().map(Int::from).collect(),
+    )];
+    assert_eq!(m.items.first(), Some(&Item::Global(want)));
+    assert_eq!(
+        messages(&text),
+        ["alloca allocates on the stack in M1, not as global: global and heap are hooks"]
+    );
+}
+
 #[test]
 fn attributes_that_do_not_decode_fail_where_the_spec_says() {
     rejected_at(
         &glob("memory(0) size(1) align(1)"),
-        11,
+        13,
         "writes memory(N) first",
     );
     rejected_at(
         &glob("memory(-1) size(1) align(1)"),
-        11,
+        13,
         "writes memory(N) first",
     );
-    rejected_at(&glob("align(1) size(1)"), 11, "writes size(S)");
-    rejected_at(&glob("size(-1) align(1)"), 11, "writes size(S)");
-    rejected_at(&glob("size(1) align(a)"), 19, "writes align(A)");
+    rejected_at(&glob("align(1) size(1)"), 13, "writes size(S)");
+    rejected_at(&glob("size(-1) align(1)"), 13, "writes size(S)");
+    rejected_at(&glob("size(1) align(a)"), 21, "writes align(A)");
     rejected_at(
         &glob("memory(1) size(1) align(18446744073709551616)"),
-        29,
+        31,
         "writes align(A)",
     );
     rejected_at(&glob("size(1)"), 1, "writes size(S) and align(A)");
-    rejected_at(&glob("size(1) align(1) export constant"), 35, "not a piece");
-    rejected_at(
-        &glob("size(1) align(1) constant constant"),
-        37,
-        "not a piece",
-    );
-    rejected_at(
-        &glob("size(1) align(1) units(1) constant"),
-        37,
-        "not a piece",
-    );
+    rejected_at(&glob("size(1) align(1) export const"), 37, "not a piece");
+    rejected_at(&glob("size(1) align(1) const const"), 36, "not a piece");
+    rejected_at(&glob("size(1) align(1) units(1) const"), 39, "not a piece");
     for piece in [
         "addr(@g, 0)",
         "addr(g)",
@@ -125,22 +141,22 @@ fn attributes_that_do_not_decode_fail_where_the_spec_says() {
     ] {
         rejected_at(
             &glob(&format!("size(1) align(1) {piece}")),
-            28,
+            30,
             "not a piece",
         );
     }
     rejected_at(
-        &one_func("data @g(%x: i8) size(1) align(1) {\n}\n"),
-        9,
+        &one_func("global @g(%x: i8) size(1) align(1) {\n}\n"),
+        11,
         "a global has no parameters",
     );
     rejected_at(
-        &one_func("data @g() -> i8 size(1) align(1) {\n}\n"),
-        14,
+        &one_func("global @g() -> i8 size(1) align(1) {\n}\n"),
+        16,
         "a global has no results",
     );
     rejected_at(
-        &one_func("data @g() size(1) align(1) {\n^e:\n  ret @0\n}\n"),
+        &one_func("global @g() size(1) align(1) {\n^e:\n  ret @0\n}\n"),
         1,
         "a global has an empty body",
     );
@@ -148,7 +164,7 @@ fn attributes_that_do_not_decode_fail_where_the_spec_says() {
 
 #[test]
 fn validation_checks_the_initializer() {
-    assert!(messages(&glob("size(8) align(1) constant units(104, 105, 0)")).is_empty());
+    assert!(messages(&glob("size(8) align(1) const units(104, 105, 0)")).is_empty());
     assert!(messages(&glob("size(0) align(1)")).is_empty());
     assert!(
         messages(&globs(
@@ -180,13 +196,13 @@ fn validation_checks_the_initializer() {
     );
     assert_eq!(
         messages(&one_func(
-            "data @g() size(8) align(8) addr(@f) {\n}\n\nfunc @f() {\n^e:\n  ret @0\n}\n"
+            "global @g() size(8) align(8) addr(@f) {\n}\n\nfunc @f() {\n^e:\n  ret @0\n}\n"
         )),
         ["the initializer's address of @f names no global of its table"]
     );
     assert_eq!(
         messages(&one_func(
-            "data @a() size(1) align(1) {\n}\n\nmodule @dev() {\n  data @g() size(8) align(8) addr(@a) {\n  }\n\n}\n"
+            "global @a() size(1) align(1) {\n}\n\nmodule @dev() {\n  global @g() size(8) align(8) addr(@a) {\n  }\n\n}\n"
         )),
         ["the initializer's address of @a names no global of its table"]
     );
@@ -208,13 +224,13 @@ fn validation_checks_the_memory_alignment_and_symbols() {
     }
     assert_eq!(
         messages(&one_func(
-            "data @f() size(1) align(1) {\n}\n\nfunc @f() {\n^e:\n  ret @0\n}\n"
+            "global @f() size(1) align(1) {\n}\n\nfunc @f() {\n^e:\n  ret @0\n}\n"
         )),
         ["the symbol @f names more than one item"]
     );
     assert_eq!(
         messages(&one_func(
-            "module @dev() {\n  data @g() memory(1) size(1) align(1) {\n  }\n\n}\n"
+            "module @dev() {\n  global @g() memory(1) size(1) align(1) {\n  }\n\n}\n"
         )),
         ["the global lives in memory 1, which the data layout does not declare"]
     );

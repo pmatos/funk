@@ -50,7 +50,10 @@ CORE_TEXT_PARTS = (
     "lean/Fir/Core/StoreText.lean",
     "lean/Fir/Core/RoundingText.lean",
 )
-SHARED_WORDS = frozenset({"align"})
+# The shared words: `align`, which the data layout line writes (the human's
+# ruling of 2026-11-14, #382), and `global` and `const`, a global's item
+# kind and flag (the human's ruling of 2026-11-20, #237 Q4).
+SHARED_WORDS = frozenset({"align", "global", "const"})
 CORE_POISON = "lean/Fir/Core/Poison.lean"
 POISON_DEF = "def Op.poisonClass"
 CORE_EFFECTS = "lean/Fir/Core/OpEffects.lean"

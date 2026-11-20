@@ -204,7 +204,7 @@ impl DialectItem {
 /// An item of a module. Every item is written
 /// `kind @sym(params) -> results attrs { body }` (N2). The core's kinds are
 /// `func`, `module` (ADR-2026-11-10-1510), `aggregate`
-/// (ADR-2026-11-16-1546) and `data`, a global (ADR-2026-11-19-0124), and a
+/// (ADR-2026-11-16-1546) and `global`, a global (ADR-2026-11-19-0124), and a
 /// dialect registers kinds of its own
 /// (ADR-2026-11-09-1543).
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
