@@ -309,9 +309,9 @@ each is what covers the whole core:
   `Core.caller_isRefinedBy_of_from` ask nothing of it.
 - `Core.Op.liftsSetM`, `Core.Op.effects_touchesNoMemory` and
   `Core.reachesNoMemory` are about touching no memory, and the first, since
-  `fieldAddr`, about reading no item too, so no version covers a memory op:
-  it has no tie and declares a memory effect. Nor does one cover
-  `fieldAddr`, which has no tie either. The obligations
+  `fieldAddr`, about reading no item too. So no version covers a memory op,
+  which has no tie and declares a memory effect, or `fieldAddr`, which has
+  no tie. The obligations
   they served hold through `Core.Op.memCases` and
   `Core.lawfulDialectEffects`.
 - `Core.memDenoteIn_mapsDenote` still covers every op, and asks the

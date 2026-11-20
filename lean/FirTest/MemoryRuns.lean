@@ -316,9 +316,9 @@ example : allocMain ∈ allocModule.funcs := by simp [allocModule, Module.funcs]
 Only the ops that `Core.Op.touchesMemory` marks touch memory: those that
 `docs/decisions/semantics-effects.md#soundness` says touch it, not
 `fieldAddr`, which reads items but touches none. A core function that
-reaches none of them reaches no memory, so it returns
-from given memories what it returns with memory, with the memories it
-started from (the section on runs that touch no memory). -/
+reaches none of them reaches no memory, so it returns from given memories
+what it returns with memory, with the memories it started from (the
+section on runs that touch no memory). -/
 
 example (M : Module CoreDialect) {s : Name} {f : Func CoreDialect} (hf : M.func? s = some f)
     (hno : ∀ g ∈ M.funcs, ∀ o ∈ g.allOps, o.op.touchesMemory = false)
