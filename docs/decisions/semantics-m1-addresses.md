@@ -73,7 +73,10 @@ memory, and exposing exposes nothing but in its own memory. Which declared
 effect covers exposing is open for the human, and the op that exposes waits
 for it. Rejected: adding the address to `Memory.allocs`, which would make
 exposing an allocation effect but narrow _no read_ under the same
-statement of `LawfulDialectEffects`.
+statement of `LawfulDialectEffects`. The end of a return does not compare
+the addresses of the allocations it observes: the human ruled this on
+2026-11-20, on #233
+([semantics-m1-trace.md](semantics-m1-trace.md#how-the-spec-states-the-end-of-a-return)).
 
 ## Exposing a pointer, and address policies
 

@@ -174,7 +174,12 @@ import Fir.Execution.MemoryFreeReplace
 import Fir.Execution.Trace
 import Fir.Execution.TraceMonad
 import Fir.Execution.TraceRuns
+import Fir.Execution.TraceWorld
+import Fir.Execution.Observe
+import Fir.Execution.ObserveEnd
+import Fir.Execution.ObserveEndLaws
 import Fir.Execution.TraceDialect
+import Fir.Core.Observe
 import Fir.Memory.Model
 import Fir.Memory.Ordering
 import Fir.Memory.Laws
