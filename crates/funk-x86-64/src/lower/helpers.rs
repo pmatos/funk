@@ -19,18 +19,15 @@ type Helper = (fn(&Op) -> Option<&'static str>, &'static str, u64);
 /// Every runtime helper: the one that divides at `i128`, the one that
 /// does `fma` at `f32` and `f64`, the one that does `frem` and `fmod`
 /// there, and funk's own `memcpy`, `memmove` and `memset`.
-const HELPERS: [Helper; COUNT] = [
+const HELPERS: [Helper; 4] = [
     (div::helper, div::HELPER, div::HELPER_STACK),
     (farith::helper, farith::HELPER, farith::HELPER_STACK),
     (frem::helper, frem::HELPER, frem::HELPER_STACK),
     (memops::helper, memops::HELPER, memops::HELPER_STACK),
 ];
 
-/// How many runtime helpers there are.
-pub const COUNT: usize = 4;
-
-/// Which helpers a function or module calls, in [`HELPERS`] order.
-pub type Used = [bool; COUNT];
+/// Which helpers a function or module calls, in `HELPERS` order.
+pub type Used = [bool; HELPERS.len()];
 
 /// The most stack that a call of a routine of any runtime helper uses
 /// below the caller's `%rsp`.
