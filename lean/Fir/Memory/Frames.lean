@@ -37,6 +37,11 @@ when a memory that the run has not touched before changes. Finding a memory
 then looks at no more entries than the run has memories, however many
 stores, allocations and frees came before, and takes no stack for them
 (`docs/decisions/fir-ref-memory.md`).
+
+The memories also count the integers that the run has turned back into
+pointers, in every memory: the resolver that picks an allocation for each
+of them sees the count, so each call may pick differently (the section on
+address resolvers). No other operation changes the count.
 -/
 
 namespace Fir.Memory
@@ -45,18 +50,21 @@ namespace Fir.Memory
 `unit x` bits wide for the memory `x`: the table of the memories, each with
 its name, and the frames of the calls that have not returned, the innermost
 first. A frame lists the stack allocations its call made, each by its memory
-and its id. -/
+and its id. It also counts the integers the run has turned back into
+pointers. -/
 structure Memories (Mem : Type) (unit : Mem → Nat) where
   table : List (Σ x : Mem, Memory (unit x))
   frames : List (List (Mem × AllocId))
+  rebuilds : Nat
 
 namespace Memories
 
 variable {Mem : Type} {unit : Mem → Nat}
 
 /-- The memories of a run before anything is allocated, outside every call:
-no memory in the table, so each is empty. -/
-def empty : Memories Mem unit := ⟨[], []⟩
+no memory in the table, so each is empty, and no integer turned back into a
+pointer. -/
+def empty : Memories Mem unit := ⟨[], [], 0⟩
 
 /-- Enters a call: pushes an empty frame. -/
 def enter (S : Memories Mem unit) : Memories Mem unit :=

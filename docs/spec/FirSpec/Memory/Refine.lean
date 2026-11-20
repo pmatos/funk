@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Refining memories: readable blocks" =>
 
-:::moduleDocs (fingerprint := "444526487067295512")
+:::moduleDocs (fingerprint := "12449435311160166700")
 :::
 
 :::readable Fir.Memory.MemUnit.IsRefinedBy Fir.Memory.Block.IsRefinedBy Fir.Memory.Memory.IsRefinedBy (fingerprint := "15233952586122848034")
@@ -81,17 +81,22 @@ others faults for the same reason in both, or gives memories that refine
 each other.
 :::
 
-:::readable Fir.Memory.Memories.IsRefinedBy Fir.Memory.Memories.isRefinedBy_refl Fir.Memory.Memories.isRefinedBy_trans (fingerprint := "16786046636736567672")
+:::readable Fir.Memory.Memories.IsRefinedBy Fir.Memory.Memories.isRefinedBy_refl Fir.Memory.Memories.isRefinedBy_trans (fingerprint := "17857734809133270860")
 *Definition: refining the memories of a run.* The memories $`S'` of a
-run refine $`S` when they have the same frames, and the memory of each
-name in $`S'` refines the memory of that name in $`S`:
+run refine $`S` when they have the same frames, the memory of each name
+in $`S'` refines the memory of that name in $`S`, and both have turned as
+many integers back into pointers:
 
-$$`S \sqsubseteq S' \iff \mathit{frames}(S) = \mathit{frames}(S') \land \forall x.\ \mathit{mem}_S(x) \sqsubseteq \mathit{mem}_{S'}(x)`
+$$`S \sqsubseteq S' \iff \mathit{frames}(S) = \mathit{frames}(S') \land \forall x.\ \mathit{mem}_S(x) \sqsubseteq \mathit{mem}_{S'}(x) \land c_S = c_{S'}`
+
+The count is compared so that the
+{ref "The-fir-specification--Memory--Address-resolvers"}[resolver] of a
+call sees the same count in both.
 
 It is reflexive and transitive.
 :::
 
-:::readable Fir.Memory.Memories.IsRefinedBy.enter Fir.Memory.Memories.IsRefinedBy.set Fir.Memory.Memories.IsRefinedBy.free Fir.Memory.Memories.IsRefinedBy.freeAll Fir.Memory.Memories.IsRefinedBy.exit Fir.Memory.Memories.IsRefinedBy.record (pin := Fir.Memory.Memories.exit) (fingerprint := "16507926405396771119")
+:::readable Fir.Memory.Memories.IsRefinedBy.enter Fir.Memory.Memories.IsRefinedBy.set Fir.Memory.Memories.IsRefinedBy.free Fir.Memory.Memories.IsRefinedBy.freeAll Fir.Memory.Memories.IsRefinedBy.exit Fir.Memory.Memories.IsRefinedBy.record (pin := Fir.Memory.Memories.exit) (fingerprint := "7318644965343585393")
 *Theorems: frames keep refinement.* Let $`S \sqsubseteq S'`. Entering a
 call keeps refinement. Replacing the memory $`x` by $`m` in $`S` and by
 $`m'` in $`S'`, with $`m \sqsubseteq m'`, keeps it, and so does freeing an

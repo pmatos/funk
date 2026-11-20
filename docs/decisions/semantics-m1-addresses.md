@@ -12,9 +12,11 @@ Stage 1 gives the memory model its addresses, in
 `CanonicalLaws.lean` and `ExposeLaws.lean`. Stage 2 makes exposing a
 pointer an operation of the memory effect, under an address policy
 (`lean/Fir/Memory/Policy.lean`, `PolicyLaws.lean`,
-`lean/Fir/Execution/MemoryExposeLaws.lean` and `MemoryPolicyRuns.lean`).
-No op uses it yet: `ptr_expose` and `ptr_from_int` (the human's spelling of
-2026-11-18, Q1), the operation that turns an integer back into a pointer,
+`lean/Fir/Execution/MemoryExposeLaws.lean` and `MemoryPolicyRuns.lean`),
+and turning an integer back into a pointer one too, under an address
+resolver (`lean/Fir/Memory/Resolver.lean`, `ResolverLaws.lean` and
+`lean/Fir/Execution/MemoryFromAddrLaws.lean`). No op uses them yet:
+`ptr_expose` and `ptr_from_int` (the human's spelling of 2026-11-18, Q1),
 the Rust tools and the backend come in the stages after it. The spec's
 memory chapter renders all of them.
 
@@ -69,9 +71,13 @@ out, so the obligations cannot tell an op that exposes from one that does
 nothing. Stage 2 states what exposing changes as a property of its own,
 _exposes nothing in `x`_ (`ExposesNot`): every allocation of `x` keeps its
 address. Allocating, freeing, loading and storing expose nothing in any
-memory, and exposing exposes nothing but in its own memory. Which declared
-effect covers exposing is open for the human, and the op that exposes waits
-for it. Rejected: adding the address to `Memory.allocs`, which would make
+memory, and exposing exposes nothing but in its own memory. Exposing counts
+as allocating in its memory, as a declared effect: an op that exposes
+declares that it allocates there (the human's ruling of 2026-11-20 on
+#232, question B), and stage 3 states it for `ptr_expose`. Rejected: a new
+declared effect, "exposes in memory m", which would add a field to every
+effect set, the Rust effects, the verifier and the function summaries.
+Also rejected: adding the address to `Memory.allocs`, which would make
 exposing an allocation effect but narrow _no read_ under the same
 statement of `LawfulDialectEffects`. The end of a return does not compare
 the addresses of the allocations it observes: the human ruled this on
@@ -158,7 +164,59 @@ apart from the next allocation's canonical address. The fallback does not
 keep it: the lowest address that fits may start where a live allocation
 ends. `ptr_from_int` takes an angelic choice among the live, exposed
 allocations that contain the address, the end included (the human's ruling
-of 2026-11-18, Q3), so at such an address it may pick either. How the spec
-states that choice is open for the human, and the operation that turns an
-integer back into a pointer waits for it. The gap is `fir-ref`'s choice,
-not a rule of the spec.
+of 2026-11-18, Q3), so at such an address it may pick either (the next
+section). The gap is `fir-ref`'s choice, not a rule of the spec.
+
+## Turning an integer back into a pointer
+
+The memory effect's `fromAddr` turns an integer of a memory's pointer width
+back into a pointer of an allocation that holds its address: a live,
+exposed allocation from its address to its end, the end included. A freed
+allocation never counts (the human's ruling of 2026-11-18, Q3). The
+pointer's offset is the address less the allocation's. When no allocation
+holds it, the pointer has no provenance, and an access through it is
+immediate UB, so a pointer rebuilt from an address that was never exposed
+cannot access memory. `fromAddr` itself never fails.
+
+Two allocations may hold one address, one ending where the next starts,
+and the choice between them is angelic. It is stated by a _resolver per
+call_ (`Memory.Resolver`), as the human ruled on 2026-11-20, on #232
+(question A): the memories of a run count the integers turned back into
+pointers (`Memories.rebuilds`), and the run's resolver for each memory sees
+that count, the places of the memory's blocks and the address, and
+proposes an allocation. The effect takes the proposal when it holds the
+address, and else the memory model's own pick (`Memory.pick`): the first
+allocation whose units hold the address, and else the first whose end it
+is. At each call every allocation that holds the address is the one picked
+under the resolver that proposes it (`Memories.fromAddr_of_holds`).
+Rejected: a resolver per memory state, under which two calls on the same
+address in the same memories pick the same allocation, narrower than Q3;
+wildcard provenance, as Miri has, which is broader; and the fixed rule that
+the allocation that starts at the address wins, which is not angelic.
+
+The resolver travels in the run's record (`RunItems`, field `resolvers`), as
+the policy does, and a run made from its module gives the canonical
+resolver, which proposes nothing, so `fir-ref` takes the memory model's
+pick. The pick is `fir-ref`'s choice, not a rule of the spec. Every
+obligation and guarantee over the semantics with memory holds for every
+record, so for every resolver, with no new hypothesis.
+
+Memories refine each other only when they have counted as many calls
+(`Memories.IsRefinedBy`), so turning an integer back in memories that
+refine each other gives the same pointer. The effect obligations do not
+see the count: turning an integer back writes, allocates and exposes
+nothing. Which declared effect covers the count comes with
+`ptr_from_int` in stage 3. _Counts no rebuild_ (`RebuildsNot`) is its own
+property, which every other operation of the effect has.
+
+A step cannot look ahead at what the program does with the pointer, so the
+angel chooses over whole runs. `Func.angelicBehaviour` is the spec's
+behaviour with memory: under each policy, the resolvers whose runs never
+end in UB, when there is one, and every resolver otherwise. Rejected: a
+union over every resolver, as `Func.memBehaviour` is over policies, under
+which one resolver that ends in UB would make the program UB. A run of
+`fir-ref` that never ends in UB gives outcomes of the spec. A refinement
+under each policy and resolver lifts to the spec's behaviour when the
+target ends in UB under each resolver under which the source does
+(`Func.angelicBehaviour_isRefinedBy_of_each`), and in general when each
+resolver the target keeps is matched by one the source keeps.
