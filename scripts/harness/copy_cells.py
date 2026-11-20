@@ -9,8 +9,8 @@ The ordering is not part of a cell: validation accepts only `nonatomic`,
 so another ordering is not a cell, as a rounding mode other than `rne` is
 not.
 
-The cells are on the interpreter-only side alone, until the backend lowers
-the three ops to funk's own runtime routines (stage 4 of #234).
+The cells are on both sides, since the backend lowers the three ops to
+funk's own runtime routines (stage 4 of #234).
 """
 
 from cell_types import Cell, CellError, Row, Table, is_pointer

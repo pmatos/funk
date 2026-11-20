@@ -2,7 +2,8 @@
 
 This page continues [x86-64-backend-lowering.md](x86-64-backend-lowering.md).
 It says what holds today for how the backend lowers pointers and the memory
-ops of #231: `ptradd`, `alloca`, `load` and `store`. It is the record: when
+ops of #231, `ptradd`, `alloca`, `load` and `store`, and the copies, moves and
+sets of #234, `memcpy`, `memmove` and `memset`. It is the record: when
 this page and an ADR disagree, the page wins, and the ADR is fixed or deleted
 (ADR-2026-11-09-1610). The ops' meaning is on
 [semantics-m1-memory.md](semantics-m1-memory.md) and
@@ -72,6 +73,46 @@ misaligned access is UB in the spec (the human's ruling of 2026-11-14 on
 makes poison, reads the bytes that are there. Each access loads the address
 into `%rcx` and the value through `%rax`, and `%rdx` for an `i128`, or
 through `%xmm0` for a float.
+
+## Copies, moves and sets
+
+`memcpy`, `memmove` and `memset` each call funk's own routine,
+`__funk_rt_memcpy`, `__funk_rt_memmove` or `__funk_rt_memset`, of the runtime
+helper `lower/memops.s`, which the module's object file carries once when a
+function calls one, as the `i128` division routines are carried
+([x86-64-backend-lowering.md](x86-64-backend-lowering.md#division-at-i128)).
+This is the human's ruling of 2026-11-11 on #274, in ADR-2026-11-09-1551: a
+program that only copies, moves or sets memory links static, with no C
+library. The routines are local symbols with the `__funk_rt_` prefix, which
+no fir function's symbol has, so a module that also links glibc
+([x86-64-backend.md](x86-64-backend.md#linking-with-the-host-c-library)) keeps
+glibc's `memcpy`, `memmove` and `memset` apart from funk's
+(`crates/funk-x86-64/tests/memops.rs`).
+
+Each is a System V function of the destination in `%rdi`, the source, or the
+`i8` value of `memset`, in `%rsi`, and the length in bytes in `%rdx`. Each
+uses only `%rax`, `%rcx`, `%rsi` and `%rdi` and its return address, and
+copies or fills with one `rep movsb` or `rep stosb`, which with a length of 0
+touches nothing, whatever the pointers (#234, Q1 B). `memcpy` copies first to
+last, exact for ranges that are equal or disjoint, the only ones it allows
+(Q2 B). `memmove` copies last to first, with the direction flag set and then
+cleared, when the destination starts inside the source, and first to last
+otherwise, so it writes what the source held before it began.
+
+The length is read as unsigned: zero-extended from its width, and an `i128`
+whose high half is not zero saturates to `2^64 - 1`, as an `alloca` count
+does, since no allocation the backend makes holds 2^64 bytes and such a length
+is UB: the routine runs until it faults, rather than copy the length's low half
+and return. A poison length is the bits its slot holds, one of the lengths the spec
+chooses from (the human's ruling of 2026-11-19 on #234), and a poison value
+writes the byte its slot holds, which refines poison units. A pointer of a
+memory of wider units is reported where it is defined, as for every op, so
+none of the three is lowered in such a memory. The differential harness
+checks the three against `fir-ref` (`tests/fir/canonical/memops-native.fir`).
+Rejected: calls of the C library's routines, which the ruling of #274
+replaced; global `memcpy`, `memmove` and `memset` symbols, which clash with
+glibc's; and inline `rep` code at each op, which the ruling's routines
+replace.
 
 ## Stack allocation
 

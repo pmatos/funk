@@ -25,7 +25,7 @@
 //! (`docs/decisions/x86-64-backend-lowering.md#lowering-i128`). Division at
 //! `i128` calls a routine of a runtime helper, as `fma` at `f32` and `f64`
 //! does, and the module's text then ends with each helper that it calls,
-//! once (`div.rs`, `farith.rs`,
+//! once (`helpers.rs`, `div.rs`, `farith.rs`,
 //! `docs/decisions/x86-64-backend-lowering.md#division-at-i128`).
 //!
 //! An `f32` or `f64` is its bits in one slot. A float constant writes them
@@ -45,9 +45,10 @@
 //!
 //! A pointer is a 64-bit address in one slot, of a memory whose layout
 //! entry x86-64 realises: 8-bit units and 64-bit pointers. `ptradd`, `load`
-//! and `store` work on addresses (`memory.rs`), and `alloca` moves `%rsp`
-//! below the frame at run time, which the stack need counts (`alloca.rs`,
-//! `docs/decisions/x86-64-backend-lowering-memory.md`).
+//! and `store` work on addresses (`memory.rs`), `memcpy`, `memmove` and
+//! `memset` call funk's own runtime routines (`memops.rs`), and `alloca`
+//! moves `%rsp` below the frame at run time, which the stack need counts
+//! (`alloca.rs`, `docs/decisions/x86-64-backend-lowering-memory.md`).
 
 mod alloca;
 mod arith;
@@ -65,7 +66,9 @@ mod float_convert;
 mod float_to_int;
 mod freeze;
 mod frem;
+mod helpers;
 mod int_to_float;
+mod memops;
 mod memory;
 mod moves;
 mod stack;
@@ -83,33 +86,6 @@ use crate::abi::{self, Arg, symbol};
 use crate::asm::{Asm, Mem, NO_EXEC_STACK, Reg};
 use crate::frame::{self, Frame};
 use crate::width;
-
-/// A runtime helper: the routine of it that an op calls, if any, its code,
-/// and the bytes of stack that a call of one of its routines uses below
-/// the caller's `%rsp`.
-type Helper = (fn(&Op) -> Option<&'static str>, &'static str, u64);
-
-/// Every runtime helper: the one that divides at `i128`, the one that
-/// does `fma` at `f32` and `f64`, and the one that does `frem` and `fmod`
-/// there.
-const HELPERS: [Helper; 3] = [
-    (div::helper, div::HELPER, div::HELPER_STACK),
-    (farith::helper, farith::HELPER, farith::HELPER_STACK),
-    (frem::helper, frem::HELPER, frem::HELPER_STACK),
-];
-
-/// The most stack that a call of a routine of any runtime helper uses
-/// below the caller's `%rsp`.
-const HELPER_STACK: u64 = {
-    let (mut i, mut most) = (0, 0);
-    while i < HELPERS.len() {
-        if HELPERS[i].2 > most {
-            most = HELPERS[i].2;
-        }
-        i += 1;
-    }
-    most
-};
 
 /// Why an op was not lowered.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -156,8 +132,8 @@ pub struct Cx<'f> {
     callees: &'f HashMap<&'f str, usize>,
     /// Stack facts collected from emitted calls.
     stack: stack::Function,
-    /// Helper families used by this function, in `HELPERS` order.
-    helpers: [bool; HELPERS.len()],
+    /// The runtime helpers that this function calls.
+    helpers: helpers::Used,
     /// The module's data layout.
     layout: &'f [MemLayout],
     /// The labels of the blocks on a cycle of branches, when the function
@@ -321,6 +297,7 @@ fn lowering(name: &str) -> Option<Lower> {
         .or_else(|| float_convert::lowering(name))
         .or_else(|| float_to_int::lowering(name))
         .or_else(|| memory::lowering(name))
+        .or_else(|| memops::lowering(name))
         .or_else(|| alloca::lowering(name))
 }
 
@@ -339,7 +316,7 @@ pub fn module(m: &Module) -> Result<Lowered, Vec<Diagnostic>> {
     let mut asm = Asm::new();
     let mut out = Vec::new();
     let mut functions = Vec::new();
-    let mut helpers = [false; HELPERS.len()];
+    let mut helpers = helpers::Used::default();
     let mut callees = HashMap::new();
     for (i, f) in m.funcs().enumerate() {
         callees.entry(f.name.as_str()).or_insert(i);
@@ -354,11 +331,7 @@ pub fn module(m: &Module) -> Result<Lowered, Vec<Diagnostic>> {
             }
         }
     }
-    for ((_, code, _), used) in HELPERS.into_iter().zip(helpers) {
-        if used {
-            asm.raw(code);
-        }
-    }
+    helpers::append(&mut asm, &helpers);
     asm.raw(NO_EXEC_STACK);
     if out.is_empty() {
         Ok(Lowered {
@@ -393,7 +366,7 @@ fn func<'f>(
     callees: &'f HashMap<&'f str, usize>,
     layout: &'f [MemLayout],
     out: &mut Vec<Diagnostic>,
-) -> Option<(String, stack::Function, [bool; HELPERS.len()])> {
+) -> Option<(String, stack::Function, helpers::Used)> {
     let entry = f.body.blocks.first();
     let before = out.len();
     let frame = Frame::new(f)
@@ -414,7 +387,7 @@ fn func<'f>(
         locals: 0,
         callees,
         stack,
-        helpers: [false; HELPERS.len()],
+        helpers: helpers::Used::default(),
         layout,
         looping: alloca::looping(f),
         block: "",
@@ -510,11 +483,8 @@ fn block(i: usize, f: &Func, cx: &mut Cx<'_>, b: &Block, out: &mut Vec<Diagnosti
             Err(Unlowered::Why(why)) => out.push(at(f, Some(b), Some(n), why)),
             Err(Unlowered::Reported) => {}
             Ok(()) => {
-                for (i, (routine, _, _)) in HELPERS.iter().enumerate() {
-                    if routine(op).is_some() {
-                        cx.helpers[i] = true;
-                        cx.stack.helper_stack = HELPER_STACK;
-                    }
+                if helpers::mark(op, &mut cx.helpers) {
+                    cx.stack.helper_stack = helpers::STACK;
                 }
             }
         }

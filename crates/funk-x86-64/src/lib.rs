@@ -6,8 +6,8 @@
 //! The module's file holds one function per fir function, each a global
 //! symbol that follows the System V AMD64 calling convention
 //! (ADR-2026-10-30-1232), so C code can link to it, and, when a function
-//! divides at `i128` or does `fma` at `f32` or `f64`, the runtime helper
-//! that it calls, under local symbols
+//! divides at `i128`, does `fma` at `f32` or `f64`, or copies, moves or
+//! sets memory, the runtime helper that it calls, under local symbols
 //! (`docs/decisions/x86-64-backend-lowering.md#division-at-i128`). The
 //! entry file holds the entry point of an executable that runs one function
 //! from the command line and prints its results

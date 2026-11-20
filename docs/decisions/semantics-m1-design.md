@@ -185,7 +185,8 @@ three may be UB, for out-of-bounds access, unless the length is 0. A frontend lo
 `memcpy` to the copy op, not to an external call. The naive backend lowers them
 to funk's own runtime routines `memcpy`, `memmove` and `memset`, not the C
 library's, so a program that only copies, moves or sets memory keeps the
-static link without the C library (ADR-2026-11-09-1551).
+static link without the C library (ADR-2026-11-09-1551). Their symbols are
+funk-private, so they never clash with the C library's.
 
 The human ruled these ops on 2026-11-09, on #220. On 2026-11-11 the human ruled
 on #251 that set writes one unit value, not a byte, and on #274 that funk's
@@ -228,7 +229,8 @@ would gain one.
 The spec has both ops, `Core.Op.memCopy` with a `CopyKind`
 (`lean/Fir/Core/MemCopy.lean`), through every layer but native code (stage 2
 of #234), and `memset`, `Core.Op.memSet` (`lean/Fir/Core/MemSet.lean`),
-too (stage 3); native code and funk's runtime routines are stage 4. The rule takes the length first: 0 does nothing; otherwise a poison
+too (stage 3), and native code calls funk's runtime routines (stage 4,
+[x86-64-backend-lowering-memory.md](x86-64-backend-lowering-memory.md#copies-moves-and-sets)). The rule takes the length first: 0 does nothing; otherwise a poison
 pointer is UB, then a `memcpy` whose ranges partly overlap, then the copy of
 units of stage 1 (`lean/Fir/Execution/MemoryCopyLaws.lean`): a load of the
 units through the source, then a store of them through the destination, so

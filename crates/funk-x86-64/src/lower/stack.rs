@@ -417,6 +417,17 @@ mod tests {
             );
             assert_eq!(lowered(&text), [need(72, false)]);
         }
+        for op in [
+            "memcpy nonatomic %d, %d, %n",
+            "memmove nonatomic %d, %d, %n",
+            "memset nonatomic %d, %v, %n",
+        ] {
+            let text = format!(
+                "func @f(%d: ptr, %v: i8, %n: i64) {{\n^entry:\n  {op} @0\n  ret @0\n}}\n\n\
+                 locs {{\n  @0 = unknown\n}}\n"
+            );
+            assert_eq!(lowered(&text), [need(72, false)]);
+        }
     }
 
     #[test]
