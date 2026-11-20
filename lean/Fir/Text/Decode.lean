@@ -14,8 +14,8 @@ second decodes each op in that scope.
 A text that follows the grammar but does not decode is rejected, with the
 position of the part that does not decode (ADR-2026-10-29-2014):
 
-* an item whose kind is neither `func`, `module`, `aggregate` nor a word
-  of a dialect, at its kind. An item of a dialect's kind decodes whichever
+* an item whose kind is neither `func`, `module`, `aggregate`, `data`
+  nor a word of a dialect, at its kind. An item of a dialect's kind decodes whichever
   dialect registers it: that is validation's question (ADR-2026-11-09-1543);
 * a `func` with attributes, at its first attribute; a `func` whose body
   holds a dialect set, at its kind; and one whose body holds items, at the
@@ -28,6 +28,10 @@ position of the part that does not decode (ADR-2026-10-29-2014):
   not its memory, size and alignment, then fields, at the first attribute
   that does not decode, or at its kind when it has fewer than three
   (ADR-2026-11-16-1546);
+* a global with parameters or results, at the first of them; one whose body
+  is not empty, at its kind; and one whose attributes do not decode, at the
+  first that does not, or at its kind when it has too few
+  (ADR-2026-11-09-1546);
 * a type that does not decode, at the type;
 * an entry of the data layout that does not decode, at the entry
   (ADR-2026-11-12-1821);
@@ -207,6 +211,18 @@ def decodeAggregate (kindPos : TextPos) (name : String) : List SDef → List (At
   | [], [], _, _ => errorAt kindPos
     "an aggregate's layout writes memory(N), size(S) and align(A), then its fields"
 
+/-- Decodes a global (ADR-2026-11-09-1546): it has no parameters or
+results and an empty body, and its attributes decode. -/
+def decodeGlobal (kindPos : TextPos) (name : String) : List SDef → List (Attr × TextPos) →
+    List (Attr × TextPos) → SBody → Except ParseError (Item d)
+  | x :: _, _, _, _ => errorAt x.pos "a global has no parameters"
+  | [], (_, p) :: _, _, _ => errorAt p "a global has no results"
+  | [], [], attrs, .blocks [] =>
+    match Global.decodeAttrs name (attrs.map (·.1)) with
+    | .ok g => pure (.global g)
+    | .error (i, m) => errorAt ((i.bind fun i => (attrs[i]?).map (·.2)).getD kindPos) m
+  | [], [], _, _ => errorAt kindPos "a global has an empty body"
+
 mutual
 /-- Decodes an item: a `func`, a `module`, whose body is its dialect set
 and its items (ADR-2026-11-10-1510), or an item of a dialect's kind
@@ -222,9 +238,10 @@ def decodeItem : SItem → Except ParseError (Item d)
       | .blocks (_ :: _) => errorAt kindPos "a module's body holds items, not blocks"
       | .items ds is => do pure (.module name ds (← decodeItems is))
     else if kind = "aggregate" then decodeAggregate kindPos name params results attrs body
+    else if kind = "data" then decodeGlobal kindPos name params results attrs body
     else if isDialectWord kind then decodeDialectItem kind kindPos name params results attrs body
     else errorAt kindPos ("unknown item kind " ++ kind ++
-      ": the kinds are func, module, aggregate and the words of dialects")
+      ": the kinds are func, module, aggregate, data and the words of dialects")
 
 /-- Decodes items, in order. -/
 def decodeItems : List SItem → Except ParseError (List (Item d))

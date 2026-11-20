@@ -1,0 +1,9 @@
+# Tests of globals.fir: globals in the default memory (ADR-2026-11-09-1546)
+# sit beside a function, which runs on fir-ref and as native code as it
+# would without them. @table is a table of pointers to @msg, @counter has no
+# initializer, and @self points into itself. Globals have no run meaning
+# yet: the address op and the run's starting memories are stage 2 of #237,
+# and the backend's .data, .rodata and .bss stage 3.
+tests = [
+  { func = "@msg_size" },
+]

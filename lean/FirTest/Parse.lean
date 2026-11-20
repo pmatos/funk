@@ -110,7 +110,7 @@ def seven : String :=
 
 /-! # An item of a kind the parser does not know -/
 
-#guard rejectedAt (oneFunc "global @g() {\n}\n") 1 1 "unknown item kind global"
+#guard rejectedAt (oneFunc "struct @g() {\n}\n") 1 1 "unknown item kind struct"
 #guard rejectedAt (oneFunc "func @f() inline {\n^e:\n  ret @0\n}\n") 1 11 "no attributes"
 #guard rejectedAt (oneFunc "func @f() {\n  func @g() {\n  }\n}\n") 2 3 "blocks, not items"
 #guard rejectedAt (oneFunc "func @f() {\n  dialects toy\n}\n") 1 1 "not a dialect set"
@@ -119,8 +119,8 @@ def seven : String :=
 #guard rejectedAt (oneFunc "module @m() inline {\n}\n") 1 13 "a module has no attributes"
 #guard rejectedAt (oneFunc "module @m() {\n^e:\n  ret @0\n}\n") 1 1 "holds items, not blocks"
 #guard rejectedAt (oneFunc "module @m() {\n  dialects\n}\n") 3 1 "the name of a dialect"
-#guard rejectedAt (oneFunc "module @m() {\n  global @g() {\n  }\n}\n") 2 3
-  "unknown item kind global"
+#guard rejectedAt (oneFunc "module @m() {\n  struct @g() {\n  }\n}\n") 2 3
+  "unknown item kind struct"
 
 /-! # A type that does not decode -/
 

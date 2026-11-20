@@ -1,4 +1,5 @@
 import Fir.Text.DecodeBlocks
+import Fir.Text.GlobalLaws
 
 /-!
 # Decoding the tree of a module
@@ -12,9 +13,10 @@ never as an empty list of items. A nested module's item is a `module` with
 no parameters, results or attributes, whose body is its dialect set and its
 items, or no blocks when it has neither, and it decodes its items in turn.
 An item of a dialect's kind has a word of a dialect as its kind, so it is
-neither a `func`, a `module` nor an `aggregate`, and its empty body reads as
-no blocks. An aggregate's layout decodes back from the attributes it writes
-when its numbers are within the limit and its fields' types decode back.
+neither a `func`, a `module`, an `aggregate` nor a `data`, and its empty
+body reads as no blocks. An aggregate's layout decodes back from the
+attributes it writes when its numbers are within the limit and its fields'
+types decode back, and a global when its numbers are within the limit.
 Decoding a function then decodes the result types, builds the scope with
 the first pass, decodes the parameters, and decodes the blocks in the scope
 with the second pass.
@@ -91,11 +93,11 @@ theorem Func.WellFormed.decodeItem_eq {f : Func d} (hf : f.WellFormed) {si : SIt
   simp only [↓reduceIte, decodeFuncItem, hf.decodeFunc_eq hp hr hbs]
   rfl
 
-/-- A word of a dialect is not the kind `func`, `module` or `aggregate`. -/
+/-- A word of a dialect is not the kind `func`, `module`, `aggregate` or `data`. -/
 theorem isDialectWord_ne {k : String} (hk : isDialectWord k) :
-    k ≠ "func" ∧ k ≠ "module" ∧ k ≠ "aggregate" :=
+    k ≠ "func" ∧ k ≠ "module" ∧ k ≠ "aggregate" ∧ k ≠ "data" :=
   ⟨by rintro rfl; exact absurd hk (by decide), by rintro rfl; exact absurd hk (by decide),
-    by rintro rfl; exact absurd hk (by decide)⟩
+    by rintro rfl; exact absurd hk (by decide), by rintro rfl; exact absurd hk (by decide)⟩
 
 omit [DialectSignature d] [DialectValidation d] [LawfulDialectText d] in
 /-- An item of a dialect's kind decodes back from a tree that erases to its
@@ -121,9 +123,9 @@ theorem DialectItem.WellFormed.decodeItem_eq {i : DialectItem d} (hi : i.WellFor
     mapM_decodeType (fun _ _ => rfl) hr' fun t ht => hty t (List.mem_append_right _ ht)
   have hps : params.mapM decodeDef = .ok i.params := mapM_decodeDef hp fun y hy =>
     hty y.2 (List.mem_append_left _ (List.mem_map_of_mem hy))
-  obtain ⟨hf, hm, hg⟩ := isDialectWord_ne hi.kind
+  obtain ⟨hf, hm, hg, hgl⟩ := isDialectWord_ne hi.kind
   rw [Text.decodeItem.eq_def]
-  simp only [hf, hm, hg, hi.kind, ↓reduceIte, decodeDialectItem, hres, hps, ok_bind, ha']
+  simp only [hf, hm, hg, hgl, hi.kind, ↓reduceIte, decodeDialectItem, hres, hps, ok_bind, ha']
   rfl
 
 omit [DialectSignature d] [DialectValidation d] [LawfulDialectText d] in
@@ -180,6 +182,29 @@ theorem Aggregate.WellFormed.decodeItem_eq {a : Aggregate d} (ha : a.WellFormed)
       ok_bind]
     rfl
 
+omit [DialectSignature d] [DialectValidation d] [LawfulDialectText d] in
+/-- A global decodes back from a tree that erases to its tree, at any
+positions, when its numbers are within the limit. -/
+theorem Global.decodeItem_eq {g : Global} (hg : g.InLimits) {si : SItem}
+    (h : si.erase = (g.item (d := d)).tree) : Text.decodeItem (d := d) si = .ok (.global g) := by
+  obtain ⟨kind, kindPos, name, params, results, attrs, body⟩ := si
+  simp only [SItem.erase, DialectItem.tree, Global.item, SItem.mk.injEq] at h
+  obtain ⟨rfl, -, rfl, hp, hr, hA, hb⟩ := h
+  obtain rfl : params = [] := List.map_eq_nil_iff.mp hp
+  obtain rfl : results = [] := List.map_eq_nil_iff.mp hr
+  obtain rfl : body = .blocks [] := by
+    cases body with
+    | blocks bs =>
+      cases bs with
+      | nil => rfl
+      | cons b _ => obtain ⟨⟩ := b; simp [SBody.erase, SBlock.eraseList] at hb
+    | items => simp [SBody.erase] at hb
+  have hA' : attrs.map (·.1) = g.attrs := by
+    simpa [List.map_map, Function.comp_def, eraseAt] using congrArg (List.map Prod.fst) hA
+  rw [Text.decodeItem.eq_def]
+  simp only [String.reduceEq, ↓reduceIte, decodeGlobal, hA', Global.decodeAttrs_attrs hg]
+  rfl
+
 -- The two theorems recurse together, so both take the dialect's lawful
 -- text, which only the first states it needs.
 set_option linter.unusedSectionVars false in
@@ -191,6 +216,7 @@ theorem Item.WellFormed.decodeItem_eq : ∀ {i : Item d}, i.WellFormed → ∀ {
   | .func _, hf, _, h => Func.WellFormed.decodeItem_eq hf h
   | .dialect _, hi, _, h => DialectItem.WellFormed.decodeItem_eq hi h
   | .aggregate _, ha, _, h => Aggregate.WellFormed.decodeItem_eq ha h
+  | .global _, hg, _, h => Global.decodeItem_eq hg h
   | .module name ds is, hm, ⟨kind, kindPos, sname, params, results, attrs, body⟩, h => by
     simp only [SItem.erase, Item.tree, SItem.mk.injEq] at h
     obtain ⟨rfl, -, rfl, hp, hr, ha, hb⟩ := h

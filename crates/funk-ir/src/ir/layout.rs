@@ -87,14 +87,20 @@ impl MemLayout {
         non_integral: false,
     };
 
-    /// The units that a pointer of the memory takes: its width over the
-    /// unit's, rounded up, and 0 for a unit of 0 bits, as in Lean.
-    pub fn pointer_units(&self) -> u32 {
+    /// The units that `w` bits take in the memory: `w` over the unit's
+    /// width, rounded up, and 0 for a unit of 0 bits (`MemLayout.bitsUnits`).
+    pub fn bits_units(&self, w: u32) -> u32 {
         if self.unit == 0 {
             0
         } else {
-            self.pointer.div_ceil(self.unit)
+            w.div_ceil(self.unit)
         }
+    }
+
+    /// The units that a pointer of the memory takes: its width over the
+    /// unit's, rounded up, and 0 for a unit of 0 bits, as in Lean.
+    pub fn pointer_units(&self) -> u32 {
+        self.bits_units(self.pointer)
     }
 
     /// The alignment of the memory's pointers, in units: the entry's own,

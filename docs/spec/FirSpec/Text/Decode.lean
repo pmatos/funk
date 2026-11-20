@@ -14,7 +14,7 @@ changes under it.
 
 #doc (Manual) "Decoding: readable blocks" =>
 
-:::moduleDocs (fingerprint := "147575948114996756")
+:::moduleDocs (fingerprint := "14006238473567480409")
 :::
 
 :::readable Fir.Text.Scope Fir.Text.decodeType Fir.Text.decodeDef Fir.Text.define (pin := Fir.DialectText) (fingerprint := "12263311160479661426")
@@ -70,10 +70,11 @@ that scope. So its errors are found in that order. Its body is a region of
 the core's kind.
 :::
 
-:::readable Fir.Text.decodeFuncItem Fir.Text.moduleHeader Fir.Text.decodeDialectItem Fir.Text.decodeItem Fir.Text.decodeItems Fir.Text.decodeItems_eq_mapM Fir.Text.decodeMemLayout Fir.Text.decodeModule (fingerprint := "12619496807394719028")
+:::readable Fir.Text.decodeFuncItem Fir.Text.moduleHeader Fir.Text.decodeDialectItem Fir.Text.decodeItem Fir.Text.decodeGlobal Fir.Text.decodeItems Fir.Text.decodeItems_eq_mapM Fir.Text.decodeMemLayout Fir.Text.decodeModule (fingerprint := "10145732364343447493")
 *Definition: decoding an item and a module.* An item decodes as a function,
 as a nested module (ADR-2026-11-10-1510), as an aggregate's layout
-(ADR-2026-11-16-1546) or as an item of a dialect's kind
+(ADR-2026-11-16-1546), as a global (ADR-2026-11-09-1546) or as an item of
+a dialect's kind
 (ADR-2026-11-09-1543):
 
 * a `func` with attributes is an error at its first attribute;
@@ -89,6 +90,11 @@ as a nested module (ADR-2026-11-10-1510), as an aggregate's layout
 * any other `module` decodes its items, in order, and keeps its dialect
   set;
 * an `aggregate` decodes as its layout, as above;
+* a `data` item with parameters or results is an error at the first of
+  them, and one whose body is not empty an error at its kind; otherwise it
+  decodes as the global its attributes read, as the section on globals
+  says, or is an error at the attribute that does not read, or at its kind
+  when there are too few;
 * an item whose kind is a word of a dialect, a word with a `.`, is an
   error at its kind, "an item of a dialect's kind has an empty body", when
   its body is not empty; otherwise it decodes its result types and its

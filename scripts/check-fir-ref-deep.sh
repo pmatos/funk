@@ -3,7 +3,8 @@
 # fir-ref that it builds: scripts/check-fir-ref-deep.sh FIR_REF. On a 256
 # KiB stack, fir-ref fmt and validate give texts nested a million levels
 # deep in attributes, in functions, in modules and in regions, and a block
-# of a million ops, their verdicts, never an abort, and validate accepts
+# of a million ops and a global of a million pieces, their verdicts, never
+# an abort, and validate accepts
 # valid modules nested a million levels deep and checks an item of a
 # dialect's kind whose attribute is nested a million levels deep.
 set -euo pipefail
@@ -77,6 +78,11 @@ awk -v end="$ending" 'BEGIN {
     for (i = 0; i < 1000000; i++) printf "  %%c%d: i32 = const %d @0\n", i, i
     printf "  ret @0\n%s", end
 }' >"$tmp/ops.fir"
+awk -v end="$ending" 'BEGIN {
+    printf "data @g() size(1000000) align(1)"
+    for (i = 0; i < 1000000; i++) printf " zeros(1)"
+    printf " {\n%s", end
+}' >"$tmp/pieces.fir"
 # deep [--validate-only] [--invalid DIAGNOSTICS] NAME WHAT [LINE COLUMN
 # MESSAGE]: on a 256 KiB stack, fir-ref fmt --check and validate give
 # $tmp/NAME.fir, WHAT, the parse error at LINE and COLUMN with MESSAGE, or,
@@ -136,10 +142,13 @@ deep deep-attrs "an attribute applied a million levels deep" 3 3 "$attr_error" |
 deep deep-items "functions nested a million levels deep" 2 1 \
     "a func's body holds blocks, not items" || status=1
 deep deep-modules "modules nested a million levels deep" 2000001 1 \
-    "unknown item kind bad: the kinds are func, module, aggregate and the words of dialects" || status=1
+    "unknown item kind bad: the kinds are func, module, aggregate, data and the words of dialects" || status=1
 deep deep-regions "regions nested a million levels deep" 2000003 5 \
     "value %x is not defined in @f" || status=1
 deep ops "a block of a million ops" || status=1
+# A global's initializer of a million pieces: fir-ref reads, checks and
+# prints its pieces with no stack per piece (ADR-2026-11-19-0124).
+deep pieces "a global of a million pieces" || status=1
 # An item of a dialect's kind keeps its attributes at any depth, and
 # validate walks them by loops (ADR-2026-11-09-1543). The core registers no
 # kind and the module names no dialect, so validate rejects the item.
