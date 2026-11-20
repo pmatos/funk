@@ -183,7 +183,10 @@ import Fir.Execution.Observe
 import Fir.Execution.ObserveEnd
 import Fir.Execution.ObserveEndLaws
 import Fir.Execution.TraceDialect
+import Fir.Execution.TraceLift
+import Fir.Execution.TraceRefine
 import Fir.Core.Observe
+import Fir.Core.Trace
 import Fir.Memory.Model
 import Fir.Memory.Ordering
 import Fir.Memory.Laws
@@ -280,8 +283,10 @@ import Fir.Gpu.Validation
 import Fir.Gpu.Effects
 import Fir.Gpu.TextLaws
 import Fir.Sum.RunLaws
+import Fir.Sum.Pointers
 import Fir.Validation.Nest
 import Fir.Gpu.Semantics
 import Fir.Gpu.WorkGroup
 import Fir.Gpu.Runs
 import Fir.Gpu.Modes
+import Fir.Gpu.Trace
