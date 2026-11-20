@@ -8,8 +8,12 @@
 # length past the allocation, however long: 2^63 bytes into an allocation of
 # 4 is UB at once. A poison length chooses its value: an i1 over one byte is
 # never UB, and an i8 is UB where its value is. A length may be an integer
-# of any width. The backend does not lower memset until stage 4 of #234, so
-# each test is interpreter-only.
+# of any width. Tests that pass poison pointers or reach UB are
+# interpreter-only in any module. @lengths takes lengths of i7 and i33,
+# which the backend does not lower, and funk build builds a module all or
+# nothing (tests/fir/README.md), so every test of this file is
+# interpreter-only, even one such as @fill that native code could run alone;
+# memops-native.toml runs memset as native code.
 tests = [
   { func = "@fill", args = ["1"], expect = ["16843009"] },
   { func = "@fill", args = ["-1"], expect = ["-1"] },

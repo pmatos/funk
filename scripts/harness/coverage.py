@@ -77,6 +77,7 @@ SIDES = (
         cells.POINTER_DIFFERENTIAL,
         memory=MEMORY_FLOAT_DIFFERENTIAL,
         fields=cells.FIELD_DIFFERENTIAL,
+        copies=True,
     ),
     Side(
         "interpreter",

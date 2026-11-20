@@ -59,10 +59,11 @@ has neither operands nor attributes, is a cell at each width of its result
   and `gpu.work_group_alloca` a cell for each type it allocates, as
   `alloca` (stage 3 of #212), its floats included (#432).
 - The field address `fieldaddr` is a cell for each width of its index,
-  and one with no index, at the side's field widths
-  (`pointer_cells.py`, #236).
+  and one with no index, at the side's field widths, on both sides, since
+  the backend lowers it as address arithmetic (`pointer_cells.py`, #236).
 - `memcpy`, `memmove` and `memset` are a cell for each width of their
-  length, on the interpreter-only side (`copy_cells.py`, #234).
+  length, at the side's pointer widths, on both sides, since the backend
+  lowers them to funk's own runtime routines (`copy_cells.py`, #234).
 """
 
 from cell_types import Cell, CellError, Row, Table
@@ -109,9 +110,9 @@ FLOAT_INTERPRETER = ("f16", "bf16", "f32", "f64", "f128")
 # and of `store`'s value on each side (#231).
 POINTER_DIFFERENTIAL = DIFFERENTIAL
 POINTER_INTERPRETER = INTERPRETER
-# The widths of `fieldaddr`'s index on each side. The backend does not lower
-# it yet, so the differential side has no cell of it (stage 4 of #236).
-FIELD_DIFFERENTIAL: tuple[int, ...] = ()
+# The widths of `fieldaddr`'s index on each side: the backend lowers an
+# index of every width it lowers (stage 4 of #236).
+FIELD_DIFFERENTIAL = DIFFERENTIAL
 FIELD_INTERPRETER = INTERPRETER
 
 WRAP = ("", "nuw", "nsw", "nuw nsw")

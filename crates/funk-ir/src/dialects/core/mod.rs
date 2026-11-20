@@ -57,7 +57,7 @@ pub use access::ORDERINGS;
 #[cfg(test)]
 pub(crate) use alloc_shape::float_attr;
 pub(crate) use alloc_shape::{check_work_group_shape, shape_attr_types, shape_decodes};
-pub use alloca::{Allocation, allocation};
+pub use alloca::{ALLOC_KINDS, Allocation, allocation};
 pub(crate) use alloca::{allocation_effects, memory as allocation_memory};
 pub use arith::WRAP_FLAG_SETS;
 pub use bitwise::{BITWISE_OPS, SHIFT_OPS};

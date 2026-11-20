@@ -23,9 +23,9 @@ A dialect whose ops show no event has, in the traced layer, its semantics
 with memory, lifted onto the memories of the traced state: its traced runs
 then show no act, nothing escapes, and they end as its runs with memory,
 each return seen at its end. M0's dialects show no event and return no
-pointer, but none has a traced semantics yet; once one has a traced
-semantics that lifts its semantics with memory, its tests keep their
-results by this theorem and `End.isRefinedBy_iff_vals`.
+pointer. The core and CoreGpu have a traced semantics that lifts their
+semantics with memory (`Fir.Core.Trace`, `Fir.Gpu.Trace`), so their tests
+keep their results by this theorem and `End.isRefinedBy_iff_vals`.
 -/
 
 namespace Fir

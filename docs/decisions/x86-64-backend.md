@@ -269,8 +269,8 @@ A register allocator must treat as clobbered:
   register pairs for `i128`.
 - Every caller-saved register by an `i128` division.
 - `%xmm0` to `%xmm7` as argument registers of a call.
-- `%rax` and `%rcx` by a `load`, a `store` or a `ptradd`, and `%rdx` by an
-  `i128` access.
+- `%rax` and `%rcx` by a `load`, a `store`, a `ptradd` or a `fieldaddr`, and
+  `%rdx` by an `i128` access.
 - `%rax` and `%rcx` by an `alloca`, which also moves `%rsp` below the frame,
   so nothing in a frame may be addressed from `%rsp` after one.
 

@@ -260,6 +260,9 @@ import FirSpec.Core.Observe
 import FirSpec.Execution.ObserveEnd
 import FirSpec.Execution.ObserveEndLaws
 import FirSpec.Execution.TraceDialect
+import FirSpec.Execution.TraceLift
+import FirSpec.Execution.TraceRefine
+import FirSpec.Core.Trace
 import FirSpec.Execution.MemoryModes
 import FirSpec.Execution.NaNModes
 import FirSpec.Core.MemoryRuns
@@ -288,7 +291,9 @@ import FirSpec.Gpu.Semantics
 import FirSpec.Gpu.WorkGroup
 import FirSpec.Gpu.Runs
 import FirSpec.Gpu.Modes
+import FirSpec.Gpu.Trace
 import FirSpec.Sum.RunLaws
+import FirSpec.Sum.Pointers
 import FirSpec.Validation.Nest
 
 /-!

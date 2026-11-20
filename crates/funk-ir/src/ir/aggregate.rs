@@ -159,20 +159,22 @@ fn decode_field(a: &Attr) -> Option<Field> {
     })
 }
 
-/// `u` rounded up to a multiple of `a`, and 0 when `a` is 0, as in Lean
-/// (`roundUp`): the units of one element of a repeated field.
-fn round_up(u: u128, a: u128) -> u128 {
-    u.checked_next_multiple_of(a).unwrap_or(0)
-}
-
 impl Field {
+    /// The units from one element of a field to the next, where one value
+    /// of its type takes `u` units aligned to `a` (`Field.place`): `u`
+    /// rounded up to a multiple of `a`, and 0 when `a` is 0, as `roundUp`
+    /// in Lean.
+    pub fn stride(u: u128, a: u128) -> u128 {
+        u.checked_next_multiple_of(a).unwrap_or(0)
+    }
+
     /// The units that the field takes, where one value of its type takes
     /// `u` units aligned to `a` (`Field.extent`): `u`, or for a repeated
     /// field its count times `u` rounded up to `a`.
     pub(crate) fn extent(&self, u: u128, a: u128) -> u128 {
         match self.count {
             None => u,
-            Some(c) => u128::from(c) * round_up(u, a),
+            Some(c) => u128::from(c) * Field::stride(u, a),
         }
     }
 }
@@ -183,9 +185,9 @@ mod tests {
 
     #[test]
     fn a_repeated_field_rounds_its_elements_up_to_their_alignment() {
-        assert_eq!(round_up(3, 4), 4);
-        assert_eq!(round_up(10, 16), 16);
-        assert_eq!(round_up(5, 0), 0);
+        assert_eq!(Field::stride(3, 4), 4);
+        assert_eq!(Field::stride(10, 16), 16);
+        assert_eq!(Field::stride(5, 0), 0);
         let f = Field {
             offset: 0,
             ty: Type::word("i24"),

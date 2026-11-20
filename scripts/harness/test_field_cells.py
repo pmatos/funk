@@ -45,8 +45,8 @@ class Tests(unittest.TestCase):
             any(c.table == "fields" for c in cells.cells((8,), offsets=(8,)))
         )
 
-    def test_only_the_interpreter_only_side_has_them_until_the_backend_lowers_it(self):
-        self.assertEqual(cells.FIELD_DIFFERENTIAL, ())
+    def test_both_sides_have_them_since_the_backend_lowers_it(self):
+        self.assertEqual(cells.FIELD_DIFFERENTIAL, cells.DIFFERENTIAL)
         self.assertEqual(cells.FIELD_INTERPRETER, cells.INTERPRETER)
         sides = {side.name: side for side in coverage.SIDES}
         self.assertEqual(sides["differential"].fields, cells.FIELD_DIFFERENTIAL)
