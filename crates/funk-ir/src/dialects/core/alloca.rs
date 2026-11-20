@@ -31,7 +31,8 @@ use crate::ir::MemLayout;
 use crate::registry::{OpContext, OpShape, OpSpec, OpTypes};
 use crate::{Attr, Int, Type};
 
-/// The kinds of an allocation, as words (`AllocKind.word`).
+/// The kinds of an allocation, as words (`AllocKind.word`): each one
+/// decodes, and validation accepts only `stack`.
 pub const ALLOC_KINDS: [&str; 3] = ["stack", "global", "heap"];
 
 /// The parts of a decoded `alloca`: its kind, and the shape that follows.
