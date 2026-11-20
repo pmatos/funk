@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Monotonicity in the traced layer: readable blocks" =>
 
-:::moduleDocs (fingerprint := "9425960177402715745")
+:::moduleDocs (fingerprint := "6212536383839346428")
 :::
 
 :::readable Fir.Step.IsRefinedBy (pin := Fir.instHRefinementStep) (fingerprint := "9259369860302064242")
@@ -24,13 +24,12 @@ and the second refines the first. Marked traces refine one another element
 by element.
 :::
 
-:::readable Fir.List.IsRefinedPrefix Fir.List.isRefinedBy_append Fir.List.isRefinedPrefix_nil Fir.List.IsRefinedPrefix.append_left Fir.List.IsRefinedPrefix.append_right (fingerprint := "4099428677081364833")
+:::readable Fir.List.IsRefinedPrefix Fir.List.isRefinedPrefix_nil Fir.List.IsRefinedPrefix.append_left Fir.List.IsRefinedPrefix.append_right (fingerprint := "927429146959535312")
 *Definition: a refined prefix.* The list $`l` is a refined prefix of $`l'`
 when $`l'` starts with a list $`m` such that $`l \sqsubseteq m`, element by
 element. The empty list is one of every list.
 
-*Theorems.* Lists that refine element by element, appended, refine element
-by element. So a refined prefix stays one after both lists are preceded by
+*Theorems.* A refined prefix stays one after both lists are preceded by
 lists that refine element by element, and after the second is followed by
 any list.
 :::

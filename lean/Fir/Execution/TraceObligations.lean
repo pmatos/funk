@@ -59,14 +59,6 @@ section
 
 variable [HRefinement A A]
 
-/-- Lists that refine element by element, appended, refine element by
-element. -/
-theorem List.isRefinedBy_append : ∀ {l₁ l₁' l₂ l₂' : List A}, l₁ ⊑ l₁' → l₂ ⊑ l₂' →
-    l₁ ++ l₂ ⊑ l₁' ++ l₂'
-  | [], [], _, _, _, h => h
-  | _ :: _, _ :: _, _, _, ⟨ha, h₁⟩, h₂ => ⟨ha, List.isRefinedBy_append h₁ h₂⟩
-  | [], _ :: _, _, _, h, _ | _ :: _, [], _, _, h, _ => h.elim
-
 /-- The empty list is refined by a prefix of every list. -/
 theorem List.isRefinedPrefix_nil (l : List A) : List.IsRefinedPrefix [] l :=
   ⟨[], trivial, List.nil_prefix⟩
@@ -76,7 +68,7 @@ refine element by element. -/
 theorem List.IsRefinedPrefix.append_left {t t' l l' : List A} (ht : t ⊑ t')
     (h : List.IsRefinedPrefix l l') : List.IsRefinedPrefix (t ++ l) (t' ++ l') := by
   obtain ⟨m, hm, r, rfl⟩ := h
-  exact ⟨t' ++ m, List.isRefinedBy_append ht hm, r, by rw [List.append_assoc]⟩
+  exact ⟨t' ++ m, List.IsRefinedBy.append ht hm, r, by rw [List.append_assoc]⟩
 
 /-- A refined prefix of a list is a refined prefix of every list that the
 list starts. -/
@@ -123,8 +115,8 @@ section
 
 variable {Mem : Type} {unit : Mem → Nat} [DecidableEq Mem]
 
-/-- A traced state refined by another: its memories refine the other's, and
-the same allocations escaped, in the same order. -/
+/-- A traced state refined by another: the other's memories refine its own,
+and the same allocations escaped, in the same order. -/
 instance : HRefinement (TraceState Mem unit) (TraceState Mem unit) :=
   ⟨fun s s' => s.mem ⊑ s'.mem ∧ s.escaped = s'.escaped⟩
 
@@ -178,7 +170,7 @@ each other. -/
 theorem TraceEnd.Allows.after {r : α → β → Prop} {t t' : List A} (ht : t ⊑ t') :
     ∀ {e : TraceEnd A σ α} {e' : TraceEnd A σ β}, TraceEnd.Allows r e e' →
       TraceEnd.Allows r (e.after t) (e'.after t')
-  | .ok _, .ok _, h => ⟨h.1, List.isRefinedBy_append ht h.2.1, h.2.2⟩
+  | .ok _, .ok _, h => ⟨h.1, List.IsRefinedBy.append ht h.2.1, h.2.2⟩
   | .error _, e', h => by
     show List.IsRefinedPrefix _ (e'.after t').trace
     rw [TraceEnd.trace_after]

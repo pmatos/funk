@@ -28,7 +28,7 @@ each path that does not hit UB leaves the frame.
 :::readable Fir.Func.TStepPath Fir.Func.tStepPath_iff (fingerprint := "3424079462557353236")
 *Definition and theorem: the ways a step goes on.* A path of the traced run
 of $`o :: os` with $`n + 1` steps, from $`s`, that is not stuck goes on in
-exactly one of eight ways, each from $`s`:
+one of eight ways, each from $`s`:
 
 * a terminator's exit hits UB after the acts $`t`; or returns, after $`t`,
   in $`s'`, giving its operands back with $`n` steps left; or goes to a

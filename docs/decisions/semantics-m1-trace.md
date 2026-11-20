@@ -261,16 +261,16 @@ above.
   theorems exist, so the spec's traced runs would have none meanwhile.
 - **A dialect with events.** Its refined arguments and congruence in the
   callee are the traced layer's own theorems (#233, stages 3b and 3c),
-  which prove the core's statements again, unchanged, once the core shows
-  events. Divergence needs one source trace at every budget. An op with
+  which are to prove the core's statements again, unchanged, once the core
+  shows events. Divergence needs one source trace at every budget. An op with
   infinitely many outcomes `c` can show, on a poison argument, an event
   that differs with each `c` and is refined by the target's, then take `c`
   silent steps and return. The target then falls silent after its event,
   and no source outcome allows it. So the generic theorems of stages 3b
   and 3c take a hypothesis: each op has finitely many outcomes given the
   world's answers, as congruence with memory takes `OpsFinite`. The core's
-  and CoreGpu's statements take no hypothesis, since both meet it. The
-  human ruled this on 2026-11-20, on #233. Rejected: change how stage 1
+  and CoreGpu's statements take no hypothesis: stage 3b-2 is to show that
+  both meet it. The human ruled this on 2026-11-20, on #233. Rejected: change how stage 1
   judges divergence (`traceObservable`), a definition already merged.
 - **The obligation of an op with events.** An op is monotone in the traced
   layer (`OpTraceMonotone`): from operands and a traced state that refine

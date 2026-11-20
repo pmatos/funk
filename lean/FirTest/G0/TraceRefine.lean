@@ -17,7 +17,7 @@ dialect's semantics with memory, lifted, is a traced semantics that lifts
 it; and that a sum's values hold pointers when both sides' do. A dialect
 whose ops show events needs the theorems of the traced layer itself, which
 stages 3b and 3c of #233 give: the last section restates those of 3b's
-first half, for returns and for each budget, and that a dialect with no
+first half, for returns, UB and each budget, and that a dialect with no
 event meets their obligation.
 -/
 
@@ -157,6 +157,27 @@ theorem traceRuns_ret_allowed (d : Dialect) [TyDenote d.Ty] [DecidableEq d.Ty]
       traceObservable (f.traceRuns lay ρ L μ ar M a) s ∧
         s ⊑ (.ret tr o' : TOutcome (DialectTrace.Acts d) (End (unitsOf lay) μ ar (List (DVal d)))) :=
   Func.traceRuns_ret_allowed lay ρ L μ ar htrans hmono hf ha h
+
+/-- Refined arguments over traced runs, for each UB, for every function of a
+module of every dialect, events included, whose terminators and ops with no
+callee are monotone in the traced layer, wherever a run names its
+memories. -/
+theorem traceRuns_ub_allowed (d : Dialect) [TyDenote d.Ty] [DecidableEq d.Ty]
+    [DialectSignature d] [DialectCall d] [DialectEffects d] [DialectTrace d] [TyRefinement d.Ty]
+    [TyPointers d.Ty] {N : Type} [DecidableEq N] (lay : N → MemLayout)
+    (ρ : DialectEffects.Mem d → N) (L : RunItems) (μ : Nat → N) (ar : AddrRule)
+    {M : Module d} {f : Func d}
+    (hmono : letI := DialectTrace.traceAt (d := d) lay ρ L
+      ∀ g ∈ M.funcs, g.TraceOpsMonotone (DialectTrace.Acts d) (TraceState N (unitsOf lay)))
+    (hf : letI := DialectTrace.traceAt (d := d) lay ρ L
+      f.TraceOpsMonotone (DialectTrace.Acts d) (TraceState N (unitsOf lay)))
+    {a a' : HVector toType (f.params.map (·.2))} (ha : a.Forall₂ TyRefinement.IsRefinedBy a')
+    {tr : List (DialectTrace.Acts d)} {r' : String}
+    (h : traceObservable (f.traceRuns lay ρ L μ ar M a') (.ub tr r')) :
+    ∃ s : TOutcome (DialectTrace.Acts d) (End (unitsOf lay) μ ar (List (DVal d))),
+      traceObservable (f.traceRuns lay ρ L μ ar M a) s ∧
+        s ⊑ (.ub tr r' : TOutcome (DialectTrace.Acts d) (End (unitsOf lay) μ ar (List (DVal d)))) :=
+  Func.traceRuns_ub_allowed lay ρ L μ ar hmono hf ha h
 
 /-- Refined arguments over traced runs, at each budget, for each path that
 runs out of fuel, for every function of a module of every dialect, events
