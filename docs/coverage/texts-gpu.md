@@ -14,7 +14,7 @@ work-groups. `reject/gpu.toml` holds the texts that do not decode, such as
 a dimension other than `gpu.x`, `gpu.y` and `gpu.z`, a gpu op with an
 operand and one with a pointer result, and those that validation rejects:
 a result other than an `i32`, a gpu op in a module whose dialect set does
-not name `gpu`, and a device module whose pointers name a memory that the
+not name `gpu`, a dialect set that names `gpu` twice, and a device module whose pointers name a memory that the
 host's layout does not declare
 ([ADR-2026-11-12-1821](../adrs/2026-11-12-1821-a-module-declares-its-memories-in-a-data-layout-line.md)).
 
@@ -36,7 +36,8 @@ The text of #406 fills the coverage matrix's cells of the `gpu` ops
 ([testing-and-harness-corpus.md](../decisions/testing-and-harness-corpus.md#the-coverage-matrix)).
 `gpu-dims` runs each op in each dimension, on a work-item whose ids and
 sizes differ in every dimension, so that a read of another dimension
-fails the test, and on the default work-item.
+fails the test, and runs `gpu.num_work_groups` on the default work-item
+too.
 
 The texts of the third stage use `gpu.work_group_alloca`, which allocates
 in a memory of the host's layout, as `alloca` does, for the whole run of
@@ -48,8 +49,8 @@ the return freed. Two allocations are distinct, and one of each kind
 returned from a call keeps the work-group one and frees the other. It
 allocates an `i1`, `i7`, `i8`, `i16`, `i32`, `i33`, `i64`, `i128` and a
 pointer, and a pointer stored into an allocation of `align(2)` is UB.
-`gpu-work-group-floats` (#432) allocates floats, as the human ruled on 2026-11-18: each aliased
-format and `float(2, 1)` loads back as the same float, a NaN's payload
+`gpu-work-group-floats` (#432) allocates floats, as the human ruled on
+2026-11-18: each aliased format and `float(2, 1)` loads back as the same float, a NaN's payload
 included, an `f32` takes two units of a memory of 16-bit units, the second
 holding its top 16 bits, an `f64` at offset 4 of a memory of bytes is UB,
 and a load from fresh memory gives poison. `reject/gpu.toml` holds the
@@ -65,4 +66,5 @@ Every test of these texts is interpreter-only. `funk build` builds none of
 a nested module's functions, so a kernel runs on `fir-ref` alone
 ([testing-and-harness-corpus.md](../decisions/testing-and-harness-corpus.md#the-test-corpus)),
 and the one test of a host function, `@host` of `gpu-memories`, is
-interpreter-only too.
+written interpreter-only too, although `funk build` builds the host's
+functions and that one would run as native code.

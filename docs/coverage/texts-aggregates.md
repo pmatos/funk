@@ -48,7 +48,8 @@ pointer's. Since stage 4 of #236 the backend lowers `fieldaddr`, and every
 test of `fieldaddr-programs` runs differentially but those that are UB;
 the tests of `fieldaddr` and `fieldaddr-programs-memories` use types or a
 memory that the backend does not lower, and run on `fir-ref` alone.
-Since that stage `fieldaddr-programs` also zeroes the array of `i24` with
+Since that stage `fieldaddr-programs` also zeroes the whole allocation
+of its array of `i24`, the 4 units before the array included, with
 `memset` ([texts-memops.md](texts-memops.md)) before it stores the
 elements, so that the units it does not store read back as 0, not as
 poison.
