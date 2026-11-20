@@ -98,9 +98,10 @@ calls the same functions: the dialect's rules, `Env.operands`, `Env.bind`,
 `Func.jump` and `Func.enter`. `Machine.advance_tree` proves that where the
 machine stops stands for the spec's tree of the state.
 
-`Machine.scripted`, `Machine.exhaustive` and `Machine.sampled`
-(`lean/FirRef/RunModes.lean`), and `Machine.exhaustiveNaN`
-(`lean/FirRef/RunNaN.lean`), which tries a few NaNs
+`Machine.scriptedWith`, `Machine.exhaustiveWith` and `Machine.sampledWith`
+(`lean/FirRef/MachineModes.lean`), and `Machine.exhaustiveNaNWith`
+(`lean/FirRef/RunNaN.lean`), each seeing a return by a function of its
+values and memories, which tries a few NaNs
 ([the command line](fir-ref-command-line.md#trying-a-few-nans)), walk the machine's states in loops of tail calls,
 the exhaustive walks with a work list in the order the spec visits the paths.
 For every dialect, each is proved to give what `ChoiceTree.script`,
@@ -108,9 +109,12 @@ For every dialect, each is proved to give what `ChoiceTree.script`,
 `FirRef.Run` registers them for the dialects in tree, the core and `gpu`, over
 `Gpu.scripted`, `Gpu.exhaustive`, `Gpu.exhaustiveNaN` and `Gpu.sampled`, the
 modes that `fir-ref run` calls (#212), and the first three over the
-core's own, `Core.scripted`, `Core.exhaustive` and `Core.sampled`, before
-`runBytes`. `fir-ref run` reports fuel exhaustion at any budget. Its frames and
-environments are on the heap, so a deep recursion costs memory, not stack.
+core's own, `Core.scripted`, `Core.exhaustive` and `Core.sampled`, and over
+`Gpu.scriptedEnd`, `Gpu.exhaustiveEnd`, `Gpu.exhaustiveNaNEnd` and
+`Gpu.sampledEnd`, which see each return at its end, for `--world`, before
+`runBytes`. `fir-ref run` reports fuel exhaustion
+at any budget. Its frames and environments are on the heap, so a deep
+recursion costs memory, not stack.
 
 The evidence that `fir-ref` runs the machine is in what its `main` reaches:
 `lean/.lake/build/ir/FirRef/Run.c` calls the four walkers, and no copy of
@@ -267,6 +271,7 @@ for #169, with the swaps added since.
 | `scripted_eq_runScripted`, `exhaustive_eq_runExhaustive`, `sampled_eq_runSampled` | `Run` | depth | The machine of [Running](#running), for the core's modes |
 | `gpuScripted_eq_runGpuScripted`, `gpuExhaustive_eq_runGpuExhaustive`, `gpuSampled_eq_runGpuSampled` | `Run` | depth | The machine, for the modes of the core and `gpu` that `fir-ref run` calls (#212) |
 | `gpuExhaustiveNaN_eq_runGpuExhaustiveNaN` | `Run` | depth | The machine, for `--exhaustive --nans` (#219) |
+| `gpuScriptedEnd_eq`, `gpuExhaustiveEnd_eq`, `gpuExhaustiveNaNEnd_eq`, `gpuSampledEnd_eq` | `Run` | depth | The machine, for `--world` (#233) |
 | `toDVals_eq_toDValsFast` | `HVector` | depth | The spec recurses per value (#405) |
 | `toSum_eq_toSumFast`, `ofSum_eq_ofSumFast` | `HVectorSum` | depth | Per value; reached through the copies `sumDenote` and `gpuTreeDenote` (#405) |
 | `enter_eq_enterFast` | `Bindings` | depth | `List.zip` recurses per parameter (#405) |

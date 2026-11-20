@@ -185,6 +185,8 @@ import Fir.Execution.ObserveEndLaws
 import Fir.Execution.TraceDialect
 import Fir.Execution.TraceLift
 import Fir.Execution.TraceRefine
+import Fir.Execution.TraceScript
+import Fir.Execution.MemoryEndModes
 import Fir.Core.Observe
 import Fir.Core.Trace
 import Fir.Memory.Model
@@ -290,3 +292,4 @@ import Fir.Gpu.WorkGroup
 import Fir.Gpu.Runs
 import Fir.Gpu.Modes
 import Fir.Gpu.Trace
+import Fir.Gpu.EndModes

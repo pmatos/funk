@@ -19,6 +19,14 @@ def defaultFuel : Nat := 1000000
 path, so at most 65,536 paths. -/
 def defaultChoiceBits : Nat := 16
 
+/-- The bit pattern that `v` spells: `0x` and one or more lowercase
+hexadecimal digits, as fir's text writes them, read as the lexer reads
+them (`Text.hexValue`). -/
+def hexBits (v : String) : Option Nat :=
+  let ds := v.toList.drop 2
+  if v.startsWith "0x" && !ds.isEmpty && ds.all Text.isHexDigit then some (Text.hexValue ds)
+  else none
+
 /-- Text from the command line, with each control character shown as
 `\xHH`, so that a message stays on one line. -/
 def shown (s : String) : String :=

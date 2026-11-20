@@ -1,6 +1,7 @@
 import Fir
 import FirRef.Utf8
 import FirRef.RunText
+import FirRef.Reach
 
 /-!
 What `fir-ref validate` reports on a file: one JSON object on one line, in the
@@ -121,6 +122,12 @@ def tyText (t : Core.Ty) : String := t.attr.print
 /-- An op as text writes its name and attributes, such as `add nsw`. -/
 def opText (op : Core.Op) : String := " ".intercalate (op.name :: op.attrs.map Attr.print)
 
+/-- A pointer as `fir-ref run` spells it: `ptr(A, O)`, for the allocation
+`A` it has provenance for and its offset `O`, or `ptr(none, O)`. -/
+def ptrText (p : Memory.Pointer) : String :=
+  let a := match p.prov with | some a => toString a | none => "none"
+  s!"ptr({a}, {(Attr.int p.offset).print})"
+
 /-- A value as `fir-ref run` spells it: as a constant of its type in text,
 or `poison`. A float is written as the one float literal of its bits
 (ADR-2026-11-11-1438). A pointer is written `ptr(A, O)`, for the
@@ -138,9 +145,7 @@ def valueText : DVal CoreDialect → String
     | .value b => (Attr.float (Core.floatLit e m b)).print
   | ⟨.ptr _, v⟩ => match (v : PoisonOr Memory.Pointer) with
     | .poison => "poison"
-    | .value p =>
-      let a := match p.prov with | some a => toString a | none => "none"
-      s!"ptr({a}, {(Attr.int p.offset).print})"
+    | .value p => ptrText p
 
 /-- The values that `fir-ref run` reports, spelled as `valueText` spells
 them: the core's, and those of the sum of the core and `gpu`, whose types
@@ -193,17 +198,25 @@ def misfitText : ChoiceTree.Misfit String → String
   | .unread made w s => s!"choice {made + 1}, {shown s}, is not a value of type {tyText (.int w)}"
   | .long made n => s!"the run makes {count made "choice"}, and --choices gives {n}"
 
+/-- The fields of the JSON object that report how a path ends, whose return
+is seen as a value of type `R`, and whether it is stuck; or the op without
+rules that the path reaches. -/
+abbrev Fields (R : Type) := PathEnd R Core.Op → Except Core.Op (List (String × String) × Bool)
+
+variable {R : Type} (fields : Fields R)
+
 /-- The report of scripted mode on a run of the function whose symbol is
 written `name`: the one path that the choices name, or why they do not fit
 the run. -/
-def scriptedReport (name : String) :
-    Except (ChoiceTree.Misfit String) (RunLeaf V × Nat) → RunReport
+def scriptedReportWith (name : String) :
+    Except (ChoiceTree.Misfit String) (ChoiceTree.Leaf Core.Op (Except Stuck (Result R)) × Nat) →
+      RunReport
   | .error m => { err := s!"fir-ref: {name}: the choices do not fit the run: {misfitText m}",
                   status := 2 }
-  | .ok (l, c) => match pathFields (V := V) l.pathEnd with
+  | .ok (l, c) => match fields l.pathEnd with
     | .error op => noRules name op
-    | .ok (fields, stuck) =>
-      { out := jsonObject (fields ++ [("choices", toString c)]), status := if stuck then 1 else 0 }
+    | .ok (fs, stuck) =>
+      { out := jsonObject (fs ++ [("choices", toString c)]), status := if stuck then 1 else 0 }
 
 /-- A value that a path chose, spelled as `--choices` takes it: as a
 constant of its type. -/
@@ -213,11 +226,12 @@ def chosenText : ChoiceTree.Chosen → String
 /-- The report of sampled mode on a run of the function whose symbol is
 written `name`: the one path that the generator draws, and the values it
 drew on it. -/
-def sampledReport (name : String) : RunLeaf V × List ChoiceTree.Chosen → RunReport
-  | (l, cs) => match pathFields (V := V) l.pathEnd with
+def sampledReportWith (name : String) :
+    ChoiceTree.Leaf Core.Op (Except Stuck (Result R)) × List ChoiceTree.Chosen → RunReport
+  | (l, cs) => match fields l.pathEnd with
     | .error op => noRules name op
-    | .ok (fields, stuck) =>
-      { out := jsonObject (fields ++ [("choices", toString cs.length),
+    | .ok (fs, stuck) =>
+      { out := jsonObject (fs ++ [("choices", toString cs.length),
           ("sequence", jsonArray (cs.map (jsonString ∘ chosenText)))]),
         status := if stuck then 1 else 0 }
 
@@ -225,10 +239,10 @@ def sampledReport (name : String) : RunLeaf V × List ChoiceTree.Chosen → RunR
 is written `name`, with a choice budget of `budget` bits: every way its
 paths end, each once, with the fields `more` after the choices, or that some
 path chooses more than the budget. -/
-def outcomesReport (name : String) (budget : Nat) (more : List (String × String)) :
-    Option (List (RunLeaf V × Nat)) → RunReport
+def outcomesReportWith (name : String) (budget : Nat) (more : List (String × String)) :
+    Option (List (ChoiceTree.Leaf Core.Op (Except Stuck (Result R)) × Nat)) → RunReport
   | none => { out := resultJson "choice-budget-exceeded" [("budget", toString budget)], status := 0 }
-  | some ls => match ls.mapM (fun (l, c) => (pathFields (V := V) l.pathEnd).map (·, c)) with
+  | some ls => match ls.mapM (fun (l, c) => (fields l.pathEnd).map (·, c)) with
     | .error op => noRules name op
     | .ok ps =>
       let choices := ps.foldl (fun m p => max m p.2) 0
@@ -238,17 +252,124 @@ def outcomesReport (name : String) (budget : Nat) (more : List (String × String
 
 /-- The report of exhaustive mode on a run of the function whose symbol is
 written `name`, with a choice budget of `budget` bits. -/
-def exhaustiveReport (name : String) (budget : Nat) : Option (List (RunLeaf V × Nat)) → RunReport :=
-  outcomesReport name budget []
+def exhaustiveReportWith (name : String) (budget : Nat) :
+    Option (List (ChoiceTree.Leaf Core.Op (Except Stuck (Result R)) × Nat)) → RunReport :=
+  outcomesReportWith fields name budget []
 
 /-- The report of exhaustive mode that tries a few NaNs, `--exhaustive
 --nans`, on a run of the function whose symbol is written `name`, with a
 choice budget of `budget` bits: exhaustive mode's, with whether the
 outcomes are the whole set, `complete`, which they are when no path made a
 NaN choice (`Gpu.exhaustiveNaN_exact`). -/
-def exhaustiveNaNReport (name : String) (budget : Nat) (r : Option (List (RunLeaf V × Nat × Nat))) :
+def exhaustiveNaNReportWith (name : String) (budget : Nat)
+    (r : Option (List (ChoiceTree.Leaf Core.Op (Except Stuck (Result R)) × Nat × Nat))) :
     RunReport :=
   let complete := if (r.getD []).all (·.2.2 == 0) then "true" else "false"
-  outcomesReport name budget [("complete", complete)] (r.map (·.map fun (l, c, _) => (l, c)))
+  outcomesReportWith fields name budget [("complete", complete)]
+    (r.map (·.map fun (l, c, _) => (l, c)))
+
+/-! # The reports that see a return as its values -/
+
+/-- The report of scripted mode, each return seen as its values. -/
+def scriptedReport (name : String) :
+    Except (ChoiceTree.Misfit String) (RunLeaf V × Nat) → RunReport :=
+  scriptedReportWith (pathFields (V := V)) name
+
+/-- The report of sampled mode, each return seen as its values. -/
+def sampledReport (name : String) : RunLeaf V × List ChoiceTree.Chosen → RunReport :=
+  sampledReportWith (pathFields (V := V)) name
+
+/-- The report of exhaustive mode, each return seen as its values. -/
+def exhaustiveReport (name : String) (budget : Nat) : Option (List (RunLeaf V × Nat)) → RunReport :=
+  exhaustiveReportWith (pathFields (V := V)) name budget
+
+/-- The report of exhaustive mode that tries a few NaNs, each return seen as
+its values. -/
+def exhaustiveNaNReport (name : String) (budget : Nat) (r : Option (List (RunLeaf V × Nat × Nat))) :
+    RunReport :=
+  exhaustiveNaNReportWith (pathFields (V := V)) name budget r
+
+/-! # What `fir-ref run --world` reports
+
+With a scripted world, each object that reports how a path ends also has
+the path's trace and, at a return, what escaped and the memory that an
+observer reaches, so that a judge can compare two runs as the spec's end of
+a return does (`ObservedEnd`), up to a one-to-one renaming of allocations,
+with no address compared (`docs/decisions/fir-ref-run-end.md#results`).
+Neither the core nor `gpu` shows an event yet, so the trace is empty. A
+unit is spelled `0x` and its bits in hexadecimal, `poison`, or the fragment
+`I` of a pointer of the memory `N`, `frag(N, ptr(A, O), I)`; no address is
+printed.
+-/
+
+open Memory
+
+/-- The bits of a unit `u` bits wide, as `0x` and `⌈u/4⌉` lowercase
+hexadecimal digits, at least one. -/
+def unitBitsText (u : Nat) (b : BitVec u) : String :=
+  let h := Text.hex b.toNat
+  "0x" ++ "".pushn '0' (max 1 ((u + 3) / 4) - h.length) ++ h
+
+/-- A unit of memory as `fir-ref run --world` spells it. -/
+def unitText {u : Nat} : MemUnit u → String
+  | .bits b => unitBitsText u b
+  | .poison => "poison"
+  | .frag m p i => s!"frag({m}, {ptrText p}, {i})"
+
+/-- The kind of an allocation, as `fir-ref run --world` spells it. -/
+def kindText : AllocKind → String
+  | .stack => "stack"
+  | .global => "global"
+  | .heap => "heap"
+
+/-- An allocation, by its memory and its id. -/
+def allocRef (xa : Nat × AllocId) : List (String × String) :=
+  [("memory", toString xa.1), ("alloc", toString xa.2)]
+
+variable {unit : Nat → Nat}
+
+/-- An allocation of the memories `S` that an observer reaches: its memory
+and id, and its block's kind, alignment, size and liveness, with its units
+while it is live; or a `null` kind when the memory never made it. -/
+def allocJson (S : Memories Nat unit) (xa : Nat × AllocId) : String :=
+  match (S.mem xa.1).blocks[xa.2]? with
+  | none => jsonObject (allocRef xa ++ [("kind", "null")])
+  | some b =>
+    jsonObject (allocRef xa ++ [("kind", jsonString (kindText b.kind)),
+      ("align", toString b.align), ("size", toString b.units.length),
+      ("live", if b.live then "true" else "false")] ++
+      if b.live then [("units", jsonArray (b.units.map (jsonString ∘ unitText)))] else [])
+
+/-- The fields that report the end of a return, after its values: its trace,
+which is empty, the allocations that escaped, and the memory that an
+observer reaches, or `null` when the walk runs out of steps, which its
+bound rules out (`FirRef.Reach`). -/
+def endJson {ar : AddrRule} {V : Type} [HRefinement V V] [HasPtrs V] (e : End unit id ar V) :
+    List (String × String) :=
+  [("trace", "[]"), ("escaped", jsonArray (e.escaped.map (jsonObject ∘ allocRef))),
+    ("memory", match endReach e with
+      | some L => jsonArray (L.map (allocJson e.mem))
+      | none => "null")]
+
+/-- The fields that report how a path ends, each return seen at its end
+(`Gpu.RunEnd`): those of `pathFields`, with the trace of every path after
+its values or its reason, and at a return the allocations that escaped and
+the memory that an observer reaches. -/
+def endFields [Gpu.WorkItem] {M : Module CoreGpu} : Fields (Gpu.RunEnd M)
+  | .outcome (.ret e) => (pathFields (V := DVal CoreGpu) (.outcome (.ret e.vals))).map
+    fun (fs, st) => (fs ++ endJson e, st)
+  | .outcome (.ub r) => (pathFields (V := DVal CoreGpu) (.outcome (.ub r))).map withTrace
+  | .outcome .fuelExhausted => (pathFields (V := DVal CoreGpu) (.outcome .fuelExhausted)).map withTrace
+  | .stuck st => (pathFields (V := DVal CoreGpu) (.stuck st)).map withTrace
+  | .noOutcome op => .error op
+where
+  withTrace (p : List (String × String) × Bool) : List (String × String) × Bool :=
+    (p.1 ++ [("trace", "[]")], p.2)
+
+/-- Why a scripted world does not fit a run that shows no event: it
+answers some. -/
+def worldMisfit (name : String) (answers : Nat) : RunReport :=
+  { err := s!"fir-ref: {name}: the world's script does not fit the run: the run shows no " ++
+      s!"event, and the script answers {answers}", status := 2 }
 
 end FirRef

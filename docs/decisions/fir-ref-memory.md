@@ -80,8 +80,13 @@ callee returns, as the interpreter's frame does. `Machine.advance_tree`
 proves that it computes the spec's tree of the run with memory, so the
 `@[csimp]` theorems of `FirRef.Run` hold as before
 ([Running](fir-ref-fast-paths.md#running)). `FirRef.Steps` holds for any lawful
-monad, and the tree of choices is a lawful monad. A path that ends drops its
-memories, so the machine never leaves the frames of the callers that wait.
+monad, and the tree of choices is a lawful monad. The machine sees the
+run's return by a function of its values and of the memories at its end,
+after its frame is left: the modes that `FirRef.Run` registers see it as its
+values, and those of `fir-ref run --world` at its end
+([fir-ref-run-end.md](fir-ref-run-end.md)). Any other path that ends drops
+its memories, so the machine never leaves the frames of the callers that
+wait.
 `Memories` keeps a stack of frames beside the machine's own, so a deep
 recursion costs two lists on the heap, still no stack.
 
