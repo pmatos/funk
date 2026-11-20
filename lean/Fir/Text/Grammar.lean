@@ -276,7 +276,7 @@ applies (ADR-2026-10-29-2014):
 * a string or quoted symbol not in its one spelling, such as an escape the
   printer does not write, or a quoted name that is a word;
 * an item whose kind the parser does not know: every kind but `func`,
-  `module`, `aggregate` and the words of dialects; a `func` with attributes, or with a
+  `module`, `aggregate`, `data` and the words of dialects; a `func` with attributes, or with a
   dialect set or items in its body; a `module` with parameters, results,
   attributes or blocks; and an item of a dialect's kind with a body that is
   not empty;

@@ -1,0 +1,11 @@
+# Tests of gpu-memset.fir: memset in gpu work-group memory, a memory of
+# 16-bit units (#234). Each work-item fills the two units of its own slot,
+# 8 units into a work-group buffer of 8 i32, with an i16, and reads them back
+# as an i32; the last half of the work-items fill past the buffer, which is
+# UB. The backend builds no device module, so each test is
+# interpreter-only.
+tests = [
+  { func = "@dev::@fill", args = ["7"], expect = ["458759"], work_item = { id = [3, 0, 0], group_size = [8, 1, 1] } },
+  { func = "@dev::@fill", args = ["-1"], expect = ["-1"], work_item = { id = [0, 0, 0], group_size = [8, 1, 1] } },
+  { func = "@dev::@fill", args = ["7"], expect = "ub", work_item = { id = [4, 0, 0], group_size = [8, 1, 1] } },
+]

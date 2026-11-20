@@ -13,8 +13,9 @@ those ops (ADR-2026-10-29-2009).
 
 The memory effect gives six operations of the memory model on the
 memories of a run, each named by its memory: allocating, freeing, loading,
-storing, exposing, and turning an integer back into a pointer. A load or a store is an aligned access: it carries the
-alignment that the op promises, in units. An access that faults is
+storing, exposing, and turning an integer back into a pointer. A load or a
+store is an aligned access: it carries the alignment that the op promises,
+in units. An access that faults is
 immediate UB, for the reason of its fault, a misaligned access included
 (ADR-2026-11-09-1542; the human's ruling of 2026-11-11 on #231). Exposing a
 pointer turns it into an integer of the memory's pointer width, and gives

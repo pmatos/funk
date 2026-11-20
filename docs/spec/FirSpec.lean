@@ -184,6 +184,8 @@ functions, blocks and ops.
 
 {includeReadable "." Fir.Core.MemCopyText "Copies and moves in text" FirSpec.Core.MemCopyText (level := 2)}
 
+{includeReadable "." Fir.Core.MemSetText "Fills in text" FirSpec.Core.MemSetText (level := 2)}
+
 {includeReadable "." Fir.Core.FieldAddrText "Field addresses in text" FirSpec.Core.FieldAddrText (level := 2)}
 
 {includeReadable "." Fir.Core.TextSamples "The core dialect's text, checked" FirSpec.Core.TextSamples (level := 2)}
@@ -207,6 +209,8 @@ functions, blocks and ops.
 {includeReadable "." Fir.Core.StoreTextLaws "Stores read back" FirSpec.Core.StoreTextLaws (level := 2)}
 
 {includeReadable "." Fir.Core.MemCopyTextLaws "Copies and moves read back" FirSpec.Core.MemCopyTextLaws (level := 2)}
+
+{includeReadable "." Fir.Core.MemSetTextLaws "Fills read back" FirSpec.Core.MemSetTextLaws (level := 2)}
 
 {includeReadable "." Fir.Core.FloatOpTextLaws "The float ops read back" FirSpec.Core.FloatOpTextLaws (level := 2)}
 

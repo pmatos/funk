@@ -107,7 +107,7 @@ operands and results are defined. The parser has no code for any op of any
 dialect beyond these functions.
 :::
 
-:::readable Fir.LawfulDialectText (pin := Fir.DialectSignature) (pin := Fir.DialectValidation) (fingerprint := "16177606339395822275")
+:::readable Fir.LawfulDialectText (pin := Fir.DialectSignature) (pin := Fir.DialectValidation) (fingerprint := "9175486634428602045")
 *Definition: a dialect whose text is lawful.* Let $`d` be a dialect with its
 {ref "The-fir-specification--Abstract-syntax--Dialects"}[signature], which
 gives each op instance $`o` its operand types $`\mathrm{sig}(o)` and its

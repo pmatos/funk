@@ -25,9 +25,9 @@ vector of its parameter types, poison included (the section on core
 functions with memory):
 
 * _every core op but `call`, `alloca`, the loads and stores,
-  `fieldAddr` and `memCopy` is total_, by the obligations that each family
+  `fieldAddr`, `memCopy` and `memSet` is total_, by the obligations that each family
   proves of its ops, and `alloca`, the loads and stores, of an integer, a
-  pointer or a float, `fieldAddr` and `memCopy` are total with memory, each
+  pointer or a float, `fieldAddr`, `memCopy` and `memSet` are total with memory, each
   by its own rule;
 * _every valid core function without calls runs within itself_: none of
   its ops calls a function; `br` and `cond_br` go only to successors they
@@ -57,12 +57,12 @@ def CallFree (f : Func CoreDialect) : Prop :=
 instance (f : Func CoreDialect) : Decidable (CallFree f) :=
   inferInstanceAs (Decidable (∀ b ∈ f.blocks, ∀ o ∈ b.body, o.op.isCall = false))
 
-/-- Every core op but `call`, `alloca`, the loads and stores, `fieldAddr`
-and `memCopy` is total in the set monad. `alloca`, the loads and stores,
-`fieldAddr` and `memCopy` have no rule there: each is total with memory, by
+/-- Every core op but `call`, `alloca`, the loads and stores, `fieldAddr`,
+`memCopy` and `memSet` is total in the set monad. `alloca`, the loads and stores,
+`fieldAddr`, `memCopy` and `memSet` have no rule there: each is total with memory, by
 its own rule (the sections on the stack allocation, load, store, pointer
-load, pointer store, float load, float store, field address and copy and
-move obligations). -/
+load, pointer store, float load, float store, field address, copy and
+move, and fill obligations). -/
 theorem Op.total : (op : Op) → op.isCall = false → op.touchesMemory = false →
     op.readsItems = false → OpTotal (d := CoreDialect) op
   | .const w v, _, _, _ => const_total w v
@@ -107,7 +107,7 @@ theorem Op.total : (op : Op) → op.isCall = false → op.touchesMemory = false 
   | .call .., h, _, _ => nomatch h
   | .alloca .., _, h, _ | .load .., _, h, _ | .store .., _, h, _ | .loadPtr .., _, h, _
   | .storePtr .., _, h, _ | .loadFloat .., _, h, _ | .storeFloat .., _, h, _
-  | .memCopy .., _, h, _ => nomatch h
+  | .memCopy .., _, h, _ | .memSet .., _, h, _ => nomatch h
   | .fieldAddr .., _, _, h => nomatch h
 
 /-- A core terminator that jumps goes to a successor that it has, and gives

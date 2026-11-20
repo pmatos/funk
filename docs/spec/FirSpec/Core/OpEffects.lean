@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Core effects: readable blocks" =>
 
-:::moduleDocs (fingerprint := "5747122463456821881")
+:::moduleDocs (fingerprint := "16790106770193789825")
 :::
 
 :::readable Fir.Core.Mem (fingerprint := "11401156343561318334")
@@ -26,11 +26,12 @@ module has. The module's data layout declares the others by number
 (ADR-2026-11-12-1821;
 {ref "The-fir-specification--Validation--The-data-layout___s-rules"}[the data layout's rules]).
 $`\mathsf{alloca}` names the memory of its result in its effects, and
-$`\mathsf{load}` and $`\mathsf{store}` the memory of their pointer; no
-other core op names a memory.
+$`\mathsf{load}`, $`\mathsf{store}`, $`\mathsf{memcpy}`,
+$`\mathsf{memmove}` and $`\mathsf{memset}` the memory of their pointers;
+no other core op names a memory.
 :::
 
-:::readable Fir.Core.Op.effects (fingerprint := "12969306900515650652")
+:::readable Fir.Core.Op.effects (fingerprint := "4327253371606704340")
 *Definition: the effects of each core op.* For each
 {ref "The-fir-specification--Abstract-syntax--Core-ops"}[core op instance]:
 
@@ -50,7 +51,7 @@ $$`\mathsf{br},\ \mathsf{ret}:\ \{\mathsf{control}\} \qquad \mathsf{cond\_br},\ 
 
 $$`\mathsf{alloca}_N:\ \{\mathsf{allocates}(N)\} \qquad \mathsf{load}_N:\ \{\mathsf{reads}(N),\ \mathsf{mayUB},\ \mathsf{mayPoison}\}`
 
-$$`\mathsf{store}_N:\ \{\mathsf{writes}(N),\ \mathsf{mayUB}\} \qquad \mathsf{memcpy}_N,\ \mathsf{memmove}_N:\ \{\mathsf{reads}(N),\ \mathsf{writes}(N),\ \mathsf{mayUB}\}`
+$$`\mathsf{store}_N,\ \mathsf{memset}_N:\ \{\mathsf{writes}(N),\ \mathsf{mayUB}\} \qquad \mathsf{memcpy}_N,\ \mathsf{memmove}_N:\ \{\mathsf{reads}(N),\ \mathsf{writes}(N),\ \mathsf{mayUB}\}`
 
 The load and store of a pointer, $`\mathsf{load}_N~o~\mathsf{ptr}\langle M \rangle~a`
 and $`\mathsf{store}_N~o~\mathsf{ptr}\langle M \rangle~a` (`loadPtr` and
@@ -86,7 +87,10 @@ $`\mathsf{memcpy}_N` and $`\mathsf{memmove}_N` read and write the memory
 $`N` of their pointers and may be UB, on a poison pointer, an access that
 faults and, for $`\mathsf{memcpy}_N`, ranges that partly overlap, unless
 the length is 0. They give no result, so they make no poison, though they
-may carry poison units.
+may carry poison units. $`\mathsf{memset}_N` writes the memory $`N` of its
+pointer and may be UB, on a poison pointer or an access that faults,
+unless the length is 0; as $`\mathsf{store}_N`, it reads no memory and
+makes no poison, though it may write poison units.
 $`\mathsf{call}`'s own rule only runs its callee, so its own set is empty;
 a call has its callee's effects. The definition lists every op, with no
 case for the rest, so a new core op does not build until it declares its

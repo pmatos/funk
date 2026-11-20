@@ -189,7 +189,7 @@ trace. The access cannot be removed, duplicated or reordered with other events
 
 The spec gives one memory of this model, for a unit of any width, in
 `lean/Fir/Memory/`, with its accesses and their laws. `alloca`, `load`,
-`store` (#231), `memcpy` and `memmove` (#234) are the ops that use memory
+`store` (#231), `memcpy`, `memmove` and `memset` (#234) are the ops that use memory
 yet. Memory is a state layer over the way of computing
 (ADR-2026-11-10-2350):
 
@@ -234,7 +234,8 @@ to enumerate memory names, which may be infinite.
 ## The core's guarantees
 
 The semantics with memory carries the guarantees for the whole core
-dialect, `alloca`, the loads and stores, `memcpy` and `memmove` included.
+dialect, `alloca`, the loads and stores, `memcpy`, `memmove` and `memset`
+included.
 The statements without memory cover only the code that touches none: those
 over the set monad cover the ops other than those, and those that ask a
 function to reach no memory cover such
@@ -245,7 +246,8 @@ which changes the dialect's structure where the versions with memory
 already cover every op.
 
 These hold for every core op, and for every function of a valid core
-module, `alloca`, the loads and stores, `memcpy` and `memmove` included:
+module, `alloca`, the loads and stores, `memcpy`, `memmove` and `memset`
+included:
 
 - the lawful classes with memory: `Core.lawfulDialectTotal`,
   `Core.lawfulDialectMonotone` and `Core.lawfulDialectMemPoison`

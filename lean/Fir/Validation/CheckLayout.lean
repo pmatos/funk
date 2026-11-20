@@ -7,7 +7,9 @@ order, then each memory that the layout declares more than once. The check
 of a module's memories names, for each function and each item of a
 dialect's kind whose types, or for a function the types that its ops carry
 in their attributes, name a memory that the layout does not declare, the
-first such memory (ADR-2026-11-12-1821). The check of an aggregate's layout
+first such memory (ADR-2026-11-12-1821), and for each function whose ops
+write values into the units of a memory whose units are not as wide, the
+first such memory. The check of an aggregate's layout
 names each rule of a valid layout that it breaks, and each field that is not
 placed (ADR-2026-11-16-1546).
 -/
@@ -80,20 +82,35 @@ def memoryProblem (sym : Name) : List Nat → Option Problem
 theorem memoryProblem_eq_none (sym : Name) (ns : List Nat) : memoryProblem sym ns = none ↔ ns = [] := by
   cases ns <;> simp [memoryProblem]
 
+/-- A problem for a function whose ops write values into the units of a
+memory whose units are not as wide: it names the first such memory. -/
+def unitsProblem (l : DataLayout) (sym : Name) (qs : List (Nat × Nat)) : Option Problem :=
+  (qs.find? fun q => !decide (l.HasUnits q)).map fun q =>
+    { message := "an op writes values of " ++ toString q.2 ++ " bits into memory " ++
+        toString q.1 ++ ", whose units have " ++ toString (l.entry q.1).unit ++ " bits",
+      func := sym }
+
+theorem unitsProblem_eq_none (l : DataLayout) (sym : Name) (qs : List (Nat × Nat)) :
+    unitsProblem l sym qs = none ↔ ∀ q ∈ qs, l.HasUnits q := by
+  simp [unitsProblem, List.find?_eq_none]
+
 /-- The problems of the memories that a symbol table's types name: one for
 each function, then one for each item of a dialect's kind, whose types name
-a memory that the layout does not declare. A function's types are those it
-states, then those its ops carry in their attributes. -/
+a memory that the layout does not declare, then one for each function
+whose ops write values into units that are not as wide. A function's types
+are those it states, then those its ops carry in their attributes. -/
 def SymbolTable.memoryProblems (l : DataLayout) (t : SymbolTable d) : List Problem :=
   t.funcs.filterMap (fun f => memoryProblem f.name (l.missing (f.types ++ f.attrTypes))) ++
-  t.dialectItems.filterMap (fun i => memoryProblem i.name (l.missing i.types))
+  t.dialectItems.filterMap (fun i => memoryProblem i.name (l.missing i.types)) ++
+  t.funcs.filterMap (fun f => unitsProblem l f.name f.unitWidths)
 
 theorem SymbolTable.memoryProblems_eq_nil (l : DataLayout) (t : SymbolTable d) :
     t.memoryProblems l = [] ↔ t.MemoriesIn l := by
   simp only [SymbolTable.memoryProblems, List.append_eq_nil_iff, List.filterMap_eq_nil_iff,
-    memoryProblem_eq_none, DataLayout.missing_eq_nil, List.mem_append]
-  exact ⟨fun ⟨a, b⟩ => ⟨fun f hf ty h => a f hf ty (.inl h), b, fun f hf ty h => a f hf ty (.inr h)⟩,
-    fun ⟨a, b, c⟩ => ⟨fun f hf ty h => h.elim (a f hf ty) (c f hf ty), b⟩⟩
+    memoryProblem_eq_none, DataLayout.missing_eq_nil, List.mem_append, unitsProblem_eq_none]
+  exact ⟨fun ⟨⟨a, b⟩, u⟩ => ⟨fun f hf ty h => a f hf ty (.inl h), b,
+      fun f hf ty h => a f hf ty (.inr h), u⟩,
+    fun ⟨a, b, c, u⟩ => ⟨⟨fun f hf ty h => h.elim (a f hf ty) (c f hf ty), b⟩, u⟩⟩
 
 section
 variable [DecidableDialectValidation d]

@@ -35,8 +35,8 @@ choice effect, and the divisions,
 * Each op that is not a terminator has the rule of its family, from the
   arithmetic rules to the width change rules. `call` has none: its meaning
   is its callee's run. `alloca`, and the loads `load`, `loadPtr` and
-  `loadFloat`, the stores `store`, `storePtr` and `storeFloat`, and the
-  copy or move `memCopy` have none either: they allocate, read
+  `loadFloat`, the stores `store`, `storePtr` and `storeFloat`, the
+  copy or move `memCopy` and the fill `memSet` have none either: they allocate, read
   and write, so each rule needs the memory effect, and is
   one of the core's rules with memory. Nor has the field address
   `fieldAddr`: it reads the layout it names in the items that the run
@@ -47,7 +47,7 @@ choice effect, and the divisions,
   a function, when it touches memory, or when it reads the run's items.
   Every core op has rules: each family gave its ops theirs, the call rules
   name the callee of `call`, and `alloca`, the loads and stores,
-  `fieldAddr` and `memCopy` have their rules with memory.
+  `fieldAddr`, `memCopy` and `memSet` have their rules with memory.
 
 An op has no rules when its dialect's semantics gives it none. The rule for
 such an op, first written while its family had not landed, is the one the spec
@@ -98,12 +98,13 @@ variable {m : Type → Type} [Monad m]
 
 /-- The core ops that touch memory: `alloca`, which allocates, `load`,
 `loadPtr` and `loadFloat`, which read, `store`, `storePtr` and
-`storeFloat`, which write, and `memCopy`, which reads and writes. Each has a
+`storeFloat`, which write, `memCopy`, which reads and writes, and
+`memSet`, which writes. Each has a
 rule only in a monad with the memory effect (the section on the core's
 rules with memory). -/
 def Op.touchesMemory : Op → Bool
   | .alloca .. | .load .. | .store .. | .loadPtr .. | .storePtr .. | .loadFloat ..
-  | .storeFloat .. | .memCopy .. => true
+  | .storeFloat .. | .memCopy .. | .memSet .. => true
   | _ => false
 
 /-- The core ops whose rules read the items that the run gives each op:
@@ -264,6 +265,8 @@ def Op.hasRules (op : Op) : Bool :=
   (Op.storeFloat .seqCst 2 1 (some 4) 1).hasRules
 #guard ((Op.memCopy .copy .nonatomic 64 0).denote? (m := SetM)).isNone &&
   (Op.memCopy .copy .nonatomic 64 0).hasRules && (Op.memCopy .move .seqCst 1 1).hasRules
+#guard ((Op.memSet .nonatomic 8 64 0).denote? (m := SetM)).isNone &&
+  (Op.memSet .nonatomic 8 64 0).hasRules && (Op.memSet .seqCst 16 1 1).hasRules
 
 /-- The core dialect's semantics in a monad `m` from two tables of rules,
 `den` for the ops that are not terminators and `ex` for the terminators:
