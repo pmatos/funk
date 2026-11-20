@@ -15,12 +15,13 @@ its command line) and of G0's Lean tests must not:
 * write a word of the core dialect's text as a string: an op name such as
   `"add"`, an attribute such as `"nsw"` or `"true"`, or a type such as
   `"i32"`. The words are those of `lean/Fir/Core/Text.lean` and of the
-  files it writes types, `alloca`, `load`, `store` and rounding modes
-  with, `TypeText.lean`, `AllocaText.lean`, `LoadText.lean`,
-  `StoreText.lean` and `RoundingText.lean`, but the shared words: `align`,
-  which the data layout's generic grammar writes too, and `global` and
-  `const`, a global's item kind and flag (the human's ruling of
-  2026-11-20, #237 Q4).
+  files it writes types, `alloca`, `load`, `store`, rounding modes and the
+  float ops' fast-math flags with, `TypeText.lean`, `AllocaText.lean`,
+  `LoadText.lean`, `StoreText.lean`, `RoundingText.lean` and
+  `FloatOpText.lean`, but the shared words: `align`, which the data
+  layout's generic grammar writes too, and `global` and `const`, a global's
+  item kind and flag (the human's ruling of 2026-11-20, #237 Q4). The Rust
+  side, `crates/funk-ir/tests/g0.rs`, checks the same words.
 
 The same holds of every other dialect in tree, so the same code must not
 name the second dialect, `gpu` (ADR-2026-11-09-1545), nor import its
@@ -42,15 +43,16 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 CORE_TEXT = "lean/Fir/Core/Text.lean"
-# The files that Text.lean writes types, `alloca`, `load`, `store` and
-# rounding modes with, whose words it writes too, and the words that the
-# generic text writes as well.
+# The files that Text.lean writes types, `alloca`, `load`, `store`, rounding
+# modes and fast-math flags with, whose words it writes too, and the words
+# that the generic text writes as well.
 CORE_TEXT_PARTS = (
     "lean/Fir/Core/TypeText.lean",
     "lean/Fir/Core/AllocaText.lean",
     "lean/Fir/Core/LoadText.lean",
     "lean/Fir/Core/StoreText.lean",
     "lean/Fir/Core/RoundingText.lean",
+    "lean/Fir/Core/FloatOpText.lean",
 )
 # The shared words: `align`, which the data layout line writes (the human's
 # ruling of 2026-11-14, #382), and `global` and `const`, a global's item

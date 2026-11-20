@@ -23,7 +23,9 @@ Tier: direction; area: semantics
 - **Backend.** The naive backend lowers them to funk's own runtime routines
   `memcpy`, `memmove` and `memset`, not the C library's, so a program that
   only copies, moves or sets memory keeps the static link without the C
-  library.
+  library. The routines' symbols are funk-private, so they never clash with
+  the C library's when a module also links it
+  ([x86-64-backend-lowering-memory.md](../decisions/x86-64-backend-lowering-memory.md#copies-moves-and-sets)).
 
 [semantics-m1-design.md](../decisions/semantics-m1-design.md) states each
 rule. The human ruled this on 2026-11-09, on #220. On 2026-11-11 the human

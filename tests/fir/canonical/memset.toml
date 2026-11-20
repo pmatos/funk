@@ -1,0 +1,38 @@
+# Tests of memset.fir: memset writes copies of one byte of memory 0 (#234,
+# ADR-2026-11-09-1551). Four copies of an i8 read back as an i32 of four
+# equal bytes; a fill of part of an i32 leaves its other bytes as they were.
+# A fill over a stored pointer leaves bytes, so the pointer reads back as
+# poison and a load through it is UB. A poison value writes poison units,
+# and is not UB. A length of 0 does nothing, through poison and dangling
+# pointers alike (Q1 B); another length through them is UB, and so is a
+# length past the allocation, however long: 2^63 bytes into an allocation of
+# 4 is UB at once. A poison length chooses its value: an i1 over one byte is
+# never UB, and an i8 is UB where its value is. A length may be an integer
+# of any width. Tests that pass poison pointers or reach UB are
+# interpreter-only in any module. @lengths takes lengths of i7 and i33,
+# which the backend does not lower, and funk build builds a module all or
+# nothing (tests/fir/README.md), so every test of this file is
+# interpreter-only, even one such as @fill that native code could run alone;
+# memops-native.toml runs memset as native code.
+tests = [
+  { func = "@fill", args = ["1"], expect = ["16843009"] },
+  { func = "@fill", args = ["-1"], expect = ["-1"] },
+  { func = "@fill_part", args = ["-1", "2"], expect = ["67371007"] },
+  { func = "@fill_part", args = ["0", "4"], expect = ["0"] },
+  { func = "@fill_ptr", expect = "ub" },
+  { func = "@fill_poison", expect = ["poison"] },
+  { func = "@through", args = ["poison", "1", "0"], expect = ["0"] },
+  { func = "@through", args = ["poison", "poison", "0"], expect = ["0"] },
+  { func = "@through", args = ["poison", "1", "1"], expect = "ub" },
+  { func = "@dangling", args = ["0"], expect = ["0"] },
+  { func = "@dangling", args = ["1"], expect = "ub" },
+  { func = "@huge", expect = "ub" },
+  { func = "@past", args = ["0", "4"], expect = ["4"] },
+  { func = "@past", args = ["2", "3"], expect = "ub" },
+  { func = "@past", args = ["-1", "2"], expect = "ub" },
+  { func = "@poison_length", args = ["poison"], choices = ["false"], expect = ["poison"] },
+  { func = "@poison_length", args = ["poison"], choices = ["true"], expect = ["7"] },
+  { func = "@poison_length_ub", args = ["poison"], choices = ["1"], expect = ["7"] },
+  { func = "@poison_length_ub", args = ["poison"], choices = ["5"], expect = "ub" },
+  { func = "@lengths", args = ["2"], expect = ["33686018"] },
+]

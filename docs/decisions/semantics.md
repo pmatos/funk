@@ -11,6 +11,7 @@ this page and an ADR disagree, the page wins, and the ADR is fixed or deleted
 - semantics-poison.md: poison, UB and `freeze`;
 - semantics-dialects.md: how dialects extend fir, and sums;
 - semantics-effects.md: op effects;
+- semantics-effects-summaries.md: the effects that a call carries;
 - semantics-floats.md: floating point;
 - semantics-floats-conversions.md: the conversions of floats;
 - semantics-m1-design.md: the M1 design, most of it not built yet;

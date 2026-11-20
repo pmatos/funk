@@ -7,7 +7,7 @@ wins, and the ADR is fixed or deleted (ADR-2026-11-09-1610).
 These are decided designs, and the spec and the tools implement only some of
 them yet: `ptr` has values (ADR-2026-11-09-1542), and its ops so far are
 `ptradd` (ADR-2026-11-13-0251), `alloca` (ADR-2026-11-14-0915), `load`
-and `store` (ADR-2026-11-14-2316), and `memcpy` and `memmove`
+and `store` (ADR-2026-11-14-2316), and `memcpy`, `memmove` and `memset`
 (ADR-2026-11-18-2131). M0 has no
 global data (ADR-2026-11-09-1546). `funk`, `fir-ref fmt`, `fir-ref
 validate` and `fir-ref run` read the core and the second dialect, `gpu`
@@ -154,7 +154,7 @@ proof, and each new op costs one soundness proof per effect it leaves out
 (ADR-2026-11-09-1541).
 
 Every core op of M0 is pure, may produce poison or may-UB, as its rules already
-say. `call` carries its callee's summary (semantics-effects.md,
+say. `call` carries its callee's summary (semantics-effects-summaries.md,
 ADR-2026-11-09-1541). Each M1 op is classified when it
 lands, in its own ticket, by the same rule (ADR-2026-11-09-1541):
 
@@ -190,7 +190,8 @@ three may be UB, for out-of-bounds access, unless the length is 0. A frontend lo
 `memcpy` to the copy op, not to an external call. The naive backend lowers them
 to funk's own runtime routines `memcpy`, `memmove` and `memset`, not the C
 library's, so a program that only copies, moves or sets memory keeps the
-static link without the C library (ADR-2026-11-09-1551).
+static link without the C library (ADR-2026-11-09-1551). Their symbols are
+funk-private, so they never clash with the C library's.
 
 The human ruled these ops on 2026-11-09, on #220. On 2026-11-11 the human ruled
 on #251 that set writes one unit value, not a byte, and on #274 that funk's
@@ -213,16 +214,28 @@ There is no `align(A)` in M1: each access is aligned to one unit. With a
 length other than 0, a poison pointer is UB, as for a load. A poison length
 runs as some length, chosen as `freeze` chooses bits, so it is UB wherever
 some length is, and the op stays in the `propagates` class
-(ADR-2026-10-29-2006). Rejected: a poison length always UB, as in LLVM's
-LangRef, which the `propagates` class forbids, since with an `i1` length over
-a one-unit allocation no length is UB; it would need the class `exception`.
-This paragraph records agent work, not a ruling, and the poison length waits
-for the human's ruling on #234.
+(ADR-2026-10-29-2006). The human ruled the poison length on 2026-11-19 on
+#234 (option A), for all three ops; a lowering to LLVM freezes the length
+first. Rejected: a poison length always UB, as in LLVM's LangRef, which the
+`propagates` class forbids, since with an `i1` length over a one-unit
+allocation no length is UB; it would need the class `exception`. The rest of
+this paragraph records agent work, not a ruling.
+
+A fill, the set op, is written `memset ORDERING %d, %v, %n` (ADR-2026-11-18-2131), with the
+rules of copy for its pointer, length and ordering. Its value `%v` is an
+`iV` as wide as a unit of the pointer's memory (#251). The module's
+data-layout rule checks it, as it checks the memories that types name: each
+op lists the memory and width pairs it asks (`DialectValidation.opUnits`),
+and `SymbolTable.MemoriesIn` asks the layout's entry to agree. A poison value
+writes poison units, as a store of poison does. Rejected: checking the width
+in the op's own rule, which has no data layout, so every dialect's op rule
+would gain one.
 
 The spec has both ops, `Core.Op.memCopy` with a `CopyKind`
 (`lean/Fir/Core/MemCopy.lean`), through every layer but native code (stage 2
-of #234); `memset` is stage 3, and native code and funk's runtime routines
-stage 4. The rule takes the length first: 0 does nothing; otherwise a poison
+of #234), and `memset`, `Core.Op.memSet` (`lean/Fir/Core/MemSet.lean`),
+too (stage 3), and native code calls funk's runtime routines (stage 4,
+[x86-64-backend-lowering-memory.md](x86-64-backend-lowering-memory.md#copies-moves-and-sets)). The rule takes the length first: 0 does nothing; otherwise a poison
 pointer is UB, then a `memcpy` whose ranges partly overlap, then the copy of
 units of stage 1 (`lean/Fir/Execution/MemoryCopyLaws.lean`): a load of the
 units through the source, then a store of them through the destination, so
@@ -230,7 +243,10 @@ a move whose ranges overlap writes what the source held before it began.
 Every law of the op comes from the copy of units, through the laws of a
 choice in the state layer (`lean/Fir/Execution/MemoryChoiceLaws.lean`), and
 joins the core's guarantees through `Core.Op.memCases`, whose statements
-gain no hypothesis.
+gain no hypothesis. The rule of `memset` takes the length first in the same
+way, then a poison pointer, then a store of `n` copies of the value's unit;
+its laws come from the store's, and `fir-ref` checks the range before it
+builds the `n` units (fir-ref-fast-paths.md).
 
 ## Aggregates
 

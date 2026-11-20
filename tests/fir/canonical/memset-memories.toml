@@ -1,0 +1,13 @@
+# Tests of memset-memories.fir: in memory 1, of 16-bit units, memset writes
+# copies of an i16 and its length counts those units, not bytes (#234). An
+# i32 takes two units, so a length of 2 fills it and a length of 1 fills
+# its low unit and leaves its high one. An i32 alloca holds two units, so a
+# length of 3 is out of bounds. The backend does not realise a memory of
+# 16-bit units, so each test is interpreter-only.
+tests = [
+  { func = "@fill", args = ["-16657", "2"], expect = ["-1091584273"] },
+  { func = "@fill", args = ["-16657", "1"], expect = ["67354351"] },
+  { func = "@fill", args = ["7", "0"], expect = ["67305985"] },
+  { func = "@past", args = ["2"], expect = ["2"] },
+  { func = "@past", args = ["3"], expect = "ub" },
+]

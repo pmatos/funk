@@ -1,5 +1,5 @@
-"""Tests of the cells of `memcpy` and `memmove`, and that they follow the
-op's names in Lean (#234)."""
+"""Tests of the cells of `memcpy`, `memmove` and `memset`, and that they
+follow the ops' names in Lean (#234)."""
 
 import re
 import unittest
@@ -35,6 +35,11 @@ class CopyCells(unittest.TestCase):
                 found = of_op(op(name, ("nonatomic",), (ptr, ptr, "i33")))
                 self.assertEqual(found, {Cell("copies", name, "", "i33")})
 
+    def test_a_fill_is_a_cell_at_the_width_of_its_length(self):
+        for ptr, value in (("ptr", "i8"), ("ptr(3)", "i16")):
+            found = of_op(op("memset", ("nonatomic",), (ptr, value, "i33")))
+            self.assertEqual(found, {Cell("copies", "memset", "", "i33")})
+
     def test_other_texts_are_not_cells(self):
         for bad in (
             op("memcpy", ("seq_cst",), ("ptr", "ptr", "i64")),
@@ -42,22 +47,22 @@ class CopyCells(unittest.TestCase):
             op("memmove", ("nonatomic",), ("ptr", "ptr", "f64")),
             op("memmove", ("nonatomic",), ("ptr", "ptr")),
             op("memcpy", ("nonatomic",), ("ptr", "ptr", "i64"), ("i64",)),
+            op("memset", ("seq_cst",), ("ptr", "i8", "i64")),
+            op("memset", ("nonatomic",), ("ptr", "ptr", "i64")),
+            op("memset", ("nonatomic",), ("i64", "i8", "i64")),
+            op("memset", ("nonatomic",), ("ptr", "i8")),
         ):
             with self.assertRaises(CellError):
                 of_op(bad)
 
-    def test_only_the_interpreter_side_has_the_cells(self):
+    def test_both_sides_have_the_cells_at_their_pointer_widths(self):
         for side in coverage.SIDES:
             found = {c for c in side.cells() if c.table == "copies"}
-            want = (
-                {
-                    Cell("copies", o, "", f"i{w}")
-                    for o in copy_cells.COPY_OPS
-                    for w in side.offsets
-                }
-                if side.name == "interpreter"
-                else set()
-            )
+            want = {
+                Cell("copies", o, "", f"i{w}")
+                for o in copy_cells.MEM_OPS
+                for w in side.offsets
+            }
             self.assertEqual(found, want, side.name)
 
     def test_the_catalog_has_no_copies_by_default(self):

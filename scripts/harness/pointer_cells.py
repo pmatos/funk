@@ -25,8 +25,7 @@ index, read as signed, and one, with no index, for the address of a field
 or of a repeated field's first element, whatever its layout and field, as
 a call's callee is not part of its cell. Its cells are at the side's field
 widths, `cells.FIELD_DIFFERENTIAL` and `cells.FIELD_INTERPRETER`: the
-backend does not lower it yet, so the differential side has none (stage 4
-of #236).
+backend lowers an index of each width it lowers (stage 4 of #236).
 """
 
 from cell_types import Cell, CellError, Row, Table, is_pointer

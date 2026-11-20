@@ -35,7 +35,7 @@ does not change the number of units. In memory 0 a pointer of memory 0
 takes 8 units aligned to 8.
 :::
 
-:::readable Fir.Core.loadPtrResult Fir.Core.storePtrUnits Fir.Core.loadPtrRule Fir.Core.storePtrRule (pin := Fir.MonadMemory) (pin := Fir.MonadUB) (pin := Fir.Memory.decodePtr) (pin := Fir.Memory.encodePtr) (pin := Fir.Core.Op) (fingerprint := "17581365762429048626")
+:::readable Fir.Core.loadPtrResult Fir.Core.storePtrUnits Fir.Core.loadPtrRule Fir.Core.storePtrRule (pin := Fir.MonadMemory) (pin := Fir.MonadUB) (pin := Fir.Memory.decodePtr) (pin := Fir.Memory.encodePtr) (pin := Fir.Core.Op) (fingerprint := "13082724024271406660")
 *Definition: the rules of the load and store of a pointer.* Let a run's
 memories have the layout entries $`\ell`, and let the run name the core's
 memory $`x` as $`\rho(x)`. For $`\mathsf{load}_N~o~\mathsf{ptr}\langle M \rangle~a`

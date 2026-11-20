@@ -108,6 +108,7 @@ import Fir.Execution.BlackBox
 import Fir.Execution.RefineUp
 import Fir.Execution.RefineDown
 import Fir.Execution.RefineRuns
+import Fir.Execution.ReplaceBody
 import Fir.Execution.Replace
 import Fir.Core.CallRefine
 import Fir.Execution.Lawful
@@ -157,6 +158,9 @@ import Fir.Core.StoreFloatLaws
 import Fir.Core.MemCopy
 import Fir.Core.MemCopyLaws
 import Fir.Core.MemCopyPoison
+import Fir.Core.MemSet
+import Fir.Core.MemSetLaws
+import Fir.Core.MemSetPoison
 import Fir.Core.FieldAddrLaws
 import Fir.Core.EffectLaws
 import Fir.Core.MemoryRuns
@@ -179,7 +183,10 @@ import Fir.Execution.Observe
 import Fir.Execution.ObserveEnd
 import Fir.Execution.ObserveEndLaws
 import Fir.Execution.TraceDialect
+import Fir.Execution.TraceLift
+import Fir.Execution.TraceRefine
 import Fir.Core.Observe
+import Fir.Core.Trace
 import Fir.Memory.Model
 import Fir.Memory.Ordering
 import Fir.Memory.Laws
@@ -221,6 +228,8 @@ import Fir.Core.LoadTextLaws
 import Fir.Core.StoreTextLaws
 import Fir.Core.MemCopyText
 import Fir.Core.MemCopyTextLaws
+import Fir.Core.MemSetText
+import Fir.Core.MemSetTextLaws
 import Fir.Core.FloatOpTextLaws
 import Fir.Core.TextLaws
 import Fir.Text.Example
@@ -274,8 +283,10 @@ import Fir.Gpu.Validation
 import Fir.Gpu.Effects
 import Fir.Gpu.TextLaws
 import Fir.Sum.RunLaws
+import Fir.Sum.Pointers
 import Fir.Validation.Nest
 import Fir.Gpu.Semantics
 import Fir.Gpu.WorkGroup
 import Fir.Gpu.Runs
 import Fir.Gpu.Modes
+import Fir.Gpu.Trace

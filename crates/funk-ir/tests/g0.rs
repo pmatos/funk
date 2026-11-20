@@ -17,7 +17,8 @@ mod g0_scan;
 use std::path::Path;
 
 use funk_ir::dialects::core::{
-    self, FAST_MATH_FLAGS, FLOAT_PREDICATES, ORDERINGS, PREDICATES, ROUNDING_MODES, WRAP_FLAG_SETS,
+    self, ALLOC_KINDS, FAST_MATH_FLAGS, FLOAT_ALIASES, FLOAT_PREDICATES, ORDERINGS, PREDICATES,
+    ROUNDING_MODES, WRAP_FLAG_SETS,
 };
 use funk_ir::dialects::gpu;
 use funk_ir::{Block, Func, LocRef, Location, Module, Op, Registry, parse, print, verify};
@@ -41,14 +42,17 @@ fn core_words() -> Vec<String> {
     words.extend(FAST_MATH_FLAGS.iter().map(|f| f.to_string()));
     words.extend(ORDERINGS.iter().map(|o| o.to_string()));
     words.extend(ROUNDING_MODES.iter().map(|r| r.to_string()));
+    words.extend(ALLOC_KINDS.iter().map(|k| k.to_string()));
+    words.extend(FLOAT_ALIASES.iter().map(|(name, _, _)| name.to_string()));
     words.extend(
         WRAP_FLAG_SETS
             .iter()
             .flat_map(|s| s.iter().map(|f| f.to_string())),
     );
-    // `sdiv exact`, the `i1` constants, the pointer type `ptr` and the head
-    // of a rounding mode, `round`, which the dialect does not export by name.
-    words.extend(["exact", "true", "false", "ptr", "round"].map(String::from));
+    // `sdiv exact`, the `i1` constants, the pointer type `ptr`, the head of
+    // a float format without a name, `float`, and the head of a rounding
+    // mode, `round`, which the dialect does not export by name.
+    words.extend(["exact", "true", "false", "ptr", "float", "round"].map(String::from));
     words.sort();
     words.dedup();
     words
@@ -192,7 +196,7 @@ fn the_check_covers_the_ir_the_parser_the_printer_and_the_verifier() {
     assert!(files.iter().all(|f| !f.starts_with("src/dialects/")));
     assert!(core_ops().len() >= 25, "{:?}", core_ops());
     for w in [
-        "add", "cond_br", "poison", "slt", "nsw", "exact", "true", "ptr",
+        "add", "cond_br", "poison", "slt", "nsw", "exact", "true", "ptr", "stack", "heap",
     ] {
         assert!(is_core_word(&core_words(), w), "{w}");
     }
@@ -213,9 +217,9 @@ fn strings_written(src: &str, is_word: impl Fn(&str) -> bool) -> Vec<String> {
 
 /// The core's words that generic code writes too: `global` and `const`, a
 /// global's item kind and flag (the human's ruling of 2026-11-20, #237 Q4).
-/// `scripts/check_g0.py` leaves out `align` as well, which [`core_words`]
-/// does not hold; it holds no kind of `alloca` either, so of these only
-/// `const` is one of its words today.
+/// Both are words of [`core_words`]: `const` an op and `global` a kind of
+/// `alloca`. `scripts/check_g0.py` leaves out `align` as well, which
+/// [`core_words`] does not hold.
 const SHARED_WORDS: [&str; 2] = ["global", "const"];
 
 /// The strings of the code of `src` that are words of the core dialect,
@@ -317,9 +321,10 @@ fn a_word_that_names_a_core_op_and_a_generic_term_is_a_core_word() {
     }
 }
 
-/// `const` names a core op, and generic code writes it alone as a global's
-/// flag, as it writes `global` as its kind (#237 Q4); `poison` beside them
-/// is found all the same.
+/// `const` names a core op and `global` an `alloca` kind, and generic code
+/// writes them alone as a global's flag and kind (#237 Q4): both stay core
+/// words, the scan passes them, and `poison` beside them is found all the
+/// same.
 #[test]
 fn the_shared_words_are_not_found_and_another_core_op_is() {
     let words = core_words();
@@ -328,7 +333,9 @@ fn the_shared_words_are_not_found_and_another_core_op_is() {
         "{:?}",
         core_ops()
     );
-    assert!(!is_core_word(&words, "global"), "{words:?}");
+    for w in SHARED_WORDS {
+        assert!(is_core_word(&words, w), "{w}: {words:?}");
+    }
     assert_eq!(
         core_words_written(
             &words,
@@ -336,6 +343,54 @@ fn the_shared_words_are_not_found_and_another_core_op_is() {
         ),
         ["poison"]
     );
+}
+
+/// The kinds of an `alloca` are words of the core dialect, as on the Lean
+/// side (`scripts/check_g0.py`): generic code does not write `stack` or
+/// `heap` alone, and may write a message that holds one.
+#[test]
+fn an_alloca_kind_written_alone_is_a_core_word() {
+    let words = core_words();
+    let written = |src: &str| core_words_written(&words, src);
+    assert_eq!(
+        written(r#"fn kind() -> &'static str { "stack" }"#),
+        ["stack"]
+    );
+    assert_eq!(
+        written(r#"fn f(k: &str) -> bool { k == "heap" }"#),
+        ["heap"]
+    );
+    for src in [
+        r#"fn why() -> &'static str { "a stack slot" }"#,
+        "// \"stack\" in a comment\nfn f() {}",
+        r#"#[cfg(test)] mod t { fn f() { let _ = "heap"; } }"#,
+    ] {
+        assert!(written(src).is_empty(), "{src}");
+    }
+}
+
+/// The float types are words of the core dialect, as on the Lean side,
+/// which takes them from `TypeText.lean`: generic code does not write an
+/// alias such as `f32`, or the head `float` of a format without one, alone,
+/// and may write a message that holds one.
+#[test]
+fn a_float_type_word_written_alone_is_a_core_word() {
+    let words = core_words();
+    for w in ["f16", "bf16", "f32", "f64", "f128", "float"] {
+        assert!(is_core_word(&words, w), "{w}");
+    }
+    let written = |src: &str| core_words_written(&words, src);
+    assert_eq!(
+        written(r#"fn f(t: &str) -> bool { t == "f32" || t == "float" }"#),
+        ["f32", "float"]
+    );
+    for src in [
+        r#"fn why() -> &'static str { "an f32 operand" }"#,
+        "// \"bf16\" in a comment\nfn f() {}",
+        r#"#[cfg(test)] mod t { fn f() { let _ = "f64"; } }"#,
+    ] {
+        assert!(written(src).is_empty(), "{src}");
+    }
 }
 
 #[test]

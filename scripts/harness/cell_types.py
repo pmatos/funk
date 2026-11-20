@@ -2,7 +2,7 @@
 every module of cells shares (ADR-2026-11-03-0557). `cells.py` gives the cell set,
 `conversion_cells.py` the cells of the conversions, `pointer_cells.py`
 those of the pointer ops, `gpu_cells.py` those of the `gpu` dialect, and
-`copy_cells.py` those of `memcpy` and `memmove`."""
+`copy_cells.py` those of `memcpy`, `memmove` and `memset`."""
 
 from typing import NamedTuple
 
@@ -19,7 +19,8 @@ class Cell(NamedTuple):
     allocates, a `load` loads or a `store` stores, or empty where nothing
     is passed. A `fieldaddr`'s `width` is the type of its index, empty
     with none. A `gpu` op's `row` is its dimension and its `width` the
-    `i32` it gives; a copy's `width` is the width of its length."""
+    `i32` it gives; a copy's, a move's or a fill's `width` is the width of
+    its length."""
 
     table: str
     op: str

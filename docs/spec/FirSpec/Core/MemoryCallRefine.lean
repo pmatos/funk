@@ -17,18 +17,20 @@ pins their fingerprint; the build fails when the Lean changes under it.
 :::moduleDocs (fingerprint := "15085586242917980642")
 :::
 
-:::readable Fir.Core.Op.effects_touchesNoMemory Fir.Core.Op.touchesMemory_false Fir.Core.reachesNoMemory Fir.Core.reachesNoMemory_of_all (pin := Fir.Core.Op.effects) (fingerprint := "6295985866215650368")
+:::readable Fir.Core.Op.effects_touchesNoMemory Fir.Core.Op.touchesMemory_false Fir.Core.reachesNoMemory Fir.Core.reachesNoMemory_of_all (pin := Fir.Core.Op.effects) (fingerprint := "7945888835252537160")
 *Theorems: a core op declares a memory effect exactly when it touches
-memory, and a core function with no allocation, load, store, copy or move
-in reach
+memory, and a core function with no allocation, load, store, copy, move
+or fill in reach
 reaches no memory.* The {ref "The-fir-specification--Execution--Effect-sets"}[effects]
 of every core op that touches no memory, every one but
-$`\mathsf{alloca}`, the loads and stores and the copies and moves, read, write and allocate in
+$`\mathsf{alloca}`, the loads and stores, the copies and moves and the
+fills, read, write and allocate in
 no memory, and an op that declares no memory effect touches no memory,
 since $`\mathsf{alloca}_N` declares that it allocates in memory $`N`,
 $`\mathsf{load}_N` of an integer, a pointer or a float that it reads it,
 $`\mathsf{store}_N` of any of them that it writes it, and
-$`\mathsf{memcpy}_N` and $`\mathsf{memmove}_N` that they read it. So in a core symbol table, the
+$`\mathsf{memcpy}_N` and $`\mathsf{memmove}_N` that they read it, and
+$`\mathsf{memset}_N` that it writes it. So in a core symbol table, the
 function named $`s`
 {ref "The-fir-specification--Memory--Touching-no-memory"}[reaches no memory]
 when no function that the walk from $`s` reaches, $`s`'s own included, has
@@ -46,8 +48,8 @@ $`\mathsf{fieldaddr}`, which reads an item, not memory, and
 {ref "The-fir-specification--Memory--Field-address-obligations"}[gives its result at once]
 and keeps them.
 $`\mathsf{alloca}`, the loads and stores, of an integer, a pointer or a
-float, and the copies and moves, which touch memory, declare it, so they
-are not asked.
+float, the copies and moves and the fills, which touch memory, declare
+it, so they are not asked.
 :::
 
 :::readable Fir.Core.opsFinite (pin := Fir.Core.Op.liftsSetM) (pin := Fir.OpsFinite) (fingerprint := "15692013965595329733")
@@ -68,7 +70,11 @@ either, and have at most one that ends
 {ref "The-fir-specification--Memory--Store-obligations"}[store obligations]).
 $`\mathsf{fieldaddr}` has no tie, and has
 {ref "The-fir-specification--Memory--Field-address-obligations"}[one outcome]
-by its own rule.
+by its own rule. The copies and moves and the fills have no tie either,
+and have at most one that ends for each length, of which a poison length
+chooses one of finitely many
+({ref "The-fir-specification--Memory--Copy-and-move-obligations"}[copy and move obligations],
+{ref "The-fir-specification--Memory--Fill-obligations"}[fill obligations]).
 :::
 
 :::readable Fir.Core.replaceBody_isRefinedBy_of_from Fir.Core.caller_isRefinedBy_of_from (fingerprint := "3664423118415088410")

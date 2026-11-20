@@ -78,7 +78,7 @@ poison class through `DialectEffects`: `propagates` or `exception`
 (ADR-2026-10-29-2006). Rejected: propagation in prose only, as LLVM's reference
 states it. An op whose rules forget to propagate poison would go unnoticed.
 
-In the core dialect, 42 ops propagate and seven are exceptions. The 42 are
+In the core dialect, 43 ops propagate and seven are exceptions. The 43 are
 `const`, the float constant and `poison`, which have no operands, `add`, `sub`
 and `mul`, the four divisions, the bitwise ops and shifts, `icmp`, the width
 changes, `fcmp`, the three ops of float arithmetic, the two bit casts, the
@@ -94,8 +94,10 @@ units and gives no result, each of an integer, of a pointer and of a float
 (`loadPtr`, `storePtr`, `loadFloat` and `storeFloat` in the Lean), and
 `memcpy` and `memmove` (`memCopy`), which give no result, do nothing for a
 length of 0, are UB on a poison pointer otherwise, and run a poison length
-as some length, chosen, so that it is UB only where some length is
-(ADR-2026-11-18-2131). `select`, `freeze` and `cond_br` are
+as some length, chosen, so that it is UB only where some length is, and
+`memset` (`memSet`), which follows the same rules and writes a poison value
+as poison units (ADR-2026-11-18-2131; the human's ruling of 2026-11-19 on
+#234). `select`, `freeze` and `cond_br` are
 exceptions with their own rules. `br`, `ret` and `call` are exceptions that pass
 values on as they are, to block arguments, the caller or the callee.
 `unreachable` is an exception that is always UB, which the obligations below
@@ -132,7 +134,8 @@ The obligations reject a wrong op, and the theorems of
 `lean/Fir/Core/Unlawful.lean` check it: an op with no outcome, an `add` that is
 UB on a poison operand, the rejected `sdiv` rule, and a semantics in which every
 op is always UB. The obligations do not fix what an op computes: each family's
-semantics does. Each core op that touches no memory meets them with no `sorry`
+semantics does. Each core op that touches no memory and reads no item of the
+run (`Core.Op.touchesMemory`, `Core.Op.readsItems`) meets them with no `sorry`
 and only the standard axioms (`lean/Fir/Core/Lawful.lean`). The core dialect as
 a whole meets their forms with memory, below, which carry its guarantees
 ([semantics-m1-memory.md](semantics-m1-memory.md#the-cores-guarantees)).
@@ -161,10 +164,12 @@ obligation with memory. In a dialect that lifts the set monad the three hold
 exactly when `LawfulDialectPoison` does (`LawfulDialectPoison.iff_mem`), so
 the test dialects and their sums and lifts meet them, and the four
 rejections of `Core.Unlawful` hold with memory (`Core.Unlawful.memUnlawful`).
-The core meets them op by op (`lean/Fir/Core/MemoryRuns.lean`): each op that
-touches no memory by its tie and its obligations in the set monad, and
-`alloca`, `load` and `store` by their own rules
-(`lean/Fir/Core/AllocaLaws.lean`, `LoadLaws.lean`, `StoreLaws.lean`). Since `alloca` has no rule in the set monad, the core no longer meets
+The core meets them op by op (`lean/Fir/Core/MemoryRuns.lean`,
+through `Core.Op.memCases`): each op that touches no memory and reads no
+item of the run by its tie and its obligations in the set monad, and
+`alloca`, the loads and stores, `fieldAddr`, `memCopy` and `memSet` by
+their own rules (semantics-effects.md#soundness lists their files). Since
+`alloca` has no rule in the set monad, the core no longer meets
 `LawfulDialectPoison`, and `Core.lawfulDialectPoison` went in stage 4d-2 of
 #231. Rejected: a rule for `alloca` in the set monad, which has no
 memories to allocate in.
@@ -187,10 +192,12 @@ of the progress proof with calls (`Module.calls_hasPath`,
 `Func.progress_of_inModule`) and those of the refinement engine
 (`Func.runOps_allowed`, `Func.runs_isRefinedBy_of_calls` and the theorems under
 them). `Core.Op.monotone_all` holds for every core op that meets the guard:
-every core op but `call`. `Core.Op.total_all` holds for those that touch no
-memory too, every one but `call`, `alloca`, `load` and `store`; with
-memory every core op that
-meets the guard is total (`Core.lawfulDialectTotal`). Rejected: a stand-in rule
+every core op but `call`. `Core.Op.total_all` holds for those that also
+touch no memory and read no item of the run (`Core.Op.touchesMemory`,
+`Core.Op.readsItems`): every one but `call` and the ten ops that
+`Core.Op.memCases` gives their own rules, which semantics-effects.md#soundness
+lists. With memory every core op that meets the guard is total
+(`Core.lawfulDialectTotal`). Rejected: a stand-in rule
 for `call`, immediate UB in the set monad, so that it would meet the op-level
 obligations. It claimed a meaning that a call does not have, and as a source it
 was refined by every computation, so a statement proved op by op would hold for

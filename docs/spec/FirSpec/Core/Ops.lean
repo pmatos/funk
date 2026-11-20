@@ -14,15 +14,15 @@ pins their fingerprint; the build fails when the Lean changes under it.
 
 #doc (Manual) "Core ops: readable blocks" =>
 
-:::moduleDocs (fingerprint := "12653311029240902648")
+:::moduleDocs (fingerprint := "6100192088741328958")
 :::
 
-:::readable Fir.Core.Op (pin := Fir.Core.Op.Valid) (fingerprint := "1416819811864249766")
+:::readable Fir.Core.Op (pin := Fir.Core.Op.Valid) (fingerprint := "16644474741706231006")
 *Ops.* An op of the core dialect carries the width $`N` of the integers it
 works on, or the format $`\mathsf{float}\langle e,m \rangle` of the floats
 it works on, so the types of its operands and results follow from it.
 Below, $`c` is a constant of type $`\mathsf{i}N`, $`v` a vector of
-$`1+e+m` bits, $`t` and $`r` are types, and $`f` is a function's symbol. The ops come in nineteen families.
+$`1+e+m` bits, $`t` and $`r` are types, and $`f` is a function's symbol. The ops come in twenty families.
 
 *Constants* put a fixed value in the program.
 
@@ -335,6 +335,22 @@ memCopy \mathsf{memcpy}_{N}~o~W \mid \mathsf{memmove}_{N}~o~W
   is UB wherever some length is.
 * $`\mathsf{memmove}_{N}~o~W` (the kind $`\mathsf{move}`) does the same,
   and allows any overlap: it writes what the source held before it began.
+
+*Fills* write copies of one unit (#234; the human's rulings of
+2026-11-18 and 2026-11-19 on #234).
+
+```grammar Fir.Core.Op
+\mathit{op}
+-      \dots
+memSet \mathsf{memset}_{N}~o~V~W
+```
+
+* $`\mathsf{memset}_{N}~o~V~W` takes a destination of
+  $`\mathsf{ptr}\langle N \rangle`, a value of $`\mathsf{i}V` and a length
+  of $`\mathsf{i}W`, read as unsigned, and writes that many copies of the
+  value's unit, poison units for poison, through the destination. The
+  data layout asks that $`V` be the width of a unit of $`N`. Its pointer
+  and its length are as $`\mathsf{memcpy}`'s.
 
 The {ref "The-fir-specification--Validation--Core-rules"}[core rules]
 accept only the ordering $`\mathsf{nonatomic}`.

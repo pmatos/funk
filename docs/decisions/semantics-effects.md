@@ -4,6 +4,7 @@ This page continues semantics.md. It says what holds today about the effects of
 ops. It is the record: when this page and an ADR disagree, the page wins, and
 the ADR is fixed or deleted (ADR-2026-11-09-1610). ADR-2026-11-09-1541 holds the
 direction decision, and semantics-m1-design.md says how M1's ops will use it.
+semantics-effects-summaries.md says how a call carries its callee's effects.
 
 ## Effect sets
 
@@ -30,7 +31,8 @@ first ops that use them are `alloca`, which allocates in the memory of its
 result (ADR-2026-11-14-0915), `load`, which reads the memory of its
 pointer, and `store`, which writes it and reads no memory
 (ADR-2026-11-14-2316). `memcpy` and `memmove` read and write the memory of
-their pointers and may be UB (ADR-2026-11-09-1551, ADR-2026-11-18-2131).
+their pointers and may be UB, and `memset` writes the memory of its pointer
+and may be UB, as `store` does (ADR-2026-11-09-1551, ADR-2026-11-18-2131).
 
 An external call, an indirect call to an unknown function and inline assembly
 without a narrower declaration carry every effect on every memory that can have
@@ -69,7 +71,7 @@ each op its poison class and its effect set, so an op's poison behaviour is
 declared in one place. `DialectPoison` folded into it, and the class keeps its
 meaning and its obligations (ADR-2026-11-09-1541). An op's set holds the effects
 of its own rule. An op with a callee also has its callee's, since its meaning is
-the callee's run (ADR-2026-10-29-2006); the section on function summaries says
+the callee's run (ADR-2026-10-29-2006); semantics-effects-summaries.md says
 how.
 
 ## The core ops' sets
@@ -79,19 +81,29 @@ its constructor, with no case for the rest. `scripts/check_g0.py` checks that,
 as it checks `Core.Op.poisonClass` (ADR-2026-11-03-0600). The sets
 (ADR-2026-11-09-1541):
 
-- Pure: `const`, a float's included, `and`, `or`, `xor`, `icmp`, `fcmp`,
+- Pure: `const`, a float's included, `and`, `or`, `xor`, `icmp`,
   `select`, the width changes, `freeze`, `add`, `sub` and `mul` without
-  flags, the float arithmetic, whose NaN results are defined values, the
+  flags, `fcmp` and the float arithmetic without `nnan` and `ninf`, whose
+  NaN results are defined values (`nsz` alone keeps them pure), the
   bit casts, the conversions from integers, `sitofp` and `uitofp`, the
   conversions between formats, `fpext` and `fptrunc`, whose NaN results are
-  defined values too (ADR-2026-11-09-1549), and the pointer offset `ptradd`
-  (ADR-2026-11-13-0251). `call`'s own set is empty: its callee's summary
-  carries its effects (ADR-2026-11-09-1541).
+  defined values too (ADR-2026-11-09-1549), the pointer offset `ptradd`
+  (ADR-2026-11-13-0251) and the field address `fieldAddr`, which move a
+  pointer and keep its provenance. `call`'s own set is empty: its callee's
+  summary carries its effects (ADR-2026-11-09-1541).
 - May produce poison: `poison`, the shifts, `add`, `sub` and `mul` with a
-  flag, `sdiv` and `udiv` with `exact`, and the conversions to integers,
-  `fptosi` and `fptoui`, which give poison for an integer out of range, an
-  infinity or a NaN (#241).
+  flag, `sdiv` and `udiv` with `exact`, `fcmp` and the float arithmetic
+  with `nnan` or `ninf`, which give poison on a NaN or an infinity, and the
+  conversions to integers, `fptosi` and `fptoui`, which give poison for an
+  integer out of range, an infinity or a NaN (#241).
 - May-UB: the four divisions, `cond_br` and `unreachable`.
+- Allocates in memory `N`: `alloca` with a result of `ptr<N>`.
+- Reads memory `N`, may-UB and may produce poison: the loads `load`,
+  `loadPtr` and `loadFloat` through a pointer of `ptr<N>`.
+- Writes memory `N` and may-UB: the stores `store`, `storePtr` and
+  `storeFloat`, and the fill `memSet`, through a pointer of `ptr<N>`.
+- Reads and writes memory `N`, and may-UB: `memCopy`, a copy or a move,
+  over pointers of `ptr<N>`.
 - Control: `br`, `cond_br`, `ret` and `unreachable`.
 
 ## Soundness
@@ -190,19 +202,26 @@ lawful in its effects (`Core.lawfulDialectEffects`). Its rules are written for a
 monad with choice, UB and the memory effect, at the layout and naming of a run
 (`Core.Op.memDenote?`, `Core.Op.memExit?`, in `lean/Fir/Core/MemRules.lean`),
 and its semantics with memory runs them op by op in the state layer
-(`Core.memDenoteAt`), not by lifting its semantics in the set monad. Each op
-that touches no memory, every one but `alloca`, `load` and `store`, has
-its rule as
-its rule with memory. A monad morphism that keeps choice and UB
-(`MonadMorphism.KeepsChoiceUB`) maps the core's semantics in one monad to its
-semantics in another, op by op (`Core.denoteIn_mapsDenote`), and with memory
-when it also keeps allocation (`Core.memDenoteIn_mapsDenote`); lifting keeps
-choice and UB, so every core op but `alloca`, `load` and `store` is tied
-(`Core.Op.liftsSetM`), and each of its obligations with memory, effects,
-totality, monotonicity and poison, follows from that op's own tie.
-`alloca`, `load` and `store` meet each by their own rules
-(`lean/Fir/Core/AllocaLaws.lean`, `LoadLaws.lean`, `StoreLaws.lean`), and
-`Core.Op.memCases` splits an obligation of every core op into the four.
+(`Core.memDenoteAt`), not by lifting its semantics in the set monad. A monad
+morphism that keeps choice and UB (`MonadMorphism.KeepsChoiceUB`) maps the
+core's semantics in one monad to its semantics in another, op by op
+(`Core.denoteIn_mapsDenote`), and with memory when it also keeps allocation
+(`Core.memDenoteIn_mapsDenote`). Each op that touches no memory and reads no
+item of the run (`Core.Op.touchesMemory`, `Core.Op.readsItems`) has its rule
+in the set monad as its rule with memory, and lifting keeps choice and UB, so
+it is tied (`Core.Op.liftsSetM`): each of its obligations with memory,
+effects, totality, monotonicity and poison, follows from its tie.
+`Core.Op.memCases`, in `lean/Fir/Core/AllocaLaws.lean`, splits an obligation
+of every core op into the tied ops and the ops that meet it by their own
+rules, whose laws files are in `lean/Fir/Core/`. Those are
+the ops that touch memory: `alloca` (`AllocaLaws.lean`), `load` and `store`
+(`LoadLaws.lean`, `StoreLaws.lean`), `loadPtr` and `storePtr`
+(`LoadPtrLaws.lean`, `StorePtrLaws.lean`), `loadFloat` and `storeFloat`
+(`LoadFloatLaws.lean`, `StoreFloatLaws.lean`), and `memCopy` and `memSet`
+(`MemCopyLaws.lean`, `MemCopyPoison.lean`, `MemSetLaws.lean`,
+`MemSetPoison.lean`). With them is `fieldAddr` (`FieldAddrLaws.lean`), which
+touches no memory but reads items: its rule reads the layout it names from
+the run's items, which the set monad does not have.
 `Core.memDenoteIn_mapsDenote` asks the morphism to keep loads and stores as
 well, which `MonadMorphism.state_load` and `MonadMorphism.state_store` give
 for the state layer.
@@ -218,10 +237,10 @@ the equivalence tests, the tests of the dialects over the core and the core's
 effect tests are stated over runs with memory. Congruence in the callee is too:
 for a callee that touches no memory it asks that each op that declares no
 memory effect ignore the memories (`OpsIgnoreMemory`, in
-`lean/Fir/Execution/MemoryFree.lean`), which each core op meets by its own tie
-(`Core.opsIgnoreMemory`; semantics-refinement.md#refinement-with-memory);
-`alloca`, `load` and `store` declare a memory effect, so they are not
-asked. The
+`lean/Fir/Execution/MemoryFree.lean`), which each tied core op meets by its
+tie and `fieldAddr` by its own rule (`Core.opsIgnoreMemory`;
+semantics-refinement.md#refinement-with-memory); the ops that touch memory
+declare a memory effect, so they are not asked. The
 test of the tie, that the core's runs with memory are its runs in the set
 monad, went with it; `lean/FirTest/MemoryRuns.lean` now shows that a core
 function that touches no memory returns from given memories what it returns
@@ -251,49 +270,6 @@ the run's naming composed with the side's memory map. The toy and bit test
 dialects declare pure ops and are lawful in their effects, and so are their
 sums with the core. The probe test dialect declares every effect and is lawful
 in its effects, and so is its sum with the core.
-
-## Function summaries
-
-A call carries its callee's effects through a summary (ADR-2026-11-09-1541):
-
-- Each function of a symbol table has a summary: the join of what a caller
-  sees of each op of each function that it reaches through calls, itself
-  included (`SymbolTable.summary`, in `lean/Fir/Execution/Summary.lean`). The
-  join keeps every effect of either side, and a memory-named effect touches
-  the memories of both.
-- A caller sees every effect of an op but control. A terminator of the callee
-  ends a block of the callee, so a call is not a terminator for its caller.
-  Rejected: a call carries control. Every function returns through a
-  terminator, so every call would claim to be one, and the summary would say
-  nothing.
-- The effects of an op in place are those of its own rule and, for a call,
-  its callee's summary (`SymbolTable.opEffects`).
-- A call of a symbol that names no function of its table has every effect but
-  control, as nothing narrower is known of it. Validation rejects such a call.
-  Rejected: an unknown callee is pure, which would be unsound for a pass that
-  runs before validation.
-- A call resolves in the table that holds its function, so each nested
-  module's functions have summaries of their own (ADR-2026-11-10-1510).
-  Rejected: one table for the whole module, since a call into or out of a
-  nested module is not a call that the module can make.
-- The summary is the least fixpoint of the calls, recursion included
-  (`SymbolTable.summary_closed`, `SymbolTable.summary_le`). In a dialect
-  lawful in its effects and a module of valid functions, a function whose
-  summary leaves out may-UB never ends in UB in its runs with memory, and one
-  whose summary leaves out may produce poison returns no poison on arguments
-  with none, at every layout and naming (`Module.summary_neverUB`,
-  `Module.summary_noPoison`). They ask for no semantics in the set monad and
-  no tie, so they hold when the core dialect gains a memory op (stage 4b-3b
-  of #231). The proofs follow a run with memory from any memories
-  (`Module.memOps_notUB`, `Module.memOps_clean`). `lean/FirTest/G0Effects.lean`
-  restates them for every dialect. Rejected: keeping them over runs in the set
-  monad under the tie, which no dialect with a memory op meets.
-- The spec's walk and Rust's pass keep their work on the heap, so a long
-  chain of calls takes no stack per call. The spec finds the functions a call
-  reaches by a walk that keeps its work in lists, and Rust takes one pass over
-  the call graph's strongly connected components.
-
-Memory and observable effects join through calls like the others.
 
 ## In Rust
 

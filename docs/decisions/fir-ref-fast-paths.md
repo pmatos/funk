@@ -222,11 +222,28 @@ map insert, about as much as a whole step of a run. Also rejected: a
 `Std.HashMap` for `old`, since paths after a choice share their bindings and a
 shared hash map copies its whole bucket array on its first insert.
 
+### Fills
+
+The spec's rule of a `memset` of a defined length `n` other than 0 stores `n`
+copies of a unit (`Core.setLenRule`), and Lean builds that list before the
+store looks at the allocation, so a `memset` of 2^63 units into an
+allocation of 4 would build 2^63 units before it faults. `FirRef.memTreeFast`
+(`lean/FirRef/Run.lean`, which may name the core) is the core's semantics over the tree of
+choices with one change: a fill first finds where its store lands
+(`Memory.locate`) and is UB at once, for that store's reason, where it would
+fault. `memTreeDenote_eq_memTreeFast` proves the two equal, and its
+`@[csimp]` makes every call that `FirRef.Run` compiles after it reach the
+fast rule: `Run.c` calls `memTreeFast` and never `Core.memTreeDenote`.
+`lean/FirTest/MemSet.lean` runs the 2^63 fill. Rejected: a lazy list of
+units, which would change the spec's store; and a bound on the length in
+validation, which the length, a run-time value, cannot have (#234).
+
 ## What each fast path is for
 
 Each `@[csimp]` theorem under `lean/FirRef/` is listed with its class: depth
 (the spec's function takes stack per level of nesting, per list element, per
-step or per call), speed-only, or an ordering device (`rfl`, a copy compiled after a
+step or per call), speed-only, memory (the spec's function builds what the
+answer does not need), or an ordering device (`rfl`, a copy compiled after a
 theorem so that `fir-ref`'s calls reach the fast path). The classes come from
 reading the code and what the depth checks cover. The list is the split made
 for #169, with the swaps added since.
@@ -253,6 +270,7 @@ for #169, with the swaps added since.
 | `toDVals_eq_toDValsFast` | `HVector` | depth | The spec recurses per value (#405) |
 | `toSum_eq_toSumFast`, `ofSum_eq_ofSumFast` | `HVectorSum` | depth | Per value; reached through the copies `sumDenote` and `gpuTreeDenote` (#405) |
 | `enter_eq_enterFast` | `Bindings` | depth | `List.zip` recurses per parameter (#405) |
+| `memTreeDenote_eq_memTreeFast` | `Run` | memory | A `memset` out of bounds faults before it builds its units ([Fills](#fills), #234) |
 
 The modules of `lean/FirRef/` fall in the same classes:
 
@@ -273,6 +291,8 @@ The modules of `lean/FirRef/` fall in the same classes:
   cursor took `fmt --check` of a block of 1,000,000 ops from 980 MB to 505 MB,
   and only `readText` on a `LexCursor` keeps a file parse off the spec's
   `utf8Len` on each comment body. No check covers a long comment in a file.
+- **Memory:** the fills of `Run`, without which a `memset` out of bounds builds
+  all its units before it faults ([Fills](#fills)).
 - **Infrastructure:** `Fast`, `Utf8` and `Except` (import order, the UTF-8
   check, proof helpers); `Main`, `RunArgs`, `Report` and `Sample`.
 

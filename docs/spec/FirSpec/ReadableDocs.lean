@@ -118,6 +118,7 @@ import FirSpec.Execution.BlackBox
 import FirSpec.Execution.RefineUp
 import FirSpec.Execution.RefineDown
 import FirSpec.Execution.RefineRuns
+import FirSpec.Execution.ReplaceBody
 import FirSpec.Execution.Replace
 import FirSpec.Core.CallRefine
 import FirSpec.Execution.Lawful
@@ -137,6 +138,8 @@ import FirSpec.Core.StoreText
 import FirSpec.Core.StoreTextLaws
 import FirSpec.Core.MemCopyText
 import FirSpec.Core.MemCopyTextLaws
+import FirSpec.Core.MemSetText
+import FirSpec.Core.MemSetTextLaws
 import FirSpec.Core.TextSamples
 import FirSpec.Text.Print
 import FirSpec.Text.RoundTrip
@@ -216,6 +219,9 @@ import FirSpec.Core.StoreFloatLaws
 import FirSpec.Core.MemCopy
 import FirSpec.Core.MemCopyLaws
 import FirSpec.Core.MemCopyPoison
+import FirSpec.Core.MemSet
+import FirSpec.Core.MemSetLaws
+import FirSpec.Core.MemSetPoison
 import FirSpec.Memory.Ordering
 import FirSpec.Execution.MemoryCallSteps
 import FirSpec.Execution.MemoryProgress
@@ -251,6 +257,9 @@ import FirSpec.Core.Observe
 import FirSpec.Execution.ObserveEnd
 import FirSpec.Execution.ObserveEndLaws
 import FirSpec.Execution.TraceDialect
+import FirSpec.Execution.TraceLift
+import FirSpec.Execution.TraceRefine
+import FirSpec.Core.Trace
 import FirSpec.Execution.MemoryModes
 import FirSpec.Execution.NaNModes
 import FirSpec.Core.MemoryRuns
@@ -279,7 +288,9 @@ import FirSpec.Gpu.Semantics
 import FirSpec.Gpu.WorkGroup
 import FirSpec.Gpu.Runs
 import FirSpec.Gpu.Modes
+import FirSpec.Gpu.Trace
 import FirSpec.Sum.RunLaws
+import FirSpec.Sum.Pointers
 import FirSpec.Validation.Nest
 
 /-!

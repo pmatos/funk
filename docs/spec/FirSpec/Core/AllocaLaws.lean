@@ -14,25 +14,25 @@ fails when the Lean changes under it.
 
 #doc (Manual) "Stack allocation obligations: readable blocks" =>
 
-:::moduleDocs (fingerprint := "9541988464624692614")
+:::moduleDocs (fingerprint := "7065700237780127663")
 :::
 
-:::readable Fir.Core.Op.memCases Fir.Core.Op.touchesMemory_false_of_denote Fir.Core.Op.readsItems_false_of_denote (pin := Fir.Core.Op.touchesMemory) (pin := Fir.Core.Op.readsItems) (fingerprint := "1175821576638939318")
+:::readable Fir.Core.Op.memCases Fir.Core.Op.touchesMemory_false_of_denote Fir.Core.Op.readsItems_false_of_denote (pin := Fir.Core.Op.touchesMemory) (pin := Fir.Core.Op.readsItems) (fingerprint := "11532314543837563236")
 *Theorems: the core ops, split by memory.* A property holds of every core
 op when it holds of each op that touches no memory and reads no item of
 the run, of every $`\mathsf{alloca}`, of every $`\mathsf{load}` and every
 $`\mathsf{store}` of an integer, of a pointer or of a float, of every
-$`\mathsf{memcpy}` and $`\mathsf{memmove}` (`memCopy` in the Lean), the
-core ops that touch memory, and of every $`\mathsf{fieldaddr}`, the core
+$`\mathsf{memcpy}` and $`\mathsf{memmove}` (`memCopy` in the Lean), and
+of every $`\mathsf{memset}` (`memSet`), the core ops that touch memory, and of every $`\mathsf{fieldaddr}`, the core
 op that reads an item.
 So the core dialect meets an obligation with memory op by op: an op that
 touches no memory and reads no item by its
 {ref "The-fir-specification--Memory--The-core___s-rules-with-memory"}[tie]
 to the set monad, and $`\mathsf{alloca}`, each load and store,
-$`\mathsf{fieldaddr}` and each copy and move by its own rule. A core op
+$`\mathsf{fieldaddr}`, each copy and move and each fill by its own rule. A core op
 with an outcome in the set monad touches no memory and reads no item,
-since $`\mathsf{alloca}`, the loads and stores, $`\mathsf{fieldaddr}` and
-the copies and moves have none there.
+since $`\mathsf{alloca}`, the loads and stores, $`\mathsf{fieldaddr}`,
+the copies and moves and the fills have none there.
 :::
 
 :::readable Fir.Core.allocaResult Fir.Core.allocaAlloc Fir.Core.alloca_denote (pin := Fir.Core.allocaRule) (pin := Fir.Core.memDenoteAt) (fingerprint := "16272084187325246097")

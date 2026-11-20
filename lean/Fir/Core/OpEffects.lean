@@ -9,8 +9,9 @@ terminator, as its rules say (ADR-2026-11-09-1541). The core dialect names
 the memories of a module by their numbers, as a pointer type `ptr<N>` names
 memory `N`, and the module's data layout says which of them it has. The
 stack allocation `alloca` allocates in the memory of its result, `load`
-reads the memory of its pointer, `store` writes it, and a copy or a move,
-`memCopy`, reads and writes it. No core op frees
+reads the memory of its pointer, `store` writes it, a copy or a move,
+`memCopy`, reads and writes it, and a fill, `memSet`, writes it. No core
+op frees
 memory, or adds an event to the trace: M0's runs have no trace. A frame
 frees its call's stack allocations when the call returns.
 
@@ -55,6 +56,10 @@ frees its call's stack allocations when the call returns.
   them, and is UB on a poison pointer, on an access that faults and, for a
   copy, on ranges that partly overlap, unless its length is 0. It gives no
   result, so it makes no poison, though it may carry poison units.
+* Writes memory `N` and may-UB: `memSet`, a fill, through a pointer of
+  `ptr<N>`. It is UB on a poison pointer and on an access that faults,
+  unless its length is 0, and reads no memory, as a store does. It gives
+  no result, so it makes no poison, though it may write poison units.
 * Control: the terminators `br`, `ret`, `cond_br` and `unreachable`.
   `cond_br` may hit UB too, on a poison condition, and `unreachable` hits
   UB whenever a run reaches it (ADR-2026-11-09-1548).
@@ -92,7 +97,7 @@ def Op.effects : Op → Effects Mem
   | .alloca _ _ _ _ n => { allocates := .these [n] }
   | .load _ _ _ n | .loadPtr _ _ _ n | .loadFloat _ _ _ _ n =>
     { reads := .these [n], mayUB := true, mayPoison := true }
-  | .store _ _ _ n | .storePtr _ _ _ n | .storeFloat _ _ _ _ n =>
+  | .store _ _ _ n | .storePtr _ _ _ n | .storeFloat _ _ _ _ n | .memSet _ _ _ n =>
     { writes := .these [n], mayUB := true }
   | .memCopy _ _ _ n => { reads := .these [n], writes := .these [n], mayUB := true }
 

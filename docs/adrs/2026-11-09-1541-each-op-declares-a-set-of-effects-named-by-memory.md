@@ -39,7 +39,9 @@ Tier: direction; area: semantics
   the join of every effect but control of each op the callee may reach,
   computed per symbol table and proved sound.
 
-[semantics-effects.md](../decisions/semantics-effects.md) states what holds,
+[semantics-effects.md](../decisions/semantics-effects.md), with
+[semantics-effects-summaries.md](../decisions/semantics-effects-summaries.md)
+for calls, states what holds,
 the obligations and the human's rulings: #208 (2026-11-09), #226, option B
 (2026-11-10), #309, option A (2026-11-15: an assembly block's pointer
 operands), and #240, option A (2026-11-15: what a pointer operand covers, and

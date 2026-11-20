@@ -36,8 +36,8 @@ class Side(NamedTuple):
     formats and widths of a pointer op's integer that it has cells at,
     whether it has the cells of the `gpu` dialect, the float formats of
     its loads, stores and allocations, the widths of `fieldaddr`'s index
-    that it has cells at, and whether it has the cells of `memcpy` and
-    `memmove`."""
+    that it has cells at, and whether it has the cells of `memcpy`,
+    `memmove` and `memset`."""
 
     name: str
     title: str
@@ -77,6 +77,7 @@ SIDES = (
         cells.POINTER_DIFFERENTIAL,
         memory=MEMORY_FLOAT_DIFFERENTIAL,
         fields=cells.FIELD_DIFFERENTIAL,
+        copies=True,
     ),
     Side(
         "interpreter",
@@ -190,7 +191,7 @@ SECTIONS = {
     ),
     "fields": ("Field addresses, with no index or by an index", ("op",), "by "),
     "values": ("Passed and returned values", ("op", "what"), ""),
-    "copies": ("Copies and moves, by the width of their length", ("op",), ""),
+    "copies": ("Copies, moves and fills, by the width of their length", ("op",), ""),
     "gpu": ("Ops of the gpu dialect in a dimension", ("op", "dimension"), ""),
     "gpu_memory": (
         "Work-group allocation of the gpu dialect, of one, of a float or of a pointer",

@@ -71,6 +71,7 @@ import FirTest.MemoryRuns
 import FirTest.Trace
 import FirTest.TraceDialect
 import FirTest.ObserveEnd
+import FirTest.CoreTrace
 import FirTest.MemoryPoison
 import FirTest.MemoryObligations
 import FirTest.MemoryRefine
@@ -82,6 +83,7 @@ import FirTest.Load
 import FirTest.Store
 import FirTest.MemoryCopy
 import FirTest.MemCopy
+import FirTest.MemSet
 import FirTest.PointerAccess
 import FirTest.FloatAccess
 import FirTest.FieldAddr

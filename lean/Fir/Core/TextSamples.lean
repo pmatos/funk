@@ -53,7 +53,8 @@ def samples : List Op :=
    .storeFloat .nonatomic 5 10 (some 2) 1, .storeFloat .release 1 0 none maxMemory] ++
   [.fptosi 8 23 32, .fptoui 11 52 64, .fptosi 5 10 1, .fptoui 15 112 128, .fptosi 2 1 7] ++
   [.memCopy .copy .nonatomic 64 0, .memCopy .move .nonatomic 8 1,
-   .memCopy .copy .seqCst 1 maxMemory, .memCopy .move .acquire 128 0]
+   .memCopy .copy .seqCst 1 maxMemory, .memCopy .move .acquire 128 0] ++
+  [.memSet .nonatomic 8 64 0, .memSet .nonatomic 16 8 1, .memSet .seqCst 1 1 maxMemory]
 
 -- Decoding an op's encoding, at its own types, gives the op back.
 #guard samples.all fun o => Op.decode o.name o.attrs o.sig o.returnTypes == some o

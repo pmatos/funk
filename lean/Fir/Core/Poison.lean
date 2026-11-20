@@ -6,9 +6,9 @@ import Fir.Core.OpEffects
 /-!
 # The poison classes of the core ops
 
-Every one of the 49 core ops has a class (ADR-2026-10-29-2006).
+Every one of the 50 core ops has a class (ADR-2026-10-29-2006).
 
-Forty-two ops propagate poison: `const`, the float constant `fconst`,
+Forty-three ops propagate poison: `const`, the float constant `fconst`,
 `poison`, `add`, `sub`, `mul`, `sdiv`, `udiv`, `srem`, `urem`, `and`, `or`,
 `xor`, `shl`, `lshr`, `ashr`, `icmp`, `fcmp`, `zext`, `sext`, `trunc`, the
 three ops of float arithmetic: `fbin` (`fadd`, `fsub`, `fmul`, `fdiv`,
@@ -22,12 +22,14 @@ load `load`, which is immediate UB on a poison pointer, as a defined
 pointer in its place may fault, and the store `store`, which is too, and
 which stores the poison units of a poison value and gives no result, and
 the loads and stores of a pointer and of a float, `loadPtr`, `storePtr`,
-`loadFloat` and `storeFloat`, which are as `load` and `store`, and the
+`loadFloat` and `storeFloat`, which are as `load` and `store`, the
 copy or move of units `memCopy`, which gives no result and does nothing
 for a length of 0. With a length other than 0 it is immediate UB on a
 poison pointer, as a pointer with no provenance in its place faults, and
 a poison length runs as some length, chosen, so it is UB only where some
-length is.
+length is. The fill of units `memSet` is as `memCopy` in its pointer and
+its length, and writes the poison units of a poison value, as `store`
+does.
 `const`, `fconst`, `poison` and `alloca` have no operands, so they
 propagate poison whatever their semantics. `poison` meets the
 obligation of a result on defined operands too: its one operand vector,
@@ -55,10 +57,12 @@ sections of their own, after the interpreter: the sections from arithmetic
 rules to call rules give the rules, and the sections from constant
 obligations to branch obligations prove that each op meets the obligations
 of its class. The section on the core dialect's poison obligations puts
-them together for the ops that touch no memory, and the section on core
-functions with memory gives the core dialect's lawful classes with memory,
-`alloca`, the loads and stores and `fieldAddr` included. Tests check the rules of the exceptions. `call` has no
-op-level obligation, as below.
+them together for the ops that touch no memory and read no item of the
+run, and the section on core functions with memory gives the core
+dialect's lawful classes with memory, the ops that `Core.Op.memCases` gives
+their own rules included
+(`docs/decisions/semantics-effects.md#soundness`). Tests check the rules
+of the exceptions. `call` has no op-level obligation, as below.
 
 `call` gets its meaning from the call effect, which the interpreter runs
 with the fuel budget that the caller has left (ADR-2026-10-29-2009): the
@@ -92,7 +96,7 @@ def Op.poisonClass : Op → PoisonClass
   | .fbin .. | .funary .. | .fma .. | .zext .. | .sext .. | .trunc .. | .poison _
   | .toBits .. | .ofBits .. | .sitofp .. | .uitofp .. | .fpext .. | .fptrunc .. | .ptradd ..
   | .fieldAddr .. | .fptosi .. | .fptoui .. | .alloca .. | .load .. | .store .. | .loadPtr .. | .storePtr ..
-  | .loadFloat .. | .storeFloat .. | .memCopy .. => .propagates
+  | .loadFloat .. | .storeFloat .. | .memCopy .. | .memSet .. => .propagates
   | .select _ | .freeze _ | .br | .condBr | .ret _ | .unreachable | .call .. => .exception
 
 /-- A core value is poison when it is the poison of its type: `iN`, a
