@@ -16,8 +16,8 @@ mod g0_scan;
 use std::path::Path;
 
 use funk_ir::dialects::core::{
-    self, ALLOC_KINDS, FAST_MATH_FLAGS, FLOAT_PREDICATES, ORDERINGS, PREDICATES, ROUNDING_MODES,
-    WRAP_FLAG_SETS,
+    self, ALLOC_KINDS, FAST_MATH_FLAGS, FLOAT_ALIASES, FLOAT_PREDICATES, ORDERINGS, PREDICATES,
+    ROUNDING_MODES, WRAP_FLAG_SETS,
 };
 use funk_ir::dialects::gpu;
 use funk_ir::{Block, Func, LocRef, Location, Module, Op, Registry, parse, print, verify};
@@ -42,14 +42,16 @@ fn core_words() -> Vec<String> {
     words.extend(ORDERINGS.iter().map(|o| o.to_string()));
     words.extend(ROUNDING_MODES.iter().map(|r| r.to_string()));
     words.extend(ALLOC_KINDS.iter().map(|k| k.to_string()));
+    words.extend(FLOAT_ALIASES.iter().map(|(name, _, _)| name.to_string()));
     words.extend(
         WRAP_FLAG_SETS
             .iter()
             .flat_map(|s| s.iter().map(|f| f.to_string())),
     );
-    // `sdiv exact`, the `i1` constants, the pointer type `ptr` and the head
-    // of a rounding mode, `round`, which the dialect does not export by name.
-    words.extend(["exact", "true", "false", "ptr", "round"].map(String::from));
+    // `sdiv exact`, the `i1` constants, the pointer type `ptr`, the head of
+    // a float format without a name, `float`, and the head of a rounding
+    // mode, `round`, which the dialect does not export by name.
+    words.extend(["exact", "true", "false", "ptr", "float", "round"].map(String::from));
     words.sort();
     words.dedup();
     words
@@ -328,6 +330,30 @@ fn an_alloca_kind_written_alone_is_a_core_word() {
         r#"fn why() -> &'static str { "a stack slot" }"#,
         "// \"stack\" in a comment\nfn f() {}",
         r#"#[cfg(test)] mod t { fn f() { let _ = "heap"; } }"#,
+    ] {
+        assert!(written(src).is_empty(), "{src}");
+    }
+}
+
+/// The float types are words of the core dialect, as on the Lean side,
+/// which takes them from `TypeText.lean`: generic code does not write an
+/// alias such as `f32`, or the head `float` of a format without one, alone,
+/// and may write a message that holds one.
+#[test]
+fn a_float_type_word_written_alone_is_a_core_word() {
+    let words = core_words();
+    for w in ["f16", "bf16", "f32", "f64", "f128", "float"] {
+        assert!(is_core_word(&words, w), "{w}");
+    }
+    let written = |src: &str| core_words_written(&words, src);
+    assert_eq!(
+        written(r#"fn f(t: &str) -> bool { t == "f32" || t == "float" }"#),
+        ["f32", "float"]
+    );
+    for src in [
+        r#"fn why() -> &'static str { "an f32 operand" }"#,
+        "// \"bf16\" in a comment\nfn f() {}",
+        r#"#[cfg(test)] mod t { fn f() { let _ = "f64"; } }"#,
     ] {
         assert!(written(src).is_empty(), "{src}");
     }
