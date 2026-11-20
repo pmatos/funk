@@ -166,8 +166,7 @@ of funk are on `main`:
   instance that validation accepts meets the poison obligations with
   memory (`LawfulDialectMemPoison CoreDialect`), and those that touch no
   memory and read no item of the run meet them in the set monad too; a
-  call has no op-level rule, since
-  its meaning is its callee's run
+  call has no op-level rule, since its meaning is its callee's run
   ([ADR-2026-10-29-2006](adrs/2026-10-29-2006-poison-and-freeze.md)).
 - The execution rule of `poison` in Lean
   ([#122](https://github.com/pmatos/funk/issues/122)): it gives the
