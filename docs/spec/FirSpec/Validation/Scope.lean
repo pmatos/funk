@@ -252,7 +252,7 @@ that carries a type is $`\mathsf{alloca}`; the one op that asks a unit's
 width is $`\mathsf{memset}`. Each of its types, an integer,
 a float or a pointer, may be a field, with the units and alignment that
 $`\mathsf{alloca}` gives one value of it. It registers no kind of item: its kinds, `func`,
-`module`, `aggregate` and `data`, have rules of their own in the next sections. It registers no region kind either: the rule of its own kind, a
+`module`, `aggregate` and `global`, have rules of their own in the next sections. It registers no region kind either: the rule of its own kind, a
 control-flow graph, is the rule of a function's body.
 :::
 

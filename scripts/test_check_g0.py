@@ -226,6 +226,23 @@ class Rules(unittest.TestCase):
         moved = {CORE_TEXT: core, "lean/Fir/Core/Report.lean": generic}
         self.assertEqual(problems(tree(self, moved)), [])
 
+    def test_the_shared_words_pass_and_another_core_op_does_not(self):
+        # `global` and `const` are core words that a global's generic text
+        # writes too (the human's ruling of 2026-11-20, #237 Q4), as is
+        # `align`; `poison` stays a core word.
+        core = CORE_TEXT_SAMPLE.replace(
+            '"ret"', '"ret" | .const _ => "const" | .poison _ => "poison"'
+        ).replace('[.word "nsw"]', '[.word "nsw", .word "global", .word "align"]')
+        generic = 'def item : List String := ["global", "const", "align", "poison"]\n'
+        root = tree(self, {CORE_TEXT: core, "lean/Fir/Text/GlobalText.lean": generic})
+        self.assertLessEqual({"nsw", "poison"}, core_words(root))
+        self.assertEqual(
+            problems(root),
+            [
+                'lean/Fir/Text/GlobalText.lean:1: writes the core dialect\'s word "poison"'
+            ],
+        )
+
     def test_a_fast_math_flag_written_alone_is_a_core_word(self):
         # The flags are words of FloatOpText.lean, which Text.lean writes the
         # float ops with, as on the Rust side (`FAST_MATH_FLAGS`).
@@ -383,7 +400,8 @@ class Repository(unittest.TestCase):
         self.assertIn("lean/FirTest/G0/Regions.lean", generic_files())
 
     def test_the_core_words_hold_every_core_op(self):
-        self.assertLessEqual(set(CORE_OPS), core_words())
+        # `const` is the one op name that generic code shares (#237 Q4).
+        self.assertLessEqual(set(CORE_OPS) - {"const"}, core_words())
         self.assertLessEqual(
             {
                 "nsw",
@@ -413,6 +431,8 @@ class Repository(unittest.TestCase):
             core_words(),
         )
         self.assertNotIn("align", core_words())
+        self.assertNotIn("global", core_words())
+        self.assertNotIn("const", core_words())
 
     def test_the_gpu_words_hold_every_gpu_op_and_dimension(self):
         self.assertEqual(

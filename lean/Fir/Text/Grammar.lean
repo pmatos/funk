@@ -16,7 +16,7 @@ symbol reference needs a new token: a change to the tokens of the previous
 section.
 
 * An item's kind says what it is. The core's kinds are `func`, `module`,
-  `aggregate`, an aggregate's layout (below), and `data`, a global
+  `aggregate`, an aggregate's layout (below), and `global`, a global
   (`Fir.Text.GlobalText`), so a function is written
   as `func @sum(%n: i32) -> i32 { ... }` and a nested module as
   `module @dev() { ... }`. A `func` has no
@@ -276,7 +276,7 @@ applies (ADR-2026-10-29-2014):
 * a string or quoted symbol not in its one spelling, such as an escape the
   printer does not write, or a quoted name that is a word;
 * an item whose kind the parser does not know: every kind but `func`,
-  `module`, `aggregate`, `data` and the words of dialects; a `func` with attributes, or with a
+  `module`, `aggregate`, `global` and the words of dialects; a `func` with attributes, or with a
   dialect set or items in its body; a `module` with parameters, results,
   attributes or blocks; and an item of a dialect's kind with a body that is
   not empty;

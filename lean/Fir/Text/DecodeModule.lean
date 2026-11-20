@@ -13,7 +13,7 @@ never as an empty list of items. A nested module's item is a `module` with
 no parameters, results or attributes, whose body is its dialect set and its
 items, or no blocks when it has neither, and it decodes its items in turn.
 An item of a dialect's kind has a word of a dialect as its kind, so it is
-neither a `func`, a `module`, an `aggregate` nor a `data`, and its empty
+neither a `func`, a `module`, an `aggregate` nor a `global`, and its empty
 body reads as no blocks. An aggregate's layout decodes back from the
 attributes it writes when its numbers are within the limit and its fields'
 types decode back, and a global when its numbers are within the limit.
@@ -93,9 +93,9 @@ theorem Func.WellFormed.decodeItem_eq {f : Func d} (hf : f.WellFormed) {si : SIt
   simp only [↓reduceIte, decodeFuncItem, hf.decodeFunc_eq hp hr hbs]
   rfl
 
-/-- A word of a dialect is not the kind `func`, `module`, `aggregate` or `data`. -/
+/-- A word of a dialect is not the kind `func`, `module`, `aggregate` or `global`. -/
 theorem isDialectWord_ne {k : String} (hk : isDialectWord k) :
-    k ≠ "func" ∧ k ≠ "module" ∧ k ≠ "aggregate" ∧ k ≠ "data" :=
+    k ≠ "func" ∧ k ≠ "module" ∧ k ≠ "aggregate" ∧ k ≠ "global" :=
   ⟨by rintro rfl; exact absurd hk (by decide), by rintro rfl; exact absurd hk (by decide),
     by rintro rfl; exact absurd hk (by decide), by rintro rfl; exact absurd hk (by decide)⟩
 

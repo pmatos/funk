@@ -88,7 +88,7 @@ indentation $`n`:
 * so does every item whose tokens can all be written: a function as
   above, an item of a dialect's kind by the theorem for such items, an
   aggregate's layout and a global by that theorem for the item of kind
-  `aggregate` or `data` that writes it, and a nested module, printed as $`n` spaces, `module`, a space, its symbol, `()`, ` {`, a line
+  `aggregate` or `global` that writes it, and a nested module, printed as $`n` spaces, `module`, a space, its symbol, `()`, ` {`, a line
   feed, its dialect set and its items two spaces deeper, $`n` spaces, `}`
   and a line feed;
 * every list of items whose tokens can all be written, each printed then

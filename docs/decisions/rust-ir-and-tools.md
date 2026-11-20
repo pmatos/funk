@@ -139,7 +139,9 @@ generator and unit tests. Code that builds, lowers or runs one dialect's
 programs may name its ops. That covers the dialect's files, the generator, the
 x86-64 backend, `funk`'s command line and the tests. `crates/funk-ir/tests/g0.rs`
 keeps this line in `rust-test`. A word that names a core op counts as a core
-word in generic code, whatever else it means (ADR-2026-11-03-0600).
+word in generic code, whatever else it means (ADR-2026-11-03-0600), but for
+`const` and `global`, a global's flag and kind, which its `SHARED_WORDS`
+leaves out as the human ruled on 2026-11-20 (#237 Q4).
 
 The core dialect is `dialects/core/`. Its types are in `types.rs`, and each op
 family has a file of its own, registered in `dialects/core/mod.rs`. The second

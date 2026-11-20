@@ -1,13 +1,13 @@
 //! Globals (`Global` in `lean/Fir/Syntax/Module.lean`, ADR-2026-11-09-1546):
-//! an item of the core's kind `data` that names a block of units of one
-//! memory, with its size, its alignment, its initial units, a `constant` flag
+//! an item of the core's kind `global` that names a block of units of one
+//! memory, with its size, its alignment, its initial units, a `const` flag
 //! and its linkage.
 //!
 //! The text writes one as
-//! `data @msg() size(8) align(1) constant units(104, 105, 0) {` and `}` on
+//! `global @msg() size(8) align(1) const units(104, 105, 0) {` and `}` on
 //! the next line (`lean/Fir/Text/GlobalText.lean`, ADR-2026-11-19-0124):
 //! `memory(N)` first when `N` is not 0, `size(S)` and `align(A)`, the words
-//! `constant` and `export` when they hold, then the pieces of the
+//! `const` and `export` when they hold, then the pieces of the
 //! initializer, `units(U, ...)`, `zeros(N)` and `addr(@s)` or `addr(@s, K)`
 //! with `K` not 0. Every number but a unit's is at most `2^64 - 1`, so it is
 //! a `u64` here; a unit is any natural number, kept as its spelling.
@@ -92,7 +92,7 @@ impl Global {
             i += usize::from(hit);
             hit
         };
-        let constant = flag("constant");
+        let constant = flag("const");
         let linkage = if flag("export") {
             Linkage::Exported
         } else {
@@ -172,7 +172,7 @@ mod tests {
             &[
                 n("size", 16),
                 n("align", 8),
-                Attr::word("constant"),
+                Attr::word("const"),
                 Attr::word("export"),
                 units,
                 n("zeros", 6),
@@ -214,7 +214,7 @@ mod tests {
                     n("size", 1),
                     n("align", 1),
                     Attr::word("export"),
-                    Attr::word("constant")
+                    Attr::word("const")
                 ]
             ),
             Err(GlobalFault::Piece(3))

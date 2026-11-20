@@ -79,7 +79,7 @@ awk -v end="$ending" 'BEGIN {
     printf "  ret @0\n%s", end
 }' >"$tmp/ops.fir"
 awk -v end="$ending" 'BEGIN {
-    printf "data @g() size(1000000) align(1)"
+    printf "global @g() size(1000000) align(1)"
     for (i = 0; i < 1000000; i++) printf " zeros(1)"
     printf " {\n%s", end
 }' >"$tmp/pieces.fir"
@@ -142,7 +142,7 @@ deep deep-attrs "an attribute applied a million levels deep" 3 3 "$attr_error" |
 deep deep-items "functions nested a million levels deep" 2 1 \
     "a func's body holds blocks, not items" || status=1
 deep deep-modules "modules nested a million levels deep" 2000001 1 \
-    "unknown item kind bad: the kinds are func, module, aggregate, data and the words of dialects" || status=1
+    "unknown item kind bad: the kinds are func, module, aggregate, global and the words of dialects" || status=1
 deep deep-regions "regions nested a million levels deep" 2000003 5 \
     "value %x is not defined in @f" || status=1
 deep ops "a block of a million ops" || status=1
