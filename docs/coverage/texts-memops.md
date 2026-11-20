@@ -39,10 +39,10 @@ stage's is interpreter-only. `funk build` builds a module all or nothing
 is interpreter-only for its own reason. `memcpy` and `memset` do not
 build: their `@lengths` takes lengths of `i7` and `i33`, widths the
 backend does not lower. So even a test such as `@copy_int`, which native
-code could run alone, is interpreter-only. `memcpy-memories` and `memset-memories` do not build
-either: every function's pointers are of memory 1, of 16-bit units and
-32-bit pointers, which the backend reports where they are defined, as the
-human ruled on 2026-11-15 (#399)
+code could run alone, is interpreter-only. `memcpy-memories` and
+`memset-memories` do not build either: every function's pointers are of
+memory 1, of 16-bit units and 32-bit pointers, which the backend reports
+where they are defined, as the human ruled on 2026-11-15 (#399)
 ([x86-64-backend-lowering-memory.md](../decisions/x86-64-backend-lowering-memory.md)).
 `gpu-memcpy` and `gpu-memset` build, but every test of them runs a kernel
 of the device module, and `funk build` builds none of a nested module's
