@@ -153,8 +153,8 @@ to the memories (`Func.memRunsFrom_replaceBody_isRefinedBy_of_opsFinite`, in
 `lean/Fir/Execution/MemoryFiniteDown.lean`). The argument is by budgets and
 needs no infinite path. Every core op has finitely many outcomes
 (`Core.opsFinite`): an op that touches no memory and reads no item of the
-run is the set of its rule in the tree of choices, whose choices of _w_ bits have 2 to the power _w_
-options. The ops that have their own rules with memory, the ones
+run is the set of its rule in the tree of choices, whose choices of _w_
+bits have 2 to the power _w_ options. The ops that have their own rules with memory, the ones
 `Core.Op.memCases` names (semantics-effects.md#soundness), count by them:
 `alloca` and `fieldAddr` have one outcome, the loads `load`, `loadPtr` and
 `loadFloat` and the stores `store`, `storePtr` and `storeFloat` at most one
