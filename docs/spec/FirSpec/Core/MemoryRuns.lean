@@ -38,7 +38,7 @@ terminator and each core op with no callee is
 {ref "The-fir-specification--Memory--Monotonicity-with-memory"}[monotone with memory],
 at every layout and naming: it is monotone in the set monad, and it is
 tied, or it is $`\mathsf{alloca}`, a load, a store, $`\mathsf{fieldaddr}`,
-a copy or a move, monotone by its own rule.
+a copy, a move or a fill, monotone by its own rule.
 :::
 
 :::readable Fir.Core.lawfulDialectMemPoison (fingerprint := "10064458873019723603")
@@ -48,7 +48,7 @@ core op instance that propagates poison
 and returns a result on some defined operands with memory, at every layout
 and naming of the core's memories: it meets both in the set monad, and it
 is tied, or it is $`\mathsf{alloca}`, a load, a store, $`\mathsf{fieldaddr}`,
-a copy or a move, which meets both by its own rule. A
+a copy, a move or a fill, which meets both by its own rule. A
 poison value of each valid core type is refined by every value of the
 type.
 :::
