@@ -33,8 +33,10 @@ sums an array in a loop, reads an element by an index, one past the end
 and through a poison index included, steps back from the one-past-the-end
 address, walks a linked list, appends to an array that follows its
 length, writes past a flexible array member up to the end of its
-allocation, and reaches the second element of an array of `float(15, 64)`,
-16 units apart. `fieldaddr-programs-memories` runs such programs in a
+allocation, and reaches the elements of an array of `i24`, 4 units apart,
+by an index of `i1`, `i16` and `i128`. `fieldaddr` reaches the second
+element of an array of `float(15, 64)`, 16 units apart.
+`fieldaddr-programs-memories` runs such programs in a
 memory of 16-bit units and 32-bit pointers, and keeps a pointer of the
 default memory in a field of a layout of that memory.
 `reject/fieldaddr.toml` holds the uses of `fieldaddr` that do not decode,
@@ -42,5 +44,7 @@ such as a negative field number, a result of another memory or a float
 index, and those that validation rejects: a symbol that names no layout
 of the op's own module, a field the layout does not have, an index on a
 field that is not repeated, and a layout of another memory than the
-pointer's. Every test runs on `fir-ref` alone until the backend lowers
-`fieldaddr` (stage 4 of #236).
+pointer's. Since stage 4 of #236 the backend lowers `fieldaddr`, and every
+test of `fieldaddr-programs` runs differentially but those that are UB;
+the tests of `fieldaddr` and `fieldaddr-programs-memories` use types or a
+memory that the backend does not lower, and run on `fir-ref` alone.

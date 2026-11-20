@@ -7,8 +7,8 @@ says how to read it.
 
 | op | flags or predicate | `i1` | `i8` | `i16` | `i32` | `i64` | `i128` |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| `const` |  | 517 | 786 | 445 | 803 | 853 | 639 |
-| `add` |  | 205 | 359 | 311 | 299 | 434 | 534 |
+| `const` |  | 517 | 789 | 448 | 807 | 864 | 639 |
+| `add` |  | 205 | 359 | 311 | 300 | 437 | 534 |
 | `add` | `nuw` | 8 | 29 | 29 | 31 | 29 | 35 |
 | `add` | `nsw` | 211 | 225 | 206 | 218 | 205 | 107 |
 | `add` | `nuw nsw` | 8 | 31 | 29 | 29 | 29 | 35 |
@@ -16,7 +16,7 @@ says how to read it.
 | `sub` | `nuw` | 8 | 29 | 29 | 29 | 29 | 35 |
 | `sub` | `nsw` | 8 | 33 | 29 | 41 | 29 | 35 |
 | `sub` | `nuw nsw` | 8 | 29 | 29 | 34 | 29 | 35 |
-| `mul` |  | 17 | 61 | 50 | 63 | 60 | 241 |
+| `mul` |  | 17 | 61 | 50 | 63 | 62 | 241 |
 | `mul` | `nuw` | 8 | 39 | 29 | 32 | 29 | 37 |
 | `mul` | `nsw` | 10 | 41 | 31 | 34 | 30 | 37 |
 | `mul` | `nuw nsw` | 8 | 29 | 29 | 29 | 29 | 37 |
@@ -34,11 +34,11 @@ says how to read it.
 | `ashr` |  | 10 | 49 | 46 | 62 | 58 | 144 |
 | `icmp` | `eq` | 33 | 353 | 115 | 133 | 121 | 51 |
 | `icmp` | `ne` | 10 | 29 | 29 | 40 | 29 | 37 |
-| `icmp` | `slt` | 8 | 38 | 29 | 43 | 37 | 41 |
+| `icmp` | `slt` | 8 | 38 | 29 | 43 | 39 | 41 |
 | `icmp` | `sle` | 8 | 29 | 29 | 29 | 61 | 37 |
 | `icmp` | `sgt` | 10 | 53 | 40 | 51 | 56 | 81 |
 | `icmp` | `sge` | 10 | 40 | 37 | 51 | 45 | 59 |
-| `icmp` | `ult` | 10 | 31 | 31 | 42 | 41 | 39 |
+| `icmp` | `ult` | 10 | 31 | 31 | 42 | 42 | 39 |
 | `icmp` | `ule` | 10 | 39 | 36 | 36 | 44 | 43 |
 | `icmp` | `ugt` | 8 | 32 | 29 | 39 | 39 | 37 |
 | `icmp` | `uge` | 8 | 32 | 29 | 29 | 37 | 37 |
@@ -178,29 +178,35 @@ says how to read it.
 
 | op | `i1` | `i8` | `i16` | `i32` | `i64` | `i128` | `ptr` | `f32` | `f64` |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `ptradd` | 2 | 4 | 4 | 4 | 134 | 4 |  |  |  |
-| `alloca` | 2 | 14 | 6 | 50 | 179 | 5 | 8 | 20 | 17 |
-| `load` | 2 | 39 | 7 | 29 | 181 | 5 | 8 | 15 | 16 |
-| `store` | 4 | 11 | 6 | 50 | 179 | 5 | 8 | 20 | 19 |
+| `ptradd` | 2 | 4 | 4 | 4 | 140 | 4 |  |  |  |
+| `alloca` | 2 | 18 | 6 | 54 | 185 | 5 | 8 | 20 | 17 |
+| `load` | 2 | 39 | 10 | 34 | 187 | 5 | 10 | 16 | 17 |
+| `store` | 4 | 11 | 9 | 55 | 185 | 5 | 10 | 21 | 20 |
 
 ## Passed and returned values
 
 | op | what | no value | `i1` | `i8` | `i16` | `i32` | `i64` | `i128` | `f32` | `f64` |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | `br` | passes nothing | 21 |  |  |  |  |  |  |  |  |
-| `br` | passes values |  | 42 | 248 | 77 | 103 | 77 | 109 | 5 | 7 |
-| `cond_br` | a successor passes nothing | 858 |  |  |  |  |  |  |  |  |
-| `cond_br` | a successor passes values |  | 58 | 140 | 132 | 160 | 132 | 153 | 9 | 7 |
+| `br` | passes values |  | 42 | 248 | 77 | 103 | 80 | 109 | 5 | 7 |
+| `cond_br` | a successor passes nothing | 861 |  |  |  |  |  |  |  |  |
+| `cond_br` | a successor passes values |  | 58 | 140 | 132 | 160 | 134 | 153 | 9 | 7 |
 | `ret` | returns no value | 73 |  |  |  |  |  |  |  |  |
-| `ret` | returns one value |  | 2947 | 1626 | 1276 | 1713 | 1635 | 2490 | 546 | 473 |
-| `ret` | returns several values |  | 282 | 432 | 266 | 249 | 399 | 539 | 11 | 11 |
+| `ret` | returns one value |  | 2947 | 1626 | 1279 | 1713 | 1641 | 2490 | 546 | 473 |
+| `ret` | returns several values |  | 282 | 432 | 266 | 254 | 399 | 539 | 12 | 12 |
 | `unreachable` | ends a block | 38 |  |  |  |  |  |  |  |  |
 | `call` | gives no result | 35 |  |  |  |  |  |  |  |  |
 | `call` | gives one result |  | 89 | 87 | 80 | 87 | 93 | 130 | 2 | 2 |
 | `call` | gives several results |  | 171 | 220 | 126 | 111 | 191 | 279 | 3 | 4 |
 | `func` | returns no value | 41 |  |  |  |  |  |  |  |  |
-| `func` | returns one value |  | 2947 | 1626 | 1276 | 1713 | 1635 | 2490 | 544 | 471 |
-| `func` | returns several values |  | 282 | 432 | 266 | 240 | 399 | 503 | 11 | 11 |
+| `func` | returns one value |  | 2947 | 1626 | 1279 | 1713 | 1641 | 2490 | 544 | 471 |
+| `func` | returns several values |  | 282 | 432 | 266 | 245 | 399 | 503 | 12 | 12 |
+
+## Field addresses, with no index or by an index
+
+| op | no index | by `i1` | by `i8` | by `i16` | by `i32` | by `i64` | by `i128` |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `fieldaddr` | 3 | 3 | 2 | 3 | 1 | 8 | 3 |
 
 ## Copies, moves and fills, by the width of their length
 
@@ -208,4 +214,4 @@ says how to read it.
 | --- | --- | --- | --- | --- | --- | --- |
 | `memcpy` | 2 | 5 | 4 | 4 | 6 | 4 |
 | `memmove` | 7 | 12 | 13 | 12 | 14 | 12 |
-| `memset` | 10 | 13 | 13 | 14 | 13 | 13 |
+| `memset` | 10 | 13 | 13 | 14 | 16 | 13 |
