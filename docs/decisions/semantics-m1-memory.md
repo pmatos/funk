@@ -297,18 +297,21 @@ each is what covers the whole core:
   `coreToyBit_lawful` and `coreProbe_lawful` went with it; their instances
   of the classes with memory stay (`lean/FirTest/Deps.lean`,
   `lean/FirTest/LawfulRefine.lean`).
-- `Core.Op.total` and `Core.Op.total_all` ask that the op touch no memory:
+- `Core.Op.total` and `Core.Op.total_all` ask that the op touch no memory
+  and, since `fieldAddr`, read no item of the run (`Core.Op.readsItems`):
   `Core.lawfulDialectTotal` covers every op, `alloca` by
   `Core.alloca_memTotal`.
-- `Core.Op.returnsOnDefined_valid` asks it too:
+- `Core.Op.returnsOnDefined_valid` asks both too:
   `Core.lawfulDialectMemPoison` covers every valid op.
 - `Core.replaceBody_isRefinedBy` and `Core.caller_isRefinedBy` ask that
   `@g` reach no memory (`Core.reachesNoMemory`), which held of every
   function before #382: `Core.replaceBody_isRefinedBy_of_from` and
   `Core.caller_isRefinedBy_of_from` ask nothing of it.
 - `Core.Op.liftsSetM`, `Core.Op.effects_touchesNoMemory` and
-  `Core.reachesNoMemory` are about touching no memory, so no version covers
-  a memory op: it has no tie and declares a memory effect. The obligations
+  `Core.reachesNoMemory` are about touching no memory, and the first, since
+  `fieldAddr`, about reading no item too. So no version covers a memory op,
+  which has no tie and declares a memory effect, or `fieldAddr`, which has
+  no tie. The obligations
   they served hold through `Core.Op.memCases` and
   `Core.lawfulDialectEffects`.
 - `Core.memDenoteIn_mapsDenote` still covers every op, and asks the

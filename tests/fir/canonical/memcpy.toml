@@ -9,9 +9,12 @@
 # them is UB, and so is a length past the allocation, however long. A
 # poison length chooses its value: an i1 over one unit is never UB, and an
 # i8 is UB where its value is. A length may be an integer of any width.
-# These tests return pointers, pass poison ones, reach UB or take lengths of
-# widths the backend does not lower, so each is interpreter-only;
-# memops-native.toml runs memcpy and memmove as native code.
+# Tests that return pointers, pass poison ones or reach UB are
+# interpreter-only in any module. @lengths takes lengths of i7 and i33,
+# which the backend does not lower, and funk build builds a module all or
+# nothing (tests/fir/README.md), so every test of this file is
+# interpreter-only, even one such as @copy_int that native code could run
+# alone; memops-native.toml runs memcpy and memmove as native code.
 tests = [
   { func = "@copy_int", args = ["-5"], expect = ["-5"] },
   { func = "@copy_ptr", args = ["42"], expect = ["42"] },

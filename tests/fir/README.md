@@ -102,8 +102,9 @@ tests = [
   gives the path's choices, each spelled as a constant of its type; there
   are none by default, so a run that chooses needs them.
 
-`funk build` builds a module all or nothing. So a module with a
-differential test holds only functions that the backend lowers: today
+`funk build` builds a module all or nothing, and builds none of a nested
+module's functions. So a module with a differential test holds, outside
+its nested modules, only functions that the backend lowers: today
 `const`, `poison`, `add`, `sub` and `mul` with any flags, `freeze`, the
 bitwise ops and shifts, `zext`, `sext`, `trunc`, `sdiv` and `udiv` with
 or without `exact`, `srem`, `urem`, `icmp`, `select`, `br`, `cond_br`,

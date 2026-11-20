@@ -47,9 +47,10 @@ layer over the tree, `Core.memTreeDenote lay ρ`, runs each op by its rule
 with memory in that layer, as its semantics with memory, `Core.memDenoteAt
 lay ρ`, runs it in the layer over the set monad (stage 4b-2b of #231, #367).
 Neither is defined as the lift of the rules of a monad with no memory; that
-the second equals such a lift for every op that touches no memory, every
-core op but `alloca`, `load` and `store`, is a theorem
-(`Core.Op.liftsSetM`).
+the second equals such a lift for every op that touches no memory and
+reads no item of the run, every core op but the ten that
+`Core.Op.memCases` gives their own rules (listed in
+semantics-effects.md#soundness), is a theorem (`Core.Op.liftsSetM`).
 `Core.memMapsDenote` ties the two at every layout and naming, op by op:
 `toSet` through the layer keeps choice, UB, allocation, loads and stores
 (`Core.memDenoteIn_mapsDenote`). `fir-ref`'s `@[csimp]`
