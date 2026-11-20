@@ -64,9 +64,9 @@ that the host's layout does not declare.
 `gpu-memcpy` and `gpu-memset` (#234) copy, move and fill in work-group
 memory; [texts-memops.md](texts-memops.md) lists them.
 
-Every test of these texts is interpreter-only. `funk build` builds none of
-a nested module's functions, so a kernel runs on `fir-ref` alone
+`funk build` builds none of a nested module's functions, so a kernel runs
+on `fir-ref` alone
 ([testing-and-harness-corpus.md](../decisions/testing-and-harness-corpus.md#the-test-corpus)),
-and the one test of a host function, `@host` of `gpu-memories`, is
-written interpreter-only too, although `funk build` builds the host's
-functions and that one would run as native code.
+and every test of these texts is interpreter-only but one. That one,
+`@host` of `gpu-memories`, runs a host function, which `funk build`
+builds, so it is differential (#467).

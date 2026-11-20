@@ -1,5 +1,9 @@
+# Tests of gpu-memories.fir: kernels of a device module that run in the two
+# memories of the host's layout, and the host's function @host. funk build
+# builds the host's functions and none of a nested module's, so @host runs
+# differentially, and each kernel's test is interpreter-only.
 tests = [
-  { func = "@host", args = ["7"], expect = ["7"] },
+  { func = "@host", args = ["7"], results = [{ values = ["7"], witness = [] }] },
   { func = "@dev::@global_id", expect = ["5"], work_item = { id = [2, 0, 0], group_id = [1, 0, 0], group_size = [3, 1, 1], num_groups = [2, 1, 1] } },
   { func = "@dev::@count", expect = ["9", "6"], work_item = { group_size = [1, 1, 6], num_groups = [1, 9, 1] } },
   { func = "@dev::@slot", args = ["-5"], expect = ["-5"], work_item = { id = [3, 0, 0], group_size = [8, 1, 1] } },
