@@ -163,10 +163,12 @@ obligation with memory. In a dialect that lifts the set monad the three hold
 exactly when `LawfulDialectPoison` does (`LawfulDialectPoison.iff_mem`), so
 the test dialects and their sums and lifts meet them, and the four
 rejections of `Core.Unlawful` hold with memory (`Core.Unlawful.memUnlawful`).
-The core meets them op by op (`lean/Fir/Core/MemoryRuns.lean`): each op that
-touches no memory by its tie and its obligations in the set monad, and
-`alloca`, `load` and `store` by their own rules
-(`lean/Fir/Core/AllocaLaws.lean`, `LoadLaws.lean`, `StoreLaws.lean`). Since `alloca` has no rule in the set monad, the core no longer meets
+The core meets them op by op (`lean/Fir/Core/MemoryRuns.lean`,
+through `Core.Op.memCases`): each op that touches no memory and reads no
+item of the run by its tie and its obligations in the set monad, and
+`alloca`, the loads and stores, `fieldAddr`, `memCopy` and `memSet` by
+their own rules (semantics-effects.md#soundness lists their files). Since
+`alloca` has no rule in the set monad, the core no longer meets
 `LawfulDialectPoison`, and `Core.lawfulDialectPoison` went in stage 4d-2 of
 #231. Rejected: a rule for `alloca` in the set monad, which has no
 memories to allocate in.

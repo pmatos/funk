@@ -13,7 +13,7 @@ aggregate @vec() memory(0) size(20) align(4) field(0, i32) field(4, i32, 4) {
 aggregate @tail() memory(0) size(4) align(4) field(0, i32) field(4, i16, 0) {
 }
 
-aggregate @long_doubles() memory(0) size(32) align(16) field(0, float(15, 64), 2) {
+aggregate @i24s() memory(0) size(16) align(4) field(0, i24, 4) {
 }
 
 func @point_fields(%a: i32, %b: f32, %c: f64) -> i32, f32, f64 {
@@ -177,18 +177,32 @@ func @flex_tail(%k: i64) -> i16 {
   ret %r @0
 }
 
-func @long_double_stride(%v: f64) -> f64 {
+func @i24_elements(%a: i1, %b: i16, %c: i128) -> i32, i32, i32, i32 {
 ^entry:
-  %p: ptr = alloca stack i8 32 align(16) @0
-  %one: i8 = const 1 @0
-  %e: ptr = fieldaddr @long_doubles 0 %p, %one @0
-  %x: float(15, 64) = fpext %v @0
-  store nonatomic %x, %e @0
+  %p: ptr = alloca stack i8 16 align(4) @0
+  %zero: i8 = const 0 @0
   %sixteen: i64 = const 16 @0
-  %q: ptr = ptradd %p, %sixteen @0
-  %y: float(15, 64) = load nonatomic %q @0
-  %r: f64 = fptrunc round(rne) %y @0
-  ret %r @0
+  memset nonatomic %p, %zero, %sixteen @0
+  %four: i64 = const 4 @0
+  %q: ptr = ptradd %p, %four @0
+  %ea: ptr = fieldaddr @i24s 0 %q, %a @0
+  %one: i32 = const 1 @0
+  store nonatomic %one, %ea @0
+  %eb: ptr = fieldaddr @i24s 0 %q, %b @0
+  %two: i32 = const 2 @0
+  store nonatomic %two, %eb @0
+  %ec: ptr = fieldaddr @i24s 0 %q, %c @0
+  %three: i32 = const 3 @0
+  store nonatomic %three, %ec @0
+  %x0: i32 = load nonatomic %p @0
+  %x1: i32 = load nonatomic %q @0
+  %eight: i64 = const 8 @0
+  %r2: ptr = ptradd %p, %eight @0
+  %x2: i32 = load nonatomic %r2 @0
+  %twelve: i64 = const 12 @0
+  %r3: ptr = ptradd %p, %twelve @0
+  %x3: i32 = load nonatomic %r3 @0
+  ret %x0, %x1, %x2, %x3 @0
 }
 
 locs {

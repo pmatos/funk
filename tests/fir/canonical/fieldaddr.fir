@@ -9,6 +9,9 @@ aggregate @i24s() memory(0) size(16) align(4) field(0, i24, 4) {
 aggregate @wide() memory(1) size(6) align(2) field(0, ptr(1)) field(2, i16, 4) {
 }
 
+aggregate @long_doubles() memory(0) size(32) align(16) field(0, float(15, 64), 2) {
+}
+
 func @pair_fields(%a: i64, %b: i64) -> i64, i64 {
 ^entry:
   %p: ptr = alloca stack i64 2 @0
@@ -89,6 +92,20 @@ func @wide_element(%v: i16, %k: i32) -> i16 {
   %b: ptr(1) = ptradd %p, %four @0
   %x: i16 = load nonatomic %b @0
   ret %x @0
+}
+
+func @long_double_stride(%v: f64) -> f64 {
+^entry:
+  %p: ptr = alloca stack i8 32 align(16) @0
+  %one: i8 = const 1 @0
+  %e: ptr = fieldaddr @long_doubles 0 %p, %one @0
+  %x: float(15, 64) = fpext %v @0
+  store nonatomic %x, %e @0
+  %sixteen: i64 = const 16 @0
+  %q: ptr = ptradd %p, %sixteen @0
+  %y: float(15, 64) = load nonatomic %q @0
+  %r: f64 = fptrunc round(rne) %y @0
+  ret %r @0
 }
 
 locs {

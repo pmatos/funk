@@ -276,11 +276,12 @@ The sum of the core and `gpu` keeps every one of them, at every work-item,
 for the functions of every table of a valid module, a device module's
 kernels included (`lean/Fir/Gpu/Runs.lean`, #212; semantics-m1-dialects.md).
 
-Each new memory op keeps every one of them holding, with its own rule with
-memory and its own proofs, as `alloca`, `load` and `store` do
-(`lean/Fir/Core/AllocaLaws.lean`, `LoadLaws.lean`, `StoreLaws.lean`,
-`LoadPtrLaws.lean`, `StorePtrLaws.lean`, joined to the tied ops by
-`Core.Op.memCases`).
+Each new op with no tie, one that touches memory or reads the run's items,
+keeps every one of them holding, with its own rule with memory and its own
+proofs: the memory ops `alloca`, the loads and stores, `memCopy` and
+`memSet` do, and so does `fieldAddr`, which touches no memory but reads
+items. `Core.Op.memCases` joins them to the tied ops
+(semantics-effects.md#soundness lists each op's laws files).
 
 PR #382 narrowed these statements, which now cover memory-free code; beside
 each is what covers the whole core:
