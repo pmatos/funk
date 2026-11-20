@@ -165,7 +165,7 @@ of funk are on `main`:
   callee, run in the new module, refines the old one. Every core op
   instance that validation accepts meets the poison obligations with
   memory (`LawfulDialectMemPoison CoreDialect`), and those that touch no
-  memory meet them in the set monad too; a call has no op-level rule, since
+  memory and read no item of the run meet them in the set monad too; a call has no op-level rule, since
   its meaning is its callee's run
   ([ADR-2026-10-29-2006](adrs/2026-10-29-2006-poison-and-freeze.md)).
 - The execution rule of `poison` in Lean

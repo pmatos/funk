@@ -126,7 +126,11 @@ touches nothing, whatever the pointers (#234, Q1 B). `memcpy` copies first to
 last, exact for ranges that are equal or disjoint, the only ones it allows
 (Q2 B). `memmove` copies last to first, with the direction flag set and then
 cleared, when the destination starts inside the source, and first to last
-otherwise, so it writes what the source held before it began.
+otherwise, so it writes what the source held before it began. A
+destination equal to the source starts inside it, so that copy too runs
+last to first with the direction flag set: slow but correct, and left for
+a performance milestone, with no ticket filed (the human's ruling of
+2026-11-20).
 
 The length is read as unsigned: zero-extended from its width, and an `i128`
 whose high half is not zero saturates to `2^64 - 1`, as an `alloca` count

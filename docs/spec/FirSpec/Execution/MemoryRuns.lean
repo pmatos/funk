@@ -62,9 +62,10 @@ memories and all layout entries $`\ell` of the run's memories, it is that
 semantics lifted into the layer:
 $`\mathrm{denote}^{\ell,\rho}_o = \mathrm{lift} \circ \mathrm{denote}_o` and the same
 for $`\mathrm{exit}_o`. This ties the two semantics of a dialect whose ops
-touch no memory, such as the core dialect, the dialects of the tests and
-their sums and lifts. A dialect with an op that touches memory has no such
-tie, since the op has no semantics in the set monad.
+touch no memory, such as the dialects of the tests and their sums and
+lifts. A dialect with an op that touches memory has no such tie, since the
+op has no semantics in the set monad: the core dialect has none, and ties
+only its ops that touch no memory and read no item of the run.
 :::
 
 :::readable Fir.OpLiftsSetM Fir.LiftsSetM.opLifts Fir.LiftsSetM.ofOpLifts (fingerprint := "12979419841126230776")

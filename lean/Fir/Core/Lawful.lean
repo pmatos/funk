@@ -4,8 +4,8 @@ import Fir.Execution.Lawful
 /-!
 # Every valid core op instance meets the obligations
 
-Each core op that touches no memory meets the poison obligations in the
-set monad, at every core op instance whose types validation accepts, from
+Each core op that touches no memory and reads no item of the run meets
+the poison obligations in the set monad, at every core op instance whose types validation accepts, from
 the obligations that each op family proves, in the sections from the
 constant obligations to the branch obligations:
 
@@ -160,8 +160,8 @@ theorem pos_of_typesValid {op : Op} {w : Nat} (hv : TypesValid (d := CoreDialect
     (hw : i w ∈ Fir.sig (d := CoreDialect) op) : 0 < w :=
   (hv.1 _ hw).1
 
-/-- Each valid core op instance that touches no memory and propagates
-poison returns a result on some operand vector with no poison. The
+/-- Each valid core op instance that touches no memory, reads no item of
+the run and propagates poison returns a result on some operand vector with no poison. The
 divisions need their width above zero, which validation gives. `alloca`,
 the loads and stores, `fieldAddr`, `memCopy` and `memSet` return one with memory, by
 their own rules. -/

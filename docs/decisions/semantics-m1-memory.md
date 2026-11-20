@@ -243,9 +243,15 @@ would hold with no condition, with the memory ops beside it (option C),
 which changes the dialect's structure where the versions with memory
 already cover every op.
 
+`fieldaddr`, which came after that ruling (ADR-2026-11-18-2041), touches no
+memory but reads an item of the run, which the set monad does not have, so
+the statements over the set monad leave it out too: they cover the ops that
+touch no memory and read no item (`Core.Op.readsItems`). The semantics with
+memory carries its guarantees, by its own rule and proofs.
+
 These hold for every core op, and for every function of a valid core
-module, `alloca`, the loads and stores, `memcpy`, `memmove` and `memset`
-included:
+module, `alloca`, the loads and stores, `fieldaddr`, `memcpy`, `memmove`
+and `memset` included:
 
 - the lawful classes with memory: `Core.lawfulDialectTotal`,
   `Core.lawfulDialectMonotone` and `Core.lawfulDialectMemPoison`

@@ -89,8 +89,8 @@ namespace Fir
 
 /-- The core dialect is lawful in its totality: each core op that runs by
 its own rule has an outcome from any memories, at every layout and naming:
-each op that touches no memory from its own tie and its totality in the set
-monad, and `alloca`, the loads and stores, `fieldAddr`, `memCopy` and `memSet` each by its own
+each op that touches no memory and reads no item of the run from its own
+tie and its totality in the set monad, and `alloca`, the loads and stores, `fieldAddr`, `memCopy` and `memSet` each by its own
 rule. -/
 instance Core.lawfulDialectTotal : LawfulDialectTotal CoreDialect :=
   ⟨fun op _ hc => Core.Op.memCases (P := fun op =>
@@ -111,8 +111,8 @@ instance Core.lawfulDialectTotal : LawfulDialectTotal CoreDialect :=
 
 /-- The core dialect is lawful in its monotonicity: each core op that runs
 by its own rule is monotone with memory, at every layout and naming: each op
-that touches no memory from its own tie and its monotonicity in the set
-monad, and `alloca`, the loads and stores, `fieldAddr`, `memCopy` and `memSet` each by its own
+that touches no memory and reads no item of the run from its own tie and
+its monotonicity in the set monad, and `alloca`, the loads and stores, `fieldAddr`, `memCopy` and `memSet` each by its own
 rule. -/
 instance Core.lawfulDialectMonotone : LawfulDialectMonotone CoreDialect :=
   ⟨fun op _ hc => Core.Op.memCases (P := fun op =>
@@ -134,8 +134,8 @@ instance Core.lawfulDialectMonotone : LawfulDialectMonotone CoreDialect :=
 /-- The core dialect is lawful in its poison with memory: each valid core op
 instance that propagates poison propagates it with memory, and returns a
 result on some defined operands, at every layout and naming: each op that
-touches no memory from its own tie and its poison obligations in the set
-monad, and `alloca`, the loads and stores, `fieldAddr`, `memCopy` and `memSet` each by its own
+touches no memory and reads no item of the run from its own tie and its
+poison obligations in the set monad, and `alloca`, the loads and stores, `fieldAddr`, `memCopy` and `memSet` each by its own
 rule. -/
 instance Core.lawfulDialectMemPoison : LawfulDialectMemPoison CoreDialect where
   poison_isRefinedBy _ := Core.Ty.poison_isRefinedBy
@@ -181,7 +181,8 @@ They are the runs that the modes report. -/
 def funcRuns (M : Module CoreDialect) (f : Func CoreDialect) : FuncRuns (f.params.map (·.2)) :=
   f.memRuns M.layout.entry id M.runItems M
 
-/-- Every core terminator is tied: it touches no memory. -/
+/-- Every core terminator is tied: it touches no memory and reads no item
+of the run. -/
 theorem Op.liftsSetM_of_terminator {op : Op} (h : Fir.isTerminator (d := CoreDialect) op = true) :
     OpLiftsSetM (d := CoreDialect) op :=
   Op.liftsSetM op (by cases op <;> first | rfl | cases h) (by cases op <;> first | rfl | cases h)
