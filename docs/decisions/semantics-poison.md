@@ -134,7 +134,8 @@ The obligations reject a wrong op, and the theorems of
 `lean/Fir/Core/Unlawful.lean` check it: an op with no outcome, an `add` that is
 UB on a poison operand, the rejected `sdiv` rule, and a semantics in which every
 op is always UB. The obligations do not fix what an op computes: each family's
-semantics does. Each core op that touches no memory meets them with no `sorry`
+semantics does. Each core op that touches no memory and reads no item of the
+run (`Core.Op.touchesMemory`, `Core.Op.readsItems`) meets them with no `sorry`
 and only the standard axioms (`lean/Fir/Core/Lawful.lean`). The core dialect as
 a whole meets their forms with memory, below, which carry its guarantees
 ([semantics-m1-memory.md](semantics-m1-memory.md#the-cores-guarantees)).

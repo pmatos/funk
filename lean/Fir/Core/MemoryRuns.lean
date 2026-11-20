@@ -77,6 +77,12 @@ op that touches memory keeps every guarantee here holding, with its own
 rule with memory and its own proofs, as `alloca` does. The human ruled
 this on 2026-11-14, on #384
 (`docs/decisions/semantics-m1-memory.md#the-cores-guarantees`).
+
+`fieldAddr`, which came after that ruling (ADR-2026-11-18-2041), touches no
+memory but reads an item of the run, which the set monad does not have, so
+the obligations over the set monad leave it out too: they cover the ops
+that touch no memory and read no item (`Core.Op.readsItems`). It keeps
+every guarantee here by its own rule with memory and its own proofs.
 -/
 
 namespace Fir

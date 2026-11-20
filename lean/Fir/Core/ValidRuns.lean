@@ -13,10 +13,11 @@ that calls it back, and branches and loops are included.
 
 * _Every core terminator and every core op with no callee is total_:
   these are every core op but `call`, each total by the obligations of its
-  family, and `alloca`, the loads and stores and `fieldAddr` total with
-  memory by their own rules. `call` needs no
-  rule of its own: its way to go on is its callee's run, which the
-  induction on the budget in the section on progress with calls covers.
+  family, and the ops that `Core.Op.memCases` gives their own rules
+  (`docs/decisions/semantics-effects.md#soundness`) total with memory by
+  those rules. `call` needs no rule of its own: its way to go on is its
+  callee's run, which the induction on the budget in the section on
+  progress with calls covers.
 * _Every core function valid in the context of a module runs within that
   module_. Validation's rule for `call @g` asks that the module's symbol
   table give `@g` the type of the call, its operand types and its result
@@ -38,7 +39,8 @@ theorem Op.eq_call_of_callee {op : Op} {s : Name} (h : callee? (d := CoreDialect
 
 /-- Every core terminator and every core op with no callee that touches no
 memory and reads no item of the run is total in the set monad: every core
-op but `call`, `alloca`, the loads and stores and `fieldAddr`. -/
+op but `call` and the ops that `Op.memCases` gives their own rules
+(`docs/decisions/semantics-effects.md#soundness`). -/
 theorem Op.total_all (op : Op)
     (h : Fir.isTerminator (d := CoreDialect) op = true ∨ callee? (d := CoreDialect) op = none)
     (hm : op.touchesMemory = false) (hi : op.readsItems = false) : OpTotal (d := CoreDialect) op := by
