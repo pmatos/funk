@@ -90,8 +90,8 @@ namespace Fir
 /-- The core dialect is lawful in its totality: each core op that runs by
 its own rule has an outcome from any memories, at every layout and naming:
 each op that touches no memory and reads no item of the run from its own
-tie and its totality in the set monad, and `alloca`, the loads and stores, `fieldAddr`, `memCopy` and `memSet` each by its own
-rule. -/
+tie and its totality in the set monad, and `alloca`, the loads and stores,
+`fieldAddr`, `memCopy` and `memSet` each by its own rule. -/
 instance Core.lawfulDialectTotal : LawfulDialectTotal CoreDialect :=
   ⟨fun op _ hc => Core.Op.memCases (P := fun op =>
       (isTerminator (d := CoreDialect) op = true ∨ callee? (d := CoreDialect) op = none) →
@@ -112,8 +112,8 @@ instance Core.lawfulDialectTotal : LawfulDialectTotal CoreDialect :=
 /-- The core dialect is lawful in its monotonicity: each core op that runs
 by its own rule is monotone with memory, at every layout and naming: each op
 that touches no memory and reads no item of the run from its own tie and
-its monotonicity in the set monad, and `alloca`, the loads and stores, `fieldAddr`, `memCopy` and `memSet` each by its own
-rule. -/
+its monotonicity in the set monad, and `alloca`, the loads and stores,
+`fieldAddr`, `memCopy` and `memSet` each by its own rule. -/
 instance Core.lawfulDialectMonotone : LawfulDialectMonotone CoreDialect :=
   ⟨fun op _ hc => Core.Op.memCases (P := fun op =>
       (isTerminator (d := CoreDialect) op = true ∨ callee? (d := CoreDialect) op = none) →
@@ -135,8 +135,8 @@ instance Core.lawfulDialectMonotone : LawfulDialectMonotone CoreDialect :=
 instance that propagates poison propagates it with memory, and returns a
 result on some defined operands, at every layout and naming: each op that
 touches no memory and reads no item of the run from its own tie and its
-poison obligations in the set monad, and `alloca`, the loads and stores, `fieldAddr`, `memCopy` and `memSet` each by its own
-rule. -/
+poison obligations in the set monad, and `alloca`, the loads and stores,
+`fieldAddr`, `memCopy` and `memSet` each by its own rule. -/
 instance Core.lawfulDialectMemPoison : LawfulDialectMemPoison CoreDialect where
   poison_isRefinedBy _ := Core.Ty.poison_isRefinedBy
   propagates op _ hc := Core.Op.memCases (P := fun op =>

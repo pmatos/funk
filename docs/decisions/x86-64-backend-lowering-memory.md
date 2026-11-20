@@ -127,8 +127,8 @@ last, exact for ranges that are equal or disjoint, the only ones it allows
 (Q2 B). `memmove` copies last to first, with the direction flag set and then
 cleared, when the destination starts inside the source, and first to last
 otherwise, so it writes what the source held before it began. A
-destination equal to the source starts inside it, so that copy too runs
-last to first with the direction flag set: slow but correct, and left for
+destination equal to the source starts inside it when the length is above
+0, so that copy too runs last to first with the direction flag set: slow but correct, and left for
 a performance milestone, with no ticket filed (the human's ruling of
 2026-11-20).
 

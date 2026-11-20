@@ -25,10 +25,11 @@ with memory is that lift, at every naming, _lifts the set monad_: this ties
 its semantics in the set monad to its semantics with memory. The run with
 memory of a function of such a dialect is then its run in the set monad,
 with the memories it started from; its runs with memory are its runs, and
-every theorem about its runs holds of them. The dialects of the tests and
-their sums lift the set monad by their definition. The core dialect does
-not lift it: it runs its own rules with memory, and only its ops that touch
-no memory and read no item of the run are tied, in the sense below
+every theorem about its runs holds of them. The toy, bit and probe
+dialects of the tests and their sums lift the set monad by their
+definition. The core dialect does not lift it, nor does a sum with it: it
+runs its own rules with memory, and only its ops that touch no memory and
+read no item of the run are tied, in the sense below
 (`docs/decisions/semantics-effects.md#soundness`).
 
 The tie also holds of one op: an op is _tied_ when it runs with memory by
