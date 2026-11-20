@@ -290,3 +290,6 @@ from #229's fourth stage on, are listed in
 
 The texts of aggregates' layouts and the field address `fieldaddr`
 (#236) are listed in [texts-aggregates.md](texts-aggregates.md).
+
+The texts of the copies, moves and sets `memcpy`, `memmove` and `memset`
+(#234) are listed in [texts-memops.md](texts-memops.md).
