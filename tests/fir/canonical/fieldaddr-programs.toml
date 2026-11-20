@@ -16,11 +16,11 @@
 # array member of no elements, up to the end of its allocation, and before
 # its start, where index -2 reaches the struct's first field. The elements
 # of @i24s are 4 units apart, each 3-unit i24 rounded up to its alignment
-# (Q2 B): @i24_elements stores an i32 at an element by an index of i1, i16
-# and i128, each from the second element, and reads the four back by
-# ptradd. A test that is UB is interpreter-only, since a native run of UB
-# proves nothing; every other test runs differentially and declares its
-# result.
+# (Q2 B): @i24_elements zeroes an allocation of 16 units with memset,
+# stores an i32 at an element by an index of i1, i16 and i128, each from
+# the second element, and reads the four back by ptradd. A test that is
+# UB is interpreter-only, since a native run of UB proves nothing; every
+# other test runs differentially and declares its result.
 tests = [
   { func = "@point_fields", args = ["7", "1.5", "-2.25"], results = [{ values = ["7", "1.5", "-2.25"], witness = [] }] },
   { func = "@row_sum", args = ["1"], results = [{ values = ["64"], witness = [] }] },
