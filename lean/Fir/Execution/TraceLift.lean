@@ -86,7 +86,7 @@ theorem isRefinedBy_of_mem (hV : ∀ {a b c : V}, a ⊑ b → b ⊑ c → a ⊑ 
     fun n p _ => Renaming.id_covers _ n p, hV (hle v) hv, fun x a a' ha => ?_⟩
   cases ha
   refine ⟨?_, fun _ _ _ n p _ => Renaming.id_covers _ n p⟩
-  rcases List.IsRefinedBy.getElem? (hS.2 x) a with ⟨h₁, h₂⟩ | ⟨b, b', h₁, h₂, hb⟩
+  rcases List.IsRefinedBy.getElem? (hS.2.1 x) a with ⟨h₁, h₂⟩ | ⟨b, b', h₁, h₂, hb⟩
   · show Block.OptSeenIn ar _ ((S.mem x).blocks[a]?) ((S'.mem x).blocks[a]?)
     rw [h₁, h₂]
     exact trivial

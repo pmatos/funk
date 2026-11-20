@@ -70,6 +70,7 @@ import FirTest.Memory
 import FirTest.MemoryRuns
 import FirTest.Trace
 import FirTest.TraceDialect
+import FirTest.WorldScript
 import FirTest.ObserveEnd
 import FirTest.CoreTrace
 import FirTest.MemoryPoison

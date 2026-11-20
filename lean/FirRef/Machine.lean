@@ -33,9 +33,12 @@ runs ops holds the memories they start from, an op's tree holds the memories
 after each of its paths, and a function that returns holds the memories it
 returns with. Each function runs in a frame of its own: the machine enters a
 frame where it starts a callee, and leaves it where the callee returns, as the
-spec's frame does. The modes report what a path ends with and not its memories,
-so a path that ends stuck, out of fuel or with the run's return drops its
-memories, and the machine does not leave the frames of the callers that wait.
+spec's frame does. The run's return is seen by a function `fin` of its values
+and of the memories at its end, after its frame is left: as its values by
+the modes that the core's and `gpu`'s `@[csimp]` theorems name, and at its end
+by those of `fir-ref run --world` (`FirRef.Run`). Any other path that ends
+drops its memories, and the machine does not leave the frames of the callers
+that wait.
 
 `Machine.advance_tree` (`FirRef.MachineTree`) proves that the machine
 computes the spec's tree: a state stands for the spec's tree of what is
@@ -79,14 +82,15 @@ inductive Cur (d : Dialect) [TyDenote d.Ty] [DialectSignature d] (ε σ : Type) 
   /-- The function returns `vs` and leaves `k` steps, in the state `S`. -/
   | ret (vs : List (DVal d)) (k : Nat) (S : σ)
 
-/-- How a path of a run ends. -/
-abbrev Leaf (d : Dialect) [TyDenote d.Ty] (ε : Type) :=
-  ChoiceTree.Leaf ε (Except Stuck (Result (List (DVal d))))
+/-- How a path of a run ends, where a return is seen as a value of type `R`:
+by default its values. -/
+abbrev Leaf (d : Dialect) [TyDenote d.Ty] (ε : Type) (R : Type := List (DVal d)) :=
+  ChoiceTree.Leaf ε (Except Stuck (Result R))
 
 /-- Where the machine stops: at the end of a path, or at a choice of `w`
 bits, with the state that the run goes on from for each value. -/
-inductive Stop (d : Dialect) [TyDenote d.Ty] [DialectSignature d] (ε σ : Type) where
-  | leaf (l : Leaf d ε)
+inductive Stop (d : Dialect) [TyDenote d.Ty] [DialectSignature d] (ε σ R : Type) where
+  | leaf (l : Leaf d ε R)
   | choose (w : Nat) (c : ChoiceKind) (k : BitVec w → Cur d ε σ × List (Frame d))
 
 /-- A measure of a state that each step of `advance` lowers. -/
@@ -100,12 +104,15 @@ variable {N : Type} [DecidableEq N] {unit : N → Nat}
 
 local notation "SM" => StateT (Memories N unit) (ChoiceTree ε)
 
+variable {R : Type}
+
 set_option wf.preprocess false in
 /-- The steps of a run from the state `c`, with the callers `st` waiting,
-up to the end of the path or its next choice. Its recursive calls are tail
-calls. -/
-def advance (M : Module d) :
-    Cur d ε (Memories N unit) → List (Frame d) → Stop d ε (Memories N unit)
+up to the end of the path or its next choice, where a return of the values
+`vs` with the memories `S` at its end is seen as `fin vs S`. Its recursive
+calls are tail calls. -/
+def advance (M : Module d) (fin : List (DVal d) → Memories N unit → R) :
+    Cur d ε (Memories N unit) → List (Frame d) → Stop d ε (Memories N unit) R
   | .ops 0 _ _ _ _, _ => .leaf (.ok (.ok .fuelExhausted))
   | .ops (_ + 1) _ _ [] _, _ => .leaf (.ok (stuck "a block ends without a terminator"))
   | .ops (n + 1) f env (o :: os) S, st =>
@@ -116,41 +123,41 @@ def advance (M : Module d) :
     | .ok (args, env) =>
       if isTerminator o.op then
         if !os.isEmpty then .leaf (.ok (stuck "an op follows the terminator of its block"))
-        else advance M (.ex n f env o args ((DialectDenote.exit (m := SM) o.op args).run S)) st
+        else advance M fin (.ex n f env o args ((DialectDenote.exit (m := SM) o.op args).run S)) st
       else match callee? o.op with
         | none =>
-          advance M (.den n f env o os ((DialectDenote.denote (m := SM) o.op args).run S)) st
+          advance M fin (.den n f env o os ((DialectDenote.denote (m := SM) o.op args).run S)) st
         | some s => match M.func? s with
           | none => .leaf (.ok (stuck s!"@{s} is not a function of the module"))
           | some g => match Bindings.enter g args with
             | .error e => .leaf (.ok (.error e))
             | .ok (body, genv) =>
-              advance M (.ops n g genv body S.enter) (⟨n, f, env, o, os, s⟩ :: st)
+              advance M fin (.ops n g genv body S.enter) (⟨n, f, env, o, os, s⟩ :: st)
   | .den n f env o os t, st => match t with
     | .pure (rs, S) =>
       match env.bindResults o.results rs
         "an op names a number of results other than it gives" with
-      | .ok env' => advance M (.ops n f env' os S) st
+      | .ok env' => advance M fin (.ops n f env' os S) st
       | .error e => .leaf (.ok (.error e))
     | .ub r => .leaf (.ub r)
     | .noOutcome e => .leaf (.noOutcome e)
     | .choose w c k => .choose w c fun b => (.den n f env o os (k b), st)
   | .ex n f env o args t, st => match t with
     | .pure (.ret, S) =>
-      if sig o.op = f.results then advance M (.ret args.toDVals n S) st
+      if sig o.op = f.results then advance M fin (.ret args.toDVals n S) st
       else .leaf (.ok (stuck "the function returns values of types other than its result types"))
     | .pure (.goto i, S) => match Bindings.jump f env o.succs i with
-      | .ok (b, env') => advance M (.ops n f env' b.body S) st
+      | .ok (b, env') => advance M fin (.ops n f env' b.body S) st
       | .error e => .leaf (.ok (.error e))
     | .ub r => .leaf (.ub r)
     | .noOutcome e => .leaf (.noOutcome e)
     | .choose w c k => .choose w c fun b => (.ex n f env o args (k b), st)
-  | .ret vs _ _, [] => .leaf (.ok (.ok (.ret vs)))
+  | .ret vs _ S, [] => .leaf (.ok (.ok (.ret (fin vs S.exit))))
   | .ret vs k S, fr :: st =>
     if vs.map (·.1) = returnTypes fr.o.op then
       match fr.env.bind fr.o.results vs
         "an op names a number of results other than it gives" with
-      | .ok env' => advance M (.ops (min k fr.n) fr.f env' fr.os S.exit) st
+      | .ok env' => advance M fin (.ops (min k fr.n) fr.f env' fr.os S.exit) st
       | .error e => .leaf (.ok (.error e))
     else .leaf (.ok (stuck s!"@{fr.s} returns values of types other than its call's result types"))
 termination_by c => c.rank
@@ -194,11 +201,26 @@ def kont (M : Module d) : List (Frame d) → Paths d ε (Memories N unit) →
   | [], x => x.bind fun p => thenAt finish (p.1, p.2.exit)
   | fr :: st, x => kont M st (x.bind (fr.cont M))
 
-/-- The tree of the rest of a run from a state, with the memories dropped
-at the end of each path. -/
-def tree (M : Module d) (c : Cur d ε (Memories N unit)) (st : List (Frame d)) :
-    ChoiceTree ε (Except Stuck (Result (List (DVal d)))) :=
-  Prod.fst <$> kont M st (c.denote M)
+/-- How a path ends, from how it ends with the memories at its end, where a
+return of the values `vs` with the memories `S` is seen as `fin vs S`. -/
+def endWith {σ : Type} (fin : List (DVal d) → σ → R) :
+    Except Stuck (Result (List (DVal d))) × σ → Except Stuck (Result R)
+  | (.ok (.ret vs), S) => .ok (.ret (fin vs S))
+  | (.ok .fuelExhausted, _) => .ok .fuelExhausted
+  | (.error e, _) => .error e
+
+omit [DialectSignature d] [DecidableEq d.Ty] [DialectCall d] in
+/-- Seeing a return as its values drops the memories. -/
+theorem endWith_vals {σ : Type} :
+    endWith (d := d) (σ := σ) (fun vs _ => vs) = Prod.fst := by
+  funext p
+  rcases p with ⟨_ | _ | _, _⟩ <;> rfl
+
+/-- The tree of the rest of a run from a state, where a return of the
+values `vs` with the memories `S` at its end is seen as `fin vs S`. -/
+def tree (M : Module d) (fin : List (DVal d) → Memories N unit → R) (c : Cur d ε (Memories N unit))
+    (st : List (Frame d)) : ChoiceTree ε (Except Stuck (Result R)) :=
+  endWith fin <$> kont M st (c.denote M)
 
 /-- The tree of a path that ends at a leaf. -/
 def leafTree {α : Type} : ChoiceTree.Leaf ε α → ChoiceTree ε α
@@ -207,10 +229,10 @@ def leafTree {α : Type} : ChoiceTree.Leaf ε α → ChoiceTree ε α
   | .noOutcome e => .noOutcome e
 
 /-- The tree that the machine stands for where it stops. -/
-def Stop.tree (M : Module d) :
-    Stop d ε (Memories N unit) → ChoiceTree ε (Except Stuck (Result (List (DVal d))))
+def Stop.tree (M : Module d) (fin : List (DVal d) → Memories N unit → R) :
+    Stop d ε (Memories N unit) R → ChoiceTree ε (Except Stuck (Result R))
   | .leaf l => leafTree l
-  | .choose w c k => .choose w c fun b => Machine.tree M (k b).1 (k b).2
+  | .choose w c k => .choose w c fun b => Machine.tree M fin (k b).1 (k b).2
 
 /-! # The callers' rest of a run that ends or chooses
 
@@ -218,15 +240,15 @@ def Stop.tree (M : Module d) :
 
 section Proofs
 
-variable (M : Module d)
+variable (M : Module d) (fin : List (DVal d) → Memories N unit → R)
 
 theorem kont_error : ∀ (st : List (Frame d)) (e : Stuck) (S : Memories N unit),
-    Prod.fst <$> kont (ε := ε) M st (.pure (.error e, S)) = .pure (.error e)
+    endWith fin <$> kont (ε := ε) M st (.pure (.error e, S)) = .pure (.error e)
   | [], _, _ => rfl
   | _ :: st, e, S => kont_error st e S.exit
 
 theorem kont_fuel : ∀ (st : List (Frame d)) (S : Memories N unit),
-    Prod.fst <$> kont (ε := ε) M st (.pure (.ok .fuelExhausted, S)) = .pure (.ok .fuelExhausted)
+    endWith fin <$> kont (ε := ε) M st (.pure (.ok .fuelExhausted, S)) = .pure (.ok .fuelExhausted)
   | [], _ => rfl
   | _ :: st, S => kont_fuel st S.exit
 

@@ -28,8 +28,8 @@ memories dropped at the end of each path:
 
 $$`\mathrm{tree}^{\mathrm{mem}}_{M,f}(\vec{v}, k) = \mathrm{map}_{(r, S) \mapsto r}(\mathrm{run}_{M,f}(\vec{v}, k)(\emptyset))`
 
-An observer sees what a run returns and not its memories, until
-observations at the end of a run are designed (#233). This is the tree
+It sees a return as its values; the modes that see each return at its
+end walk the tree that keeps the memories (#233). This is the tree
 that the {ref "The-fir-specification--Execution--Exhaustive___-scripted-and-sampled-modes"}[modes]
 walk.
 :::
