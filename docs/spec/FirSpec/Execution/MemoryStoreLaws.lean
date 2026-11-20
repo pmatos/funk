@@ -42,7 +42,7 @@ same allocation $`a` at the same offset $`o`, and writes $`\vec{y}` at
 $`o` of the block of $`a` in each.
 :::
 
-:::readable Fir.store_apply Fir.store_ok (pin := Fir.instMonadMemoryStateT) (pin := Fir.Memory.Memories.store) (fingerprint := "6303222023396732223")
+:::readable Fir.store_apply Fir.store_ok (pin := Fir.instMonadMemoryStateT) (pin := Fir.Memory.Memories.store) (fingerprint := "12479088072758132017")
 *Theorems: how a store ends.* In the
 {ref "The-fir-specification--Memory--The-state-layer"}[state layer] over
 the set monad, the

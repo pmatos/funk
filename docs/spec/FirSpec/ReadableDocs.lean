@@ -196,6 +196,8 @@ import FirSpec.Execution.MemoryLoadLaws
 import FirSpec.Execution.MemoryStoreLaws
 import FirSpec.Execution.MemoryBindLaws
 import FirSpec.Execution.MemoryCopyLaws
+import FirSpec.Execution.MemoryExposeLaws
+import FirSpec.Execution.MemoryPolicyRuns
 import FirSpec.Execution.MemoryChoiceLaws
 import FirSpec.Core.Alloca
 import FirSpec.Core.AllocaLaws
@@ -229,6 +231,8 @@ import FirSpec.Memory.Address
 import FirSpec.Memory.AddressLaws
 import FirSpec.Memory.CanonicalLaws
 import FirSpec.Memory.ExposeLaws
+import FirSpec.Memory.Policy
+import FirSpec.Memory.PolicyLaws
 import FirSpec.Execution.MemoryOpRefine
 import FirSpec.Execution.MemoryPoison
 import FirSpec.Execution.MemoryStepPaths

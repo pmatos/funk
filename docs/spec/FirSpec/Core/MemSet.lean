@@ -31,7 +31,7 @@ the cut and the padding only make the rule total for a module that
 `fir-ref run` runs without validating it.
 :::
 
-:::readable Fir.Core.poisonSetPointer Fir.Core.setUnits Fir.Core.setLenRule Fir.Core.memSetRule (pin := Fir.MonadMemory) (pin := Fir.MonadUB) (pin := Fir.MonadChoice) (pin := Fir.Core.setUnit) (fingerprint := "13979339695001588112")
+:::readable Fir.Core.poisonSetPointer Fir.Core.setUnits Fir.Core.setLenRule Fir.Core.memSetRule (pin := Fir.MonadMemory) (pin := Fir.MonadUB) (pin := Fir.MonadChoice) (pin := Fir.Core.setUnit) (fingerprint := "888018103110620322")
 *Definition: the rule of $`\mathsf{memset}`.* Let a run's memories have
 the layout entries $`\ell`, and let the run name the core's memory $`x` as
 $`\rho(x)`. For $`\mathsf{memSet}_N~o~V~W` on the destination $`p`, the

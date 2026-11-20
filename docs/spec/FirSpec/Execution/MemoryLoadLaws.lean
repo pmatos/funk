@@ -17,7 +17,7 @@ fails when the Lean changes under it.
 :::moduleDocs (fingerprint := "4607958562880319941")
 :::
 
-:::readable Fir.load_apply Fir.load_keeps (pin := Fir.instMonadMemoryStateT) (pin := Fir.Memory.Memories.load) (fingerprint := "453037277487555865")
+:::readable Fir.load_apply Fir.load_keeps (pin := Fir.instMonadMemoryStateT) (pin := Fir.Memory.Memories.load) (fingerprint := "14202662533026696911")
 *Theorems: how a load ends.* In the
 {ref "The-fir-specification--Memory--The-state-layer"}[state layer] over
 the set monad, the
