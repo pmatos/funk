@@ -1,4 +1,10 @@
+# Tests of gpu-kernel.fir: the host's function @host, and kernels of the
+# device module @dev. funk build builds the host's functions and none of a
+# nested module's, so @host runs differentially, and each kernel's test is
+# interpreter-only.
 tests = [
+  { func = "@host", args = ["21"], results = [{ values = ["42"], witness = [] }] },
+  { func = "@host", args = ["1073741824"], results = [{ values = ["-2147483648"], witness = [] }] },
   { func = "@dev::@global_id", expect = ["0"] },
   { func = "@dev::@global_id", expect = ["11"], work_item = { id = [3, 0, 0], group_id = [2, 0, 0], group_size = [4, 1, 1], num_groups = [5, 1, 1] } },
   { func = "@dev::@global_id", expect = ["-3"], work_item = { id = [4294967294, 0, 0], group_id = [1, 0, 0], group_size = [4294967295, 1, 1], num_groups = [2, 1, 1] } },

@@ -67,6 +67,8 @@ memory; [texts-memops.md](texts-memops.md) lists them.
 `funk build` builds none of a nested module's functions, so a kernel runs
 on `fir-ref` alone
 ([testing-and-harness-corpus.md](../decisions/testing-and-harness-corpus.md#the-test-corpus)),
-and every test of these texts is interpreter-only but one. That one,
-`@host` of `gpu-memories`, runs a host function, which `funk build`
-builds, so it is differential (#467).
+and every test of these texts is interpreter-only but those of `@host`.
+`@host` of `gpu-memories` (#467) and of `gpu-kernel` (#471) is a host
+function, which `funk build` builds, so its tests are differential.
+`gpu-kernel`'s `@host` doubles its argument, once where the `add` wraps
+at `i32`.
