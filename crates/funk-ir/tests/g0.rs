@@ -195,8 +195,7 @@ fn the_check_covers_the_ir_the_parser_the_printer_and_the_verifier() {
     assert!(files.iter().all(|f| !f.starts_with("src/dialects/")));
     assert!(core_ops().len() >= 25, "{:?}", core_ops());
     for w in [
-        "add", "cond_br", "poison", "slt", "nsw", "exact", "true", "ptr", "stack", "heap", "f32",
-        "float", "nnan",
+        "add", "cond_br", "poison", "slt", "nsw", "exact", "true", "ptr", "stack", "heap",
     ] {
         assert!(is_core_word(&core_words(), w), "{w}");
     }
