@@ -72,7 +72,8 @@ and has no text output to choose from.
 
 The full form is `fir-ref run [--fuel N] [--choices C,C,... | --exhaustive
 [--choice-bits B] [--nans V,V,...] | --seed S] [--work-item-id X,Y,Z] [--work-group-id X,Y,Z]
-[--work-group-size X,Y,Z] [--num-work-groups X,Y,Z] FILE @FUNC [ARG...]`.
+[--work-group-size X,Y,Z] [--num-work-groups X,Y,Z] [--world WORLD] FILE @FUNC
+[ARG...]`.
 Options come anywhere before `--`, and each takes the next argument as its
 value. An argument such as `-5` is not an option.
 
@@ -165,6 +166,12 @@ Its `choices` field counts the choices the path made, `0` when it made none:
 Reasons are for people. Tools compare the kind and the values only, and
 `"poison"` matches any native value. Strings escape as `fir-ref validate`'s
 and `funk`'s reports escape them.
+
+With `--world WORLD`, the run is at the scripted world that WORLD holds,
+and each result also reports its trace and, at a return, what escaped and
+the memory an observer reaches; without it, every result is as above.
+[fir-ref-run-end.md](fir-ref-run-end.md) records the script and these
+fields (#233).
 
 Rejected: bare JSON numbers. `i1` would read as booleans, and wide values lose
 precision in many JSON readers.

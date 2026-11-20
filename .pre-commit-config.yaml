@@ -145,7 +145,7 @@ repos:
         language: unsupported_script
         stages: [pre-commit]
         pass_filenames: false
-        files: ^(lean/|tests/fir/|scripts/(build-spec|check-fir-ref(-run|-deep)?)\.sh$)
+        files: ^(lean/|tests/fir/|scripts/(build-spec|check-fir-ref(-run|-deep|-world)?)\.sh$)
       - id: fir-round-trip
         name: Lean reprints the texts that Rust prints, byte for byte
         entry: scripts/check-fir-ref.sh
