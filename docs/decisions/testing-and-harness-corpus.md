@@ -37,8 +37,7 @@ proposed by #212, and the human accepted it on 2026-11-16 (Q4 on #212).
 A module with a differential test builds whole, since `funk build` is all or
 nothing. A function that the backend does not lower goes in a module whose tests
 are all interpreter-only, or in a nested module, whose functions `funk build`
-does not build: `gpu-memories` and `gpu-kernel` test their host's `@host`
-differentially and their kernels on `fir-ref` alone (#467, #471). A corpus text uses only the ops that both tools have.
+does not build (#467). A corpus text uses only the ops that both tools have.
 
 A must-reject text is a `[[reject]]` table with `verdict`, `rule` and `text`. The
 verdict is `parse-error` or `validation-error`. The rule is the one it breaks, in

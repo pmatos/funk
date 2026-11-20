@@ -69,6 +69,5 @@ memory; [texts-memops.md](texts-memops.md) lists them.
 on `fir-ref` alone
 ([testing-and-harness-corpus.md](../decisions/testing-and-harness-corpus.md#the-test-corpus)),
 and every test of these texts is interpreter-only but those of `@host`.
-The `@host` functions of `gpu-memories` (#467) and `gpu-kernel` (#471)
-are host functions, which `funk build` builds, so their tests are
-differential.
+`@host` of `gpu-memories` (#467) and of `gpu-kernel` (#471) are host
+functions, which `funk build` builds, so their tests are differential.
