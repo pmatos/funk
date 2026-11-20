@@ -59,8 +59,8 @@ obligations to branch obligations prove that each op meets the obligations
 of its class. The section on the core dialect's poison obligations puts
 them together for the ops that touch no memory and read no item of the
 run, and the section on core functions with memory gives the core
-dialect's lawful classes with memory, the ten ops that `Core.Op.memCases`
-gives their own rules included
+dialect's lawful classes with memory, the ops that `Core.Op.memCases` gives
+their own rules included
 (`docs/decisions/semantics-effects.md#soundness`). Tests check the rules
 of the exceptions. `call` has no op-level obligation, as below.
 

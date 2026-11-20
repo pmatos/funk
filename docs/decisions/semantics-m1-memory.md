@@ -310,7 +310,8 @@ each is what covers the whole core:
 - `Core.Op.liftsSetM`, `Core.Op.effects_touchesNoMemory` and
   `Core.reachesNoMemory` are about touching no memory, and the first, since
   `fieldAddr`, about reading no item too, so no version covers a memory op:
-  it has no tie and declares a memory effect. The obligations
+  it has no tie and declares a memory effect. Nor does one cover
+  `fieldAddr`, which has no tie either. The obligations
   they served hold through `Core.Op.memCases` and
   `Core.lawfulDialectEffects`.
 - `Core.memDenoteIn_mapsDenote` still covers every op, and asks the

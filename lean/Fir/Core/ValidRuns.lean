@@ -13,7 +13,7 @@ that calls it back, and branches and loops are included.
 
 * _Every core terminator and every core op with no callee is total_:
   these are every core op but `call`, each total by the obligations of its
-  family, and the ten ops that `Core.Op.memCases` gives their own rules
+  family, and the ops that `Core.Op.memCases` gives their own rules
   (`docs/decisions/semantics-effects.md#soundness`) total with memory by
   those rules. `call` needs no rule of its own: its way to go on is its
   callee's run, which the induction on the budget in the section on
@@ -39,7 +39,7 @@ theorem Op.eq_call_of_callee {op : Op} {s : Name} (h : callee? (d := CoreDialect
 
 /-- Every core terminator and every core op with no callee that touches no
 memory and reads no item of the run is total in the set monad: every core
-op but `call` and the ten ops that `Op.memCases` gives their own rules
+op but `call` and the ops that `Op.memCases` gives their own rules
 (`docs/decisions/semantics-effects.md#soundness`). -/
 theorem Op.total_all (op : Op)
     (h : Fir.isTerminator (d := CoreDialect) op = true ∨ callee? (d := CoreDialect) op = none)
