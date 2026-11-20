@@ -44,19 +44,15 @@ def globs (a g : String) : String :=
 #guard roundTrips (oneFunc "module @dev() {\n  global @g() size(1) align(1) units(1) {\n  }\n\n}\n")
 
 -- The global's words are the core's too (#237 Q4): a global sits beside
--- `alloca`'s kind `global` and the op `const` in one module, and each
--- reads back as itself.
-def beside : String :=
+-- `alloca` of the kind `kind` and the op `const` in one module.
+def beside (kind : String) : String :=
   oneFunc ("global @g() size(4) align(4) const units(1, 0, 0, 0) {\n}\n\n" ++
-    "func @f() -> i32 {\n^e:\n  %p: ptr = alloca global i32 @0\n" ++
+    "func @f() -> i32 {\n^e:\n  %p: ptr = alloca " ++ kind ++ " i32 @0\n" ++
     "  %c: i32 = const 1 @0\n  ret %c @0\n}\n")
-#guard roundTrips beside
-#guard checks beside
-  ["the op breaks its dialect's own rule"]
--- With `alloca stack`, the module is valid.
-#guard valid (oneFunc ("global @g() size(4) align(4) const units(1, 0, 0, 0) {\n}\n\n" ++
-    "func @f() -> i32 {\n^e:\n  %p: ptr = alloca stack i32 @0\n" ++
-    "  %c: i32 = const 1 @0\n  ret %c @0\n}\n"))
+#guard roundTrips (beside "global")
+#guard checks (beside "global") ["the op breaks its dialect's own rule"]
+#guard roundTrips (beside "stack")
+#guard valid (beside "stack")
 
 -- Attributes that do not decode, at the attribute; too few, at the kind.
 #guard rejectedAt (glob "memory(0) size(1) align(1)") 1 13 "writes memory(N) first"
