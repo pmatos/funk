@@ -201,8 +201,9 @@ item of the run (`Core.Op.touchesMemory`, `Core.Op.readsItems`) has its rule
 in the set monad as its rule with memory, and lifting keeps choice and UB, so
 it is tied (`Core.Op.liftsSetM`): each of its obligations with memory,
 effects, totality, monotonicity and poison, follows from its tie.
-`Core.Op.memCases` splits an obligation of every core op into the tied ops
-and the ops that meet it by their own rules, in `lean/Fir/Core/`. Those are
+`Core.Op.memCases`, in `lean/Fir/Core/AllocaLaws.lean`, splits an obligation
+of every core op into the tied ops and the ops that meet it by their own
+rules, whose laws files are in `lean/Fir/Core/`. Those are
 the ops that touch memory: `alloca` (`AllocaLaws.lean`), `load` and `store`
 (`LoadLaws.lean`, `StoreLaws.lean`), `loadPtr` and `storePtr`
 (`LoadPtrLaws.lean`, `StorePtrLaws.lean`), `loadFloat` and `storeFloat`

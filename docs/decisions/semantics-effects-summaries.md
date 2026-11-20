@@ -36,7 +36,7 @@ A call carries its callee's effects through a summary (ADR-2026-11-09-1541):
   whose summary leaves out may produce poison returns no poison on arguments
   with none, at every layout and naming (`Module.summary_neverUB`,
   `Module.summary_noPoison`). They ask for no semantics in the set monad and
-  no tie, so they hold when the core dialect gains a memory op (stage 4b-3b
+  no tie, so they hold for the core dialect with its memory ops (stage 4b-3b
   of #231). The proofs follow a run with memory from any memories
   (`Module.memOps_notUB`, `Module.memOps_clean`). `lean/FirTest/G0Effects.lean`
   restates them for every dialect. Rejected: keeping them over runs in the set
