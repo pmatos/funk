@@ -36,10 +36,10 @@ decode, and those that validation rejects, such as a value that is not as
 wide as a unit of its memory. Every test of these texts and of the second
 stage's is interpreter-only. `funk build` builds a module all or nothing
 ([the corpus README](../../tests/fir/README.md)), and each pair of texts
-is interpreter-only for its own reason. `memcpy` and `memset` do not build: their `@lengths`
-takes lengths of `i7` and `i33`, widths the backend does not lower. So
-even a test such as `@copy_int`, which native code could run alone, is
-interpreter-only. `memcpy-memories` and `memset-memories` do not build
+is interpreter-only for its own reason. `memcpy` and `memset` do not
+build: their `@lengths` takes lengths of `i7` and `i33`, widths the
+backend does not lower. So even a test such as `@copy_int`, which native
+code could run alone, is interpreter-only. `memcpy-memories` and `memset-memories` do not build
 either: every function's pointers are of memory 1, of 16-bit units and
 32-bit pointers, which the backend reports where they are defined, as the
 human ruled on 2026-11-15 (#399)
