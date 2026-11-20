@@ -31,7 +31,7 @@ partly overlap depends only on the pointers and $`n`, not on the
 memories.
 :::
 
-:::readable Fir.Core.poisonCopyPointer Fir.Core.overlapCopy Fir.Core.copyLenRule Fir.Core.memCopyRule (pin := Fir.copyUnits) (pin := Fir.MonadMemory) (pin := Fir.MonadUB) (pin := Fir.MonadChoice) (pin := Fir.Core.CopyKind) (fingerprint := "12326008513904577959")
+:::readable Fir.Core.poisonCopyPointer Fir.Core.overlapCopy Fir.Core.copyLenRule Fir.Core.memCopyRule (pin := Fir.copyUnits) (pin := Fir.MonadMemory) (pin := Fir.MonadUB) (pin := Fir.MonadChoice) (pin := Fir.Core.CopyKind) (fingerprint := "199355975012138981")
 *Definition: the rule of $`\mathsf{memcpy}` and $`\mathsf{memmove}`.*
 Let a run's memories have the layout entries $`\ell`, and let the run name
 the core's memory $`x` as $`\rho(x)`. For $`\mathsf{memcpy}_N~o~W` or
