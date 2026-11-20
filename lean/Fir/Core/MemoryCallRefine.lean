@@ -59,23 +59,24 @@ namespace Fir.Core
 
 /-- A core op that touches no memory, every core op but `alloca`, the
 loads and stores, `load`, `store`, `loadPtr`, `storePtr`, `loadFloat` and
-`storeFloat`, and `memCopy`, declares no memory effect. -/
+`storeFloat`, `memCopy` and `memSet`, declares no memory effect. -/
 theorem Op.effects_touchesNoMemory (op : Op) (hm : op.touchesMemory = false) :
     (Fir.effects (d := CoreDialect) op).TouchesNoMemory := fun _ => by
   cases op with
-  | alloca | load | store | loadPtr | storePtr | loadFloat | storeFloat | memCopy => cases hm
+  | alloca | load | store | loadPtr | storePtr | loadFloat | storeFloat | memCopy | memSet =>
+    cases hm
   | _ => exact ⟨nofun, nofun, nofun⟩
 
 /-- A core op that declares no memory effect touches no memory: `alloca`
 declares that it allocates in the memory of its result, each load that it
 reads the memory of its pointer, each store that it writes it, and
-`memCopy` that it reads it. -/
+`memCopy` that it reads it, and `memSet` that it writes it. -/
 theorem Op.touchesMemory_false {op : Op} (h : (Fir.effects (d := CoreDialect) op).TouchesNoMemory) :
     op.touchesMemory = false := by
   cases op with
   | alloca _ _ _ _ n => exact ((h n).2.2 (List.mem_singleton_self n)).elim
   | load _ _ _ n => exact ((h n).1 (List.mem_singleton_self n)).elim
-  | store _ _ _ n | storePtr _ _ _ n | storeFloat _ _ _ _ n =>
+  | store _ _ _ n | storePtr _ _ _ n | storeFloat _ _ _ _ n | memSet _ _ _ n =>
     exact ((h n).2.1 (List.mem_singleton_self n)).elim
   | loadPtr _ _ _ n | loadFloat _ _ _ _ n | memCopy _ _ _ n =>
     exact ((h n).1 (List.mem_singleton_self n)).elim
@@ -133,6 +134,7 @@ theorem opsFinite :
     · exact ⟨fun _ => loadFloat_finitelyMany _ _ _ _ _ lay ρ L args, fun h => nomatch h⟩
     · exact ⟨fun _ => storeFloat_finitelyMany _ _ _ _ _ lay ρ L args, fun h => nomatch h⟩
     · exact ⟨fun _ => memCopy_finitelyMany _ _ _ _ lay ρ L args, fun h => nomatch h⟩
+    · exact ⟨fun _ => memSet_finitelyMany _ _ _ _ lay ρ L args, fun h => nomatch h⟩
   | false => ?_
   cases hi : op.readsItems with
   | true =>

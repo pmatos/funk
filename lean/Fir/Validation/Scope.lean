@@ -13,8 +13,9 @@ This chapter gives the rules that hold for every dialect: types, scoping,
 SSA dominance, block arguments, successors, terminators, symbols, isolation
 from above and locations. Each dialect adds rules for its own ops and types,
 a rule over a whole function, rules for the kinds of region and of item
-that it registers, the memory that each of its pointer types names and the
-types that each of its ops carries in its attributes, as the last
+that it registers, the memory that each of its pointer types names, the
+types that each of its ops carries in its attributes and the widths of the
+values that each of its ops writes into a memory's units, as the last
 definition of this section says; the core dialect's rules have a section of their own. A text that does not decode is rejected before
 validation, by the parser (see the text format chapter).
 
@@ -299,6 +300,11 @@ The rules a dialect adds to validation.
   that the core's `alloca` allocates. Validation checks the memory that
   each names, as it checks the memory of every type a function states. An
   op that carries no type lists none, the default.
+* `opUnits` lists the memories whose units an op writes values of, by
+  their numbers in the module's data layout, each with the width of those
+  values, such as the core's `memSet`, which fills units with one value.
+  Validation checks that the layout gives each memory units of that width.
+  An op that writes no values into units lists none, the default.
 -/
 class DialectValidation (d : Dialect) where
   validTy : d.Ty → Prop
@@ -313,8 +319,9 @@ class DialectValidation (d : Dialect) where
     Prop := fun _ _ _ => False
   tyMemory : d.Ty → Option Nat := fun _ => none
   opTypes : d.Op → List d.Ty := fun _ => []
+  opUnits : d.Op → List (Nat × Nat) := fun _ => []
   fieldShape : (Nat → MemLayout) → Nat → d.Ty → Option (Nat × Nat) := fun _ _ _ => none
 export DialectValidation (validTy symbolRefs validOp validFunc regionKindNames validRegion
-  itemKindNames validItem tyMemory opTypes fieldShape)
+  itemKindNames validItem tyMemory opTypes opUnits fieldShape)
 
 end Fir

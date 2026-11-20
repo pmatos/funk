@@ -12,7 +12,8 @@ carries a reserved word, `contract` or `reassoc` (ADR-2026-11-09-1549),
 the rule that a float op that rounds rounds with the mode `rne`
 (ADR-2026-11-11-1801), the rules of `alloca` (ADR-2026-11-14-0915), the
 rules of the loads and stores (ADR-2026-11-14-2316), the rule of a copy
-or a move, `memCopy` (ADR-2026-11-18-2131), the rule of `fieldAddr`,
+or a move, `memCopy`, and of a fill, `memSet` (ADR-2026-11-18-2131), the
+width that a fill asks of its memory's units, the rule of `fieldAddr`,
 which reads the layouts of the op's table (#236), and the
 units and alignment of a field of an aggregate's layout
 (ADR-2026-11-16-1546).
@@ -136,6 +137,16 @@ def _root_.Fir.LayoutRef.admits (l : LayoutRef) (i n : Nat) (indexed : Bool) : B
     | some c => !indexed || c.isSome
     | none => false
 
+/-- The memories whose units an op writes values of, each with the width of
+those values: a fill, `memSet`, writes values of `iV` in the units of its
+memory, so it asks that they be `V` bits wide (the human's ruling on
+#251: a fill writes one unit value, sized to the memory's unit). The
+module's data layout checks it, as it checks the memories that types
+name. No other core op asks a width of a unit. -/
+def Op.unitWidths : Op → List (Nat × Nat)
+  | .memSet _ v _ n => [(n, v)]
+  | _ => []
+
 /-- `call` refers to its callee's symbol, which names a function; no other
 core op refers to a function. `fieldAddr` names a layout, which its own
 rule checks. -/
@@ -227,6 +238,10 @@ The core rules of an op beyond its signature.
   that the module has their memory, and that the length's width is valid,
   as it checks every type. Its text already asks that the two pointers be
   of one memory.
+* `memSet`, a fill, has the ordering `nonatomic`. Its pointer, value and
+  length are values of the function, which validation checks as it checks
+  every type, and the module's data layout checks that the value is as
+  wide as a unit of the pointer's memory (`Op.unitWidths`).
 
 Every other op has no rule beyond its signature.
 -/
@@ -247,7 +262,7 @@ def Op.Valid (ctx : OpContext CoreDialect) : Op → Prop
   | .load o _ a _ | .store o _ a _ | .loadPtr o _ a _ | .storePtr o _ a _
   | .loadFloat o _ _ a _ | .storeFloat o _ _ a _ =>
     o = .nonatomic ∧ ∀ x ∈ a, MemLayout.ValidAlign x
-  | .memCopy _ o _ _ => o = .nonatomic
+  | .memCopy _ o _ _ | .memSet o _ _ _ => o = .nonatomic
   | .fieldAddr s i n w => (ctx.layouts s).map (·.admits i n w.isSome) = some true
   | _ => True
 
@@ -262,6 +277,7 @@ instance : DialectValidation CoreDialect where
   validFunc _ _ _ := True
   tyMemory := Core.Ty.memory
   opTypes := Core.Op.attrTypes
+  opUnits := Core.Op.unitWidths
   fieldShape := Core.Ty.fieldShape
 
 end Fir

@@ -4,6 +4,7 @@ import Fir.Core.FloatConvertLaws
 import Fir.Core.Alloca
 import Fir.Core.FloatAccess
 import Fir.Core.MemCopy
+import Fir.Core.MemSet
 import Fir.Core.FieldAddr
 import Fir.Core.Lawful
 import Fir.Execution.MemoryRuns
@@ -25,8 +26,9 @@ where the run names the core's memory `x` as `ρ x`. An op that touches
 memory reads the entry `lay (ρ x)` of the memory it accesses
 (ADR-2026-11-13-0906). `alloca`'s rule allocates in the memory of its
 result, `load`'s, `loadPtr`'s and `loadFloat`'s read the memory of their
-pointer, `store`'s, `storePtr`'s and `storeFloat`'s write it, and
-`memCopy`'s reads and writes the memory of its two pointers: each is its
+pointer, `store`'s, `storePtr`'s and `storeFloat`'s write it,
+`memCopy`'s reads and writes the memory of its two pointers, and
+`memSet`'s writes the memory of its pointer: each is its
 rule with memory alone, and has no rule in the set monad. The run also
 gives each op the items of its module that ops read (the section on the
 items a run gives each op): `fieldAddr` touches no memory, but its rule
@@ -38,14 +40,14 @@ there, as in the set monad.
 
 Lifting a computation of the set monad into the state layer keeps choice
 and UB, so it maps each rule in the set monad to the same rule with memory.
-So each core op but `alloca`, the loads and stores, `fieldAddr` and
-`memCopy` is tied: it runs with memory by its rule in the set monad and
+So each core op but `alloca`, the loads and stores, `fieldAddr`,
+`memCopy` and `memSet` is tied: it runs with memory by its rule in the set monad and
 keeps the memories. Each obligation with memory of a tied op follows from
 its own tie and its obligation in the set monad, and `alloca`, the loads
-and stores, `fieldAddr` and `memCopy` meet each by their own proofs (the
-sections on the stack allocation, load, store, pointer load, pointer
-store, float load, float store, field address and copy and move
-obligations). No theorem asks that the whole core dialect lift the set monad.
+and stores, `fieldAddr`, `memCopy` and `memSet` meet each by their own
+proofs (the sections on the stack allocation, load, store, pointer load,
+pointer store, float load, float store, field address, copy and move, and
+fill obligations). No theorem asks that the whole core dialect lift the set monad.
 -/
 
 namespace Fir.Core
@@ -122,7 +124,7 @@ theorem denoteIn_mapsDenote (zm : {α : Type} → Op → μ α) (zn : {α : Type
       | .urem _, args => ruleOfEv_map φ hk uremValues args
       | .br, _ | .condBr, _ | .ret _, _ | .unreachable, _ | .call .., _ | .alloca .., _
       | .load .., _ | .store .., _ | .loadPtr .., _ | .storePtr .., _ | .loadFloat .., _
-      | .storeFloat .., _ | .memCopy .., _ | .fieldAddr .., _ => hz _
+      | .storeFloat .., _ | .memCopy .., _ | .memSet .., _ | .fieldAddr .., _ => hz _
     exit := fun
       | .br, _ | .ret _, _ => φ.map_pure _
       | .condBr, .cons c .nil => exitOfEv_map φ hk (condBrExit c)
@@ -135,7 +137,7 @@ theorem denoteIn_mapsDenote (zm : {α : Type} → Op → μ α) (zn : {α : Type
       | .sitofp .., _ | .uitofp .., _ | .fpext .., _ | .fptrunc .., _
       | .ptradd .., _ | .alloca .., _ | .load .., _ | .store .., _ | .loadPtr .., _
       | .storePtr .., _ | .loadFloat .., _ | .storeFloat .., _ | .fptosi .., _
-      | .fptoui .., _ | .memCopy .., _ | .fieldAddr .., _ => hz _ }
+      | .fptoui .., _ | .memCopy .., _ | .memSet .., _ | .fieldAddr .., _ => hz _ }
 
 end
 
@@ -149,7 +151,8 @@ variable {N : Type} {m : Type → Type} [Monad m] [MonadChoice m] [MonadUB m]
 monad with choice, UB and the memory effect on the memories of a run whose
 layout entries are `lay`, where the run names the core's memory `x` as
 `ρ x` and gives each op the items `L`. `alloca` allocates, each load
-loads, each store stores, and `memCopy` copies or moves, by its rule;
+loads, each store stores, `memCopy` copies or moves, and `memSet` fills,
+by its rule;
 `fieldAddr` moves its pointer to the field of the layout that `L` gives;
 every other op's rule is its rule in `Op.denote?`. -/
 def Op.memDenote? (lay : N → MemLayout) (ρ : Mem → N) (L : RunItems)
@@ -171,6 +174,8 @@ def Op.memDenote? (lay : N → MemLayout) (ρ : Mem → N) (L : RunItems)
     | .cons v (.cons p .nil) => storeFloatRule lay ρ e m a n v p
   | .memCopy k _ w n => some fun
     | .cons d (.cons s (.cons l .nil)) => memCopyRule lay ρ k w n d s l
+  | .memSet _ v w n => some fun
+    | .cons p (.cons x (.cons l .nil)) => memSetRule lay ρ v w n p x l
   | .fieldAddr s i _ w => some fun args => pure (fieldAddrResult (L.layout? s) i w args)
   | op => op.denote? (m := m)
 
@@ -287,6 +292,9 @@ theorem memDenoteIn_mapsDenote {μ ν : Type → Type} [Monad μ] [Monad ν] [Mo
       | memCopy k o w n =>
         match args with
         | .cons d (.cons s (.cons l .nil)) => exact memCopyRule_map lay ρ φ hk hl hs k w n d s l
+      | memSet o v w n =>
+        match args with
+        | .cons p (.cons x (.cons l .nil)) => exact memSetRule_map lay ρ φ hk hs v w n p x l
       | fieldAddr => exact φ.map_pure _
       | _ =>
         exact @MonadMorphism.MapsDenote.denote μ ν _ _ φ CoreDialect _ _ (denoteIn @zm)
@@ -314,7 +322,8 @@ instance Core.instDialectMemDenote : DialectMemDenote CoreDialect :=
 namespace Core
 
 /-- Each core op that touches no memory and reads no item of the run, every
-core op but `alloca`, the loads and stores, `fieldAddr` and `memCopy`, runs
+core op but `alloca`, the loads and stores, `fieldAddr`, `memCopy` and
+`memSet`, runs
 with memory by its rule in the set monad and keeps the memories, at every
 layout, naming and record of items. Lifting into the layer keeps choice and
 UB, and maps an op with no rule to one with no outcome. -/
@@ -328,7 +337,8 @@ theorem Op.liftsSetM (op : Op) (hm : op.touchesMemory = false) (hi : op.readsIte
       exact propext ⟨fun h => by rcases h with ⟨_, h, _⟩ | ⟨_, h, _⟩ <;> exact h, False.elim⟩
   obtain ⟨hd, he⟩ := h
   cases op with
-  | alloca | load | store | loadPtr | storePtr | loadFloat | storeFloat | memCopy => cases hm
+  | alloca | load | store | loadPtr | storePtr | loadFloat | storeFloat | memCopy | memSet =>
+    cases hm
   | fieldAddr => cases hi
   | _ => exact ⟨(hd _ args).symm, (he _ args).symm⟩
 

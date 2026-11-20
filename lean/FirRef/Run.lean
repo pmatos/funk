@@ -130,6 +130,100 @@ where
     | .inr e :: _, _ :: _, _, _ => e.elim
     | rest, as, _, _ => .error s!"{as.length} arguments are given for {rest.length} parameters"
 
+/-! # Fills
+
+The spec's `memset` rule builds its `len` units before the store looks at
+the allocation; `memTreeFast` first finds where the store lands and is UB
+at once where it would fault, so a fill out of bounds builds no units
+(`docs/decisions/fir-ref-fast-paths.md#fills`). The `@[csimp]` swap comes
+before the modes below, so their calls of `Core.memTreeDenote` reach it.
+-/
+
+section Fills
+
+open Fir.Core Fir.Memory
+
+variable {N : Type} [DecidableEq N] (lay : N → MemLayout) (ρ : Core.Mem → N)
+
+local notation "TM" => StateT (Memories N (unitsOf lay)) (ChoiceTree Core.Op)
+
+/-- `setLenRule` in the layer over the tree of choices, which first finds
+where the store of a length other than 0 lands, and is UB at once where it
+would fault. -/
+def setLenFast (v n len : Nat) (p : PoisonOr Pointer) (x : PoisonOr (BitVec v)) :
+    TM (HVector toType ([] : List Ty)) :=
+  match p with
+  | .value q => fun S =>
+    if len = 0 then setLenRule (m := TM) lay ρ v n len p x S else
+      match (S.mem (ρ n)).locate q len with
+      | .error f => MonadUB.ub f.reason
+      | .ok _ => setLenRule (m := TM) lay ρ v n len p x S
+  | .poison => setLenRule lay ρ v n len p x
+
+theorem setLenFast_eq (v n len : Nat) (p : PoisonOr Pointer) (x : PoisonOr (BitVec v)) :
+    setLenFast lay ρ v n len p x = setLenRule (m := TM) lay ρ v n len p x := by
+  cases p with
+  | poison => rfl
+  | value q =>
+    funext S
+    simp only [setLenFast]
+    split
+    · rfl
+    · rename_i hlen
+      split
+      · rename_i f hf
+        have hs : S.store (ρ n) q (setUnits (lay (ρ n)) len x) 1 = .error f := by
+          simp only [Memories.store, Memory.storeAligned]
+          rw [Memory.store_eq_error.2 (by simpa [setUnits] using hf)]
+          rfl
+        simp only [setLenRule, hlen, ↓reduceIte]
+        show _ = StateT.map _ (MonadMemory.store (m := TM) (ρ n) q (setUnits (lay (ρ n)) len x) 1) S
+        simp only [StateT.map, MonadMemory.store, hs]
+        rfl
+      · rfl
+
+/-- `memSetRule` in the layer over the tree of choices, by `setLenFast`. -/
+def memSetFast (v w n : Nat) (p : PoisonOr Pointer) (x : PoisonOr (BitVec v)) :
+    PoisonOr (BitVec w) → TM (HVector toType ([] : List Ty))
+  | .value l => setLenFast lay ρ v n l.toNat p x
+  | .poison => MonadChoice.choose w >>= fun l => setLenFast lay ρ v n l.toNat p x
+
+theorem memSetFast_eq (v w n : Nat) (p : PoisonOr Pointer) (x : PoisonOr (BitVec v))
+    (l : PoisonOr (BitVec w)) :
+    memSetFast lay ρ v w n p x l = memSetRule (m := TM) lay ρ v w n p x l := by
+  cases l <;> simp only [memSetFast, memSetRule, setLenFast_eq]
+
+/-- `Op.memDenote?` in the layer over the tree of choices, with `memSet`'s
+rule by `memSetFast`. -/
+def memDenoteFast? (L : RunItems) (op : Core.Op) :
+    Option (HVector toType (Fir.sig (d := CoreDialect) op) →
+      TM (HVector toType (Fir.returnTypes (d := CoreDialect) op))) :=
+  match op with
+  | .memSet _ v w n => some fun
+    | .cons p (.cons x (.cons l .nil)) => memSetFast lay ρ v w n p x l
+  | op => op.memDenote? lay ρ L
+
+/-- `Core.memTreeDenote`, with `memSet`'s rule by `memSetFast`. -/
+@[instance_reducible] def memTreeFast (L : RunItems) : DialectDenote CoreDialect TM :=
+  denoteWith (memDenoteFast? lay ρ L) (fun op => op.memExit? lay ρ)
+    fun op _ => ChoiceTree.noOutcome op
+
+@[csimp] theorem memTreeDenote_eq_memTreeFast : @Core.memTreeDenote = @memTreeFast := by
+  funext N _ lay ρ L
+  unfold Core.memTreeDenote memDenoteIn memTreeFast
+  congr 1
+  funext op
+  cases op with
+  | memSet o v w n =>
+    show some _ = some _
+    congr 1
+    funext args
+    match args with
+    | .cons p (.cons x (.cons l .nil)) => exact (memSetFast_eq lay ρ v w n p x l).symm
+  | _ => rfl
+
+end Fills
+
 /-! # The modes, by the machine
 
 `runBytes` below calls the spec's `Gpu.scripted`, `Gpu.exhaustive`,

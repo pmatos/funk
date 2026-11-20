@@ -8,7 +8,7 @@ from pathlib import Path
 
 import cells
 from cells import Cell, CellError, of_op, results
-from copy_cells import COPY_OPS
+from copy_cells import MEM_OPS
 from firtext import Op
 
 CORE = Path(__file__).resolve().parents[2] / "lean" / "Fir" / "Core"
@@ -84,7 +84,9 @@ def decoded_attrs(text: str, floats: str) -> dict[str, tuple[str, ...]]:
     `decodeLoad` and `decodeStore` read: a load's cell is the width of its
     result, and a store's the width of its value. Nor are the layout and
     field that `decodeFieldAddr` reads for `fieldaddr`: its cell is the
-    width of its index. Any other arm is not known."""
+    width of its index. Nor is the ordering that `decodeMemCopy` and
+    `decodeMemSet` read: a copy's, a move's and a fill's cell is the width
+    of its length. Any other arm is not known."""
     body = definition(text, "Op.decode")
     arms = dict(re.findall(r'\n  \| "(\w+)" =>(.*?)(?=\n  \| |\Z)', body, re.DOTALL))
     for name in re.findall(r'\("(\w+)", \.\w+\)', definition(text, "plainBinOps")):
@@ -108,6 +110,7 @@ def decoded_attrs(text: str, floats: str) -> dict[str, tuple[str, ...]]:
         "decodeLoad": ("",),
         "decodeStore": ("",),
         "decodeMemCopy": ("",),
+        "decodeMemSet": ("",),
         "decodeFieldAddr": ("",),
     }
     by_ctor = {
@@ -161,7 +164,7 @@ class Tests(unittest.TestCase):
             r'=> "(\w+)"',
             definition(MEM_COPY_TEXT.read_text(encoding="utf-8"), "CopyKind.name"),
         )
-        self.assertEqual(sorted(names), sorted((*cells.OPS, *COPY_OPS)))
+        self.assertEqual(sorted(names), sorted((*cells.OPS, *MEM_OPS)))
         preds = re.findall(r"\.(\w+)", definition(text, "Pred.all").split(":=")[1])
         self.assertEqual(tuple(preds), cells.PREDS)
         fpreds = re.findall(r"\.(\w+)", definition(text, "FPred.all").split(":=")[1])
@@ -181,7 +184,7 @@ class Tests(unittest.TestCase):
                 else cells.FLOAT_CONVERSIONS.get(
                     op, cells.AT_WIDTH.get(op, cells.AT_FORMAT.get(op, ("",)))
                 )
-                for op in (*cells.OPS, *COPY_OPS)
+                for op in (*cells.OPS, *MEM_OPS)
             },
         )
         flagged = flagged_ops(text)
@@ -224,7 +227,7 @@ class Tests(unittest.TestCase):
             flagged["loadAttrs o a"],
             {"load", "store", "loadPtr", "storePtr", "loadFloat", "storeFloat"},
         )
-        self.assertEqual(flagged["loadAttrs o none"], {"memCopy"})
+        self.assertEqual(flagged["loadAttrs o none"], {"memCopy", "memSet"})
         self.assertEqual(flagged["[]"], set())
 
     def test_the_ops_of_the_core_dialect(self):

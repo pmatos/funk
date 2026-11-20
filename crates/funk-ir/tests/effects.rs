@@ -74,7 +74,7 @@ fn effects_of(reg: &Registry, c: &Case) -> Effects {
 fn each_op_has_the_effects_of_its_lean_declaration() {
     let reg = in_tree();
     let cs = cases();
-    assert_eq!(cs.len(), 110);
+    assert_eq!(cs.len(), 113);
     for c in &cs {
         assert_eq!(effects_of(&reg, c).to_string(), c.effects, "{}", c.name);
     }
@@ -113,10 +113,11 @@ fn the_cases_pin_every_op_and_every_flag() {
             }
             // alloca's words are its kind and its type, gpu's a dimension or
             // the type of gpu.work_group_alloca, and load's, store's,
-            // memcpy's and memmove's their ordering, which change no set: an
-            // allocation allocates in its result's memory, load reads its
-            // pointer's, store writes it, and a copy or move does both.
-            let ordered = ["alloca", "load", "store", "memcpy", "memmove"];
+            // memcpy's, memmove's and memset's their ordering, which change
+            // no set: an allocation allocates in its result's memory, load
+            // reads its pointer's, store and a fill write it, and a copy or
+            // move does both.
+            let ordered = ["alloca", "load", "store", "memcpy", "memmove", "memset"];
             if ordered.contains(&op.name.as_str()) || gpu_ops.contains(&op.name) {
                 flags.clear();
             }

@@ -82,6 +82,7 @@ import FirTest.Load
 import FirTest.Store
 import FirTest.MemoryCopy
 import FirTest.MemCopy
+import FirTest.MemSet
 import FirTest.PointerAccess
 import FirTest.FloatAccess
 import FirTest.FieldAddr
