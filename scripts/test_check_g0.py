@@ -226,6 +226,26 @@ class Rules(unittest.TestCase):
         moved = {CORE_TEXT: core, "lean/Fir/Core/Report.lean": generic}
         self.assertEqual(problems(tree(self, moved)), [])
 
+    def test_a_fast_math_flag_written_alone_is_a_core_word(self):
+        # The flags are words of FloatOpText.lean, which Text.lean writes the
+        # float ops with, as on the Rust side (`FAST_MATH_FLAGS`).
+        flags = "lean/Fir/Core/FloatOpText.lean"
+        self.assertIn(flags, CORE_TEXT_PARTS)
+        core = 'def splitFlags := takeWord "nnan" (takeWord "reassoc" as)\n'
+        generic = (
+            'def isFlag (w : String) : Bool := w == "nnan" || w == "reassoc"\n'
+            'def why : String := "a nnan flag"\n'
+        )
+        root = tree(self, {flags: core, "lean/FirRef/Decode/Flags.lean": generic})
+        self.assertLessEqual({"nnan", "reassoc"}, core_words(root))
+        self.assertEqual(
+            problems(root),
+            [
+                'lean/FirRef/Decode/Flags.lean:1: writes the core dialect\'s word "nnan"',
+                'lean/FirRef/Decode/Flags.lean:1: writes the core dialect\'s word "reassoc"',
+            ],
+        )
+
     def test_corollary_files_may_name_the_core_dialect_but_not_write_its_words(self):
         text = 'import Fir.Core.TextLaws\ntheorem Core.x : "add" = "add" := rfl\n'
         found = problems(tree(self, {"lean/Fir/Text/PrintParse.lean": text}))
@@ -378,6 +398,17 @@ class Repository(unittest.TestCase):
                 "nonatomic",
                 "seq_cst",
                 "store",
+                "f16",
+                "bf16",
+                "f32",
+                "f64",
+                "f128",
+                "float",
+                "nnan",
+                "ninf",
+                "nsz",
+                "contract",
+                "reassoc",
             },
             core_words(),
         )
