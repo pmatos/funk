@@ -197,9 +197,10 @@ yet. Memory is a state layer over the way of computing
   each memory name, with a unit width per name, and a stack of frames. The
   semantics with memory takes each memory's layout entry and gives the
   memories the units of their entries (`unitsOf lay`). A frame lists the
-  stack allocations its call made.
-- `MonadMemory` gives allocating, freeing, loading and storing on a named
-  memory, each load and store with its alignment, and a faulting access,
+  stack allocations its call made. The memories also count the integers
+  turned back into pointers (`semantics-m1-addresses.md`).
+- `MonadMemory` gives allocating, freeing, loading, storing, exposing and
+  turning an integer back into a pointer on a named memory, each load and store with its alignment, and a faulting access,
   misaligned included, is UB. An allocation records its kind and
   its alignment in units, which refinement and the effect obligations
   compare.

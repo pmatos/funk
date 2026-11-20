@@ -68,8 +68,10 @@ resolver ends in UB, which is not angelic.
 :::readable Fir.Func.angelicBehaviour_of_observable Fir.Func.angelicBehaviour_of_noUB (fingerprint := "9178524160503808562")
 *Theorems: a run under one policy and resolver.* Each outcome of a run
 under the policies and resolvers of its items is one of the spec's when
-that resolver is kept, and so when the run never ends in UB, as a run of
-`fir-ref` under the canonical policy and resolver may.
+that resolver is kept, and so when those runs never end in UB, on any
+path at any budget of fuel. So the outcomes of `fir-ref`, under the
+canonical policy and resolver, are the spec's when its runs never end in
+UB; when they do, another resolver may avoid the UB.
 :::
 
 :::readable Fir.Func.angelicBehaviour_isRefinedBy Fir.Func.angelicBehaviour_isRefinedBy_of_each (fingerprint := "12581916420485410482")

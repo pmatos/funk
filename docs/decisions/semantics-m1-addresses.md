@@ -214,8 +214,10 @@ angel chooses over whole runs. `Func.angelicBehaviour` is the spec's
 behaviour with memory: under each policy, the resolvers whose runs never
 end in UB, when there is one, and every resolver otherwise. Rejected: a
 union over every resolver, as `Func.memBehaviour` is over policies, under
-which one resolver that ends in UB would make the program UB. A run of
-`fir-ref` that never ends in UB gives outcomes of the spec. A refinement
+which one resolver that ends in UB would make the program UB. When the
+runs of `fir-ref` never end in UB, on any path at any budget, their
+outcomes are the spec's; when they do, another resolver may avoid the UB,
+so from stage 3 `fir-ref` may report UB where the spec has none. A refinement
 under each policy and resolver lifts to the spec's behaviour when the
 target ends in UB under each resolver under which the source does
 (`Func.angelicBehaviour_isRefinedBy_of_each`), and in general when each

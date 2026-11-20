@@ -42,9 +42,10 @@ and every budget of fuel runs under it. Rejected: a union over every
 resolver, under which one resolver that ends in UB would make the program
 UB, which is not angelic.
 
-`fir-ref` runs under the canonical resolver. When those runs never end in
-UB, each of their outcomes is one of the spec's; when they do, an
-other resolver may avoid it. A refinement that holds under each policy and
+`fir-ref` runs under the canonical resolver. When its runs never end in
+UB, on any path at any budget of fuel, each of their outcomes is one of
+the spec's; when one does, another resolver may avoid it, and the spec
+then drops the canonical one. A refinement that holds under each policy and
 resolver lifts to the spec's behaviour when the target ends in UB under
 each resolver under which the source does: without that, a target could
 keep a resolver that the source drops.
@@ -101,9 +102,9 @@ theorem Func.angelicBehaviour_of_observable {M : Module d} {f : Func d}
     f.angelicBehaviour lay ρ L M a o :=
   ⟨L.addrs, L.resolvers, hk, h⟩
 
-/-- When a run under its items never ends in UB, as a run of `fir-ref` under
-the canonical policy and resolver may, each of its outcomes is one of the
-spec's. -/
+/-- When the runs under the items never end in UB, on any path at any budget,
+each of their outcomes is one of the spec's: so are those of `fir-ref`,
+under the canonical policy and resolver, when its runs never end in UB. -/
 theorem Func.angelicBehaviour_of_noUB {M : Module d} {f : Func d}
     {a : HVector toType (f.params.map (·.2))} {o : Outcome (List (DVal d))}
     (hu : ∀ r, ¬ observable (f.memRuns lay ρ L M a) (.ub r))
