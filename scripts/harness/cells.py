@@ -62,7 +62,8 @@ has neither operands nor attributes, is a cell at each width of its result
   and one with no index, at the side's field widths
   (`pointer_cells.py`, #236).
 - `memcpy`, `memmove` and `memset` are a cell for each width of their
-  length, on the interpreter-only side (`copy_cells.py`, #234).
+  length, at the side's pointer widths, on both sides, since the backend
+  lowers them to funk's own runtime routines (`copy_cells.py`, #234).
 """
 
 from cell_types import Cell, CellError, Row, Table

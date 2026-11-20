@@ -8,8 +8,9 @@
 # length past the allocation, however long: 2^63 bytes into an allocation of
 # 4 is UB at once. A poison length chooses its value: an i1 over one byte is
 # never UB, and an i8 is UB where its value is. A length may be an integer
-# of any width. The backend does not lower memset until stage 4 of #234, so
-# each test is interpreter-only.
+# of any width. These tests pass poison pointers, reach UB or take lengths of
+# widths the backend does not lower, so each is interpreter-only;
+# memops-native.toml runs memset as native code.
 tests = [
   { func = "@fill", args = ["1"], expect = ["16843009"] },
   { func = "@fill", args = ["-1"], expect = ["-1"] },
