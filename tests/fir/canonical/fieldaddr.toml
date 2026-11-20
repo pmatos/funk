@@ -5,8 +5,10 @@
 # by an index of each width. An index past the field's elements is an
 # address, as ptradd gives one: storing through it is UB only when it
 # leaves the allocation (Q3 A). @wide is a layout of a memory of 16-bit
-# units, where a pointer takes two units. The backend does not lower
-# fieldaddr yet, so each test is interpreter-only (stage 4 of #236).
+# units, where a pointer takes two units. The elements of @long_doubles
+# are 16 units apart, each 10-unit float(15, 64) rounded up to its
+# alignment (Q2 B). The backend lowers neither i24 nor float(15, 64), nor a
+# memory of 16-bit units, so each test is interpreter-only.
 tests = [
   { func = "@pair_fields", args = ["7", "-9"], expect = ["7", "-9"] },
   { func = "@elements", expect = ["17", "16", "15", "14"] },
@@ -15,4 +17,5 @@ tests = [
   { func = "@element", args = ["5", "4"], expect = "ub" },
   { func = "@element", args = ["5", "-1"], expect = "ub" },
   { func = "@wide_element", args = ["-300", "2"], expect = ["-300"] },
+  { func = "@long_double_stride", args = ["2.5"], expect = ["2.5"] },
 ]

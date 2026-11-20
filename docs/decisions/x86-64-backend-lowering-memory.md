@@ -2,8 +2,9 @@
 
 This page continues [x86-64-backend-lowering.md](x86-64-backend-lowering.md).
 It says what holds today for how the backend lowers pointers and the memory
-ops of #231, `ptradd`, `alloca`, `load` and `store`, and the copies, moves and
-sets of #234, `memcpy`, `memmove` and `memset`. It is the record: when
+ops of #231, `ptradd`, `alloca`, `load` and `store`, the field address of
+#236, `fieldaddr`, and the copies, moves and sets of #234, `memcpy`,
+`memmove` and `memset`. It is the record: when
 this page and an ADR disagree, the page wins, and the ADR is fixed or deleted
 (ADR-2026-11-09-1610). The ops' meaning is on
 [semantics-m1-memory.md](semantics-m1-memory.md) and
@@ -41,6 +42,31 @@ half of an `i128`. The address wraps at 64 bits where the spec's offset does
 not; the two agree on every access the spec allows, and an access the spec
 does not allow is UB
 ([semantics-m1-memory.md](semantics-m1-memory.md#memory)).
+
+## Field addresses
+
+`fieldaddr @s i %p` adds the offset of the field `i` of the layout `@s` to
+the address, with one `leaq`, or a `movabsq` and an `addq` for an offset
+past 32 bits, and nothing for offset 0. With an index, `fieldaddr @s i %p,
+%k` first adds the index, read as signed as `ptradd`'s offset is and the low
+half of an `i128`, times the field's stride: the units of one value of its
+type rounded up to its alignment (the human's ruling of 2026-11-16 on #236,
+Q2 B), one `imulq` by an immediate, since a type of at most `2^24 - 1` bits
+takes at most 2^21 bytes. The layout is the first of the module's own table
+with that symbol, the one validation checked the op against. Its memory is
+the pointer's, so its units are bytes, or the pointer is reported where it
+is defined, as the human ruled on 2026-11-15 (#399) for every memory of
+wider units. The field's type is no value of the op, so a field of a type
+the backend does not lower, such as `i24`, still has its address computed
+(`lower/field_addr.rs`).
+
+The address wraps at 64 bits where the spec's offset does not, as for
+`ptradd`; the two agree on every access the spec allows. An index outside
+the field's elements gives an address and no fault, as the spec gives one
+(Q3 A). The differential harness checks struct and array programs against
+`fir-ref` (`tests/fir/canonical/fieldaddr-programs.fir`). Rejected: a
+`leaq` with a scaled index, which scales by 1, 2, 4 or 8 only, where a
+stride may be any number of bytes.
 
 ## Loads and stores
 

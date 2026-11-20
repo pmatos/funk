@@ -45,7 +45,8 @@
 //!
 //! A pointer is a 64-bit address in one slot, of a memory whose layout
 //! entry x86-64 realises: 8-bit units and 64-bit pointers. `ptradd`, `load`
-//! and `store` work on addresses (`memory.rs`), `memcpy`, `memmove` and
+//! and `store` work on addresses (`memory.rs`), `fieldaddr` adds a field's
+//! offset and its elements' strides (`field_addr.rs`), `memcpy`, `memmove` and
 //! `memset` call funk's own runtime routines (`memops.rs`), and `alloca`
 //! moves `%rsp` below the frame at run time, which the stack need counts
 //! (`alloca.rs`, `docs/decisions/x86-64-backend-lowering-memory.md`).
@@ -62,6 +63,7 @@ mod control;
 mod div;
 mod farith;
 mod fcompare;
+mod field_addr;
 mod float_convert;
 mod float_to_int;
 mod freeze;
@@ -77,7 +79,7 @@ use std::collections::{HashMap, HashSet};
 
 use funk_ir::dialects::core::{CoreType, core_type};
 use funk_ir::text::{print_op, print_symbol};
-use funk_ir::{Block, Def, Diagnostic, Func, MemLayout, Module, Op};
+use funk_ir::{Block, Def, Diagnostic, Func, MemLayout, Module, Op, SymbolTable};
 
 pub use call::callee;
 pub use stack::Need;
@@ -136,6 +138,8 @@ pub struct Cx<'f> {
     helpers: helpers::Used,
     /// The module's data layout.
     layout: &'f [MemLayout],
+    /// The module's own symbols, which name its aggregates' layouts.
+    symbols: &'f SymbolTable<'f>,
     /// The labels of the blocks on a cycle of branches, when the function
     /// has an `alloca` (`alloca::looping`).
     looping: HashSet<&'f str>,
@@ -297,6 +301,7 @@ fn lowering(name: &str) -> Option<Lower> {
         .or_else(|| float_convert::lowering(name))
         .or_else(|| float_to_int::lowering(name))
         .or_else(|| memory::lowering(name))
+        .or_else(|| field_addr::lowering(name))
         .or_else(|| memops::lowering(name))
         .or_else(|| alloca::lowering(name))
 }
@@ -318,12 +323,13 @@ pub fn module(m: &Module) -> Result<Lowered, Vec<Diagnostic>> {
     let mut functions = Vec::new();
     let mut helpers = helpers::Used::default();
     let mut callees = HashMap::new();
+    let symbols = m.symbols();
     for (i, f) in m.funcs().enumerate() {
         callees.entry(f.name.as_str()).or_insert(i);
     }
     asm.directive(format_args!(".text"));
     for (i, f) in m.funcs().enumerate() {
-        if let Some((code, facts, used)) = func(i, f, &callees, &m.layout, &mut out) {
+        if let Some((code, facts, used)) = func(i, f, &callees, &m.layout, &symbols, &mut out) {
             asm.raw(&code);
             functions.push(facts);
             for (all, used) in helpers.iter_mut().zip(used) {
@@ -365,6 +371,7 @@ fn func<'f>(
     f: &'f Func,
     callees: &'f HashMap<&'f str, usize>,
     layout: &'f [MemLayout],
+    symbols: &'f SymbolTable<'f>,
     out: &mut Vec<Diagnostic>,
 ) -> Option<(String, stack::Function, helpers::Used)> {
     let entry = f.body.blocks.first();
@@ -389,6 +396,7 @@ fn func<'f>(
         stack,
         helpers: helpers::Used::default(),
         layout,
+        symbols,
         looping: alloca::looping(f),
         block: "",
     };

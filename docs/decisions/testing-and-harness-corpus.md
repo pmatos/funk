@@ -129,10 +129,12 @@ float op.
 The field address `fieldaddr` has a table of its own (`pointer_cells.FIELDS`,
 #236). It has one cell with no index and one at each width of its index;
 its layout and field are no part of a cell, just as a callee is not. A side
-has the cells at its field widths (`cells.FIELD_*`). The backend does not
-lower `fieldaddr` yet, so only the interpreter-only side has them, filled
-by `tests/fir/canonical/fieldaddr.fir`. Stage 4 of #236 gives the
-differential side its widths.
+has the cells at its field widths (`cells.FIELD_*`). The backend lowers
+`fieldaddr` at every index width it lowers (stage 4 of #236), so both
+sides have them: the differential side's are filled by
+`tests/fir/canonical/fieldaddr-programs.fir`, and the interpreter-only
+side's by `fieldaddr.fir`, `fieldaddr-programs-memories.fir` and the
+interpreter-only tests of `fieldaddr-programs.fir`.
 
 A test exercises each op of the function it runs and of every function it calls,
 directly or through others. A function of a nested module, such as a kernel
