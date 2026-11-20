@@ -75,7 +75,7 @@ characters. The four are proved together, since ops hold regions, which
 hold blocks of ops.
 :::
 
-:::readable Fir.Func.spells Fir.Item.spells Fir.Item.spellsList (pin := Fir.Func.print) (pin := Fir.Item.print) (pin := Fir.Item.printList) (fingerprint := "11783769898233631886")
+:::readable Fir.Func.spells Fir.Item.spells Fir.Item.spellsList (pin := Fir.Func.print) (pin := Fir.Item.print) (pin := Fir.Item.printList) (fingerprint := "5947654041831721123")
 *Theorems: a printed function, an item, and items, spell their tokens
 before any characters.* For every dialect with a text format and every
 indentation $`n`:
@@ -87,8 +87,8 @@ indentation $`n`:
   line feed, its blocks, $`n` spaces, `}` and a line feed;
 * so does every item whose tokens can all be written: a function as
   above, an item of a dialect's kind by the theorem for such items, an
-  aggregate's layout by that theorem for the item of kind `aggregate` that
-  writes it, and a nested module, printed as $`n` spaces, `module`, a space, its symbol, `()`, ` {`, a line
+  aggregate's layout and a global by that theorem for the item of kind
+  `aggregate` or `data` that writes it, and a nested module, printed as $`n` spaces, `module`, a space, its symbol, `()`, ` {`, a line
   feed, its dialect set and its items two spaces deeper, $`n` spaces, `}`
   and a line feed;
 * every list of items whose tokens can all be written, each printed then

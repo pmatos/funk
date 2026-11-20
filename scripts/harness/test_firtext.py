@@ -138,10 +138,18 @@ class Tests(unittest.TestCase):
         )
         self.assertEqual(list(read(text)), ["@f"])
 
+    def test_a_global_is_skipped(self):
+        text = (
+            "data @g() size(16) align(8) constant export addr(@g) units(1, 2) "
+            "zeros(6) {\n}\n\n"
+            "func @f(%p: ptr) {\n^e:\n  ret @0\n}\n\nlocs {\n  @0 = unknown\n}\n"
+        )
+        self.assertEqual(list(read(text)), ["@f"])
+
     def test_texts_it_cannot_read(self):
         for text, needle in [
             ("func @f() {\n^e:\n  ret %x @0\n}\nlocs {\n}\n", "%x is not defined"),
-            ("global @g() {\n}\nlocs {\n}\n", "an item of kind global"),
+            ("struct @g() {\n}\nlocs {\n}\n", "an item of kind struct"),
             ("module @m() {\n  func @f() {\n", "the end: expected }"),
             ("module @m() {\n", "the end: expected }"),
             ("aggregate @a() memory(0) size(1) align(1) {\n", "the end: expected }"),

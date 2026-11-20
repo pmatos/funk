@@ -15,8 +15,9 @@ float is an attribute already, written as a float literal token. A nested
 symbol reference needs a new token: a change to the tokens of the previous
 section.
 
-* An item's kind says what it is. The core's kinds are `func`, `module`
-  and `aggregate`, an aggregate's layout (below), so a function is written
+* An item's kind says what it is. The core's kinds are `func`, `module`,
+  `aggregate`, an aggregate's layout (below), and `data`, a global
+  (`Fir.Text.GlobalText`), so a function is written
   as `func @sum(%n: i32) -> i32 { ... }` and a nested module as
   `module @dev() { ... }`. A `func` has no
   attributes, and its body is its blocks. A `module` has no parameters,

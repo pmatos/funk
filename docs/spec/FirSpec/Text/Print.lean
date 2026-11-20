@@ -14,7 +14,7 @@ changes under it.
 
 #doc (Manual) "The canonical printer: readable blocks" =>
 
-:::moduleDocs (fingerprint := "9803841250079739534")
+:::moduleDocs (fingerprint := "4176489267812084703")
 :::
 
 :::readable Fir.Attr.print (pin := Fir.Text.quote) (pin := Fir.Text.printInt) (pin := Fir.Text.printSymbol) (fingerprint := "470254955115097083")
@@ -103,7 +103,7 @@ So `toy.cell @c() -> toy.flag 1 {`, then `}` on the next line, is an item
 of the kind `toy.cell` (ADR-2026-11-09-1543).
 :::
 
-:::readable Fir.Func.print Fir.printDialects Fir.Item.print Fir.Item.printList (pin := Fir.Text.printSymbol) (fingerprint := "15197532613295899672")
+:::readable Fir.Func.print Fir.printDialects Fir.Item.print Fir.Item.printList (pin := Fir.Text.printSymbol) (fingerprint := "2893342539488743545")
 *Definition: a function, a dialect set, and items, in text.* A function at
 the indentation $`n`, with the symbol $`s`, the parameters $`p^*`, the
 result types $`t_1, \dots, t_m` and the body $`b^*`, is written:
@@ -124,7 +124,8 @@ $`k = 0`.
 An item that is a function is written as that function, an item of a
 dialect's kind as that item, and an aggregate's layout as the item of kind
 `aggregate` that writes it, with no parameters or results and its
-attributes. A nested module
+attributes, and a global as the item of kind `data` that writes it, in the
+same way. A nested module
 with the symbol $`s`, the dialect set $`x^*` and the items $`i^*`, at the
 indentation $`n`, is written as $`n` spaces, `module `,
 $`\mathrm{printsym}(s)`, `() {` and a line feed; then its dialect set and
