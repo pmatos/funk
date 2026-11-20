@@ -19,8 +19,8 @@ use super::{ParseError, TextPos};
 use crate::ir::names::is_dialect_word;
 use crate::ir::tree::Nest;
 use crate::ir::{
-    Aggregate, AggregateFault, Attr, Def, DialectItem, Func, Item, MemLayout, Module, NestedModule,
-    Op, Part, Region, Type,
+    Aggregate, AggregateFault, Attr, Def, DialectItem, Func, Global, GlobalFault, Item, MemLayout,
+    Module, NestedModule, Op, Part, Region, Type,
 };
 use crate::registry::{OpTypes, Registry, TypeCheck};
 
@@ -122,11 +122,12 @@ fn item(mut s: SItem, reg: &Registry) -> Result<Decoded, ParseError> {
             Ok(Decoded::Module(m, body))
         }
         "aggregate" => aggregate_item(s, reg).map(Decoded::Item),
+        "data" => global_item(s).map(Decoded::Item),
         kind if is_dialect_word(kind) => dialect_item(s, reg).map(Decoded::Item),
         _ => err(
             s.kind_pos,
             format!(
-                "unknown item kind {}: the kinds are func, module, aggregate and the words of dialects",
+                "unknown item kind {}: the kinds are func, module, aggregate, data and the words of dialects",
                 s.kind
             ),
         ),
@@ -136,13 +137,21 @@ fn item(mut s: SItem, reg: &Registry) -> Result<Decoded, ParseError> {
 /// An aggregate's layout (`decodeAggregate`, ADR-2026-11-16-1546): no
 /// parameters or results, an empty body, and attributes that decode, each
 /// field's type through the registry.
-fn aggregate_item(mut s: SItem, reg: &Registry) -> Result<Item, ParseError> {
+/// An item of a core kind that has no signature, such as an aggregate's
+/// layout or a global, `what` it is: an error at its first parameter or
+/// result, if it has one.
+fn no_signature(s: &SItem, what: &str) -> Result<(), ParseError> {
     if let Some((_, at)) = s.params.first() {
-        return err(at.name, "an aggregate has no parameters");
+        return err(at.name, format!("{what} has no parameters"));
     }
     if let Some((_, pos)) = s.results.first() {
-        return err(*pos, "an aggregate has no results");
+        return err(*pos, format!("{what} has no results"));
     }
+    Ok(())
+}
+
+fn aggregate_item(mut s: SItem, reg: &Registry) -> Result<Item, ParseError> {
+    no_signature(&s, "an aggregate")?;
     let empty = matches!(&s.body, SBody::Blocks(blocks, _) if blocks.is_empty());
     if s.attrs.len() >= 3 && !empty {
         return err(s.kind_pos, "an aggregate has an empty body");
@@ -182,6 +191,42 @@ fn aggregate_item(mut s: SItem, reg: &Registry) -> Result<Item, ParseError> {
     };
     Ok(Item::Aggregate(a))
 }
+
+/// A global (`decodeGlobal`, ADR-2026-11-09-1546): no parameters or
+/// results, an empty body, and attributes that decode.
+fn global_item(mut s: SItem) -> Result<Item, ParseError> {
+    no_signature(&s, "a global")?;
+    if !matches!(&s.body, SBody::Blocks(blocks, _) if blocks.is_empty()) {
+        return err(s.kind_pos, "a global has an empty body");
+    }
+    let (attrs, positions): (Vec<Attr>, Vec<TextPos>) =
+        std::mem::take(&mut s.attrs).into_iter().unzip();
+    let at = |i: usize| positions.get(i).copied().unwrap_or(s.kind_pos);
+    match Global::decode(std::mem::take(&mut s.name), &attrs) {
+        Ok(g) => Ok(Item::Global(g)),
+        Err(GlobalFault::Header) => err(
+            s.kind_pos,
+            "a global writes size(S) and align(A), then constant, export and its initializer",
+        ),
+        Err(GlobalFault::Memory) => err(
+            at(0),
+            "a global writes memory(N) first, N from 1 to 2^64 - 1, and no memory for memory 0",
+        ),
+        Err(GlobalFault::Size(i)) => err(
+            at(i),
+            "a global writes size(S) after its memory, S at most 2^64 - 1",
+        ),
+        Err(GlobalFault::Align(i)) => err(
+            at(i),
+            "a global writes align(A) after its size, A at most 2^64 - 1",
+        ),
+        Err(GlobalFault::Piece(i)) => err(at(i), NOT_A_PIECE),
+    }
+}
+
+const NOT_A_PIECE: &str = "not a piece of a global's initializer, which is written \
+    units(U, ...), zeros(N), addr(@s) or addr(@s, K), each number but a unit at most \
+    2^64 - 1 and K not 0";
 
 const NOT_A_FIELD: &str = "not a field of an aggregate's layout, which is written \
     field(offset, type) or field(offset, type, count), each number at most 2^64 - 1";

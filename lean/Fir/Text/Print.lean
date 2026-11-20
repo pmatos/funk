@@ -1,4 +1,4 @@
-import Fir.Text.Grammar
+import Fir.Text.GlobalText
 
 /-!
 The printer fixes the one spelling of every module: printing what the
@@ -27,7 +27,9 @@ is:
   on the next line, its closing `}` at its indentation
   (ADR-2026-11-09-1543), and an aggregate's layout written in the same way,
   with the kind `aggregate`, no parameters or results, and its memory,
-  size, alignment and fields as attributes (ADR-2026-11-16-1546);
+  size, alignment and fields as attributes (ADR-2026-11-16-1546), and a
+  global with the kind `data`, its attributes as `Global.attrs` writes
+  them (ADR-2026-11-09-1546);
 * one empty line after each item, then the location table, its entries
   indented by two spaces, in the order they are stored;
 * a line feed at the end of every line, the last included, and no trailing
@@ -159,6 +161,7 @@ def Item.print (n : Nat) : Item d → String
       Item.printList (n + 2) is ++ indent n ++ "}\n"
   | .dialect i => i.print n
   | .aggregate a => a.item.print n
+  | .global g => (g.item (d := d)).print n
 
 /-- Items at indentation `n`, each followed by an empty line. -/
 def Item.printList (n : Nat) : List (Item d) → String

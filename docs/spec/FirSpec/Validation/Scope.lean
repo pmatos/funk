@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Scope and symbols: readable blocks" =>
 
-:::moduleDocs (fingerprint := "10270739387761515840")
+:::moduleDocs (fingerprint := "9489635421931241664")
 :::
 
 :::readable Fir.Func.blocks Fir.Region.allBlocks Fir.Block.allBlocks Fir.Operation.regionBlocks Fir.Func.allBlocks (fingerprint := "9127946111391752751")
@@ -108,7 +108,7 @@ A valid module has one function for each symbol. A call is valid only when
 the symbol table gives its symbol the type the call states.
 :::
 
-:::readable Fir.SymbolTable Fir.SymbolTable.funcs Fir.SymbolTable.dialectItems Fir.SymbolTable.aggregates Fir.SymbolTable.symbols (fingerprint := "13060690585010064588")
+:::readable Fir.SymbolTable Fir.SymbolTable.funcs Fir.SymbolTable.dialectItems Fir.SymbolTable.aggregates Fir.SymbolTable.globals Fir.SymbolTable.symbols (fingerprint := "17791131167039873492")
 *Definition: a symbol table of a module.* A module nested in another is a
 symbol table of its own, with its own dialect set (ADR-2026-11-10-1510). A
 _symbol table_ $`T` is a dialect set $`\mathrm{dialects}(T)` and a list of
@@ -116,29 +116,30 @@ items $`\mathrm{items}(T)`: those of a module, or of a module nested in
 one. Its functions $`\mathrm{funcs}(T)` are the items of $`T` that are
 functions, in order; the functions of a nested module are those of its own
 table. Its items of a dialect's kind $`\mathrm{ditems}(T)` are the items
-of $`T` of a kind that a dialect registers, in order, and its aggregates'
+of $`T` of a kind that a dialect registers, in order, its aggregates'
 layouts $`\mathrm{aggregates}(T)` are the layouts among its items, in
-order. Its symbol table
+order, and its globals $`\mathrm{globals}(T)` are the globals among its
+items, in order. Its symbol table
 $`\mathrm{symtab}_T(s)` is the type of the first
 function of $`T` whose symbol is $`s`, as for a module:
 
 $$`\mathrm{symtab}_T(s) = \mathrm{type}(g)`
 
 where $`g` is the first function of $`\mathrm{funcs}(T)` with the symbol
-$`s`. The symbol of a nested module, of an item of a dialect's kind or of
-an aggregate's layout names no function, so no op refers to it as a
+$`s`. The symbol of a nested module, of an item of a dialect's kind, of
+an aggregate's layout or of a global names no function, so no op refers to it as a
 callee.
 :::
 
-:::readable Fir.Item.tables Fir.Item.tablesIn Fir.Module.table Fir.Module.tables (fingerprint := "18417648986635413284")
+:::readable Fir.Item.tables Fir.Item.tablesIn Fir.Module.table Fir.Module.tables (fingerprint := "15088554108936824820")
 *Definition: the symbol tables of a module.* The tables that an item
-holds, at any depth, are none for a function, an item of a dialect's kind
-or an aggregate's layout, and for a nested module with
+holds, at any depth, are none for a function, an item of a dialect's
+kind, an aggregate's layout or a global, and for a nested module with
 the dialect set $`D` and the items $`I`, its own table $`(D, I)`, then the
 tables that $`I` holds. The tables that a list of items holds are those of
 each item, in order:
 
-$$`\begin{aligned} \mathrm{tables}(\mathsf{func}~f) &= \epsilon \\ \mathrm{tables}(\mathsf{dialect}~i) &= \epsilon \\ \mathrm{tables}(\mathsf{aggregate}~a) &= \epsilon \\ \mathrm{tables}(\mathsf{module}~s~D~I) &= (D, I) \cdot \mathrm{tables}^*(I) \\ \mathrm{tables}^*(i_1 \dots i_n) &= \mathrm{tables}(i_1) \dots \mathrm{tables}(i_n) \end{aligned}`
+$$`\begin{aligned} \mathrm{tables}(\mathsf{func}~f) &= \epsilon \\ \mathrm{tables}(\mathsf{dialect}~i) &= \epsilon \\ \mathrm{tables}(\mathsf{aggregate}~a) &= \epsilon \\ \mathrm{tables}(\mathsf{global}~g) &= \epsilon \\ \mathrm{tables}(\mathsf{module}~s~D~I) &= (D, I) \cdot \mathrm{tables}^*(I) \\ \mathrm{tables}^*(i_1 \dots i_n) &= \mathrm{tables}(i_1) \dots \mathrm{tables}(i_n) \end{aligned}`
 
 A module's own table, $`\mathrm{table}(M)`, is its dialect set and its
 items, and its tables are its own, then those that its items hold:

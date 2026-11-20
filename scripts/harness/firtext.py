@@ -179,7 +179,7 @@ class Reader:
         (ADR-2026-11-10-1510), so they are named by their path. The layout
         says nothing that the matrix counts, so its entries are skipped
         (ADR-2026-11-12-1821), and so are aggregates' layouts
-        (ADR-2026-11-16-1546)."""
+        (ADR-2026-11-16-1546) and globals (ADR-2026-11-09-1546)."""
         if self.at("word") and self.peek().text == "dialects":
             self.take("word")
             self.take("word")
@@ -196,8 +196,8 @@ class Reader:
         while self.at("word") and self.peek().text != "locs":
             if self.peek().text == "module":
                 found += self.nested(scope)
-            elif self.peek().text == "aggregate":
-                self.aggregate()
+            elif self.peek().text in ("aggregate", "data"):
+                self.empty_item()
             else:
                 found.append(self.item(scope))
         return found
@@ -214,9 +214,9 @@ class Reader:
             depth += {"(": 1, ")": -1}.get(t.kind, 0)
             self.i += 1
 
-    def aggregate(self) -> None:
-        """Skips an aggregate's layout: its header, its attributes and its
-        empty body."""
+    def empty_item(self) -> None:
+        """Skips an aggregate's layout or a global: its header, its
+        attributes and its empty body."""
         self.take("word")
         self.take("symbol")
         self.take("(")

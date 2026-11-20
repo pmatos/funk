@@ -28,7 +28,9 @@
 //!   and pointer types, repeated or not (ADR-2026-11-16-1546);
 //! - field addresses, `fieldaddr`, of the module's layout or of a symbol
 //!   that names none, of fields of any number, with or without an index
-//!   (`field_addr.rs`, #236).
+//!   (`field_addr.rs`, #236);
+//! - globals of any numbers, flags and initializers (ADR-2026-11-09-1546),
+//!   spelled as ADR-2026-11-19-0124 says.
 //!
 //! Each new op still decodes: its operands are values the function defines,
 //! somewhere, of the types its name and attributes need, and its results
@@ -48,15 +50,16 @@
 use super::{Rng, Widths, constant, name, symbol, width};
 use crate::dialects::core::{self, int_type};
 use crate::effects::Effects;
-use crate::ir::{
-    Attr, Block, Def, DialectItem, Func, Item, LocRef, Module, NestedModule, Op, Region, Succ, Type,
-};
+use crate::ir::{Attr, Block, Def, Func, Item, LocRef, Module, Op, Region, Succ, Type};
 use crate::registry::{Dialect, OpShape, OpSpec, OpTypes};
 use attr::attr;
+use items::{add_dialects, dialect_item, nested};
 
 mod aggregate;
 mod attr;
 mod field_addr;
+mod global;
+mod items;
 mod layout;
 mod locs;
 
@@ -144,54 +147,14 @@ pub fn module(rng: &mut Rng, dialects: Dialects) -> Module {
         let at = rng.below(m.items.len() as u64 + 1) as usize;
         m.items.insert(at, Item::Aggregate(a));
     }
+    if rng.one_in(3) {
+        let at = rng.below(m.items.len() as u64 + 1) as usize;
+        m.items.insert(at, global::global(rng));
+    }
     if rng.one_in(4) {
         m.items.push(Item::Module(nested(rng, 3)));
     }
     m
-}
-
-/// An item of a kind from [`ITEM_KINDS`], with up to two parameters, two
-/// results of core types and three attributes.
-fn dialect_item(rng: &mut Rng) -> Item {
-    let mut i = DialectItem::new(*rng.pick(&ITEM_KINDS), symbol(rng));
-    let mut taken = Vec::new();
-    for _ in 0..rng.below(3) {
-        let t = int_type(width(rng, Widths::Any));
-        i.params.push(Def::new(Shaper::fresh(rng, &mut taken), t));
-    }
-    i.results = (0..rng.below(3))
-        .map(|_| int_type(width(rng, Widths::Any)))
-        .collect();
-    i.attrs = (0..rng.below(4)).map(|_| attr(rng, 0)).collect();
-    Item::Dialect(i)
-}
-
-/// Names one to three dialects, drawn with repeats, in one draw of four.
-fn add_dialects(rng: &mut Rng, dialects: &mut Vec<String>) {
-    if rng.one_in(4) {
-        for _ in 0..=rng.below(3) {
-            dialects.push(rng.pick(&["toy", "gpu", "x_1"]).to_string());
-        }
-    }
-}
-
-/// A nested module at most `depth` deep: the functions of a valid module,
-/// then, in one draw of three, a module nested in it.
-fn nested(rng: &mut Rng, depth: u32) -> NestedModule {
-    let mut n = NestedModule::new(symbol(rng));
-    add_dialects(rng, &mut n.dialects);
-    n.items = super::module(rng).items;
-    if rng.one_in(3) {
-        n.items.push(dialect_item(rng));
-    }
-    if rng.one_in(3) {
-        n.items.push(Item::Aggregate(aggregate::aggregate(rng)));
-    }
-    field_addr::add_to_items(rng, &mut n.items);
-    if depth > 1 && rng.one_in(3) {
-        n.items.push(Item::Module(nested(rng, depth - 1)));
-    }
-    n
 }
 
 /// What a function defines, and what its new ops may name.

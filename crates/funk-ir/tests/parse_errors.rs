@@ -82,10 +82,10 @@ fn a_string_or_symbol_not_in_its_one_spelling_is_rejected() {
 #[test]
 fn an_item_of_an_unknown_kind_is_rejected() {
     rejected_at(
-        &one_func("global @g() {\n}\n"),
+        &one_func("struct @g() {\n}\n"),
         1,
         1,
-        "unknown item kind global",
+        "unknown item kind struct",
     );
     rejected_at(
         &one_func("func @f() inline {\n^e:\n  ret @0\n}\n"),
@@ -165,10 +165,10 @@ fn a_module_item_with_a_header_or_blocks_is_rejected() {
             "the name of a dialect",
         ),
         (
-            "module @m() {\n  global @g() {\n  }\n}\n",
+            "module @m() {\n  struct @g() {\n  }\n}\n",
             2,
             3,
-            "unknown item kind global",
+            "unknown item kind struct",
         ),
     ];
     for (text, line, col, needle) in cases {

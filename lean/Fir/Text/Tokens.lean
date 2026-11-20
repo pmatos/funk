@@ -181,6 +181,7 @@ def Item.tokens : Item d → List Tok
       Item.tokensList is ++ [.rbrace]
   | .dialect i => i.tokens
   | .aggregate a => a.item.tokens
+  | .global g => (g.item (d := d)).tokens
 
 /-- The tokens of items. -/
 def Item.tokensList : List (Item d) → List Tok

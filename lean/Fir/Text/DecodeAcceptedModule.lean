@@ -1,4 +1,5 @@
 import Fir.Text.DecodeAccepted
+import Fir.Text.GlobalLaws
 
 /-!
 # Functions, items and the module as decoded
@@ -14,8 +15,8 @@ An item decodes only as a `func` with no attributes, whose body holds
 blocks or holds nothing, as a `module` with no parameters, results or
 attributes, whose body holds a dialect set and items, decoded in turn, or
 holds nothing, as an aggregate's layout whose numbers are within the limit
-and whose fields' types are written as types and decode back, or as an item
-of a dialect's kind, whose kind is a word of a dialect and whose body is
+and whose fields' types are written as types and decode back, as a global
+whose numbers are within the limit, or as an item of a dialect's kind, whose kind is a word of a dialect and whose body is
 empty, with its attributes as read. Decoding a
 module decodes each entry of its data layout, which is within the limit
 when it decodes, and keeps the location table as it was read. So a module decoded from a
@@ -187,6 +188,22 @@ theorem decodeAggregate_wellFormed {kindPos : TextPos} {name : String} {params :
   · cases h
   · cases h
 
+omit [DialectValidation d] [LawfulDialectText d] in
+/-- A global decoded from its attributes has its numbers within the limit. -/
+theorem decodeGlobal_wellFormed {kindPos : TextPos} {name : String} {params : List SDef}
+    {results attrs : List (Attr × TextPos)} {body : SBody} {i : Item d}
+    (h : decodeGlobal kindPos name params results attrs body = .ok i) : i.WellFormed := by
+  unfold decodeGlobal at h
+  split at h
+  · cases h
+  · cases h
+  · split at h
+    · rename_i g hg
+      cases h
+      exact Global.inLimits_of_decodeAttrs hg
+    · cases h
+  · cases h
+
 -- The two theorems recurse together, so both take the dialect's lawful
 -- text, which only the first states it needs.
 set_option linter.unusedSectionVars false in
@@ -213,6 +230,10 @@ theorem decodeItem_wellFormed : ∀ {si : SItem} {i : Item d}, decodeItem si = .
         · simp only [hg, ↓reduceIte] at h
           exact decodeAggregate_wellFormed h ha
         simp only [hg, ↓reduceIte] at h
+        by_cases hgl : kind = "data"
+        · simp only [hgl, ↓reduceIte] at h
+          exact decodeGlobal_wellFormed h
+        simp only [hgl, ↓reduceIte] at h
         split at h
         · exact decodeDialectItem_wellFormed h (by assumption) hp hr ha
         · cases h
@@ -236,6 +257,10 @@ theorem decodeItem_wellFormed : ∀ {si : SItem} {i : Item d}, decodeItem si = .
         · simp only [hg, ↓reduceIte] at h
           exact decodeAggregate_wellFormed h ha
         simp only [hg, ↓reduceIte] at h
+        by_cases hgl : kind = "data"
+        · simp only [hgl, ↓reduceIte] at h
+          exact decodeGlobal_wellFormed h
+        simp only [hgl, ↓reduceIte] at h
         split at h
         · exact decodeDialectItem_wellFormed h (by assumption) hp hr ha
         · cases h

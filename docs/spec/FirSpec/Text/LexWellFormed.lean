@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Writable tokens: readable blocks" =>
 
-:::moduleDocs (fingerprint := "1942924921461273043")
+:::moduleDocs (fingerprint := "2468687098486824909")
 :::
 
 :::readable Fir.forall_mem_intercalate_of Fir.comma_writable (fingerprint := "15438348163069253873")
@@ -171,7 +171,7 @@ written, its result types are written as types, and its attributes can be
 written.
 :::
 
-:::readable Fir.dialectsTokens_writable Fir.layoutTokens_writable Fir.Item.WellFormed.tokens Fir.Item.WellFormed.tokensList Fir.Module.WellFormed.tokens_writable (pin := Fir.Module.WellFormed) (pin := Fir.Item.WellFormed) (fingerprint := "12928439844853614679")
+:::readable Fir.dialectsTokens_writable Fir.layoutTokens_writable Fir.Item.WellFormed.tokens Fir.Item.WellFormed.tokensList Fir.Global.tokens_writable Fir.Module.WellFormed.tokens_writable (pin := Fir.Module.WellFormed) (pin := Fir.Item.WellFormed) (fingerprint := "15326786092719108757")
 *Theorems: well-formed items and modules have tokens that can be written.*
 For every dialect with signatures and a text format:
 
@@ -180,7 +180,8 @@ For every dialect with signatures and a text format:
   each entry writes a type;
 * every token of a well-formed item can be written, and so can every token
   of a list of well-formed items: a function, an item of a dialect's kind
-  and an aggregate's layout by the theorems above, and a nested module since its dialect set names words and its items are well
+  and an aggregate's layout by the theorems above, a global since every
+  attribute it writes can be written and `data` is a word, and a nested module since its dialect set names words and its items are well
   formed, at any depth;
 * every token of every well-formed module can be written. A well-formed
   module names its dialects by words, has a data layout whose tokens can
