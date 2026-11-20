@@ -55,18 +55,14 @@ class CopyCells(unittest.TestCase):
             with self.assertRaises(CellError):
                 of_op(bad)
 
-    def test_only_the_interpreter_side_has_the_cells(self):
+    def test_both_sides_have_the_cells_at_their_pointer_widths(self):
         for side in coverage.SIDES:
             found = {c for c in side.cells() if c.table == "copies"}
-            want = (
-                {
-                    Cell("copies", o, "", f"i{w}")
-                    for o in copy_cells.MEM_OPS
-                    for w in side.offsets
-                }
-                if side.name == "interpreter"
-                else set()
-            )
+            want = {
+                Cell("copies", o, "", f"i{w}")
+                for o in copy_cells.MEM_OPS
+                for w in side.offsets
+            }
             self.assertEqual(found, want, side.name)
 
     def test_the_catalog_has_no_copies_by_default(self):

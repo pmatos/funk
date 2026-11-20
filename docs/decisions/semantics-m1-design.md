@@ -228,7 +228,8 @@ would gain one.
 The spec has both ops, `Core.Op.memCopy` with a `CopyKind`
 (`lean/Fir/Core/MemCopy.lean`), through every layer but native code (stage 2
 of #234), and `memset`, `Core.Op.memSet` (`lean/Fir/Core/MemSet.lean`),
-too (stage 3); native code and funk's runtime routines are stage 4. The rule takes the length first: 0 does nothing; otherwise a poison
+too (stage 3), and native code calls funk's runtime routines (stage 4,
+[x86-64-backend-lowering-memory.md](x86-64-backend-lowering-memory.md#copies-moves-and-sets)). The rule takes the length first: 0 does nothing; otherwise a poison
 pointer is UB, then a `memcpy` whose ranges partly overlap, then the copy of
 units of stage 1 (`lean/Fir/Execution/MemoryCopyLaws.lean`): a load of the
 units through the source, then a store of them through the destination, so
