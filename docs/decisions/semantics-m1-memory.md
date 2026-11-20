@@ -278,13 +278,10 @@ kernels included (`lean/Fir/Gpu/Runs.lean`, #212; semantics-m1-dialects.md).
 
 Each new op with no tie, one that touches memory or reads the run's items,
 keeps every one of them holding, with its own rule with memory and its own
-proofs. The memory ops `alloca`, the loads and stores, `memCopy` and `memSet`
-do (`lean/Fir/Core/AllocaLaws.lean`, `LoadLaws.lean`, `StoreLaws.lean`,
-`LoadPtrLaws.lean`, `StorePtrLaws.lean`, `LoadFloatLaws.lean`,
-`StoreFloatLaws.lean`, `MemCopyLaws.lean`, `MemCopyPoison.lean`,
-`MemSetLaws.lean`, `MemSetPoison.lean`), and so does `fieldAddr`, which
-touches no memory but reads items (`FieldAddrLaws.lean`). `Core.Op.memCases`
-joins them to the tied ops (semantics-effects.md#soundness).
+proofs: the memory ops `alloca`, the loads and stores, `memCopy` and
+`memSet` do, and so does `fieldAddr`, which touches no memory but reads
+items. `Core.Op.memCases` joins them to the tied ops
+(semantics-effects.md#soundness lists each op's laws files).
 
 PR #382 narrowed these statements, which now cover memory-free code; beside
 each is what covers the whole core:
