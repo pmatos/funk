@@ -83,6 +83,23 @@ pub trait OpSpec: Send + Sync {
         Vec::new()
     }
 
+    /// The memories whose units the op instance used at `op`, which decodes,
+    /// writes values of, each with the width of those values, such as the
+    /// fill `memset` (`DialectValidation.opUnits`). The verifier checks that
+    /// the data layout gives each memory units of that width. An op that
+    /// writes no values into units gives none, the default.
+    fn unit_widths(&self, _op: &OpTypes<'_>) -> Vec<(u32, u32)> {
+        Vec::new()
+    }
+
+    /// Whether [`OpSpec::unit_widths`] may give a pair for some instance, so
+    /// that the verifier types the operands of this op's instances to ask
+    /// it. An op that writes no values into units gives `false`, the
+    /// default, and the verifier skips it.
+    fn asks_unit_widths(&self) -> bool {
+        false
+    }
+
     /// The symbol of the function that the op instance used at `op` calls,
     /// or `None` for an op that calls none (`callee?`, `DialectCall`). The
     /// interpreter runs the callee of an op that is not a terminator, and

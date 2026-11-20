@@ -23,8 +23,8 @@ written, the tree it gives can be written too, part by part:
 
 An op's operands are not in this list: decoding finds each of them among
 the definitions of its function, whose names are names. An item's kind is
-not in it either: decoding accepts only `func`, `module` and a word of a
-dialect, which a word token gives. An item of a dialect's kind keeps its
+not in it either: decoding accepts only `func`, `module`, `aggregate`,
+`data` and a word of a dialect, which a word token gives. An item of a dialect's kind keeps its
 attributes, so they are in it. A `func` whose body is a list of items is rejected
 unless that list is empty, so nothing is asked of the items of a body.
 

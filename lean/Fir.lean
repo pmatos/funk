@@ -108,6 +108,7 @@ import Fir.Execution.BlackBox
 import Fir.Execution.RefineUp
 import Fir.Execution.RefineDown
 import Fir.Execution.RefineRuns
+import Fir.Execution.ReplaceBody
 import Fir.Execution.Replace
 import Fir.Core.CallRefine
 import Fir.Execution.Lawful
@@ -157,6 +158,9 @@ import Fir.Core.StoreFloatLaws
 import Fir.Core.MemCopy
 import Fir.Core.MemCopyLaws
 import Fir.Core.MemCopyPoison
+import Fir.Core.MemSet
+import Fir.Core.MemSetLaws
+import Fir.Core.MemSetPoison
 import Fir.Core.FieldAddrLaws
 import Fir.Core.EffectLaws
 import Fir.Core.MemoryRuns
@@ -224,6 +228,8 @@ import Fir.Core.LoadTextLaws
 import Fir.Core.StoreTextLaws
 import Fir.Core.MemCopyText
 import Fir.Core.MemCopyTextLaws
+import Fir.Core.MemSetText
+import Fir.Core.MemSetTextLaws
 import Fir.Core.FloatOpTextLaws
 import Fir.Core.TextLaws
 import Fir.Text.Example

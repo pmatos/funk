@@ -163,6 +163,8 @@ Each section renders one module of `lean/Fir`.
 
 {includeReadable "." Fir.Execution.RefineRuns "Refined arguments" FirSpec.Execution.RefineRuns (level := 1)}
 
+{includeReadable "." Fir.Execution.ReplaceBody "Replacing a body" FirSpec.Execution.ReplaceBody (level := 1)}
+
 {includeReadable "." Fir.Execution.Replace "Replacing a callee" FirSpec.Execution.Replace (level := 1)}
 
 {includeReadable "." Fir.Core.CallRefine "Refinement through core calls" FirSpec.Core.CallRefine (level := 1)}

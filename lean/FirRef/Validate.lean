@@ -172,11 +172,19 @@ def funcAttrTypes (f : Func d) : List d.Ty :=
 
 @[csimp] theorem attrTypes_eq_funcAttrTypes : @Func.attrTypes = @funcAttrTypes := rfl
 
-/-- `SymbolTable.memoryProblems`, compiled after `types_eq_funcTypes` and
-`attrTypes_eq_funcAttrTypes`. -/
+/-- `Func.unitWidths`, compiled after `allBlocks_eq_allBlocks`, as
+`funcTypes` is. -/
+def funcUnitWidths (f : Func d) : List (Nat × Nat) :=
+  (f.allBlocks.flatMap (·.body)).flatMap fun o => opUnits o.op
+
+@[csimp] theorem unitWidths_eq_funcUnitWidths : @Func.unitWidths = @funcUnitWidths := rfl
+
+/-- `SymbolTable.memoryProblems`, compiled after `types_eq_funcTypes`,
+`attrTypes_eq_funcAttrTypes` and `unitWidths_eq_funcUnitWidths`. -/
 def tableMemoryProblems (l : DataLayout) (t : SymbolTable d) : List Problem :=
   t.funcs.filterMap (fun f => memoryProblem f.name (l.missing (f.types ++ f.attrTypes))) ++
-  t.dialectItems.filterMap (fun i => memoryProblem i.name (l.missing i.types))
+  t.dialectItems.filterMap (fun i => memoryProblem i.name (l.missing i.types)) ++
+  t.funcs.filterMap (fun f => unitsProblem l f.name f.unitWidths)
 
 @[csimp] theorem memoryProblems_eq_tableMemoryProblems :
     @SymbolTable.memoryProblems = @tableMemoryProblems := rfl

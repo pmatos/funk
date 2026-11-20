@@ -14,10 +14,10 @@ build fails when the Lean changes under it.
 
 #doc (Manual) "The core dialect's poison obligations: readable blocks" =>
 
-:::moduleDocs (fingerprint := "1993754729950285110")
+:::moduleDocs (fingerprint := "11746787569716277188")
 :::
 
-:::readable Fir.Core.Op.propagates_all Fir.Core.load_propagatesPoison Fir.Core.store_propagatesPoison Fir.Core.loadPtr_propagatesPoison Fir.Core.storePtr_propagatesPoison Fir.Core.loadFloat_propagatesPoison Fir.Core.storeFloat_propagatesPoison Fir.Core.memCopy_propagatesPoison Fir.Core.fieldAddr_propagatesPoison (pin := Fir.Core.Op.poisonClass) (pin := Fir.PropagatesPoison) (pin := Fir.PoisonOut) (pin := Fir.UBByOwnRules) (pin := Fir.HVector.IsFilledBy) (fingerprint := "9524803116104478695")
+:::readable Fir.Core.Op.propagates_all Fir.Core.load_propagatesPoison Fir.Core.store_propagatesPoison Fir.Core.loadPtr_propagatesPoison Fir.Core.storePtr_propagatesPoison Fir.Core.loadFloat_propagatesPoison Fir.Core.storeFloat_propagatesPoison Fir.Core.memCopy_propagatesPoison Fir.Core.memSet_propagatesPoison Fir.Core.fieldAddr_propagatesPoison (pin := Fir.Core.Op.poisonClass) (pin := Fir.PropagatesPoison) (pin := Fir.PoisonOut) (pin := Fir.UBByOwnRules) (pin := Fir.HVector.IsFilledBy) (fingerprint := "7725863538073868586")
 *Theorem: each core op that propagates poison does.* For every
 {ref "The-fir-specification--Abstract-syntax--Core-ops"}[core op] $`o`
 whose
@@ -28,11 +28,11 @@ on operands of which one is poison, every result it returns is poison,
 and it may hit UB only if it may hit UB on some operands that put a
 defined value in place of each poison.
 
-These are 42 ops: $`\mathsf{const}` at an integer type and at a float
+These are 43 ops: $`\mathsf{const}` at an integer type and at a float
 type, $`\mathsf{poison}`, $`\mathsf{alloca}`, $`\mathsf{load}` and
 $`\mathsf{store}` of an integer, of a pointer and of a float,
 $`\mathsf{memcpy}` and $`\mathsf{memmove}` (`memCopy` in the Lean),
-$`\mathsf{add}`,
+$`\mathsf{memset}` (`memSet`), $`\mathsf{add}`,
 $`\mathsf{sub}`, $`\mathsf{mul}`, the four divisions $`\mathsf{sdiv}`,
 $`\mathsf{udiv}`, $`\mathsf{srem}` and $`\mathsf{urem}`, the bitwise ops
 $`\mathsf{and}`, $`\mathsf{or}` and $`\mathsf{xor}`, the shifts
@@ -45,8 +45,8 @@ two conversions between formats $`\mathsf{fpext}` and
 $`\mathsf{fptrunc}`, the pointer offset $`\mathsf{ptradd}`, the two
 conversions to integers $`\mathsf{fptosi}` and $`\mathsf{fptoui}`, and
 the field address $`\mathsf{fieldaddr}`. Each proves it in the section of its family; $`\mathsf{alloca}`, like $`\mathsf{const}` and $`\mathsf{poison}`, has no operands, so it propagates poison whatever its rule, and
-the loads and stores, $`\mathsf{fieldaddr}` and the copies and moves have
-no outcome in the set monad, so they give no result and hit no UB there. The other
+the loads and stores, $`\mathsf{fieldaddr}`, the copies and moves and
+the fills have no outcome in the set monad, so they give no result and hit no UB there. The other
 ops, $`\mathsf{select}`, $`\mathsf{freeze}`, $`\mathsf{br}`,
 $`\mathsf{cond\_br}`, $`\mathsf{ret}`, $`\mathsf{unreachable}` and
 $`\mathsf{call}`, are poison
@@ -73,15 +73,16 @@ poison: the obligation asks for a result, not for a defined one
 above zero, where a divisor that is not zero exists, and the first theorem
 gives that width. This is the one obligation that needs the op instance
 to be valid (ADR-2026-10-29-2006). $`\mathsf{alloca}`, the loads and
-stores and the copies and moves touch memory, and $`\mathsf{fieldaddr}`
+stores, the copies and moves and the fills touch memory, and $`\mathsf{fieldaddr}`
 reads an item: none has a rule in the set monad, so none gives a result
 there. Each returns one with memory, by its own rule
 (the
 {ref "The-fir-specification--Memory--Stack-allocation-obligations"}[stack allocation obligations],
 the {ref "The-fir-specification--Memory--Load-obligations"}[load obligations],
 the {ref "The-fir-specification--Memory--Store-obligations"}[store obligations],
-the {ref "The-fir-specification--Memory--Field-address-obligations"}[field address obligations]
-and the {ref "The-fir-specification--Memory--Copy-and-move-obligations"}[copy and move obligations]),
+the {ref "The-fir-specification--Memory--Field-address-obligations"}[field address obligations],
+the {ref "The-fir-specification--Memory--Copy-and-move-obligations"}[copy and move obligations]
+and the {ref "The-fir-specification--Memory--Fill-poison-obligations"}[fill poison obligations]),
 so the core dialect as a whole does not meet the lawful class in the set
 monad, and meets the lawful classes with memory instead.
 :::

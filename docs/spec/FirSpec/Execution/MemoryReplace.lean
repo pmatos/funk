@@ -35,7 +35,7 @@ symbols are unique, let every op of its functions that runs by its own rule
 be monotone with memory, and the refinement of values be reflexive and
 transitive. Let $`g` be a function of $`M`, and $`g'` and $`M'` be $`g`
 and $`M` with the body of $`g` replaced
-({ref "The-fir-specification--Execution--Replacing-a-callee"}[replacing a callee]).
+({ref "The-fir-specification--Execution--Replacing-a-body"}[replacing a body]).
 If, on each argument vector and from each memories, the behaviour of $`g'`
 in $`M'` refines that of $`g` in $`M`, values and memories, and the runs
 of $`g'` from given memories are bounded by one budget $`B`, so that past

@@ -156,6 +156,8 @@ event.
 
 {includeReadable "." Fir.Core.MemCopy "Copy and move rules" FirSpec.Core.MemCopy (level := 1)}
 
+{includeReadable "." Fir.Core.MemSet "Fill rules" FirSpec.Core.MemSet (level := 1)}
+
 {includeReadable "." Fir.Core.FieldAddr "Field address rules" FirSpec.Core.FieldAddr (level := 1)}
 
 {includeReadable "." Fir.Core.MemRules "The core's rules with memory" FirSpec.Core.MemRules (level := 1)}
@@ -181,6 +183,10 @@ event.
 {includeReadable "." Fir.Core.MemCopyLaws "Copy and move obligations" FirSpec.Core.MemCopyLaws (level := 1)}
 
 {includeReadable "." Fir.Core.MemCopyPoison "Copy and move poison obligations" FirSpec.Core.MemCopyPoison (level := 1)}
+
+{includeReadable "." Fir.Core.MemSetLaws "Fill obligations" FirSpec.Core.MemSetLaws (level := 1)}
+
+{includeReadable "." Fir.Core.MemSetPoison "Fill poison obligations" FirSpec.Core.MemSetPoison (level := 1)}
 
 {includeReadable "." Fir.Core.FieldAddrLaws "Field address obligations" FirSpec.Core.FieldAddrLaws (level := 1)}
 

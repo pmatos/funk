@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "The core's rules with memory: readable blocks" =>
 
-:::moduleDocs (fingerprint := "8476043567393448027")
+:::moduleDocs (fingerprint := "13231531829217735796")
 :::
 
 :::readable Fir.Core.freezeValue_map Fir.Core.ruleOfEv_map Fir.Core.exitOfEv_map (pin := Fir.MonadMorphism.KeepsChoiceUB) (pin := Fir.Core.freezeValue) (pin := Fir.Core.ruleOfEv) (pin := Fir.Core.exitOfEv) (fingerprint := "2405690779588688594")
@@ -52,7 +52,7 @@ keeps UB; and an op with no rule, as $`\mathsf{call}`, maps by the
 hypothesis on $`z_m` and $`z_n`.
 :::
 
-:::readable Fir.Core.Op.memDenote? Fir.Core.Op.memExit? Fir.Core.memDenoteIn (pin := Fir.Core.denoteWith) (pin := Fir.MonadMemory) (pin := Fir.Core.allocaRule) (fingerprint := "15007870226446232790")
+:::readable Fir.Core.Op.memDenote? Fir.Core.Op.memExit? Fir.Core.memDenoteIn (pin := Fir.Core.denoteWith) (pin := Fir.MonadMemory) (pin := Fir.Core.allocaRule) (fingerprint := "1251217208382238113")
 *Definition: the core's rules with memory.* Let $`m` be a monad with
 choice, UB and the
 {ref "The-fir-specification--Memory--The-memory-effect"}[memory effect] on
@@ -76,9 +76,11 @@ store of a pointer their
 {ref "The-fir-specification--Memory--Pointer-load-and-store-rules"}[pointer load and store rules],
 those of the load and store of a float their
 {ref "The-fir-specification--Memory--Float-load-and-store-rules"}[float load and store rules],
-and that of $`\mathsf{memcpy}` and $`\mathsf{memmove}` their
+that of $`\mathsf{memcpy}` and $`\mathsf{memmove}` their
 {ref "The-fir-specification--Memory--Copy-and-move-rules"}[copy and move rule],
-which reads and writes the memory $`\rho(N)` of its pointers;
+which reads and writes the memory $`\rho(N)` of its pointers, and that of
+$`\mathsf{memset}` its {ref "The-fir-specification--Memory--Fill-rules"}[fill rule],
+which writes the memory $`\rho(N)` of its pointer;
 these are the core ops
 that touch memory, and none has a rule without memory. The rule with
 memory of $`\mathsf{fieldaddr}~s~j` is its
@@ -104,8 +106,8 @@ maps the core's semantics with memory in $`m` at $`\ell`, $`\rho` and
 $`L` to its semantics with memory in $`n`, op by op, when it maps what an
 op with no rule does. $`\mathsf{fieldaddr}` maps because its rule gives
 its result at once, and $`\varphi(\mathsf{pure}~r) = \mathsf{pure}~r`.
-Every other op but $`\mathsf{alloca}`, the loads, the stores and the
-copies and moves follows from the theorem above; $`\mathsf{alloca}` maps because
+Every other op but $`\mathsf{alloca}`, the loads, the stores, the
+copies and moves and the fills follows from the theorem above; $`\mathsf{alloca}` maps because
 $`\varphi` maps its allocation to the same allocation in $`n`, and
 mapping the pointer to the result comes after it in both.
 $`\mathsf{load}` maps because $`\varphi` maps the UB of a poison pointer
@@ -115,7 +117,9 @@ same way, by its UB on a poison pointer and its store, after which it
 gives no result in both. A copy or a move maps because $`\varphi` maps
 returning no result to the same, UB to UB for the same reason, its load
 and its store to the same load and store, and its choice of a poison
-length's bits to the same choice. The
+length's bits to the same choice; a fill maps in the same way, by its
+store and with no load
+({ref "The-fir-specification--Memory--Fill-rules"}[the fill rules]). The
 {ref "The-fir-specification--Memory--The-state-layer"}[translation through the layer]
 keeps allocation, loads and stores.
 :::
@@ -129,13 +133,15 @@ runs each op by its rule with memory in the
 the set monad; an op with no rule has no way to end, as in the set monad.
 It is given op by op, not by lifting the core's semantics in the set
 monad, so an op that touches memory joins it with its own rule, as
-$`\mathsf{alloca}`, the loads and stores and the copies and moves do.
+$`\mathsf{alloca}`, the loads and stores, the copies and moves and the
+fills do.
 :::
 
 :::readable Fir.Core.Op.liftsSetM (pin := Fir.OpLiftsSetM) (fingerprint := "6022338225824521883")
 *Theorem: every core op that touches no memory and reads no item is tied.*
 For every core op $`p` but $`\mathsf{alloca}`, the loads, the stores,
-$`\mathsf{fieldaddr}` and the copies and moves, at every layout $`\ell`,
+$`\mathsf{fieldaddr}`, the copies and moves and the fills, at every
+layout $`\ell`,
 naming $`\rho` and record of items $`L`, on every operand vector, $`p`'s meaning with
 memory is its meaning in the set monad, lifted into the state layer: it
 keeps the memories. Lifting
