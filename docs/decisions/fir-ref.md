@@ -6,7 +6,9 @@ and the ADR is fixed or deleted (ADR-2026-11-09-1610). It continues in
 [fir-ref-command-line.md](fir-ref-command-line.md) (what each command takes and
 prints), [fir-ref-fast-paths.md](fir-ref-fast-paths.md) (each implementation
 `fir-ref` runs in place of a spec function, and what it is for) and
-[fir-ref-memory.md](fir-ref-memory.md) (runs with memory).
+[fir-ref-memory.md](fir-ref-memory.md) (runs with memory) and
+[fir-ref-run-end.md](fir-ref-run-end.md) (scripted worlds, and the end of a
+run as an observer sees it).
 
 ## What a run means
 

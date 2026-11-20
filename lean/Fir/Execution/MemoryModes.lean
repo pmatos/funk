@@ -10,10 +10,10 @@ over the set monad, from the empty memories (the section on runs with
 memory). So a mode that walks a run with memory walks the run in the state
 layer over the tree of choices: its tree is the tree of the run from the
 empty memories, and each path of it ends with the memories as they are at
-its end. Until observations at the end of a run are designed
-([#233](https://github.com/pmatos/funk/issues/233)), an observer sees what
-a run returns and not its memories, so the tree that a mode walks drops
-the memories at the end of each path.
+its end. The tree here drops the memories at the end of each path, and
+sees a return as its values; the modes that see each return at its end,
+with the memory an observer reaches, walk the tree of
+`Fir.Execution.MemoryEndModes`, which keeps them.
 
 A dialect's semantics in the state layer over the tree of choices is tied to
 its semantics with memory by the morphism through the layer: it maps each

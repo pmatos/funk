@@ -53,3 +53,5 @@ module's kernels included, and the modes that `fir-ref run` walks.
 {includeReadable "." Fir.Gpu.Modes "Modes of the core and gpu" FirSpec.Gpu.Modes (level := 1)}
 
 {includeReadable "." Fir.Gpu.Trace "Traced runs of the core and gpu" FirSpec.Gpu.Trace (level := 1)}
+
+{includeReadable "." Fir.Gpu.EndModes "Modes of the core and gpu that see the end of a return" FirSpec.Gpu.EndModes (level := 1)}
