@@ -68,10 +68,19 @@ def emitMain : Func EmitDialect where
 /-- A module of the emit dialect with that one function. -/
 def emitModule : Module EmitDialect := { items := [.func emitMain], locs := [(0, .unknown)] }
 
-/-- The traced runs of `emitMain`, with no memory. -/
+/-- The layout of the one memory of a run of the emit dialect, which has no
+memory of its own. -/
+abbrev lay : Unit → MemLayout := fun _ => MemLayout.default
+
+/-- The spec's traced runs of `emitMain`, with no memory of its own, each
+return seen at its end. -/
 abbrev runs : FuncTraceRuns (HVector toType ([] : List Core.Ty)) (DialectTrace.Acts EmitDialect)
-    (List (DVal EmitDialect)) :=
-  emitMain.traceRuns (fun _ : Empty => MemLayout.default) id RunItems.empty emitModule
+    (ObservedEnd (unitsOf lay) (fun _ => ()) (List (DVal EmitDialect))) :=
+  emitMain.observedRuns lay Empty.elim RunItems.empty (fun _ => ()) emitModule
+
+/-- The traced state inside the call of `emitMain`: a frame entered, and
+nothing escaped. -/
+abbrev inCall : TraceState Unit (unitsOf lay) := ⟨Memories.empty.enter, []⟩
 
 /-! # Paths of the traced layer, with stuck paths -/
 
@@ -108,49 +117,49 @@ end Paths
 any answer, then the step of `ret`, and returns: the interpreter marks each
 op's step before the op's acts. -/
 theorem emitMain_run (a : Nat) :
-    runs .nil 2 (.ok (.ok (.ret []), [.tick, .act (⟨0, a⟩ : Act Nat Nat), .tick])) := by
-  letI := DialectTrace.stepAt (d := EmitDialect) (fun _ : Empty => MemLayout.default) id
-    RunItems.empty
-  refine ⟨.ok (.ok (.ret []), [.tick, .act (⟨0, a⟩ : Act Nat Nat), .tick],
-    (Memories.empty : Memories Empty _).enter.exit), ?_, rfl⟩
+    runs .nil 2 (.ok (.ok (.ret ⟨[], Memories.empty, []⟩),
+      [.tick, .act (⟨0, a⟩ : Act Nat Nat), .tick])) := by
+  letI := DialectTrace.stepAt (d := EmitDialect) lay Empty.elim RunItems.empty
+  refine ⟨.ok (.ok (.ret []), [.tick, .act (⟨0, a⟩ : Act Nat Nat), .tick], TraceState.init), ?_,
+    rfl⟩
   unfold Func.run
-  refine run_bind (a := (emitOps, [])) (t := []) (s' := Memories.empty)
+  refine run_bind (a := (emitOps, [])) (t := []) (s' := TraceState.init)
     (run_liftExcept _ _) ?_ (TraceEnd.after_nil _).symm
   refine run_bind (a := Result.ret ([], 0))
     (t := [Step.tick, Step.act (⟨0, a⟩ : Act Nat Nat), Step.tick])
-    (s' := Memories.empty.enter.exit)
+    (s' := TraceState.init)
     ⟨.ok (.ok (Result.ret ([], 0)), [Step.tick, Step.act (⟨0, a⟩ : Act Nat Nat), Step.tick],
-      Memories.empty.enter), ?_, rfl⟩ (run_pure _ _) (by simp [TraceEnd.after])
+      inCall), ?_, rfl⟩ (run_pure _ _) (by simp [TraceEnd.after])
   simp only [emitOps]
   unfold Func.runOps
   simp only [Operation.ownsCoreRegion, List.any_nil, Bool.false_eq_true, ite_false, sig,
     isTerminator, callee?]
   refine run_bind (a := HVector.nil) (run_liftExcept _ _) ?_ (TraceEnd.after_nil _).symm
   refine run_bind (a := HVector.nil) (t := [Step.tick, Step.act (⟨0, a⟩ : Act Nat Nat)])
-    (s' := Memories.empty.enter)
-    (e' := .ok (.ok (Result.ret ([], 0)), [Step.tick], Memories.empty.enter))
+    (s' := inCall)
+    (e' := .ok (.ok (Result.ret ([], 0)), [Step.tick], inCall))
     (run_lift ?_) ?_ (by simp [TraceEnd.after])
-  · refine ⟨_, rfl, _, ⟨.ok (HVector.nil, [(⟨0, a⟩ : Act Nat Nat)], Memories.empty.enter), ?_, rfl⟩, rfl⟩
+  · refine ⟨_, rfl, _, ⟨.ok (HVector.nil, [(⟨0, a⟩ : Act Nat Nat)], inCall), ?_, rfl⟩, rfl⟩
     exact ⟨_, ⟨a, rfl⟩, _, rfl, rfl⟩
   refine run_bind (a := []) (run_liftExcept _ _) ?_ (TraceEnd.after_nil _).symm
   unfold Func.runOps
   simp only [Operation.ownsCoreRegion, List.any_nil, Bool.false_eq_true, ite_false, sig,
     isTerminator, ite_true, List.isEmpty_nil, Bool.not_true]
   refine run_bind (a := HVector.nil) (run_liftExcept _ _) ?_ (TraceEnd.after_nil _).symm
-  refine run_bind (a := Exit.ret) (t := [Step.tick]) (s' := Memories.empty.enter)
-    (e' := .ok (.ok (Result.ret ([], 0)), [], Memories.empty.enter))
+  refine run_bind (a := Exit.ret) (t := [Step.tick]) (s' := inCall)
+    (e' := .ok (.ok (Result.ret ([], 0)), [], inCall))
     (run_lift ⟨_, rfl, _, ⟨_, rfl, rfl⟩, rfl⟩) ?_ (by simp [TraceEnd.after])
   exact run_pure _ _
 
 /-- So `emitMain`'s traced behaviour returns after the act of `emit`, with
 any answer. -/
-example (a : Nat) : traceObservable (runs .nil) (.ret [(⟨0, a⟩ : Act Nat Nat)] []) :=
+example (a : Nat) :
+    traceObservable (runs .nil) (.ret [(⟨0, a⟩ : Act Nat Nat)] ⟨[], Memories.empty, []⟩) :=
   ⟨2, _, emitMain_run a, rfl⟩
 
 /-- Erasing the steps of `emitMain`'s traced runs gives its runs by the
 emit dialect's rules alone. -/
 example (fuel : Nat) :=
-  Func.run_eraseSteps (d := EmitDialect) (fun _ : Empty => MemLayout.default) id RunItems.empty
-    emitModule emitMain .nil fuel
+  Func.run_eraseSteps (d := EmitDialect) lay Empty.elim RunItems.empty emitModule emitMain .nil fuel
 
 end FirTest.TraceDialect

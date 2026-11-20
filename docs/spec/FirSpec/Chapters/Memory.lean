@@ -202,4 +202,14 @@ refinement of the traced runs of functions for every world
 
 {includeReadable "." Fir.Execution.TraceRuns "Traced runs" FirSpec.Execution.TraceRuns (level := 1)}
 
+{includeReadable "." Fir.Execution.TraceWorld "The world and escaped memory" FirSpec.Execution.TraceWorld (level := 1)}
+
+{includeReadable "." Fir.Execution.Observe "Pointers under a renaming" FirSpec.Execution.Observe (level := 1)}
+
+{includeReadable "." Fir.Core.Observe "The pointers of the core's values" FirSpec.Core.Observe (level := 1)}
+
+{includeReadable "." Fir.Execution.ObserveEnd "The end of a return" FirSpec.Execution.ObserveEnd (level := 1)}
+
+{includeReadable "." Fir.Execution.ObserveEndLaws "Laws of the end of a return" FirSpec.Execution.ObserveEndLaws (level := 1)}
+
 {includeReadable "." Fir.Execution.TraceDialect "A dialect's traced runs" FirSpec.Execution.TraceDialect (level := 1)}
