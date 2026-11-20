@@ -53,5 +53,5 @@ by none, a set of an `i8`, lengths of 0 and a poison value. Lengths cut by
 `trunc` to `i1`, `i8`, `i16` and `i32` check that the call does not read
 the bits above the width, and a move and a set take a poison length of
 `i1`. Every test of it is differential. `fieldaddr-programs`, of
-[texts-aggregates.md](texts-aggregates.md), also zeroes an array with
-`memset` before it fills it.
+[texts-aggregates.md](texts-aggregates.md), also zeroes the allocation
+of an array with `memset` before it fills it.

@@ -293,3 +293,6 @@ The texts of aggregates' layouts and the field address `fieldaddr`
 
 The texts of the copies, moves and sets `memcpy`, `memmove` and `memset`
 (#234) are listed in [texts-memops.md](texts-memops.md).
+
+The texts of the gpu dialect (#212) are listed in
+[texts-gpu.md](texts-gpu.md).
