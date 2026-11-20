@@ -68,15 +68,22 @@ fn ptradd(cx: &mut Cx<'_>, op: &Op) -> Result<(), Unlowered> {
     };
     cx.width(&q.name)?;
     cx.width(p)?;
-    let w = cx.width(k)?;
     cx.load(Reg::Rax, p)?;
-    // The slot of an `i128` is that of its low half.
+    load_signed(cx, k)?;
+    cx.asm.ins("addq", format_args!("%rcx, %rax"));
+    cx.store(&q.name, Reg::Rax)
+}
+
+/// Loads the integer `k` into `%rcx`, read as signed modulo 2^64: extended
+/// from its width, or the low half of an `i128`, whose slot is that half's.
+/// `ptradd`'s offset and `fieldaddr`'s index are read so.
+pub(super) fn load_signed(cx: &mut Cx<'_>, k: &str) -> Result<(), Unlowered> {
+    let w = cx.width(k)?;
     cx.load(Reg::Rcx, k)?;
     if w != PAIR {
         width::extend(&mut cx.asm, Ext::Sign, w, Reg::Rcx);
     }
-    cx.asm.ins("addq", format_args!("%rcx, %rax"));
-    cx.store(&q.name, Reg::Rax)
+    Ok(())
 }
 
 /// The bits that one move of a `w`-bit value between memory and a

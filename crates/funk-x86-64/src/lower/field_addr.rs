@@ -18,13 +18,12 @@
 
 use std::collections::HashMap;
 
-use funk_ir::ir::layout::memory;
+use funk_ir::ir::layout;
 use funk_ir::text::print_symbol;
 use funk_ir::{Attr, Field, Item, MemLayout, Module, Op, Registry};
 
-use super::{Cx, Lower, Unlowered};
+use super::{Cx, Lower, Unlowered, memory};
 use crate::asm::Reg;
-use crate::width::{self, Ext, PAIR};
 
 pub(super) fn lowering(name: &str) -> Option<Lower> {
     (name == "fieldaddr").then_some(field_addr as Lower)
@@ -45,7 +44,7 @@ impl<'m> Places<'m> {
         let entry = |n: u64| {
             u32::try_from(n)
                 .ok()
-                .and_then(|n| memory(&m.layout, n))
+                .and_then(|n| layout::memory(&m.layout, n))
                 .unwrap_or(MemLayout::DEFAULT)
         };
         for a in m.items.iter().filter_map(Item::as_aggregate) {
@@ -98,12 +97,7 @@ fn field_addr(cx: &mut Cx<'_>, op: &Op) -> Result<(), Unlowered> {
     match index {
         [] => {}
         [k] => {
-            let w = cx.width(k)?;
-            // The slot of an `i128` is that of its low half.
-            cx.load(Reg::Rcx, k)?;
-            if w != PAIR {
-                width::extend(&mut cx.asm, Ext::Sign, w, Reg::Rcx);
-            }
+            memory::load_signed(cx, k)?;
             if stride != 1 {
                 cx.asm.ins("imulq", format_args!("${stride}, %rcx, %rcx"));
             }
