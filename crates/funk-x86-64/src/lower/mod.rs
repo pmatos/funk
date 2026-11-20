@@ -79,7 +79,7 @@ use std::collections::{HashMap, HashSet};
 
 use funk_ir::dialects::core::{CoreType, core_type};
 use funk_ir::text::{print_op, print_symbol};
-use funk_ir::{Block, Def, Diagnostic, Func, MemLayout, Module, Op, SymbolTable};
+use funk_ir::{Block, Def, Diagnostic, Func, MemLayout, Module, Op};
 
 pub use call::callee;
 pub use stack::Need;
@@ -138,8 +138,8 @@ pub struct Cx<'f> {
     helpers: helpers::Used,
     /// The module's data layout.
     layout: &'f [MemLayout],
-    /// The module's own symbols, which name its aggregates' layouts.
-    symbols: &'f SymbolTable<'f>,
+    /// The fields of the module's aggregates' layouts, placed.
+    places: &'f field_addr::Places<'f>,
     /// The labels of the blocks on a cycle of branches, when the function
     /// has an `alloca` (`alloca::looping`).
     looping: HashSet<&'f str>,
@@ -323,13 +323,13 @@ pub fn module(m: &Module) -> Result<Lowered, Vec<Diagnostic>> {
     let mut functions = Vec::new();
     let mut helpers = helpers::Used::default();
     let mut callees = HashMap::new();
-    let symbols = m.symbols();
+    let places = field_addr::Places::of(m);
     for (i, f) in m.funcs().enumerate() {
         callees.entry(f.name.as_str()).or_insert(i);
     }
     asm.directive(format_args!(".text"));
     for (i, f) in m.funcs().enumerate() {
-        if let Some((code, facts, used)) = func(i, f, &callees, &m.layout, &symbols, &mut out) {
+        if let Some((code, facts, used)) = func(i, f, &callees, &m.layout, &places, &mut out) {
             asm.raw(&code);
             functions.push(facts);
             for (all, used) in helpers.iter_mut().zip(used) {
@@ -371,7 +371,7 @@ fn func<'f>(
     f: &'f Func,
     callees: &'f HashMap<&'f str, usize>,
     layout: &'f [MemLayout],
-    symbols: &'f SymbolTable<'f>,
+    places: &'f field_addr::Places<'f>,
     out: &mut Vec<Diagnostic>,
 ) -> Option<(String, stack::Function, helpers::Used)> {
     let entry = f.body.blocks.first();
@@ -396,7 +396,7 @@ fn func<'f>(
         stack,
         helpers: helpers::Used::default(),
         layout,
-        symbols,
+        places,
         looping: alloca::looping(f),
         block: "",
     };

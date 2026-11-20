@@ -52,8 +52,10 @@ past 32 bits, and nothing for offset 0. With an index, `fieldaddr @s i %p,
 half of an `i128`, times the field's stride: the units of one value of its
 type rounded up to its alignment (the human's ruling of 2026-11-16 on #236,
 Q2 B), one `imulq` by an immediate, since a type of at most `2^24 - 1` bits
-takes at most 2^21 bytes. The layout is the first of the module's own table
-with that symbol, the one validation checked the op against. Its memory is
+takes at most 2^21 bytes, and none for a stride of 1. The backend places
+each layout's fields once per module; the layout is the first of the
+module's own table with that symbol, the one validation checked the op
+against. Its memory is
 the pointer's, so its units are bytes, or the pointer is reported where it
 is defined, as the human ruled on 2026-11-15 (#399) for every memory of
 wider units. The field's type is no value of the op, so a field of a type
@@ -65,8 +67,9 @@ The address wraps at 64 bits where the spec's offset does not, as for
 the field's elements gives an address and no fault, as the spec gives one
 (Q3 A). The differential harness checks struct and array programs against
 `fir-ref` (`tests/fir/canonical/fieldaddr-programs.fir`). Rejected: a
-`leaq` with a scaled index, which scales by 1, 2, 4 or 8 only, where a
-stride may be any number of bytes.
+`leaq` with a scaled index for strides of 1, 2, 4 or 8 bytes, a second
+lowering beside the one that serves every stride, for a naive backend
+whose speed is not measured on the code it emits.
 
 ## Loads and stores
 

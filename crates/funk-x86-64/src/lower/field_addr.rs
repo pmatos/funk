@@ -16,9 +16,11 @@
 //! field's type is not a value of the op, so a field of a type that the
 //! backend does not lower, such as `i24`, still has its address computed.
 
+use std::collections::HashMap;
+
 use funk_ir::ir::layout::memory;
 use funk_ir::text::print_symbol;
-use funk_ir::{Attr, Field, MemLayout, Op, Registry};
+use funk_ir::{Attr, Field, Item, MemLayout, Module, Op, Registry};
 
 use super::{Cx, Lower, Unlowered};
 use crate::asm::Reg;
@@ -28,40 +30,60 @@ pub(super) fn lowering(name: &str) -> Option<Lower> {
     (name == "fieldaddr").then_some(field_addr as Lower)
 }
 
-/// The offset of the field, in bytes, and its stride, which fits an
-/// immediate: a type of at most `2^24 - 1` bits takes at most 2^21 bytes.
+/// The fields of each layout of a module's own table, by its symbol: each
+/// field's offset and stride in bytes, or `None` when its type may not be a
+/// field, which validation rejects.
+pub struct Places<'m>(HashMap<&'m str, Vec<Option<(u64, i32)>>>);
+
+impl<'m> Places<'m> {
+    /// The places of `m`'s layouts, the first with each symbol, as
+    /// `SymbolTable::layout` finds it. A module with no layout builds no
+    /// registry.
+    pub fn of(m: &'m Module) -> Places<'m> {
+        let mut places = HashMap::new();
+        let mut core = None;
+        let entry = |n: u64| {
+            u32::try_from(n)
+                .ok()
+                .and_then(|n| memory(&m.layout, n))
+                .unwrap_or(MemLayout::DEFAULT)
+        };
+        for a in m.items.iter().filter_map(Item::as_aggregate) {
+            if places.contains_key(a.name.as_str()) {
+                continue;
+            }
+            let reg = core.get_or_insert_with(Registry::core);
+            let fields = a.fields.iter().map(|f| {
+                let (u, align) = reg.field_shape(&f.ty, &entry, a.memory)?;
+                let stride = Field::stride(u, align);
+                // A type of at most `2^24 - 1` bits takes at most 2^21
+                // bytes, so a stride fits an immediate.
+                debug_assert!(stride <= 1 << 21, "{stride}");
+                Some((f.offset, stride as i32))
+            });
+            places.insert(a.name.as_str(), fields.collect());
+        }
+        Places(places)
+    }
+}
+
+/// The offset of the field that `op` names, and its stride.
 fn place(cx: &Cx<'_>, op: &Op) -> Result<(u64, i32), Unlowered> {
     let [Attr::Sym(s), Attr::Int(i)] = op.attrs.as_slice() else {
         return Err("fieldaddr takes a layout's symbol and a field's number".into());
     };
-    let field = cx.symbols.layout(s).and_then(|a| {
-        let f = a.fields.get(i.as_str().parse::<usize>().ok()?)?;
-        Some((a, f))
+    let field = cx.places.0.get(s.as_str()).and_then(|fs| {
+        let i = i.as_str().parse::<usize>().ok()?;
+        fs.get(i).copied()
     });
-    let sym = print_symbol(s);
-    let Some((a, f)) = field else {
-        return Err(format!("fieldaddr {sym} {} names no field", i.as_str()).into());
-    };
-    let entry = |n: u64| {
-        u32::try_from(n)
-            .ok()
-            .and_then(|n| memory(cx.layout, n))
-            .unwrap_or(MemLayout::DEFAULT)
-    };
-    let Some((u, align)) = Registry::core().field_shape(&f.ty, &entry, a.memory) else {
-        return Err(format!(
-            "the field {} of {sym} has a type that may not be a field",
-            f.ty
-        )
-        .into());
-    };
-    let stride = i32::try_from(Field::stride(u, align)).map_err(|_| {
+    field.flatten().ok_or_else(|| {
+        let sym = print_symbol(s);
         format!(
-            "the field {} of {sym} has elements past 2^31 bytes apart",
-            f.ty
+            "fieldaddr {sym} {} names no field that can be placed",
+            i.as_str()
         )
-    })?;
-    Ok((f.offset, stride))
+        .into()
+    })
 }
 
 /// `%q: ptr<N> = fieldaddr @s i %p` and `%q: ptr<N> = fieldaddr @s i %p, %k`.
@@ -146,19 +168,26 @@ mod tests {
     }
 
     #[test]
-    fn an_offset_past_32_bits_is_added_through_rcx() {
-        let big = "aggregate @big() memory(0) size(25769803784) align(8) field(0, i64, 3) \
-                   field(25769803776, i64) {\n}";
+    fn an_offset_is_added_modulo_2_64_through_rcx_past_a_displacement() {
+        let big = "aggregate @big() memory(0) size(18446744073709551615) align(8) \
+                   field(0, i8, 4) field(2147483648, i64) field(18446744073709551600, i64) {\n}";
         let asm = lowered(
             big,
-            "func @f(%p: ptr) -> ptr {\n^entry:\n  \
-             %a: ptr = fieldaddr @big 1 %p @0\n  ret %a @0\n}",
+            "func @f(%p: ptr, %k: i64) -> ptr, ptr, ptr {\n^entry:\n  \
+             %a: ptr = fieldaddr @big 1 %p @0\n  %b: ptr = fieldaddr @big 2 %p @0\n  \
+             %c: ptr = fieldaddr @big 0 %p, %k @0\n  ret %a, %b, %c @0\n}",
         )
         .unwrap();
         assert!(
-            asm.contains("\tmovabsq\t$25769803776, %rcx\n\taddq\t%rcx, %rax\n"),
+            asm.contains("\tmovabsq\t$2147483648, %rcx\n\taddq\t%rcx, %rax\n"),
             "{asm}"
         );
+        // 2^64 - 16 is -16 modulo 2^64.
+        assert!(asm.contains("\tleaq\t-16(%rax), %rax\n"), "{asm}");
+        // An element of one byte needs no multiplication.
+        assert!(!asm.contains("imulq"), "{asm}");
+        let added = "\taddq\t%rcx, %rax\n\tmovq\t%rax, ";
+        assert_eq!(asm.matches(added).count(), 2, "{asm}");
     }
 
     #[test]

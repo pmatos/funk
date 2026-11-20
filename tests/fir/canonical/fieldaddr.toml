@@ -8,7 +8,8 @@
 # units, where a pointer takes two units. The elements of @long_doubles
 # are 16 units apart, each 10-unit float(15, 64) rounded up to its
 # alignment (Q2 B). The backend lowers neither i24 nor float(15, 64), nor a
-# memory of 16-bit units, so each test is interpreter-only.
+# memory of 16-bit units, and it builds a module whole, so each test is
+# interpreter-only, @pair_fields too.
 tests = [
   { func = "@pair_fields", args = ["7", "-9"], expect = ["7", "-9"] },
   { func = "@elements", expect = ["17", "16", "15", "14"] },
