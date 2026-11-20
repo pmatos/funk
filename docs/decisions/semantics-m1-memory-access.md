@@ -84,7 +84,8 @@ pointer's.
   ([x86-64-backend-lowering-memory.md](x86-64-backend-lowering-memory.md#loads-and-stores)).
 
 `Core.Op.memCases`, which splits an obligation of every core op into the
-tied ops and the memory ops, gained a case for `load`, and
+tied ops and the ops with their own rules (semantics-effects.md#soundness),
+gained a case for `load`, and
 `Core.memDenoteIn_mapsDenote` asks the morphism to keep loads, which
 `MonadMorphism.state_load` gives for the state layer. Every whole-core
 guarantee keeps its statement (semantics-m1-memory.md#the-cores-guarantees).
