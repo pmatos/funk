@@ -15,7 +15,7 @@ open Fir.Memory
 address 4. -/
 def two : Memory 8 := (((Memory.empty.alloc .stack 4 4).2.expose 0 4).alloc .stack 4 4).2
 
-/-- The bounds of the strictest reading for `P`-bit pointers: no
+/-- The bounds that a run exposes with for `P`-bit pointers (#232, Q4): no
 allocation at 0, and every one ending below `2 ^ P`. -/
 def hi (P : Nat) : Nat := 2 ^ P - 1
 
