@@ -12,8 +12,9 @@ order. So the scope can be replaced by the function's own types in what the
 second pass accepts, and each decoded function is well formed. Its result
 types decode as types do, from attributes written as types.
 
-An item decodes only as a `func` with no attributes, whose body holds
-blocks or holds nothing, as a `module` with no parameters, results or
+An item decodes only as a `func`, whose attributes after each result are
+that result's, held in the short form with its parameters', and whose body
+holds blocks or holds nothing, as a `module` with no parameters, results or
 attributes, whose body holds a dialect set and items, decoded in turn, or
 holds nothing, as an aggregate's layout whose numbers are within the limit
 and whose fields' types are written as types and decode back, as a global
