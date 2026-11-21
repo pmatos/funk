@@ -87,7 +87,8 @@ enum Decoded {
     Module(NestedModule, Vec<SItem>),
 }
 
-/// A `func` has no attributes and blocks in its body. A `module` has no
+/// A `func` has blocks in its body, and attributes only after a result,
+/// which are that result's (ADR-2026-11-21-1307). A `module` has no
 /// parameters, results or attributes, and its dialect set and items in its
 /// body (ADR-2026-11-10-1510). An empty body is no blocks, so it is a
 /// function with no blocks or a module with no items. An item whose kind is

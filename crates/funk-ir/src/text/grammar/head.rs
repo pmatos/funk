@@ -15,6 +15,10 @@ use crate::ir::{Attr, Def, Type};
 /// The attributes after a definition or a type, each with its position.
 type Attrs = Vec<(Attr, TextPos)>;
 
+/// The parameters as read, each with its attributes, and the position of
+/// the `...` that ends them, if any.
+type Params = (Vec<((Def, DefPos), Attrs)>, Option<TextPos>);
+
 impl Parser<'_> {
     /// `word symbol '(' params? ')' ('->' results)? attr* '{'`: an item up
     /// to its body.
@@ -62,8 +66,7 @@ impl Parser<'_> {
 
     /// `...` alone, or parameters separated by commas, which may end in
     /// `, ...`; the position of the `...`, if any.
-    #[allow(clippy::type_complexity)]
-    fn params(&mut self) -> Result<(Vec<((Def, DefPos), Attrs)>, Option<TextPos>), ParseError> {
+    fn params(&mut self) -> Result<Params, ParseError> {
         let mut params = Vec::new();
         if self.peek() == &Tok::Ellipsis {
             let pos = self.pos();

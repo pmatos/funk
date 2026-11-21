@@ -145,17 +145,13 @@ impl Func {
     /// Adds the parameter `%name: ty` with the attributes `attrs` after its
     /// type.
     pub fn marked_param(mut self, name: impl Into<String>, ty: Type, attrs: Vec<Attr>) -> Func {
-        self.param_attrs.resize(self.params.len(), Vec::new());
-        self.param_attrs.push(attrs);
-        self.param_attrs = trim_attrs(std::mem::take(&mut self.param_attrs));
+        push_attrs(&mut self.param_attrs, self.params.len(), attrs);
         self.param(name, ty)
     }
 
     /// Adds a result type with the attributes `attrs` after it.
     pub fn marked_result(mut self, ty: Type, attrs: Vec<Attr>) -> Func {
-        self.result_attrs.resize(self.results.len(), Vec::new());
-        self.result_attrs.push(attrs);
-        self.result_attrs = trim_attrs(std::mem::take(&mut self.result_attrs));
+        push_attrs(&mut self.result_attrs, self.results.len(), attrs);
         self.result(ty)
     }
 
@@ -195,4 +191,12 @@ impl Module {
         self.items.push(Item::Func(f));
         self
     }
+}
+
+/// Sets `attrs` as the attributes of the place at `index`, the one after
+/// the last place so far, keeping the list in its short form.
+fn push_attrs(list: &mut Vec<Vec<Attr>>, index: usize, attrs: Vec<Attr>) {
+    list.resize(index, Vec::new());
+    list.push(attrs);
+    *list = trim_attrs(std::mem::take(list));
 }

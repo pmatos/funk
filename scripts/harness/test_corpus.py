@@ -313,6 +313,11 @@ class ResultTypes(unittest.TestCase):
             },
         )
 
+    def test_markers(self):
+        text = "func @m(%a: i8 sext, %b: i32, %c: toy.t(i8, 2)) -> i1 zext, i16 sext {\n^e:\n}\n"
+        self.assertEqual(result_types(text), {"@m": ["i1", "i16"]})
+        self.assertEqual(param_types(text), {"@m": ["i8", "i32", "toy.t(i8, 2)"]})
+
 
 class Layout(unittest.TestCase):
     def test_the_corpus_has_a_place_for_each_file(self):

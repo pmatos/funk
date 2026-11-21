@@ -20,6 +20,8 @@ from dataclasses import dataclass
 NUMBER = re.compile(r"-?\d*(?:\.\d+e-\d+)?", re.ASCII)
 NAMECHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_."
 PUNCT = "(){},:="
+# The kinds of token that start an attribute.
+ATTR_START = ("word", "int", "string", "symbol")
 
 
 class TextError(Exception):
@@ -315,12 +317,7 @@ class Reader:
 
     def marks(self) -> None:
         """Skips the attributes after a parameter's or a result's type."""
-        while (t := self.peek()) is not None and t.kind in (
-            "word",
-            "int",
-            "string",
-            "symbol",
-        ):
+        while (t := self.peek()) is not None and t.kind in ATTR_START:
             self.attr()
 
     def types(self) -> tuple[str, ...]:
@@ -335,7 +332,7 @@ class Reader:
 
     def attr(self) -> str:
         t = self.peek()
-        if t is None or t.kind not in ("word", "int", "string", "symbol"):
+        if t is None or t.kind not in ATTR_START:
             raise TextError(f"line {t.line if t else '?'}: expected an attribute")
         self.i += 1
         if t.kind == "word" and self.at("("):
@@ -358,7 +355,7 @@ class Reader:
             self.take("=")
         name = self.take("word").text
         attrs = []
-        while self.peek() and self.peek().kind in ("word", "int", "string", "symbol"):
+        while self.peek() and self.peek().kind in ATTR_START:
             attrs.append(self.attr())
         operands, successors = [], []
         while self.at("value") or self.at("label"):
