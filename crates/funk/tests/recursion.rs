@@ -25,7 +25,7 @@ use std::path::Path;
 use std::process::{Child, Command, Output, Stdio};
 use std::time::{Duration, Instant};
 
-use common::{build, dir, module, text, values};
+use common::{build, dir, module, text, values, write_executable};
 
 /// The limit on data, in KiB, under which runs that never end are made with
 /// no stack limit: 64 MiB.
@@ -217,7 +217,7 @@ fn with_no_stack_limit_a_data_limit_bounds_a_recursive_run() {
 fn the_report_shows_control_bytes_in_the_program_s_path_escaped() {
     let exe = build("recursion-path", &recursive());
     let odd = exe.with_file_name("ever\nmore");
-    std::fs::copy(&exe, &odd).unwrap();
+    write_executable(&odd, &std::fs::read(&exe).unwrap());
     let shown = odd.display().to_string().replace('\n', "\\x0a");
     ran_out(
         &run_limited(LIMIT, &odd, &["@forever", "0"]),
