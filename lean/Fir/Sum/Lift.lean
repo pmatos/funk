@@ -34,7 +34,8 @@ has:
 * the memories of `big` and `e`'s own. A name of `e` for a memory of `dep`
   becomes that memory's name in `big`, by `μ`, and a name of one of `e`'s
   own stays as it is. So an op of `e` names each memory of `dep` as `big`
-  does, and a memory has one name in the sum `big ⊞ e.lift dep ι μ`.
+  does, and a memory has one name in the sum `big ⊞ e.lift dep ι μ`. The
+  memories that a data layout numbers are `big`'s.
 
 This section gives, in order: the lift and the inclusion of its types, then
 each class of the lift over `big`. The sections after it prove that the lift
@@ -199,11 +200,12 @@ theorem liftMem_ofBase (μ : DialectEffects.Mem dep → DialectEffects.Mem big)
 
 /-- The memories of the lift are `big`'s and `e`'s own. An op of the lift
 has `e`'s poison class, and `e`'s effects with their memories mapped by the
-lift's memory map. -/
+lift's memory map. Its numbered memories are `big`'s. -/
 instance instDialectEffects {μ : DialectEffects.Mem dep → DialectEffects.Mem big} :
     DialectEffects (big.over (e.lift dep ι μ)) :=
   ⟨DialectEffects.Mem big ⊕ DialectMemOver.Own dep e, fun o => poisonClass (d := dep.over e) o,
-    fun o => (effects (d := dep.over e) o).map (liftMem μ)⟩
+    fun o => (effects (d := dep.over e) o).map (liftMem μ),
+    fun n => (DialectEffects.numbered (d := big) n).map .inl⟩
 
 /-- The memories of the lift over `big` are `big`'s and `e`'s own. -/
 instance instDialectMemOver {μ : DialectEffects.Mem dep → DialectEffects.Mem big} :

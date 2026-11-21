@@ -30,7 +30,7 @@ what $`\mathsf{load}` runs by its own rule has a property when its rule
 has it on every pointer operand.
 :::
 
-:::readable Fir.Core.load_writesNot Fir.Core.load_allocatesNot Fir.Core.load_readsNot (pin := Fir.WritesNot) (pin := Fir.ReadsNot) (pin := Fir.AllocatesNot) (fingerprint := "2290644961823691538")
+:::readable Fir.Core.load_writesNot Fir.Core.load_allocatesNot Fir.Core.load_readsNot (pin := Fir.WritesNot) (pin := Fir.ReadsNot) (pin := Fir.AllocatesNot) (fingerprint := "16615154245356824752")
 *Theorems: $`\mathsf{load}` touches memory only by reading where it
 declares.* At every layout $`\ell` and naming $`\rho`, and for every
 memory $`y` of the run, $`\mathsf{load}_N` by its own rule writes no unit

@@ -14,16 +14,17 @@ when the Lean changes under it.
 
 #doc (Manual) "The core dialect's modes: readable blocks" =>
 
-:::moduleDocs (fingerprint := "9400045757668067221")
+:::moduleDocs (fingerprint := "8610687305381381655")
 :::
 
-:::readable Fir.Core.modeTree Fir.Core.exhaustive Fir.Core.scripted (pin := Fir.ChoiceTree.explore) (pin := Fir.ChoiceTree.script) (pin := Fir.Func.memTree) (fingerprint := "5987483451217847632")
+:::readable Fir.Core.modeTree Fir.Core.exhaustive Fir.Core.scripted (pin := Fir.ChoiceTree.explore) (pin := Fir.ChoiceTree.script) (pin := Fir.Func.memTree) (fingerprint := "7981937833910447679")
 *Definition: exhaustive and scripted mode on a core function.* For a core
 function $`f` of a module $`M`, arguments $`\vec{v}` of its parameter
 types and fuel $`k`, let
 $`T = \mathrm{tree}^{\mathrm{mem}}_{M,f}(\vec{v}, k)` be the
 {ref "The-fir-specification--Memory--Modes-with-memory"}[tree of its run with memory],
-from the empty memories, where each memory $`n` of the run has
+from the memories that hold the globals of $`M`'s own table, where each
+memory $`n` of the run has
 $`\ell_M(n)`, its entry in $`M`'s
 {ref "The-fir-specification--Abstract-syntax--Data-layouts"}[data layout],
 the run names the core's memories by themselves, and it gives each op the

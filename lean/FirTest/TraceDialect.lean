@@ -37,7 +37,7 @@ instance : DialectCall EmitDialect := ⟨fun _ => none⟩
 instance : DialectEffects EmitDialect :=
   ⟨Empty, fun _ => .exception, fun
     | .emit => {}
-    | .ret => { control := true }⟩
+    | .ret => { control := true }, fun _ => none⟩
 
 /-- The emit dialect's events are numbers, answered by numbers: `emit`
 shows `0`, and `ret` returns. -/
@@ -120,14 +120,14 @@ theorem emitMain_run (a : Nat) :
     runs .nil 2 (.ok (.ok (.ret ⟨[], Memories.empty, []⟩),
       [.tick, .act (⟨0, a⟩ : Act Nat Nat), .tick])) := by
   letI := DialectTrace.stepAt (d := EmitDialect) lay Empty.elim RunItems.empty
-  refine ⟨.ok (.ok (.ret []), [.tick, .act (⟨0, a⟩ : Act Nat Nat), .tick], TraceState.init), ?_,
+  refine ⟨.ok (.ok (.ret []), [.tick, .act (⟨0, a⟩ : Act Nat Nat), .tick], (TraceState.init Memories.empty)), ?_,
     rfl⟩
   unfold Func.run
-  refine run_bind (a := (emitOps, [])) (t := []) (s' := TraceState.init)
+  refine run_bind (a := (emitOps, [])) (t := []) (s' := (TraceState.init Memories.empty))
     (run_liftExcept _ _) ?_ (TraceEnd.after_nil _).symm
   refine run_bind (a := Result.ret ([], 0))
     (t := [Step.tick, Step.act (⟨0, a⟩ : Act Nat Nat), Step.tick])
-    (s' := TraceState.init)
+    (s' := (TraceState.init Memories.empty))
     ⟨.ok (.ok (Result.ret ([], 0)), [Step.tick, Step.act (⟨0, a⟩ : Act Nat Nat), Step.tick],
       inCall), ?_, rfl⟩ (run_pure _ _) (by simp [TraceEnd.after])
   simp only [emitOps]

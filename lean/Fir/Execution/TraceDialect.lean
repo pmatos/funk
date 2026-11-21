@@ -10,7 +10,8 @@ A dialect says what its events and their answers are, how one event refines
 another, and gives its ops a semantics in the traced layer, wherever a run
 names its memories and whatever items it gives each op. The traced runs of
 a function are the runs of the interpreter in the traced layer of marked
-traces, from the empty memories with nothing escaped,
+traces, from the memories that hold the run's starting allocations, with
+nothing escaped,
 where each op that runs by the dialect's rule, a terminator among them,
 first shows a step. A call shows no step of its own: the ops of its callee
 show theirs. Erasing the steps maps the traced runs to the runs by the
@@ -92,8 +93,8 @@ variable (μ : Nat → N) (ar : AddrRule)
 the dialect's memory `x` as `ρ x`, whose layout entry is `lay (ρ x)`, and
 gives each op the items `L`: its run
 in the traced layer of marked traces, each op that runs by the dialect's
-rule showing a step before it, from the empty memories with nothing
-escaped, at each budget, on each argument vector of its parameter types. An
+rule showing a step before it, from the memories that hold `L`'s starting
+allocations, with nothing escaped, at each budget, on each argument vector of its parameter types. An
 observer sees the acts of the trace and the end of each return, where the
 memory numbered `n` is `μ n` and addresses are compared by `ar`. The caller
 gives `μ`: it should name the memory numbered `n` as `ρ` names the
@@ -105,7 +106,7 @@ def Func.traceRuns (M : Module d) (f : Func d) :
   letI := DialectTrace.stepAt (d := d) lay ρ L
   fun args fuel e => ∃ e',
     (f.run M (m := TraceM (Step (DialectTrace.Acts d)) (TraceState N (unitsOf lay))) args fuel).run
-      TraceState.init e' ∧ e = e'.map fun p => (p.2.2.endOf μ ar p.1, p.2.1)
+      (TraceState.init (RunItems.start d lay ρ L)) e' ∧ e = e'.map fun p => (p.2.2.endOf μ ar p.1, p.2.1)
 
 /-- The spec's traced runs of the function `f`: its traced runs, where the
 end of each return compares no addresses (`AddrRule.ignore`). An address is
@@ -156,13 +157,16 @@ class LiftsMem (d : Dialect) [TyDenote d.Ty] [DecidableEq d.Ty] [DialectSignatur
     (MonadMorphism.traceMem N (unitsOf lay) (DialectTrace.Acts d)).MapsDenote (d := d)
 
 /-- The runs with memory of the function `f`, each return seen at its end:
-the returned values and the memories it ends with, with nothing escaped. -/
+the returned values and the memories it ends with, with nothing escaped.
+They start from the memories that hold `L`'s starting allocations, as the
+runs with memory do. -/
 def Func.memEndRuns [DialectMemDenote d] (M : Module d) (f : Func d) :
     FuncRuns (HVector toType (f.params.map (·.2))) (End (unitsOf lay) μ ar (List (DVal d))) :=
   letI := DialectMemDenote.denoteAt (d := d) lay ρ L
   fun args fuel => Functor.map (f := SetM)
     (fun p => (TraceState.mk p.2 []).endOf μ ar p.1)
-    ((f.run M (m := StateT (Memories N (unitsOf lay)) SetM) args fuel).run Memories.empty)
+    ((f.run M (m := StateT (Memories N (unitsOf lay)) SetM) args fuel).run
+      (RunItems.start d lay ρ L))
 
 /-- The traced runs of a function of a dialect whose ops show no event show
 no act, and end as its runs with memory, each return seen at its end. -/
@@ -179,14 +183,14 @@ theorem Func.traceRuns_noActs [DialectMemDenote d] [LiftsMem d] (M : Module d) (
       (congrArg ExceptT.run (Func.run_map (LiftsMem.lifts lay ρ L)
         MonadMorphism.traceMem_mapsFrame M f args fuel)).symm
   have hfwd : ∀ e', ((f.run M (m := TraceM (Step (DialectTrace.Acts d))
-        (TraceState N (unitsOf lay))) args fuel).run TraceState.init e') →
+        (TraceState N (unitsOf lay))) args fuel).run (TraceState.init (RunItems.start d lay ρ L)) e') →
       TraceM.liftMem (A := DialectTrace.Acts d)
-        (f.run M (m := StateT (Memories N (unitsOf lay)) SetM) args fuel).run TraceState.init
+        (f.run M (m := StateT (Memories N (unitsOf lay)) SetM) args fuel).run (TraceState.init (RunItems.start d lay ρ L))
         (e'.mapActs Step.acts) := fun e' h => hY ▸ ⟨e', h, rfl⟩
   have hbwd : ∀ e, TraceM.liftMem (A := DialectTrace.Acts d)
-      (f.run M (m := StateT (Memories N (unitsOf lay)) SetM) args fuel).run TraceState.init e →
+      (f.run M (m := StateT (Memories N (unitsOf lay)) SetM) args fuel).run (TraceState.init (RunItems.start d lay ρ L)) e →
       ∃ e', ((f.run M (m := TraceM (Step (DialectTrace.Acts d)) (TraceState N (unitsOf lay))) args
-        fuel).run TraceState.init e') ∧ e = e'.mapActs Step.acts := fun e h => (hY ▸ h :)
+        fuel).run (TraceState.init (RunItems.start d lay ρ L)) e') ∧ e = e'.mapActs Step.acts := fun e h => (hY ▸ h :)
   refine ⟨?_, ?_, fun x => ⟨?_, ?_⟩, fun r => ⟨?_, ?_⟩⟩
   · rintro x mt ⟨(⟨_, _⟩ | ⟨_, _, _⟩), h, he⟩ <;> cases he
     rcases hfwd _ h with ⟨_, _, _, he⟩ | ⟨_, _, he⟩

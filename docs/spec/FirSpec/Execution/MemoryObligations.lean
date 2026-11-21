@@ -14,15 +14,15 @@ when the Lean changes under it.
 
 #doc (Manual) "Memory obligations: readable blocks" =>
 
-:::moduleDocs (fingerprint := "12698197914653539461")
+:::moduleDocs (fingerprint := "15305036953839554828")
 :::
 
-:::readable Fir.Memory.Memory.allocs Fir.Memory.Memory.contents Fir.Memory.Memory.unitAt (fingerprint := "16077720331530795137")
+:::readable Fir.Memory.Memory.allocs Fir.Memory.Memory.contents Fir.Memory.Memory.unitAt (fingerprint := "18330032551635612125")
 *Definition: what a memory holds.* For a memory $`M` with the blocks
 $`b_0 \ldots b_{k-1}`:
 
 * its _allocations_ are the shape of each block, its kind, alignment,
-  size and liveness, in order:
+  size, liveness and constness, in order:
   $`\mathrm{allocs}(M) = (\mathrm{shape}(b_i))_{i < k}`;
 * its _contents_ are the units of each block, in order:
   $`\mathrm{contents}(M) = (b_i.\mathit{units})_{i < k}`;
@@ -30,7 +30,7 @@ $`b_0 \ldots b_{k-1}`:
   nothing when there is none.
 :::
 
-:::readable Fir.Memory.Memories.framesOf Fir.Memory.Memories.AgreeOff (fingerprint := "11880849265837889840")
+:::readable Fir.Memory.Memories.framesOf Fir.Memory.Memories.AgreeOff (fingerprint := "7918541357333943843")
 *Definition: the frames of a memory, and agreeing off a memory.* The
 frames of the memory $`x` in $`S` list, for each frame of $`S`, innermost
 first, the ids of the stack allocations of $`x` that it holds. Two
@@ -40,7 +40,7 @@ for every $`y \neq x`, and
 $`\mathrm{allocs}(S_1.\mathit{mem}(x)) = \mathrm{allocs}(S_2.\mathit{mem}(x))`.
 :::
 
-:::readable Fir.WritesNot Fir.AllocatesNot (fingerprint := "13670154602380140214")
+:::readable Fir.WritesNot Fir.AllocatesNot (fingerprint := "7603391212458073751")
 *Definition: no write, and no allocation.* A computation $`c` of the
 state layer over the set monad _writes no unit of_ $`x` when every way it
 ends, $`\mathsf{ok}~(a, S') \in c(S)`, keeps the contents of $`x` as a
@@ -58,7 +58,7 @@ it was. UB ends a path and shows no memory, so both speak only of the
 paths that end.
 :::
 
-:::readable Fir.ReadsNot.Match Fir.ReadsNot (fingerprint := "12419194272958014085")
+:::readable Fir.ReadsNot.Match Fir.ReadsNot (fingerprint := "6933875917264666138")
 *Definition: no read.* A computation $`c` _does not read_ $`x` when it does
 not depend on the units of $`x`. For all memories of a run $`S` and every
 memory $`m` with $`\mathrm{allocs}(m) = \mathrm{allocs}(S.\mathit{mem}(x))`,

@@ -16,6 +16,12 @@ func @msg_size() -> i64 {
   ret %s @0
 }
 
+func @after_globals() -> ptr {
+^entry:
+  %p: ptr = alloca stack i32 @0
+  ret %p @0
+}
+
 locs {
   @0 = unknown
 }

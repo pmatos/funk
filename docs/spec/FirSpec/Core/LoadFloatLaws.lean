@@ -29,7 +29,7 @@ units of $`\mathsf{i}W`, $`W = 1 + e + m`, decoded. So what it runs by its
 own rule has a property when its rule has it on every pointer.
 :::
 
-:::readable Fir.Core.loadFloat_writesNot Fir.Core.loadFloat_allocatesNot Fir.Core.loadFloat_readsNot (pin := Fir.WritesNot) (pin := Fir.ReadsNot) (pin := Fir.AllocatesNot) (fingerprint := "872194356433768512")
+:::readable Fir.Core.loadFloat_writesNot Fir.Core.loadFloat_allocatesNot Fir.Core.loadFloat_readsNot (pin := Fir.WritesNot) (pin := Fir.ReadsNot) (pin := Fir.AllocatesNot) (fingerprint := "11477987027257242562")
 *Theorems: the load of a float touches memory only by reading where it
 declares.* At every layout $`\ell` and naming $`\rho`, it writes no unit
 of any memory, allocates and frees in none, and reads no memory but

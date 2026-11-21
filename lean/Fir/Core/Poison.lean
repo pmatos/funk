@@ -111,8 +111,9 @@ end Fir.Core
 namespace Fir
 
 /-- The core dialect's effect class: each op's poison class, and its
-effects from the section on the effects of the core ops. -/
-instance : DialectEffects CoreDialect := ⟨Core.Mem, Core.Op.poisonClass, Core.Op.effects⟩
+effects from the section on the effects of the core ops. Its memories are
+named by their numbers in the data layout. -/
+instance : DialectEffects CoreDialect := ⟨Core.Mem, Core.Op.poisonClass, Core.Op.effects, some⟩
 
 instance : TyPoison Core.Ty := ⟨Core.Ty.IsPoison⟩
 

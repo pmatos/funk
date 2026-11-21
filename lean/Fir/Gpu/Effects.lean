@@ -28,10 +28,10 @@ def Op.effects : Op → Effects (DialectEffects.Mem CoreDialect ⊕ Empty)
   | .query .. => {}
   | .alloc _ _ _ n => { allocates := .these [.inl n] }
 
-/-- Every op of `gpu` propagates poison. Its memories are the core's, and
-none of its own. -/
+/-- Every op of `gpu` propagates poison. Its memories are the core's, each
+of its number, and none of its own. -/
 instance instDialectEffects : DialectEffects GpuDialect :=
-  ⟨DialectEffects.Mem CoreDialect ⊕ Empty, fun _ => .propagates, Op.effects⟩
+  ⟨DialectEffects.Mem CoreDialect ⊕ Empty, fun _ => .propagates, Op.effects, fun n => some (.inl n)⟩
 
 /-- `gpu` names the core's memories as the core does, and has none of its
 own. -/

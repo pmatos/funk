@@ -14,7 +14,7 @@ changes under it.
 
 #doc (Manual) "Congruence in the callee over traced runs, divergence included: readable blocks" =>
 
-:::moduleDocs (fingerprint := "17363283192825228851")
+:::moduleDocs (fingerprint := "4703184226879061558")
 :::
 
 :::readable Fir.Stream.IsRefinedBy.closed (fingerprint := "5280672388205635261")
@@ -34,12 +34,13 @@ UB is allowed call by call; a divergence, silent or with acts forever, by
 divergence across black boxes.
 :::
 
-:::readable Fir.Func.traceRuns_diverge_iff_from Fir.Func.traceRuns_reacts_iff_from Fir.Func.traceRuns_isRefinedBy_of_traceRunsFrom (fingerprint := "11432980720391546570")
-*Theorems: from the empty memories.* A function's traced runs diverge silently
-after $`t`, or show the infinite trace $`T`, exactly when its traced runs from
-the empty memories do: the same paths run out of fuel. So, when refinement
-of values is transitive, traced runs from the empty memories with nothing
-escaped that refine others give traced runs, each return seen at its end,
+:::readable Fir.Func.traceRuns_diverge_iff_from Fir.Func.traceRuns_reacts_iff_from Fir.Func.traceRuns_isRefinedBy_of_traceRunsFrom (fingerprint := "5252632761560559523")
+*Theorems: from the memories a run starts with.* A function's traced runs
+diverge silently after $`t`, or show the infinite trace $`T`, exactly when
+its traced runs from the memories that hold $`L`'s starting allocations do:
+the same paths run out of fuel. So, when refinement of values is
+transitive, traced runs from those memories with nothing escaped that
+refine others give traced runs, each return seen at its end,
 that refine theirs.
 :::
 

@@ -73,7 +73,7 @@ theorem Func.traceRuns_replaceBody_isRefinedBy_of_bound
       (f.replaceBody g.name b).traceRuns lay ρ L μ ar (M.replaceBody g.name b) := fun a =>
   Func.traceRuns_isRefinedBy_of_from lay ρ L μ ar htrans
     ((Func.memRuns_replaceBody_isRefinedBy_of_bound lay ρ L hrefl htrans hM hg b hbound h hf).1
-      (a, Memories.empty))
+      (a, RunItems.start d lay ρ L))
 
 /-- Congruence in the callee over traced runs, by the class alone, with no
 budget, for a dialect whose ops show no event and have finitely many
@@ -98,6 +98,6 @@ theorem Func.traceRuns_replaceBody_isRefinedBy_of_opsFinite
       (f.replaceBody g.name b).traceRuns lay ρ L μ ar (M.replaceBody g.name b) := fun a =>
   Func.traceRuns_isRefinedBy_of_from lay ρ L μ ar htrans
     ((Func.memRuns_replaceBody_isRefinedBy_of_opsFinite lay ρ L hrefl htrans hfin hM hg b h hf).1
-      (a, Memories.empty))
+      (a, RunItems.start d lay ρ L))
 
 end Fir

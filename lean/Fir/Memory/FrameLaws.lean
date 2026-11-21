@@ -12,8 +12,8 @@ run, and what they leave alone:
   allocation of another kind is in no frame. An allocation in one memory
   leaves every other memory as it was.
 * Leaving a call frees exactly the allocations of its frame. Every other
-  allocation, of any memory, keeps its kind, its alignment, its units and its
-  liveness, and no memory gains or loses an allocation.
+  allocation, of any memory, keeps its kind, its alignment, its units, its
+  liveness and its constness, and no memory gains or loses an allocation.
 * So a stack allocation that a call makes is freed when the call returns,
   and every access to it after that is UB (ADR-2026-11-09-1548).
 -/
@@ -197,7 +197,7 @@ theorem alloc_frames {k : AllocKind} (hk : k ≠ .stack) (S : Memories Mem unit)
 /-- A stack allocation that a call makes is freed when the call returns. -/
 theorem enter_alloc_exit (S : Memories Mem unit) (x : Mem) (n al : Nat) :
     (((S.enter.alloc x .stack n al).2.exit).mem x).blocks[(S.mem x).blocks.length]? =
-      some ⟨.stack, al, List.replicate n .poison, false, none⟩ := by
+      some ⟨.stack, al, List.replicate n .poison, false, none, false⟩ := by
   have hf : (S.enter.alloc x .stack n al).2.frames =
       [(x, (S.mem x).blocks.length)] :: S.frames :=
     alloc_stack_frames (S := S.enter) rfl x n al

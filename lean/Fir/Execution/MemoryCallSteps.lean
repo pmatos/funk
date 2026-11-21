@@ -235,15 +235,15 @@ def Func.InModuleAt (M : Module d) (f : Func d) : Prop :=
   f.MemInModule (unitsOf lay) M
 
 /-- A run with memory of a function that starts, at a budget, at a naming:
-its entry block's ops, run from the empty memories with a frame entered,
-finished. -/
+its entry block's ops, run from the memories the run starts with, with a
+frame entered, finished. -/
 theorem Func.memRuns_enter [DecidableEq d.Ty] (M : Module d) (f : Func d)
     (args : HVector toType (f.params.map (·.2))) (n : Nat) {body : List (Operation d)}
     {env : Env d} (hen : f.enter args.toDVals = .ok (body, env)) :
     letI := DialectMemDenote.denoteAt (d := d) lay ρ L
     f.memRuns lay ρ L M args n = (Result.finish Prod.fst
       (runFrom (Func.runOps (m := StateT (Memories N (unitsOf lay)) SetM) M n f env body)
-        Memories.empty.enter)).run := by
+        (RunItems.start d lay ρ L).enter)).run := by
   letI := DialectMemDenote.denoteAt (d := d) lay ρ L
   rw [← Func.run_fromState M f args n _ hen]
   exact fromState_fst _ _

@@ -77,7 +77,7 @@ instance : DialectValidation ProbeDialect where
 at `i0`, which validation rejects, it gives poison for a value. The probe
 dialect has no memory of its own: its memories are the core's. -/
 instance : DialectEffects ProbeDialect :=
-  ⟨DialectEffects.Mem CoreDialect ⊕ Empty, fun _ => .exception, fun _ => .all⟩
+  ⟨DialectEffects.Mem CoreDialect ⊕ Empty, fun _ => .exception, fun _ => .all, fun _ => none⟩
 
 /-- The probe dialect's memories are the core's, and none of its own. -/
 instance : DialectMemOver CoreDialect (Ext Op) := ⟨Empty, id, id, fun _ => rfl, fun _ => rfl⟩

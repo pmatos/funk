@@ -11,7 +11,8 @@ declares a write to it changes only what it stores (ADR-2026-11-09-1541).
 * An access succeeds exactly when its pointer has provenance for a live
   allocation of the memory, and every unit it touches is inside it.
   Otherwise it is immediate UB, for the reason it fails
-  (ADR-2026-11-09-1542).
+  (ADR-2026-11-09-1542). A store faults too when its allocation is
+  constant, and only then.
 * Fresh memory holds poison.
 * A load after a store, of the same units through the same pointer, gives
   back what was stored.
@@ -113,11 +114,30 @@ theorem load_eq_error {M : Memory u} {p : Pointer} {n : Nat} {f : Fault} :
   unfold load
   cases M.locate p n <;> simp [bind, Except.bind, pure, Except.pure]
 
-/-- A store faults exactly when its access does, for the same reason. -/
+/-- A store faults exactly when its access does, for the same reason, or
+when it lands in a constant allocation. -/
 theorem store_eq_error {M : Memory u} {p : Pointer} {us : List (MemUnit u)} {f : Fault} :
-    M.store p us = .error f ↔ M.locate p us.length = .error f := by
-  unfold store
-  cases M.locate p us.length <;> simp [bind, Except.bind, pure, Except.pure]
+    M.store p us = .error f ↔ M.locate p us.length = .error f ∨
+      ∃ a b o, M.locate p us.length = .ok (a, b, o) ∧ b.const = true ∧ f = .constant := by
+  cases hl : M.locate p us.length with
+  | error e => simp [store, hl, bind, Except.bind]
+  | ok r =>
+    obtain ⟨a, b, o⟩ := r
+    cases hc : b.const
+    · simp [store, hl, hc, bind, Except.bind, pure, Except.pure]
+    · simp only [store, hl, hc, bind, Except.bind, ↓reduceIte]
+      constructor
+      · intro h
+        cases h
+        exact .inr ⟨a, b, o, rfl, hc, rfl⟩
+      · rintro (h | ⟨_, _, _, h, -, rfl⟩)
+        · cases h
+        · rfl
+
+/-- A store whose access fails faults for the same reason. -/
+theorem store_of_locate_error {M : Memory u} {p : Pointer} {us : List (MemUnit u)} {f : Fault}
+    (h : M.locate p us.length = .error f) : M.store p us = .error f :=
+  store_eq_error.2 (.inl h)
 
 /-- A successful load gives the units of its allocation from its offset
 on. -/
@@ -125,11 +145,26 @@ theorem load_of_locate {M : Memory u} {p : Pointer} {n : Nat} {a : AllocId} {b :
     {o : Nat} (h : M.locate p n = .ok (a, b, o)) : M.load p n = .ok (b.read o n) := by
   simp [load, h, bind, Except.bind, pure, Except.pure]
 
-/-- A successful store writes its units into its own allocation. -/
+/-- A store to an allocation that is not constant, whose access succeeds,
+writes its units into the allocation. -/
 theorem store_of_locate {M : Memory u} {p : Pointer} {us : List (MemUnit u)} {a : AllocId}
-    {b : Block u} {o : Nat} (h : M.locate p us.length = .ok (a, b, o)) :
+    {b : Block u} {o : Nat} (h : M.locate p us.length = .ok (a, b, o)) (hc : b.const = false) :
     M.store p us = .ok ⟨M.blocks.set a (b.write o us)⟩ := by
-  simp [store, h, bind, Except.bind, pure, Except.pure]
+  simp [store, h, hc, bind, Except.bind, pure, Except.pure]
+
+/-- A store to a constant allocation faults, wherever in it it lands. -/
+theorem store_constant {M : Memory u} {p : Pointer} {us : List (MemUnit u)} {a : AllocId}
+    {b : Block u} {o : Nat} (h : M.locate p us.length = .ok (a, b, o)) (hc : b.const = true) :
+    M.store p us = .error .constant :=
+  store_eq_error.2 (.inr ⟨a, b, o, h, hc, rfl⟩)
+
+/-- A store that succeeds lands in an allocation that is not constant. -/
+theorem store_ok_const {M M' : Memory u} {p : Pointer} {us : List (MemUnit u)}
+    (h : M.store p us = .ok M') {a : AllocId} {b : Block u} {o : Nat}
+    (hl : M.locate p us.length = .ok (a, b, o)) : b.const = false := by
+  cases hc : b.const
+  · rfl
+  · rw [store_constant hl hc] at h; cases h
 
 /-- What a successful store leaves: the memory with its allocation's units
 written. -/
@@ -137,10 +172,10 @@ theorem store_eq_ok {M M' : Memory u} {p : Pointer} {us : List (MemUnit u)}
     (h : M.store p us = .ok M') :
     ∃ a b o, M.locate p us.length = .ok (a, b, o) ∧ M' = ⟨M.blocks.set a (b.write o us)⟩ := by
   cases hl : M.locate p us.length with
-  | error f => exact absurd (store_eq_error.2 hl) (by simp [h])
+  | error f => exact absurd (store_of_locate_error hl) (by simp [h])
   | ok r =>
     obtain ⟨a, b, o⟩ := r
-    rw [store_of_locate hl, Except.ok.injEq] at h
+    rw [store_of_locate hl (store_ok_const h hl), Except.ok.injEq] at h
     exact ⟨a, b, o, rfl, h.symm⟩
 
 /-!
@@ -158,10 +193,10 @@ theorem alloc_blocks_lt (M : Memory u) (k : AllocKind) (n al : Nat) {a : AllocId
   simp [alloc, List.getElem?_append_left ha]
 
 /-- An allocation adds one live block of its kind and alignment, of poison
-units. -/
+units, that is not constant. -/
 theorem alloc_blocks_new (M : Memory u) (k : AllocKind) (n al : Nat) :
     (M.alloc k n al).2.blocks[M.blocks.length]? =
-      some ⟨k, al, List.replicate n .poison, true, none⟩ := by
+      some ⟨k, al, List.replicate n .poison, true, none, false⟩ := by
   simp [alloc]
 
 /-- An allocation changes no access through a pointer without provenance

@@ -32,16 +32,16 @@ variable {d : Dialect} [TyDenote d.Ty] [DecidableEq d.Ty] [DialectSignature d] [
 
 /-- The tree of a run with memory of the function `f` of the module `M`, on
 `args` with `fuel` steps, each return seen at its end: its run in the state
-layer over the tree of choices, from the empty memories, a return of the
+layer over the tree of choices, from the memories `S₀`, a return of the
 values `v` with the memories `S` at the end of its path seen as the end
 `⟨v, S, []⟩`, where the memory numbered `n` is `μ n` and addresses are
 compared by `ar`. -/
 def Func.memEndTree (unit : N → Nat) (μ : Nat → N) (ar : AddrRule)
-    [DialectDenote d (StateT (Memories N unit) (ChoiceTree ε))] (M : Module d) (f : Func d)
-    (args : HVector toType (f.params.map (·.2))) (fuel : Nat) :
+    [DialectDenote d (StateT (Memories N unit) (ChoiceTree ε))] (S₀ : Memories N unit)
+    (M : Module d) (f : Func d) (args : HVector toType (f.params.map (·.2))) (fuel : Nat) :
     ChoiceTree ε (Except Stuck (Result (End unit μ ar (List (DVal d))))) :=
   (fun p => (TraceState.mk p.2 []).endOf μ ar p.1) <$>
-    (f.run M (m := StateT (Memories N unit) (ChoiceTree ε)) args fuel).run.run Memories.empty
+    (f.run M (m := StateT (Memories N unit) (ChoiceTree ε)) args fuel).run.run S₀
 
 variable [DialectEffects d] [DialectMemDenote d] (lay : N → MemLayout)
   (ρ : DialectEffects.Mem d → N) (L : RunItems) (μ : Nat → N) (ar : AddrRule)
@@ -52,11 +52,12 @@ set the run with memory, each return seen at its end, when the semantics in
 the layer over the tree denotes the semantics with memory. -/
 theorem Func.memEndTree_toSet (h : MemMapsDenote (d := d) lay (ε := ε) ρ L) (M : Module d)
     (f : Func d) (args : HVector toType (f.params.map (·.2))) (fuel : Nat) :
-    (f.memEndTree (unitsOf lay) (ε := ε) μ ar M args fuel).toSet =
+    (f.memEndTree (unitsOf lay) (ε := ε) μ ar (RunItems.start d lay ρ L) M args fuel).toSet =
       f.memEndRuns lay ρ L μ ar M args fuel := by
   letI := DialectMemDenote.denoteAt (d := d) lay ρ L
   show ChoiceTree.toSet (_ <$> _) = Functor.map (f := SetM) _
-    ((f.run M (m := StateT (Memories N (unitsOf lay)) SetM) args fuel).run.run Memories.empty)
+    ((f.run M (m := StateT (Memories N (unitsOf lay)) SetM) args fuel).run.run
+      (RunItems.start d lay ρ L))
   rw [← Func.run_toSetState h M f args fuel]
   exact ChoiceTree.toSetMorphism.map_map _ _
 
@@ -67,7 +68,7 @@ theorem Func.memEndExplore_outcomes (h : MemMapsDenote (d := d) lay (ε := ε) �
     (f : Func d) (args : HVector toType (f.params.map (·.2))) (fuel budget : Nat)
     {ls : List (ChoiceTree.Leaf ε (Except Stuck (Result (End (unitsOf lay) μ ar
       (List (DVal d))))) × Nat)}
-    (hx : (f.memEndTree (unitsOf lay) μ ar M args fuel).explore budget = some ls)
+    (hx : (f.memEndTree (unitsOf lay) μ ar (RunItems.start d lay ρ L) M args fuel).explore budget = some ls)
     (o : Outcome (End (unitsOf lay) μ ar (List (DVal d)))) :
     Run.outcomes (f.memEndRuns lay ρ L μ ar M args fuel) o ↔
       ∃ p ∈ ls, p.1.pathEnd = .outcome o := by
@@ -81,7 +82,7 @@ theorem Func.memEndScript_outcomes (h : MemMapsDenote (d := d) lay (ε := ε) ρ
     (read : (w : Nat) → σ → Option (BitVec w)) (M : Module d) (f : Func d)
     (args : HVector toType (f.params.map (·.2))) (fuel : Nat) (cs : List σ)
     {l : ChoiceTree.Leaf ε (Except Stuck (Result (End (unitsOf lay) μ ar (List (DVal d)))))}
-    {c : Nat} (hs : (f.memEndTree (unitsOf lay) μ ar M args fuel).script read cs 0 = .ok (l, c))
+    {c : Nat} (hs : (f.memEndTree (unitsOf lay) μ ar (RunItems.start d lay ρ L) M args fuel).script read cs 0 = .ok (l, c))
     {o : Outcome (End (unitsOf lay) μ ar (List (DVal d)))} (ho : l.pathEnd = .outcome o) :
     Run.outcomes (f.memEndRuns lay ρ L μ ar M args fuel) o := by
   rw [Run.outcomes_iff, ← Func.memEndTree_toSet lay ρ L μ ar h]
@@ -96,7 +97,7 @@ theorem Func.memEndExploreNaN_outcomes (h : MemMapsDenote (d := d) lay (ε := ε
     (nans : List Nat)
     {ls : List (ChoiceTree.Leaf ε (Except Stuck (Result (End (unitsOf lay) μ ar
       (List (DVal d))))) × Nat × Nat)}
-    (hx : (f.memEndTree (unitsOf lay) μ ar M args fuel).exploreNaN nans budget = some ls)
+    (hx : (f.memEndTree (unitsOf lay) μ ar (RunItems.start d lay ρ L) M args fuel).exploreNaN nans budget = some ls)
     (o : Outcome (End (unitsOf lay) μ ar (List (DVal d)))) :
     ((∃ p ∈ ls, p.1.pathEnd = .outcome o) → Run.outcomes (f.memEndRuns lay ρ L μ ar M args fuel) o) ∧
       ((∀ p ∈ ls, p.2.2 = 0) →

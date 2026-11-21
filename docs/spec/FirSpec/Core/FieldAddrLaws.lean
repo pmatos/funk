@@ -27,7 +27,7 @@ the memories. So what it runs has every property that each such
 computation has.
 :::
 
-:::readable Fir.Core.fieldAddr_writesNot Fir.Core.fieldAddr_readsNot Fir.Core.fieldAddr_allocatesNot Fir.Core.fieldAddr_ignoresMemory Fir.Core.fieldAddr_finitelyMany (pin := Fir.WritesNot) (pin := Fir.ReadsNot) (pin := Fir.AllocatesNot) (pin := Fir.IgnoresMemory) (pin := Fir.FinitelyMany) (fingerprint := "18415738484942943676")
+:::readable Fir.Core.fieldAddr_writesNot Fir.Core.fieldAddr_readsNot Fir.Core.fieldAddr_allocatesNot Fir.Core.fieldAddr_ignoresMemory Fir.Core.fieldAddr_finitelyMany (pin := Fir.WritesNot) (pin := Fir.ReadsNot) (pin := Fir.AllocatesNot) (pin := Fir.IgnoresMemory) (pin := Fir.FinitelyMany) (fingerprint := "1751219421586350006")
 *Theorems: $`\mathsf{fieldaddr}` touches no memory.* By its own rule,
 $`\mathsf{fieldaddr}` writes no unit of any memory, reads none, allocates
 in none, ends with the memories it started with and the same result from

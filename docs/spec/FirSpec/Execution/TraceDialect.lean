@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "A dialect's traced runs: readable blocks" =>
 
-:::moduleDocs (fingerprint := "4193867457959602704")
+:::moduleDocs (fingerprint := "5562880980263733425")
 :::
 
 :::readable Fir.DialectTrace Fir.DialectTrace.Acts (pin := Fir.instHRefinementEvent) (fingerprint := "16873117125355051426")
@@ -35,14 +35,15 @@ runs by that rule, each act of its traces an act of the marked trace. A
 call shows no step of its own: the ops of its callee show theirs.
 :::
 
-:::readable Fir.TraceState.endOf Fir.Func.traceRuns Fir.Func.observedRuns Fir.Func.run_eraseSteps (pin := Fir.TraceState.init) (fingerprint := "10032265652291617458")
+:::readable Fir.TraceState.endOf Fir.Func.traceRuns Fir.Func.observedRuns Fir.Func.run_eraseSteps (pin := Fir.TraceState.init) (fingerprint := "2906358639670659672")
 *Definition: the traced runs of a function.* Where a run names the
 dialect's memory $`x` as $`\rho(x)`, whose layout entry is
 $`\ell(\rho(x))`, and gives each op the items $`L`, the traced run of the
 function $`f` of the module $`M` on $`\vec{v}` with $`k` steps is its run in
 the traced layer of marked traces, by the dialect's semantics in the traced
-layer at $`\ell`, $`\rho` and $`L`, from the empty memories with nothing
-escaped. An observer sees the acts of the trace and, at a return of the
+layer at $`\ell`, $`\rho` and $`L`, from the traced state
+$`(\mathrm{start}(L), [])`: the memories that hold $`L`'s starting
+allocations, with nothing escaped. An observer sees the acts of the trace and, at a return of the
 values $`\vec{v}'` in the traced state $`(S, E)`, the
 {ref "The-fir-specification--Memory--The-end-of-a-return"}[end of the return]
 $`\langle \vec{v}', S, E\rangle`, which names the memory numbered $`n` as
@@ -63,7 +64,7 @@ the dialect's rules alone, by the interpreter's morphism theorem: the image
 of a step followed by an op's rule is the rule.
 :::
 
-:::readable Fir.LiftsMem Fir.Func.memEndRuns Fir.Func.traceRuns_noActs Fir.Func.traceObservable_traceRuns (fingerprint := "3468461626948554357")
+:::readable Fir.LiftsMem Fir.Func.memEndRuns Fir.Func.traceRuns_noActs Fir.Func.traceObservable_traceRuns (fingerprint := "4912331140305194747")
 *Definition: a dialect whose ops show no event.* A dialect's semantics in
 the traced layer lifts its semantics with memory when, at every naming of
 its memories and all items a run gives each op, the lift onto the memories
@@ -72,7 +73,8 @@ in the traced layer. The runs with memory of a function, each return seen
 at its end, are its
 {ref "The-fir-specification--Memory--Runs-with-memory"}[runs with memory]
 whose returns of $`\vec{v}` with the memories $`S` are seen as
-$`\langle \vec{v}, S, []\rangle`.
+$`\langle \vec{v}, S, []\rangle`, from the same memories
+$`\mathrm{start}(L)`.
 
 *Theorem: with no event, traced runs are runs with memory.* The traced runs
 of a function of such a dialect show no act, let nothing escape, and end as

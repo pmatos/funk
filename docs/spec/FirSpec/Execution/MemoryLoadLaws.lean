@@ -37,14 +37,14 @@ and at most one that ends, so it has
 {ref "The-fir-specification--Memory--Ops-of-finitely-many-outcomes"}[finitely many].
 :::
 
-:::readable Fir.load_writesNot Fir.load_allocatesNot (pin := Fir.WritesNot) (pin := Fir.AllocatesNot) (fingerprint := "2640054746864991937")
+:::readable Fir.load_writesNot Fir.load_allocatesNot (pin := Fir.WritesNot) (pin := Fir.AllocatesNot) (fingerprint := "14179290802542113336")
 *Theorems: a load changes no memory.* For every memory $`y`, a load meets
 the {ref "The-fir-specification--Memory--Memory-obligations"}[obligations]
 that it writes no unit of $`y`, and neither allocates nor frees in $`y`:
 a path that ends keeps the memories.
 :::
 
-:::readable Fir.load_readsNot (pin := Fir.ReadsNot) (pin := Fir.ReadsNot.Match) (fingerprint := "15605190028077751865")
+:::readable Fir.load_readsNot (pin := Fir.ReadsNot) (pin := Fir.ReadsNot.Match) (fingerprint := "772315438284552706")
 *Theorem: a load reads only its own memory.* For every memory $`y \ne x`,
 a load of $`x` meets the
 {ref "The-fir-specification--Memory--Memory-obligations"}[obligation]

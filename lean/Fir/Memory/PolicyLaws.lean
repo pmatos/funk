@@ -168,10 +168,10 @@ theorem IsRefinedBy.places {M M' : Memory u} (h : M ⊑ M') : M.places = M'.plac
   | cons b bs ih => cases bs' with
     | nil => exact (h : False).elim
     | cons b' bs' =>
-      obtain ⟨hk, hal, hl, hn, ha, -⟩ := h.1
+      obtain ⟨hk, hal, hl, hn, ha, hc, -⟩ := h.1
       have := ih bs' h.2
       simp only at this
-      simp [Block.shape, hk, hal, hl, hn, ha]
+      simp [Block.shape, hk, hal, hl, hn, ha, hc]
       simpa [Block.shape] using this
 
 /-- The same addresses may be given in memories that refine each other. -/

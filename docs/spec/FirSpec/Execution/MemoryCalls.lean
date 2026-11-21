@@ -14,7 +14,7 @@ fails when the Lean changes under it.
 
 #doc (Manual) "Runs from given memories: readable blocks" =>
 
-:::moduleDocs (fingerprint := "17986188099351976431")
+:::moduleDocs (fingerprint := "12615395094845139789")
 :::
 
 :::readable Fir.Result.withMem Fir.Result.finish_id_run (pin := Fir.Result.finish) (pin := Fir.Ev.dropLeft) (fingerprint := "8987210541298503114")
@@ -57,23 +57,26 @@ are ({ref "The-fir-specification--Memory--Runs-with-memory-at-every-budget"}[run
 and one that runs out of fuel runs out of fuel with fewer steps.
 :::
 
-:::readable Fir.Func.memRuns_eq_fromState Fir.Func.memRuns_ret_iff Fir.Func.memRuns_ub_iff Fir.Func.memRuns_exhausted_iff (pin := Fir.Func.memRuns) (fingerprint := "15186826435223613203")
-*Theorems: runs with memory are the runs from the empty memories.* The
+:::readable Fir.Func.memRuns_eq_fromState Fir.Func.memRuns_ret_iff Fir.Func.memRuns_ub_iff Fir.Func.memRuns_exhausted_iff (pin := Fir.Func.memRuns) (fingerprint := "1617679516695806541")
+*Theorems: runs with memory are the runs from the memories a run starts
+with.* The
 {ref "The-fir-specification--Memory--Runs-with-memory"}[runs with memory]
-of a function are its runs from the empty memories, with the memories they
+of a function at the items $`L` are its runs from $`\mathrm{start}(L)`,
+the memories that hold $`L`'s starting allocations, with the memories they
 end with dropped. So at each budget, a run with memory returns
-$`\vec{w}` exactly when the run from the empty memories returns
+$`\vec{w}` exactly when the run from $`\mathrm{start}(L)` returns
 $`(\vec{w}, T)` for some memories $`T`, and hits UB, or runs out of fuel,
-exactly when the run from the empty memories does.
+exactly when the run from $`\mathrm{start}(L)` does.
 :::
 
-:::readable Fir.Func.memRuns_isRefinedBy_of_from (pin := Fir.Func.memRuns) (fingerprint := "8080633394760038605")
-*Theorem: runs with memory refine when runs from the empty memories do.*
+:::readable Fir.Func.memRuns_isRefinedBy_of_from (pin := Fir.Func.memRuns) (fingerprint := "1578247425883488269")
+*Theorem: runs with memory refine when runs from the memories a run starts
+with do.*
 The {ref "The-fir-specification--Memory--Runs-with-memory"}[runs with memory]
-of a function are its runs from the empty memories, with the memories they
-end with dropped. So when the behaviour of $`f'` in $`M'` from the empty
-memories refines that of $`f` in $`M`, values and memories, the behaviour
-with memory of $`f'` refines that of $`f`:
+of a function are its runs from $`\mathrm{start}(L)`, with the memories
+they end with dropped. So when the behaviour of $`f'` in $`M'` from
+$`\mathrm{start}(L)` refines that of $`f` in $`M`, values and memories,
+the behaviour with memory of $`f'` refines that of $`f`:
 
-$$`\mathrm{obs}(\mathrm{runs}^S_{M,f}(\vec{v}, \varnothing)) \sqsubseteq \mathrm{obs}(\mathrm{runs}^S_{M',f'}(\vec{v}', \varnothing)) \implies \mathrm{obs}(\mathrm{runs}^{\mathrm{mem}}_{M,f}(\vec{v})) \sqsubseteq \mathrm{obs}(\mathrm{runs}^{\mathrm{mem}}_{M',f'}(\vec{v}'))`
+$$`\mathrm{obs}(\mathrm{runs}^S_{M,f}(\vec{v}, \mathrm{start}(L))) \sqsubseteq \mathrm{obs}(\mathrm{runs}^S_{M',f'}(\vec{v}', \mathrm{start}(L))) \implies \mathrm{obs}(\mathrm{runs}^{\mathrm{mem}}_{M,f}(\vec{v})) \sqsubseteq \mathrm{obs}(\mathrm{runs}^{\mathrm{mem}}_{M',f'}(\vec{v}'))`
 :::

@@ -21,9 +21,9 @@ liveness, size and address, and a live allocation's units refine the
 other's; a dangling pointer, seen as poison, is refined by any value.
 
 So what holds of runs with memory holds of traced runs. When a function's
-runs from the empty memories refine another's, the memories they end with
-included, its traced runs refine the other's, and so they do at every
-world. Refined arguments and congruence in the callee then hold over the
+runs from the memories a run starts with refine another's, the memories
+they end with included, its traced runs refine the other's, and so they do
+at every world. Refined arguments and congruence in the callee then hold over the
 traced runs of every dialect whose ops show no event, from the theorems with
 memory (`Fir.Execution.TraceRefine`).
 -/
@@ -93,7 +93,7 @@ theorem isRefinedBy_of_mem (hV : ∀ {a b c : V}, a ⊑ b → b ⊑ c → a ⊑ 
   · show Block.OptSeenIn ar _ ((S.mem x).blocks[a]?) ((S'.mem x).blocks[a]?)
     rw [h₁, h₂]
     exact ⟨hb.1, hb.2.1, hb.2.2.1, hb.2.2.2.1, hb.2.2.2.2.1 ▸ ar.refl _, fun hl =>
-      List.isRefinedBy_trans MemUnit.isRefinedBy_trans (hle b.units) (hb.2.2.2.2.2 hl)⟩
+      List.isRefinedBy_trans MemUnit.isRefinedBy_trans (hle b.units) (hb.2.2.2.2.2.2 hl)⟩
 
 end End
 
@@ -115,14 +115,14 @@ def Result.memEnd {V : Type} :
   | .error e => .error e
 
 /-- The runs with memory of a function, each return seen at its end, are its
-runs from the empty memories, each return seen at its end with nothing
-escaped. -/
+runs from the memories a run starts with, each return seen at its end with
+nothing escaped. -/
 theorem Func.memEndRuns_eq (M : Module d) (f : Func d) (a : HVector toType (f.params.map (·.2)))
     (n : Nat) :
     letI := DialectMemDenote.denoteAt (d := d) lay ρ L
     f.memEndRuns lay ρ L μ ar M a n =
       Functor.map (f := SetM) (Result.memEnd lay μ ar)
-        (f.memRunsFrom M (a, (Memories.empty : Memories N (unitsOf lay))) n) := by
+        (f.memRunsFrom M (a, (RunItems.start d lay ρ L)) n) := by
   letI := DialectMemDenote.denoteAt (d := d) lay ρ L
   simp only [Func.memEndRuns, Func.memRunsFrom, fromState]
   show _ = Result.memEnd lay μ ar <$> ExceptT.run (Result.withMem <$> ExceptT.mk _)
@@ -138,12 +138,13 @@ theorem SetM.map_iff {α β : Type} (g : α → β) (s : SetM α) (e : Ev β) :
 
 variable {M : Module d} {f : Func d} {a : HVector toType (f.params.map (·.2))} {n : Nat}
 
-/-- A run with memory returns, seen at its end, what the run from the empty
-memories returns, with the memories it ends with and nothing escaped. -/
+/-- A run with memory returns, seen at its end, what the run from the
+memories a run starts with returns, with the memories it ends with and
+nothing escaped. -/
 theorem Func.memEndRuns_ret_iff {o : End (unitsOf lay) μ ar (List (DVal d))} :
     letI := DialectMemDenote.denoteAt (d := d) lay ρ L
     (f.memEndRuns lay ρ L μ ar M a n).outcomes (.ret o) ↔
-      o.escaped = [] ∧ (f.memRunsFrom M (a, (Memories.empty : Memories N (unitsOf lay))) n).outcomes
+      o.escaped = [] ∧ (f.memRunsFrom M (a, (RunItems.start d lay ρ L)) n).outcomes
         (.ret (o.vals, o.mem)) := by
   letI := DialectMemDenote.denoteAt (d := d) lay ρ L
   simp only [Run.outcomes, Func.memEndRuns_eq, SetM.map_iff]
@@ -157,11 +158,11 @@ theorem Func.memEndRuns_ret_iff {o : End (unitsOf lay) μ ar (List (DVal d))} :
     exact .inl ⟨_, h, rfl⟩
 
 /-- A run with memory, each return seen at its end, hits UB exactly when the
-run from the empty memories does. -/
+run from the memories a run starts with does. -/
 theorem Func.memEndRuns_ub_iff {r : String} :
     letI := DialectMemDenote.denoteAt (d := d) lay ρ L
     (f.memEndRuns lay ρ L μ ar M a n).outcomes (.ub r) ↔
-      (f.memRunsFrom M (a, (Memories.empty : Memories N (unitsOf lay))) n).outcomes (.ub r) := by
+      (f.memRunsFrom M (a, (RunItems.start d lay ρ L)) n).outcomes (.ub r) := by
   letI := DialectMemDenote.denoteAt (d := d) lay ρ L
   simp only [Run.outcomes, Func.memEndRuns_eq, SetM.map_iff]
   constructor
@@ -170,11 +171,11 @@ theorem Func.memEndRuns_ub_iff {r : String} :
   · exact fun h => .inr ⟨r, h, rfl⟩
 
 /-- A run with memory, each return seen at its end, runs out of fuel exactly
-when the run from the empty memories does. -/
+when the run from the memories a run starts with does. -/
 theorem Func.memEndRuns_exhausted_iff :
     letI := DialectMemDenote.denoteAt (d := d) lay ρ L
     (f.memEndRuns lay ρ L μ ar M a n).outcomes .fuelExhausted ↔
-      (f.memRunsFrom M (a, (Memories.empty : Memories N (unitsOf lay))) n).outcomes
+      (f.memRunsFrom M (a, (RunItems.start d lay ρ L)) n).outcomes
         .fuelExhausted := by
   letI := DialectMemDenote.denoteAt (d := d) lay ρ L
   simp only [Run.outcomes, Func.memEndRuns_eq, SetM.map_iff]
@@ -187,21 +188,21 @@ theorem Func.memEndRuns_exhausted_iff :
 
 variable [TyRefinement d.Ty] [TyPointers d.Ty]
 
-/-- When a function's runs from the empty memories refine another's, the
-memories they end with included, its runs with memory, each return seen at
+/-- When a function's runs from the memories a run starts with refine
+another's, the memories they end with included, its runs with memory, each return seen at
 its end, refine the other's, when the refinement of values is transitive. -/
 theorem Func.memEndRuns_isRefinedBy_of_from
     (htrans : ∀ {t : d.Ty} {u v w : ⟦t⟧}, TyRefinement.IsRefinedBy u v →
       TyRefinement.IsRefinedBy v w → TyRefinement.IsRefinedBy u w)
     {M' : Module d} {f' : Func d} {a' : HVector toType (f'.params.map (·.2))}
     (h : letI := DialectMemDenote.denoteAt (d := d) lay ρ L
-      observable (f.memRunsFrom M (a, (Memories.empty : Memories N (unitsOf lay)))) ⊑
-        observable (f'.memRunsFrom M' (a', (Memories.empty : Memories N (unitsOf lay))))) :
+      observable (f.memRunsFrom M (a, (RunItems.start d lay ρ L))) ⊑
+        observable (f'.memRunsFrom M' (a', (RunItems.start d lay ρ L)))) :
     observable (f.memEndRuns lay ρ L μ ar M a) ⊑ observable (f'.memEndRuns lay ρ L μ ar M' a') := by
   letI := DialectMemDenote.denoteAt (d := d) lay ρ L
   have hV : ∀ {a b c : List (DVal d)}, a ⊑ b → b ⊑ c → a ⊑ c :=
     List.isRefinedBy_trans (DVal.isRefinedBy_trans htrans)
-  have hub : ∀ {r : String}, observable (f.memRunsFrom M (a, Memories.empty)) (.ub r) →
+  have hub : ∀ {r : String}, observable (f.memRunsFrom M (a, RunItems.start d lay ρ L)) (.ub r) →
       observable (f.memEndRuns lay ρ L μ ar M a) (.ub r) :=
     fun ⟨m, hm⟩ => ⟨m, (Func.memEndRuns_ub_iff lay ρ L μ ar).2 hm⟩
   intro t ht
@@ -229,8 +230,8 @@ theorem Func.memEndRuns_isRefinedBy_of_from
 
 variable [DialectTrace d] [LiftsMem d]
 
-/-- When a function's runs from the empty memories refine another's, the
-memories they end with included, its traced runs refine the other's, for a
+/-- When a function's runs from the memories a run starts with refine
+another's, the memories they end with included, its traced runs refine the other's, for a
 dialect whose ops show no event, when the refinement of values is
 transitive. -/
 theorem Func.traceRuns_isRefinedBy_of_from
@@ -238,8 +239,8 @@ theorem Func.traceRuns_isRefinedBy_of_from
       TyRefinement.IsRefinedBy v w → TyRefinement.IsRefinedBy u w)
     {M' : Module d} {f' : Func d} {a' : HVector toType (f'.params.map (·.2))}
     (h : letI := DialectMemDenote.denoteAt (d := d) lay ρ L
-      observable (f.memRunsFrom M (a, (Memories.empty : Memories N (unitsOf lay)))) ⊑
-        observable (f'.memRunsFrom M' (a', (Memories.empty : Memories N (unitsOf lay))))) :
+      observable (f.memRunsFrom M (a, (RunItems.start d lay ρ L))) ⊑
+        observable (f'.memRunsFrom M' (a', (RunItems.start d lay ρ L)))) :
     traceObservable (f.traceRuns lay ρ L μ ar M a) ⊑
       traceObservable (f'.traceRuns lay ρ L μ ar M' a') := by
   rw [Func.traceObservable_traceRuns, Func.traceObservable_traceRuns]
