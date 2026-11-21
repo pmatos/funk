@@ -7,9 +7,10 @@ ADR disagree, the page wins, and the ADR is fixed or deleted
 (ADR-2026-11-09-1610). ADR-2026-11-09-1540 holds the direction decision.
 
 These are decided designs. The spec states the core's and CoreGpu's traced
-runs, with refined arguments and congruence in the callee over them while
-they show no event (`lean/Fir/Execution/TraceLift.lean`,
-`TraceRefine.lean`, `lean/Fir/Core/Trace.lean`, `lean/Fir/Gpu/Trace.lean`).
+runs (`lean/Fir/Execution/TraceLift.lean`, `lean/Fir/Core/Trace.lean`,
+`lean/Fir/Gpu/Trace.lean`), and, for every dialect with no event, refined
+arguments and congruence in the callee over its traced runs from the
+theorems with memory (`TraceRefine.lean`).
 For a dialect that shows events, the spec defines the obligation of its
 ops and proves that refined arguments allow each return, each UB and each
 path out of fuel at its budget (`lean/Fir/Execution/TraceObligations.lean`
@@ -53,9 +54,11 @@ semantics-m1-trace.md.
   theorems exist, so the spec's traced runs would have none meanwhile.
 - **A dialect with events.** Its refined arguments and congruence in the
   callee are the traced layer's own theorems (#233, stages 3b and 3c),
-  which prove the core's and CoreGpu's statements, unchanged, so they keep
-  holding once the core shows events. Divergence needs one source trace at every budget. An op with
-  infinitely many outcomes `c` can show, on a poison argument, an event
+  which prove the core's and CoreGpu's statements, unchanged. Refined
+  arguments needs nothing of the lift, so its proof stays once the core
+  shows events; congruence in the callee takes its hypothesis with memory
+  through the lift (below). Divergence needs one source trace at every
+  budget. An op with infinitely many outcomes `c` can show, on a poison argument, an event
   that differs with each `c` and is refined by the target's, then take `c`
   silent steps and return. The target then falls silent after its event,
   and no source outcome allows it. So the generic theorems of stages 3b

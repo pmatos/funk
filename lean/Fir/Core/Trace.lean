@@ -35,14 +35,15 @@ of that layer's divergence (`Fir.Execution.TraceFinite`): each has finitely
 many outcomes with memory, so finitely many given the world's answers.
 
 So both are proved by the traced layer's own theorems for a dialect that
-shows events, as they stay once the core shows events and its traced
-semantics is no longer this lift: refined arguments by
-`Fir.Execution.TraceDiverge`, congruence in the callee by
+shows events: refined arguments by `Fir.Execution.TraceDiverge`, a proof
+that stays once the core shows events and its traced semantics is no longer
+this lift, and congruence in the callee by
 `Fir.Execution.TraceReplaceDiverge`. Congruence in the callee keeps its
 hypothesis with memory: since the core's traced semantics is the lift, a run
 from a traced state ends as the run from its memories, so that hypothesis
-gives the traced one (`Fir.Execution.TraceLiftFrom`). Neither proof uses
-`LiftsMem`.
+gives the traced one (`Fir.Execution.TraceLiftFrom`). That step needs the
+lift, so the core's first event asks for the hypothesis over traces. Neither
+proof uses `LiftsMem`.
 -/
 
 namespace Fir

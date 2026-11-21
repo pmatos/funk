@@ -27,7 +27,8 @@ layer's divergence (`Fir.Execution.TraceFinite`), as the core's do. So
 both are proved by the traced layer's own theorems
 (`Fir.Execution.TraceDiverge`, `Fir.Execution.TraceReplaceDiverge`), with
 no `LiftsMem`. Congruence in the callee keeps its hypothesis with memory,
-which the lift takes to the traced one (`Fir.Execution.TraceLiftFrom`).
+which the lift takes to the traced one (`Fir.Execution.TraceLiftFrom`), so
+that step lasts only while the sum shows no event.
 -/
 
 namespace Fir.Gpu

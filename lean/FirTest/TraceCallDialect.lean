@@ -5,8 +5,9 @@ A toy dialect with calls, for the tests of divergence across a replaced callee
 (ADR-2026-11-09-1540, stage 3c-2 of #233). Its op `emit` shows the event `0`
 to the world and gets any answer, `skip` does nothing, `call @g` calls the
 function `@g`, `br` jumps back to the function's first block, `ret`
-returns, and `ub` hits UB. Its ops are monotone in the traced layer and have finitely many
-outcomes, given the world's answers, so the traced layer's theorems apply.
+returns, and `ub` hits UB. Its ops are monotone in the traced layer and
+have finitely many outcomes, given the world's answers, so the traced
+layer's theorems apply.
 
 The module `callModule` has a callee `@g`, which takes a step to `skip`, then
 returns, and two callers that loop forever around a call of `@g`: `@quiet`
@@ -46,6 +47,7 @@ instance : DialectCall CallDialect := ⟨fun | .call s => some s | _ => none⟩
 instance : DialectEffects CallDialect :=
   ⟨Empty, fun _ => .exception, fun
     | .br | .ret => { control := true }
+    | .ub => { mayUB := true }
     | _ => {}⟩
 
 /-- The call dialect's events are numbers, answered by numbers: `emit` shows

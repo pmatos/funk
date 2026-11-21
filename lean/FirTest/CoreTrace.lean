@@ -89,6 +89,9 @@ theorem count_traceIsRefinedBy_world (L : RunItems) :
 /-- info: 'Fir.Func.traceRunsFrom_isRefinedBy_of_memRunsFrom' depends on axioms: [propext, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Func.traceRunsFrom_isRefinedBy_of_memRunsFrom
 
+/-- info: 'Fir.Func.traceRunsFrom_noActs_ofMem' depends on axioms: [propext, Quot.sound] -/
+#guard_msgs in #print axioms Fir.Func.traceRunsFrom_noActs_ofMem
+
 /-- info: 'Fir.Core.trace_replaceBody_isRefinedBy_of_from' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.trace_replaceBody_isRefinedBy_of_from
 

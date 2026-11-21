@@ -16,9 +16,10 @@ refinement of traced runs from given traced states, the traced state each
 return ends in included (`Func.traceRunsFrom_isRefinedBy_of_memRunsFrom`).
 The core and CoreGpu state congruence in the callee with a hypothesis with
 memory; this bridge takes it to the hypothesis that the traced layer's own
-theorem asks (`Func.traceRuns_replaceBody_isRefinedBy`). It uses only that
-their traced semantics is the lift, not the class `LiftsMem`, which a
-dialect whose ops show events does not meet.
+theorem asks (`Func.traceRuns_replaceBody_isRefinedBy`). It unfolds the
+lift itself, each op's traced semantics being its lift by definition, so the
+core's and CoreGpu's proofs name no `LiftsMem`. It holds only while a
+dialect's traced semantics is that lift.
 -/
 
 namespace Fir
