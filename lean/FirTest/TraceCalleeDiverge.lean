@@ -105,7 +105,7 @@ theorem quiet_diverges :
       intro j
       induction j with
       | zero => intro i; rfl
-      | succ j ih => intro i; simp only [TBranch.pre, TGood.Sees.actsOf_append, actsOf_tick, ih]; rfl
+      | succ j ih => intro i; simp only [TBranch.pre, Step.actsOf_append, actsOf_tick, ih]; rfl
     funext p
     cases ha : TBranch.acts (fun _ => ([.tick] : List (Step (DialectTrace.Acts CallDialect)))) 0 p with
     | none => rfl
@@ -171,7 +171,7 @@ theorem lt_acts : ∀ j i a, a ∈ Step.actsOf (TBranch.pre lt i j) → a = act�
   | zero => intro i a h; simp [TBranch.pre, Step.actsOf] at h
   | succ j ih =>
     intro i a h
-    simp only [TBranch.pre, TGood.Sees.actsOf_append, List.mem_append] at h
+    simp only [TBranch.pre, Step.actsOf_append, List.mem_append] at h
     rcases h with h | h
     · unfold lt at h
       split at h <;> simp [Step.actsOf, Step.acts] at h
@@ -189,7 +189,7 @@ theorem lt_many : ∀ q, q ≤ (Step.actsOf (TBranch.pre lt 0 (3 * q))).length :
     have h1 : lt (0 + (3 * q + 1)) = [.tick, .act act₀] := by
       simp only [lt, Nat.zero_add, ite_eq_left_iff]
       omega
-    simp only [TGood.Sees.actsOf_append, List.length_append, h1]
+    simp only [Step.actsOf_append, List.length_append, h1]
     have : (Step.actsOf ([.tick, .act act₀] : List (Step (DialectTrace.Acts CallDialect)))).length
       = 1 := rfl
     omega

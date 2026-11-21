@@ -91,7 +91,7 @@ theorem TCfg.Allows.lift (hone : OpsOneStep d A (TraceState Mem unit)) {c c₁ :
   rcases h with ⟨n, r, mt₁, hu, hs⟩ | ⟨S, K, hS, hr⟩
   · obtain ⟨n', hu'⟩ := hmv.ub hu
     refine .inl ⟨n', r, t ++ mt₁, hu', ?_⟩
-    rw [TGood.Sees.actsOf_append]
+    rw [Step.actsOf_append]
     exact hs.cat ht
   · exact .inr ⟨_, _, TShows.step (hmv.tStep hone) hS, hr.cat ht⟩
 

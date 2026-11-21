@@ -1,5 +1,6 @@
 import Fir.Execution.TraceMoveCases
 import Fir.Execution.TraceKonig
+import Fir.Execution.TraceBlackBox
 
 /-!
 # Showing a stream at unboundedly many budgets
@@ -62,15 +63,10 @@ theorem mono {k k' : Nat} {mt : List (Step A)} (h : TGood.Sees T K k mt) (hk : k
     TGood.Sees T K k' mt :=
   ⟨h.1, fun k'' hk'' => h.2 k'' (Nat.le_trans hk'' hk)⟩
 
-/-- The acts of a marked trace, then of another, are the acts of each. -/
-theorem actsOf_append (t mt : List (Step A)) :
-    Step.actsOf (t ++ mt) = Step.actsOf t ++ Step.actsOf mt := by
-  simp [Step.actsOf]
-
 /-- A trace that sees a stream shows its first acts at their places. -/
 theorem cons_prefix {k : Nat} {t mt₁ : List (Step A)} (h : TGood.Sees T K k (t ++ mt₁)) :
     Stream.Cons T (Step.actsOf t) := fun i a ha =>
-  h.1 i a (by rw [actsOf_append, List.getElem?_append_left (List.getElem?_eq_some_iff.1 ha).1]; exact ha)
+  h.1 i a (by rw [Step.actsOf_append, List.getElem?_append_left (List.getElem?_eq_some_iff.1 ha).1]; exact ha)
 
 /-- A stream that a trace's first acts start has as many acts more as the
 stream after them. -/
@@ -101,12 +97,12 @@ theorem shift {k : Nat} {t mt₁ : List (Step A)}
     TGood.Sees (Stream.drop T (Step.actsOf t).length)
       (Stream.dropK K (Step.actsOf t).length (Step.ticks t)) k mt₁ := by
   refine ⟨fun i a ha => h.1 (i + (Step.actsOf t).length) a ?_, fun k' hk' havail => ?_⟩
-  · rw [actsOf_append, List.getElem?_append_right (by omega)]
+  · rw [Step.actsOf_append, List.getElem?_append_right (by omega)]
     simpa using ha
   have havail' := h.avail_of_drop havail
   have h₁ := h.2 _ (by omega) havail'
   by_cases hle : Step.ticks t ≤ K (k' + (Step.actsOf t).length)
-  · rw [Step.upTo_append_of_ticks_le t mt₁ hle, actsOf_append, List.length_append] at h₁
+  · rw [Step.upTo_append_of_ticks_le t mt₁ hle, Step.actsOf_append, List.length_append] at h₁
     simp only [Stream.dropK]
     omega
   · exact (h.steps_le (by omega) havail' (by omega)) ▸ Nat.zero_le _

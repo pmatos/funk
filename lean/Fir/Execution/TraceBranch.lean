@@ -16,8 +16,9 @@ of fuel at each budget.
   after acts that the stream has at their places, and with at least `k` acts
   in its first `K k` steps whenever the stream has `k` acts and `K k` is at
   most the budget (`TShows`). Silent divergence after a trace and an infinite
-  trace are the two ways of showing a stream (`TShows.diverge`,
-  `TShows.reacts`).
+  trace are the two ways of showing a closed stream
+  (`Fir.Execution.TraceShowsObs`: `TShows.ofObservable`,
+  `TShows.toObservable`).
 * _A move._ A run goes on by a move to another run, after the marked trace
   `t` and with `F` steps of fuel, when each of its budgets either is below `F`,
   with a path that has shown part of `t`, or goes on, after `t`, by every path

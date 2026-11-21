@@ -20,11 +20,11 @@ callee over traced runs (`Fir.Execution.TraceReplace`):
   the body of its function `@g` with one under which `@g`, run in the new
   module from given traced states, refines `@g` in the old, refines every
   function of the module over its traced runs from given traced states, and
-  so over its traced runs from the empty memories, at every world
+  so over its traced runs from the empty memories
   (`Func.traceRuns_replaceBody_isRefinedBy`). It asks what refined arguments
   over traced runs asks: monotone ops, ops of finitely many outcomes given the
   world's answers (the human's ruling of 2026-11-20, on #233), and transitive
-  refinement of values and of events.
+  refinement of values and of events; and reflexive refinement of values.
 -/
 
 namespace Fir
@@ -187,8 +187,8 @@ from given traced states, refines `@g` in the old, refines every function of
 the module over its traced runs from given traced states, divergence included.
 It asks that every terminator and every op with no callee of the old module's
 functions be monotone in the traced layer, that every op have finitely many
-outcomes given the world's answers, and that the refinement of values and of
-events be reflexive and transitive. -/
+outcomes given the world's answers, that the refinement of values be
+reflexive and transitive, and that the refinement of events be transitive. -/
 theorem Func.traceRunsFrom_replaceBody_isRefinedBy
     (hfin : letI := DialectTrace.traceAt (d := d) lay ρ L
       OpsTraceFinite d (DialectTrace.Event d) (DialectTrace.Answer d) (TraceState N (unitsOf lay)))

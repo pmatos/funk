@@ -48,7 +48,8 @@ that refine theirs.
 whose ops show events, let the symbols of $`M` be unique, every terminator
 and every op with no callee of its functions be monotone in the traced
 layer, every op have finitely many outcomes given the world's answers, and
-refinement of values and of events be reflexive and transitive. Replace the
+refinement of values be reflexive and transitive and refinement of events
+transitive. Replace the
 body of its function $`g` by $`b`, so that $`g`, run in the new module $`M'`
 from given traced states, refines $`g` in $`M`. Then every function $`f` of
 $`M` is refined by its new version in $`M'`, over traced runs from given

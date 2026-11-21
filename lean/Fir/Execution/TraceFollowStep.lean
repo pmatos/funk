@@ -39,9 +39,6 @@ theorem TCfg.Follows.step (hone : OpsOneStep d A (TraceState Mem unit))
   rcases c with ⟨f, env, os, s⟩
   obtain ⟨hf, hos, henv, hs, hfm, hops⟩ := hc
   dsimp only at hf hos henv hs hfm hops
-  have ub : ∀ {N r t₀}, TCfg.ub A M ⟨f, env, os, s⟩ N r t₀ → List.IsRefinedPrefix t₀ t' →
-      TCfg.Allows M ⟨f, env, os, s⟩ (Stream.cat (Step.actsOf t') T₁) := fun hu hle =>
-    .inl ⟨_, _, _, hu, Stream.ShowsRefined.of_prefix (Step.actsOf_isRefinedPrefix hle) T₁⟩
   have ubActs : ∀ {N r t₀}, TCfg.ub A M ⟨f, env, os, s⟩ N r t₀ →
       List.IsRefinedPrefix (Step.actsOf t₀) (Step.actsOf t') →
       TCfg.Allows M ⟨f, env, os, s⟩ (Stream.cat (Step.actsOf t') T₁) := fun hu hle =>
@@ -57,7 +54,8 @@ theorem TCfg.Follows.step (hone : OpsOneStep d A (TraceState Mem unit))
     have hmo := hops o List.mem_cons_self (.inr hcn)
     obtain ⟨e, he, hle⟩ := ((hmo args args' hr).1 hT) s s' hs _ hx'
     rcases e with ⟨r, t₀⟩ | ⟨rs, t, s₁⟩
-    · exact .inl (ub (mk (N := 0) rfl (.denoteUB hreg hargs hT hcn he) (TraceEnd.notStuck_error _ _)) hle)
+    · exact .inl (ubActs (mk (N := 0) rfl (.denoteUB hreg hargs hT hcn he) (TraceEnd.notStuck_error _ _))
+        (Step.actsOf_isRefinedPrefix hle))
     · obtain ⟨hrs, ht, hs₁⟩ := hle
       have hvs := HVector.toDVals_isRefinedBy hrs
       exact .inr ⟨_, t, 1, .denote hreg hargs hT hcn he
@@ -70,7 +68,8 @@ theorem TCfg.Follows.step (hone : OpsOneStep d A (TraceState Mem unit))
     have hmo := hops o List.mem_cons_self (.inl hT)
     obtain ⟨e, he, hle⟩ := ((hmo args args' hr).2 hT) s s' hs _ hx'
     rcases e with ⟨r, t₀⟩ | ⟨x, t, s₁⟩
-    · exact .inl (ub (mk (N := 0) rfl (.exitUB hreg hargs hT hos' he) (TraceEnd.notStuck_error _ _)) hle)
+    · exact .inl (ubActs (mk (N := 0) rfl (.exitUB hreg hargs hT hos' he) (TraceEnd.notStuck_error _ _))
+        (Step.actsOf_isRefinedPrefix hle))
     · obtain ⟨rfl, ht, hs₁⟩ := hle
       obtain ⟨env₁, hj, henv₁⟩ := henv.jump hj'
       exact .inr ⟨_, t, 1, .goto hreg hargs hT hos' he hj,

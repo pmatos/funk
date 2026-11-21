@@ -58,7 +58,7 @@ theorem TBranch.acts_isRefinedBy [HRefinement A A] {t t' : Nat → List (Step A)
     | zero => intro i; exact trivial
     | succ j ih =>
       intro i
-      simp only [TBranch.pre, TGood.Sees.actsOf_append]
+      simp only [TBranch.pre, Step.actsOf_append]
       exact List.IsRefinedBy.append (h i) (ih (i + 1))
   intro p
   refine ⟨⟨fun hn => ?_, fun hn => ?_⟩, fun a b ha hb => ?_⟩

@@ -14,7 +14,7 @@ changes under it.
 
 #doc (Manual) "A stream at unboundedly many budgets: readable blocks" =>
 
-:::moduleDocs (fingerprint := "16645158281614943901")
+:::moduleDocs (fingerprint := "10726824725437512295")
 :::
 
 :::readable Fir.Stream.drop Fir.Stream.dropK Fir.TGood.Sees Fir.TGood (fingerprint := "8509045638980318254")
@@ -34,10 +34,9 @@ which may cost $`W` steps of fuel for each of its steps, never makes a
 deadline grow.
 :::
 
-:::readable Fir.TGood.Sees.mono Fir.TGood.Sees.actsOf_append Fir.TGood.Sees.cons_prefix Fir.TGood.Sees.avail_of_drop Fir.TGood.Sees.steps_le Fir.TGood.Sees.shift Fir.TGood.Sees.of_prefix (fingerprint := "6428021979670591782")
+:::readable Fir.TGood.Sees.mono Fir.TGood.Sees.cons_prefix Fir.TGood.Sees.avail_of_drop Fir.TGood.Sees.steps_le Fir.TGood.Sees.shift Fir.TGood.Sees.of_prefix (fingerprint := "5740372686558716648")
 *Theorems: seeing a stream after a marked trace.* A trace that sees a stream
-for $`k` acts sees it for fewer. The acts of $`t \mathbin{+\!\!+} m` are
-those of $`t`, then $`m`'s. When $`t \mathbin{+\!\!+} m_1` sees $`T` for
+for $`k` acts sees it for fewer. When $`t \mathbin{+\!\!+} m_1` sees $`T` for
 $`k` acts: $`t`'s acts are acts of $`T`; when $`T` after them has $`x`
 acts, $`T` has $`x + |\mathrm{acts}(t)|`; and the deadline of each number
 of acts beyond $`t`'s, within $`k`, is at least $`t`'s steps. When it sees
