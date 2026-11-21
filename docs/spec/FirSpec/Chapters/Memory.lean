@@ -260,6 +260,28 @@ event.
 
 {includeReadable "." Fir.Execution.TraceReplace "Congruence in the callee over traced runs: returns and UB" FirSpec.Execution.TraceReplace (level := 1)}
 
+{includeReadable "." Fir.Execution.TraceBranch "Streams of acts and branches of moves" FirSpec.Execution.TraceBranch (level := 1)}
+
+{includeReadable "." Fir.Execution.TraceMoves "Configurations and their moves" FirSpec.Execution.TraceMoves (level := 1)}
+
+{includeReadable "." Fir.Execution.TraceMoveCases "How a run goes on by moves" FirSpec.Execution.TraceMoveCases (level := 1)}
+
+{includeReadable "." Fir.Execution.TraceGood "A stream at unboundedly many budgets" FirSpec.Execution.TraceGood (level := 1)}
+
+{includeReadable "." Fir.Execution.TraceMoveSel "The pigeonhole step" FirSpec.Execution.TraceMoveSel (level := 1)}
+
+{includeReadable "." Fir.Execution.TraceTargetBranch "The target's branch" FirSpec.Execution.TraceTargetBranch (level := 1)}
+
+{includeReadable "." Fir.Execution.TraceShowsObs "Streams and outcomes that diverge" FirSpec.Execution.TraceShowsObs (level := 1)}
+
+{includeReadable "." Fir.Execution.TraceFollow "The source follows the target" FirSpec.Execution.TraceFollow (level := 1)}
+
+{includeReadable "." Fir.Execution.TraceFollowStep "One move of the source" FirSpec.Execution.TraceFollowStep (level := 1)}
+
+{includeReadable "." Fir.Execution.TraceCalleeDiverge "Divergence across black boxes" FirSpec.Execution.TraceCalleeDiverge (level := 1)}
+
+{includeReadable "." Fir.Execution.TraceReplaceDiverge "Congruence in the callee over traced runs, divergence included" FirSpec.Execution.TraceReplaceDiverge (level := 1)}
+
 {includeReadable "." Fir.Core.Trace "The core's traced runs" FirSpec.Core.Trace (level := 1)}
 
 {includeReadable "." Fir.Execution.MemoryEndModes "Modes that see the end of a return" FirSpec.Execution.MemoryEndModes (level := 1)}
