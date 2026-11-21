@@ -20,6 +20,9 @@ and at every world, with no hypothesis beyond those they have with memory:
 * _congruence in the callee_, from given memories, with no budget, for every
   callee of the module of each table of a valid module: every op of the
   sum has finitely many outcomes.
+
+Its ops meet the obligation of the traced layer for a dialect that shows
+events (`Fir.Execution.TraceObligations`), as the core's do.
 -/
 
 namespace Fir.Gpu
@@ -39,6 +42,15 @@ instance coreGpu_instInhabitedAnswer : Inhabited (DialectTrace.Answer CoreGpu) :
 variable {M : Module CoreGpu} {t : SymbolTable CoreGpu} {f : Func CoreGpu} {N : Type}
   [DecidableEq N] (lay : N → MemLayout) (ρ : DialectEffects.Mem CoreGpu → N) (L : RunItems)
   (μ : Nat → N)
+
+/-- Every function of the sum has its ops that run by their own rule
+monotone in the sum's traced semantics, wherever a run names the sum's
+memories: each is monotone with memory, and the lift onto the traced state
+keeps it. -/
+theorem traceOpsMonotone (g : Func CoreGpu) :
+    letI := DialectTrace.traceAt (d := CoreGpu) lay ρ L
+    g.TraceOpsMonotone (DialectTrace.Acts CoreGpu) (TraceState N (unitsOf lay)) :=
+  Func.TraceOpsMonotone.ofMem lay ρ L (memOpsMonotone lay ρ L g)
 
 /-- Refined arguments over traced runs: on arguments that refine others, the
 spec's traced runs of every function of every module of the sum, a module

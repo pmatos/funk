@@ -28,7 +28,8 @@ numbers (ADR-2026-11-09-1542), and its `alloca` allocates in the memory of
 its result (ADR-2026-11-14-0915). The effect class also says which of the
 dialect's memories a data layout numbers, so that a run can start each
 global's allocation in the memory of its number (the section on the
-memories a run starts with); a dialect numbers none unless it says so.
+memories a run starts with); every dialect says which, none for a dialect
+with no numbered memory.
 
 The effect class holds each op's poison class too, which says how the op
 treats poison operands (the section on poison classes): the op's poison
@@ -117,8 +118,10 @@ class DialectEffects (d : Dialect) where
   effects : d.Op → Effects Mem
   /-- The dialect's memory that a module's data layout numbers `n`, if the
   dialect names one: a run starts with each global's allocation in the
-  memory of its number. A dialect with no numbered memory names none. -/
-  numbered : Nat → Option Mem := fun _ => none
+  memory of its number. A dialect with no numbered memory names none: it
+  says so, so that no dialect leaves its globals out of its runs by
+  omission. -/
+  numbered : Nat → Option Mem
 export DialectEffects (poisonClass effects)
 
 end Fir

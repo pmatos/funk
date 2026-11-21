@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "The core's traced runs: readable blocks" =>
 
-:::moduleDocs (fingerprint := "15760459583964791149")
+:::moduleDocs (fingerprint := "4887261015418406495")
 :::
 
 :::readable Fir.Core.instDialectTrace Fir.Core.liftsMem Fir.Core.instInhabitedAnswer (fingerprint := "9825455798937681785")
@@ -44,4 +44,11 @@ spec's traced runs by itself with $`@g`'s new body in $`M[g := b]`, with no
 budget, whatever the parameter types of $`@g` and whatever $`b` does to the
 memories: every core op has finitely many outcomes. So it is at every
 world.
+:::
+
+:::readable Fir.Core.traceOpsMonotone (fingerprint := "8322739222347623941")
+*Theorem: the core meets the traced obligation.* Every core function's
+ops that run by their own rule are monotone in the core's traced
+semantics, wherever a run names the core's memories: each is monotone with memory, and
+the lift onto the traced state keeps it.
 :::

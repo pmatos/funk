@@ -10,12 +10,24 @@ module @dev() {
   global @cell() memory(1) size(2) align(2) export addr(@cell) {
   }
 
+  func @first() -> ptr {
+  ^entry:
+    %p: ptr = alloca stack i32 @0
+    ret %p @0
+  }
+
 }
 
 func @wide_size() -> i64 {
 ^entry:
   %s: i64 = const 8 @0
   ret %s @0
+}
+
+func @after_narrow() -> ptr {
+^entry:
+  %p: ptr = alloca stack i32 @0
+  ret %p @0
 }
 
 locs {

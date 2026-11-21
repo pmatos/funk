@@ -5,7 +5,6 @@ globals: the item, its text and validation, and how a run starts with them.
 
 ## The item
 
-
 A global is an item with (ADR-2026-11-09-1546):
 
 - a symbol;
@@ -43,8 +42,9 @@ takes the units of one pointer of `@s`'s memory. A valid global names a
 declared memory and a power-of-two alignment, gives units that fit its
 memory's unit, takes addresses of globals of its own table only, and has
 an initializer no larger than its size. The spec, `fir-ref fmt` and
-`validate`, and `funk-ir` read, print and check globals; they have no run
-meaning yet, and the backend leaves them out, until #237's later stages.
+`validate`, and `funk-ir` read, print and check globals, and a run starts
+with them (below); no op names one until the address op, and the backend
+leaves them out, until #237's later stages.
 The words `global` and `const` are ADR-2026-11-09-1546's: the human ruled
 on 2026-11-20 (#237 Q4) that a global keeps them, and that the G0 check, on
 the Lean and the Rust side, lists both with `align` among the words generic
@@ -64,7 +64,12 @@ function's table, before anything it allocates, outside every call, so no
 frame frees it (ADR-2026-11-09-1546). Each is the next allocation of the
 memory of its number, so a memory's globals take its first ids in the
 table's order, and an `addr(@g, K)` piece holds the pointer to `@g`'s
-allocation plus `K`, in the fragments a store of that pointer writes.
+allocation plus `K`, in the fragments a store of that pointer writes. The
+id an address names is the one the run places `@g` at when the run names
+distinct memories by distinct numbers, as a module's own runs do. A
+global's whole block is built at the start, so a run of a module with a
+huge global, which validation accepts up to `2^64 - 1` units, builds all
+its units, as `alloca` of a huge count does.
 
 - A global's units past its initializer hold zeros when the run starts. The
   human ruled this on 2026-11-20 (#237 Q1). Rejected: poison, as fresh

@@ -261,6 +261,12 @@ import FirSpec.Execution.ObserveEndLaws
 import FirSpec.Execution.TraceDialect
 import FirSpec.Execution.TraceLift
 import FirSpec.Execution.TraceRefine
+import FirSpec.Execution.TraceObligations
+import FirSpec.Execution.TraceObligationLaws
+import FirSpec.Execution.TracePaths
+import FirSpec.Execution.TraceStepPaths
+import FirSpec.Execution.TraceOpsRefine
+import FirSpec.Execution.TraceArgs
 import FirSpec.Core.Trace
 import FirSpec.Execution.MemoryEndModes
 import FirSpec.Execution.MemoryModes

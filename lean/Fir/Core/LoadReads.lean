@@ -26,6 +26,7 @@ memory. -/
   effects
     | .load .. => { mayUB := true, mayPoison := true }
     | op => Core.Op.effects op
+  numbered := some
 
 /-- A `load` of an `i8` through a pointer of memory 0 is a valid op
 instance. -/
