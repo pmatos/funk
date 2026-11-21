@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "The location table read back: readable blocks" =>
 
-:::moduleDocs (fingerprint := "4937616668860296335")
+:::moduleDocs (fingerprint := "9023441130972602640")
 :::
 
 :::readable Fir.Text.readNat_cons (pin := Fir.Text.readNat) (pin := Fir.Location.limit) (fingerprint := "8174598499938946659")
@@ -53,7 +53,7 @@ that its reader takes alone, a number, `)` or the word `unknown`, so what
 follows does not matter.
 :::
 
-:::readable Fir.Text.readLocEntries_reads (pin := Fir.Text.readLocEntries) (pin := Fir.LocTable.InLimits) (pin := Fir.Location.numbers) (pin := Fir.Location.limit) (fingerprint := "14638626372986856869")
+:::readable Fir.Text.readLocEntries_reads (pin := Fir.Text.readLocEntries) (pin := Fir.LocTable.InLimits) (pin := Fir.Location.numbers) (pin := Fir.Location.limit) (fingerprint := "14650048667954598398")
 *Theorem: the entries of a location table read back.* For every location
 table $`t`
 {ref "The-fir-specification--Abstract-syntax--Locations"}[within limits],

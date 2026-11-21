@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Ops, functions and the module: readable blocks" =>
 
-:::moduleDocs (fingerprint := "11002072048922252901")
+:::moduleDocs (fingerprint := "480392564500907843")
 :::
 
 :::readable Fir.spells_lhs (pin := Fir.printDefs) (fingerprint := "7259325238878645560")
@@ -99,7 +99,7 @@ The theorems for an item and for a list of items are proved together, by
 induction on the items, since a nested module holds items.
 :::
 
-:::readable Fir.LocTable.spellsEntries Fir.LocTable.spells (pin := Fir.LocTable.print) (fingerprint := "4189193677339275372")
+:::readable Fir.LocTable.spellsEntries Fir.LocTable.spells (pin := Fir.LocTable.print) (fingerprint := "13120248097464997514")
 *Theorems: the printed location table spells its tokens before any
 characters.* For every location table whose tokens can all be written:
 

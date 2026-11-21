@@ -14,7 +14,7 @@ build fails when the Lean changes under it.
 
 #doc (Manual) "Runs with memory at every budget: readable blocks" =>
 
-:::moduleDocs (fingerprint := "3368760154218919778")
+:::moduleDocs (fingerprint := "12536997600893172640")
 :::
 
 :::readable Fir.Result.mapVal Fir.SetM.run_map Fir.LeavesAtMost.mapVal Fir.Ahead.mapVal (fingerprint := "7766632884357331668")
@@ -27,7 +27,7 @@ steps a run leaves, and keeps one run
 of another.
 :::
 
-:::readable Fir.fromState_bind_result Fir.runFrom_inFrame Fir.Ahead.bindCall (fingerprint := "3396021307234932204")
+:::readable Fir.fromState_bind_result Fir.runFrom_inFrame Fir.Ahead.bindCall (fingerprint := "11114798194851624492")
 *Theorems: a call, from given memories.* A run of ops in a call's frame,
 from $`S`, runs from $`\mathrm{enter}(S)`, and each of its returns leaves
 the frame, $`\mathrm{exit}(S')`. A call followed by what its caller does
@@ -59,7 +59,7 @@ UB of the smaller run is one of the larger, and each of the larger is one
 of the smaller, unless the smaller can run out of fuel.
 :::
 
-:::readable Fir.fromState_fst Fir.Func.run_of_enter Fir.Func.fromState_run_stuck Fir.Func.run_fromState Fir.Func.run_fromState_stuck (fingerprint := "1257011703424659824")
+:::readable Fir.fromState_fst Fir.Func.run_of_enter Fir.Func.fromState_run_stuck Fir.Func.run_fromState Fir.Func.run_fromState_stuck (fingerprint := "7283670085571937738")
 *Theorems: the run of a function with memory.* What a computation of the
 layer may end with from $`S`, without the memories it ends with, is what
 it ends with read from $`S`, without them. A function that starts runs its

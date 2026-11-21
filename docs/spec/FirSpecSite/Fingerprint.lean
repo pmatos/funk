@@ -21,10 +21,12 @@ recursive definition (`f._f`, `f._unary`, or `f._mutual`, which holds the
 whole mutual block), its case splits (`f._sparseCasesOn_1`), and its
 pattern matchers (`f.match_1`), followed transitively, so a recursive
 definition of a mutual block covers the bodies of the whole block. A
-helper counts by its type and value, not by its name: Lean may reuse a
-matcher made for another definition of the same shape, or name the helper
-afresh when that definition goes, and neither changes the fingerprint. Any
-other definition that the declaration only refers to counts by its name: a
+statement, a type, a constructor's type or a field's default that holds a
+`match` includes its matcher the same way. A helper counts by its type and
+value, not by its name: Lean may reuse a matcher made for another
+declaration of the same shape, or name the helper afresh when that
+declaration goes, and neither changes the fingerprint. Any other
+definition that the declaration only refers to counts by its name: a
 change to that definition's body does not change the fingerprint. A
 readable block that restates such a definition pins it as well, with
 `(pin := …)`.
@@ -60,16 +62,15 @@ def withHelperHashes (hashes : NameMap UInt64) (e : Expr) : Expr :=
 mutual
 /--
 The hash of the helper `c`: its type and its value, but not its name. The
-state keeps the hash of each helper met. Helpers form no cycle, since Lean
-adds a definition only after every constant it uses, so this ends.
+state keeps the hash of each helper met. A helper that is met again while
+its own hash is being computed, as an unsafe one that names itself is,
+counts as 0 there, so this ends.
 -/
 partial def helperHash (env : Environment) (c : Name) : StateM (NameMap UInt64) UInt64 := do
   if let some h := (← get).find? c then return h
-  let some ci := env.find? c | return 0
-  let value ← match ci.value? with
-    | some v => contentHash env v
-    | none => pure 0
-  let h := mixHash (← contentHash env ci.type) value
+  let some (.defnInfo d) := env.find? c | return 0
+  modify (·.insert c 0)
+  let h := mixHash (← contentHash env d.type) (← contentHash env d.value)
   modify (·.insert c h)
   return h
 
@@ -79,29 +80,30 @@ partial def contentHash (env : Environment) (e : Expr) : StateM (NameMap UInt64)
   for c in e.getUsedConstants do
     if isHelper env c then
       hashes := hashes.insert c (← helperHash env c)
+  if hashes.isEmpty then return hash e
   return hash (withHelperHashes hashes e)
 end
 
-/-- The hash of the definition body `e`, with the type and value of each helper it reaches. -/
-def bodyHash (env : Environment) (e : Expr) : UInt64 :=
+/-- The hash of the term `e`, with the type and value of each helper it reaches. -/
+def termHash (env : Environment) (e : Expr) : UInt64 :=
   (contentHash env e).run' {}
 
 /-- The hash of what the declaration `n` says, or none when there is no such declaration. -/
 def declHash (env : Environment) (n : Name) : Option UInt64 := do
   let ci ← env.find? n
-  let base := hash ci.type
+  let base := termHash env ci.type
   match ci with
-  | .defnInfo v => return mixHash base (bodyHash env v.value)
-  | .opaqueInfo v => return mixHash base (bodyHash env v.value)
+  | .defnInfo v => return mixHash base (termHash env v.value)
+  | .opaqueInfo v => return mixHash base (termHash env v.value)
   | .inductInfo v =>
     let withCtors := v.ctors.foldl (init := base) fun h c =>
       match env.find? c with
-      | some cc => mixHash h (mixHash (hash c) (hash cc.type))
+      | some cc => mixHash h (mixHash (hash c) (termHash env cc.type))
       | none => mixHash h (hash c)
     let fields := if isStructure env n then getStructureFields env n else #[]
     let defaults := fields.foldl (init := withCtors) fun h f =>
       match env.find? (n ++ f ++ `_default) with
-      | some (.defnInfo d) => mixHash h (mixHash (hash f) (hash d.value))
+      | some (.defnInfo d) => mixHash h (mixHash (hash f) (termHash env d.value))
       | _ => h
     return defaults
   | _ => return base

@@ -14,7 +14,7 @@ changes under it.
 
 #doc (Manual) "Words and dialect sets: readable blocks" =>
 
-:::moduleDocs (fingerprint := "1176514965532951450")
+:::moduleDocs (fingerprint := "426493583140685421")
 :::
 
 :::readable Fir.wordDialect Fir.wordDialect_dot (fingerprint := "1656636787730505960")
@@ -53,7 +53,7 @@ dialects that its words may name. A bare word is the core's, and every
 dialect may write one, so the core's name is in no set.
 :::
 
-:::readable Fir.LawfulDialectSet (fingerprint := "9771981345072976832")
+:::readable Fir.LawfulDialectSet (fingerprint := "13651695932060048183")
 *Definition: a dialect whose words stay in its set.* The words of the
 dialect $`d` name only dialects of its set when, for every op instance $`p`
 and every valid type $`t`:

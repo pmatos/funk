@@ -132,32 +132,103 @@ def expectSame (what : String) (n : Name) (old new : String) : CommandElabM Unit
      def fpCount (n : Nat) : Nat := n + 2
      end"
 
-/-!
-A matcher counts by what it says, not by its name. Lean reuses the matcher
-of an earlier definition of the same shape: here `fpShape` uses
-`fpIsZero.match_1`. Without `fpIsZero`, `fpShape` gets a matcher of its own,
-`fpShape.match_1`, with the same body, and its fingerprint must stay.
+/--
+Fails unless the declaration `n`, elaborated after `srcs`, uses the matcher
+`m`, which an earlier declaration made, so that a test of a shared matcher
+checks something.
 -/
-
-#eval show CommandElabM Unit from do
-  let isZero := "def fpIsZero : Nat → Bool | 0 => true | _ => false"
-  let shape := "def fpShape : Nat → Nat | 0 => 1 | _ => 2"
+def expectShared (srcs : List String) (n m : Name) : CommandElabM Unit := do
   let ns ← getCurrNamespace
   let shared ← withoutModifyingEnv do
-    elabAll [isZero, shape]
-    let some (.defnInfo d) := (← getEnv).find? (ns ++ `fpShape) | throwError "no fpShape"
-    return d.value.getUsedConstants.contains (ns ++ `fpIsZero.match_1)
+    elabAll srcs
+    let some ci := (← getEnv).find? (ns ++ n) | throwError "{srcs} do not declare {n}"
+    let used := ci.type.getUsedConstants ++ (ci.value?.map (·.getUsedConstants) |>.getD #[])
+    return used.contains (ns ++ m)
   unless shared do
-    throwError "fpShape does not reuse the matcher of fpIsZero, so this test checks nothing"
-  if (← hashAfterAll [isZero, shape] `fpShape) != (← hashAfter shape `fpShape) then
-    throwError "the fingerprint of fpShape changes with the name of the matcher it uses"
+    throwError "{n} does not reuse {m}, so this test checks nothing"
 
-/-! A change to a matcher that the definition shares with another still counts. -/
+/--
+Fails unless the fingerprint of `n` is the same after `shared ++ [src]`, where
+`user`, `n` or a part of it, reuses the matcher `m` that `shared` made, as
+after `src` alone, where it has its own.
+-/
+def expectSameUnshared (what : String) (n m : Name) (shared : List String) (src : String)
+    (user : Name := n) : CommandElabM Unit := do
+  expectShared (shared ++ [src]) user m
+  unless (← hashAfterAll (shared ++ [src]) n) == (← hashAfter src n) do
+    throwError "the fingerprint of {n} changes with {what}"
 
-#eval show CommandElabM Unit from do
-  let isZero := "def fpIsZero : Nat → Bool | 0 => true | _ => false"
-  if (← hashAfterAll [isZero, "def fpShape : Nat → Nat | 0 => 1 | _ => 2"] `fpShape) ==
-      (← hashAfterAll [isZero, "def fpShape : Nat → Nat | 1 => 1 | _ => 2"] `fpShape) then
-    throwError "the fingerprint of fpShape misses a change to the patterns of a matcher it shares"
+/--
+Fails unless the fingerprint of `n` changes from `old` to `new`, in both of
+which `user`, `n` or a part of it, reuses the matcher `m`, of the same name,
+that their first declarations made.
+-/
+def expectChangeShared (what : String) (n m : Name) (old new : List String)
+    (user : Name := n) : CommandElabM Unit := do
+  expectShared old user m
+  expectShared new user m
+  if (← hashAfterAll old n) == (← hashAfterAll new n) then
+    throwError "the fingerprint of {n} misses {what}"
+
+/-!
+A matcher counts by what it says, not by its name. Lean reuses the matcher
+of an earlier declaration of the same shape: here `fpShape` uses
+`fpIsZero.match_1`. Without `fpIsZero`, `fpShape` gets a matcher of its own,
+`fpShape.match_1`, with the same body, and its fingerprint must stay. A
+change to the patterns of a shared matcher, whose name stays, must still
+change it.
+-/
+
+#eval show CommandElabM Unit from
+  expectSameUnshared "the name of the matcher its body uses" `fpShape `fpIsZero.match_1
+    ["def fpIsZero : Nat → Bool | 0 => true | _ => false"]
+    "def fpShape : Nat → Nat | 0 => 1 | _ => 2"
+
+#eval show CommandElabM Unit from
+  expectChangeShared "a change to the patterns of the matcher its body shares" `fpShape
+    `fpIsZero.match_1
+    ["def fpIsZero : Nat → Bool | 0 => true | _ => false",
+     "def fpShape : Nat → Nat | 0 => 1 | _ => 2"]
+    ["def fpIsZero : Nat → Bool | 1 => true | _ => false",
+     "def fpShape : Nat → Nat | 1 => 1 | _ => 2"]
+
+/-! The same holds for a matcher in a statement. -/
+
+#eval show CommandElabM Unit from
+  expectSameUnshared "the name of the matcher its statement uses" `fpStmt `fpIsZero.match_1
+    ["def fpIsZero : Nat → Bool | 0 => true | _ => false"]
+    "axiom fpStmt (n : Nat) : (match n with | 0 => 1 | _ => 2) = 1"
+
+#eval show CommandElabM Unit from
+  expectChangeShared "a change to the patterns of the matcher its statement shares" `fpStmt
+    `fpIsZero.match_1
+    ["def fpIsZero : Nat → Bool | 0 => true | _ => false",
+     "axiom fpStmt (n : Nat) : (match n with | 0 => 1 | _ => 2) = 1"]
+    ["def fpIsZero : Nat → Bool | 1 => true | _ => false",
+     "axiom fpStmt (n : Nat) : (match n with | 1 => 1 | _ => 2) = 1"]
+
+/-! And for a matcher in a field's default. -/
+
+#eval show CommandElabM Unit from
+  expectSameUnshared "the name of the matcher a field's default uses" `fpBox
+    `fpIsZero.match_1
+    ["def fpIsZero : Nat → Bool | 0 => true | _ => false"]
+    "structure fpBox where
+       k : Nat
+       x : Nat := match k with | 0 => 1 | _ => 2"
+    (user := `fpBox.x._default)
+
+#eval show CommandElabM Unit from
+  expectChangeShared "a change to the patterns of the matcher a field's default shares" `fpBox
+    `fpIsZero.match_1
+    ["def fpIsZero : Nat → Bool | 0 => true | _ => false",
+     "structure fpBox where
+       k : Nat
+       x : Nat := match k with | 0 => 1 | _ => 2"]
+    ["def fpIsZero : Nat → Bool | 1 => true | _ => false",
+     "structure fpBox where
+       k : Nat
+       x : Nat := match k with | 1 => 1 | _ => 2"]
+    (user := `fpBox.x._default)
 
 end FirSpecSite.FingerprintTests

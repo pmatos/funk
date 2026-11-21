@@ -116,8 +116,9 @@ the document is elaborated:
   Rejected: hashing only the stored value, which names the helpers without
   their bodies, so a block could drift from its Lean while the build passed.
 - A helper counts by its type and value, not by its name. Each helper that a
-  term names is replaced, before hashing, by a placeholder that carries the
-  hash of its own type and value. Lean reuses the matcher of another
+  hashed term names, in a body, a statement, a type, a constructor's type
+  or a field's default, is replaced before hashing by a placeholder that
+  carries the hash of its own type and value. Lean reuses the matcher of another
   definition of the same shape, and names it afresh when that definition
   goes, so a name-based hash changed with an unrelated definition (#476).
   The human ruled on 2026-11-21 (#476) to hash the body instead of the
