@@ -4,8 +4,8 @@ import FirTest.TraceDialect
 A toy dialect with calls, for the tests of divergence across a replaced callee
 (ADR-2026-11-09-1540, stage 3c-2 of #233). Its op `emit` shows the event `0`
 to the world and gets any answer, `skip` does nothing, `call @g` calls the
-function `@g`, `br` jumps back to the function's first block, and `ret`
-returns. Its ops are monotone in the traced layer and have finitely many
+function `@g`, `br` jumps back to the function's first block, `ret`
+returns, and `ub` hits UB. Its ops are monotone in the traced layer and have finitely many
 outcomes, given the world's answers, so the traced layer's theorems apply.
 
 The module `callModule` has a callee `@g`, which takes a step to `skip`, then
@@ -24,6 +24,7 @@ inductive CallOp where
   | call (sym : Name)
   | br
   | ret
+  | ub
   deriving DecidableEq
 
 /-- A dialect, for these tests, with an event and calls. -/
@@ -58,6 +59,7 @@ instance : DialectTrace CallDialect where
         | .emit, _ => (fun (_ : Nat) => .nil) <$> MonadEvent.emit (0 : Nat)
         | .skip, _ => pure .nil
         | .call _, _ => MonadUB.ub "a call runs its callee"
+        | .ub, _ => MonadUB.ub "ub"
         | .br, _ | .ret, _ => MonadUB.ub "a terminator exits"
       exit := fun
         | .br, _ => pure (.goto 0)
@@ -116,6 +118,7 @@ theorem call_monotone (op : CallDialect.Op) :
     subst he'
     exact ⟨.ok (.nil, [], s), rfl, trivial, trivial, hs⟩
   | call _ => exact ⟨fun _ => ubAll _, (fun h => nomatch h)⟩
+  | ub => exact ⟨fun _ => ubAll _, (fun h => nomatch h)⟩
   | br =>
     refine ⟨(fun h => nomatch h), fun _ s s' hs e' he' => ?_⟩
     have he' : e' = .ok (.goto 0, [], s') := he'
@@ -161,6 +164,7 @@ theorem call_traceFinite :
     exact List.mem_map.2 ⟨n, by simp [this], rfl⟩
   | skip => exact ⟨fun _ => one _, (fun h => nomatch h)⟩
   | call _ => exact ⟨fun _ => none _, (fun h => nomatch h)⟩
+  | ub => exact ⟨fun _ => none _, (fun h => nomatch h)⟩
   | br => exact ⟨(fun h => nomatch h), fun _ => one _⟩
   | ret => exact ⟨(fun h => nomatch h), fun _ => one _⟩
 
