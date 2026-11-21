@@ -300,16 +300,6 @@ impl Registry {
         self.ops.get(name).map(|(_, op)| op.as_ref())
     }
 
-    /// The names of the registered ops whose specs ask the width of an
-    /// integer that they turn pointers into ([`OpSpec::asks_addr_widths`]).
-    pub(crate) fn ops_asking_addr_widths(&self) -> Vec<&str> {
-        self.ops
-            .iter()
-            .filter(|(_, (_, op))| op.asks_addr_widths())
-            .map(|(name, _)| name.as_str())
-            .collect()
-    }
-
     /// The effects of the op named `name` at `op`, as the dialect that its
     /// word names declares them, or `None` if no dialect registered it. An
     /// op of a sum has its own side's effects in Lean (the sum's

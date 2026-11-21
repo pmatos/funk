@@ -131,9 +131,11 @@ monad with memory.
 *Definition: the core ops that read the run's items.*
 $`\mathsf{fieldaddr}` reads the layout it names in the
 {ref "The-fir-specification--Memory--The-items-a-run-gives-each-op"}[items]
-that the run gives every op, and no other core op does. It touches no
-memory, but the set monad has no run, so it too has a rule only with
-memory.
+that the run gives every op, and no other core op that touches no memory
+does: $`\mathsf{ptr\_expose}` and $`\mathsf{ptr\_from\_int}` read the
+run's address policy and resolver, but they touch memory. $`\mathsf{fieldaddr}`
+touches no memory, but the set monad has no run, so it too has a rule only
+with memory.
 
 *Definition: an op has rules.* A core op has rules when one of the two
 blocks above gives it a rule, as an op that is not a terminator or as a

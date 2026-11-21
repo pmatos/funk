@@ -5,7 +5,7 @@ coverage matrix (#232, ADR-2026-11-03-0557).
 integer, whatever their memory, in a table of their own, `addresses`. The
 data layout asks that the integer be as wide as the memory's pointers, so
 the columns are the pointer widths of the memories that the corpus
-declares: `i64`, the default memory's, and `i32`.
+declares: `i32`, and `i64`, the default memory's.
 
 The cells are on the interpreter side only: the backend lowers the two ops
 in stage 5 of #232. A test that returns an exposed address depends on the
@@ -15,6 +15,7 @@ address reaches, or the difference of two addresses, never the address.
 
 from cell_types import Cell, CellError, Row, Table, is_pointer
 from firtext import Op
+from pointer_cells import is_int
 
 ADDRESSES = "addresses"
 ADDRESS_OPS = ("ptr_expose", "ptr_from_int")
@@ -39,6 +40,6 @@ def address_cell(op: Op) -> Cell:
     if not op.attrs and len(op.operands) == len(op.results) == 1:
         [a], [r] = op.operands, op.results
         pointer, integer = (a, r) if op.name == "ptr_expose" else (r, a)
-        if is_pointer(pointer) and integer.startswith("i"):
+        if is_pointer(pointer) and is_int(integer):
             return Cell(ADDRESSES, op.name, "", integer)
     raise CellError(f"{op.name} of {op.operands} to {op.results} is not a cell")

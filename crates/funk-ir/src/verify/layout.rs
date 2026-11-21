@@ -127,13 +127,13 @@ pub(super) fn check_memories(
             ));
         }
     }
-    let addr_names = reg.ops_asking_addr_widths();
     for f in t.funcs() {
-        let asks = |o: &&crate::ir::Op| addr_names.iter().any(|n| *n == o.name);
-        if !all_ops(f).any(|o| asks(&o)) {
+        let mut addr_ops = all_ops(f)
+            .filter(|o| reg.op(&o.name).is_some_and(|s| s.asks_addr_widths()))
+            .peekable();
+        if addr_ops.peek().is_none() {
             continue;
         }
-        let addr_ops = all_ops(f).filter(asks);
         let bad = |(n, w): (u32, u32)| entry(n).pointer != w || entry(n).non_integral;
         if let Some((n, w)) = first_width(f, addr_ops, reg, |s, op| s.addr_widths(op), bad) {
             let message = if entry(n).non_integral {

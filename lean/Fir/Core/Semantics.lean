@@ -111,10 +111,12 @@ def Op.touchesMemory : Op → Bool
   | .storeFloat .. | .memCopy .. | .memSet .. | .ptrExpose .. | .ptrFromInt .. => true
   | _ => false
 
-/-- The core ops whose rules read the items that the run gives each op:
-`fieldAddr`, which reads the layout it names. It touches no memory, but
-the set monad has no run and no items, so it too has a rule only with
-memory (the section on the core's rules with memory). -/
+/-- The core ops that touch no memory but whose rules read the items that
+the run gives each op: `fieldAddr`, which reads the layout it names. The
+set monad has no run and no items, so it too has a rule only with memory
+(the section on the core's rules with memory). `ptrExpose` and
+`ptrFromInt` read the run's address policy and resolver, but they touch
+memory, so they are not marked here. -/
 def Op.readsItems : Op → Bool
   | .fieldAddr .. => true
   | _ => false
