@@ -16,8 +16,12 @@ over them while they show no event (`lean/Fir/Execution/TraceLift.lean`,
 and scripted worlds (`lean/Fir/Execution/TraceScript.lean`), which
 `fir-ref run --world` takes, reporting the end of each return
 (`lean/Fir/Gpu/EndModes.lean`, [fir-ref-run-end.md](fir-ref-run-end.md)).
-Refinement over traces for a dialect that shows events is not implemented
-yet (#233, stages 3b and 3c).
+For a dialect that shows events, the spec defines the obligation of its
+ops and proves that refined arguments allow each return, each UB and each
+path out of fuel at its budget (`lean/Fir/Execution/TraceObligations.lean`
+to `TraceArgs.lean`). Divergence for such a dialect and congruence in the
+callee over its traced runs are not implemented yet (#233, stages 3b-2
+and 3c).
 semantics-refinement.md says what a run shows in M0.
 
 ## What a run shows
@@ -256,16 +260,41 @@ above.
   guarantees over its runs with memory alone until the traced layer's own
   theorems exist, so the spec's traced runs would have none meanwhile.
 - **A dialect with events.** Its refined arguments and congruence in the
-  callee need the traced layer's own theorems (#233, stages 3b and 3c),
+  callee are the traced layer's own theorems (#233, stages 3b and 3c),
   which are to prove the core's statements again, unchanged, once the core
-  shows events. Not a rule yet, a fact for those stages: divergence needs
-  one source trace at every budget, and an op with infinitely many
-  outcomes `c` can show, on a poison argument, an event that differs with
-  each `c` and is refined by the target's, then take `c` silent steps and
-  return. The target then falls silent after its event, and no source
-  outcome allows it. So refined arguments over traces cannot hold for
-  every dialect with no hypothesis; which hypothesis, or a change to how
-  divergence is judged, is for stage 3b to propose.
+  shows events. Divergence needs one source trace at every budget. An op with
+  infinitely many outcomes `c` can show, on a poison argument, an event
+  that differs with each `c` and is refined by the target's, then take `c`
+  silent steps and return. The target then falls silent after its event,
+  and no source outcome allows it. So the generic theorems of stages 3b
+  and 3c take a hypothesis: each op has finitely many outcomes given the
+  world's answers, as congruence with memory takes `OpsFinite`. The core's
+  and CoreGpu's statements take no hypothesis: stage 3b-2 is to show that
+  both meet it. The human ruled this on 2026-11-20, on #233. Rejected: change how stage 1
+  judges divergence (`traceObservable`), a definition already merged.
+- **The obligation of an op with events.** An op is monotone in the traced
+  layer (`OpTraceMonotone`): from operands and a traced state that refine
+  others, each way it may end is allowed by a way it may end on those
+  others. One traced state refines another when its memories refine the
+  other's and the same allocations escaped, in the same order, so the
+  world names each by the same handle. A result allows a result that
+  refines it, after acts that refine its own one by one, with a traced
+  state that refines its own. UB after the acts `t` allows any way of
+  ending that first shows acts refining `t`. The step before each op and
+  the lift of a semantics with memory keep the obligation, so the core and
+  CoreGpu meet it from their monotonicity with memory
+  (`Core.traceOpsMonotone`, `Gpu.traceOpsMonotone`). Rejected: escaped
+  lists related only by the renaming of allocations, which refined
+  arguments do not need: both runs allocate the same ids, in step.
+- **Refined arguments run in step.** On arguments that refine others, a
+  function's traced runs and its runs on those others run the same ops at
+  the same budget, with the same steps left after each return. So each
+  path of the first that is not stuck is allowed by a path of the second
+  at the same budget (`Func.traceRun_allowed`). Each return and each UB
+  of the traced runs is allowed, and so is each path out of fuel, at its
+  budget (`Fir.Execution.TraceArgs`). Rejected: allow a path by one at a
+  smaller budget, as the theorems with memory do for black boxes, which
+  only congruence in the callee needs (stage 3c).
 
 ## Scripts and native runs
 
