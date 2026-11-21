@@ -312,6 +312,9 @@ instance instDialectValidation [DialectValidation base] [DialectValidation (base
   fieldShape lay n
     | .inl t => fieldShape lay n t
     | .inr t => fieldShape (d := base.over e) lay n (.inr t)
+  validSigAttrs
+    | .inl t => validSigAttrs t
+    | .inr t => validSigAttrs (d := base.over e) (.inr t)
 
 /-- The sum's rules can be decided when each side's can. -/
 instance instDecidableDialectValidation [DialectValidation base] [DialectValidation (base.over e)]
@@ -331,6 +334,9 @@ instance instDecidableDialectValidation [DialectValidation base] [DialectValidat
   decValidItem v ctx i := by
     show Decidable (ValidItem v ctx i)
     unfold ValidItem; infer_instance
+  decValidSigAttrs
+    | .inl t, as => inferInstanceAs (Decidable (validSigAttrs t as))
+    | .inr t, as => DecidableDialectValidation.decValidSigAttrs (d := base.over e) (.inr t) as
 
 /-- The memories of the sum are `e`'s, which hold the base's: so a memory
 has one name in the sum, whichever side names it. An op of the sum has its

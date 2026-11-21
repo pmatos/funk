@@ -14,10 +14,10 @@ changes under it.
 
 #doc (Manual) "Example: readable blocks" =>
 
-:::moduleDocs (fingerprint := "15614714651354990337")
+:::moduleDocs (fingerprint := "4773986959500756726")
 :::
 
-:::readable Fir.Example.sum Fir.Example.sum10 Fir.Example.sumModule (fingerprint := "15614714651354990337")
+:::readable Fir.Example.sum Fir.Example.sum10 Fir.Example.sumModule (fingerprint := "4773986959500756726")
 *Definition: the example module.* The module above, as
 {ref "The-fir-specification--Abstract-syntax--Modules___-functions___-blocks-and-ops"}[abstract syntax]:
 the function `@sum`, the function `@sum10` and the location table with the

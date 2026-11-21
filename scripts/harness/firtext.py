@@ -91,6 +91,9 @@ def tokens(text: str) -> list[Token]:
         elif text.startswith("->", i):
             out.append(Token("->", "->", line))
             i += 2
+        elif text.startswith("...", i):
+            out.append(Token("...", "...", line))
+            i += 3
         elif c in PUNCT:
             out.append(Token(c, c, line))
             i += 1
@@ -243,12 +246,12 @@ class Reader:
             raise TextError(f"line {kind.line}: an item of kind {kind.text}")
         symbol = scope + self.take("symbol").text
         self.take("(")
-        params = () if self.at(")") else self.defs()
+        params = () if self.at(")") else self.params()
         self.take(")")
         results = ()
         if self.at("->"):
             self.take("->")
-            results = self.types()
+            results = self.results()
         self.take("{")
         defined, ops = list(params), []
         while self.at("label"):
@@ -285,6 +288,40 @@ class Reader:
         name = self.take("value").text
         self.take(":")
         return name, self.type()
+
+    def params(self) -> tuple[tuple[str, str], ...]:
+        """A function's parameters, each with the attributes after its type,
+        such as an extension marker, which it skips, then maybe `...`."""
+        out = []
+        while not self.at("..."):
+            out.append(self.define())
+            self.marks()
+            if not self.at(","):
+                return tuple(out)
+            self.take(",")
+        self.take("...")
+        return tuple(out)
+
+    def results(self) -> tuple[str, ...]:
+        """A function's results, each with the attributes after its type,
+        which it skips."""
+        out = [self.type()]
+        self.marks()
+        while self.at(","):
+            self.take(",")
+            out.append(self.type())
+            self.marks()
+        return tuple(out)
+
+    def marks(self) -> None:
+        """Skips the attributes after a parameter's or a result's type."""
+        while (t := self.peek()) is not None and t.kind in (
+            "word",
+            "int",
+            "string",
+            "symbol",
+        ):
+            self.attr()
 
     def types(self) -> tuple[str, ...]:
         out = [self.type()]

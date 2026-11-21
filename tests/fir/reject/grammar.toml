@@ -185,7 +185,7 @@ locs {
 
 [[reject]]
 verdict = "parse-error"
-rule = "a function has no attributes"
+rule = "a function with no results has no attributes: those after a result are its markers"
 text = '''
 func @f() inline {
 ^e:

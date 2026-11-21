@@ -60,13 +60,21 @@ structure SRegion where
 end
 
 mutual
-/-- An item as written: `kind @sym(params) -> results attrs { body }`. -/
+/-- An item as written: `kind @sym(params) -> results attrs { body }`. Each
+parameter may carry attributes after its type, `paramAttrs` holding one
+list for each, and the parameters may end in `...`, at `variadic`. A
+result may carry attributes after its type too: `resultAttrs` holds those
+of each result that a comma follows, and the attributes after the last
+result are the item's, `attrs`. -/
 structure SItem where
   kind : String
   kindPos : TextPos
   name : String
   params : List SDef
+  paramAttrs : List (List (Attr × TextPos))
+  variadic : Option TextPos
   results : List (Attr × TextPos)
+  resultAttrs : List (List (Attr × TextPos))
   attrs : List (Attr × TextPos)
   body : SBody
 
@@ -216,6 +224,41 @@ def readDef : (ts : List Token) → Read SDef ts
     let (d, a) ← readDefType n p rest
     pure (d, a.next)
   | ts => fail ts "a value definition, `%x: type`"
+
+/-- Reads a parameter of an item: a definition, then the attributes after
+its type. -/
+def readParam (ts : List Token) : Read (SDef × List (Attr × TextPos)) ts := do
+  let (d, a) ← readDef ts
+  let (as, b) ← readAttrs a.1
+  pure ((d, as), a.then b)
+
+/-- Reads `, p` for each further parameter `p` of an item, and `, ...` at
+the end: the rest of the parameters, after the first. -/
+def readMoreParams : (ts : List Token) →
+    Read (List (SDef × List (Attr × TextPos)) × Option TextPos) ts
+  | ⟨.comma, _⟩ :: ⟨.ellipsis, p⟩ :: rest => .ok (([], some p), ⟨rest, by simp; omega⟩)
+  | ⟨.comma, _⟩ :: rest => do
+    let (x, ⟨r, hr⟩) ← readParam rest
+    let ((xs, v), ⟨r', hr'⟩) ← readMoreParams r
+    pure ((x :: xs, v), ⟨r', by simp; omega⟩)
+  | ts => .ok (([], none), .here ts)
+termination_by ts => ts.length
+
+/-- Reads the parameters of an item, before its `)`: `...` alone, or one or
+more parameters, separated by commas, which may end in `, ...`. -/
+def readParams : (ts : List Token) →
+    Read (List (SDef × List (Attr × TextPos)) × Option TextPos) ts
+  | ⟨.ellipsis, p⟩ :: rest => .ok (([], some p), ⟨rest, Nat.le_succ _⟩)
+  | ts => do
+    let (x, a) ← readParam ts
+    let ((xs, v), b) ← readMoreParams a.1
+    pure ((x :: xs, v), a.then b)
+
+/-- Reads a result of an item: a type, then the attributes after it. -/
+def readResult (ts : List Token) : Read ((Attr × TextPos) × List (Attr × TextPos)) ts := do
+  let (t, a) ← readType ts
+  let (as, b) ← readAttrs a.1
+  pure ((t, as), a.then b)
 
 /-- Reads one or more definitions, separated by commas. -/
 def readDefs (ts : List Token) : Read (List SDef) ts := do
@@ -400,16 +443,18 @@ def readItem (kind : String) (p : TextPos) (ts : List Token) : Read SItem ts :=
   match ts with
   | ⟨.sym name, _⟩ :: rest => do
     let ((), ⟨r₁, h₁⟩) ← expect .lparen "( and the item's parameters" rest
-    let (params, ⟨r₂, h₂⟩) ← (match r₁ with
-      | ⟨.rparen, p⟩ :: tl => pure ([], .here (⟨.rparen, p⟩ :: tl))
-      | ts' => readDefs ts' : Read (List SDef) r₁)
+    let ((params, variadic), ⟨r₂, h₂⟩) ← (match r₁ with
+      | ⟨.rparen, p⟩ :: tl => pure (([], none), .here (⟨.rparen, p⟩ :: tl))
+      | ts' => readParams ts' :
+        Read (List (SDef × List (Attr × TextPos)) × Option TextPos) r₁)
     let ((), ⟨r₃, h₃⟩) ← expect .rparen ")" r₂
     let (results, ⟨r₄, h₄⟩) ← (match r₃ with
       | ⟨.arrow, _⟩ :: rest' => do
-        let (t, a) ← readType rest'
-        let (more, b) ← readMore readType a.1
+        let (t, a) ← readResult rest'
+        let (more, b) ← readMore readResult a.1
         pure (t :: more, (a.then b).next)
-      | ts' => pure ([], .here ts') : Read (List (Attr × TextPos)) r₃)
+      | ts' => pure ([], .here ts') :
+        Read (List ((Attr × TextPos) × List (Attr × TextPos))) r₃)
     let (attrs, ⟨r₅, h₅⟩) ← readAttrs r₄
     let ((), ⟨r₆, h₆⟩) ← expect .lbrace "{ and the item's body" r₅
     let (body, ⟨r₇, h₇⟩) ← (match r₆ with
@@ -421,7 +466,9 @@ def readItem (kind : String) (p : TextPos) (ts : List Token) : Read SItem ts :=
         let (bs, a) ← readBlocks ts'
         pure (SBody.blocks bs, a) : Read SBody r₆)
     let ((), ⟨r₈, h₈⟩) ← expect .rbrace "} to close the item's body" r₇
-    pure (⟨kind, p, name, params, results, attrs, body⟩, ⟨r₈, by simp; omega⟩)
+    pure (⟨kind, p, name, params.map (·.1), params.map (·.2), variadic, results.map (·.1),
+      results.dropLast.map (·.2), (results.getLast?.map (·.2)).getD [] ++ attrs, body⟩,
+      ⟨r₈, by simp; omega⟩)
   | ts => fail ts "the item's symbol"
 termination_by 2 * ts.length + 1
 decreasing_by all_goals (simp_wf; simp only [List.length_cons] at *; omega)

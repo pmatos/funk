@@ -78,7 +78,7 @@ These are what the second pass needs to give an op back: with them, the
 dialect's decoder of ops is given exactly what the op instance encodes.
 :::
 
-:::readable Fir.Func.WellFormed.decodesIn (pin := Fir.Func.WellFormed) (pin := Fir.Func.OpWellFormed) (pin := Fir.Func.typeOf) (pin := Fir.Func.allBlocks) (fingerprint := "3014058364488264218")
+:::readable Fir.Func.WellFormed.decodesIn (pin := Fir.Func.WellFormed) (pin := Fir.Func.OpWellFormed) (pin := Fir.Func.typeOf) (pin := Fir.Func.allBlocks) (fingerprint := "16096781994589858869")
 *Theorem: the blocks of a well-formed function decode in a scope that
 gives each value its type.* For every dialect
 with signatures and a text format, every
@@ -95,7 +95,7 @@ signature, gives its results the types it returns, and states only types
 that decode back to themselves, so each condition holds.
 :::
 
-:::readable Fir.decodeOps_cons (pin := Fir.LawfulDialectText) (pin := Fir.Text.decodeOps) (fingerprint := "3706732858518273105")
+:::readable Fir.decodeOps_cons (pin := Fir.LawfulDialectText) (pin := Fir.Text.decodeOps) (fingerprint := "7141633377343772981")
 *Theorem: the second pass gives an op back.* For every dialect with
 signatures, validation rules and a text format whose text is
 {ref "The-fir-specification--Text-format--Grammar"}[lawful], every scope

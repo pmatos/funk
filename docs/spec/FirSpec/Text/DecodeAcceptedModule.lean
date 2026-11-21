@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "What decoding accepts: readable blocks" =>
 
-:::moduleDocs (fingerprint := "2132999802552582992")
+:::moduleDocs (fingerprint := "11520587128705991113")
 :::
 
 :::readable Fir.mapM_decodeType_writable (pin := Fir.Text.decodeType) (fingerprint := "13728904447647436187")
@@ -33,7 +33,7 @@ which is the same decoder written another way, so that the decoder of a
 function can pass its own.
 :::
 
-:::readable Fir.decodeFunc_wellFormed (pin := Fir.Text.decodeFunc) (pin := Fir.Func.WellFormed) (pin := Fir.Func.typeOf) (pin := Fir.Func.defs) (pin := Fir.Func.types) (fingerprint := "3592434745829390512")
+:::readable Fir.decodeFunc_wellFormed (pin := Fir.Text.decodeFunc) (pin := Fir.Func.WellFormed) (pin := Fir.Func.typeOf) (pin := Fir.Func.defs) (pin := Fir.Func.types) (fingerprint := "12717166577573691148")
 *Theorem: a function decoded from a tree that can be written is well
 formed.* Let $`d` be a dialect with a signature, validation rules and a
 text, whose text is lawful. For every symbol, list of parameters as read,
@@ -66,7 +66,23 @@ proof joins the two:
 These are the seven conditions of a well-formed function.
 :::
 
-:::readable Fir.Attr.allWritable_of_mem Fir.decodeDialectItem_wellFormed (pin := Fir.Text.decodeDialectItem) (pin := Fir.DialectItem.WellFormed) (fingerprint := "2960477687707163277")
+:::readable Fir.decodeFunc_lengths Fir.Func.WellFormed.withAttrs Fir.funcResultAttrs_wellFormed (pin := Fir.Text.funcResultAttrs) (pin := Fir.AttrsTrimmed) (fingerprint := "12422768248043314542")
+*Lemmas: a decoded function's signature.* For every dialect with a
+signature, validation rules and a text:
+
+* a function that the decoder gives has one parameter for each definition
+  read, and one result for each type read;
+* a well-formed function stays well formed with any attributes for its
+  parameters and results that are in the short form, at most one list per
+  place and none empty at the end, and can be written, and whether or not
+  its parameters end in `...`;
+* when the attributes of a `func`'s results decode, from a list of
+  attributes for each result but the last that can be written and the
+  item's attributes, which can be written, they are in the short form for
+  its results, and can be written.
+:::
+
+:::readable Fir.Attr.allWritable_of_mem Fir.decodeDialectItem_wellFormed (pin := Fir.Text.decodeDialectItem) (pin := Fir.DialectItem.WellFormed) (fingerprint := "18188866446613568567")
 *Theorems: an item of a dialect's kind decoded from a tree that can be
 written is well formed.* Attributes that can each be written can all be
 written. For every dialect with a text format, whose text is lawful, and
@@ -77,7 +93,7 @@ is well formed. Its body is then empty, its types decoded from attributes
 written as types, and its attributes kept as they were read.
 :::
 
-:::readable Fir.decodeFields_wellFormed Fir.decodeAggregate_wellFormed (pin := Fir.Text.decodeAggregate) (pin := Fir.Aggregate.WellFormed) (fingerprint := "2713669664253862019")
+:::readable Fir.decodeFields_wellFormed Fir.decodeAggregate_wellFormed (pin := Fir.Text.decodeAggregate) (pin := Fir.Aggregate.WellFormed) (fingerprint := "9993015238600184465")
 *Theorems: an aggregate's layout as decoded is well formed.* For a
 dialect whose text is lawful, fields decoded from attributes that can be
 written have their numbers within the limit, and their types are written
@@ -85,22 +101,25 @@ as types and decode back. So an aggregate's layout decoded from
 attributes that can be written is well formed.
 :::
 
-:::readable Fir.decodeFuncItem_wellFormed Fir.decodeItem_wellFormed Fir.decodeItems_wellFormed Fir.decodeGlobal_wellFormed (pin := Fir.Text.decodeFuncItem) (pin := Fir.Text.decodeItem) (pin := Fir.Text.decodeItems) (pin := Fir.Text.SItem.Writable) (fingerprint := "9757308709303783635")
+:::readable Fir.decodeFuncItem_wellFormed Fir.decodeItem_wellFormed Fir.decodeItems_wellFormed Fir.decodeGlobal_wellFormed (pin := Fir.Text.decodeFuncItem) (pin := Fir.Text.decodeItem) (pin := Fir.Text.decodeItems) (pin := Fir.Text.SItem.Writable) (fingerprint := "1546712496407499703")
 *Theorems: items decoded from a tree that can be written are well formed.*
 Let $`d` be a dialect with a signature, validation rules and a text, whose
 text is lawful:
 
-* for every `func` as read whose parameters can be written, whose result
-  types are written as types and whose body can be written: when it decodes
-  to an item, that item is a well-formed function;
+* for every `func` as read whose parameters can be written, with one list
+  of attributes each, whose result types are written as types, with one
+  list of attributes for each but the last, whose attributes can all be
+  written and whose body can be written: when it decodes to an item, that
+  item is a well-formed function;
 * for every item as read that can be written: when it decodes to an item,
   that item is well formed;
 * for every list of items as read that can be written: when it decodes to
   a list of items, each of them is well formed.
 
-A `func` decodes only when it has no attributes; its body then holds
-blocks, which can be written, or nothing, and the function is decoded from
-them. A `module` decodes only when it has no parameters, results or
+A `func` decodes the attributes of its results, in the short form, then
+its body, which holds blocks, which can be written, or nothing, and the
+function is decoded from them, and takes the attributes of its parameters
+in the short form too. A `module` decodes only when it has no parameters, results or
 attributes; its body then holds no blocks, or a dialect set whose names are
 words and items that can be written, which decode to well-formed items in
 turn. An `aggregate`, and an item whose kind is a word of a dialect,

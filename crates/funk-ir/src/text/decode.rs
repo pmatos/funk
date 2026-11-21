@@ -20,7 +20,7 @@ use crate::ir::names::is_dialect_word;
 use crate::ir::tree::Nest;
 use crate::ir::{
     Aggregate, AggregateFault, Attr, Def, DialectItem, Func, Global, GlobalFault, Item, MemLayout,
-    Module, NestedModule, Op, Part, Region, Type,
+    Module, NestedModule, Op, Part, Region, Type, trim_attrs,
 };
 use crate::registry::{OpTypes, Registry, TypeCheck};
 
@@ -95,8 +95,11 @@ enum Decoded {
 /// dialect registers its kind, as validation asks. Every other item is of a
 /// kind the parser does not know.
 fn item(mut s: SItem, reg: &Registry) -> Result<Decoded, ParseError> {
+    if s.kind == "func" {
+        return func_item(s, reg).map(Decoded::Item);
+    }
+    plain_header(&s)?;
     match s.kind.as_str() {
-        "func" => func_item(s, reg).map(Decoded::Item),
         "module" => {
             if let Some((_, at)) = s.params.first() {
                 return err(at.name, "a module has no parameters");
@@ -132,6 +135,33 @@ fn item(mut s: SItem, reg: &Registry) -> Result<Decoded, ParseError> {
             ),
         ),
     }
+}
+
+/// The header of an item other than a `func` (`plainHeader`): no parameter
+/// carries attributes, the parameters do not end in `...`, and no result
+/// that a comma follows carries attributes.
+fn plain_header(s: &SItem) -> Result<(), ParseError> {
+    if let Some((_, pos)) = s.param_attrs.iter().flatten().next() {
+        return err(*pos, "only a func's parameters carry attributes");
+    }
+    if let Some(pos) = s.variadic {
+        return err(pos, "only a func's parameters end in ...");
+    }
+    if let Some((_, pos)) = s.result_attrs.iter().flatten().next() {
+        return err(*pos, "only a func's results carry attributes");
+    }
+    Ok(())
+}
+
+/// The attributes of each parameter or result, without their positions,
+/// with the empty lists at the end left out.
+fn sig_attrs(attrs: Vec<Vec<(Attr, TextPos)>>) -> Vec<Vec<Attr>> {
+    trim_attrs(
+        attrs
+            .into_iter()
+            .map(|as_| as_.into_iter().map(|(a, _)| a).collect())
+            .collect(),
+    )
 }
 
 /// An aggregate's layout (`decodeAggregate`, ADR-2026-11-16-1546): no
@@ -262,11 +292,16 @@ fn dialect_item(mut s: SItem, reg: &Registry) -> Result<Item, ParseError> {
     }))
 }
 
-/// An item of kind `func`.
+/// An item of kind `func` (`decodeFuncItem`): the attributes after its
+/// last result are that result's, and its parameters may end in `...`.
 fn func_item(mut s: SItem, reg: &Registry) -> Result<Item, ParseError> {
-    if let Some((_, pos)) = s.attrs.first() {
-        return err(*pos, "a func has no attributes");
+    if s.results.is_empty()
+        && let Some((_, pos)) = s.attrs.first()
+    {
+        return err(*pos, "a func with no results has no attributes");
     }
+    let mut result_attrs = std::mem::take(&mut s.result_attrs);
+    result_attrs.push(std::mem::take(&mut s.attrs));
     let (blocks, at) = match &mut s.body {
         SBody::Items(dialects, _) if !dialects.is_empty() => {
             return err(s.kind_pos, "a func's body holds blocks, not a dialect set");
@@ -282,6 +317,9 @@ fn func_item(mut s: SItem, reg: &Registry) -> Result<Item, ParseError> {
         params: Vec::new(),
         results: Vec::new(),
         body: Region::new(blocks),
+        param_attrs: sig_attrs(std::mem::take(&mut s.param_attrs)),
+        result_attrs: sig_attrs(result_attrs),
+        variadic: s.variadic.is_some(),
     };
     func(f, s.params, s.results, &at, reg)
 }

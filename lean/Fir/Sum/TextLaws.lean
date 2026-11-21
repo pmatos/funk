@@ -195,6 +195,9 @@ theorem lawful (h : Routes base e) : LawfulDialectText (base ⊞ e) where
   tyAttr_isType
     | .inl t, hv => LawfulDialectText.tyAttr_isType (d := base) t hv
     | .inr t, hv => LawfulDialectText.tyAttr_isType (d := base.over e) (.inr t) hv
+  sigAttrs_writable
+    | .inl t, as, hv => LawfulDialectText.sigAttrs_writable (d := base) t as hv
+    | .inr t, as, hv => LawfulDialectText.sigAttrs_writable (d := base.over e) (.inr t) as hv
 
 /-- Given two dialects with lawful text, the sum's text is lawful exactly
 when every word goes to its own side. -/

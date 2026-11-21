@@ -125,9 +125,8 @@ def blockHead (n : Nat) (b : Block d) : String :=
 
 /-- The line of a function's header at indentation `n`, through its `{`. -/
 def funcHead (n : Nat) (f : Func d) : String :=
-  let results :=
-    if f.results.isEmpty then "" else " -> " ++ ", ".intercalate (f.results.map (tyAttr · |>.print))
-  indent n ++ "func " ++ printSymbol f.name ++ "(" ++ defsText f.params ++ ")" ++ results ++ " {\n"
+  indent n ++ "func " ++ printSymbol f.name ++ "(" ++ f.printParams ++ ")" ++ f.printResults ++
+    " {\n"
 
 /-- An item of a dialect's kind at indentation `n`, with its line feed:
 `DialectItem.print`, compiled after `print_eq_printAttr`. -/
@@ -209,7 +208,7 @@ theorem printFrames_eq (acc : String) (fs : List (Frame d)) :
     simp only [Frame.text, Region.printList, List.map_cons, String.join_cons, String.append_assoc]
   | case10 acc n f is fs ih =>
     rw [ih]
-    simp only [Frame.text, Item.printList, Item.print, Func.print, funcHead, defsText_eq,
+    simp only [Frame.text, Item.printList, Item.print, Func.print, funcHead,
       List.map_cons, String.join_cons, String.append_assoc]
   | case11 acc n name ds is' is fs ih =>
     rw [ih]

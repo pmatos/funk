@@ -1,6 +1,7 @@
 import FirSpec.Syntax.Dialect
 import FirSpec.Syntax.Location
 import FirSpec.Syntax.Module
+import FirSpec.Syntax.FuncAttrs
 import FirSpec.Syntax.Layout
 import FirSpec.Syntax.Global
 import FirSpec.Core.Types
@@ -39,6 +40,8 @@ import FirSpec.Validation.Dominance
 import FirSpec.Validation.Layout
 import FirSpec.Validation.Global
 import FirSpec.Validation.LocTable
+import FirSpec.Validation.AllBlocks
+import FirSpec.Validation.Signature
 import FirSpec.Validation.Rules
 import FirSpec.Core.Validation
 import FirSpec.Core.Rejects
@@ -58,6 +61,7 @@ import FirSpec.Core.ValidRuns
 import FirSpec.Text.Tree
 import FirSpec.Text.ReadAttrs
 import FirSpec.Text.ReadDefs
+import FirSpec.Text.ReadParams
 import FirSpec.Text.ReadOps
 import FirSpec.Text.ReadBlocks
 import FirSpec.Text.ReadFunc
@@ -142,6 +146,7 @@ import FirSpec.Core.MemSetText
 import FirSpec.Core.MemSetTextLaws
 import FirSpec.Core.TextSamples
 import FirSpec.Text.Print
+import FirSpec.Text.SigAttrs
 import FirSpec.Text.RoundTrip
 import FirSpec.Core.TypeTextLaws
 import FirSpec.Core.FloatOpTextLaws
@@ -162,6 +167,8 @@ import FirSpec.Text.LexStrings
 import FirSpec.Text.LexFloats
 import FirSpec.Text.LexLayout
 import FirSpec.Text.LexPrint
+import FirSpec.Text.LexWritable
+import FirSpec.Text.LexFunc
 import FirSpec.Text.LexModule
 import FirSpec.Text.LexWellFormed
 import FirSpec.Text.LexAccepted

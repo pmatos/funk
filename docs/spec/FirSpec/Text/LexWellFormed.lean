@@ -14,46 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Writable tokens: readable blocks" =>
 
-:::moduleDocs (fingerprint := "2468687098486824909")
-:::
-
-:::readable Fir.forall_mem_intercalate_of Fir.comma_writable (fingerprint := "15438348163069253873")
-*Lemmas: proof plumbing.* For every test $`P` on tokens, separator $`x`
-whose tokens all pass $`P`, and lists of tokens $`t_1, \dots, t_n` whose
-tokens all pass $`P`, every token of $`t_1~x~t_2~\dots~x~t_n` passes
-$`P`; and the token $`\texttt{,}`
-{ref "The-fir-specification--Text-format--Lexing-printed-text"}[can be written]. Together they show that
-a list written with commas can be written when its elements can.
-:::
-
-:::readable Fir.Attr.Writable.tokens Fir.Attr.AllWritable.tokens (pin := Fir.Attr.Writable) (pin := Fir.Attr.AllWritable) (fingerprint := "2842475737533523099")
-*Theorems: an attribute that can be written has tokens that can be
-written.* An
-{ref "The-fir-specification--Text-format--Grammar"}[attribute can be written]
-when each word it holds, its own or an application's head, at any depth,
-is a word, and each float literal it holds can be written: a decimal's
-fraction is one or more decimal digits, and hexadecimal bits are one or
-more lowercase hexadecimal digits. For every attribute that can be written, every one of its
-tokens can be written; and for every list of attributes that can each be
-written, every token of each can be written. The two are proved together,
-since an application holds a list of attributes.
-:::
-
-:::readable Fir.Attr.AllWritable.mem (fingerprint := "7578950284979742545")
-*Lemma: each attribute of a list that can be written can be written.* It
-turns the condition on a list into one on each of its elements.
-:::
-
-:::readable Fir.Attr.AllWritable.of_mem (fingerprint := "15356391788914094031")
-*Theorem: a list of attributes that can each be written can be written.*
-:::
-
-:::readable Fir.Attr.IsType.writable (pin := Fir.Attr.IsType) (fingerprint := "13149683016674199934")
-*Theorem: a type is an attribute that can be written.* An attribute is
-written as a type when it is a word, or a word applied to attributes, and
-it can be written. So every attribute written as a type can be written:
-the theorem only unfolds that definition, so that the proofs can use the
-condition on a type where they need the one on an attribute.
+:::moduleDocs (fingerprint := "1723282206056725990")
 :::
 
 :::readable Fir.Location.tokens_writable (pin := Fir.Location.numbers) (pin := Fir.Location.refs) (pin := Fir.Location.limit) (fingerprint := "18066471416399668887")
@@ -80,7 +41,7 @@ depth, $`b` is among the blocks of the regions of the list's ops, at any
 depth. It lets the proofs below go down from a list of ops into one op.
 :::
 
-:::readable Fir.Func.WellFormed.def_tokens Fir.Func.WellFormed.defs_tokens (pin := Fir.Func.WellFormed) (pin := Fir.Func.defs) (fingerprint := "5833674688040657592")
+:::readable Fir.Func.WellFormed.def_tokens Fir.Func.WellFormed.defs_tokens (pin := Fir.Func.WellFormed) (pin := Fir.Func.defs) (fingerprint := "10909188449668313223")
 *Theorems: the definitions of a well-formed function have tokens that can
 be written.* For every dialect with
 {ref "The-fir-specification--Abstract-syntax--Dialects"}[signatures] and
@@ -140,11 +101,12 @@ ops. An op's location reference is below $`2^{32}`, since the op is well
 formed, and the kinds of its regions are words, since $`f` is.
 :::
 
-:::readable Fir.Func.WellFormed.tokens (pin := Fir.Func.WellFormed) (fingerprint := "1421354120040587777")
+:::readable Fir.Func.WellFormed.tokens (pin := Fir.Func.WellFormed) (fingerprint := "8946835150335264586")
 *Theorem: a well-formed function has tokens that can be written.* For
 every dialect with signatures and a text format, every token of every
-well-formed function can be written: `func`, its symbol, its parameters,
-its result types, which are written as types, and its blocks.
+well-formed function can be written: `func`, its symbol, its parameters
+with their attributes and `...`, its result types, which are written as
+types, with their attributes, and its blocks.
 :::
 
 :::readable Fir.DialectItem.tokens_writable (pin := Fir.DialectItem.tokens) (fingerprint := "16205382713216671566")

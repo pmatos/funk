@@ -305,6 +305,11 @@ The rules a dialect adds to validation.
   values, such as the core's `memSet`, which fills units with one value.
   Validation checks that the layout gives each memory units of that width.
   An op that writes no values into units lists none, the default.
+* `validSigAttrs` says which attributes a parameter or a result of a
+  function may carry after its type, read by the dialect of the type, such
+  as the core's extension markers `sext` and `zext` on an integer narrower
+  than 32 bits (ADR-2026-11-09-1547). A dialect that reads none allows none,
+  the default.
 -/
 class DialectValidation (d : Dialect) where
   validTy : d.Ty → Prop
@@ -321,7 +326,8 @@ class DialectValidation (d : Dialect) where
   opTypes : d.Op → List d.Ty := fun _ => []
   opUnits : d.Op → List (Nat × Nat) := fun _ => []
   fieldShape : (Nat → MemLayout) → Nat → d.Ty → Option (Nat × Nat) := fun _ _ _ => none
+  validSigAttrs : d.Ty → List Attr → Prop := fun _ as => as = []
 export DialectValidation (validTy symbolRefs validOp validFunc regionKindNames validRegion
-  itemKindNames validItem tyMemory opTypes opUnits fieldShape)
+  itemKindNames validItem tyMemory opTypes opUnits fieldShape validSigAttrs)
 
 end Fir

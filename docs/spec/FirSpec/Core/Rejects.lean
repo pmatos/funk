@@ -14,10 +14,10 @@ changes under it.
 
 #doc (Manual) "A rejected function: readable blocks" =>
 
-:::moduleDocs (fingerprint := "1093004692008041701")
+:::moduleDocs (fingerprint := "12593573712834980168")
 :::
 
-:::readable Fir.Core.Rejects.deadBlock (pin := Fir.Core.op) (fingerprint := "13096372077821160979")
+:::readable Fir.Core.Rejects.deadBlock (pin := Fir.Core.op) (fingerprint := "15235436922774642154")
 *Definition: a function with a block that no branch reaches.* The function
 `@f` above, which the theorems below call $`f`, takes no parameters and
 returns one $`\mathsf{i32}`. Its entry block `^entry` returns the constant
@@ -26,7 +26,7 @@ successor, so nothing jumps to `^dead`. Every op uses the location
 reference 0.
 :::
 
-:::readable Fir.Core.Rejects.deadBlock_reachable (pin := Fir.Core.Rejects.deadBlock) (fingerprint := "15497913397002913572")
+:::readable Fir.Core.Rejects.deadBlock_reachable (pin := Fir.Core.Rejects.deadBlock) (fingerprint := "7406317764495696009")
 *Theorem: only the entry block of the function is reachable.* For every
 label $`l`, if $`l` is
 {ref "The-fir-specification--Validation--Dominance"}[reachable] in the

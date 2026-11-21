@@ -68,11 +68,14 @@ and nothing more (ADR-2026-11-09-2257):
 
 - `[DecidableEq d.Ty]`, the standard class.
 - An instance of `DecidableDialectValidation d`, from
-  `lean/Fir/Validation/Check.lean`. Its fields decide the dialect's five
+  `lean/Fir/Validation/Check.lean`. Its fields decide the dialect's six
   rules: `validTy` for every type, `validOp` for every context and op,
   `validFunc` for every function, `validRegion` for every region of a kind it
-  registers (ADR-2026-11-10-1941) and `validItem` for every item of a kind it
-  registers (ADR-2026-11-09-1543).
+  registers (ADR-2026-11-10-1941), `validItem` for every item of a kind it
+  registers (ADR-2026-11-09-1543) and `validSigAttrs` for the attributes
+  after a parameter's or a result's type (ADR-2026-11-21-1307). The last
+  has a default, that a type carries no attribute, and so does its
+  decision.
 
 A module's dialect set has a rule of its own, `Module.InDialectSet`, in
 `lean/Fir/Validation/DialectSet.lean`, beside `Module.Valid`. It reads the

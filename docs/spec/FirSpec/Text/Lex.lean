@@ -14,10 +14,10 @@ changes under it.
 
 #doc (Manual) "The parser: readable blocks" =>
 
-:::moduleDocs (fingerprint := "15914544584614923657")
+:::moduleDocs (fingerprint := "17502251280148323988")
 :::
 
-:::readable Fir.Text.Tok (pin := Fir.Location.limit) (fingerprint := "10018366003460929732")
+:::readable Fir.Text.Tok (pin := Fir.Location.limit) (fingerprint := "12552603311764561059")
 *Definition: a token.* The lexer reads a text into these tokens, from the
 {ref "The-fir-specification--Text-format--Tokens"}[tokens section]:
 
@@ -29,6 +29,7 @@ word,int,str                \mathsf{word}~w \mid \mathsf{int}~i \mid \mathsf{str
 float                       \mathsf{float}~l
 lparen,rparen,lbrace,rbrace \texttt{(} \mid \texttt{)} \mid \texttt{\{} \mid \texttt{\}}
 comma,colon,eq,arrow        \texttt{,} \mid \texttt{:} \mid \texttt{=} \mid \texttt{->}
+ellipsis                    \texttt{...}
 eof                         \mathsf{eof}
 ```
 
@@ -39,13 +40,14 @@ $`\mathsf{int}~i` an integer, $`\mathsf{str}~s` a string and
 $`\mathsf{float}~l` a float literal, each with what it holds: $`s` is the
 text of the string, with its escapes read, and $`l` the literal as it is
 written. The
-punctuation tokens are their characters (`lparen` to `arrow` in the Lean).
+punctuation tokens are their characters (`lparen` to `ellipsis` in the
+Lean); `...` ends the parameters of a variadic signature.
 $`\mathsf{eof}` ends every list of tokens, at the end of the text. Numbers
 are read whole: a location reference below $`2^{32}`, an integer of any
 size, and a float literal of any length (ADR-2026-11-11-1438).
 :::
 
-:::readable Fir.Text.Tok.describe Fir.Text.Token Fir.TextPos.advance Fir.Text.utf8Len Fir.Text.codePoint Fir.Text.errorAt (pin := Fir.Text.printSymbol) (pin := Fir.Text.quote) (pin := Fir.Text.hex) (fingerprint := "1007193707624245819")
+:::readable Fir.Text.Tok.describe Fir.Text.Token Fir.TextPos.advance Fir.Text.utf8Len Fir.Text.codePoint Fir.Text.errorAt (pin := Fir.Text.printSymbol) (pin := Fir.Text.quote) (pin := Fir.Text.hex) (fingerprint := "12285135368155849489")
 *Definition: a token at its position, and the parts of an error.* A token
 of the lexer's output is a token with the
 {ref "The-fir-specification--Text-format--Round-trips"}[position] where it
@@ -171,7 +173,7 @@ integer. What follows the whole part is never longer than what followed
 its first digit, so the lexer still ends.
 :::
 
-:::readable Fir.Text.lexToken (pin := Fir.Text.allowedOutsideStrings) (pin := Fir.isNameChar) (pin := Fir.isWordStart) (pin := Fir.Text.lexNumber) (fingerprint := "3481713002336338835")
+:::readable Fir.Text.lexToken (pin := Fir.Text.allowedOutsideStrings) (pin := Fir.isNameChar) (pin := Fir.isWordStart) (pin := Fir.Text.lexNumber) (fingerprint := "8214297174569853099")
 *Definition: reading one token.* The lexer reads the token that starts with
 the character $`c`, which is not whitespace and does not start a comment:
 
@@ -187,6 +189,7 @@ the character $`c`, which is not whitespace and does not start a comment:
   anything else;
 * a digit starts a number: an integer or a float literal;
 * a letter or `_` starts a word: it and every name character after it;
+* `.` followed by two more `.` is `...`;
 * any other character is an error at it.
 
 A value, a label, a symbol or a word takes every name character that

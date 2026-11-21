@@ -204,17 +204,44 @@ fn write_block_head(out: &mut impl Write, n: usize, b: &Block) -> fmt::Result {
     out.write_str(":\n")
 }
 
-/// A function at indentation `n`: an item of kind `func`, with no
-/// attributes. Its header, labels and `}` are at `n`, its ops two spaces
-/// deeper.
+/// A function at indentation `n`: an item of kind `func`
+/// (`Func.print`). Each parameter and each result is followed by its
+/// attributes, each after a space, and the parameters end in `...` when
+/// the function is variadic. Its header, labels and `}` are at `n`, its ops
+/// two spaces deeper.
 fn write_func(out: &mut impl Write, f: &Func, n: usize) -> fmt::Result {
-    write_header(out, "func", &f.name, &f.params, &f.results, n)?;
+    indent(out, n)?;
+    write!(out, "func {}(", print_symbol(&f.name))?;
+    for (i, p) in f.params.iter().enumerate() {
+        if i > 0 {
+            out.write_str(", ")?;
+        }
+        write!(out, "{p}")?;
+        write_attrs(out, f.param_attrs_of(i))?;
+    }
+    if f.variadic {
+        out.write_str(if f.params.is_empty() { "..." } else { ", ..." })?;
+    }
+    out.write_str(")")?;
+    for (i, t) in f.results.iter().enumerate() {
+        out.write_str(if i == 0 { " -> " } else { ", " })?;
+        write!(out, "{t}")?;
+        write_attrs(out, f.result_attrs_of(i))?;
+    }
     out.write_str(" {\n")?;
     for b in &f.body.blocks {
         write_part(out, Part::Block(b), n)?;
     }
     indent(out, n)?;
     out.write_str("}\n")
+}
+
+/// Attributes, each after a space (`printAttrs`).
+fn write_attrs(out: &mut impl Write, attrs: &[Attr]) -> fmt::Result {
+    for a in attrs {
+        write!(out, " {a}")?;
+    }
+    Ok(())
 }
 
 /// The header of an item at indentation `n`, as the one production of an
@@ -242,9 +269,7 @@ fn write_header(
 /// `}` is on the next line, at `n`.
 fn write_dialect_item(out: &mut impl Write, i: &DialectItem, n: usize) -> fmt::Result {
     write_header(out, &i.kind, &i.name, &i.params, &i.results, n)?;
-    for a in &i.attrs {
-        write!(out, " {a}")?;
-    }
+    write_attrs(out, &i.attrs)?;
     out.write_str(" {\n")?;
     indent(out, n)?;
     out.write_str("}\n")

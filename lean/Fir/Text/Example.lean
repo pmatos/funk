@@ -171,11 +171,12 @@ lines (ADR-2026-11-10-1510).
   "  br { toy.graph\n  } {\n  } @7\n"
 
 #guard Func.print (d := CoreDialect) 0
-    ⟨"1", [], [], ⟨none, [⟨"entry", [], [op [] (.call "a b" [] []) [] 0, op [] (.ret []) [] 0]⟩]⟩⟩ ==
+    ⟨"1", [], [], ⟨none, [⟨"entry", [], [op [] (.call "a b" [] []) [] 0, op [] (.ret []) [] 0]⟩]⟩, [], [], false⟩ ==
   "func @\"1\"() {\n^entry:\n  call @\"a b\" @0\n  ret @0\n}\n"
 
 #guard (Module.print (d := CoreDialect) ⟨[], [], [.module "dev" ["gpu"]
-    [.func ⟨"k", [], [], ⟨none, [⟨"entry", [], [op [] (.ret []) [] 0]⟩]⟩⟩], .module "none" [] []],
+    [.func ⟨"k", [], [], ⟨none, [⟨"entry", [], [op [] (.ret []) [] 0]⟩]⟩, [], [], false⟩],
+    .module "none" [] []],
     [(0, .unknown)]⟩) ==
   "module @dev() {\n  dialects gpu\n\n  func @k() {\n  ^entry:\n    ret @0\n  }\n\n}\n\n" ++
     "module @none() {\n}\n\nlocs {\n  @0 = unknown\n}\n"

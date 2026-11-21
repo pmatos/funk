@@ -20,6 +20,32 @@ def punctOf (c : Char) : Option Tok :=
   | '(' => some .lparen | ')' => some .rparen | '{' => some .lbrace | '}' => some .rbrace
   | ',' => some .comma | ':' => some .colon | '=' => some .eq | _ => none
 
+/-- The position after two dots at `i`, if two dots start there: the rest
+of an ellipsis, `...`, after its first dot. -/
+def dotsP (i : s.Pos) : Option s.Pos :=
+  match peekP i with
+  | some ('.', j) =>
+    match peekP j with
+    | some ('.', k) => some k
+    | _ => none
+  | _ => none
+
+theorem dotsP_eq (i : s.Pos) :
+    (dotsP i).map chars = if (chars i).take 2 = ['.', '.'] then some ((chars i).drop 2) else none := by
+  unfold dotsP
+  rcases hp : peekP i with _ | ⟨c, j⟩
+  · simp [chars_of_peekP_none hp]
+  rw [chars_of_peekP hp]
+  by_cases hc : c = '.'
+  · subst hc
+    rcases hq : peekP j with _ | ⟨c', k⟩
+    · simp [chars_of_peekP_none hq, hq]
+    rw [chars_of_peekP hq]
+    by_cases hc' : c' = '.'
+    · subst hc'; simp [hq]
+    · simp [hc', hq]
+  · simp [hc]
+
 /-- `lexToken`, over positions: the token that starts with `c`, followed by
 the characters from `i`. -/
 def lexTokenP (c : Char) (i : s.Pos) (p : TextPos) : Except ParseError (Tok × s.Pos × TextPos) :=
@@ -53,6 +79,10 @@ def lexTokenP (c : Char) (i : s.Pos) (p : TextPos) : Except ParseError (Tok × s
   else if isWordStart c then
     let w := takeWhileP isNameChar i []
     .ok (.word (String.ofList (c :: w)), skipWhileP isNameChar i, p.advance (1 + w.length))
+  else if c = '.' then
+    match dotsP i with
+    | some j => .ok (.ellipsis, j, p.advance 3)
+    | none => errorAt p ("unexpected character " ++ codePoint c)
   else errorAt p ("unexpected character " ++ codePoint c)
 
 -- One proof splits every branch of `lexTokenP` and of `lexToken` and closes
@@ -154,7 +184,15 @@ theorem lexTokenP_eq (c : Char) (i : s.Pos) (p : TextPos) :
   · exact lexNumberP_eq false c i p
   split
   · simp [takeWhileP_eq, chars_skipWhileP]
-  · rfl
+  have hd := dotsP_eq i
+  split
+  · rename_i hc
+    subst hc
+    rcases hj : dotsP i with _ | j <;> rw [hj] at hd <;> simp only [Option.map_none,
+      Option.map_some] at hd <;> split at hd <;> simp_all <;> rfl
+  · rename_i hc
+    simp only [hc, false_and, ite_false]
+    rfl
 
 /-- One step of `lexFrom`, over positions: skips whitespace and comments
 from `i`, at `p`, and reads the next token, with the position and the

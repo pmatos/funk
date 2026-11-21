@@ -126,6 +126,18 @@ pub struct Func {
     pub results: Vec<Type>,
     /// The function's blocks.
     pub body: Region,
+    /// The attributes that each parameter carries after its type, such as
+    /// the core's extension markers `sext` and `zext`, which the dialect of
+    /// its type reads (`Func.paramAttrs`). One list per parameter, with the
+    /// empty lists at the end left out, so a function with none holds no
+    /// list: read them with [`Func::param_attrs_of`].
+    pub param_attrs: Vec<Vec<Attr>>,
+    /// The attributes that each result carries after its type, held as
+    /// [`Func::param_attrs`] holds the parameters' (`Func.resultAttrs`).
+    pub result_attrs: Vec<Vec<Attr>>,
+    /// Whether the parameters end in `...`. Only an external declaration
+    /// may be variadic: the verifier rejects a function that is.
+    pub variadic: bool,
 }
 
 /// The type of a function: what it takes and what it returns.
@@ -137,7 +149,26 @@ pub struct FuncType {
     pub results: Vec<Type>,
 }
 
+/// The lists of attributes `attrs`, with the empty lists at the end left
+/// out: the form a [`Func`] holds them in (`trimAttrs`).
+pub fn trim_attrs(mut attrs: Vec<Vec<Attr>>) -> Vec<Vec<Attr>> {
+    while attrs.last().is_some_and(Vec::is_empty) {
+        attrs.pop();
+    }
+    attrs
+}
+
 impl Func {
+    /// The attributes of the parameter at `i`: none past those held.
+    pub fn param_attrs_of(&self, i: usize) -> &[Attr] {
+        self.param_attrs.get(i).map_or(&[], Vec::as_slice)
+    }
+
+    /// The attributes of the result at `i`: none past those held.
+    pub fn result_attrs_of(&self, i: usize) -> &[Attr] {
+        self.result_attrs.get(i).map_or(&[], Vec::as_slice)
+    }
+
     /// The function's type.
     pub fn func_type(&self) -> FuncType {
         FuncType {

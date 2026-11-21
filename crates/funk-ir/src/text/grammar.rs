@@ -11,6 +11,7 @@
 //! makes room for a region only when one opens, so that neither a deep nest of
 //! lists of one nor a flat body takes spare room.
 
+mod head;
 mod locs;
 
 use super::lexer::{Lexer, Tok, Token};
@@ -232,45 +233,6 @@ impl<'t> Parser<'t> {
                 }
             }
         }
-    }
-
-    /// `word symbol '(' defs? ')' ('->' types)? attr* '{'`: an item up to
-    /// its body.
-    fn item_head(&mut self) -> Result<SItem, ParseError> {
-        let (kind, kind_pos) = self.word("an item kind")?;
-        let Tok::Sym(name) = self.peek().clone() else {
-            return self.fail("the item's symbol");
-        };
-        self.advance();
-        self.expect(&Tok::LParen, "( and the item's parameters")?;
-        let params = if self.peek() == &Tok::RParen {
-            Vec::new()
-        } else {
-            self.defs()?
-        };
-        self.expect(&Tok::RParen, ")")?;
-        let mut results = Vec::new();
-        if self.eat(&Tok::Arrow) {
-            results.push(self.ty()?);
-            while self.eat(&Tok::Comma) {
-                results.push(self.ty()?);
-            }
-        }
-        let mut attrs = Vec::new();
-        while self.at_attr() {
-            let pos = self.pos();
-            attrs.push((self.attr()?, pos));
-        }
-        self.expect(&Tok::LBrace, "{ and the item's body")?;
-        Ok(SItem {
-            kind,
-            kind_pos,
-            name,
-            params,
-            results,
-            attrs,
-            body: SBody::Items(Vec::new(), Vec::new()),
-        })
     }
 
     fn defs(&mut self) -> Result<Vec<(Def, DefPos)>, ParseError> {

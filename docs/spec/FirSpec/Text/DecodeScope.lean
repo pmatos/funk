@@ -160,7 +160,7 @@ and the first pass on regions. The three are proved together, by recursion
 on the blocks, ops and regions, from the lemmas above.
 :::
 
-:::readable Fir.Func.WellFormed.decodeTy_def (pin := Fir.Func.WellFormed) (pin := Fir.Func.defs) (pin := Fir.Func.types) (fingerprint := "12984321481616943013")
+:::readable Fir.Func.WellFormed.decodeTy_def (pin := Fir.Func.WellFormed) (pin := Fir.Func.defs) (pin := Fir.Func.types) (fingerprint := "7316056188503605622")
 *Theorem: every type that a well-formed function defines decodes back.* For
 every dialect with signatures and a text format, every
 {ref "The-fir-specification--Text-format--Round-trips"}[well-formed]
@@ -169,7 +169,7 @@ every value that $`f` defines at any depth with its type:
 $`\mathrm{decodety}(\mathrm{tyattr}(T)) = T`.
 :::
 
-:::readable Fir.Func.WellFormed.scope (pin := Fir.Func.typeOf) (pin := Fir.Func.WellFormed) (pin := Fir.Text.define) (pin := Fir.Text.defineBlocks) (fingerprint := "14489303943484056531")
+:::readable Fir.Func.WellFormed.scope (pin := Fir.Func.typeOf) (pin := Fir.Func.WellFormed) (pin := Fir.Text.define) (pin := Fir.Text.defineBlocks) (fingerprint := "1946833108543283304")
 *Theorem: the first pass on a well-formed function gives each value its
 type.* For every dialect with
 signatures and a text format, every well-formed function $`f`, parameters

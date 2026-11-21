@@ -33,6 +33,10 @@ pub const MAX_MEMORY: u32 = (1 << 24) - 1;
 /// The head word of a pointer type: `ptr`, or `ptr(N)`.
 const PTR: &str = "ptr";
 
+/// The extension markers that a narrow integer may carry in a function's
+/// signature (ADR-2026-11-09-1547).
+pub const EXT_MARKERS: [&str; 2] = ["sext", "zext"];
+
 /// The float formats with a name of their own, as `(name, e, m)`.
 pub const FLOAT_ALIASES: [(&str, u32, u32); 5] = [
     ("f16", 5, 10),
@@ -207,6 +211,21 @@ impl TypeSpec for CoreTypes {
             Ok(CoreType::Float { .. }) => TypeCheck::Valid,
             Ok(CoreType::Ptr(_)) => TypeCheck::Valid,
         })
+    }
+
+    /// `Core.Ty.sigAttrsAllowed`: an integer narrower than 32 bits may carry
+    /// one extension marker, `sext` or `zext`, which says how a caller or a
+    /// callee outside funk extends it (ADR-2026-11-09-1547); no other type
+    /// carries any attribute.
+    fn sig_attrs(&self, ty: &Type, attrs: &[Attr]) -> bool {
+        match attrs {
+            [] => true,
+            [Attr::Word(m)] => {
+                matches!(decode(ty), Some(Ok(CoreType::Int(w))) if w < 32)
+                    && EXT_MARKERS.contains(&m.as_str())
+            }
+            _ => false,
+        }
     }
 
     fn memory(&self, ty: &Type) -> Option<u32> {

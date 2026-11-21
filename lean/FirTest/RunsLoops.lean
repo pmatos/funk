@@ -102,6 +102,7 @@ theorem forever_valid : forever.Valid foreverModule.context where
   ops := opValid_of (dom := []) (fun _ h => nomatch h) (by decide +kernel)
   inner := Func.inner_of_noRegions (by decide +kernel)
   dialect := trivial
+  signature := (Func.sigProblems_eq_nil _).1 rfl
 
 /-- `@forever`'s module is valid. -/
 theorem foreverModule_valid : foreverModule.Valid := Module.valid_of_flat

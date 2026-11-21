@@ -101,6 +101,12 @@ theorem regionFn_wellFormed : regionFn.WellFormed where
     exact fun s hs => nomatch hs
   bodyKind := rfl
   kinds := kinds_of_all (by decide +kernel)
+  paramAttrs := by decide
+  resultAttrs := by decide
+  attrs := by
+    intro as h
+    rcases List.mem_append.mp h with h | h <;> (repeat' rcases h with _ | ⟨_, h⟩) <;>
+      simp [Attr.AllWritable, Attr.Writable] <;> decide
 
 /-- The module of `@f` is well formed. -/
 theorem regionModule_wellFormed : regionModule.WellFormed where
@@ -140,12 +146,18 @@ local macro "func_wellFormed" : tactic => `(tactic| exact {
     revert o
     decide +kernel
   bodyKind := rfl
-  kinds := kinds_of_all (by decide +kernel) })
+  kinds := kinds_of_all (by decide +kernel)
+  paramAttrs := by decide
+  resultAttrs := by decide
+  attrs := by
+    intro as h
+    rcases List.mem_append.mp h with h | h <;> (repeat' rcases h with _ | ⟨_, h⟩) <;>
+      simp [Attr.AllWritable, Attr.Writable] <;> decide })
 
 /-! # A function with no blocks -/
 
 /-- `@e`, whose body has no blocks. -/
-def emptyFn : Func CoreDialect := ⟨"e", [], [], ⟨none, []⟩⟩
+def emptyFn : Func CoreDialect := ⟨"e", [], [], ⟨none, []⟩, [], [], false⟩
 
 /-- The module of `@e`. -/
 def emptyModule : Module CoreDialect := ⟨[], [], [.func emptyFn], [(0, .unknown)]⟩
@@ -226,7 +238,7 @@ theorem coreToy_printThenParse : PrintThenParse (d := CoreToy) Fir.parse := prin
 terminator, since the toy dialect has none. -/
 def toyFn : Func ToyDialect :=
   ⟨"m", [("a", .inl (i 8))], [.inl (i 8)],
-    ⟨none, [⟨"entry", [], [⟨[("k", .inl (i 8))], .mask 8 3, ["a"], [], [], 0⟩]⟩]⟩⟩
+    ⟨none, [⟨"entry", [], [⟨[("k", .inl (i 8))], .mask 8 3, ["a"], [], [], 0⟩]⟩]⟩, [], [], false⟩
 
 /-- The module of `@m`. -/
 def toyModule : Module ToyDialect := ⟨[], [], [.func toyFn], [(0, .unknown)]⟩
@@ -260,7 +272,7 @@ def mixedFn : Func CoreToy :=
   ⟨"f", [("a", .inl (i 8))], [.inl (i 8), .inl (i 8)], ⟨none, [⟨"entry", [], [
     ⟨[("m", .inl (i 8))], .inr (.mask 8 3), ["a"], [], [], 1⟩,
     ⟨[("s", .inl (i 8))], .inl (.add 8 {}), ["m", "a"], [], [], 0⟩,
-    ⟨[], .inl (.ret [i 8, i 8]), ["m", "s"], [], [], 0⟩]⟩]⟩⟩
+    ⟨[], .inl (.ret [i 8, i 8]), ["m", "s"], [], [], 0⟩]⟩]⟩, [], [], false⟩
 
 /-- The mixed module, as abstract syntax. -/
 def mixedModule : Module CoreToy := ⟨["toy"], [], [.func mixedFn], [(0, .unknown), (1, .name "mask")]⟩
@@ -285,6 +297,12 @@ theorem mixedFn_wellFormed : mixedFn.WellFormed where
     exact fun s hs => nomatch hs
   bodyKind := rfl
   kinds := kinds_of_all (by decide +kernel)
+  paramAttrs := by decide
+  resultAttrs := by decide
+  attrs := by
+    intro as h
+    rcases List.mem_append.mp h with h | h <;> (repeat' rcases h with _ | ⟨_, h⟩) <;>
+      simp [Attr.AllWritable, Attr.Writable] <;> decide
 
 /-- The mixed module is well formed. -/
 theorem mixedModule_wellFormed : mixedModule.WellFormed where

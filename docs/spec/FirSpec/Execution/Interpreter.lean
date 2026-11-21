@@ -28,7 +28,7 @@ while an environment and a return hold typed values; this turns the one
 into the other.
 :::
 
-:::readable Fir.Env Fir.stuck Fir.Env.value Fir.Env.bind (pin := Fir.Stuck) (pin := Fir.DVal) (pin := Fir.Func.Valid) (fingerprint := "10919094858235561139")
+:::readable Fir.Env Fir.stuck Fir.Env.value Fir.Env.bind (pin := Fir.Stuck) (pin := Fir.DVal) (pin := Fir.Func.Valid) (fingerprint := "6613524129795877768")
 *Definition: environments, being stuck, looking a name up and binding
 names.* An _environment_ $`E` is a list of the values a run has defined,
 each a name with a typed value, $`x \mapsto (t, v)`, the latest first.

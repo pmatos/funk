@@ -182,6 +182,23 @@ of 2026-11-16 on #212). Rejected: `ptr<N>` in text, for the reason
 undeclared memory at parse time, since a builder or a pass can change the
 data layout without text.
 
+## Signatures
+
+A parameter or a result of a `func` carries attributes after its type, each
+after a space, and the parameters may end in `...`, after a comma when a
+parameter comes before: `func @f(%c: i8 sext, %n: i32) -> i8 zext {`,
+`(%fmt: ptr, ...)` or `(...)`. `...` is a token of its own. The grammar reads
+the attributes as generic terms, and the dialect of each parameter's or
+result's type says which it allows (`validSigAttrs`): the core allows one
+marker, `sext` or `zext`, on an integer narrower than 32 bits
+([semantics-m1-design.md](semantics-m1-design.md#external-declarations)). A
+`func` whose parameters end in `...` does not validate: only an external
+declaration may be variadic. Another item whose parameter carries an
+attribute, whose parameters end in `...`, or whose result before a comma
+carries one does not decode, and a `func` with no results has no attributes
+(ADR-2026-11-21-1307). Rejected: markers as keywords of the grammar, which
+would put the core's words in generic code, against G0.
+
 ## The round trip
 
 `parse(print(m)) == m` holds for every well-formed module.

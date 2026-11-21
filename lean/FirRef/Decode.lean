@@ -34,7 +34,8 @@ def decodeFunc (name : String) (params : List SDef) (results : List (Attr × Tex
   let sc ← define ∅ params
   let sc ← defineFrames sc [.blocks blocks]
   let params ← params.mapM decodeDef
-  pure ⟨name, params, results, ⟨none, ← decodeFrames sc name [.blocks none [] blocks]⟩⟩
+  pure ⟨name, params, results, ⟨none, ← decodeFrames sc name [.blocks none [] blocks]⟩, [], [],
+    false⟩
 
 theorem decodeFunc_eq : @decodeFunc = @Text.decodeFunc := by
   funext d _ name params results blocks
@@ -43,17 +44,18 @@ theorem decodeFunc_eq : @decodeFunc = @Text.decodeFunc := by
 
 /-- `Text.decodeFuncItem`, with `decodeFunc`. -/
 def decodeFuncItem (kindPos : TextPos) (name : String) (params : List SDef)
-    (results : List (Attr × TextPos)) : List (Attr × TextPos) → SBody → Except ParseError (Item d)
-  | (_, p) :: _, _ => errorAt p "a func has no attributes"
-  | [], .items (_ :: _) _ => errorAt kindPos "a func's body holds blocks, not a dialect set"
-  | [], .items [] (⟨_, p, _, _, _, _, _⟩ :: _) => errorAt p "a func's body holds blocks, not items"
-  | [], .items [] [] => do pure (.func (← decodeFunc name params results []))
-  | [], .blocks bs => do pure (.func (← decodeFunc name params results bs))
+    (paramAttrs : List (List (Attr × TextPos))) (variadic : Option TextPos)
+    (results : List (Attr × TextPos)) (resultAttrs : List (List (Attr × TextPos)))
+    (attrs : List (Attr × TextPos)) (body : SBody) : Except ParseError (Item d) := do
+  let ras ← funcResultAttrs results resultAttrs attrs
+  let bs ← funcBlocks kindPos body
+  let f ← decodeFunc name params results bs
+  pure (.func ⟨f.name, f.params, f.results, f.body,
+    trimAttrs (paramAttrs.map fun as => as.map (·.1)), ras, variadic.isSome⟩)
 
 theorem decodeFuncItem_eq : @decodeFuncItem = @Text.decodeFuncItem := by
-  funext d _ kindPos name params results attrs body
+  funext d _ kindPos name params paramAttrs variadic results resultAttrs attrs body
   simp only [decodeFuncItem, Text.decodeFuncItem, decodeFunc_eq]
-  rfl
 
 /-- `Text.decodeDialectItem`, with the copies of `decodeType` and
 `decodeDef`. -/
@@ -80,7 +82,7 @@ inductive DFrame (d : Dialect) where
 mutual
 /-- A measure of an item as written that each step of `decodeLoop` lowers. -/
 def sitemWeight : SItem → Nat
-  | ⟨_, _, _, _, _, _, body⟩ => sbodyWeight body + 1
+  | ⟨_, _, _, _, _, _, _, _, _, body⟩ => sbodyWeight body + 1
 
 /-- A measure of an item's body. -/
 def sbodyWeight : SBody → Nat
@@ -110,12 +112,16 @@ def decodeLoop : List (DFrame d) → Except ParseError (List (Item d))
   | .items done [] :: [] => .ok done.reverse
   | .items done [] :: .module name ds :: .items done' todo :: fs =>
     decodeLoop (.items (.module name ds done.reverse :: done') todo :: fs)
-  | .items done (⟨kind, kindPos, name, params, results, attrs, body⟩ :: sis) :: fs =>
+  | .items done (⟨kind, kindPos, name, params, paramAttrs, variadic, results, resultAttrs, attrs,
+      body⟩ :: sis) :: fs =>
     if kind = "func" then
-      match decodeFuncItem kindPos name params results attrs body with
+      match decodeFuncItem kindPos name params paramAttrs variadic results resultAttrs attrs body with
       | .ok i => decodeLoop (.items (i :: done) sis :: fs)
       | .error e => .error e
-    else if kind = "module" then
+    else match plainHeader paramAttrs variadic resultAttrs with
+    | .error e => .error e
+    | .ok () =>
+    if kind = "module" then
       match moduleHeader params results attrs with
       | .error e => .error e
       | .ok () =>
@@ -168,10 +174,15 @@ theorem decodeItems_cons (si : SItem) (sis : List SItem) :
   rw [Text.decodeItems.eq_def]
 
 theorem decodeItem_mk (kind : String) (kindPos : TextPos) (name : String) (params : List SDef)
-    (results attrs : List (Attr × TextPos)) (body : SBody) :
-    Text.decodeItem (d := d) ⟨kind, kindPos, name, params, results, attrs, body⟩ =
-      if kind = "func" then Text.decodeFuncItem kindPos name params results attrs body
-      else if kind = "module" then do
+    (paramAttrs : List (List (Attr × TextPos))) (variadic : Option TextPos)
+    (results : List (Attr × TextPos)) (resultAttrs : List (List (Attr × TextPos)))
+    (attrs : List (Attr × TextPos)) (body : SBody) :
+    Text.decodeItem (d := d)
+        ⟨kind, kindPos, name, params, paramAttrs, variadic, results, resultAttrs, attrs, body⟩ =
+      if kind = "func" then
+        Text.decodeFuncItem kindPos name params paramAttrs variadic results resultAttrs attrs body
+      else plainHeader paramAttrs variadic resultAttrs >>= fun () =>
+      if kind = "module" then do
         moduleHeader params results attrs
         match body with
         | .blocks [] => pure (.module name [] [])
@@ -203,7 +214,8 @@ theorem decodeLoop_eq (fs : List (DFrame d)) : decodeLoop fs = dRun fs := by
   | .items _ [] :: .module .. :: [], _, _, _ => rfl
   | .items _ [] :: .module .. :: .module .. :: _, _, _, _ => rfl
   | .items _ [] :: .module .. :: .items .. :: _, _, h, _ => exact (h _ _ _ _ _ _ rfl).elim
-  | .items _ (⟨_, _, _, _, _, _, _⟩ :: _) :: _, _, _, h => exact (h _ _ _ _ _ _ _ _ _ _ rfl).elim
+  | .items _ (⟨_, _, _, _, _, _, _, _, _, _⟩ :: _) :: _, _, _, h =>
+    exact (h _ _ _ _ _ _ _ _ _ _ _ _ _ rfl).elim
 
 /-- A module decoded: `Text.decodeModule`, with no stack per level of
 regions or of nested modules, and none per block or op. -/

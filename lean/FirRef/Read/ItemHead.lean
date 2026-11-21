@@ -1,5 +1,6 @@
 import FirRef.Read.BlocksProof
 import FirRef.Read.Dialects
+import FirRef.Read.Params
 
 /-!
 An item's head, everything from its symbol through the `{` of its body, is
@@ -18,26 +19,33 @@ structure ItemHead where
   kind : String
   kindPos : TextPos
   name : String
-  params : List SDef
-  results : List (Attr × TextPos)
+  /-- Each parameter, with its attributes. -/
+  params : List (SDef × List (Attr × TextPos))
+  variadic : Option TextPos
+  /-- Each result, with its attributes. -/
+  results : List ((Attr × TextPos) × List (Attr × TextPos))
   attrs : List (Attr × TextPos)
 
-/-- The item of a head and a body. -/
+/-- The item of a head and a body, as `readItem` builds it. -/
 def ItemHead.item (h : ItemHead) (body : SBody) : SItem :=
-  ⟨h.kind, h.kindPos, h.name, h.params, h.results, h.attrs, body⟩
+  ⟨h.kind, h.kindPos, h.name, h.params.map (·.1), h.params.map (·.2), h.variadic,
+    h.results.map (·.1), h.results.dropLast.map (·.2),
+    (h.results.getLast?.map (·.2)).getD [] ++ h.attrs, body⟩
 
 /-- What `readItem` reads of an item's parameters. -/
-def itemParamsS (ts : List Token) : Except ParseError (List SDef × List Token) :=
+def itemParamsS (ts : List Token) : Except ParseError
+    ((List (SDef × List (Attr × TextPos)) × Option TextPos) × List Token) :=
   match ts with
-  | ⟨.rparen, _⟩ :: _ => pure ([], ts)
-  | ts' => U (readDefs ts')
+  | ⟨.rparen, _⟩ :: _ => pure (([], none), ts)
+  | ts' => U (readParams ts')
 
 /-- What `readItem` reads of an item's results. -/
-def itemResultsS (ts : List Token) : Except ParseError (List (Attr × TextPos) × List Token) :=
+def itemResultsS (ts : List Token) :
+    Except ParseError (List ((Attr × TextPos) × List (Attr × TextPos)) × List Token) :=
   match ts with
   | ⟨.arrow, _⟩ :: rest => do
-    let (t, a) ← U (readType rest)
-    let (more, b) ← U (readMore readType a)
+    let (t, a) ← U (readResult rest)
+    let (more, b) ← U (readMore readResult a)
     pure (t :: more, b)
   | ts' => pure ([], ts')
 
@@ -47,12 +55,12 @@ def itemHeadS (kind : String) (p : TextPos) (ts : List Token) :
   match ts with
   | ⟨.sym name, _⟩ :: rest => do
     let ((), r₁) ← U (expect .lparen "( and the item's parameters" rest)
-    let (params, r₂) ← itemParamsS r₁
+    let ((params, variadic), r₂) ← itemParamsS r₁
     let ((), r₃) ← U (expect .rparen ")" r₂)
     let (results, r₄) ← itemResultsS r₃
     let (attrs, r₅) ← U (readAttrs r₄)
     let ((), r₆) ← U (expect .lbrace "{ and the item's body" r₅)
-    pure (⟨kind, p, name, params, results, attrs⟩, r₆)
+    pure (⟨kind, p, name, params, variadic, results, attrs⟩, r₆)
   | ts => fail ts "the item's symbol"
 
 /-- What `readItem` reads of an item's body, after its `{`. -/
