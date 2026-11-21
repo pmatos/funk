@@ -282,6 +282,8 @@ event.
 
 {includeReadable "." Fir.Execution.TraceReplaceDiverge "Congruence in the callee over traced runs, divergence included" FirSpec.Execution.TraceReplaceDiverge (level := 1)}
 
+{includeReadable "." Fir.Execution.TraceLiftFrom "Traced runs from a traced state, for a dialect with no event" FirSpec.Execution.TraceLiftFrom (level := 1)}
+
 {includeReadable "." Fir.Core.Trace "The core's traced runs" FirSpec.Core.Trace (level := 1)}
 
 {includeReadable "." Fir.Execution.MemoryEndModes "Modes that see the end of a return" FirSpec.Execution.MemoryEndModes (level := 1)}

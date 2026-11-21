@@ -40,7 +40,9 @@ table $`t` of a valid module $`M`, if $`@g` of $`t` with the new body $`b`,
 run in $`M.\mathrm{nest}(t)[g := b]` from given memories, refines $`@g` in
 $`M.\mathrm{nest}(t)`, every function of $`t` is refined over the spec's
 traced runs by itself with $`@g`'s new body, with no budget: every op of the
-sum has finitely many outcomes. So it is at every world.
+sum has finitely many outcomes. The traced layer's own theorem for a dialect
+that shows events proves it, with no `LiftsMem`, the hypothesis from given
+memories taken to the traced one by the lift. So it is at every world.
 :::
 
 :::readable Fir.Gpu.traceOpsMonotone Fir.Gpu.opsTraceFinite (fingerprint := "7865552718645386286")

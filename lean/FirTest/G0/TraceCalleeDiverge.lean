@@ -14,7 +14,9 @@ show events, divergence included (stage 3c-2 of #233), under the human's
 ruling of 2026-11-20 that each op has finitely many outcomes given the world's
 answers: the traced runs of a function refine across modules whose calls are
 refined, and replacing a callee's body by one that refines it refines every
-function, from given traced states and from the empty memories.
+function, from given traced states and from the empty memories. For a
+dialect whose ops show no event, the bridge from runs with memory to traced
+runs from a traced state is restated too (stage 3c-2b).
 -/
 
 namespace FirTest.G0
@@ -93,5 +95,21 @@ theorem traceRuns_replaceBody_isRefinedBy_of_traceFinite (d : Dialect) [TyDenote
     f.traceRuns lay ρ L μ ar M ⊑
       (f.replaceBody g.name b).traceRuns lay ρ L μ ar (M.replaceBody g.name b) :=
   Func.traceRuns_replaceBody_isRefinedBy lay ρ L μ ar hfin hmono hrefl htrans htransE hnd hg b h hf
+
+/-- For every dialect whose ops show no event, with its traced semantics the
+lift of its semantics with memory, a function's runs from the memories of a
+traced state that refine another's give traced runs from that state that
+refine the other's, the traced state each return ends in included. -/
+theorem traceRunsFrom_isRefinedBy_of_memRunsFrom (d : Dialect) [TyDenote d.Ty] [DecidableEq d.Ty]
+    [DialectSignature d] [DialectCall d] [DialectEffects d] [DialectMemDenote d] [TyRefinement d.Ty]
+    {N : Type} [DecidableEq N] (lay : N → MemLayout) (ρ : DialectEffects.Mem d → N) (L : RunItems)
+    {M M' : Module d} {f f' : Func d} {a : HVector toType (f.params.map (·.2))}
+    {a' : HVector toType (f'.params.map (·.2))} {s : TraceState N (unitsOf lay)}
+    (h : letI := DialectMemDenote.denoteAt (d := d) lay ρ L
+      observable (f.memRunsFrom M (a, s.mem)) ⊑ observable (f'.memRunsFrom M' (a', s.mem))) :
+    letI := DialectTrace.ofMem d
+    traceObservable (f.traceRunsFrom lay ρ L M (a, s)) ⊑
+      traceObservable (f'.traceRunsFrom lay ρ L M' (a', s)) :=
+  Func.traceRunsFrom_isRefinedBy_of_memRunsFrom lay ρ L h
 
 end FirTest.G0

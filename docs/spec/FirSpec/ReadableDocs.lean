@@ -290,6 +290,7 @@ import FirSpec.Execution.TraceFollow
 import FirSpec.Execution.TraceFollowStep
 import FirSpec.Execution.TraceCalleeDiverge
 import FirSpec.Execution.TraceReplaceDiverge
+import FirSpec.Execution.TraceLiftFrom
 import FirSpec.Core.Trace
 import FirSpec.Execution.MemoryEndModes
 import FirSpec.Execution.MemoryModes

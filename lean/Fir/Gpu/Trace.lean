@@ -24,9 +24,11 @@ and at every world, with no hypothesis beyond those they have with memory:
 Its ops meet the obligation of the traced layer for a dialect that shows
 events (`Fir.Execution.TraceObligations`), and the hypothesis of that
 layer's divergence (`Fir.Execution.TraceFinite`), as the core's do. So
-refined arguments is proved by the traced layer's own theorem
-(`Fir.Execution.TraceDiverge`), and congruence in the callee from what
-holds with memory until stage 3c of #233.
+both are proved by the traced layer's own theorems
+(`Fir.Execution.TraceDiverge`, `Fir.Execution.TraceReplaceDiverge`), with
+no `LiftsMem`. Congruence in the callee keeps its hypothesis with memory,
+which the lift takes to the traced one (`Fir.Execution.TraceLiftFrom`), so
+that step lasts only while the sum shows no event.
 -/
 
 namespace Fir.Gpu
@@ -97,7 +99,9 @@ the old, refines every function of the table over the spec's traced runs,
 calls and recursion included, wherever a run names the sum's memories. It
 asks for no budget, whatever the parameter types of `@g` and whatever its
 new body does to the memories: every op of the sum has finitely many
-outcomes. -/
+outcomes. It is proved by the traced layer's own theorem for a dialect that
+shows events, its hypothesis with memory taken to the traced one by the
+lift. -/
 theorem trace_replaceBody_isRefinedBy_of_from (hM : M.Valid) (ht : t ∈ M.tables)
     {g : Func CoreGpu} (hg : g ∈ t.funcs) (b : Region CoreGpu)
     (h : letI := DialectMemDenote.denoteAt (d := CoreGpu) lay ρ L;
@@ -107,8 +111,10 @@ theorem trace_replaceBody_isRefinedBy_of_from (hM : M.Valid) (ht : t ∈ M.table
     (hf : f ∈ t.funcs) :
     f.observedRuns lay ρ L μ (M.nest t) ⊑
       (f.replaceBody g.name b).observedRuns lay ρ L μ ((M.nest t).replaceBody g.name b) :=
-  Func.traceRuns_replaceBody_isRefinedBy_of_opsFinite lay ρ L μ _ isRefinedBy_refl isRefinedBy_trans
-    (opsFinite lay ρ L) (hM.nest ht) hg b h hf
+  Func.traceRuns_replaceBody_isRefinedBy lay ρ L μ _ (opsTraceFinite lay ρ L)
+    (fun g _ => traceOpsMonotone lay ρ L g) isRefinedBy_refl isRefinedBy_trans
+    (fun {e₁} => (e₁ : Empty).elim) (hM.nest ht).symbolsUnique hg b
+    (fun p => Func.traceRunsFrom_isRefinedBy_of_memRunsFrom lay ρ L (h (p.1, p.2.mem))) hf
 
 /-- Congruence in the callee over traced runs, at every world: under the
 hypotheses of congruence in the callee from given memories, on every
