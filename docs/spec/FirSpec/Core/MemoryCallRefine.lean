@@ -41,9 +41,9 @@ has one.
 :::readable Fir.Core.opsIgnoreMemory (pin := Fir.Core.Op.liftsSetM) (fingerprint := "4616432161133284535")
 *Theorem: core ops ignore the memories.* At every layout and naming of the
 core's memories, each core op that declares no memory effect ignores the
-memories: such an op touches no memory, so it is
+memories: such an op touches no memory, so either it reads no item and is
 {ref "The-fir-specification--Memory--The-core___s-rules-with-memory"}[tied],
-and runs by its rule in the set monad and keeps the memories, or it is
+running by its rule in the set monad and keeping the memories, or it is
 $`\mathsf{fieldaddr}`, which reads an item, not memory, and
 {ref "The-fir-specification--Memory--Field-address-obligations"}[gives its result at once]
 and keeps them.
@@ -64,8 +64,8 @@ the set monad is the set of its rule in the
 by the morphism that keeps choice and UB, and a tree's choice of $`w` bits
 has $`2^w` options. $`\mathsf{alloca}` has no tie, and has
 {ref "The-fir-specification--Memory--Stack-allocation-obligations"}[one outcome]
-by its own rule; $`\mathsf{load}` and $`\mathsf{store}` have no tie
-either, and have at most one that ends
+by its own rule; the loads and stores of an integer, a pointer or a
+float have no tie either, and have at most one that ends
 ({ref "The-fir-specification--Memory--Load-obligations"}[load obligations],
 {ref "The-fir-specification--Memory--Store-obligations"}[store obligations]).
 $`\mathsf{fieldaddr}` has no tie, and has
@@ -115,10 +115,10 @@ in either module, its
 so the hypothesis gives refinement from given memories and the theorem
 above applies (#214). Until #214 this form asked that $`g` have no pointer
 parameter, as the human ruled on #373 (2026-11-13). A core function
-reaches no memory when no function in its reach has an $`\mathsf{alloca}`,
-a $`\mathsf{load}` or a $`\mathsf{store}`, the core ops that touch memory. Its hypothesis is refinement
-with memory, from the memories a run starts with, which says nothing of a
-callee that
+reaches no memory when no function in its reach has an
+$`\mathsf{alloca}`, a load, a store, a copy, a move or a fill, the core
+ops that touch memory. Its hypothesis is refinement with memory, from the
+memories a run starts with, which says nothing of a callee that
 touches memory; such a callee uses the theorem from given memories above.
 
 Congruence goes through the lawful class, so it asks for a valid module, as

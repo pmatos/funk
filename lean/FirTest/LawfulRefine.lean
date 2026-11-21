@@ -29,7 +29,8 @@ touches no memory (`coreProbe_replaceBody`). Neither asks that the ops have
 finitely many outcomes, which `CoreProbe` does not prove; these are the
 forms that such a dialect uses. Each op of the sum that declares no memory
 effect ignores the memories, since it runs by its rule in the set monad
-(`coreProbe_opsIgnoreMemory`).
+and keeps them, or it is `fieldAddr`, which gives its result at once and
+keeps them (`coreProbe_opsIgnoreMemory`).
 -/
 
 namespace FirTest.Probe
@@ -241,8 +242,8 @@ theorem mem_argVectors : ∀ {ts : List CoreProbe.Ty} (h : ∀ t ∈ ts, Finite 
   | .inr t :: _, _, _ => t.elim
 
 /-- A core op of the sum that declares no memory effect touches no memory:
-`alloca` declares that it allocates, `load` that it reads, `store` that
-it writes, `memCopy` that it reads and writes, and `memSet` that it
+`alloca` declares that it allocates, each load that it reads, each store
+that it writes, `memCopy` that it reads and writes, and `memSet` that it
 writes. -/
 theorem core_touchesMemory_false {o : Core.Op}
     (h : (effects (d := CoreProbe) (.inl o)).TouchesNoMemory) : o.touchesMemory = false := by

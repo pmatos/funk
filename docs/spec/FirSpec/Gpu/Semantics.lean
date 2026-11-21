@@ -89,7 +89,8 @@ with its results. Its results hold no poison, and they refine themselves.
 :::readable Fir.Gpu.query_liftsSetM (fingerprint := "7883783630560395389")
 *Lemma: a question is tied.* At every layout and naming of `gpu`'s
 memories, a question runs with memory by its rule in the set monad and
-keeps the memories, as a core op that touches no memory does.
+keeps the memories, as a core op that touches no memory and reads no item
+of the run does.
 :::
 
 :::readable Fir.Gpu.query_propagates Fir.Gpu.query_monotone Fir.Gpu.query_total Fir.Gpu.query_returnsOnDefined Fir.Gpu.query_neverUBSetM Fir.Gpu.query_makesNoPoisonSetM (fingerprint := "6257091572041050134")
