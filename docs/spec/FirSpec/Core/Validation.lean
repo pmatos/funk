@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Core rules: readable blocks" =>
 
-:::moduleDocs (fingerprint := "16569331555500337011")
+:::moduleDocs (fingerprint := "14153341544230733349")
 :::
 
 :::readable Fir.Core.Ty.Valid Fir.Core.Ty.memory (pin := Fir.Core.maxWidth) (pin := Fir.Core.floatWidth) (fingerprint := "1308968798942516744")
@@ -61,19 +61,6 @@ $$`\mathrm{refs}(\mathsf{call}~f : t^* \to r^*) = (f)`
 $$`\mathrm{refs}(\mathit{op}) = \epsilon \ \text{ for every other op}`
 
 The general rules check that $`f` names a function of the module.
-:::
-
-:::readable Fir.Core.Ty.IsElem (fingerprint := "13910863867682763137")
-*Definition: the integer and pointer types.* An integer type
-$`\mathsf{i}W` and a pointer type $`\mathsf{ptr}\langle M \rangle` are
-such types, and a float type is not:
-
-$$`\mathrm{elem}(\mathsf{i}W) \qquad \mathrm{elem}(\mathsf{ptr}\langle M \rangle) \qquad \neg\,\mathrm{elem}(\mathsf{float}\langle e,m \rangle)`
-
-A field of such a type in an aggregate's layout takes what one value
-that $`\mathsf{alloca}` allocates takes. A float type is not yet a field
-(#264). No allocation asks for one: $`\mathsf{alloca}` allocates values
-of every valid type, a float's included (#264).
 :::
 
 :::readable Fir.Core.Op.attrTypes (fingerprint := "13465611089469671914")
