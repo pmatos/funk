@@ -25,7 +25,8 @@ gives with `work_item`
 `gpu-kernel` computes a global id, which wraps at `i32`, and multiplies the
 numbers of work-groups in two dimensions; its `@scratch` allocates on the
 stack in a memory of 32-bit pointers and stores at the work-item's id, in
-units, where an id that is misaligned or past the allocation is UB.
+units, where an id that is misaligned or past the allocation is UB. Its
+`@host` doubles its argument, once where the `add` wraps at `i32` (#471).
 `gpu-memories` runs kernels in the two memories of its host's layout, one
 of 16-bit units and one of 16-bit pointers: each work-item stores its value
 into its own slot of a buffer and keeps the slot's pointer in the other
@@ -67,6 +68,6 @@ memory; [texts-memops.md](texts-memops.md) lists them.
 `funk build` builds none of a nested module's functions, so a kernel runs
 on `fir-ref` alone
 ([testing-and-harness-corpus.md](../decisions/testing-and-harness-corpus.md#the-test-corpus)),
-and every test of these texts is interpreter-only but one. That one,
-`@host` of `gpu-memories`, runs a host function, which `funk build`
-builds, so it is differential (#467).
+and every test of these texts is interpreter-only but those of `@host`.
+`@host` of `gpu-memories` (#467) and of `gpu-kernel` (#471) are host
+functions, which `funk build` builds, so their tests are differential.
