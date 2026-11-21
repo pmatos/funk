@@ -17,20 +17,20 @@ when the Lean changes under it.
 :::moduleDocs (fingerprint := "2299021729494554789")
 :::
 
-:::readable Fir.StartAlloc.block Fir.Memory.Memories.place Fir.Memory.Memories.ofStarts Fir.RunItems.start (fingerprint := "1626812833379423895")
+:::readable Fir.StartAlloc.block Fir.Memory.Memories.place Fir.Memory.Memories.ofStarts Fir.RunItems.start (pin := Fir.Memory.Memories.empty) (fingerprint := "3955111893373437394")
 *Definition: the memories a run starts with.* A starting allocation
 $`(n, k, \alpha, c, \vec{x})` gives, in a memory of $`u`-bit units, the
 live block $`(k, \alpha, \vec{x}_u, \mathsf{true}, \bot, c)`: of its kind
 and alignment, with its units at that width, no address yet, and constant
 when $`c` is. Placing a block $`b` in the memory $`x` of the memories
 $`S` makes it the next allocation of $`x`, $`S[x := S(x)~b]`, and keeps
-the frames.
+the frames and each memory's count of integers turned back into pointers.
 
 From the starting allocations $`A`, and a map $`\nu` from the numbers of
 the data layout's memories to the run's memories, the memories
 $`\mathrm{start}_\nu(A)` place each allocation of $`A`, in order, in the
 memory $`\nu(n)` of its number $`n`, starting from the empty memories,
-outside every call. An allocation of a number that $`\nu` names no memory
+outside every call and with no integer turned back into a pointer yet. An allocation of a number that $`\nu` names no memory
 for is left out. So in each memory the allocations of $`A` take the ids
 from $`0` up, in the order of $`A`, before anything the run allocates.
 

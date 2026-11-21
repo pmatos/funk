@@ -24,8 +24,9 @@ nothing in x_: on each path that ends, every allocation of `x` keeps its
 address, and a new one has none. A computation with no memory exposes
 nothing, and mapping results and sequencing keep it. Allocating, freeing,
 loading and storing expose nothing in any memory, and exposing exposes
-nothing in any memory but its own. Which declared effect covers exposing is
-not settled yet: an op that exposes comes with it (#232).
+nothing in any memory but its own. Exposing counts as allocating in its
+memory, as a declared effect (the human's ruling of 2026-11-20 on #232,
+question B): the op that exposes declares it.
 -/
 
 namespace Fir

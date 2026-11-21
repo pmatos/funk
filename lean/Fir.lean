@@ -145,6 +145,7 @@ import Fir.Execution.MemoryStoreLaws
 import Fir.Execution.MemoryBindLaws
 import Fir.Execution.MemoryCopyLaws
 import Fir.Execution.MemoryExposeLaws
+import Fir.Execution.MemoryFromAddrLaws
 import Fir.Execution.MemoryPolicyRuns
 import Fir.Execution.MemoryChoiceLaws
 import Fir.Core.AllocaLaws
@@ -236,6 +237,8 @@ import Fir.Memory.CanonicalLaws
 import Fir.Memory.ExposeLaws
 import Fir.Memory.Policy
 import Fir.Memory.PolicyLaws
+import Fir.Memory.Resolver
+import Fir.Memory.ResolverLaws
 import Fir.Core.Encode
 import Fir.Text.Lexical
 import Fir.Text.Grammar

@@ -347,7 +347,7 @@ none in both, and memories that refine each other. -/
 theorem IsRefinedBy.expose {S S' : Memories Mem unit} (h : S ⊑ S') (x : Mem) (g : Policy)
     (P : Nat) (p : Pointer) : Option.Rel (fun r r' => r.1 = r'.1 ∧ r.2 ⊑ r'.2)
       (S.expose x g P p) (S'.expose x g P p) := by
-  have hx := h.2 x
+  have hx := h.2.1 x
   obtain ⟨prov, o⟩ := p
   cases prov with
   | none => exact .some ⟨rfl, h⟩

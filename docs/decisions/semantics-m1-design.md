@@ -20,8 +20,9 @@ dialects, levels and the second dialect work in M1.
 ## Memory
 
 [semantics-m1-memory.md](semantics-m1-memory.md) says what holds for M1's
-memory: the memory model, its pointers and their ops, stack allocation, and
-the memories of a run.
+memory: the memory model, its pointers and their ops, and the memories of a
+run. [semantics-m1-stack.md](semantics-m1-stack.md) says what holds for
+stack allocation.
 
 ## Globals
 

@@ -17,7 +17,7 @@ fails when the Lean changes under it.
 :::moduleDocs (fingerprint := "4607958562880319941")
 :::
 
-:::readable Fir.load_apply Fir.load_keeps (pin := Fir.instMonadMemoryStateT) (pin := Fir.Memory.Memories.load) (fingerprint := "14202662533026696911")
+:::readable Fir.load_apply Fir.load_keeps (pin := Fir.instMonadMemoryStateT) (pin := Fir.Memory.Memories.load) (fingerprint := "14726849575282239222")
 *Theorems: how a load ends.* In the
 {ref "The-fir-specification--Memory--The-state-layer"}[state layer] over
 the set monad, the
@@ -55,7 +55,7 @@ $`x` is the same; each run ends with the memories it started from, which
 agree off $`y`, and whose units of $`y` are those each run had.
 :::
 
-:::readable Fir.load_refines (pin := Fir.StateRefinedBy) (pin := Fir.Memory.Memories.IsRefinedBy) (fingerprint := "16922641767448538274")
+:::readable Fir.load_refines (pin := Fir.StateRefinedBy) (pin := Fir.Memory.Memories.IsRefinedBy) (fingerprint := "2745685152072682073")
 *Theorem: a load is monotone.* From memories $`S'` that
 {ref "The-fir-specification--Memory--Refining-memories"}[refine] $`S`, a
 load faults for the same reason as from $`S`, or loads units that refine

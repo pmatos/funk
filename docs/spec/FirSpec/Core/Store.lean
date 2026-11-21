@@ -34,7 +34,7 @@ $`v` is poison. In memory 0, the $`\mathsf{i32}` `0x04030201` is the bytes
 1, 2, 3 and 4, in that order, aligned to 4.
 :::
 
-:::readable Fir.Core.poisonStorePointer Fir.Core.storeRule (pin := Fir.MonadMemory) (pin := Fir.MonadUB) (pin := Fir.Core.Op) (fingerprint := "17358374950144803225")
+:::readable Fir.Core.poisonStorePointer Fir.Core.storeRule (pin := Fir.MonadMemory) (pin := Fir.MonadUB) (pin := Fir.Core.Op) (fingerprint := "9488787985352738449")
 *Definition: the rule of $`\mathsf{store}`.* Let a run's memories have the
 layout entries $`\ell`, and let the run name the core's memory $`x` as
 $`\rho(x)`. For $`\mathsf{store}_N~o~W~a` on the operands $`v`, the value,

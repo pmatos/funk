@@ -203,7 +203,8 @@ alignment is not covered yet, as with the other limits of this proof device
 below.
 No access reaches a freed block, so its units are not compared, and a store to
 a block that is then freed may be dropped. Refined memories have the same
-frames and allocations, each memory refined block by block
+frames, allocations and counts of integers turned back into pointers
+(`semantics-m1-addresses.md`), each memory refined block by block
 (`lean/Fir/Memory/Refine.lean`). Entering and leaving a call, allocating,
 freeing, loading and storing keep it. The human ruled on #231 on 2026-11-11
 that a punned load gives poison and that a pointer's fragments keep its
@@ -225,7 +226,7 @@ since a callee runs from its caller's memories (`Func.memRunsFrom`). Refined
 arguments and memories need nothing more
 (`Func.memRunsFrom_args_isRefinedBy`), and congruence is
 `Func.memRunsFrom_replaceBody_isRefinedBy`. The runs with memory refine when
-these runs from the empty memories do. Congruence assumes that the new callee
+these runs from the memories a run starts with do. Congruence assumes that the new callee
 refines the old from every memories, and either one fuel bound for it in
 place of finitely many argument vectors
 (`Func.memRunsFrom_replaceBody_isRefinedBy`), or that the dialect's ops have
@@ -284,8 +285,8 @@ before stage 4d, which would have held every memory op back for it.
 These proofs stand beside those in the set
 monad, step by step, and each change to `Func.runOps` is proved again in the
 memory refinement files until the refactor that semantics-interpreter.md names.
-Rejected: refining runs with memory only from the empty memories, since a black
-box stated so says nothing of a call.
+Rejected: refining runs with memory only from the memories a run starts with,
+since a black box stated so says nothing of a call.
 
 The relation on end memories is a proof device for composing calls, not an
 observation. It is stricter than the observation of ADR-2026-11-09-1540: the

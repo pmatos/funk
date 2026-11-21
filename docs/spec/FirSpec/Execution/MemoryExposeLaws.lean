@@ -31,7 +31,7 @@ no memory exposes nothing, and mapping the results of one that exposes
 nothing, or sequencing two that expose nothing, exposes nothing.
 :::
 
-:::readable Fir.expose_apply Fir.expose_ub Fir.expose_ok (pin := Fir.instMonadMemoryStateT) (pin := Fir.Memory.Memories.expose) (fingerprint := "13406363034743534662")
+:::readable Fir.expose_apply Fir.expose_ub Fir.expose_ok (pin := Fir.instMonadMemoryStateT) (pin := Fir.Memory.Memories.expose) (fingerprint := "10191073411681353167")
 *Theorems: how an exposure ends.* In the
 {ref "The-fir-specification--Memory--The-state-layer"}[state layer] over
 the set monad, the

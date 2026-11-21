@@ -14,13 +14,13 @@ when the Lean changes under it.
 
 #doc (Manual) "The memory effect: readable blocks" =>
 
-:::moduleDocs (fingerprint := "8352164345079083580")
+:::moduleDocs (fingerprint := "5713132151613066836")
 :::
 
-:::readable Fir.MonadMemory (fingerprint := "8352164345079083580")
+:::readable Fir.MonadMemory (fingerprint := "5713132151613066836")
 *Definition: the memory effect.* A way of computing has the memory
 effect, on memories named by $`X` whose units are $`u(x)` bits wide, when
-it gives five operations of the memory model, each on a named memory:
+it gives six operations of the memory model, each on a named memory:
 
 * $`\mathrm{alloc}(x, k, n, \alpha)` allocates $`n` units of kind $`k`,
   aligned to $`\alpha` units, in the memory $`x`, and gives the pointer
@@ -34,11 +34,17 @@ it gives five operations of the memory model, each on a named memory:
   the width of the pointers of $`x`: its allocation's address plus its
   offset, wrapped, where an allocation with no address is given one under
   the {ref "The-fir-specification--Memory--Address-policies"}[address policy]
-  $`g`.
+  $`g`;
+* $`\mathrm{fromAddr}(x, k, P, i)` turns the integer $`i` of $`P` bits
+  back into a pointer of an allocation of $`x` that holds its address,
+  picked under the
+  {ref "The-fir-specification--Memory--Address-resolvers"}[address resolver]
+  $`k`, or into a pointer with no provenance when none holds it.
 
 The alignment of a load or a store is the op's promise that its address
 is a multiple of $`\alpha`. A load or a store that faults, misaligned
 included, is immediate UB (ADR-2026-11-09-1542; the human's ruling of
 2026-11-11 on #231). An exposure when no address may be given is immediate UB too
-(the human's ruling of 2026-11-18 on #232, Q5).
+(the human's ruling of 2026-11-18 on #232, Q5). Turning an integer back
+into a pointer never fails.
 :::

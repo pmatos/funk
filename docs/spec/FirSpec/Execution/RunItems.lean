@@ -14,10 +14,10 @@ when the Lean changes under it.
 
 #doc (Manual) "The items a run gives each op: readable blocks" =>
 
-:::moduleDocs (fingerprint := "3735612867492249398")
+:::moduleDocs (fingerprint := "6306705812128715090")
 :::
 
-:::readable Fir.FieldPlace Fir.LayoutPlace Fir.StartAlloc Fir.RunItems Fir.RunItems.empty Fir.RunItems.withAddrs (pin := Fir.Memory.Policy.canonical) (fingerprint := "3385168423609539833")
+:::readable Fir.FieldPlace Fir.LayoutPlace Fir.StartAlloc Fir.RunItems Fir.RunItems.empty Fir.RunItems.withAddrs Fir.RunItems.withResolvers (pin := Fir.Memory.Policy.canonical) (pin := Fir.Memory.Resolver.canonical) (fingerprint := "9492155803483734559")
 *Definition: the items a run gives each op.* An op may name an item of
 its module by its symbol, as `call` names a function. A run gives each
 op's rule the items that ops name, beside each memory's layout entry (the
@@ -37,6 +37,13 @@ says otherwise, so the empty record and a module's own items give it. The
 spec's runs replace it by every policy in turn
 ({ref "The-fir-specification--Memory--Runs-under-every-address-policy"}[runs under every policy]):
 $`L[\mathrm{addrs} := g]` is $`L` with the policies $`g`.
+
+It carries the run's
+{ref "The-fir-specification--Memory--Address-resolvers"}[address resolver]
+for each memory too, $`L.\mathrm{resolvers}(n)`, the canonical resolver
+unless the run says otherwise, and $`L[\mathrm{resolvers} := k]` is $`L` with
+the resolvers $`k`. The spec's runs replace it by each resolver that they
+keep.
 
 Last, the record lists the allocations the run starts with,
 $`L.\mathrm{starts}`, in order, none unless the run says otherwise. A
@@ -59,7 +66,7 @@ field of this record, and the statements of those obligations and
 guarantees stay as they are.
 :::
 
-:::readable Fir.Field.place Fir.Aggregate.place Fir.Global.startId? Fir.InitPiece.startUnits Fir.Global.start Fir.RunItems.ofTable Fir.Module.runItems (pin := Fir.Field.shape) (pin := Fir.roundUp) (pin := Fir.InitPiece.unitCount) (pin := Fir.Memory.encodePtr) (fingerprint := "4286216880147342255")
+:::readable Fir.Field.place Fir.Aggregate.place Fir.Global.startId? Fir.InitPiece.startUnits Fir.Global.start Fir.RunItems.ofTable Fir.Module.runItems (pin := Fir.Field.shape) (pin := Fir.roundUp) (pin := Fir.InitPiece.unitCount) (pin := Fir.Memory.encodePtr) (fingerprint := "411038831800314650")
 *Definition: the items of a table.* In the memory $`n` of a module whose
 data layout is $`l`, a field of the type $`t` is placed at its offset,
 with its count, and with the step $`\mathrm{roundUp}(u, a)`, where one
@@ -82,10 +89,10 @@ symbol that names no global of $`T`, which validation rejects, gives no
 units.
 
 A run of a function of the symbol table $`T` gives each op the first
-layout of $`T` with each symbol, placed, under the canonical policy, and
-starts with the allocation of each global of $`T`, in $`T`'s order: the
-globals of its own table, not those of a table nested in it or around it
-(the human's ruling of 2026-11-20 on #237, Q3). A
+layout of $`T` with each symbol, placed, under the canonical policy and
+resolver, and starts with the allocation of each global of $`T`, in $`T`'s
+order: the globals of its own table, not those of a table nested in it or
+around it (the human's ruling of 2026-11-20 on #237, Q3). A
 module's own items,
 $`\mathrm{items}(M)`, are those of its own table, in its data layout:
 the items that the runs the modes report give each op.
