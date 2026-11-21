@@ -225,7 +225,7 @@ memory its meaning (ADR-2026-11-09-1542;
   of the integer of its `1 + e + m` bits at the natural alignment of its
   size, and the float loads and stores work on it unchanged
   (`tests/fir/canonical/gpu-work-group-floats.fir`). `Gpu.Op.Valid` asks
-  only that the type be valid, so its rule for an allocation is `alloca`'s
+  of its type only that it be valid, so its rule for an allocation is `alloca`'s
   but the kind. A field of any core type, a float's included, takes what
   one allocated value takes (`Ty.fieldShape_eq_allocaShape`, with no
   hypothesis since #436; floats are fields, ADR-2026-11-16-1546).
