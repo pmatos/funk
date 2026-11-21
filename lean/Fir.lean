@@ -185,6 +185,12 @@ import Fir.Execution.ObserveEndLaws
 import Fir.Execution.TraceDialect
 import Fir.Execution.TraceLift
 import Fir.Execution.TraceRefine
+import Fir.Execution.TraceObligations
+import Fir.Execution.TraceObligationLaws
+import Fir.Execution.TracePaths
+import Fir.Execution.TraceStepPaths
+import Fir.Execution.TraceOpsRefine
+import Fir.Execution.TraceArgs
 import Fir.Execution.TraceScript
 import Fir.Execution.MemoryEndModes
 import Fir.Core.Observe

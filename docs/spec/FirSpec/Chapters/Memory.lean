@@ -222,6 +222,18 @@ event.
 
 {includeReadable "." Fir.Execution.TraceRefine "Refinement over the traced runs of a dialect with no event" FirSpec.Execution.TraceRefine (level := 1)}
 
+{includeReadable "." Fir.Execution.TraceObligations "Monotonicity in the traced layer" FirSpec.Execution.TraceObligations (level := 1)}
+
+{includeReadable "." Fir.Execution.TraceObligationLaws "Ops monotone in the traced layer" FirSpec.Execution.TraceObligationLaws (level := 1)}
+
+{includeReadable "." Fir.Execution.TracePaths "Paths of the interpreter in the traced layer" FirSpec.Execution.TracePaths (level := 1)}
+
+{includeReadable "." Fir.Execution.TraceStepPaths "A traced run of ops, one step at a time" FirSpec.Execution.TraceStepPaths (level := 1)}
+
+{includeReadable "." Fir.Execution.TraceOpsRefine "A traced run of ops on refined environments and states" FirSpec.Execution.TraceOpsRefine (level := 1)}
+
+{includeReadable "." Fir.Execution.TraceArgs "Refined arguments over traced runs: returns, UB and each budget" FirSpec.Execution.TraceArgs (level := 1)}
+
 {includeReadable "." Fir.Core.Trace "The core's traced runs" FirSpec.Core.Trace (level := 1)}
 
 {includeReadable "." Fir.Execution.MemoryEndModes "Modes that see the end of a return" FirSpec.Execution.MemoryEndModes (level := 1)}
