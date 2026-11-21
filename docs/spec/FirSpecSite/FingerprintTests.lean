@@ -170,6 +170,11 @@ def expectChangeShared (what : String) (n m : Name) (old new : List String)
   if (← hashAfterAll old n) == (← hashAfterAll new n) then
     throwError "the fingerprint of {n} misses {what}"
 
+/-- A definition whose matcher, `fpIsZero.match_1`, the tests below share. -/
+def isZero : String := "def fpIsZero : Nat → Bool | 0 => true | _ => false"
+/-- `fpIsZero` with other patterns, so its matcher changes and keeps its name. -/
+def isOne : String := "def fpIsZero : Nat → Bool | 1 => true | _ => false"
+
 /-!
 A matcher counts by what it says, not by its name. Lean reuses the matcher
 of an earlier declaration of the same shape: here `fpShape` uses
@@ -181,30 +186,30 @@ change it.
 
 #eval show CommandElabM Unit from
   expectSameUnshared "the name of the matcher its body uses" `fpShape `fpIsZero.match_1
-    ["def fpIsZero : Nat → Bool | 0 => true | _ => false"]
+    [isZero]
     "def fpShape : Nat → Nat | 0 => 1 | _ => 2"
 
 #eval show CommandElabM Unit from
   expectChangeShared "a change to the patterns of the matcher its body shares" `fpShape
     `fpIsZero.match_1
-    ["def fpIsZero : Nat → Bool | 0 => true | _ => false",
+    [isZero,
      "def fpShape : Nat → Nat | 0 => 1 | _ => 2"]
-    ["def fpIsZero : Nat → Bool | 1 => true | _ => false",
+    [isOne,
      "def fpShape : Nat → Nat | 1 => 1 | _ => 2"]
 
 /-! The same holds for a matcher in a statement. -/
 
 #eval show CommandElabM Unit from
   expectSameUnshared "the name of the matcher its statement uses" `fpStmt `fpIsZero.match_1
-    ["def fpIsZero : Nat → Bool | 0 => true | _ => false"]
+    [isZero]
     "axiom fpStmt (n : Nat) : (match n with | 0 => 1 | _ => 2) = 1"
 
 #eval show CommandElabM Unit from
   expectChangeShared "a change to the patterns of the matcher its statement shares" `fpStmt
     `fpIsZero.match_1
-    ["def fpIsZero : Nat → Bool | 0 => true | _ => false",
+    [isZero,
      "axiom fpStmt (n : Nat) : (match n with | 0 => 1 | _ => 2) = 1"]
-    ["def fpIsZero : Nat → Bool | 1 => true | _ => false",
+    [isOne,
      "axiom fpStmt (n : Nat) : (match n with | 1 => 1 | _ => 2) = 1"]
 
 /-! And for a matcher in a field's default. -/
@@ -212,7 +217,7 @@ change it.
 #eval show CommandElabM Unit from
   expectSameUnshared "the name of the matcher a field's default uses" `fpBox
     `fpIsZero.match_1
-    ["def fpIsZero : Nat → Bool | 0 => true | _ => false"]
+    [isZero]
     "structure fpBox where
        k : Nat
        x : Nat := match k with | 0 => 1 | _ => 2"
@@ -221,11 +226,11 @@ change it.
 #eval show CommandElabM Unit from
   expectChangeShared "a change to the patterns of the matcher a field's default shares" `fpBox
     `fpIsZero.match_1
-    ["def fpIsZero : Nat → Bool | 0 => true | _ => false",
+    [isZero,
      "structure fpBox where
        k : Nat
        x : Nat := match k with | 0 => 1 | _ => 2"]
-    ["def fpIsZero : Nat → Bool | 1 => true | _ => false",
+    [isOne,
      "structure fpBox where
        k : Nat
        x : Nat := match k with | 1 => 1 | _ => 2"]
