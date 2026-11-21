@@ -14,10 +14,10 @@ build fails when the Lean changes under it.
 
 #doc (Manual) "Exhaustive, scripted and sampled modes: readable blocks" =>
 
-:::moduleDocs (fingerprint := "10569892650345021518")
+:::moduleDocs (fingerprint := "4859899031298329233")
 :::
 
-:::readable Fir.ChoiceTree.Leaf Fir.ChoiceTree.Leaf.ev? (fingerprint := "5326550102879268601")
+:::readable Fir.ChoiceTree.Leaf Fir.ChoiceTree.Leaf.ev? (fingerprint := "17707828040967081440")
 *Definition: a leaf, and the way to end it stands for.* A walk of a
 {ref "The-fir-specification--Execution--Choice-trees"}[tree of choices]
 reports, for each path it follows, the leaf it reaches:
@@ -47,7 +47,7 @@ $`\mathrm{bits}(w)`, so a walk that follows each of them misses no
 subtree.
 :::
 
-:::readable Fir.ChoiceTree.collect Fir.ChoiceTree.collect_mem Fir.ChoiceTree.collect_some (fingerprint := "12075344262802261300")
+:::readable Fir.ChoiceTree.collect Fir.ChoiceTree.collect_mem Fir.ChoiceTree.collect_some (fingerprint := "15473225048448548665")
 *Definition and theorems: joining the lists of each element.* A helper of
 exhaustive mode. For a function $`g` that gives each element a list, or
 fails, $`\mathrm{collect}_g(\mathit{xs}, \mathit{acc})` gives the
@@ -60,7 +60,7 @@ $`\mathit{acc}` and of the lists $`g` gives, and that it gives something
 only when $`g` gives a list for every element.
 :::
 
-:::readable Fir.ChoiceTree.explore (fingerprint := "13598658221882494765")
+:::readable Fir.ChoiceTree.explore (fingerprint := "6573312303054563552")
 *Definition: exhaustive mode.* $`\mathrm{explore}(t, B)` lists every leaf
 of the tree $`t`, each with the number of choices on its path, when no
 path chooses more than $`B` bits in all, and fails otherwise:
@@ -89,7 +89,7 @@ Each way the tree may end is a leaf in the list, and each leaf in the
 list that has an outcome is a way the tree may end.
 :::
 
-:::readable Fir.ChoiceTree.Within Fir.ChoiceTree.collect_isSome Fir.ChoiceTree.explore_isSome_iff (fingerprint := "12533589728584485959")
+:::readable Fir.ChoiceTree.Within Fir.ChoiceTree.collect_isSome Fir.ChoiceTree.explore_isSome_iff (fingerprint := "870353944145253921")
 *Definition: within a budget.* A tree is _within_ the budget $`B` when no
 path of it chooses more than $`B` bits in all: a leaf always is, and
 $`\mathsf{choose}~w~c~(b \mapsto t_b)` is when $`w \le B` and every $`t_b`
@@ -125,7 +125,7 @@ long     \mathsf{long}~\mathit{made}~\mathit{length}
   sequence has $`\mathit{length}` values.
 :::
 
-:::readable Fir.ChoiceTree.script (fingerprint := "16609521679019339584")
+:::readable Fir.ChoiceTree.script (fingerprint := "12150713574876092476")
 *Definition: scripted mode.* $`\mathrm{script}(t, \mathit{cs}, n)` follows
 the path of the tree $`t` that the choice sequence $`\mathit{cs}` names,
 after $`n` choices already made, and gives the leaf it reaches with the
@@ -156,14 +156,14 @@ and count $`n`: if $`\mathrm{script}(t, \mathit{cs}, n)` reaches the leaf
 $`\ell` and $`\mathrm{end}(\ell) = e`, then $`e \in \mathrm{set}(t)`.
 :::
 
-:::readable Fir.ChoiceTree.Chosen Fir.ChoiceTree.readChosen (fingerprint := "4674671955620266833")
+:::readable Fir.ChoiceTree.Chosen Fir.ChoiceTree.readChosen (fingerprint := "10063234509845602107")
 *Definition: a chosen value, and reading it back.* A value that a path
 chose is a pair $`(u, b)` of a width $`u` and a vector $`b` of $`u` bits.
 Read as $`w` bits, it gives $`b` when $`u = w`, and does not read
 otherwise.
 :::
 
-:::readable Fir.ChoiceTree.sample (fingerprint := "1467443537577545210")
+:::readable Fir.ChoiceTree.sample (fingerprint := "13237233851001206646")
 *Definition: sampled mode.* $`\mathrm{sample}(t, g)` follows one path of
 the tree $`t`, drawing each choice as the path reaches it, and gives the
 leaf it reaches with the values it chose, in order. A function
@@ -194,7 +194,7 @@ and sampled mode inherits scripted mode's theorems, whatever the
 generator.
 :::
 
-:::readable Fir.PathEnd Fir.ChoiceTree.Leaf.pathEnd (fingerprint := "10494028443500246089")
+:::readable Fir.PathEnd Fir.ChoiceTree.Leaf.pathEnd (fingerprint := "10276119042979950204")
 *Definition: how a path of a run ends.* A path of a run of the
 interpreter ends with an
 {ref "The-fir-specification--Execution--Outcomes-and-behaviours"}[outcome],
@@ -215,7 +215,7 @@ $`\mathsf{ub}~r`; a stuck path is $`\mathsf{stuck}~s`; and
 $`\mathsf{no\_outcome}~e` stays so. `fir-ref` reports each path this way.
 :::
 
-:::readable Fir.Outcome.ev Fir.Run.outcomes_iff Fir.ChoiceTree.Leaf.ev?_eq_outcome Fir.ChoiceTree.Leaf.ev?_eq_stuck (pin := Fir.Run.outcomes) (pin := Fir.Run.IsStuck) (fingerprint := "11552738343349871628")
+:::readable Fir.Outcome.ev Fir.Run.outcomes_iff Fir.ChoiceTree.Leaf.ev?_eq_outcome Fir.ChoiceTree.Leaf.ev?_eq_stuck (pin := Fir.Run.outcomes) (pin := Fir.Run.IsStuck) (fingerprint := "8586143421409032639")
 *Definition and theorems: outcomes as ways to end.* Steps in the proofs
 below. Each outcome $`o` is a way a run's computation may end,
 $`\mathrm{ev}(o)`: a return $`\mathsf{ret}~o'` is
@@ -245,7 +245,7 @@ This is the theorem of the
 for the morphism from trees to sets.
 :::
 
-:::readable Fir.Func.explore_outcomes Fir.Func.explore_stuck (pin := Fir.Run.outcomes) (pin := Fir.Run.IsStuck) (fingerprint := "10324481200540189671")
+:::readable Fir.Func.explore_outcomes Fir.Func.explore_stuck (pin := Fir.Run.outcomes) (pin := Fir.Run.IsStuck) (fingerprint := "17124679010909583959")
 *Theorem: exhaustive mode gives exactly the outcomes of a run.* With the
 dialect and the hypothesis of the previous theorem, let $`R_k` be the run
 of $`f` in the set monad at fuel $`k`, and let exhaustive mode on the run's
@@ -264,7 +264,7 @@ speak of the run at one fuel budget, as the section on
 explains.
 :::
 
-:::readable Fir.Func.script_outcomes Fir.Func.script_stuck (pin := Fir.Run.outcomes) (pin := Fir.Run.IsStuck) (fingerprint := "11697535310839881486")
+:::readable Fir.Func.script_outcomes Fir.Func.script_stuck (pin := Fir.Run.outcomes) (pin := Fir.Run.IsStuck) (fingerprint := "13508516131780551102")
 *Theorem: on a sequence that fits, scripted mode gives an outcome of a
 run.* With the dialect and the hypothesis of the theorems above, let
 scripted mode on the run's tree, with any $`\mathrm{read}` and choice

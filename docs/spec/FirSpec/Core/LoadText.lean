@@ -14,10 +14,10 @@ changes under it.
 
 #doc (Manual) "Loads in text: readable blocks" =>
 
-:::moduleDocs (fingerprint := "5354674448523914058")
+:::moduleDocs (fingerprint := "10131362273438378323")
 :::
 
-:::readable Fir.Memory.Ordering.word Fir.Core.decodeOrdering Fir.Core.decodeOrdering_word (pin := Fir.Memory.Ordering) (fingerprint := "3761968327788049239")
+:::readable Fir.Memory.Ordering.word Fir.Core.decodeOrdering Fir.Core.decodeOrdering_word (pin := Fir.Memory.Ordering) (fingerprint := "9521432590191118764")
 *Definition: the words of the orderings.* The
 {ref "The-fir-specification--Memory--The-ordering-of-an-access"}[orderings]
 are written as the words `nonatomic`, `unordered`, `monotonic`,
@@ -25,7 +25,7 @@ are written as the words `nonatomic`, `unordered`, `monotonic`,
 as the ordering it writes. No other word names an ordering.
 :::
 
-:::readable Fir.Core.loadAttrs Fir.Core.decodeAccess Fir.Core.decodeLoad (pin := Fir.Core.decodeAlign) (fingerprint := "9138032434620264217")
+:::readable Fir.Core.loadAttrs Fir.Core.decodeAccess Fir.Core.decodeLoad (pin := Fir.Core.decodeAlign) (fingerprint := "13764465843128067380")
 *Definition: the text of $`\mathsf{load}`.* The attributes of
 $`\mathsf{load}_N~o~W~a`, and of the loads of a pointer and of a float,
 are the word of its ordering $`o`, then

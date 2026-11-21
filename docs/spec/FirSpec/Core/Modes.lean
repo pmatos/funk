@@ -17,7 +17,7 @@ when the Lean changes under it.
 :::moduleDocs (fingerprint := "9400045757668067221")
 :::
 
-:::readable Fir.Core.modeTree Fir.Core.exhaustive Fir.Core.scripted (pin := Fir.ChoiceTree.explore) (pin := Fir.ChoiceTree.script) (pin := Fir.Func.memTree) (fingerprint := "5987483451217847632")
+:::readable Fir.Core.modeTree Fir.Core.exhaustive Fir.Core.scripted (pin := Fir.ChoiceTree.explore) (pin := Fir.ChoiceTree.script) (pin := Fir.Func.memTree) (fingerprint := "15948426803453780529")
 *Definition: exhaustive and scripted mode on a core function.* For a core
 function $`f` of a module $`M`, arguments $`\vec{v}` of its parameter
 types and fuel $`k`, let
@@ -46,7 +46,7 @@ widths that its own layout declares
 (`docs/decisions/fir-ref-memory.md#the-modes-run-with-memory`).
 :::
 
-:::readable Fir.Core.sampled (pin := Fir.ChoiceTree.sample) (fingerprint := "975734535298047826")
+:::readable Fir.Core.sampled (pin := Fir.ChoiceTree.sample) (fingerprint := "9213446715362804606")
 *Definition: sampled mode on a core function.* For a function
 $`\mathrm{draw}` and a generator $`g`,
 $`\mathrm{sampled}(M, f, \vec{v}, k, g)` is sampled mode on the tree of
@@ -55,7 +55,7 @@ leaf of the path on which $`\mathrm{draw}` gives each choice, from
 $`g`, and the values chosen on it, in order.
 :::
 
-:::readable Fir.Core.exhaustive_memOutcomes Fir.Core.exhaustive_memStuck (pin := Fir.Run.outcomes) (pin := Fir.Run.IsStuck) (pin := Fir.ChoiceTree.Leaf.pathEnd) (fingerprint := "11269341482823510974")
+:::readable Fir.Core.exhaustive_memOutcomes Fir.Core.exhaustive_memStuck (pin := Fir.Run.outcomes) (pin := Fir.Run.IsStuck) (pin := Fir.ChoiceTree.Leaf.pathEnd) (fingerprint := "2695240003079214859")
 *Theorem: exhaustive mode gives exactly the outcomes of a core run with
 memory.* For every module $`M`, function $`f`, arguments $`\vec{v}`,
 fuel $`k` and choice budget $`B`, let $`R^M_k` be the
@@ -80,7 +80,7 @@ the path end $`\mathsf{stuck}~s`, for some $`s`. Both are the
 since the core's semantics in the tree denotes its semantics with memory.
 :::
 
-:::readable Fir.Core.scripted_memOutcomes Fir.Core.scripted_memStuck (pin := Fir.Run.outcomes) (pin := Fir.Run.IsStuck) (pin := Fir.ChoiceTree.Leaf.pathEnd) (fingerprint := "12580449247256363133")
+:::readable Fir.Core.scripted_memOutcomes Fir.Core.scripted_memStuck (pin := Fir.Run.outcomes) (pin := Fir.Run.IsStuck) (pin := Fir.ChoiceTree.Leaf.pathEnd) (fingerprint := "3034986576444153008")
 *Theorem: on a sequence that fits, scripted mode gives an outcome of a
 core run with memory.* For every $`\mathrm{read}`, module $`M`, function
 $`f`, arguments $`\vec{v}`, fuel $`k` and choice
@@ -95,7 +95,7 @@ same hypotheses, if $`\mathrm{path\_end}(\ell) = \mathsf{stuck}~s`,
 then $`R^M_k` is stuck.
 :::
 
-:::readable Fir.Core.sampled_fits (pin := Fir.ChoiceTree.readChosen) (fingerprint := "15952345883096125907")
+:::readable Fir.Core.sampled_fits (pin := Fir.ChoiceTree.readChosen) (fingerprint := "8350698989882857321")
 *Theorem: the values that sampled mode chose fit the run.* For every
 $`\mathrm{draw}`, module $`M`, function $`f`, arguments
 $`\vec{v}`, fuel $`k` and generator $`g`, let
@@ -110,7 +110,7 @@ So a sampled run can be replayed exactly, from the values `fir-ref`
 reports.
 :::
 
-:::readable Fir.Core.sampled_memOutcomes Fir.Core.sampled_memStuck (pin := Fir.Run.outcomes) (pin := Fir.Run.IsStuck) (pin := Fir.ChoiceTree.Leaf.pathEnd) (fingerprint := "7769039438455395876")
+:::readable Fir.Core.sampled_memOutcomes Fir.Core.sampled_memStuck (pin := Fir.Run.outcomes) (pin := Fir.Run.IsStuck) (pin := Fir.ChoiceTree.Leaf.pathEnd) (fingerprint := "16295973400252051953")
 *Theorem: sampled mode gives an outcome of a core run with memory,
 whatever the generator.* For every $`\mathrm{draw}`, module $`M`, function
 $`f`, arguments $`\vec{v}`, fuel $`k` and generator

@@ -14,10 +14,10 @@ Lean changes under it.
 
 #doc (Manual) "Traced runs from a traced state, for a dialect with no event: readable blocks" =>
 
-:::moduleDocs (fingerprint := "1277147490547063446")
+:::moduleDocs (fingerprint := "5083062287745304342")
 :::
 
-:::readable Fir.Result.withEscaped (fingerprint := "16909940391715339000")
+:::readable Fir.Result.withEscaped (fingerprint := "5226299474016504440")
 *Definition: a run from memories, read from a traced state.* A path of a
 run from the memories of the traced state $`s` is read from $`s`: a return
 $`(\vec{v}, S)` returns $`(\vec{v}, s[\mathrm{mem} := S])`, the traced

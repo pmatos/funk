@@ -41,7 +41,7 @@ The proofs below take the spelling of each character apart case by case
 with these.
 :::
 
-:::readable Fir.Text.lexStringFrom_escapeChar (pin := Fir.Text.lexStringFrom) (pin := Fir.Text.lexEscape) (fingerprint := "18426762495900020609")
+:::readable Fir.Text.lexStringFrom_escapeChar (pin := Fir.Text.lexStringFrom) (pin := Fir.Text.lexEscape) (fingerprint := "16464186626490275355")
 *Theorem: the spelling of one character reads back as the character.* The
 lexer reads the characters of a string in a loop that keeps the
 characters read so far and works on what is left of the text after the
@@ -52,7 +52,7 @@ position, with $`c` added to the characters read. The loop reads an escape
 in one turn, from its backslash.
 :::
 
-:::readable Fir.Text.lexStringFrom_quote (pin := Fir.Text.lexStringFrom) (fingerprint := "10552310109353650783")
+:::readable Fir.Text.lexStringFrom_quote (pin := Fir.Text.lexStringFrom) (fingerprint := "11230152485230395729")
 *Theorem: the spellings of the characters of a string, then a quote, read
 back as the string.* For all characters $`s = s_1 \dots s_n` and $`c`, at
 every position and with any characters $`a` read so far: when what is left
@@ -73,7 +73,7 @@ given the spellings of the characters of $`s`, then `"`, then $`c`, gives
 $`s` and leaves $`c`.
 :::
 
-:::readable Fir.Text.readsToken_str (pin := Fir.Text.lexToken) (fingerprint := "1182260461521890193")
+:::readable Fir.Text.readsToken_str (pin := Fir.Text.lexToken) (fingerprint := "16075336905192848868")
 *Theorem: a string token is read.* For every
 {ref "The-fir-specification--Text-format--Tokens"}[string] $`s` and characters
 $`c`, the token that starts with `"`, followed by the spellings of the
@@ -82,7 +82,7 @@ $`c`. Unlike a name, a string ends at its closing quote, so $`c` may be
 anything.
 :::
 
-:::readable Fir.Text.readsToken_quotedSym Fir.Text.readsToken_wordSym (pin := Fir.Text.lexToken) (pin := Fir.Text.lexAt) (fingerprint := "13188672460436326134")
+:::readable Fir.Text.readsToken_quotedSym Fir.Text.readsToken_wordSym (pin := Fir.Text.lexToken) (pin := Fir.Text.lexAt) (fingerprint := "11358020809315989414")
 *Theorems: a symbol is read, quoted or bare.* For every string $`s` that is
 not a
 {ref "The-fir-specification--Abstract-syntax--Modules___-functions___-blocks-and-ops"}[word],
@@ -117,7 +117,7 @@ with $`a`, followed by $`s~c`, is read as $`t`, leaving $`c`, then $`a~s`
 number $`n`, its decimal digits spell $`\mathsf{int}~n`.
 :::
 
-:::readable Fir.Text.spells_float (pin := Fir.FloatLit.print) (pin := Fir.FloatLit.valid) (pin := Fir.Text.expChars) (fingerprint := "6137234749525409531")
+:::readable Fir.Text.spells_float (pin := Fir.FloatLit.print) (pin := Fir.FloatLit.valid) (pin := Fir.Text.expChars) (fingerprint := "362123861683071589")
 *Theorem: a float literal that can be written spells itself.* For every
 float literal $`l` that can be written,
 $`\mathrm{spells}(\mathrm{print}(l), \mathsf{float}~l)`: its spelling,
@@ -128,7 +128,7 @@ first digit starts it; a negative decimal starts with `-`; and hexadecimal
 bits start with `0`, then `x`.
 :::
 
-:::readable Fir.Text.Tok.spells (pin := Fir.Text.Tok.spell) (pin := Fir.Text.Tok.Writable) (fingerprint := "17156829002827149423")
+:::readable Fir.Text.Tok.spells (pin := Fir.Text.Tok.spell) (pin := Fir.Text.Tok.Writable) (fingerprint := "10554810705382899150")
 *Theorem: every token that can be written spells itself.* For every token
 $`t` that
 {ref "The-fir-specification--Text-format--Lexing-printed-text"}[can be written]:

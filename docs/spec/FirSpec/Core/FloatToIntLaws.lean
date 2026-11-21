@@ -14,17 +14,17 @@ pins their fingerprint; the build fails when the Lean changes under it.
 
 #doc (Manual) "Integer conversion obligations: readable blocks" =>
 
-:::moduleDocs (fingerprint := "4429898547962608621")
+:::moduleDocs (fingerprint := "7232624898964972572")
 :::
 
-:::readable Fir.Core.floatToIntOp (pin := Fir.Core.Op) (fingerprint := "13948364320953674186")
+:::readable Fir.Core.floatToIntOp (pin := Fir.Core.Op) (fingerprint := "12338697981205889699")
 *Definition: the conversion of a signedness.* $`\mathrm{conv}_{e,m,N}(\mathit{true})`
 is $`\mathsf{fptosi}_{e,m,N}`, and $`\mathrm{conv}_{e,m,N}(\mathit{false})`
 is $`\mathsf{fptoui}_{e,m,N}`, so that the theorems below are stated once
 for both.
 :::
 
-:::readable Fir.Core.unaryStrict_floatToInt (pin := Fir.Core.UnaryStrict) (pin := Fir.Core.floatToInt) (fingerprint := "14271876880429564850")
+:::readable Fir.Core.unaryStrict_floatToInt (pin := Fir.Core.UnaryStrict) (pin := Fir.Core.floatToInt) (fingerprint := "4468139951346731167")
 *Theorem: the rule is strict.* For every format, width and signedness,
 the rule of the conversion gives $`\mathsf{poison}` on
 $`\mathsf{poison}`, as the
@@ -32,7 +32,7 @@ $`\mathsf{poison}`, as the
 do.
 :::
 
-:::readable Fir.Core.floatToInt_propagatesPoison Fir.Core.floatToInt_returnsOnDefined Fir.Core.floatToInt_total Fir.Core.floatToInt_monotone (pin := Fir.PropagatesPoison) (pin := Fir.PoisonOut) (pin := Fir.UBByOwnRules) (pin := Fir.ReturnsOnDefined) (pin := Fir.OpTotal) (pin := Fir.OpMonotone) (pin := Fir.Core.Op.denote?) (fingerprint := "7992764810794482557")
+:::readable Fir.Core.floatToInt_propagatesPoison Fir.Core.floatToInt_returnsOnDefined Fir.Core.floatToInt_total Fir.Core.floatToInt_monotone (pin := Fir.PropagatesPoison) (pin := Fir.PoisonOut) (pin := Fir.UBByOwnRules) (pin := Fir.ReturnsOnDefined) (pin := Fir.OpTotal) (pin := Fir.OpMonotone) (pin := Fir.Core.Op.denote?) (fingerprint := "12548812550789945306")
 *Theorem: $`\mathsf{fptosi}` and $`\mathsf{fptoui}` are lawful, from every
 format to every width.* Under fir's execution rules, each meets every
 obligation of an op that

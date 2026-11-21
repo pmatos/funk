@@ -14,10 +14,10 @@ when the Lean changes under it.
 
 #doc (Manual) "Core rules: readable blocks" =>
 
-:::moduleDocs (fingerprint := "3096912535685055126")
+:::moduleDocs (fingerprint := "14153341544230733349")
 :::
 
-:::readable Fir.Core.Ty.Valid Fir.Core.Ty.memory (pin := Fir.Core.maxWidth) (pin := Fir.Core.floatWidth) (fingerprint := "744407091263889301")
+:::readable Fir.Core.Ty.Valid Fir.Core.Ty.memory (pin := Fir.Core.maxWidth) (pin := Fir.Core.floatWidth) (fingerprint := "1308968798942516744")
 *Definition: valid core types.* A
 {ref "The-fir-specification--Abstract-syntax--Core-types"}[core type] is
 valid when it is an integer type $`\mathsf{i}N` whose width $`N` is at
@@ -50,7 +50,7 @@ in every module, and $`\mathsf{ptr}\langle N \rangle` with $`N \ge 1` is in
 a module whose layout declares memory $`N` (ADR-2026-11-12-1821).
 :::
 
-:::readable Fir.Core.Op.symbolRefs (fingerprint := "17705138793972318009")
+:::readable Fir.Core.Op.symbolRefs (fingerprint := "206206975138930432")
 *Definition: the symbols a core op refers to.* $`\mathsf{call}~f : t^* \to r^*`
 refers to the symbol $`f` of its callee: its list of symbols is the
 one-element sequence $`(f)`. No other core op refers to a function:
@@ -63,7 +63,7 @@ $$`\mathrm{refs}(\mathit{op}) = \epsilon \ \text{ for every other op}`
 The general rules check that $`f` names a function of the module.
 :::
 
-:::readable Fir.Core.Op.attrTypes (fingerprint := "16621200450031835539")
+:::readable Fir.Core.Op.attrTypes (fingerprint := "13465611089469671914")
 *Definition: the types a core op carries.* $`\mathsf{alloca}_N~k~t~c~a`
 carries the type $`t` that it allocates values of in its attributes, when
 $`t` is valid:
@@ -79,7 +79,7 @@ core op carries a type of its own: $`\mathsf{call}`'s are its callee's, and
 $`\mathsf{ret}`'s the function's results.
 :::
 
-:::readable Fir.Core.Op.unitWidths (fingerprint := "7024771246569661941")
+:::readable Fir.Core.Op.unitWidths (fingerprint := "5340763466587710267")
 *Definition: the unit widths a core op asks.* $`\mathsf{memset}_N~o~V~W`
 writes values of $`\mathsf{i}V` in the units of memory $`N`, so it asks
 that they be $`V` bits wide (the human's ruling on #251: a fill writes
@@ -93,7 +93,7 @@ $`\mathsf{memset}` of an $`\mathsf{i16}` into memory 0, of bytes, is not
 valid.
 :::
 
-:::readable Fir.Core.pow2AtLeast Fir.Core.pow2AtLeast.go Fir.Core.pow2AtLeast.two_mul_le Fir.Core.pow2AtLeast.go_spec Fir.Core.pow2AtLeast_eq (fingerprint := "14321921282438045218")
+:::readable Fir.Core.pow2AtLeast Fir.Core.pow2AtLeast.go Fir.Core.pow2AtLeast.two_mul_le Fir.Core.pow2AtLeast.go_spec Fir.Core.pow2AtLeast_eq (fingerprint := "1491655453649461933")
 *Definition: the least power of two at least a number.* $`\mathrm{pow2}(n)`
 doubles $`1` while it is below $`n`, at most $`n` times. It is the least
 power of two that is at least $`n`, Lean's `Nat.nextPowerOfTwo`: each
@@ -102,7 +102,7 @@ and $`n` doublings reach $`n`. It is written as a loop of at most $`n`
 steps, by structural recursion, so the rules that use it rest on no axiom.
 :::
 
-:::readable Fir.Core.Ty.fieldShape (fingerprint := "332229719061644368")
+:::readable Fir.Core.Ty.fieldShape (fingerprint := "11480272077969549060")
 *Definition: a core field's units and alignment.* In the memory $`n` of a
 module whose memories have the entries $`\ell`, with $`e = \ell(n)`, a field
 of a core type takes (ADR-2026-11-16-1546):
@@ -118,7 +118,7 @@ So every core type may be a field (#236). These are the units and the
 alignment that $`\mathsf{alloca}` gives one value of a field's type.
 :::
 
-:::readable Fir.Core.FBin.mode Fir.Core.FUnary.mode Fir.LayoutRef.admits Fir.Core.Op.Valid (pin := Fir.isPowerOfTwo) (pin := Fir.MemLayout.limit) (pin := Fir.MemLayout.ValidAlign) (fingerprint := "8033722880951947079")
+:::readable Fir.Core.FBin.mode Fir.Core.FUnary.mode Fir.LayoutRef.admits Fir.Core.Op.Valid (pin := Fir.isPowerOfTwo) (pin := Fir.MemLayout.limit) (pin := Fir.MemLayout.ValidAlign) (fingerprint := "14596572156755049592")
 *Definition: the core rules of an op.* Beyond its signature, which the
 {ref "The-fir-specification--Validation--The-general-rules"}[general rules]
 check, a core op obeys these rules in its op context $`C`:

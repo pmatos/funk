@@ -17,7 +17,7 @@ when the Lean changes under it.
 :::moduleDocs (fingerprint := "10798246534216229047")
 :::
 
-:::readable Fir.Core.Strict Fir.Core.Strict.isRefinedBy (pin := Fir.PoisonOr.IsRefinedBy) (fingerprint := "7310851394041706")
+:::readable Fir.Core.Strict Fir.Core.Strict.isRefinedBy (pin := Fir.PoisonOr.IsRefinedBy) (fingerprint := "9618792975393568731")
 *Definition: a strict rule.* A rule $`g` that maps two values of
 $`\mathsf{i}N` to one is _strict_ when a poison operand gives poison:
 
@@ -38,7 +38,7 @@ theorem gives most of their
 proofs, here and in the next sections.
 :::
 
-:::readable Fir.Core.strict_addValues Fir.Core.strict_subValues Fir.Core.strict_mulValues (pin := Fir.Core.addValues) (pin := Fir.Core.subValues) (pin := Fir.Core.mulValues) (fingerprint := "14337328564560880003")
+:::readable Fir.Core.strict_addValues Fir.Core.strict_subValues Fir.Core.strict_mulValues (pin := Fir.Core.addValues) (pin := Fir.Core.subValues) (pin := Fir.Core.mulValues) (fingerprint := "10811543601888416978")
 *Theorem: the sum, the difference and the product are strict.* At every
 width, the rules of $`\mathsf{add}`, $`\mathsf{sub}` and
 $`\mathsf{mul}` without flags are strict: each gives the result modulo
@@ -47,7 +47,7 @@ $`2^N` of two values, and poison when either operand is poison
 {ref "The-fir-specification--Execution--Wrap-flag-rules"}[wrap flag rules]).
 :::
 
-:::readable Fir.Core.Strict.wrapValues Fir.Core.strict_addWith Fir.Core.strict_subWith Fir.Core.strict_mulWith (pin := Fir.Core.wrapValues) (pin := Fir.Core.addWith) (pin := Fir.Core.subWith) (pin := Fir.Core.mulWith) (fingerprint := "2401415297538047190")
+:::readable Fir.Core.Strict.wrapValues Fir.Core.strict_addWith Fir.Core.strict_subWith Fir.Core.strict_mulWith (pin := Fir.Core.wrapValues) (pin := Fir.Core.addWith) (pin := Fir.Core.subWith) (pin := Fir.Core.mulWith) (fingerprint := "16519992947985426385")
 *Theorem: the flags keep a rule strict.* Let $`g` be a strict rule,
 $`f` any
 {ref "The-fir-specification--Abstract-syntax--Core-ops"}[wrap flags], and
@@ -64,7 +64,7 @@ read as unsigned and as signed. So $`\mathsf{add}`, $`\mathsf{sub}`
 and $`\mathsf{mul}` with any flags have strict rules.
 :::
 
-:::readable Fir.Core.add_propagatesPoison Fir.Core.add_returnsOnDefined Fir.Core.add_total Fir.Core.add_monotone (pin := Fir.PropagatesPoison) (pin := Fir.PoisonOut) (pin := Fir.UBByOwnRules) (pin := Fir.ReturnsOnDefined) (pin := Fir.OpTotal) (pin := Fir.OpMonotone) (pin := Fir.Core.Op.denote?) (pin := Fir.Core.addWith) (fingerprint := "15987871530105342387")
+:::readable Fir.Core.add_propagatesPoison Fir.Core.add_returnsOnDefined Fir.Core.add_total Fir.Core.add_monotone (pin := Fir.PropagatesPoison) (pin := Fir.PoisonOut) (pin := Fir.UBByOwnRules) (pin := Fir.ReturnsOnDefined) (pin := Fir.OpTotal) (pin := Fir.OpMonotone) (pin := Fir.Core.Op.denote?) (pin := Fir.Core.addWith) (fingerprint := "2046071893308521656")
 *Theorem: $`\mathsf{add}` is lawful, with any flags.* For every width
 $`w` and flags $`f`, under fir's execution rules,
 $`\mathsf{add}_w~f` meets every obligation of an op that
@@ -79,7 +79,7 @@ $`\mathsf{add}_w~f` meets every obligation of an op that
   operands, and that result keeps refinement, since its rule is strict.
 :::
 
-:::readable Fir.Core.sub_propagatesPoison Fir.Core.sub_returnsOnDefined Fir.Core.sub_total Fir.Core.sub_monotone (pin := Fir.PropagatesPoison) (pin := Fir.PoisonOut) (pin := Fir.UBByOwnRules) (pin := Fir.ReturnsOnDefined) (pin := Fir.OpTotal) (pin := Fir.OpMonotone) (pin := Fir.Core.Op.denote?) (pin := Fir.Core.subWith) (fingerprint := "10927144110086567688")
+:::readable Fir.Core.sub_propagatesPoison Fir.Core.sub_returnsOnDefined Fir.Core.sub_total Fir.Core.sub_monotone (pin := Fir.PropagatesPoison) (pin := Fir.PoisonOut) (pin := Fir.UBByOwnRules) (pin := Fir.ReturnsOnDefined) (pin := Fir.OpTotal) (pin := Fir.OpMonotone) (pin := Fir.Core.Op.denote?) (pin := Fir.Core.subWith) (fingerprint := "6704492886827472987")
 *Theorem: $`\mathsf{sub}` is lawful, with any flags.* For every width
 $`w` and flags $`f`, under fir's execution rules,
 $`\mathsf{sub}_w~f` propagates poison, returns a result on defined
@@ -88,7 +88,7 @@ $`\mathsf{add}`: its rule is strict, never UB, gives a result on
 $`0` and $`0`, and gives exactly one result on every two operands.
 :::
 
-:::readable Fir.Core.mul_propagatesPoison Fir.Core.mul_returnsOnDefined Fir.Core.mul_total Fir.Core.mul_monotone (pin := Fir.PropagatesPoison) (pin := Fir.PoisonOut) (pin := Fir.UBByOwnRules) (pin := Fir.ReturnsOnDefined) (pin := Fir.OpTotal) (pin := Fir.OpMonotone) (pin := Fir.Core.Op.denote?) (pin := Fir.Core.mulWith) (fingerprint := "13603690591657442547")
+:::readable Fir.Core.mul_propagatesPoison Fir.Core.mul_returnsOnDefined Fir.Core.mul_total Fir.Core.mul_monotone (pin := Fir.PropagatesPoison) (pin := Fir.PoisonOut) (pin := Fir.UBByOwnRules) (pin := Fir.ReturnsOnDefined) (pin := Fir.OpTotal) (pin := Fir.OpMonotone) (pin := Fir.Core.Op.denote?) (pin := Fir.Core.mulWith) (fingerprint := "428660570561597248")
 *Theorem: $`\mathsf{mul}` is lawful, with any flags.* For every width
 $`w` and flags $`f`, under fir's execution rules,
 $`\mathsf{mul}_w~f` propagates poison, returns a result on defined

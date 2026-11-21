@@ -35,8 +35,10 @@ A readable block names the declarations it explains, pins with
 The build fails when a declaration's statement, body or constructors
 change, or a pinned definition's body, printing the new signatures and
 fingerprint. A body includes the helpers that Lean generates for it, such
-as the body of a recursive definition and its pattern matchers: read the
-block again against the Lean, correct it, then pin the new fingerprint. It
+as the body of a recursive definition and its pattern matchers, and a
+statement includes its matchers. A helper counts by what it says, not by
+its name. Read the block again against the Lean, correct it, then pin the
+new fingerprint. It
 also fails when a declaration of the module has no block, and when a
 ```` ```grammar ```` box misses a constructor or shows one twice. To move a section, write its
 document, import it in `FirSpec/ReadableDocs.lean`, pin each block with the

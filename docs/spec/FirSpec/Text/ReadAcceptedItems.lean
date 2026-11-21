@@ -18,7 +18,7 @@ when the Lean changes under it.
 :::moduleDocs (fingerprint := "1031541180037873395")
 :::
 
-:::readable Fir.Text.readDialectName_writable Fir.Text.readDialects_writable (pin := Fir.Text.readDialectName) (pin := Fir.Text.readDialects) (fingerprint := "12397764985525691727")
+:::readable Fir.Text.readDialectName_writable Fir.Text.readDialects_writable (pin := Fir.Text.readDialectName) (pin := Fir.Text.readDialects) (fingerprint := "1862823378121394692")
 *Theorems: the names of a dialect set as read are words.* For every list
 of tokens that can be written, the reader of a dialect's name gives a
 word, since it reads a word token, and the reader of a dialect set gives
@@ -27,13 +27,13 @@ start of a module or of a body of items. Each leaves tokens that can be
 written.
 :::
 
-:::readable Fir.Text.readLayout_writable (pin := Fir.Text.readLayout) (fingerprint := "390839528149057092")
+:::readable Fir.Text.readLayout_writable (pin := Fir.Text.readLayout) (fingerprint := "12168887123004102915")
 *Theorem: the entries of a layout as read are types.* For every list of
 tokens that can be written, the reader of a data layout gives entries
 written as types, and leaves tokens that can be written.
 :::
 
-:::readable Fir.Text.readItems_writable (pin := Fir.Text.readItems) (pin := Fir.Text.readItem) (pin := Fir.Text.ReadsWritable) (pin := Fir.Text.SItem.Writable) (pin := Fir.Text.SBody.Writable) (pin := Fir.Text.decodeItem) (fingerprint := "13336071039710394503")
+:::readable Fir.Text.readItems_writable (pin := Fir.Text.readItems) (pin := Fir.Text.readItem) (pin := Fir.Text.ReadsWritable) (pin := Fir.Text.SItem.Writable) (pin := Fir.Text.SBody.Writable) (pin := Fir.Text.decodeItem) (fingerprint := "5635360953234195224")
 *Theorem: items as read can be written.* For every list of tokens
 $`\mathit{ts}`, at the top of the module or inside the body of an item,
 the {ref "The-fir-specification--Text-format--Reading-the-grammar"}[reader of items]

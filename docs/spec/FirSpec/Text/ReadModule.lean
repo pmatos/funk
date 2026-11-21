@@ -14,10 +14,10 @@ when the Lean changes under it.
 
 #doc (Manual) "The module read back: readable blocks" =>
 
-:::moduleDocs (fingerprint := "14901324028528581880")
+:::moduleDocs (fingerprint := "15571877571744741621")
 :::
 
-:::readable Fir.readDialectName_reads Fir.readDialects_reads (pin := Fir.Text.readDialectName) (pin := Fir.Text.readDialects) (pin := Fir.dialectsTokens) (fingerprint := "4869094606769137639")
+:::readable Fir.readDialectName_reads Fir.readDialects_reads (pin := Fir.Text.readDialectName) (pin := Fir.Text.readDialects) (pin := Fir.dialectsTokens) (fingerprint := "7313927300558078576")
 *Theorems: a dialect set reads back.* The reader of a dialect's name reads
 the token $`\mathsf{word}~x` as $`x`, before any token. The reader of a
 dialect set reads the tokens of a set as the set, before any token but a
@@ -27,7 +27,7 @@ reads none, since what follows is not `dialects`; a set of names is
 reader of a list reads until no comma follows.
 :::
 
-:::readable Fir.readLayout_reads (pin := Fir.Text.readLayout) (pin := Fir.layoutTokens) (fingerprint := "17892437619492814220")
+:::readable Fir.readLayout_reads (pin := Fir.Text.readLayout) (pin := Fir.layoutTokens) (fingerprint := "16123847854739485967")
 *Theorem: a data layout reads back.* The reader of a data layout reads the
 tokens of a layout as what its entries write, each at a position that
 erases to zero, before any token but a comma, `(` and the word `layout`:
@@ -38,7 +38,7 @@ until no comma follows. An entry writes a type, so the reader of types
 reads it back.
 :::
 
-:::readable Fir.Item.kind Fir.Item.tokens_eq Fir.head_items Fir.isDialectWord_not_reserved Fir.Item.TypesWritable Fir.Item.TypesWritableList Fir.Item.typesWritableList_iff Fir.itemsEnd (pin := Fir.Item.tokens) (pin := Fir.Func.types) (pin := Fir.DialectItem.types) (fingerprint := "13743465840238432287")
+:::readable Fir.Item.kind Fir.Item.tokens_eq Fir.head_items Fir.isDialectWord_not_reserved Fir.Item.TypesWritable Fir.Item.TypesWritableList Fir.Item.typesWritableList_iff Fir.itemsEnd (pin := Fir.Item.tokens) (pin := Fir.Func.types) (pin := Fir.DialectItem.types) (fingerprint := "16243675875508527955")
 *Definitions: an item's kind, and the types it writes.* The kind of an
 item is `func` for a function, `module` for a nested module, `aggregate`
 for an aggregate's layout, `global` for a global, and its own kind for an item of a dialect's
@@ -60,7 +60,7 @@ kind is never read as a dialect set, a data layout or the location table. A list
 module, and at `}` in the body of an item.
 :::
 
-:::readable Fir.Item.reads Fir.Item.readsList (pin := Fir.Text.readItems) (pin := Fir.Text.readItem) (pin := Fir.Item.tree) (fingerprint := "15429099911852121476")
+:::readable Fir.Item.reads Fir.Item.readsList (pin := Fir.Text.readItems) (pin := Fir.Text.readItem) (pin := Fir.Item.tree) (fingerprint := "3100001507553199473")
 *Theorems: an item, and a list of items, read back.* For every dialect
 with a {ref "The-fir-specification--Text-format--Grammar"}[text format]:
 
@@ -84,7 +84,7 @@ a word, read by the reader of a dialect set and the reader of items; then
 induction on the items.
 :::
 
-:::readable Fir.readModule_tokens (pin := Fir.Text.readModule) (pin := Fir.Module.tokens) (pin := Fir.Item.TypesWritable) (pin := Fir.LocTable.InLimits) (fingerprint := "2509072922504184329")
+:::readable Fir.readModule_tokens (pin := Fir.Text.readModule) (pin := Fir.Module.tokens) (pin := Fir.Item.TypesWritable) (pin := Fir.LocTable.InLimits) (fingerprint := "2719801589360498904")
 *Theorem: the grammar step reads a module's tokens as its tree.* For every
 dialect with a text format and every
 module $`m` such that:
@@ -113,7 +113,7 @@ right kind, and the two conditions cover them. Being within limits also
 bounds the location references, which no reader checks.
 :::
 
-:::readable Fir.Item.WellFormed.typesWritable Fir.Item.WellFormed.typesWritableList Fir.Module.WellFormed.readModule_tokens (pin := Fir.Module.WellFormed) (pin := Fir.Func.WellFormed) (pin := Fir.Item.WellFormed) (fingerprint := "12288915226066157144")
+:::readable Fir.Item.WellFormed.typesWritable Fir.Item.WellFormed.typesWritableList Fir.Module.WellFormed.readModule_tokens (pin := Fir.Module.WellFormed) (pin := Fir.Func.WellFormed) (pin := Fir.Item.WellFormed) (fingerprint := "4594339343672830067")
 *Theorem: the grammar step for a well-formed module.* For every dialect
 with signatures and a text format, every
 {ref "The-fir-specification--Text-format--Round-trips"}[well-formed]

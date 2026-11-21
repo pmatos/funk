@@ -14,10 +14,10 @@ when the Lean changes under it.
 
 #doc (Manual) "Globals in text: readable blocks" =>
 
-:::moduleDocs (fingerprint := "5712898593547375858")
+:::moduleDocs (fingerprint := "9343948432328461853")
 :::
 
-:::readable Fir.InitPiece.attr Fir.Global.attrs Fir.Global.item (fingerprint := "5081660641289923576")
+:::readable Fir.InitPiece.attr Fir.Global.attrs Fir.Global.item (fingerprint := "3835029162633092479")
 *Definition: how a global is written.* A global $`G` is written as an item
 of the core's kind `global` with the generic production of an item, with no
 parameters, no results and an empty body (ADR-2026-11-19-0124). Its
@@ -35,7 +35,7 @@ ruled on 2026-11-20 (#237 Q4). The core's text writes them too, as
 that generic code shares with the core.
 :::
 
-:::readable Fir.InitPiece.decodeUnit Fir.InitPiece.decode (fingerprint := "8038383235798892266")
+:::readable Fir.InitPiece.decodeUnit Fir.InitPiece.decode (fingerprint := "14251321511947220698")
 *Definition: reading a piece.* A unit of `units(...)` is any integer that
 is not negative. `zeros(n)` reads when $`n` is within the limit
 $`2^{64} - 1`; `addr(@s)` reads as the address of $`s` plus 0, and
@@ -43,7 +43,7 @@ $`2^{64} - 1`; `addr(@s)` reads as the address of $`s` plus 0, and
 attribute is no piece.
 :::
 
-:::readable Fir.GlobalFault Fir.Global.noMemory Fir.Global.decodeMem Fir.Global.decodeFlag Fir.Global.decodePieces Fir.Global.decodeAttrs (fingerprint := "16424761833313874252")
+:::readable Fir.GlobalFault Fir.Global.noMemory Fir.Global.decodeMem Fir.Global.decodeFlag Fir.Global.decodePieces Fir.Global.decodeAttrs (fingerprint := "5505819918022884100")
 *Definition: reading a global.* Reading a global's attributes either gives
 the global or stops at a fault: the index of the attribute that does not
 read, or none when there are too few, and why. A first attribute

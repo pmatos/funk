@@ -17,7 +17,7 @@ fails when the Lean changes under it.
 :::moduleDocs (fingerprint := "4607958562880319941")
 :::
 
-:::readable Fir.load_apply Fir.load_keeps (pin := Fir.instMonadMemoryStateT) (pin := Fir.Memory.Memories.load) (fingerprint := "14202662533026696911")
+:::readable Fir.load_apply Fir.load_keeps (pin := Fir.instMonadMemoryStateT) (pin := Fir.Memory.Memories.load) (fingerprint := "18420834841701571019")
 *Theorems: how a load ends.* In the
 {ref "The-fir-specification--Memory--The-state-layer"}[state layer] over
 the set monad, the
@@ -44,7 +44,7 @@ that it writes no unit of $`y`, and neither allocates nor frees in $`y`:
 a path that ends keeps the memories.
 :::
 
-:::readable Fir.load_readsNot (pin := Fir.ReadsNot) (pin := Fir.ReadsNot.Match) (fingerprint := "15605190028077751865")
+:::readable Fir.load_readsNot (pin := Fir.ReadsNot) (pin := Fir.ReadsNot.Match) (fingerprint := "14918265554758701461")
 *Theorem: a load reads only its own memory.* For every memory $`y \ne x`,
 a load of $`x` meets the
 {ref "The-fir-specification--Memory--Memory-obligations"}[obligation]

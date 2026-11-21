@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Copy and move rules: readable blocks" =>
 
-:::moduleDocs (fingerprint := "12405156472491787047")
+:::moduleDocs (fingerprint := "17304903872887629984")
 :::
 
 :::readable Fir.Core.partlyOverlap (fingerprint := "9681611242270941796")
@@ -31,7 +31,7 @@ partly overlap depends only on the pointers and $`n`, not on the
 memories.
 :::
 
-:::readable Fir.Core.poisonCopyPointer Fir.Core.overlapCopy Fir.Core.copyLenRule Fir.Core.memCopyRule (pin := Fir.copyUnits) (pin := Fir.MonadMemory) (pin := Fir.MonadUB) (pin := Fir.MonadChoice) (pin := Fir.Core.CopyKind) (fingerprint := "199355975012138981")
+:::readable Fir.Core.poisonCopyPointer Fir.Core.overlapCopy Fir.Core.copyLenRule Fir.Core.memCopyRule (pin := Fir.copyUnits) (pin := Fir.MonadMemory) (pin := Fir.MonadUB) (pin := Fir.MonadChoice) (pin := Fir.Core.CopyKind) (fingerprint := "14185726535735405010")
 *Definition: the rule of $`\mathsf{memcpy}` and $`\mathsf{memmove}`.*
 Let a run's memories have the layout entries $`\ell`, and let the run name
 the core's memory $`x` as $`\rho(x)`. For $`\mathsf{memcpy}_N~o~W` or

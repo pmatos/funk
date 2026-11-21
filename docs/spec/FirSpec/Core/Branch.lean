@@ -14,7 +14,7 @@ changes under it.
 
 #doc (Manual) "Branch rules: readable blocks" =>
 
-:::moduleDocs (fingerprint := "14659350861829010890")
+:::moduleDocs (fingerprint := "11383851215521137291")
 :::
 
 :::readable Fir.Core.brExit (pin := Fir.Exit) (fingerprint := "1268996599905063284")
@@ -33,7 +33,7 @@ binds them to the arguments of the block that the successor names, poison
 included.
 :::
 
-:::readable Fir.Core.condBrExit (pin := Fir.Exit) (pin := Fir.Ev) (fingerprint := "4488598084046858016")
+:::readable Fir.Core.condBrExit (pin := Fir.Exit) (pin := Fir.Ev) (fingerprint := "17811428833441071635")
 *Definition: the rule of $`\mathsf{cond\_br}`.* $`\mathsf{cond\_br}`
 (`condBr` in the Lean) takes an $`\mathsf{i1}` condition $`c`. It goes to
 its first successor when $`c` is 1 and to its second when $`c` is 0, and a
@@ -52,7 +52,7 @@ ends in one of these ways and never chooses, so this definition is a
 function to its ending.
 :::
 
-:::readable Fir.Core.exitOfEv (pin := Fir.Ev) (pin := Fir.MonadUB) (pin := Fir.Exit) (fingerprint := "15326280306294019639")
+:::readable Fir.Core.exitOfEv (pin := Fir.Ev) (pin := Fir.MonadUB) (pin := Fir.Exit) (fingerprint := "15122881674189837785")
 *Definition: a terminator's rule that may end with UB, for every way of
 computing.* Let $`e` be a way a terminator ends: going to an exit $`x`, or
 immediate UB with a reason $`r`. For every way of computing with the

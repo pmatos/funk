@@ -15,10 +15,10 @@ when the Lean changes under it.
 
 #doc (Manual) "The core dialect in text: readable blocks" =>
 
-:::moduleDocs (fingerprint := "17964418049888084575")
+:::moduleDocs (fingerprint := "7791885013769806885")
 :::
 
-:::readable Fir.Core.Pred.name Fir.Core.Pred.all (pin := Fir.Core.Pred) (fingerprint := "1788544629891754135")
+:::readable Fir.Core.Pred.name Fir.Core.Pred.all (pin := Fir.Core.Pred) (fingerprint := "7742647283086207839")
 *Definition: the names of the predicates.* Each of the ten
 {ref "The-fir-specification--Abstract-syntax--Core-ops"}[predicates] of
 $`\mathsf{icmp}` is written as its name, as LLVM writes it:
@@ -27,7 +27,7 @@ $`\mathrm{name}(p)` is `eq`, `ne`, `slt`, `sle`, `sgt`, `sge`, `ult`,
 parser looks a name up in that list to read a predicate back.
 :::
 
-:::readable Fir.Core.FPred.name Fir.Core.FPred.all (pin := Fir.Core.FPred) (fingerprint := "12616161590799648022")
+:::readable Fir.Core.FPred.name Fir.Core.FPred.all (pin := Fir.Core.FPred) (fingerprint := "16746009043379703816")
 *Definition: the names of the float predicates.* Each of the fourteen
 {ref "The-fir-specification--Abstract-syntax--Core-ops"}[float predicates]
 of $`\mathsf{fcmp}` is written as its name, as LLVM writes it: `oeq`,
@@ -36,7 +36,7 @@ of $`\mathsf{fcmp}` is written as its name, as LLVM writes it: `oeq`,
 and the parser looks a name up in that list to read a predicate back.
 :::
 
-:::readable Fir.Core.Op.name (pin := Fir.Core.Op) (fingerprint := "9557651689602219263")
+:::readable Fir.Core.Op.name (pin := Fir.Core.Op) (fingerprint := "1157933907397124324")
 *Definition: the name of a core op instance.* $`\mathrm{opname}(o)` is
 the name of the op of $`o`, whatever its widths and attributes:
 $`\mathrm{opname}(\mathsf{add}_{32}~\mathsf{nsw})` is `add`. Each of the
@@ -59,7 +59,7 @@ which the Lean spells `memCopy`, is written `memcpy` for a copy and
 written `memset`.
 :::
 
-:::readable Fir.Core.WrapFlags.attrs Fir.Core.constAttr Fir.Core.Op.attrs (pin := Fir.Core.Op) (pin := Fir.Core.WrapFlags) (pin := Fir.Core.floatLit) (fingerprint := "18395240931537171942")
+:::readable Fir.Core.WrapFlags.attrs Fir.Core.constAttr Fir.Core.Op.attrs (pin := Fir.Core.Op) (pin := Fir.Core.WrapFlags) (pin := Fir.Core.floatLit) (fingerprint := "3395318994916244892")
 *Definition: the attributes of a core op instance.* The attributes
 $`\mathrm{opattrs}(o)` of a core op instance $`o` are:
 
@@ -106,7 +106,7 @@ An op's widths are not among its attributes: they are the widths of the
 types written where its operands and results are defined.
 :::
 
-:::readable Fir.Core.decodeWrap Fir.Core.decodeExact Fir.Core.binWidth Fir.Core.bare Fir.Core.decodeCast Fir.Core.decodePtrAdd Fir.Core.plainBinOps Fir.Core.decodeFcmpWith Fir.Core.decodeFcmp Fir.Core.Op.decode (pin := Fir.Core.Op) (pin := Fir.Text.decodeOps) (pin := Fir.Core.decodeFloatLit) (fingerprint := "2790064833627969474")
+:::readable Fir.Core.decodeWrap Fir.Core.decodeExact Fir.Core.binWidth Fir.Core.bare Fir.Core.decodeCast Fir.Core.decodePtrAdd Fir.Core.plainBinOps Fir.Core.decodeFcmpWith Fir.Core.decodeFcmp Fir.Core.Op.decode (pin := Fir.Core.Op) (pin := Fir.Text.decodeOps) (pin := Fir.Core.decodeFloatLit) (fingerprint := "1171116730746057334")
 *Definition: reading a core op instance back.*
 $`\mathrm{decodeop}(n, a^*, t^*, r^*)` is the core op instance with the
 name $`n` and the attributes $`a^*`, whose operands have the types $`t^*`

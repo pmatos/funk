@@ -14,10 +14,10 @@ fails when the Lean changes under it.
 
 #doc (Manual) "More fuel, in the traced layer: readable blocks" =>
 
-:::moduleDocs (fingerprint := "6360229458711917981")
+:::moduleDocs (fingerprint := "5599654426933090476")
 :::
 
-:::readable Fir.TraceEnd.Done Fir.TraceEnd.addLeft Fir.TraceEnd.Done.notStuck Fir.TraceEnd.Done.of_after Fir.TraceEnd.Done.addLeft Fir.TraceEnd.addLeft_zero Fir.TraceEnd.addLeft_after Fir.TraceEnd.addLeft_exit Fir.TraceEnd.Done.of_exit (fingerprint := "7950786738979011767")
+:::readable Fir.TraceEnd.Done Fir.TraceEnd.addLeft Fir.TraceEnd.Done.notStuck Fir.TraceEnd.Done.of_after Fir.TraceEnd.Done.addLeft Fir.TraceEnd.addLeft_zero Fir.TraceEnd.addLeft_after Fir.TraceEnd.addLeft_exit Fir.TraceEnd.Done.of_exit (fingerprint := "5576529788052026534")
 *Definitions: done, and more steps left.* A way of ending of a traced run
 of ops is _done_ when it is a return or UB; running out of fuel and being
 stuck are not. $`e + j` is $`e` with $`j` more steps left when it is a

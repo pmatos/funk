@@ -14,10 +14,10 @@ when the Lean changes under it.
 
 #doc (Manual) "Refinement: readable blocks" =>
 
-:::moduleDocs (fingerprint := "8434147763687369764")
+:::moduleDocs (fingerprint := "1593333703185212246")
 :::
 
-:::readable Fir.Outcome.IsRefinedBy (fingerprint := "7370314379264705665")
+:::readable Fir.Outcome.IsRefinedBy (fingerprint := "16253900873914144627")
 *Definition: one outcome allows another.* A source
 {ref "The-fir-specification--Execution--Outcomes-and-behaviours"}[outcome]
 $`s` allows a target outcome $`t`, written $`s \sqsubseteq t`, in exactly

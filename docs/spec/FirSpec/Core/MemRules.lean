@@ -14,10 +14,10 @@ when the Lean changes under it.
 
 #doc (Manual) "The core's rules with memory: readable blocks" =>
 
-:::moduleDocs (fingerprint := "13231531829217735796")
+:::moduleDocs (fingerprint := "2774716517731707122")
 :::
 
-:::readable Fir.Core.freezeValue_map Fir.Core.ruleOfEv_map Fir.Core.exitOfEv_map (pin := Fir.MonadMorphism.KeepsChoiceUB) (pin := Fir.Core.freezeValue) (pin := Fir.Core.ruleOfEv) (pin := Fir.Core.exitOfEv) (fingerprint := "2405690779588688594")
+:::readable Fir.Core.freezeValue_map Fir.Core.ruleOfEv_map Fir.Core.exitOfEv_map (pin := Fir.MonadMorphism.KeepsChoiceUB) (pin := Fir.Core.freezeValue) (pin := Fir.Core.ruleOfEv) (pin := Fir.Core.exitOfEv) (fingerprint := "15500528643255840448")
 *Theorem: the rules of `freeze`, the divisions and the terminators mean the
 same in both monads.* For every monad morphism $`\varphi` that
 {ref "The-fir-specification--Execution--Monad-morphisms"}[keeps choice and UB],
@@ -52,7 +52,7 @@ keeps UB; and an op with no rule, as $`\mathsf{call}`, maps by the
 hypothesis on $`z_m` and $`z_n`.
 :::
 
-:::readable Fir.Core.Op.memDenote? Fir.Core.Op.memExit? Fir.Core.memDenoteIn (pin := Fir.Core.denoteWith) (pin := Fir.MonadMemory) (pin := Fir.Core.allocaRule) (fingerprint := "1251217208382238113")
+:::readable Fir.Core.Op.memDenote? Fir.Core.Op.memExit? Fir.Core.memDenoteIn (pin := Fir.Core.denoteWith) (pin := Fir.MonadMemory) (pin := Fir.Core.allocaRule) (fingerprint := "1218300276586282714")
 *Definition: the core's rules with memory.* Let $`m` be a monad with
 choice, UB and the
 {ref "The-fir-specification--Memory--The-memory-effect"}[memory effect] on
@@ -97,7 +97,7 @@ with no rule, gives each op its rule with memory, and $`z(p)` to an op
 $`p` that has none.
 :::
 
-:::readable Fir.Core.memCopyRule_map Fir.Core.memDenoteIn_mapsDenote (pin := Fir.Core.memCopyRule) (fingerprint := "4180995393656693144")
+:::readable Fir.Core.memCopyRule_map Fir.Core.memDenoteIn_mapsDenote (pin := Fir.Core.memCopyRule) (fingerprint := "710039391943419071")
 *Theorem: the core's rules with memory mean the same in both monads.* For
 monads $`m` and $`n` with choice, UB and the memory effect, a morphism
 $`\varphi` from $`m` to $`n` that keeps choice, UB, allocation, loads and

@@ -45,7 +45,7 @@ The proofs below use them to look a name up in an environment, whose
 latest bindings come first.
 :::
 
-:::readable Fir.HVector.toDVals_types (pin := Fir.HVector.toDVals) (fingerprint := "2336224121020263148")
+:::readable Fir.HVector.toDVals_types (pin := Fir.HVector.toDVals) (fingerprint := "10736798949260861008")
 *Theorem: the typed values of a vector have the vector's types.* For
 values $`v_1, \dots, v_n` of the types $`t_1, \dots, t_n`, the typed values
 $`(t_1, v_1), \dots, (t_n, v_n)` have the types $`t_1, \dots, t_n`. The
@@ -102,7 +102,7 @@ A run binds an op's results this way: the new names are found with
 their types, and the names it held before are still found as they were.
 :::
 
-:::readable Fir.Env.operands_ok (pin := Fir.Env.operands) (fingerprint := "9375417624921154413")
+:::readable Fir.Env.operands_ok (pin := Fir.Env.operands) (fingerprint := "16490994676956217430")
 *Theorem: an op's operands are found with their types.* For types
 $`t_1, \dots, t_n` and names $`x_1, \dots, x_k`, let the function $`f` give
 the names the types $`t_1, \dots, t_n`: $`k = n` and

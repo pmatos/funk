@@ -44,7 +44,7 @@ entry block or the block that a label names. This keeps the invariant of
 the proof below along a run, through jumps and loops.
 :::
 
-:::readable Fir.Allowed.of_someUB Fir.Allowed.of_not Fir.Allowed.of_step (pin := Fir.Allowed) (pin := Fir.SomeUB) (pin := Fir.Ev.addLeft) (fingerprint := "10866283808511520235")
+:::readable Fir.Allowed.of_someUB Fir.Allowed.of_not Fir.Allowed.of_step (pin := Fir.Allowed) (pin := Fir.SomeUB) (pin := Fir.Ev.addLeft) (fingerprint := "14070717277850908382")
 *Theorems: three ways to show that a source allows a path.* Let $`S` and
 $`C` be sources, each a run of ops at every budget.
 
@@ -94,7 +94,7 @@ covers. When $`s` names a black box, the
 what its target does.
 :::
 
-:::readable Fir.Func.runOps_allowed (pin := Fir.Allowed) (pin := Fir.CallsRefined) (pin := Fir.MonotoneOps) (pin := Fir.Func.OpsMonotone) (fingerprint := "2972448464735520336")
+:::readable Fir.Func.runOps_allowed (pin := Fir.Allowed) (pin := Fir.CallsRefined) (pin := Fir.MonotoneOps) (pin := Fir.Func.OpsMonotone) (fingerprint := "16738430195099835913")
 *Theorem: every return and every UB of the target is allowed by the
 source.* Let the target module $`M'` run each call as the source $`M`
 does, with some bound $`\beta`: each symbol names the same function in

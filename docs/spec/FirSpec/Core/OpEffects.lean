@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Core effects: readable blocks" =>
 
-:::moduleDocs (fingerprint := "16790106770193789825")
+:::moduleDocs (fingerprint := "5360612883883928661")
 :::
 
 :::readable Fir.Core.Mem (fingerprint := "11401156343561318334")
@@ -31,7 +31,7 @@ $`\mathsf{memmove}` and $`\mathsf{memset}` the memory of their pointers;
 no other core op names a memory.
 :::
 
-:::readable Fir.Core.Op.effects (fingerprint := "4327253371606704340")
+:::readable Fir.Core.Op.effects (fingerprint := "584904972198544856")
 *Definition: the effects of each core op.* For each
 {ref "The-fir-specification--Abstract-syntax--Core-ops"}[core op instance]:
 

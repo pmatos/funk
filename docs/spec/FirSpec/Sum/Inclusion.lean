@@ -14,7 +14,7 @@ changes under it.
 
 #doc (Manual) "Inclusions of types: readable blocks" =>
 
-:::moduleDocs (fingerprint := "5659030338356489601")
+:::moduleDocs (fingerprint := "10931731348411140084")
 :::
 
 :::readable Fir.TyIncl (fingerprint := "13161707640643539970")
@@ -33,7 +33,7 @@ to $`a` is $`\iota(a)`, $`\downarrow_\iota \uparrow_\iota x = x` and
 $`\uparrow_\iota \downarrow_\iota x = x`.
 :::
 
-:::readable Fir.TyIncl.inl Fir.TyIncl.over Fir.TyIncl.comp (fingerprint := "4897002299801920243")
+:::readable Fir.TyIncl.inl Fir.TyIncl.over Fir.TyIncl.comp (fingerprint := "3930184173301410917")
 *Definition: three inclusions.*
 
 * The types $`A` are included in $`A \uplus B` by $`\mathsf{inl}`, with
@@ -52,7 +52,7 @@ So the core is included in $`\mathrm{core} \boxplus a \boxplus b` by
 $`\mathsf{inl} \circ \mathsf{inl}`.
 :::
 
-:::readable Fir.HVector.up Fir.HVector.down Fir.HVector.down_up Fir.HVector.up_down (fingerprint := "5104509760909341569")
+:::readable Fir.HVector.up Fir.HVector.down Fir.HVector.down_up Fir.HVector.up_down (fingerprint := "6209970873849186586")
 *Definition: vectors across an inclusion.* $`\uparrow_\iota` moves a vector
 of values of the types $`a^*` to the types $`\iota(a)^*`, position by
 position, and $`\downarrow_\iota` moves it back. Each undoes the other.

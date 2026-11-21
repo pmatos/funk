@@ -14,10 +14,10 @@ pins their fingerprint; the build fails when the Lean changes under it.
 
 #doc (Manual) "Two modules in the traced layer, compared call by call: readable blocks" =>
 
-:::moduleDocs (fingerprint := "9564740219285441388")
+:::moduleDocs (fingerprint := "7549369164401973266")
 :::
 
-:::readable Fir.TraceEnd.withState Fir.Step.actsOf_append (fingerprint := "16142718993487628509")
+:::readable Fir.TraceEnd.withState Fir.Step.actsOf_append (fingerprint := "9274160893709162379")
 *Definition: the end state of a return.* A path of a run ends, with the
 traced state of each return: $`\mathsf{ret}~\vec{w}` in the traced state
 $`s` becomes $`\mathsf{ret}~(\vec{w}, s)`.
@@ -38,7 +38,7 @@ from, the same ways of ending of $`f`'s entry block's ops in its frame from
 $`s`.
 :::
 
-:::readable Fir.TSomeUB Fir.TAllowed Fir.TAllowed.of_someUB Fir.TAllowed.of_step (pin := Fir.TraceEnd.trace) (fingerprint := "1584956859638796438")
+:::readable Fir.TSomeUB Fir.TAllowed Fir.TAllowed.of_someUB Fir.TAllowed.of_step (pin := Fir.TraceEnd.trace) (fingerprint := "922765940895484054")
 *Definition: allowed at some budget.* A source, a run $`\mathit{src}_N` at
 each budget $`N`, allows a path of the target that hits UB or returns when
 it hits UB at some budget after acts that the target's path first shows,

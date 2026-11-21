@@ -14,17 +14,17 @@ when the Lean changes under it.
 
 #doc (Manual) "Stack allocation in text: readable blocks" =>
 
-:::moduleDocs (fingerprint := "17831508715452589650")
+:::moduleDocs (fingerprint := "3304312749807501853")
 :::
 
-:::readable Fir.Memory.AllocKind.word Fir.Core.decodeKind Fir.Core.decodeKind_word (pin := Fir.Memory.AllocKind) (fingerprint := "17575128766852536650")
+:::readable Fir.Memory.AllocKind.word Fir.Core.decodeKind Fir.Core.decodeKind_word (pin := Fir.Memory.AllocKind) (fingerprint := "3216539511333506316")
 *Definition: the words of the kinds of an allocation.* The
 {ref "The-fir-specification--Memory--The-memory-model"}[kinds] of an
 allocation are written as the words `stack`, `global` and `heap`, and each
 word reads back as the kind it writes. No other word names a kind.
 :::
 
-:::readable Fir.Core.Ty.decodeAny (pin := Fir.Core.Ty.decode) (fingerprint := "12753521565736632364")
+:::readable Fir.Core.Ty.decodeAny (pin := Fir.Core.Ty.decode) (fingerprint := "6320837925464302874")
 *Definition: reading a type with no bound.* $`\mathrm{decodety}^\infty(a)`
 reads a core type as
 {ref "The-fir-specification--Text-format--The-core-types-in-text"}[$`\mathrm{decodety}`]
@@ -37,7 +37,7 @@ the text, bounds it, so every type reads back from how it is written:
 `i16777216` decodes here, and validation rejects it.
 :::
 
-:::readable Fir.Core.allocaAttrs Fir.Core.decodeAlign Fir.Core.decodeAlloca (pin := Fir.Core.Ty.attr) (fingerprint := "12644634145410610100")
+:::readable Fir.Core.allocaAttrs Fir.Core.decodeAlign Fir.Core.decodeAlloca (pin := Fir.Core.Ty.attr) (fingerprint := "1986619449601400710")
 *Definition: how $`\mathsf{alloca}` is written, and read back.* The
 attributes of $`\mathsf{alloca}_N~k~t~c~a` are, separated by spaces as
 every op's attributes are (ADR-2026-11-14-0915):

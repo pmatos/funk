@@ -30,7 +30,7 @@ $`a`, when there is one. These are the conditions that a
 function asks of each value it defines.
 :::
 
-:::readable Fir.Text.operandTypes_ok (pin := Fir.Text.operandTypes) (fingerprint := "15638602656179600944")
+:::readable Fir.Text.operandTypes_ok (pin := Fir.Text.operandTypes) (fingerprint := "6844801560988947208")
 *Lemma: the operands' types come from the scope.* For every dialect,
 scope $`\mathit{sc}`, function symbol, list of operands
 $`x_1, \dots, x_n`, each with its position, and list of types
@@ -73,7 +73,7 @@ function $`f`, with the scope in place of the type that $`f` gives each
 value; the second pass knows the scope, and not yet the function.
 :::
 
-:::readable Fir.Block.AcceptedIn Fir.Block.AllAcceptedIn Fir.Operation.AllAcceptedIn Fir.Region.AllAcceptedIn (pin := Fir.Block.allBlocks) (pin := Fir.Operation.regionBlocks) (pin := Fir.Region.allBlocks) (fingerprint := "212326029259463308")
+:::readable Fir.Block.AcceptedIn Fir.Block.AllAcceptedIn Fir.Operation.AllAcceptedIn Fir.Region.AllAcceptedIn (pin := Fir.Block.allBlocks) (pin := Fir.Operation.regionBlocks) (pin := Fir.Region.allBlocks) (fingerprint := "6677325034813425207")
 *Definition: blocks, ops and regions that a scope accepts.* Let $`d` be a
 dialect with a signature and a text, and $`\mathit{sc}` a scope. The scope
 $`\mathit{sc}` _accepts_ a block $`b` when:
@@ -91,7 +91,7 @@ the regions that names a kind names it by a word and it accepts each block
 of the regions, at any depth.
 :::
 
-:::readable Fir.Text.decodeType_writable (pin := Fir.Text.decodeType) (pin := Fir.LawfulDialectText) (fingerprint := "6839827100362395461")
+:::readable Fir.Text.decodeType_writable (pin := Fir.Text.decodeType) (pin := Fir.LawfulDialectText) (fingerprint := "44712334757911696")
 *Theorem: a type as read decodes back to itself.* Let $`d` be a dialect
 with a signature, validation rules and a text, whose text is
 {ref "The-fir-specification--Text-format--Grammar"}[lawful]. For every
@@ -130,7 +130,7 @@ everything that $`\mathrm{decode}` gives from $`a`:
 $$`\begin{aligned} & W(a) \implies \forall x.\ \mathrm{decode}(a) = \mathsf{ok}(x) \\ & \quad \implies P(x) \end{aligned}`
 :::
 
-:::readable Fir.Text.decodes_blocks_nil Fir.Text.decodes_blocks_cons Fir.Text.decodes_ops_nil Fir.Text.decodes_ops_cons Fir.Text.decodes_regions_nil Fir.Text.decodes_regions_cons (pin := Fir.Text.decodeBlocks) (pin := Fir.Text.decodeOps) (pin := Fir.Text.decodeRegions) (pin := Fir.LawfulDialectText) (pin := Fir.Text.SOp.Writable) (pin := Fir.DialectText) (fingerprint := "11456643119111580024")
+:::readable Fir.Text.decodes_blocks_nil Fir.Text.decodes_blocks_cons Fir.Text.decodes_ops_nil Fir.Text.decodes_ops_cons Fir.Text.decodes_regions_nil Fir.Text.decodes_regions_cons (pin := Fir.Text.decodeBlocks) (pin := Fir.Text.decodeOps) (pin := Fir.Text.decodeRegions) (pin := Fir.LawfulDialectText) (pin := Fir.Text.SOp.Writable) (pin := Fir.DialectText) (fingerprint := "13154344622687404827")
 *Theorems: the second pass, part by part.* Let $`d` be a dialect with a
 signature and a text, $`\mathit{sc}` a scope and $`g` a function's
 symbol. Each pass below decodes in $`\mathit{sc}`, for $`g`. The passes

@@ -17,7 +17,7 @@ build fails when the Lean changes under it.
 :::moduleDocs (fingerprint := "8472785573976490432")
 :::
 
-:::readable Fir.Text.Attr.allWritable_of_forall (pin := Fir.Attr.AllWritable) (fingerprint := "11825618486817116511")
+:::readable Fir.Text.Attr.allWritable_of_forall (pin := Fir.Attr.AllWritable) (fingerprint := "10365985323083731484")
 *Lemma: proof plumbing.* For every list of attributes each of which can
 be {ref "The-fir-specification--Text-format--Grammar"}[written], the list
 can be written. The condition on a list of attributes is defined element
@@ -27,7 +27,7 @@ can be written, which is what the reader of an op's attributes gives, so
 that it fits the condition on an op.
 :::
 
-:::readable Fir.Text.readBlocks_writable (pin := Fir.Text.readBlocks) (pin := Fir.Text.readOps) (pin := Fir.Text.readOpWithResults) (pin := Fir.Text.readOpBody) (pin := Fir.Text.readRegions) (pin := Fir.Text.ReadsWritable) (pin := Fir.Text.SOp.Writable) (pin := Fir.Text.SBlock.WritableList) (fingerprint := "1954111721538448529")
+:::readable Fir.Text.readBlocks_writable (pin := Fir.Text.readBlocks) (pin := Fir.Text.readOps) (pin := Fir.Text.readOpWithResults) (pin := Fir.Text.readOpBody) (pin := Fir.Text.readRegions) (pin := Fir.Text.ReadsWritable) (pin := Fir.Text.SOp.Writable) (pin := Fir.Text.SBlock.WritableList) (fingerprint := "2555473043152512899")
 *Theorem: blocks as read can be written, at any depth.* For every list
 of tokens $`\mathit{ts}`, the
 {ref "The-fir-specification--Text-format--Reading-the-grammar"}[reader of blocks]

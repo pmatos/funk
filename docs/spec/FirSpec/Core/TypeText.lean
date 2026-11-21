@@ -14,10 +14,10 @@ when the Lean changes under it.
 
 #doc (Manual) "The core types in text: readable blocks" =>
 
-:::moduleDocs (fingerprint := "9183927375383473699")
+:::moduleDocs (fingerprint := "17203330632163735195")
 :::
 
-:::readable Fir.Core.floatAlias Fir.Core.aliasFormat (fingerprint := "4887163029484126784")
+:::readable Fir.Core.floatAlias Fir.Core.aliasFormat (fingerprint := "1633695519109727721")
 *Definition: the aliases of float formats.* Five float formats have a name
 of their own (ADR-2026-11-09-1549), and $`\mathrm{alias}(e, m)` gives it:
 
@@ -31,7 +31,7 @@ Every other format has no alias. $`\mathrm{format}(n)` reads the table the
 other way: the format that the alias $`n` names, if $`n` is one.
 :::
 
-:::readable Fir.Core.Ty.attr Fir.Core.decodeFloat Fir.Core.decodePtr Fir.Core.Ty.decode (pin := Fir.Core.Ty) (pin := Fir.Core.maxWidth) (pin := Fir.Core.maxMemory) (fingerprint := "5971740752925932742")
+:::readable Fir.Core.Ty.attr Fir.Core.decodeFloat Fir.Core.decodePtr Fir.Core.Ty.decode (pin := Fir.Core.Ty) (pin := Fir.Core.maxWidth) (pin := Fir.Core.maxMemory) (fingerprint := "6550569970885121775")
 *Definition: how a core type is written, and read back.* The
 {ref "The-fir-specification--Abstract-syntax--Core-types"}[integer type]
 $`\mathsf{i}N` is written $`\mathrm{tyattr}(\mathsf{i}N)`, the word `i`

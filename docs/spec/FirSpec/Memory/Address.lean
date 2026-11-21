@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Addresses: readable blocks" =>
 
-:::moduleDocs (fingerprint := "10754931566103611440")
+:::moduleDocs (fingerprint := "77473957639626523")
 :::
 
 :::readable Fir.Memory.alignUp (fingerprint := "5903328988636615743")
@@ -28,7 +28,7 @@ $`\lceil 7 \rceil_1 = 7`. For $`\alpha = 0` it is $`c`: no address but 0 is
 a multiple of 0, so an allocation aligned to 0 fits only at 0.
 :::
 
-:::readable Fir.Memory.Block.leavesRoom Fir.Memory.roomFrom (fingerprint := "12365414332012343242")
+:::readable Fir.Memory.Block.leavesRoom Fir.Memory.roomFrom (fingerprint := "6977827549227237265")
 *Definition: leaving room.* A block $`(k, \alpha, \vec{x}, \ell, y^?)`
 leaves room for $`n` units from the address $`z` when it is freed, or has
 no address, or its addresses and those from $`z` to $`z + n` do not
@@ -56,7 +56,7 @@ address of the block $`M[a]`, when $`M` has that block and it was given
 one, and $`\bot` otherwise.
 :::
 
-:::readable Fir.Memory.Memory.fits (fingerprint := "11533354598463887437")
+:::readable Fir.Memory.Memory.fits (fingerprint := "15420125501033846395")
 *Definition: an address that fits.* Between the bounds $`lo` and $`hi`,
 the address $`z` fits the allocation $`a` of $`M`, with
 $`M[a] = (k, \alpha, \vec{x}, \ell, y^?)`, when
@@ -81,7 +81,7 @@ $`M[a] := \mathrm{give}_z(M[a])`. Nothing else changes, and an id the
 memory does not have changes nothing.
 :::
 
-:::readable Fir.Memory.bumpFrom Fir.Memory.Memory.bump (fingerprint := "787101431676786687")
+:::readable Fir.Memory.bumpFrom Fir.Memory.Memory.bump (fingerprint := "4710689305863777439")
 *Definition: the canonical addresses.* The canonical layout lays the blocks
 $`b_0, b_1, \ldots` of $`M` out in the order they were made, from $`lo`.
 With $`c_0 = lo`, the block $`b_i`, of alignment $`\alpha_i` and size
@@ -94,7 +94,7 @@ and 2 units, aligned to 4 and 8, are at 4 and 16. The address of $`b_i`
 depends only on the blocks made before it.
 :::
 
-:::readable Fir.Memory.lowestFrom (fingerprint := "7585015368436307075")
+:::readable Fir.Memory.lowestFrom (fingerprint := "3098750353783868438")
 *Definition: the lowest candidate.* For the allocation $`a`, aligned to
 $`\alpha`, $`\mathrm{lowest}_M(a, z^?, \vec{c})` walks the blocks
 $`\vec{c}` in order, starting from the address $`z^?` found so far, if
@@ -103,7 +103,7 @@ $`\lceil y + n \rceil_\alpha` fits $`a`, it keeps the lower of that
 address and the one found so far. It gives the one found at the end.
 :::
 
-:::readable Fir.Memory.Memory.lowestFit (fingerprint := "17520641030439452004")
+:::readable Fir.Memory.Memory.lowestFit (fingerprint := "63834399341398295")
 *Definition: the lowest address that fits.* For the allocation $`a` of
 $`M`, aligned to $`\alpha`, $`\mathrm{lowest}_M(a)` starts from
 $`\lceil lo \rceil_\alpha` when it fits, and walks every block of $`M`.

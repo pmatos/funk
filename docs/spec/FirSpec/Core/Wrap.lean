@@ -14,10 +14,10 @@ changes under it.
 
 #doc (Manual) "Wrap flag rules: readable blocks" =>
 
-:::moduleDocs (fingerprint := "7100485994793152043")
+:::moduleDocs (fingerprint := "7903143356433133950")
 :::
 
-:::readable Fir.Core.subValues Fir.Core.mulValues (pin := BitVec.sub) (pin := BitVec.mul) (fingerprint := "12106208524909401837")
+:::readable Fir.Core.subValues Fir.Core.mulValues (pin := BitVec.sub) (pin := BitVec.mul) (fingerprint := "216586117790627579")
 *Definition: the rules of $`\mathsf{sub}` and $`\mathsf{mul}` without
 flags.* For every width $`N`, $`\mathsf{sub}_N` of two vectors of bits is
 their difference modulo $`2^N`, and $`\mathsf{mul}_N` their product modulo
@@ -35,7 +35,7 @@ Like $`\mathsf{add}`, both wrap as two's complement does, are never UB, and
 (ADR-2026-10-29-2006).
 :::
 
-:::readable Fir.Core.wrapValues (pin := Fir.Core.WrapFlags) (fingerprint := "1505803928091845072")
+:::readable Fir.Core.wrapValues (pin := Fir.Core.WrapFlags) (fingerprint := "2170130142248968895")
 *Definition: an op with wrap flags.* Take a set $`\phi` of
 {ref "The-fir-specification--Abstract-syntax--Core-ops"}[wrap flags], two
 overflow tests $`o_u` and $`o_s` on pairs of vectors of $`N` bits, and a rule $`g`
@@ -54,7 +54,7 @@ about the operands, and a broken promise gives poison, not UB
 $`\mathsf{sub}` and $`\mathsf{mul}` at every width.
 :::
 
-:::readable Fir.Core.addWith Fir.Core.subWith Fir.Core.mulWith (pin := Fir.Core.wrapValues) (pin := BitVec.uaddOverflow) (pin := BitVec.saddOverflow) (pin := BitVec.usubOverflow) (pin := BitVec.ssubOverflow) (pin := BitVec.umulOverflow) (pin := BitVec.smulOverflow) (fingerprint := "13191436751305933760")
+:::readable Fir.Core.addWith Fir.Core.subWith Fir.Core.mulWith (pin := Fir.Core.wrapValues) (pin := BitVec.uaddOverflow) (pin := BitVec.saddOverflow) (pin := BitVec.usubOverflow) (pin := BitVec.ssubOverflow) (pin := BitVec.umulOverflow) (pin := BitVec.smulOverflow) (fingerprint := "15045754166385798243")
 *Definition: the rules of $`\mathsf{add}`, $`\mathsf{sub}` and
 $`\mathsf{mul}` with flags.* For every width $`N` and set of flags
 $`\phi`, each op is $`\mathrm{wrap}` of its rule without flags, with the

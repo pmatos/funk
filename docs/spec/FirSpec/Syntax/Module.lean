@@ -17,7 +17,7 @@ the Lean changes under it.
 
 #doc (Manual) "Modules, functions, blocks and ops: readable blocks" =>
 
-:::moduleDocs (fingerprint := "2659651780551536934")
+:::moduleDocs (fingerprint := "18306853583458659816")
 :::
 
 :::readable Fir.Name (pin := Fir.Func.Valid) (fingerprint := "11509972817217138124")
@@ -33,7 +33,7 @@ Validation restricts the strings of values and labels to the names defined
 next; a symbol may be any string.
 :::
 
-:::readable Fir.isLetter Fir.isWordStart Fir.isNameChar Fir.isName Fir.isWord (pin := Fir.Func.Valid) (pin := Fir.Text.printSymbol) (fingerprint := "2253624661991813575")
+:::readable Fir.isLetter Fir.isWordStart Fir.isNameChar Fir.isName Fir.isWord (pin := Fir.Func.Valid) (pin := Fir.Text.printSymbol) (fingerprint := "15465900342649847224")
 *Definition: names and words.* A _name_ is one or more name characters,
 and a _word_ is a name that starts with a letter or an underscore:
 
@@ -62,7 +62,7 @@ none of them is `func` or `module`, which are the core's, nor a word that
 the grammar reserves, such as `dialects` or `locs`.
 :::
 
-:::readable Fir.Text.isHexDigit Fir.FloatLit Fir.FloatLit.valid (pin := Fir.FloatLit.print) (fingerprint := "8265536692726687142")
+:::readable Fir.Text.isHexDigit Fir.FloatLit Fir.FloatLit.valid (pin := Fir.FloatLit.print) (fingerprint := "13754246064051981023")
 *Definition: a float literal, as written.* A hexadecimal digit is a
 decimal digit or one of the lowercase letters `a` to `f`; uppercase letters
 are not digits. A float literal is one of two kinds (ADR-2026-11-11-1438):
@@ -80,7 +80,7 @@ spell a value of a float type is the
 {ref "The-fir-specification--Text-format--Float-constants-in-text"}[core dialect's rule].
 :::
 
-:::readable Fir.Attr (pin := Fir.Attr.print) (fingerprint := "8633512635814987414")
+:::readable Fir.Attr (pin := Fir.Attr.print) (fingerprint := "4613900770805779513")
 *Definition: an attribute, or a type, as written.* The grammar writes the
 attributes of ops and items, and every type, as one kind of generic term:
 
@@ -109,7 +109,7 @@ dialects can write structured attributes and types without a change to the
 grammar. A word applied to no attributes, `h()`, is not the word `h`.
 :::
 
-:::readable Fir.Attr.repr Fir.Attr.reprList (fingerprint := "14853416558229886364")
+:::readable Fir.Attr.repr Fir.Attr.reprList (fingerprint := "14345565003045618074")
 *Definition: how Lean shows an attribute.* For tests and debugging, Lean
 shows an attribute as the Lean term that builds it. This is written out by
 hand, since the one Lean would derive is not proved to terminate (Lean marks it
@@ -117,7 +117,7 @@ partial), and no definition of the spec is partial (ADR-2026-10-30-1452). It pla
 in the text format.
 :::
 
-:::readable Fir.Attr.Writable Fir.Attr.AllWritable (pin := Fir.isWord) (pin := Fir.FloatLit.valid) (fingerprint := "1280204447325578679")
+:::readable Fir.Attr.Writable Fir.Attr.AllWritable (pin := Fir.isWord) (pin := Fir.FloatLit.valid) (fingerprint := "1300235377456284104")
 *Definition: an attribute that can be written.* An attribute can be
 written as tokens when each word in it is a
 {ref "The-fir-specification--Abstract-syntax--Modules___-functions___-blocks-and-ops"}[word]:
@@ -295,7 +295,7 @@ whose numbers are all within it is within its limits, and only such a
 layout can be written.
 :::
 
-:::readable Fir.InitPiece.InLimits Fir.Global.InLimits (fingerprint := "13179149203291508932")
+:::readable Fir.InitPiece.InLimits Fir.Global.InLimits (fingerprint := "8242317702000706507")
 *Definition: a global within its limits.* The numbers of a
 {ref "The-fir-specification--Abstract-syntax--Globals"}[global] are within
 its limits when its memory, size and alignment, each count of zeros and
@@ -303,7 +303,7 @@ each offset of an address are at most $`2^{64} - 1`, an aggregate's limit.
 A unit has no limit here: validation bounds it by its memory's unit width.
 :::
 
-:::readable Fir.Item Fir.Item.name Fir.Item.func? Fir.Item.func?_func Fir.Item.func?_module Fir.Item.func?_dialect Fir.Item.func?_aggregate Fir.Item.func?_global Fir.Item.dialect? Fir.Item.aggregate? Fir.Item.global? (fingerprint := "3806920177862569462")
+:::readable Fir.Item Fir.Item.name Fir.Item.func? Fir.Item.func?_func Fir.Item.func?_module Fir.Item.func?_dialect Fir.Item.func?_aggregate Fir.Item.func?_global Fir.Item.dialect? Fir.Item.aggregate? Fir.Item.global? (fingerprint := "8995809213889338162")
 *Definition: an item.* An item is one entry of a module: a function, a
 module nested in it (ADR-2026-11-10-1510), an item of a kind that a
 dialect registers (ADR-2026-11-09-1543), an aggregate's layout
@@ -336,7 +336,7 @@ $`\mathrm{global?}(i)` the global $`G` when $`i` is $`\mathsf{global}~G`,
 each none otherwise.
 :::
 
-:::readable Fir.Module Fir.Module.funcs (pin := Fir.Module.Valid) (pin := Fir.Module.print) (pin := Fir.LocTable.print) (fingerprint := "15819456145575854113")
+:::readable Fir.Module Fir.Module.funcs (pin := Fir.Module.Valid) (pin := Fir.Module.print) (pin := Fir.LocTable.print) (fingerprint := "4237338838039210533")
 *Definition: a module.* A module is its dialect set, its
 {ref "The-fir-specification--Abstract-syntax--Data-layouts"}[data layout],
 its items, then its

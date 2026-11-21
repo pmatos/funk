@@ -14,10 +14,10 @@ when the Lean changes under it.
 
 #doc (Manual) "Monotonicity in the traced layer: readable blocks" =>
 
-:::moduleDocs (fingerprint := "13628687690477263636")
+:::moduleDocs (fingerprint := "5780248936545969967")
 :::
 
-:::readable Fir.Step.IsRefinedBy (pin := Fir.instHRefinementStep) (fingerprint := "9259369860302064242")
+:::readable Fir.Step.IsRefinedBy (pin := Fir.instHRefinementStep) (fingerprint := "12649089963462645072")
 *Definition: refined marked traces.* An element of a marked trace is
 refined by another when both are a step $`\mathsf{tick}`, or both are acts
 and the second refines the first. Marked traces refine one another element
@@ -52,13 +52,13 @@ names each by the same handle.
 transitive, and entering or leaving a frame keeps refinement.
 :::
 
-:::readable Fir.TraceEnd.trace Fir.TraceEnd.trace_after (fingerprint := "4406253799945635138")
+:::readable Fir.TraceEnd.trace Fir.TraceEnd.trace_after (fingerprint := "565791287545619874")
 *Definition: the trace of a way of ending.* A way of ending of the traced
 layer, with a result or with UB, shows a trace. After the trace $`t`, it
 shows $`t` first.
 :::
 
-:::readable Fir.TraceEnd.Allows Fir.TraceEnd.Allows.of_ub Fir.TraceEnd.Allows.after (fingerprint := "3795596474351469140")
+:::readable Fir.TraceEnd.Allows Fir.TraceEnd.Allows.of_ub Fir.TraceEnd.Allows.after (fingerprint := "10733521865864246037")
 *Definition: one way of ending allows another.* By the relation $`r` on
 what they give, a way of ending of the source allows one of the target
 when:
