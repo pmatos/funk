@@ -85,7 +85,7 @@ The count $`c`, and so $`n`, has no bound, as the human ruled on
 error of the run, as a deep recursion is, and not a rule of the spec.
 :::
 
-:::readable Fir.Core.Ty.fieldShape_eq_allocaShape (pin := Fir.Core.Ty.fieldShape) (fingerprint := "13248221461977826623")
+:::readable Fir.Core.Ty.fieldShape_eq_allocaShape (pin := Fir.Core.Ty.fieldShape) (fingerprint := "18093245466459853265")
 *Theorem: a field takes what one allocated value takes.* For every map
 $`\ell` from memories to their layout entries, every memory $`n` and every
 core type $`t`, an integer, a float or a pointer, the units and the alignment that a field of

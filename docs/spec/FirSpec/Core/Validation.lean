@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Core rules: readable blocks" =>
 
-:::moduleDocs (fingerprint := "17323455731464846767")
+:::moduleDocs (fingerprint := "3096912535685055126")
 :::
 
 :::readable Fir.Core.Ty.Valid Fir.Core.Ty.memory (pin := Fir.Core.maxWidth) (pin := Fir.Core.floatWidth) (fingerprint := "744407091263889301")
@@ -63,19 +63,6 @@ $$`\mathrm{refs}(\mathit{op}) = \epsilon \ \text{ for every other op}`
 The general rules check that $`f` names a function of the module.
 :::
 
-:::readable Fir.Core.Ty.IsElem (fingerprint := "15743480132225506412")
-*Definition: the integer and pointer types.* An integer type
-$`\mathsf{i}W` and a pointer type $`\mathsf{ptr}\langle M \rangle` are
-such types, and a float type is not:
-
-$$`\mathrm{elem}(\mathsf{i}W) \qquad \mathrm{elem}(\mathsf{ptr}\langle M \rangle) \qquad \neg\,\mathrm{elem}(\mathsf{float}\langle e,m \rangle)`
-
-A field of such a type in an aggregate's layout takes what one value
-that $`\mathsf{alloca}` allocates takes. A float type is not yet a field
-(#264). No allocation asks for one: $`\mathsf{alloca}` allocates values
-of every valid type, a float's included (#264).
-:::
-
 :::readable Fir.Core.Op.attrTypes (fingerprint := "16621200450031835539")
 *Definition: the types a core op carries.* $`\mathsf{alloca}_N~k~t~c~a`
 carries the type $`t` that it allocates values of in its attributes, when
@@ -115,7 +102,7 @@ and $`n` doublings reach $`n`. It is written as a loop of at most $`n`
 steps, by structural recursion, so the rules that use it rest on no axiom.
 :::
 
-:::readable Fir.Core.Ty.fieldShape (fingerprint := "10495742630897003574")
+:::readable Fir.Core.Ty.fieldShape (fingerprint := "332229719061644368")
 *Definition: a core field's units and alignment.* In the memory $`n` of a
 module whose memories have the entries $`\ell`, with $`e = \ell(n)`, a field
 of a core type takes (ADR-2026-11-16-1546):
