@@ -79,6 +79,14 @@ theorem TraceEnd.addLeft_exit (j : Nat) :
   | .ok (.ok (.ret _), _, _) | .ok (.ok .fuelExhausted, _, _) | .ok (.error _, _, _)
   | .error _ => rfl
 
+/-- A way of ending done once a frame is left is done in the frame. -/
+theorem TraceEnd.Done.of_exit :
+    ∀ {e : TraceEnd B (TraceState Mem unit) (Except Stuck (Result (V × Nat)))},
+      TraceEnd.Done (V := V) (e.map fun p => (p.1, p.2.1, ({ p.2.2 with mem := p.2.2.mem.exit } :
+        TraceState Mem unit))) → e.Done
+  | .ok (.ok (.ret _), _, _), _ | .error _, _ => trivial
+  | .ok (.ok .fuelExhausted, _, _), h | .ok (.error _, _, _), h => h.elim
+
 variable {d : Dialect} [TyDenote d.Ty] [DecidableEq d.Ty] [DialectSignature d] [DialectCall d]
   [DialectDenote d (TraceM B (TraceState Mem unit))] {M : Module d}
 
@@ -110,10 +118,8 @@ theorem Func.traceOps_up (j n : Nat) :
           Func.traceCall B M (n + j) g genv body s (e₁.addLeft j) := by
         intro g genv body e₁ h₁ hd₁
         obtain ⟨e₂, h₂, rfl⟩ := (TraceM.run_inFrame _ _ _).1 h₁
-        have hd₂ : e₂.Done := by
-          rcases e₂ with _ | ⟨_ | (_ | _), _, _⟩ <;> first | trivial | exact hd₁.elim
         rw [TraceEnd.addLeft_exit]
-        exact (TraceM.run_inFrame _ _ _).2 ⟨_, ihn _ _ _ _ _ h₂ hd₂, rfl⟩
+        exact (TraceM.run_inFrame _ _ _).2 ⟨_, ihn _ _ _ _ _ h₂ hd₁.of_exit, rfl⟩
       cases (Func.tStepPath_iff hne).1 he with
       | exitUB hreg hargs hT hos hx =>
         exact mk (TraceEnd.notStuck_error _ _) (.exitUB hreg hargs hT hos hx)
@@ -148,9 +154,7 @@ theorem Func.traceCall_up (j n : Nat) {g : Func d} {genv : Env d} {body : List (
     (h : Func.traceCall B M n g genv body s e) (hd : e.Done) :
     Func.traceCall B M (n + j) g genv body s (e.addLeft j) := by
   obtain ⟨e₂, h₂, rfl⟩ := (TraceM.run_inFrame _ _ _).1 h
-  have hd₂ : e₂.Done := by
-    rcases e₂ with _ | ⟨_ | (_ | _), _, _⟩ <;> first | trivial | exact hd.elim
   rw [TraceEnd.addLeft_exit]
-  exact (TraceM.run_inFrame _ _ _).2 ⟨_, Func.traceOps_up j n _ _ _ _ _ h₂ hd₂, rfl⟩
+  exact (TraceM.run_inFrame _ _ _).2 ⟨_, Func.traceOps_up j n _ _ _ _ _ h₂ hd.of_exit, rfl⟩
 
 end Fir
