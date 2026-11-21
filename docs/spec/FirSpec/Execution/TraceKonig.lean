@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Divergence of a traced run, by König's lemma: readable blocks" =>
 
-:::moduleDocs (fingerprint := "9136264021927843221")
+:::moduleDocs (fingerprint := "11926795971279751067")
 :::
 
 :::readable Fir.TRun.Truncates Fir.TRun.FinitelyMany Fir.TRun.ExhaustedAllowed (fingerprint := "10165934631249344372")
@@ -35,14 +35,17 @@ runs out of fuel with $`m \sqsubseteq m'`, or hits UB with a refined prefix
 of $`m'`.
 :::
 
-:::readable Fir.TRun.ub_or_paths Fir.TRun.ub_allows Fir.Step.actsOf_length_eq (fingerprint := "1879045168608779349")
+:::readable Fir.TRun.ub_or_paths Fir.TRun.ub_allows Fir.Step.actsOf_length_eq Fir.TRun.firstSteps_finite (fingerprint := "257247461392450263")
 *Theorems.* When $`R` allows $`R'`, and $`R'` has at each budget a path
 that runs out of fuel with a property $`Q`, either $`R` hits UB at some
 budget after a refined prefix of such a path, or at every budget both have
 paths that run out of fuel, the target's with $`Q`, refining the
 source's. UB after a refined prefix of a target's path allows every
 outcome that shows that path's acts at their places. Marked traces that
-refine each other show as many acts.
+refine each other show as many acts. When $`R` truncates and has finitely
+many traces, the first $`N` steps of its paths at every budget from $`C`
+on, whose acts agree with one stream, lie in one finite list when
+$`W (N + 1) \le C`: each is the first $`N` steps of the path cut at $`C`.
 :::
 
 :::readable Fir.TRun.diverge_allowed (fingerprint := "6952205701170830850")

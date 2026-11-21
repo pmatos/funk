@@ -1,7 +1,6 @@
 import Fir.Core.MemoryCallRefine
 import Fir.Core.Observe
 import Fir.Execution.TraceRefine
-import Fir.Execution.TraceObligationLaws
 import Fir.Execution.TraceDiverge
 
 /-!

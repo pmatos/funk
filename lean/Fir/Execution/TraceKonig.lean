@@ -122,6 +122,21 @@ theorem Step.actsOf_length_eq {mt mt' : List (Step (Act E Ans))} (h : mt ⊑ mt'
     (Step.actsOf mt).length = (Step.actsOf mt').length :=
   List.IsRefinedBy.length_eq (Step.actsOf_isRefinedBy h)
 
+omit [HRefinement E E] [HRefinement O O] in
+/-- The first `N` steps of paths of a run that truncates and has finitely many
+traces, at every budget from `C` on, lie in one finite list, when the paths'
+acts agree with one answer stream and `W (N + 1) ≤ C`: each is the first
+`N` steps of the path's cut at `C`. -/
+theorem TRun.firstSteps_finite (hcut : TRun.Truncates W R) (hfin : TRun.FinitelyMany R)
+    {src : Nat → List (Step (Act E Ans))} (hsrc : ∀ n, R n (.ok (.ok .fuelExhausted, src n)))
+    {ans : Nat → Option Ans} (hag : ∀ n, Act.Agrees ans (Step.actsOf (src n))) {N C : Nat}
+    (hC : W * (N + 1) ≤ C) :
+    ∃ L : List (List (Step (Act E Ans))), ∀ n, C ≤ n → Step.upTo N (src n) ∈ L := by
+  obtain ⟨L, hL⟩ := hfin C ans
+  refine ⟨L.map (Step.upTo N), fun n hn => ?_⟩
+  obtain ⟨mc, hmc, hpre, -, hup⟩ := hcut.cut hn (hsrc n)
+  exact List.mem_map.2 ⟨mc, hL mc hmc ((hag n).of_prefix (Step.actsOf_prefix hpre)), hup N hC⟩
+
 /-- When the target diverges silently after the trace `tr`, a source that
 truncates, has finitely many traces at each budget, and allows, at each
 budget, each path of the target that runs out of fuel, diverges silently
@@ -150,13 +165,10 @@ theorem TRun.diverge_allowed (hcut : TRun.Truncates W R) (hfin : TRun.FinitelyMa
     exact ⟨_, Step.actsOf_isRefinedBy (hst n).2.2.1, (hst n).2.2.2.1⟩
   -- At one budget `C`, finitely many cut paths; one first `N` steps occur infinitely often.
   let C := W * (N + 1) + N
-  obtain ⟨L, hL⟩ := hfin C ans
+  obtain ⟨L, hL⟩ := TRun.firstSteps_finite hcut hfin (fun n => (hst n).1) hag (N := N) (C := C)
+    (by omega)
   obtain ⟨q, hq⟩ := List.exists_often (P := (C ≤ ·)) (g := fun n => Step.upTo N (src n))
-    (L := L.map (Step.upTo N)) (fun m => ⟨max m C, Nat.le_max_left _ _, Nat.le_max_right _ _⟩)
-    fun n hn => by
-      obtain ⟨mc, hmc, hpre, -, hup⟩ := hcut.cut hn (hst n).1
-      exact List.mem_map.2 ⟨mc, hL mc hmc ((hag n).of_prefix (Step.actsOf_prefix hpre)),
-        hup N (by omega)⟩
+    (fun m => ⟨max m C, Nat.le_max_left _ _, Nat.le_max_right _ _⟩) hL
   have hacts : ∀ n, C ≤ n → Step.upTo N (src n) = q → Step.actsOf (src n) = Step.actsOf q :=
     fun n hn he => he ▸ ((hsrc n (by omega)).1).symm
   obtain ⟨n₀, -, hC₀, hq₀⟩ := hq 0
@@ -215,12 +227,7 @@ theorem TRun.reacts_allowed (hcut : TRun.Truncates W R) (hfin : TRun.FinitelyMan
     exact (congrArg some hab.2).symm
   -- Finitely many first steps at each level, from the budget of the level on.
   have hcand : ∀ k, ∃ L : List (List (Step (Act E Ans))), ∀ n, C k ≤ n → Step.upTo (K' k) (src n) ∈ L :=
-    fun k => by
-      obtain ⟨L, hL⟩ := hfin (C k) ans
-      refine ⟨L.map (Step.upTo (K' k)), fun n hn => ?_⟩
-      obtain ⟨mc, hmc, hpre, -, hup⟩ := hcut.cut hn (hst n).1
-      exact List.mem_map.2 ⟨mc, hL mc hmc ((hag n).of_prefix (Step.actsOf_prefix hpre)),
-        hup (K' k) (Nat.le_refl _)⟩
+    fun k => TRun.firstSteps_finite hcut hfin (fun n => (hst n).1) hag (Nat.le_refl _)
   -- A node is good when infinitely many budgets reach it.
   let Good : Nat → List (Step (Act E Ans)) → Prop := fun k q =>
     ∀ m, ∃ n, m ≤ n ∧ Step.upTo (K' k) (src n) = q
