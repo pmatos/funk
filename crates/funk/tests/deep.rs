@@ -72,7 +72,7 @@ fn texts_nested_a_million_levels_deep_get_their_verdicts() {
         file("deep-items.fir", &items),
     ]);
     let reasons = [
-        "a func has no attributes",
+        "a func with no results has no attributes",
         "unknown op toy.nest",
         "holds blocks, not items",
     ];

@@ -1,5 +1,6 @@
 import Std.Data.HashMap
 import Fir.Text.ReadLocs
+import Fir.Syntax.FuncAttrs
 
 /-!
 The last step decodes what the grammar leaves generic, through the dialect's
@@ -17,9 +18,12 @@ position of the part that does not decode (ADR-2026-10-29-2014):
 * an item whose kind is neither `func`, `module`, `aggregate`, `global`
   nor a word of a dialect, at its kind. An item of a dialect's kind decodes whichever
   dialect registers it: that is validation's question (ADR-2026-11-09-1543);
-* a `func` with attributes, at its first attribute; a `func` whose body
-  holds a dialect set, at its kind; and one whose body holds items, at the
-  first;
+* a `func` with no results and attributes, at its first attribute; a `func`
+  whose body holds a dialect set, at its kind; and one whose body holds
+  items, at the first;
+* an item other than a `func` whose parameter carries attributes, whose
+  parameters end in `...`, or whose result before a comma carries
+  attributes, at the first such attribute or at the `...`;
 * a `module` with parameters, results or attributes, at the first of them,
   and one whose body holds blocks, at its kind;
 * an item of a dialect's kind whose body is not empty, at its kind;
@@ -153,17 +157,48 @@ def decodeFunc (name : String) (params : List SDef) (results : List (Attr × Tex
   let sc ← define ∅ params
   let sc ← defineBlocks sc blocks
   let params ← params.mapM decodeDef
-  pure ⟨name, params, results, ⟨none, ← decodeBlocks sc name blocks⟩⟩
+  pure ⟨name, params, results, ⟨none, ← decodeBlocks sc name blocks⟩, [], [], false⟩
 
-/-- Decodes an item of kind `func`, at `kindPos`: it has no attributes,
-and its body is blocks. An empty body is no blocks. -/
+/-- The attributes of a func's results: those after each result that a
+comma follows, then those after the last, which the grammar reads as the
+item's attributes. A func with no results has no attributes. -/
+def funcResultAttrs (results : List (Attr × TextPos)) (resultAttrs : List (List (Attr × TextPos)))
+    (attrs : List (Attr × TextPos)) : Except ParseError (List (List Attr)) :=
+  match results, attrs with
+  | [], (_, p) :: _ => errorAt p "a func with no results has no attributes"
+  | _, _ => pure (trimAttrs ((resultAttrs ++ [attrs]).map (·.map (·.1))))
+
+/-- The blocks of a func's body, at `kindPos`. An empty body is no
+blocks. -/
+def funcBlocks (kindPos : TextPos) : SBody → Except ParseError (List SBlock)
+  | .items (_ :: _) _ => errorAt kindPos "a func's body holds blocks, not a dialect set"
+  | .items [] (i :: _) => errorAt i.kindPos "a func's body holds blocks, not items"
+  | .items [] [] => pure []
+  | .blocks bs => pure bs
+
+/-- Decodes an item of kind `func`, at `kindPos`: its parameters and
+results keep their attributes, its parameters may end in `...`, and its
+body is blocks. -/
 def decodeFuncItem (kindPos : TextPos) (name : String) (params : List SDef)
-    (results : List (Attr × TextPos)) : List (Attr × TextPos) → SBody → Except ParseError (Item d)
-  | (_, p) :: _, _ => errorAt p "a func has no attributes"
-  | [], .items (_ :: _) _ => errorAt kindPos "a func's body holds blocks, not a dialect set"
-  | [], .items [] (⟨_, p, _, _, _, _, _⟩ :: _) => errorAt p "a func's body holds blocks, not items"
-  | [], .items [] [] => do pure (.func (← decodeFunc name params results []))
-  | [], .blocks bs => do pure (.func (← decodeFunc name params results bs))
+    (paramAttrs : List (List (Attr × TextPos))) (variadic : Option TextPos)
+    (results : List (Attr × TextPos)) (resultAttrs : List (List (Attr × TextPos)))
+    (attrs : List (Attr × TextPos)) (body : SBody) : Except ParseError (Item d) := do
+  let ras ← funcResultAttrs results resultAttrs attrs
+  let bs ← funcBlocks kindPos body
+  let f ← decodeFunc name params results bs
+  pure (.func ⟨f.name, f.params, f.results, f.body,
+    trimAttrs (paramAttrs.map fun as => as.map (·.1)), ras, variadic.isSome⟩)
+
+/-- Checks the header of an item other than a `func`: no parameter carries
+attributes, the parameters do not end in `...`, and no result that a comma
+follows carries attributes. -/
+def plainHeader (paramAttrs : List (List (Attr × TextPos))) (variadic : Option TextPos)
+    (resultAttrs : List (List (Attr × TextPos))) : Except ParseError Unit :=
+  match paramAttrs.flatten, variadic, resultAttrs.flatten with
+  | (_, p) :: _, _, _ => errorAt p "only a func's parameters carry attributes"
+  | [], some p, _ => errorAt p "only a func's parameters end in ..."
+  | [], none, (_, p) :: _ => errorAt p "only a func's results carry attributes"
+  | [], none, [] => pure ()
 
 /-- Checks the header of an item of kind `module`: it has no parameters,
 results or attributes. -/
@@ -229,9 +264,11 @@ and its items (ADR-2026-11-10-1510), or an item of a dialect's kind
 (ADR-2026-11-09-1543). An empty body is no blocks, so it is a module with no
 items. -/
 def decodeItem : SItem → Except ParseError (Item d)
-  | ⟨kind, kindPos, name, params, results, attrs, body⟩ =>
-    if kind = "func" then decodeFuncItem kindPos name params results attrs body
-    else if kind = "module" then do
+  | ⟨kind, kindPos, name, params, paramAttrs, variadic, results, resultAttrs, attrs, body⟩ =>
+    if kind = "func" then
+      decodeFuncItem kindPos name params paramAttrs variadic results resultAttrs attrs body
+    else plainHeader paramAttrs variadic resultAttrs >>= fun () =>
+    if kind = "module" then do
       moduleHeader params results attrs
       match body with
       | .blocks [] => pure (.module name [] [])

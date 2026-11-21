@@ -14,7 +14,7 @@ changes under it.
 
 #doc (Manual) "Reading the grammar: readable blocks" =>
 
-:::moduleDocs (fingerprint := "1825114608914907934")
+:::moduleDocs (fingerprint := "12529259913768732986")
 :::
 
 :::readable Fir.Text.SDef (fingerprint := "2461358331634527445")
@@ -67,13 +67,13 @@ depends on the dialect: the name and attributes of an op stay as written
 until decoding.
 :::
 
-:::readable Fir.Text.SItem Fir.Text.SBody (fingerprint := "1906821671651604732")
+:::readable Fir.Text.SItem Fir.Text.SBody (fingerprint := "9276016701394299529")
 *Definition: an item, and its body, as written.* An item is read as the
 record below, and its body as blocks, or as a dialect set and items:
 
 ```grammar Fir.Text.SItem
 \mathit{sitem}
-kind,kindPos,name,params,results,attrs,body \begin{array}{l} \{\mathsf{kind}~k, \\ \enspace \mathsf{kind\_pos}~p, \\ \enspace \mathsf{name}~s, \\ \enspace \mathsf{params}~\mathit{sdef}^*, \\ \enspace \mathsf{results}~(a, q)^*, \\ \enspace \mathsf{attrs}~(a, q)^*, \\ \enspace \mathsf{body}~\mathit{sbody}\,\} \end{array}
+kind,kindPos,name,params,paramAttrs,variadic,results,resultAttrs,attrs,body \begin{array}{l} \{\mathsf{kind}~k, \\ \enspace \mathsf{kind\_pos}~p, \\ \enspace \mathsf{name}~s, \\ \enspace \mathsf{params}~\mathit{sdef}^*, \\ \enspace \mathsf{param\_attrs}~((a, q)^*)^*, \\ \enspace \mathsf{variadic}~q^?, \\ \enspace \mathsf{results}~(a, q)^*, \\ \enspace \mathsf{result\_attrs}~((a, q)^*)^*, \\ \enspace \mathsf{attrs}~(a, q)^*, \\ \enspace \mathsf{body}~\mathit{sbody}\,\} \end{array}
 ```
 
 ```grammar Fir.Text.SBody
@@ -84,8 +84,14 @@ items  \mathsf{items}~\mathit{name}^*~\mathit{sitem}^*
 
 An item keeps its kind $`k`, a word, with its position $`p`
 ($`\mathsf{kind\_pos}` is `kindPos` in the Lean), its symbol $`s`, its
-parameters, and each result type and attribute $`a` with its position
-$`q`. Its body is its blocks, or the dialect set and the items that it
+parameters, the attributes after each parameter's type, the position of
+the `...` that ends its parameters, if they end in it, each result type,
+the attributes after each result's type but the last's, and its
+attributes, each attribute $`a` with its position $`q`
+($`\mathsf{param\_attrs}` and $`\mathsf{result\_attrs}` are
+`paramAttrs` and `resultAttrs` in the Lean). The attributes after the last
+result's type start its attributes: the grammar cannot tell them apart,
+and decoding says whose they are. Its body is its blocks, or the dialect set and the items that it
 holds; an empty body is no blocks. A `func` with blocks and a `module` with
 a dialect set and items decode; the tree reads other kinds so that a later
 kind needs no change to this step.
@@ -115,7 +121,7 @@ for one reader after another. These bounds are what make the readers, which
 call one another, end.
 :::
 
-:::readable Fir.Text.fail Fir.Text.expect Fir.Text.keyword Fir.Text.readMore (fingerprint := "16985387300482755857")
+:::readable Fir.Text.fail Fir.Text.expect Fir.Text.keyword Fir.Text.readMore (fingerprint := "6965504618080113712")
 *Definition: the readers that the others are built from.* A reader that
 expects one thing and finds a token $`t` fails at the position of $`t`,
 with the reason "expected" the thing, "found" $`t`. Every list of tokens
@@ -128,7 +134,7 @@ reads a comma and an element with a given reader, as long as a comma
 follows: the elements after the first of a list separated by commas.
 :::
 
-:::readable Fir.Text.readAttr Fir.Text.readAttrArgs Fir.Text.readMoreAttrArgs Fir.Text.readType Fir.Text.Tok.startsAttr Fir.Text.readAttrs (fingerprint := "14079719549840315452")
+:::readable Fir.Text.readAttr Fir.Text.readAttrArgs Fir.Text.readMoreAttrArgs Fir.Text.readType Fir.Text.Tok.startsAttr Fir.Text.readAttrs (fingerprint := "9760399790842598158")
 *Definition: reading attributes and types.* An attribute is a word
 followed by `(`, which is the word applied to the attributes that follow,
 up to `)` and separated by commas; or a word, an integer, a float literal,
@@ -143,13 +149,13 @@ position, as long as the next token is a word, an integer, a float
 literal, a string or a symbol.
 :::
 
-:::readable Fir.Text.readDefType Fir.Text.readDef Fir.Text.readDefs (fingerprint := "1027100472526777793")
+:::readable Fir.Text.readDefType Fir.Text.readDef Fir.Text.readDefs (fingerprint := "320528512199189741")
 *Definition: reading definitions.* A definition is a value token, then
 `:`, then a type, and is read with the positions of the value and of the
 type. A list of definitions is one or more of them, separated by commas.
 :::
 
-:::readable Fir.Text.readSuccArgs Fir.Text.readSucc Fir.Text.readMoreOperands Fir.Text.readOperands Fir.Text.readOpLoc (fingerprint := "13944746277913763084")
+:::readable Fir.Text.readSuccArgs Fir.Text.readSucc Fir.Text.readMoreOperands Fir.Text.readOperands Fir.Text.readOpLoc (fingerprint := "6159597756254706277")
 *Definition: reading operands, successors and the location reference.* A
 successor is a label, followed, when `(` follows it, by one or more values
 that it passes, separated by commas, and `)`. An op's operands
@@ -160,7 +166,7 @@ or neither. Last comes the op's location reference; any other token there
 is an error, "expected the op's location reference".
 :::
 
-:::readable Fir.Text.readKind Fir.Text.readBlocks Fir.Text.readOps Fir.Text.readOpWithResults Fir.Text.readOpBody Fir.Text.readRegions (fingerprint := "7655503512379460276")
+:::readable Fir.Text.readKind Fir.Text.readBlocks Fir.Text.readOps Fir.Text.readOpWithResults Fir.Text.readOpBody Fir.Text.readRegions (fingerprint := "11848995529020059096")
 *Definition: reading blocks, ops and regions.* These readers call one
 another, since an op may own regions:
 
@@ -178,7 +184,7 @@ another, since an op may own regions:
   two never meet.
 :::
 
-:::readable Fir.Text.readDialectName Fir.Text.readDialects (fingerprint := "18181625636344405930")
+:::readable Fir.Text.readDialectName Fir.Text.readDialects (fingerprint := "11638523870589205576")
 *Definition: reading a dialect set.* When the tokens start with the word
 `dialects`, the set is the word after it, then each word after a comma, as
 long as a comma follows; a token after `dialects` or after a comma that is
@@ -188,7 +194,7 @@ is empty, and nothing is read. A set starts a module, and a body of items
 reads nothing of it.
 :::
 
-:::readable Fir.Text.readLayout (pin := Fir.Text.readType) (fingerprint := "889149445110897318")
+:::readable Fir.Text.readLayout (pin := Fir.Text.readType) (fingerprint := "7093527520123102893")
 *Definition: reading a data layout.* When the tokens start with the word
 `layout`, the layout is the type after it, with its position, then each
 type after a comma, as long as a comma follows; each entry is read as a
@@ -197,12 +203,21 @@ is an entry. Otherwise the layout is empty, and nothing is read. A layout
 follows a module's dialect set, and a body of items has none.
 :::
 
-:::readable Fir.Text.readItems Fir.Text.readItem (fingerprint := "13058271859784856739")
+:::readable Fir.Text.readParam Fir.Text.readMoreParams Fir.Text.readParams Fir.Text.readResult (fingerprint := "13469694055812550233")
+*Definition: reading parameters and results.* A parameter is a definition,
+then the attributes after it. An item's parameters are `...` alone, or one
+or more parameters separated by commas, which may end in `, ...`; the
+reader keeps the position of the `...`. A result is a type, then the
+attributes after it.
+:::
+
+:::readable Fir.Text.readItems Fir.Text.readItem (fingerprint := "13976377462153773885")
 *Definition: reading items.* Items are read as long as a word, the item's
 kind, follows; at the top of the module, the word `locs` starts the
 location table instead. An item is its kind, then its symbol, then its
 parameters in parentheses, which may be none, then, when `->` follows, one
-or more result types separated by commas, then its attributes, then its
-body in braces. The body is a dialect set and items when it starts with a
+or more results separated by commas, then its attributes, then its
+body in braces. The attributes read with the last result start the item's
+attributes. The body is a dialect set and items when it starts with a
 word, and blocks otherwise.
 :::

@@ -39,7 +39,7 @@ use crate::dialects;
 use crate::dialects::core::NAME as CORE;
 use crate::effects::Effects;
 use crate::ir::names::{is_word, word_dialect};
-use crate::ir::{MemLayout, Type};
+use crate::ir::{Attr, MemLayout, Type};
 
 /// A dialect: a name, the dialects it depends on, its ops, its types, its
 /// function rules, its region kinds and its kinds of item.
@@ -365,6 +365,17 @@ impl Registry {
     pub fn type_memory(&self, ty: &Type) -> Option<u32> {
         let name = word_dialect(&ty.name).unwrap_or(CORE);
         self.dialect(name)?.types.iter().find_map(|t| t.memory(ty))
+    }
+
+    /// Whether a parameter or result of type `ty` may carry the attributes
+    /// `attrs` in a function's signature, as the dialect that its head word
+    /// names says (`validSigAttrs`). A type that no registered dialect
+    /// claims carries none.
+    pub fn sig_attrs(&self, ty: &Type, attrs: &[Attr]) -> bool {
+        let name = word_dialect(&ty.name).unwrap_or(CORE);
+        self.dialect(name)
+            .and_then(|d| d.types.iter().find(|t| t.check(ty).is_some()))
+            .map_or(attrs.is_empty(), |t| t.sig_attrs(ty, attrs))
     }
 
     /// The units and the alignment of a field of type `ty` in the memory

@@ -1,4 +1,5 @@
 import Fir.Text.ReadLocs
+import Fir.Syntax.FuncAttrs
 
 /-!
 # The syntax tree of a module
@@ -7,15 +8,15 @@ The parser reads a text in three steps: the lexer reads it as tokens, the
 grammar reads the tokens as a tree, and decoding turns the tree into a
 module. The proof that parsing the printed text of a well-formed module
 gives the module back has one step for each, and this section and the
-eleven after it give the last two, and put all three together:
+twelve after it give the last two, and put all three together:
 
 * Lexing printed text, in the sections before this one, reads the printed
   text of a module as exactly the module's tokens, then `eof`.
 * The grammar step reads those tokens, at any positions, as the module's
   own tree, up to positions. This section defines that tree. The next
-  seven read it back: what it means for a reader to read tokens back, then
-  definitions and successors, ops, blocks and regions, a function, the
-  location table, and the whole module.
+  eight read it back: what it means for a reader to read tokens back, then
+  definitions and successors, parameters and results, ops, blocks and
+  regions, a function, the location table, and the whole module.
 * The decoding step gives the module back from any tree that is the
   module's tree up to positions. Three sections take it: the first pass,
   which builds the scope of a function; the second pass, which decodes its
@@ -23,7 +24,9 @@ eleven after it give the last two, and put all three together:
 * The last section, the round trip, proved, puts the three steps together.
 
 The tree of a module is how the grammar sees it. A function is a `func` with
-its symbol, its parameters, its result types and no attributes, and its body
+its symbol, its parameters and their attributes, `...` when it is variadic,
+its result types and their attributes, the last result's attributes being
+the item's, and its body
 is its blocks, even when it has none: a function's tokens after its `{`
 start with a label or are its `}`, never a word, so the grammar reads its
 body as blocks. A nested module is a `module` with its symbol and no
@@ -90,9 +93,10 @@ end
 mutual
 /-- An item without its positions, at any depth. -/
 def SItem.erase : SItem → SItem
-  | ⟨kind, _, name, params, results, attrs, body⟩ =>
-    ⟨kind, .zero, name, params.map SDef.erase, results.map eraseAt, attrs.map eraseAt,
-      SBody.erase body⟩
+  | ⟨kind, _, name, params, paramAttrs, variadic, results, resultAttrs, attrs, body⟩ =>
+    ⟨kind, .zero, name, params.map SDef.erase, paramAttrs.map (·.map eraseAt),
+      variadic.map fun _ => .zero, results.map eraseAt, resultAttrs.map (·.map eraseAt),
+      attrs.map eraseAt, SBody.erase body⟩
 
 /-- The body of an item without its positions. -/
 def SBody.erase : SBody → SBody
@@ -155,10 +159,16 @@ def Operation.treeList : List (Operation d) → List SOp
   | o :: os => o.tree :: Operation.treeList os
 end
 
-/-- The tree of a function: an item of kind `func` with no attributes, whose
-body is its blocks. -/
+/-- Attributes, each at the empty position. -/
+def attrsTree (as : List Attr) : List (Attr × TextPos) := as.map (·, .zero)
+
+/-- The tree of a function: an item of kind `func`, whose parameters and
+results carry their attributes, and whose body is its blocks. The
+attributes of its last result are the item's, as the grammar reads them. -/
 def Func.tree (f : Func d) : SItem :=
-  ⟨"func", .zero, f.name, f.params.map defTree, f.results.map (tyAttr · , .zero), [],
+  ⟨"func", .zero, f.name, f.params.map defTree, f.paramAttrsAll.map attrsTree,
+    if f.variadic then some .zero else none, f.results.map (tyAttr · , .zero),
+    f.resultAttrsAll.dropLast.map attrsTree, attrsTree (f.resultAttrsAll.getLast?.getD []),
     .blocks (Block.treeList f.body.blocks)⟩
 
 /-- The body of a nested module: its dialect set and its items, or no
@@ -170,8 +180,9 @@ def moduleBody (ds : List Name) (is : List SItem) : SBody :=
 results and attributes, and an empty body, which the grammar reads as no
 blocks. -/
 def DialectItem.tree (i : DialectItem d) : SItem :=
-  ⟨i.kind, .zero, i.name, i.params.map defTree, i.results.map (tyAttr · , .zero),
-    i.attrs.map (·, .zero), .blocks []⟩
+  ⟨i.kind, .zero, i.name, i.params.map defTree, i.params.map fun _ => [], none,
+    i.results.map (tyAttr · , .zero), i.results.dropLast.map fun _ => [], i.attrs.map (·, .zero),
+    .blocks []⟩
 
 mutual
 /-- The tree of an item. A nested module is an item of kind `module` with no
@@ -179,7 +190,8 @@ parameters, results or attributes, whose body is its dialect set and its
 items. -/
 def Item.tree : Item d → SItem
   | .func f => f.tree
-  | .module name ds is => ⟨"module", .zero, name, [], [], [], moduleBody ds (Item.treeList is)⟩
+  | .module name ds is =>
+    ⟨"module", .zero, name, [], [], none, [], [], [], moduleBody ds (Item.treeList is)⟩
   | .dialect i => i.tree
   | .aggregate a => a.item.tree
   | .global g => (g.item (d := d)).tree
@@ -305,17 +317,28 @@ theorem SRegion.eraseList_eq_cons {srs : List SRegion} {r : Region d} {rs : List
     exact ⟨_, srs', rfl, h.1.1, h.1.2, h.2⟩
 
 /-- An item that erases to a function's tree is a `func` with the
-function's symbol, parameters and result types, no attributes, and the
-function's blocks as its body. -/
+function's symbol, parameters with their attributes, `...` when the
+function ends in it, result types with their attributes, those of the last
+result as the item's, and the function's blocks as its body. -/
 theorem SItem.erase_eq_funcTree {si : SItem} {f : Func d} (h : si.erase = f.tree) :
     si.kind = "func" ∧ si.name = f.name ∧ si.params.map SDef.erase = f.params.map defTree ∧
-      si.results.map (·.1) = f.results.map tyAttr ∧ si.attrs = [] ∧
+      si.paramAttrs.map (·.map (·.1)) = f.paramAttrsAll ∧ si.variadic.isSome = f.variadic ∧
+      si.results.map (·.1) = f.results.map tyAttr ∧
+      si.resultAttrs.map (·.map (·.1)) = f.resultAttrsAll.dropLast ∧
+      si.attrs.map (·.1) = f.resultAttrsAll.getLast?.getD [] ∧
       ∃ bs, si.body = .blocks bs ∧ SBlock.eraseList bs = Block.treeList f.body.blocks := by
-  obtain ⟨kind, kindPos, name, params, results, attrs, body⟩ := si
+  obtain ⟨kind, kindPos, name, params, paramAttrs, variadic, results, resultAttrs, attrs, body⟩ :=
+    si
   simp only [SItem.erase, Func.tree, SItem.mk.injEq] at h
-  obtain ⟨h₁, -, h₃, h₄, h₅, h₆, h₇⟩ := h
-  refine ⟨h₁, h₃, h₄, ?_, by simpa using h₆, ?_⟩
+  obtain ⟨h₁, -, h₃, h₄, hpa, hv, h₅, hra, h₆, h₇⟩ := h
+  have strip : ∀ {xs : List (List (Attr × TextPos))} {ys : List (List Attr)},
+      xs.map (·.map eraseAt) = ys.map attrsTree → xs.map (·.map (·.1)) = ys := fun h => by
+    simpa [List.map_map, Function.comp_def, eraseAt, attrsTree] using
+      congrArg (List.map (List.map Prod.fst)) h
+  refine ⟨h₁, h₃, h₄, strip hpa, ?_, ?_, strip hra, ?_, ?_⟩
+  · cases variadic <;> cases hf : f.variadic <;> simp_all
   · simpa [List.map_map, Function.comp_def, eraseAt] using congrArg (List.map Prod.fst) h₅
+  · simpa [List.map_map, Function.comp_def, eraseAt, attrsTree] using congrArg (List.map Prod.fst) h₆
   · cases body with
     | blocks bs => exact ⟨bs, rfl, by simpa [SBody.erase] using h₇⟩
     | items _ _ => simp [SBody.erase] at h₇

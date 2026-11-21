@@ -59,6 +59,39 @@ theorem Func.entryProblems_eq_nil (f : Func d) :
 variable [DialectSignature d] [DialectValidation d] [DecidableEq d.Ty]
   [DecidableDialectValidation d]
 
+/-- The problems of a function's signature: parameters that end in `...`,
+attributes held in another form than the text reads, and attributes that
+the dialect of a parameter's or result's type does not allow. -/
+def Func.sigProblems (f : Func d) : List Problem :=
+  (if f.variadic then [f.problem ("the function's parameters end in ...: " ++
+    "a fir function is not variadic, only an external declaration is")] else []) ++
+  (if AttrsTrimmed f.params.length f.paramAttrs ∧ AttrsTrimmed f.results.length f.resultAttrs
+    then [] else [f.problem ("the function holds the attributes of its parameters or results " ++
+      "in another form than the text reads")]) ++
+  (f.params.zip f.paramAttrsAll).filterMap (fun x => if validSigAttrs x.1.2 x.2 then none else
+    some (f.problem ("the attributes of parameter " ++ valueRef x.1.1 ++
+      " are not ones its type allows"))) ++
+  (f.results.zip f.resultAttrsAll).filterMap (fun x => if validSigAttrs x.1 x.2 then none else
+    some (f.problem "the attributes of a result of the function are not ones its type allows"))
+
+omit [DecidableEq d.Ty] [DialectSignature d] in
+theorem Func.sigProblems_eq_nil (f : Func d) : f.sigProblems = [] ↔ f.SigValid := by
+  unfold Func.sigProblems
+  constructor
+  · intro h
+    simp only [List.append_eq_nil_iff, List.filterMap_eq_nil_iff, ite_eq_left_iff,
+      reduceCtorEq, imp_false, Classical.not_not] at h
+    obtain ⟨⟨⟨hv, ht⟩, hp⟩, hr⟩ := h
+    refine ⟨?_, ht.1, ht.2, hp, hr⟩
+    cases hf : f.variadic <;> simp_all
+  · rintro ⟨hv, hpa, hra, hp, hr⟩
+    have hc : AttrsTrimmed f.params.length f.paramAttrs ∧
+        AttrsTrimmed f.results.length f.resultAttrs := ⟨hpa, hra⟩
+    simp only [hv, Bool.false_eq_true, List.nil_append, hc, ↓reduceIte,
+      List.append_eq_nil_iff, List.filterMap_eq_nil_iff, ite_eq_left_iff, reduceCtorEq,
+      imp_false, Classical.not_not, and_self]
+    exact ⟨hp, hr⟩
+
 /-- The problems of a function, given `all`, its blocks at any depth. -/
 def Func.problemsIn (lk : Lookup d) (f : Func d) (all : List (Block d)) : List Problem :=
   let t := f.tables all
@@ -86,7 +119,8 @@ def Func.problemsIn (lk : Lookup d) (f : Func d) (all : List (Block d)) : List P
   f.blocks.flatMap (fun b => let n := b.body.length
     b.body.zipIdx.flatMap fun (o, i) => opProblems lk f t b n i o) ++
   all.flatMap (fun b => b.body.flatMap (·.innerProblems lk f t)) ++
-  (if validFunc (DialectView.id d) ⟨lk.symbols⟩ f then [] else [f.ruleProblem])
+  (if validFunc (DialectView.id d) ⟨lk.symbols⟩ f then [] else [f.ruleProblem]) ++
+  f.sigProblems
 
 /-- The problems of a function, in the context of its module. -/
 def Func.problems (lk : Lookup d) (f : Func d) : List Problem :=
@@ -105,9 +139,9 @@ theorem Func.valid_iff (ctx : ModuleContext d) (f : Func d) : f.Valid ctx ↔
     (∀ b ∈ f.blocks, b.body ≠ []) ∧
     (∀ b ∈ f.blocks, ∀ (i : Nat) (o : Operation d), b.body[i]? = some o → f.OpValid ctx b i o) ∧
     (∀ b ∈ f.allBlocks, ∀ o ∈ b.body, ∀ o' ∈ o.innerOps, f.InnerOpValid ctx o') ∧
-    validFunc (DialectView.id d) ⟨ctx.symbols⟩ f :=
-  ⟨fun ⟨k, a, b, c, d, e, f, g, h, i, n, j⟩ => ⟨k, a, b, c, d, e, f, g, h, i, n, j⟩,
-    fun ⟨k, a, b, c, d, e, f, g, h, i, n, j⟩ => ⟨k, a, b, c, d, e, f, g, h, i, n, j⟩⟩
+    validFunc (DialectView.id d) ⟨ctx.symbols⟩ f ∧ f.SigValid :=
+  ⟨fun ⟨k, a, b, c, d, e, f, g, h, i, n, j, s⟩ => ⟨k, a, b, c, d, e, f, g, h, i, n, j, s⟩,
+    fun ⟨k, a, b, c, d, e, f, g, h, i, n, j, s⟩ => ⟨k, a, b, c, d, e, f, g, h, i, n, j, s⟩⟩
 
 omit [DialectSignature d] [DialectValidation d] [DecidableEq d.Ty]
   [DecidableDialectValidation d] in
@@ -155,6 +189,6 @@ theorem Func.problems_eq_nil {lk : Lookup d} {ctx : ModuleContext d} {f : Func d
     Func.entryProblems_eq_nil,
     List.filterMap_eq_nil_iff, ite_none_eq_none, List.map_eq_nil_iff, repeats_eq_nil,
     List.flatMap_eq_nil_iff, Func.defs, List.mem_append, or_imp, forall_and, Prod.forall,
-    and_assoc, ite_nil_eq_nil, h.symbols]
+    and_assoc, ite_nil_eq_nil, h.symbols, Func.sigProblems_eq_nil]
 
 end Fir

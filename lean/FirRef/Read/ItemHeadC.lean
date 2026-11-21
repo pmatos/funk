@@ -12,10 +12,11 @@ open Fir Fir.Text Cursor
 variable {σ : Type} [Cursor σ]
 
 /-- `itemParamsS`, on a cursor. -/
-def itemParamsC (s : σ) : Except ParseError (List SDef × σ) :=
+def itemParamsC (s : σ) :
+    Except ParseError ((List (SDef × List (Attr × TextPos)) × Option TextPos) × σ) :=
   match uncons s with
-  | some (⟨.rparen, _⟩, _) => .ok ([], s)
-  | _ => readDefsC s
+  | some (⟨.rparen, _⟩, _) => .ok (([], none), s)
+  | _ => readParamsC s
 
 theorem itemParamsC_eq (s : σ) : V (itemParamsC s) = itemParamsS (view s) := by
   unfold itemParamsC itemParamsS
@@ -28,27 +29,25 @@ theorem itemParamsC_eq (s : σ) : V (itemParamsC s) = itemParamsS (view s) := by
     split
     · rename_i p rest he
       exact absurd he (not_head hn p rest)
-    · exact readDefsC_eq s
+    · exact readParamsC_eq s
 
-theorem itemParamsC_le {s s' : σ} {ps : List SDef} (h : itemParamsC s = .ok (ps, s')) :
+theorem itemParamsC_le {s s' : σ} {ps : List (SDef × List (Attr × TextPos)) × Option TextPos}
+    (h : itemParamsC s = .ok (ps, s')) :
     (view s').length ≤ (view s).length := by
   unfold itemParamsC at h
   split at h
   · simp only [Except.ok.injEq, Prod.mk.injEq] at h
     exact h.2 ▸ Nat.le_refl _
-  · exact readDefsC_le h
-
-theorem readTypeC_le' (s : σ) (a : Attr × TextPos) (s' : σ) (h : readTypeC s = .ok (a, s')) :
-    (view s').length ≤ (view s).length :=
-  readTypeC_le h
+  · exact readParamsC_le h
 
 /-- `itemResultsS`, on a cursor. -/
-def itemResultsC (s : σ) : Except ParseError (List (Attr × TextPos) × σ) :=
+def itemResultsC (s : σ) :
+    Except ParseError (List ((Attr × TextPos) × List (Attr × TextPos)) × σ) :=
   match uncons s with
   | some (⟨.arrow, _⟩, s₁) =>
-    match readTypeC s₁ with
+    match readResultC s₁ with
     | .ok (t, s₂) =>
-      match readMoreC readTypeC readTypeC_le' s₂ [] with
+      match readMoreC readResultC readResultC_le s₂ [] with
       | .ok (more, s₃) => .ok (t :: more, s₃)
       | .error e => .error e
     | .error e => .error e
@@ -60,13 +59,13 @@ theorem itemResultsC_eq (s : σ) : V (itemResultsC s) = itemResultsS (view s) :=
   · rename_i p s₁ h
     rw [view_of_uncons h]
     simp only
-    rcases agree (readTypeC_eq s₁) with ⟨e, hx, hy⟩ | ⟨t, s₂, r, hr, hx, hy, hv⟩
+    rcases agree (readResultC_eq s₁) with ⟨e, hx, hy⟩ | ⟨t, s₂, r, hr, hx, hy, hv⟩
     · rw [hx, hy]; rfl
     · rw [hx, hy]
       subst hv
       simp only [U_ok, okBind]
       rcases agree_map (f := fun q => ([].reverse ++ q))
-        (readMoreC_eq readTypeC readTypeC_le' readType readTypeC_eq s₂ []) with
+        (readMoreC_eq readResultC readResultC_le readResult readResultC_eq s₂ []) with
         ⟨e, hx', hy'⟩ | ⟨more, s₃, r', hr', hx', hy', hv'⟩
       · rw [hx', hy']; rfl
       · rw [hx', hy']
@@ -78,7 +77,7 @@ theorem itemResultsC_eq (s : σ) : V (itemResultsC s) = itemResultsS (view s) :=
       exact absurd he (not_head hn p rest)
     · rfl
 
-theorem itemResultsC_le {s s' : σ} {rs : List (Attr × TextPos)}
+theorem itemResultsC_le {s s' : σ} {rs : List ((Attr × TextPos) × List (Attr × TextPos))}
     (h : itemResultsC s = .ok (rs, s')) : (view s').length ≤ (view s).length := by
   unfold itemResultsC at h
   split at h
@@ -90,7 +89,7 @@ theorem itemResultsC_le {s s' : σ} {rs : List (Attr × TextPos)}
         simp only [Except.ok.injEq, Prod.mk.injEq] at h
         rw [← h.2]
         have := readMoreC_le h₃
-        have := readTypeC_le h₂
+        have := readResultC_le _ _ _ h₂
         have := length_lt hs
         omega
       · cases h
@@ -103,12 +102,12 @@ def itemHeadC (kind : String) (p : TextPos) (s : σ) : Except ParseError (ItemHe
   match uncons s with
   | some (⟨.sym name, _⟩, s₁) => do
     let ((), s₂) ← expectC .lparen "( and the item's parameters" s₁
-    let (params, s₃) ← itemParamsC s₂
+    let ((params, variadic), s₃) ← itemParamsC s₂
     let ((), s₄) ← expectC .rparen ")" s₃
     let (results, s₅) ← itemResultsC s₄
     let (attrs, s₆) ← readAttrsC s₅ []
     let ((), s₇) ← expectC .lbrace "{ and the item's body" s₆
-    pure (⟨kind, p, name, params, results, attrs⟩, s₇)
+    pure (⟨kind, p, name, params, variadic, results, attrs⟩, s₇)
   | _ => failC s "the item's symbol"
 
 theorem itemHeadC_eq (kind : String) (p : TextPos) (s : σ) :

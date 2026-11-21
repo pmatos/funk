@@ -164,6 +164,7 @@ theorem sum_valid : sum.Valid sumModule.context where
     (by simpa using sum_loop_dominates_body) (by decide +kernel)
   inner := Func.inner_of_noRegions (by decide +kernel)
   dialect := trivial
+  signature := (Func.sigProblems_eq_nil _).1 rfl
 
 /-! # `@sum10` and the module -/
 
@@ -188,6 +189,7 @@ theorem sum10_valid : sum10.Valid sumModule.context where
   ops := opValid_of (dom := []) (fun _ h => nomatch h) (by decide +kernel)
   inner := Func.inner_of_noRegions (by decide +kernel)
   dialect := trivial
+  signature := (Func.sigProblems_eq_nil _).1 rfl
 
 /-- The spec's example module is valid. -/
 theorem sumModule_valid : sumModule.Valid := Module.valid_of_flat

@@ -48,7 +48,7 @@ dialect is a
 {ref "The-fir-specification--Validation--The-validation-check"}[decidable dialect].
 :::
 
-:::readable Fir.Core.Rejects.deadModule (pin := Fir.Core.Rejects.deadBlock) (fingerprint := "16048080443308313161")
+:::readable Fir.Core.Rejects.deadModule (pin := Fir.Core.Rejects.deadBlock) (fingerprint := "12688694913204946916")
 *Definition: the rejected function, alone in a module.* The module holds
 the function `@f` and nothing else, its data layout is empty, and its
 location table has the one

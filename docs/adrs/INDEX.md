@@ -99,6 +99,7 @@ The last column is what holds now: the ADR and every ADR that its
 | [ADR-2026-11-18-2041](2026-11-18-2041-fieldaddr-moves-a-pointer-to-a-field-of-a-named-layout.md) | [semantics](../decisions/semantics.md) | fieldaddr moves a pointer to a field of a layout that it names | this ADR |
 | [ADR-2026-11-18-2131](2026-11-18-2131-memcpy-and-memmove-take-an-ordering-and-a-run-time-length.md) | [semantics](../decisions/semantics.md) | memcpy, memmove and memset take an ordering and a run-time length in units | this ADR |
 | [ADR-2026-11-19-0124](2026-11-19-0124-a-global-is-a-core-item-of-units-and-addresses.md) | [semantics](../decisions/semantics.md) | A global is a core item `global` of units and addresses, valid in its own table | this ADR |
+| [ADR-2026-11-21-1307](2026-11-21-1307-a-signature-s-markers-are-attributes-its-type-s-dialect-reads.md) | [text-format](../decisions/text-format.md) | A signature's markers are attributes after a type, which the type's dialect reads, and `...` ends the parameters | this ADR |
 
 ## Implementation
 

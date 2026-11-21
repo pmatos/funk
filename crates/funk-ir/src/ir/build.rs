@@ -31,7 +31,7 @@
 use super::attr::{Attr, Type};
 use super::layout::MemLayout;
 use super::location::LocRef;
-use super::module::{Block, Def, Func, Item, Module, Op, Region, Succ};
+use super::module::{Block, Def, Func, Item, Module, Op, Region, Succ, trim_attrs};
 
 impl Op {
     /// An op named `name` at location `loc`, with no parts yet.
@@ -124,6 +124,9 @@ impl Func {
             params: Vec::new(),
             results: Vec::new(),
             body: Region::default(),
+            param_attrs: Vec::new(),
+            result_attrs: Vec::new(),
+            variadic: false,
         }
     }
 
@@ -136,6 +139,25 @@ impl Func {
     /// Adds a result type.
     pub fn result(mut self, ty: Type) -> Func {
         self.results.push(ty);
+        self
+    }
+
+    /// Adds the parameter `%name: ty` with the attributes `attrs` after its
+    /// type.
+    pub fn marked_param(mut self, name: impl Into<String>, ty: Type, attrs: Vec<Attr>) -> Func {
+        push_attrs(&mut self.param_attrs, self.params.len(), attrs);
+        self.param(name, ty)
+    }
+
+    /// Adds a result type with the attributes `attrs` after it.
+    pub fn marked_result(mut self, ty: Type, attrs: Vec<Attr>) -> Func {
+        push_attrs(&mut self.result_attrs, self.results.len(), attrs);
+        self.result(ty)
+    }
+
+    /// Ends the parameters in `...`.
+    pub fn variadic(mut self) -> Func {
+        self.variadic = true;
         self
     }
 
@@ -169,4 +191,12 @@ impl Module {
         self.items.push(Item::Func(f));
         self
     }
+}
+
+/// Sets `attrs` as the attributes of the place at `index`, the one after
+/// the last place so far, keeping the list in its short form.
+fn push_attrs(list: &mut Vec<Vec<Attr>>, index: usize, attrs: Vec<Attr>) {
+    list.resize(index, Vec::new());
+    list.push(attrs);
+    *list = trim_attrs(std::mem::take(list));
 }

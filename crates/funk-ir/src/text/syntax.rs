@@ -18,13 +18,22 @@ pub(super) struct DefPos {
     pub ty: TextPos,
 }
 
-/// `item ::= word symbol '(' defs? ')' ('->' types)? attr* '{' body '}'`.
+/// `item ::= word symbol '(' params? ')' ('->' results)? attr* '{' body '}'`,
+/// where each parameter and each result carries the attributes after its
+/// type, and the parameters may end in `...`.
 pub(super) struct SItem {
     pub kind: String,
     pub kind_pos: TextPos,
     pub name: String,
     pub params: Vec<(Def, DefPos)>,
+    /// The attributes of each parameter.
+    pub param_attrs: Vec<Vec<(Attr, TextPos)>>,
+    /// Where the `...` that ends the parameters stands, if they end in it.
+    pub variadic: Option<TextPos>,
     pub results: Vec<(Type, TextPos)>,
+    /// The attributes of each result but the last, whose attributes start
+    /// `attrs`.
+    pub result_attrs: Vec<Vec<(Attr, TextPos)>>,
     pub attrs: Vec<(Attr, TextPos)>,
     pub body: SBody,
 }

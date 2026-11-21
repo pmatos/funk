@@ -330,9 +330,9 @@ fn parse_never_panics(text: &str, reg: &Registry) {
 fn the_parser_never_panics_on_mutated_texts() {
     let reg = Registry::core();
     let mut rng = Rng::new(42);
-    const PIECES: [&str; 24] = [
-        "%", "^", "@", "\"", "\\", "(", ")", "{", "}", ",", ":", "=", "->", "-", "0", "9", "i8",
-        "const", "add", "ret", "locs", "\n", "\r", "\u{202e}",
+    const PIECES: [&str; 26] = [
+        "%", "^", "@", "\"", "\\", "(", ")", "{", "}", ",", ":", "=", "->", "...", "-", "0", "9",
+        "i8", "sext", "const", "add", "ret", "locs", "\n", "\r", "\u{202e}",
     ];
     for (_, m) in generated().take(300) {
         let text = print(&m);

@@ -14,9 +14,10 @@ the rule that a float op that rounds rounds with the mode `rne`
 rules of the loads and stores (ADR-2026-11-14-2316), the rule of a copy
 or a move, `memCopy`, and of a fill, `memSet` (ADR-2026-11-18-2131), the
 width that a fill asks of its memory's units, the rule of `fieldAddr`,
-which reads the layouts of the op's table (#236), and the
+which reads the layouts of the op's table (#236), the
 units and alignment of a field of an aggregate's layout
-(ADR-2026-11-16-1546).
+(ADR-2026-11-16-1546), and the extension markers that a parameter or a
+result may carry (ADR-2026-11-09-1547).
 The general rules of the previous sections already
 check every op's operand and result types against its signature, so these
 are all the rules of the core dialect. It has no rule over a whole function.
@@ -255,6 +256,18 @@ def Op.Valid (ctx : OpContext CoreDialect) : Op → Prop
   | .fieldAddr s i n w => (ctx.layouts s).map (·.admits i n w.isSome) = some true
   | _ => True
 
+/--
+Whether a parameter or a result of a core type may carry the attributes
+`as` after its type: none, or one extension marker, `sext` or `zext`, on an
+integer narrower than 32 bits (ADR-2026-11-09-1547). A marked parameter is
+extended by the caller and a marked result by the callee, to 32 bits, by
+its sign with `sext` and with zeros with `zext`.
+-/
+def Ty.sigAttrsAllowed : Ty → List Attr → Bool
+  | _, [] => true
+  | .int w, [.word m] => decide (w < 32) && (m == "sext" || m == "zext")
+  | _, _ => false
+
 end Fir.Core
 
 namespace Fir
@@ -268,5 +281,6 @@ instance : DialectValidation CoreDialect where
   opTypes := Core.Op.attrTypes
   opUnits := Core.Op.unitWidths
   fieldShape := Core.Ty.fieldShape
+  validSigAttrs t as := Core.Ty.sigAttrsAllowed t as = true
 
 end Fir

@@ -72,7 +72,7 @@ are the tokens of its results followed by `=`, when it has results, then
 $`\mathsf{word}~\mathrm{opname}(\iota)`, then its tokens after its name.
 :::
 
-:::readable Fir.readOpBody_reads (pin := Fir.Text.readOpBody) (fingerprint := "6387413583896544441")
+:::readable Fir.readOpBody_reads (pin := Fir.Text.readOpBody) (fingerprint := "4475762069836149618")
 *Theorem: the rest of an op reads back.* For every dialect with a text
 format and every op $`o`, suppose that the reader of regions reads the
 tokens of the regions of $`o` as their trees before any location reference,
@@ -89,7 +89,7 @@ regions, then the location reference, each stopped by the first token of
 the next.
 :::
 
-:::readable Fir.readOpWithResults_reads (pin := Fir.Text.readOpWithResults) (pin := Fir.defTokens) (fingerprint := "6785089073480272351")
+:::readable Fir.readOpWithResults_reads (pin := Fir.Text.readOpWithResults) (pin := Fir.defTokens) (fingerprint := "16503790254902480843")
 *Theorem: an op with results reads back after its first value.* For every
 dialect with a text format, every op $`o`, definitions
 $`x_1 : T_1, \dots, x_n : T_n` with $`n \geq 1` such that each
@@ -108,7 +108,7 @@ has already taken $`\mathsf{value}~x_1`, which tells it that an op with
 results starts.
 :::
 
-:::readable Fir.readOps_nil_reads Fir.readOps_cons_reads (pin := Fir.Text.readOps) (pin := Fir.Operation.tokensList) (fingerprint := "15446500164858429372")
+:::readable Fir.readOps_nil_reads Fir.readOps_cons_reads (pin := Fir.Text.readOps) (pin := Fir.Operation.tokensList) (fingerprint := "1175954979349487016")
 *Theorems: ops read back, one at a time.* For every dialect with a text
 format, the reader of ops reads tokens of ops as their trees before any
 token that ends a block's ops, up to positions:

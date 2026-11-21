@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "The GPU dialect's rules: readable blocks" =>
 
-:::moduleDocs (fingerprint := "12918048000515998298")
+:::moduleDocs (fingerprint := "8473911090618198965")
 :::
 
 :::readable Fir.Gpu.ValidTy Fir.Gpu.instDecidableValidTy (fingerprint := "4133016473030974221")
@@ -44,11 +44,12 @@ it checks every type. So work-group memory is any memory that the host's
 data layout declares. Whether the rule holds is decided.
 :::
 
-:::readable Fir.Gpu.instDialectValidation Fir.Gpu.instDecidableDialectValidation (fingerprint := "10493083427124423242")
+:::readable Fir.Gpu.instDialectValidation Fir.Gpu.instDecidableDialectValidation (fingerprint := "1161848801302982745")
 *Definition: the rules of `gpu`, and their check.* `gpu` accepts the
 core's valid types, its ops refer to no symbol, an allocation carries its
-type, and it adds no rule for a
-function, a region or an item. Its types are the core's, and each is a
+type, it adds no rule for a
+function, a region or an item, and its types carry no attribute in a
+signature. Its types are the core's, and each is a
 field of an aggregate's layout with the units and alignment that the core
 gives it. Whether a function is a kernel is where it
 lives: in a device module whose dialect set names `gpu`. The dialect-set
