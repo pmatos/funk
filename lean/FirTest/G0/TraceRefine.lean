@@ -3,7 +3,7 @@ import FirRef
 
 /-!
 G0's check on the Lean side, for refinement over traced runs (ADR-2026-11-03-0600,
-`docs/decisions/semantics-m1-trace.md`), split from `FirTest.G0` by subject.
+`docs/decisions/semantics-m1-trace-refinement.md`), split from `FirTest.G0` by subject.
 Each statement below is made of an arbitrary dialect `d`, or an arbitrary
 base and extension, with the spec's own proof, so it builds only while those
 stay parameterized over the dialect. `scripts/check_g0.py` checks this file

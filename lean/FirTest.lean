@@ -72,6 +72,7 @@ import FirTest.Trace
 import FirTest.TraceDialect
 import FirTest.TraceArgs
 import FirTest.TraceDiverge
+import FirTest.TraceCallee
 import FirTest.WorldScript
 import FirTest.ObserveEnd
 import FirTest.CoreTrace

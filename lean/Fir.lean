@@ -199,6 +199,11 @@ import Fir.Execution.TracePace
 import Fir.Execution.TraceTruncate
 import Fir.Execution.TraceFiniteRuns
 import Fir.Execution.TraceDiverge
+import Fir.Execution.TraceAhead
+import Fir.Execution.TraceBlackBox
+import Fir.Execution.TraceCallsAllowed
+import Fir.Execution.TraceArgsFrom
+import Fir.Execution.TraceReplace
 import Fir.Execution.TraceScript
 import Fir.Execution.MemoryEndModes
 import Fir.Core.Observe

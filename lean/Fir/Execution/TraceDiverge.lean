@@ -1,6 +1,4 @@
-import Fir.Execution.TraceKonig
-import Fir.Execution.TraceTruncate
-import Fir.Execution.TraceFiniteRuns
+import Fir.Execution.TraceArgsFrom
 
 /-!
 # Refined arguments over traced runs, divergence included
@@ -77,54 +75,50 @@ theorem Func.traceRuns_exhausted_iff {a : HVector toType (f.params.map (·.2))} 
     exact ⟨_, (Func.traceRun_iff (TraceEnd.notStuck_ok _ _ _)).2
       ⟨body, env, hen, _, (TraceM.run_inFrame _ _ _).2 ⟨_, h, rfl⟩, rfl⟩, rfl⟩
 
+/-- A path of a function's traced runs that runs out of fuel is a path of its
+traced runs from the empty memories with nothing escaped that runs out of
+fuel after the same marked trace; and each such path is one. -/
+theorem Func.traceRuns_exhausted_iff_from {a : HVector toType (f.params.map (·.2))} {n : Nat}
+    {mt : List (Step (DialectTrace.Acts d))} :
+    f.traceRuns lay ρ L μ ar M a n (.ok (.ok .fuelExhausted, mt)) ↔
+      f.traceRunsFrom lay ρ L M (a, TraceState.init) n (.ok (.ok .fuelExhausted, mt)) := by
+  constructor
+  · rintro ⟨e, he, ho⟩
+    match e, he, ho with
+    | .ok (.ok .fuelExhausted, _, _), he, ho =>
+      cases ho
+      exact ⟨_, he, rfl⟩
+    | .ok (.ok (.ret _), _, _), _, ho | .ok (.error _, _, _), _, ho | .error _, _, ho => cases ho
+  · rintro ⟨e, he, ho⟩
+    match e, he, ho with
+    | .ok (.ok .fuelExhausted, _, _), he, ho =>
+      cases ho
+      exact ⟨_, he, rfl⟩
+    | .ok (.ok (.ret _), _, _), _, ho | .ok (.error _, _, _), _, ho | .error _, _, ho => cases ho
+
 /-- The traced runs of a function truncate, with at most `W` steps of fuel
 between two steps of a path, for any `W` that exceeds the length of every
-chain of calls of the module by at least one. -/
+chain of calls of the module by at least one: its traced runs from the empty
+memories do. -/
 theorem Func.traceRuns_truncates {W : Nat} (hW : ∀ os c, M.CallChain os c → c + 1 ≤ W)
     (hpos : 0 < W) (a : HVector toType (f.params.map (·.2))) :
     TRun.Truncates W (f.traceRuns lay ρ L μ ar M a) := by
-  letI := DialectTrace.stepAt (d := d) lay ρ L
-  refine ⟨hpos, fun {n n' mt'} hle hx => ?_⟩
-  obtain ⟨body, env, _, hen, h₁⟩ := (Func.traceRuns_exhausted_iff lay ρ L μ ar).1 hx
-  rw [← Nat.add_sub_cancel' hle] at h₁
-  obtain ⟨e, h, t₀, s₀, rfl, hp, ht₀, hb⟩ := Func.traceOps_cut _ (DialectTrace.stepAt_oneStep lay ρ L)
-    hW hpos n (n' - n) _ _ _ _ _ h₁ (TraceEnd.notStuck_ok _ _ _)
-  refine ⟨t₀, (Func.traceRuns_exhausted_iff lay ρ L μ ar).2 ⟨body, env, _, hen, h⟩, hp, ht₀,
-    fun K hK => ?_⟩
-  rcases hb with rfl | ⟨c, hc, hn⟩
-  · rfl
-  obtain ⟨r, rfl⟩ := hp
-  have := hW _ _ hc
-  have hlt : W * (K + 1) < W * (Step.ticks t₀ + 1) := by
-    have : W * (Step.ticks t₀ + 1) = W * Step.ticks t₀ + W := Nat.mul_succ _ _
-    omega
-  have hK' : K < Step.ticks t₀ := by have := Nat.lt_of_mul_lt_mul_left hlt; omega
-  exact (Step.upTo_append_of_lt (mt := t₀) r hK').symm
+  refine ⟨hpos, fun hle hx => ?_⟩
+  obtain ⟨mt, h, hp, ht, hup⟩ := (Func.traceRunsFrom_truncates lay ρ L hW hpos
+    (a, TraceState.init)).cut hle ((Func.traceRuns_exhausted_iff_from lay ρ L μ ar).1 hx)
+  exact ⟨mt, (Func.traceRuns_exhausted_iff_from lay ρ L μ ar).2 h, hp, ht, hup⟩
 
 /-- The traced runs of a function have finitely many traces at each budget,
 given the world's answers, when every op that runs by its own rule has
-finitely many outcomes in the traced layer, given the world's answers. -/
+finitely many outcomes in the traced layer, given the world's answers: its
+traced runs from the empty memories do. -/
 theorem Func.traceRuns_finitelyMany
     (hfin : letI := DialectTrace.traceAt (d := d) lay ρ L
       OpsTraceFinite d (DialectTrace.Event d) (DialectTrace.Answer d) (TraceState N (unitsOf lay)))
     (a : HVector toType (f.params.map (·.2))) :
-    TRun.FinitelyMany (f.traceRuns lay ρ L μ ar M a) := by
-  letI := DialectTrace.stepAt (d := d) lay ρ L
-  intro n ans
-  cases hen : f.enter a.toDVals with
-  | error _ =>
-    refine ⟨[], fun mt hx _ => ?_⟩
-    obtain ⟨_, _, _, hen', -⟩ := (Func.traceRuns_exhausted_iff lay ρ L μ ar).1 hx
-    rw [hen] at hen'
-    cases hen'
-  | ok p =>
-    obtain ⟨C, hC⟩ := Func.traceOps_finite (OpsTraceFinite.stepAt lay ρ L hfin) M n f p.2 p.1
-      { (TraceState.init : TraceState N (unitsOf lay)) with mem := Memories.empty.enter } ans
-    refine ⟨C.map (·.2.1), fun mt hx hag => ?_⟩
-    obtain ⟨_, _, _, hen', h₁⟩ := (Func.traceRuns_exhausted_iff lay ρ L μ ar).1 hx
-    rw [hen] at hen'
-    cases hen'
-    exact List.mem_map.2 ⟨_, hC _ _ _ h₁ hag, rfl⟩
+    TRun.FinitelyMany (f.traceRuns lay ρ L μ ar M a) := fun n ans => by
+  obtain ⟨C, hC⟩ := Func.traceRunsFrom_finitelyMany lay ρ L hfin (a, TraceState.init) n ans
+  exact ⟨C, fun mt hx hag => hC mt ((Func.traceRuns_exhausted_iff_from lay ρ L μ ar).1 hx) hag⟩
 
 variable [TyRefinement d.Ty] [TyPointers d.Ty] {a a' : HVector toType (f.params.map (·.2))}
 

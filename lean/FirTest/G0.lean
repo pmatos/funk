@@ -5,6 +5,7 @@ import FirTest.G0.Regions
 import FirTest.G0.MemoryRefine
 import FirTest.G0.MemoryPoison
 import FirTest.G0.TraceRefine
+import FirTest.G0.TraceCallee
 
 /-!
 G0's check on the Lean side (ADR-2026-11-03-0600). fir's spec is written
@@ -21,7 +22,7 @@ dialect and writes none of its words. It checks this file too, and the files of
 narrowed to the core dialect. The statements about validation are in
 `FirTest.G0.Validation`, those about region kinds that a dialect
 registers in `FirTest.G0.Regions`, and those about refinement over traced
-runs in `FirTest.G0.TraceRefine`.
+runs in `FirTest.G0.TraceRefine` and `FirTest.G0.TraceCallee`.
 
 The section on behaviour models shows the seam where a dialect that needs
 probabilities plugs in. `lean/FirTest/G0Effects.lean` restates the classes
