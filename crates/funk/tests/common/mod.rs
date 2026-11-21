@@ -50,15 +50,12 @@ pub fn file(name: &str, text: &str) -> String {
 /// fails with "Text file busy" (ETXTBSY). Renaming the file does not help,
 /// since the open descriptor follows the file, not its name.
 pub fn write_executable(path: &Path, contents: &[u8]) {
-    let mut child = Command::new("sh")
-        .args(["-c", "cat > \"$0\" && chmod 755 \"$0\""])
-        .arg(path)
-        .stdin(Stdio::piped())
-        .stderr(Stdio::piped())
-        .spawn()
-        .unwrap();
-    child.stdin.take().unwrap().write_all(contents).unwrap();
-    let out = child.wait_with_output().unwrap();
+    let out = with_stdin(
+        Command::new("sh")
+            .args(["-c", "cat > \"$0\" && chmod 755 \"$0\""])
+            .arg(path),
+        contents,
+    );
     assert!(out.status.success(), "{}", text(&out.stderr));
 }
 
@@ -69,20 +66,23 @@ pub fn funk(args: &[&str], stdin: &str) -> Output {
 
 /// Runs funk with `args` in the directory `cwd`.
 pub fn funk_in(cwd: &Path, args: &[&str], stdin: &str) -> Output {
-    let mut child = Command::new(env!("CARGO_BIN_EXE_funk"))
-        .current_dir(cwd)
-        .args(args)
+    with_stdin(
+        Command::new(env!("CARGO_BIN_EXE_funk"))
+            .current_dir(cwd)
+            .args(args),
+        stdin.as_bytes(),
+    )
+}
+
+/// Runs `cmd` with `stdin` as its input and gives what it wrote.
+fn with_stdin(cmd: &mut Command, stdin: &[u8]) -> Output {
+    let mut child = cmd
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
         .spawn()
         .unwrap();
-    child
-        .stdin
-        .take()
-        .unwrap()
-        .write_all(stdin.as_bytes())
-        .unwrap();
+    child.stdin.take().unwrap().write_all(stdin).unwrap();
     child.wait_with_output().unwrap()
 }
 
