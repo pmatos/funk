@@ -15,7 +15,8 @@ choices, where the run's memories have their layout entries, the run names
 the core's memories and gives each op the items of its module. Each op runs
 by its rule with memory in that layer, as it does in the core's semantics
 with memory in the layer over the set monad, and `toSet` through the layer
-keeps choice, UB, allocation, loads and stores, so it maps the one to the
+keeps choice, UB, allocation, loads, stores, exposing and turning integers
+back into pointers, so it maps the one to the
 other at every layout and naming of the core's memories and every record
 of items. The modes of the next section walk the run in that layer.
 -/
@@ -51,6 +52,8 @@ theorem memMapsDenote (ρ : DialectEffects.Mem CoreDialect → N) (L : RunItems)
     (fun x k size al => ChoiceTree.toSetMorphism.state_alloc x k size al)
     (fun x p k al => ChoiceTree.toSetMorphism.state_load ChoiceTree.toSet_keeps.ub x p k al)
     (fun x p us al => ChoiceTree.toSetMorphism.state_store ChoiceTree.toSet_keeps.ub x p us al)
+    (fun x g P p => ChoiceTree.toSetMorphism.state_expose ChoiceTree.toSet_keeps.ub x g P p)
+    (fun x k P i => ChoiceTree.toSetMorphism.state_fromAddr x k P i)
     (fun op _ => ChoiceTree.noOutcome op) (fun _ _ _ => False) fun _ => rfl
 
 end Fir.Core

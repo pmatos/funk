@@ -14,8 +14,9 @@ SSA dominance, block arguments, successors, terminators, symbols, isolation
 from above and locations. Each dialect adds rules for its own ops and types,
 a rule over a whole function, rules for the kinds of region and of item
 that it registers, the memory that each of its pointer types names, the
-types that each of its ops carries in its attributes and the widths of the
-values that each of its ops writes into a memory's units, as the last
+types that each of its ops carries in its attributes, the widths of the
+values that each of its ops writes into a memory's units and of the
+integers that each turns a memory's pointers into, as the last
 definition of this section says; the core dialect's rules have a section of their own. A text that does not decode is rejected before
 validation, by the parser (see the text format chapter).
 
@@ -305,6 +306,13 @@ The rules a dialect adds to validation.
   values, such as the core's `memSet`, which fills units with one value.
   Validation checks that the layout gives each memory units of that width.
   An op that writes no values into units lists none, the default.
+* `opAddrs` lists the memories whose pointers an op turns into integers,
+  or integers into, by their numbers in the module's data layout, each with
+  the width of the integer, such as the core's `ptrExpose` and
+  `ptrFromInt`. Validation checks that the layout gives each memory
+  pointers of that width and does not mark it non-integral (the human's
+  rulings of 2026-11-11 on #231 and of 2026-11-18 on #232, Q2). An op that
+  turns no pointer into an integer lists none, the default.
 -/
 class DialectValidation (d : Dialect) where
   validTy : d.Ty → Prop
@@ -320,8 +328,9 @@ class DialectValidation (d : Dialect) where
   tyMemory : d.Ty → Option Nat := fun _ => none
   opTypes : d.Op → List d.Ty := fun _ => []
   opUnits : d.Op → List (Nat × Nat) := fun _ => []
+  opAddrs : d.Op → List (Nat × Nat) := fun _ => []
   fieldShape : (Nat → MemLayout) → Nat → d.Ty → Option (Nat × Nat) := fun _ _ _ => none
 export DialectValidation (validTy symbolRefs validOp validFunc regionKindNames validRegion
-  itemKindNames validItem tyMemory opTypes opUnits fieldShape)
+  itemKindNames validItem tyMemory opTypes opUnits opAddrs fieldShape)
 
 end Fir

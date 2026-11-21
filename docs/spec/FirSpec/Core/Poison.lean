@@ -14,17 +14,17 @@ when the Lean changes under it.
 
 #doc (Manual) "Core poison classes: readable blocks" =>
 
-:::moduleDocs (fingerprint := "4778771264309757923")
+:::moduleDocs (fingerprint := "11385598615685418390")
 :::
 
-:::readable Fir.Core.Op.poisonClass (fingerprint := "8192748415056150117")
-*Definition: the poison class of each core op.* Forty-three core ops
+:::readable Fir.Core.Op.poisonClass (fingerprint := "17634293530761719208")
+*Definition: the poison class of each core op.* Forty-four core ops
 {ref "The-fir-specification--Execution--Poison-classes"}[propagate poison],
-and seven are exceptions:
+and eight are exceptions:
 
-$$`\begin{aligned} \mathsf{propagates}:\ & \mathsf{const}_N,\ \mathsf{const}_{e,m},\ \mathsf{poison},\ \mathsf{add}, \\ & \mathsf{sub},\ \mathsf{mul},\ \mathsf{sdiv},\ \mathsf{udiv}, \\ & \mathsf{srem},\ \mathsf{urem},\ \mathsf{and},\ \mathsf{or}, \\ & \mathsf{xor},\ \mathsf{shl},\ \mathsf{lshr},\ \mathsf{ashr}, \\ & \mathsf{icmp},\ \mathsf{fcmp},\ \mathsf{zext},\ \mathsf{sext},\ \mathsf{trunc}, \\ & \mathit{fbin},\ \mathit{funary},\ \mathsf{fma},\ \mathsf{bitcast}^{\to \mathsf{i}},\ \mathsf{bitcast}^{\mathsf{i} \to}, \\ & \mathsf{sitofp},\ \mathsf{uitofp},\ \mathsf{fpext},\ \mathsf{fptrunc},\ \mathsf{ptradd}, \\ & \mathsf{fieldaddr},\ \mathsf{fptosi},\ \mathsf{fptoui},\ \mathsf{alloca}, \\ & \mathsf{load},\ \mathsf{store},\ \mathsf{load}~\mathsf{ptr},\ \mathsf{store}~\mathsf{ptr}, \\ & \mathsf{load}~\mathsf{float},\ \mathsf{store}~\mathsf{float},\ \mathsf{memcpy}, \\ & \mathsf{memmove},\ \mathsf{memset} \end{aligned}`
+$$`\begin{aligned} \mathsf{propagates}:\ & \mathsf{const}_N,\ \mathsf{const}_{e,m},\ \mathsf{poison},\ \mathsf{add}, \\ & \mathsf{sub},\ \mathsf{mul},\ \mathsf{sdiv},\ \mathsf{udiv}, \\ & \mathsf{srem},\ \mathsf{urem},\ \mathsf{and},\ \mathsf{or}, \\ & \mathsf{xor},\ \mathsf{shl},\ \mathsf{lshr},\ \mathsf{ashr}, \\ & \mathsf{icmp},\ \mathsf{fcmp},\ \mathsf{zext},\ \mathsf{sext},\ \mathsf{trunc}, \\ & \mathit{fbin},\ \mathit{funary},\ \mathsf{fma},\ \mathsf{bitcast}^{\to \mathsf{i}},\ \mathsf{bitcast}^{\mathsf{i} \to}, \\ & \mathsf{sitofp},\ \mathsf{uitofp},\ \mathsf{fpext},\ \mathsf{fptrunc},\ \mathsf{ptradd}, \\ & \mathsf{fieldaddr},\ \mathsf{fptosi},\ \mathsf{fptoui},\ \mathsf{alloca}, \\ & \mathsf{load},\ \mathsf{store},\ \mathsf{load}~\mathsf{ptr},\ \mathsf{store}~\mathsf{ptr}, \\ & \mathsf{load}~\mathsf{float},\ \mathsf{store}~\mathsf{float},\ \mathsf{memcpy}, \\ & \mathsf{memmove},\ \mathsf{memset},\ \mathsf{ptr\_from\_int} \end{aligned}`
 
-$$`\begin{aligned} \mathsf{exception}:\ & \mathsf{select},\ \mathsf{freeze},\ \mathsf{br}, \\ & \mathsf{cond\_br},\ \mathsf{ret},\ \mathsf{unreachable},\ \mathsf{call} \end{aligned}`
+$$`\begin{aligned} \mathsf{exception}:\ & \mathsf{select},\ \mathsf{freeze},\ \mathsf{br}, \\ & \mathsf{cond\_br},\ \mathsf{ret},\ \mathsf{unreachable},\ \mathsf{call}, \\ & \mathsf{ptr\_expose} \end{aligned}`
 
 $`\mathsf{alloca}`, like $`\mathsf{const}` and $`\mathsf{poison}`, has
 no operands, so it propagates poison whatever its rule. $`\mathsf{load}`
@@ -43,7 +43,14 @@ UB, since a pointer with no provenance in its place faults, and a poison
 length runs as some length, chosen, so it is UB only where some length
 is: they propagate poison too. So does $`\mathsf{memset}` (`memSet`), in
 its pointer and its length as they do, and it writes a poison value as
-poison units, as $`\mathsf{store}` does.
+poison units, as $`\mathsf{store}` does. $`\mathsf{ptr\_from\_int}`
+gives a poison pointer for a poison integer, and still counts the call.
+$`\mathsf{ptr\_expose}` is an exception: a poison pointer is immediate UB.
+Exposing a defined pointer may give its allocation an address, and
+memories that refine each other have the same addresses, so a poison
+result with the memories as they were would not be refined by the run on a
+pointer in its place; and exposing a pointer with no provenance is never
+UB, so the UB is not that of some pointer in its place.
 The definition lists every op, with no case for the rest, so a new core op
 does not build until it declares its class (ADR-2026-11-03-0600).
 $`\mathsf{cond\_br}` is `condBr` in the Lean. The Lean checks the

@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Replacing a body: readable blocks" =>
 
-:::moduleDocs (fingerprint := "14231632584969205328")
+:::moduleDocs (fingerprint := "17358933532691954694")
 :::
 
 :::readable Fir.Func.replaceBody Fir.Item.replaceBody Fir.Module.replaceBody (fingerprint := "9923372320846237749")
@@ -87,7 +87,7 @@ the body replaced hold the same
 a function holds none, and a nested module is unchanged.
 :::
 
-:::readable Fir.Module.valid_replaceBody (pin := Fir.Module.Valid) (fingerprint := "10161992606486524137")
+:::readable Fir.Module.valid_replaceBody (pin := Fir.Module.Valid) (fingerprint := "12670456505172857495")
 *Theorem: a valid module stays valid when the new function is valid.* For
 every dialect with its validation rules, let $`M` be a
 {ref "The-fir-specification--Validation--The-general-rules"}[valid module],
@@ -96,12 +96,15 @@ the symbol $`s`, given the body $`b`, be valid in the context of $`M`, with
 each of its types, and each type that its ops carry in their attributes,
 naming a memory that the layout of $`M` declares, and each pair
 $`(N, V)` that its ops ask, $`\mathrm{opunits}`, naming a memory whose
-units in the layout of $`M` are $`V` bits wide. Then
+units in the layout of $`M` are $`V` bits wide, and each pair $`(N, W)`
+that its ops ask, $`\mathrm{opaddrs}`, naming an integral memory whose
+pointers in the layout of $`M` are $`W` bits wide. Then
 $`M[s \leftarrow b]` is valid: the symbols of its own table are those of
 $`M`, so still unique; its location table, its dialect set and its layout
 are those of $`M`; each of its functions is valid in its context, which is
-that of $`M`, its types name memories of the layout, and its ops' values
-are as wide as their memories' units; its aggregates'
+that of $`M`, its types name memories of the layout, its ops' values are
+as wide as their memories' units, and its ops' integers as wide as their
+memories' pointers; its aggregates'
 layouts and its globals are those of $`M`, so still valid; and its nested
 modules, and so
 the tables they hold, are those of $`M`.

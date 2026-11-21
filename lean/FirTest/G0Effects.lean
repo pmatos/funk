@@ -207,34 +207,35 @@ theorem summary_noPoison (d : Dialect) [TyDenote d.Ty] [DecidableEq d.Ty] [TyPoi
 The core dialect declares a class and a set of effects for each of its ops,
 case by case: `Core.Op.poisonClass` and `Core.Op.effects` have no case for
 the rest, so a new core op does not build until it has both, and
-`scripts/check_g0.py` fails if a case for the rest comes back. Forty-three
-ops propagate poison and seven are exceptions (ADR-2026-10-29-2006). The
-samples of the core ops name all 52 of their names, the float constant
+`scripts/check_g0.py` fails if a case for the rest comes back. Forty-four
+ops propagate poison and eight are exceptions (ADR-2026-10-29-2006). The
+samples of the core ops name all 54 of their names, the float constant
 sharing `const`'s, the two bit casts `bitcast`, a copy and a move
-`memcpy` and `memmove`, and a fill `memset`, and the checks below pin both
-on them.
+`memcpy` and `memmove`, a fill `memset`, and `ptr_expose` and
+`ptr_from_int`, and the checks below pin both on them.
 `alloca` allocates in the memory of its result, `load` reads the memory of
-its pointer, `store` and `memset` write it, and `memcpy` and `memmove`
-read and write it; no other core op declares an effect on memory, and no core op is observable, since the core dialect has no trace
+its pointer, `store` and `memset` write it, `memcpy` and `memmove` read
+and write it, and `ptr_expose` and `ptr_from_int` read it and allocate in
+it; no other core op declares an effect on memory, and no core op is observable, since the core dialect has no trace
 yet (ADR-2026-11-09-1541).
 -/
 
-#guard (Core.samples.map Core.Op.name).eraseDups.length == 52
+#guard (Core.samples.map Core.Op.name).eraseDups.length == 54
 #guard ((Core.samples.filter (Core.Op.poisonClass · == .propagates)).map Core.Op.name).eraseDups ==
   ["const", "add", "sub", "mul", "sdiv", "udiv", "srem", "urem", "and", "or", "xor", "shl", "lshr",
    "ashr", "zext", "sext", "trunc", "poison", "icmp", "fcmp", "fadd", "fsub", "fmul", "fdiv", "fneg",
    "fabs", "sqrt", "fma", "frem", "fmod", "bitcast", "sitofp", "uitofp",
    "fpext", "fptrunc", "ptradd", "fieldaddr", "alloca", "load", "store", "fptosi", "fptoui",
-   "memcpy", "memmove", "memset"]
+   "memcpy", "memmove", "memset", "ptr_from_int"]
 #guard ((Core.samples.filter (Core.Op.poisonClass · == .exception)).map Core.Op.name).eraseDups ==
-  ["select", "freeze", "br", "cond_br", "ret", "unreachable", "call"]
+  ["select", "freeze", "br", "cond_br", "ret", "unreachable", "call", "ptr_expose"]
 #guard ((Core.samples.filter (Core.Op.effects · == {})).map Core.Op.name).eraseDups ==
   ["const", "add", "and", "or", "xor", "select", "zext", "sext", "trunc", "freeze", "call", "icmp",
    "fcmp", "fadd", "fdiv", "fneg", "fabs", "bitcast", "sitofp", "uitofp", "fpext", "fptrunc",
    "ptradd", "fieldaddr"]
 #guard ((Core.samples.filter (·.effects.mayUB)).map Core.Op.name).eraseDups ==
   ["sdiv", "udiv", "srem", "urem", "cond_br", "unreachable", "load", "store", "memcpy", "memmove",
-   "memset"]
+   "memset", "ptr_expose"]
 #guard ((Core.samples.filter (·.effects.mayPoison)).map Core.Op.name).eraseDups ==
   ["add", "sub", "mul", "sdiv", "shl", "lshr", "ashr", "poison", "fcmp", "fsub", "fmul", "sqrt",
    "fma", "frem", "fmod", "load", "fptosi", "fptoui"]
@@ -258,9 +259,9 @@ yet (ADR-2026-11-09-1541).
 #guard ((Core.samples.filter (·.effects.writes != .these [])).map Core.Op.name).eraseDups ==
   ["store", "memcpy", "memmove", "memset"]
 #guard ((Core.samples.filter (·.effects.reads != .these [])).map Core.Op.name).eraseDups ==
-  ["load", "memcpy", "memmove"]
+  ["load", "memcpy", "memmove", "ptr_expose", "ptr_from_int"]
 #guard ((Core.samples.filter (·.effects.allocates != .these [])).map Core.Op.name).eraseDups ==
-  ["alloca"]
+  ["alloca", "ptr_expose", "ptr_from_int"]
 #guard (Core.samples.filter (·.touchesMemory)).all fun o =>
   if o.name == "load" then
     o.effects == { o.effects with reads := .these (o.sig.filterMap Core.Ty.memory) } &&
@@ -272,6 +273,10 @@ yet (ADR-2026-11-09-1541).
   else if o.name == "memset" then
     o.effects == { writes := .these ((o.sig.head?.bind Core.Ty.memory).toList), mayUB := true } &&
       o.effects.writes != .these []
+  else if o.name == "ptr_expose" || o.name == "ptr_from_int" then
+    let m := ((o.sig ++ o.returnTypes).filterMap Core.Ty.memory).take 1
+    o.effects == { reads := .these m, allocates := .these m, mayUB := o.name == "ptr_expose" } &&
+      o.effects.reads != .these []
   else if o.name == "memcpy" || o.name == "memmove" then
     let m := (o.sig.head?.bind Core.Ty.memory).toList
     o.effects == { reads := .these m, writes := .these m, mayUB := true } &&

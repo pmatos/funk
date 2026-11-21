@@ -11,6 +11,8 @@ import FirSpec.Core.Signature
 import FirSpec.Core.Poison
 import FirSpec.Core.OpEffects
 import FirSpec.Core.EffectLaws
+import FirSpec.Core.EffectUnlawful
+import FirSpec.Core.AddressLaws
 import FirSpec.Core.Unlawful
 import FirSpec.Core.Values
 import FirSpec.Execution.Behaviour
@@ -20,6 +22,7 @@ import FirSpec.Execution.Fuel
 import FirSpec.Execution.Propagation
 import FirSpec.Execution.OpEffects
 import FirSpec.Execution.EffectLaws
+import FirSpec.Execution.AddressObligations
 import FirSpec.Execution.Summary
 import FirSpec.Execution.SummaryLaws
 import FirSpec.Execution.SummaryFixpoint
@@ -139,6 +142,7 @@ import FirSpec.Core.StoreTextLaws
 import FirSpec.Core.MemCopyText
 import FirSpec.Core.MemCopyTextLaws
 import FirSpec.Core.MemSetText
+import FirSpec.Core.PtrIntText
 import FirSpec.Core.MemSetTextLaws
 import FirSpec.Core.TextSamples
 import FirSpec.Text.Print
@@ -221,8 +225,10 @@ import FirSpec.Core.MemCopy
 import FirSpec.Core.MemCopyLaws
 import FirSpec.Core.MemCopyPoison
 import FirSpec.Core.MemSet
+import FirSpec.Core.PtrInt
 import FirSpec.Core.MemSetLaws
 import FirSpec.Core.MemSetPoison
+import FirSpec.Core.PtrIntLaws
 import FirSpec.Memory.Ordering
 import FirSpec.Execution.MemoryCallSteps
 import FirSpec.Execution.MemoryProgress
@@ -307,6 +313,7 @@ import FirSpec.Sum.Dialect
 import FirSpec.Sum.TextLaws
 import FirSpec.Sum.PoisonLaws
 import FirSpec.Sum.EffectLaws
+import FirSpec.Sum.AddressLaws
 import FirSpec.Sum.Inclusion
 import FirSpec.Sum.Lift
 import FirSpec.Sum.LiftTextLaws
@@ -323,6 +330,7 @@ import FirSpec.Gpu.TextLaws
 import FirSpec.Gpu.Semantics
 import FirSpec.Gpu.WorkGroup
 import FirSpec.Gpu.Runs
+import FirSpec.Gpu.AddressLaws
 import FirSpec.Gpu.Modes
 import FirSpec.Gpu.Trace
 import FirSpec.Gpu.EndModes

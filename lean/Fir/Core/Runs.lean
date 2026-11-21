@@ -51,7 +51,7 @@ theorem straight_of_tracer {ctx : ModuleContext CoreDialect} {f : Func CoreDiale
     | .fbin .. | .funary .. | .fma .. | .toBits .. | .ofBits .. | .sitofp .. | .uitofp ..
     | .fpext .. | .fptrunc .. | .ptradd .. | .alloca .. | .load .. | .store .. | .loadPtr ..
     | .storePtr .. | .loadFloat .. | .storeFloat .. | .fptosi .. | .fptoui .. | .memCopy .. | .memSet ..
-    | .fieldAddr .. =>
+    | .fieldAddr .. | .ptrExpose .. | .ptrFromInt .. =>
       intro h; exact False.elim h
   noJump b hb o ho args i h := by
     have hop := ht b hb o ho

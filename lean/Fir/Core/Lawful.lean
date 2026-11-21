@@ -10,7 +10,7 @@ types validation accepts, from the obligations that each op family
 proves, in the sections from the
 constant obligations to the branch obligations:
 
-* _Propagation._ Each of the 43 ops that propagate poison does, at every
+* _Propagation._ Each of the 44 ops that propagate poison does, at every
   width and float format: `const` at an integer and at a float type,
   `poison`, the arithmetic, the four divisions, the bitwise ops and
   shifts, `icmp`, `fcmp`, the width changes, the float arithmetic, the
@@ -18,10 +18,10 @@ constant obligations to the branch obligations:
   formats, the pointer offset, the conversions to integers, `alloca`,
   which has no operands, and the loads and stores, `load`, `store`,
   `loadPtr`, `storePtr`, `loadFloat` and `storeFloat`, the field address
-  `fieldAddr`, the copy or move `memCopy`, and the fill `memSet`, which have
-  no outcome in the set monad.
+  `fieldAddr`, the copy or move `memCopy`, the fill `memSet` and
+  `ptrFromInt`, which have no outcome in the set monad.
 * _A result on defined operands._ Each of them but `alloca`, the loads
-  and stores, `fieldAddr`, `memCopy` and `memSet` returns a result on some operand vector with no poison. `poison` does on the empty
+  and stores, `fieldAddr`, `memCopy`, `memSet` and `ptrFromInt` returns a result on some operand vector with no poison. `poison` does on the empty
   vector, where its result is poison: the obligation asks for a result, not
   for a defined one (ADR-2026-10-29-2006). The four divisions do only at a
   width above zero, and validation accepts `iN` only for N of at least
@@ -34,19 +34,22 @@ constant obligations to the branch obligations:
   with no callee is total and monotone, at every width: every core op but
   `call`, which the obligations leave out, since its meaning is its
   callee's run (ADR-2026-10-29-2006), and `alloca`, the loads and
-  stores, `fieldAddr`, `memCopy` and `memSet`, which are monotone at once but not
+  stores, `fieldAddr`, `memCopy`, `memSet`, `ptrExpose` and `ptrFromInt`,
+  which are monotone at once but not
   total, since they have no rule in the set monad.
 
 So the core dialect as a whole does not meet the lawful class of the set
-monad: `alloca`, the loads and stores, `fieldAddr`, `memCopy` and `memSet` have no
+monad: `alloca`, the loads and stores, `fieldAddr`, `memCopy`, `memSet`,
+`ptrExpose` and `ptrFromInt` have no
 outcome there. What this section proves covers the ops that touch no
 memory and read no item of the run. The core's guarantees are those of the
 semantics with memory, which each op meets: a tied op from its tie and what
 it meets here, and `alloca`, the loads and stores, `fieldAddr`,
-`memCopy` and `memSet` by their own rules (the sections on the stack
-allocation, load, store, pointer load, pointer store, float load, float
-store, field address, copy and move, and fill obligations and on every
-valid core function, with memory).
+`memCopy`, `memSet`, `ptrExpose` and `ptrFromInt` by their own rules (the
+sections on the stack allocation, load, store, pointer load, pointer
+store, float load, float store, field address, copy and move, fill, and
+pointers as integers obligations and on every valid core function, with
+memory).
 -/
 
 namespace Fir.Core
@@ -74,6 +77,13 @@ theorem memSet_propagatesPoison (o : Memory.Ordering) (v w n : Nat) :
     PropagatesPoison (d := CoreDialect) (.memSet o v w n) where
   poisonOut | .cons _ (.cons _ (.cons _ .nil)), _, _, hrs => hrs.elim
   ubByOwnRules | .cons _ (.cons _ (.cons _ .nil)), _, _, hub => hub.elim
+
+/-- `ptrFromInt` propagates poison in the set monad, where it has no
+outcome. -/
+theorem ptrFromInt_propagatesPoison (n w : Nat) :
+    PropagatesPoison (d := CoreDialect) (.ptrFromInt n w) where
+  poisonOut | .cons _ .nil, _, _, hrs => hrs.elim
+  ubByOwnRules | .cons _ .nil, _, _, hub => hub.elim
 
 /-- `loadPtr` propagates poison in the set monad, where it has no outcome. -/
 theorem loadPtr_propagatesPoison (o : Memory.Ordering) (mp : Nat) (a : Option Nat) (n : Nat) :
@@ -148,12 +158,13 @@ theorem Op.propagates_all : (op : Op) → Fir.poisonClass (d := CoreDialect) op 
   | .storeFloat o e m a n, _ => storeFloat_propagatesPoison o e m a n
   | .memCopy k o w n, _ => memCopy_propagatesPoison k o w n
   | .memSet o v w n, _ => memSet_propagatesPoison o v w n
+  | .ptrFromInt n w, _ => ptrFromInt_propagatesPoison n w
   | .fieldAddr s j n w, _ => fieldAddr_propagatesPoison s j n w
   | .fptosi e m n, _ => floatToInt_propagatesPoison e m n true
   | .fptoui e m n, _ => floatToInt_propagatesPoison e m n false
   | .poison w, _ => poison_propagatesPoison w
   | .select _, h | .freeze _, h | .br, h | .condBr, h | .ret _, h | .unreachable, h
-  | .call .., h => nomatch h
+  | .call .., h | .ptrExpose .., h => nomatch h
 
 /-- A valid core op instance with an operand of type `iN` has `N` above
 zero. -/
@@ -164,7 +175,8 @@ theorem pos_of_typesValid {op : Op} {w : Nat} (hv : TypesValid (d := CoreDialect
 /-- Each valid core op instance that touches no memory, reads no item of
 the run and propagates poison returns a result on some operand vector
 with no poison. The divisions need their width above zero, which validation gives. `alloca`,
-the loads and stores, `fieldAddr`, `memCopy` and `memSet` return one with memory, by
+the loads and stores, `fieldAddr`, `memCopy`, `memSet` and `ptrFromInt` return one
+with memory, by
 their own rules. -/
 theorem Op.returnsOnDefined_valid : (op : Op) → op.touchesMemory = false →
     op.readsItems = false → TypesValid (d := CoreDialect) op →
@@ -206,7 +218,8 @@ theorem Op.returnsOnDefined_valid : (op : Op) → op.touchesMemory = false →
   | .ret _, _, _, _, h | .unreachable, _, _, _, h | .call .., _, _, _, h => nomatch h
   | .alloca .., h, _, _, _ | .load .., h, _, _, _ | .store .., h, _, _, _ | .loadPtr .., h, _, _, _
   | .storePtr .., h, _, _, _ | .loadFloat .., h, _, _, _ | .storeFloat .., h, _, _, _
-  | .memCopy .., h, _, _, _ | .memSet .., h, _, _, _ => nomatch h
+  | .memCopy .., h, _, _, _ | .memSet .., h, _, _, _ | .ptrExpose .., h, _, _, _
+  | .ptrFromInt .., h, _, _, _ => nomatch h
   | .fieldAddr .., _, h, _, _ => nomatch h
 
 end Fir.Core
