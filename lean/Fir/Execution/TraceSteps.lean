@@ -126,10 +126,6 @@ theorem Step.upTo_isRefinedBy [HRefinement A A] : ∀ (N : Nat) {mt mt' : List (
 
 /-! # Lists -/
 
-/-- Lists that start each other are equal. -/
-theorem List.IsPrefix.antisymm {l l' : List α} (h : l <+: l') (h' : l' <+: l) : l = l' :=
-  h.eq_of_length (Nat.le_antisymm h.length_le h'.length_le)
-
 /-- A list that starts another has, at each of its places, the other's
 element there. -/
 theorem List.IsPrefix.getElem?_some {l l' : List α} (h : l <+: l') {i : Nat} {a : α}

@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "The first steps of a marked trace: readable blocks" =>
 
-:::moduleDocs (fingerprint := "17589780618894415870")
+:::moduleDocs (fingerprint := "14264933949386889879")
 :::
 
 :::readable Fir.Step.ticks Fir.Step.ticks_append (fingerprint := "11321973910066212008")
@@ -43,9 +43,8 @@ for "$`m` starts $`m'`".
 by an act that refines it, have $`m{\restriction}N \sqsubseteq m'{\restriction}N`.
 :::
 
-:::readable Fir.List.IsPrefix.antisymm Fir.List.IsPrefix.getElem?_some Fir.List.IsRefinedPrefix.of_prefix (fingerprint := "8817046527577682417")
-*Theorems: lists.* Lists that start each other are equal. A list that
-starts $`l'` has, at each of its places, the element of $`l'` there. A
+:::readable Fir.List.IsPrefix.getElem?_some Fir.List.IsRefinedPrefix.of_prefix (fingerprint := "4332980385614873420")
+*Theorems: lists.* A list that starts $`l'` has, at each of its places, the element of $`l'` there. A
 list refined by a prefix of $`l'` is refined by a prefix of each list that
 $`l'` starts.
 :::

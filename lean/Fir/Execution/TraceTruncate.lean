@@ -128,15 +128,6 @@ theorem TraceEnd.Cut.notStuck {j n : Nat} {os : List (Operation d)} {e : End} :
   | .error _, .inr ⟨_, _, he, _⟩ => he ▸ TraceEnd.notStuck_ok _ _ _
   | .ok (.error _, _, _), h => h.elim
 
-/-- A way of ending that is not stuck is not stuck after a trace. -/
-theorem TraceEnd.NotStuck.after {B σ ε α : Type} {t : List B} {e : TraceEnd B σ (Except ε α)}
-    (h : TraceEnd.NotStuck e) : TraceEnd.NotStuck (e.after t) := by
-  rcases e with ⟨_, _⟩ | ⟨y, t', s⟩
-  · exact TraceEnd.notStuck_error _ _
-  · rcases y with er | a
-    · exact absurd rfl (h er t' s)
-    · exact TraceEnd.notStuck_ok _ _ _
-
 variable (A) in
 /-- Each path of a traced run of ops with `j` more steps of fuel that is not
 stuck is cut to a path of the run with `n`, from the same environment and

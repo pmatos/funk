@@ -27,8 +27,8 @@ refined by its own, since memories that refine others, with the same
 allocations escaped, give ends that refine each other
 (`End.isRefinedBy_of_mem`). At each budget, each path that runs out of fuel
 is allowed in the same way. Divergence needs one trace of the source for
-every budget, which the next stage of #233 gives under its hypothesis that
-each op has finitely many outcomes given the world's answers.
+every budget, which `Fir.Execution.TraceDiverge` gives under the hypothesis
+that each op has finitely many outcomes given the world's answers.
 -/
 
 namespace Fir

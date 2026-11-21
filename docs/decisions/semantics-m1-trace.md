@@ -278,17 +278,18 @@ above.
 - **The hypothesis, by position.** An op has finitely many outcomes given
   the world's answers (`OpsTraceFinite`) when, from each traced state and
   for each answer stream, its results whose acts agree with the stream
-  place by place lie in one finite list. Rejected: finitely many for each
-  list of answers, which an op showing `k` events for every `k` meets,
-  though a target could then show acts forever that no source run shows.
+  place by place lie in one finite list: the agents' reading of the
+  ruling. Rejected: finitely many for each list of answers, which an op
+  showing `k` events for every `k` meets; then, on paper (not in Lean), a
+  target could show acts forever that no source run shows.
 - **Divergence by König's lemma.** A call shows no step, so the fuel
   between two steps is bounded by the module's chains of calls into entry
-  blocks; a cycle never shows a step again (`Module.exists_callBound`). A
-  path cut at a budget `W (N + 1)` keeps its first `N` steps
-  (`Func.traceOps_cut`). With finitely many traces at one budget, the
+  blocks (`Module.exists_callBound`); a cycle never shows a step again
+  (`Func.traceOps_silent`). A path cut at a budget `W (N + 1)` keeps its
+  first `N` steps (`Func.traceOps_cut`, `Func.traceRuns_truncates`). With finitely many traces at one budget, the
   pigeonhole principle and König's lemma give the source's trace
   (`TRun.diverge_allowed`, `TRun.reacts_allowed`). Rejected: a hypothesis
-  bounding that fuel, which every core module would have to meet.
+  bounding that fuel, which every core module needs.
 - **The obligation of an op with events.** An op is monotone in the traced
   layer (`OpTraceMonotone`): from operands and a traced state that refine
   others, each way it may end is allowed by a way it may end on those

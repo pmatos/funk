@@ -26,7 +26,8 @@ With the paths that run out of fuel allowed at each budget
 gives divergence. So, for a dialect whose ops show events, in a module whose
 terminators and ops with no callee are monotone in the traced layer, and
 whose ops each have finitely many outcomes given the world's answers (the
-human's ruling of 2026-11-20, on #233), the traced runs of a function on
+hypothesis that the human ruled on 2026-11-20, on #233, in the form by
+position of `Fir.Execution.TraceFinite`), the traced runs of a function on
 arguments that refine others, a poison by any value, refine its traced runs
 on those others: returns, UB, silent divergence and acts forever.
 -/
@@ -40,6 +41,42 @@ variable {d : Dialect} [TyDenote d.Ty] [DecidableEq d.Ty] [DialectSignature d] [
   (ρ : DialectEffects.Mem d → N) (L : RunItems) (μ : Nat → N) (ar : AddrRule) {M : Module d}
   {f : Func d}
 
+/-- A path of a function's traced runs that runs out of fuel is a path of its
+entry block's ops in a frame, from the empty memories with nothing escaped,
+that runs out of fuel after the same marked trace; and each such path is
+one. -/
+theorem Func.traceRuns_exhausted_iff {a : HVector toType (f.params.map (·.2))} {n : Nat}
+    {mt : List (Step (DialectTrace.Acts d))} :
+    f.traceRuns lay ρ L μ ar M a n (.ok (.ok .fuelExhausted, mt)) ↔
+      letI := DialectTrace.stepAt (d := d) lay ρ L
+      ∃ body env s₁, f.enter a.toDVals = .ok (body, env) ∧
+        Func.traceOps (Step (DialectTrace.Acts d)) M n f env body
+          ({ (TraceState.init : TraceState N (unitsOf lay)) with mem := Memories.empty.enter } :
+            TraceState N (unitsOf lay))
+          (.ok (.ok .fuelExhausted, mt, s₁)) := by
+  letI := DialectTrace.stepAt (d := d) lay ρ L
+  constructor
+  · rintro ⟨e', he', ho⟩
+    rcases e' with ⟨_, _⟩ | ⟨y, t, s'⟩
+    · cases ho
+    rcases y with _ | (_ | _) <;>
+      simp only [Except.map, TraceState.endOf, Except.ok.injEq, Prod.mk.injEq, reduceCtorEq,
+        false_and] at ho
+    obtain ⟨-, rfl⟩ := ho
+    obtain ⟨body, env, hen, e₀, h₀, he₀⟩ :=
+      (Func.traceRun_iff (TraceEnd.notStuck_ok _ _ _)).1 he'
+    obtain ⟨e₁, h₁, rfl⟩ := (TraceM.run_inFrame _ _ _).1 h₀
+    rcases e₁ with ⟨_, _⟩ | ⟨y₁, t₁, s₁⟩
+    · cases he₀
+    rcases y₁ with _ | (⟨_, _⟩ | _) <;>
+      simp only [Except.map, Result.finishEnd, Except.ok.injEq, Prod.mk.injEq, reduceCtorEq,
+        false_and] at he₀
+    obtain ⟨-, rfl, -⟩ := he₀
+    exact ⟨body, env, s₁, hen, h₁⟩
+  · rintro ⟨body, env, s₁, hen, h⟩
+    exact ⟨_, (Func.traceRun_iff (TraceEnd.notStuck_ok _ _ _)).2
+      ⟨body, env, hen, _, (TraceM.run_inFrame _ _ _).2 ⟨_, h, rfl⟩, rfl⟩, rfl⟩
+
 /-- The traced runs of a function truncate, with at most `W` steps of fuel
 between two steps of a path, for any `W` that exceeds the length of every
 chain of calls of the module by at least one. -/
@@ -48,27 +85,12 @@ theorem Func.traceRuns_truncates {W : Nat} (hW : ∀ os c, M.CallChain os c → 
     TRun.Truncates W (f.traceRuns lay ρ L μ ar M a) := by
   letI := DialectTrace.stepAt (d := d) lay ρ L
   refine ⟨hpos, fun {n n' mt'} hle hx => ?_⟩
-  obtain ⟨e', he', ho⟩ := hx
-  rcases e' with ⟨_, _⟩ | ⟨y, t, s'⟩
-  · cases ho
-  rcases y with _ | (_ | _) <;>
-    simp only [Except.map, TraceState.endOf, Except.ok.injEq, Prod.mk.injEq, reduceCtorEq,
-      false_and] at ho
-  obtain ⟨-, rfl⟩ := ho
-  obtain ⟨body, env, hen, e₀, h₀, he₀⟩ :=
-    (Func.traceRun_iff (TraceEnd.notStuck_ok _ _ _)).1 he'
-  obtain ⟨e₁, h₁, rfl⟩ := (TraceM.run_inFrame _ _ _).1 h₀
-  rcases e₁ with ⟨_, _⟩ | ⟨y₁, t₁, s₁⟩
-  · cases he₀
-  rcases y₁ with _ | (⟨_, _⟩ | _) <;>
-    simp only [Except.map, Result.finishEnd, Except.ok.injEq, Prod.mk.injEq, reduceCtorEq,
-      false_and] at he₀
-  obtain ⟨-, rfl, -⟩ := he₀
+  obtain ⟨body, env, _, hen, h₁⟩ := (Func.traceRuns_exhausted_iff lay ρ L μ ar).1 hx
   rw [← Nat.add_sub_cancel' hle] at h₁
   obtain ⟨e, h, t₀, s₀, rfl, hp, ht₀, hb⟩ := Func.traceOps_cut _ (DialectTrace.stepAt_oneStep lay ρ L)
     hW hpos n (n' - n) _ _ _ _ _ h₁ (TraceEnd.notStuck_ok _ _ _)
-  refine ⟨t₀, ⟨_, (Func.traceRun_iff (TraceEnd.notStuck_ok _ _ _)).2
-    ⟨body, env, hen, _, (TraceM.run_inFrame _ _ _).2 ⟨_, h, rfl⟩, rfl⟩, rfl⟩, hp, ht₀, fun K hK => ?_⟩
+  refine ⟨t₀, (Func.traceRuns_exhausted_iff lay ρ L μ ar).2 ⟨body, env, _, hen, h⟩, hp, ht₀,
+    fun K hK => ?_⟩
   rcases hb with rfl | ⟨c, hc, hn⟩
   · rfl
   obtain ⟨r, rfl⟩ := hp
@@ -92,37 +114,16 @@ theorem Func.traceRuns_finitelyMany
   cases hen : f.enter a.toDVals with
   | error _ =>
     refine ⟨[], fun mt hx _ => ?_⟩
-    obtain ⟨e', he', ho⟩ := hx
-    rcases e' with ⟨_, _⟩ | ⟨y, t, s'⟩
-    · cases ho
-    rcases y with _ | (_ | _) <;>
-      simp only [Except.map, TraceState.endOf, Except.ok.injEq, Prod.mk.injEq, reduceCtorEq,
-        false_and] at ho
-    obtain ⟨_, _, hen', -⟩ := (Func.traceRun_iff (TraceEnd.notStuck_ok _ _ _)).1 he'
+    obtain ⟨_, _, _, hen', -⟩ := (Func.traceRuns_exhausted_iff lay ρ L μ ar).1 hx
     rw [hen] at hen'
     cases hen'
   | ok p =>
     obtain ⟨C, hC⟩ := Func.traceOps_finite (OpsTraceFinite.stepAt lay ρ L hfin) M n f p.2 p.1
       { (TraceState.init : TraceState N (unitsOf lay)) with mem := Memories.empty.enter } ans
     refine ⟨C.map (·.2.1), fun mt hx hag => ?_⟩
-    obtain ⟨e', he', ho⟩ := hx
-    rcases e' with ⟨_, _⟩ | ⟨y, t, s'⟩
-    · cases ho
-    rcases y with _ | (_ | _) <;>
-      simp only [Except.map, TraceState.endOf, Except.ok.injEq, Prod.mk.injEq, reduceCtorEq,
-        false_and] at ho
-    obtain ⟨-, rfl⟩ := ho
-    obtain ⟨body, env, hen', e₀, h₀, he₀⟩ :=
-      (Func.traceRun_iff (TraceEnd.notStuck_ok _ _ _)).1 he'
+    obtain ⟨_, _, _, hen', h₁⟩ := (Func.traceRuns_exhausted_iff lay ρ L μ ar).1 hx
     rw [hen] at hen'
     cases hen'
-    obtain ⟨e₁, h₁, rfl⟩ := (TraceM.run_inFrame _ _ _).1 h₀
-    rcases e₁ with ⟨_, _⟩ | ⟨y₁, t₁, s₁⟩
-    · cases he₀
-    rcases y₁ with _ | (⟨_, _⟩ | _) <;>
-      simp only [Except.map, Result.finishEnd, Except.ok.injEq, Prod.mk.injEq, reduceCtorEq,
-        false_and] at he₀
-    obtain ⟨-, rfl, -⟩ := he₀
     exact List.mem_map.2 ⟨_, hC _ _ _ h₁ hag, rfl⟩
 
 variable [TyRefinement d.Ty] [TyPointers d.Ty] {a a' : HVector toType (f.params.map (·.2))}

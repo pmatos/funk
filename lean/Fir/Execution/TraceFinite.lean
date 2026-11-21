@@ -21,10 +21,13 @@ those of a list. UB is not counted: a path that hits UB ends there.
 
 The stream fixes the answers by position, not a list of them. An op that may
 show _k_ events for every _k_ has, for each list of answers, finitely many
-outcomes whose answers are that list, one for each _k_ up to its length;
-but against a stream of answers that goes on forever it has infinitely many.
-Such an op could show acts forever in the target while no single run of the
-source shows them, so it does not meet the hypothesis. The toy `emit` of
+outcomes whose answers start that list, one for each _k_ up to its length;
+but against a stream of answers that goes on forever it has infinitely many,
+so it does not meet the hypothesis (`FirTest.TraceDiverge`). The argument
+for this form, that with such an op a target could show acts forever that
+no single run of the source shows, is on paper; it is not checked in Lean.
+The human ruled the hypothesis; its form by position is this module's,
+recorded on `docs/decisions/semantics-m1-trace.md`. The toy `emit` of
 `FirTest.TraceDialect`, which shows one event and takes any answer, meets
 it: the stream fixes the answer.
 

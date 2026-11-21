@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Truncating a traced run: readable blocks" =>
 
-:::moduleDocs (fingerprint := "16446878807482227217")
+:::moduleDocs (fingerprint := "16680259171863581099")
 :::
 
 :::readable Fir.TraceEnd.Truncated Fir.TraceEnd.Cut (fingerprint := "3670553915034550467")
@@ -36,9 +36,8 @@ on its steps. A cut after an op of one step, from ops that start no call,
 is a cut one step of fuel later.
 :::
 
-:::readable Fir.TraceEnd.Cut.notStuck Fir.TraceEnd.NotStuck.after (fingerprint := "666081695978294305")
-*Theorems.* A cut is not stuck, and a way of ending that is not stuck is
-not stuck after a trace.
+:::readable Fir.TraceEnd.Cut.notStuck (fingerprint := "17920216482317727631")
+*Theorem.* A cut is not stuck.
 :::
 
 :::readable Fir.Func.traceOps_cut (fingerprint := "7555984899333044991")

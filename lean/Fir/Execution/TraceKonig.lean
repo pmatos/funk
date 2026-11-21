@@ -31,9 +31,10 @@ Then:
   Each smaller budget is served by cutting a path at a larger one, so the
   source diverges silently after _t₀_, which _t_ refines.
 * _An infinite trace T._ The target shows at least _k_ acts in its first
-  _K(k)_ steps. The first steps of the source's paths at the levels
-  _K(0) ≤ K(1) ≤ …_ form a tree with finitely many nodes at each level, and
-  infinitely many budgets reach some node at every level. By König's lemma
+  _K(k)_ steps. Take levels _K'(k)_ that grow with _k_ and are at least
+  _k_ and each of _K(0), …, K(k)_. The first _K'(k)_ steps of the source's
+  paths form a tree with finitely many nodes at each level, and infinitely
+  many budgets reach some node at every level. By König's lemma
   it has an infinite branch, which shows the trace _T₀_ that _T_ refines;
   cutting longer paths along the branch serves every budget.
 -/
@@ -135,8 +136,8 @@ theorem TRun.diverge_allowed (hcut : TRun.Truncates W R) (hfin : TRun.FinitelyMa
   · exact TRun.ub_allows hr hle fun _ _ ha => List.IsPrefix.getElem?_some hq ha
   -- From `N` on, the target shows `tr` and nothing more; the source shows as many acts.
   have htgt : ∀ n, N ≤ n → Step.actsOf (tgt n) = tr := fun n hn =>
-    (List.IsPrefix.antisymm (hst n).2.2.2.1
-      ((hst n).2.2.2.2 hn ▸ Step.actsOf_prefix (Step.upTo_prefix N (tgt n))))
+    ((hst n).2.2.2.1.eq_of_length_le
+      ((hst n).2.2.2.2 hn ▸ Step.actsOf_prefix (Step.upTo_prefix N (tgt n))).length_le)
   have hsrc : ∀ n, N ≤ n → Step.actsOf (Step.upTo N (src n)) = Step.actsOf (src n) ∧
       Step.actsOf (Step.upTo N (src n)) ⊑ tr := fun n hn => by
     have h₁ := Step.actsOf_isRefinedBy (Step.upTo_isRefinedBy N (hst n).2.2.1)
@@ -167,8 +168,8 @@ theorem TRun.diverge_allowed (hcut : TRun.Truncates W R) (hfin : TRun.FinitelyMa
   refine ⟨mt, hmt, hpre', fun hCn => ?_⟩
   have hN' : Step.actsOf (Step.upTo N mt) = Step.actsOf q := by
     rw [hup N (by omega), hq₂]
-  exact List.IsPrefix.antisymm ((Step.actsOf_prefix (Step.upTo_prefix C mt)).trans hpre')
-    (hN' ▸ Step.actsOf_prefix (Step.upTo_mono (by omega) mt))
+  exact ((Step.actsOf_prefix (Step.upTo_prefix C mt)).trans hpre').eq_of_length_le
+    (by rw [← hN']; exact (Step.actsOf_prefix (Step.upTo_mono (by omega) mt)).length_le)
 
 /-! # Acts forever -/
 
