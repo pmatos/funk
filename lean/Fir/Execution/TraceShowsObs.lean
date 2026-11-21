@@ -172,17 +172,6 @@ theorem Stream.Closed.eq_list {S : Nat → Option A} (h : Stream.Closed S) {p : 
       rw [hq] at this
       cases this
 
-/-- A list whose acts are a list's at their places starts that list. -/
-theorem List.prefix_of_getElem? : ∀ {l l' : List A}, (∀ (i : Nat) a, l[i]? = some a → l'[i]? = some a) →
-    l <+: l'
-  | [], _, _ => List.nil_prefix
-  | a :: l, [], h => by have := h 0 a rfl; simp at this
-  | a :: l, b :: l', h => by
-    have hab : b = a := by simpa using h 0 a rfl
-    subst hab
-    exact (List.prefix_cons_inj _).2 (List.prefix_of_getElem? fun i a' ha => by
-      simpa using h (i + 1) a' (by simpa using ha))
-
 /-- A run that shows a closed stream at every budget diverges: silently after
 the stream's acts when it ends, with the stream as its infinite trace when it
 does not. -/
@@ -195,7 +184,8 @@ theorem TShows.toObservable {S : Nat → Option A} {K : Nat → Nat} (h : TShows
     refine ⟨.diverge tr, ⟨K tr.length, fun n => ?_⟩, trivial, fun i => (htr i).symm⟩
     obtain ⟨mt, hmt, hc, hk⟩ := h n
     have hpre : Step.actsOf mt <+: tr :=
-      List.prefix_of_getElem? fun i a ha => by rw [← htr]; exact hc i a ha
+      List.prefix_iff_getElem?.2 fun i hi => by
+        rw [← htr]; exact hc i _ (List.getElem?_eq_getElem hi)
     refine ⟨mt, hmt, hpre, fun hn => ?_⟩
     have havail : Stream.Avail S tr.length := fun i hi => by
       rw [htr]

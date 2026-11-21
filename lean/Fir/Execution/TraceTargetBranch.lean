@@ -189,8 +189,7 @@ theorem exhaustive (hone : OpsOneStep d (Act E Ans) (TraceState Mem unit))
     Nat.le_of_not_lt fun hlt => hno ⟨j, hlt⟩
   have hAsucc : ∀ j, (Step.actsOf (TBranch.pre t i (j + 1))).length =
       (Step.actsOf (TBranch.pre t i j)).length + (Step.actsOf (t (i + j))).length := fun j => by
-    rw [TBranch.pre_succ]
-    simp [Step.actsOf]
+    rw [TBranch.pre_succ, Step.actsOf_append, List.length_append]
   have hJsucc : ∀ j, Step.ticks (TBranch.pre t i (j + 1)) =
       Step.ticks (TBranch.pre t i j) + Step.ticks (t (i + j)) := fun j => by
     rw [TBranch.pre_succ, Step.ticks_append]

@@ -14,7 +14,7 @@ changes under it.
 
 #doc (Manual) "Streams and outcomes that diverge: readable blocks" =>
 
-:::moduleDocs (fingerprint := "3061130062146177519")
+:::moduleDocs (fingerprint := "1262399224788668426")
 :::
 
 :::readable Fir.Stream.IsRefinedBy Fir.Stream.ShowsRefined Fir.Stream.IsRefinedBy.cat Fir.Stream.ShowsRefined.cat Fir.List.isRefinedBy_of_getElem? (fingerprint := "263845681657554132")
@@ -40,12 +40,11 @@ observable behaviour includes an outcome that diverges shows its outcome's
 stream at every budget.
 :::
 
-:::readable Fir.Nat.exists_least Fir.Stream.exists_list Fir.Stream.Closed.eq_list Fir.List.prefix_of_getElem? (fingerprint := "18198400503372416797")
-*Theorems: lemmas on numbers, lists and streams.* A property that some
+:::readable Fir.Nat.exists_least Fir.Stream.exists_list Fir.Stream.Closed.eq_list (fingerprint := "5028274463788257400")
+*Theorems: lemmas on numbers and streams.* A property that some
 number has, a least number has. A stream with acts at its first $`q` places
 has them as those of a list of length $`q`. A closed stream with no act at
-some place has acts exactly at the places of a list. A list whose acts are
-another's at their places starts that list.
+some place has acts exactly at the places of a list.
 :::
 
 :::readable Fir.TShows.toObservable Fir.TOutcome.isRefinedBy_of_stream Fir.TOutcome.stream_isRefinedBy (fingerprint := "10998708434489005952")
