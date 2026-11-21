@@ -215,6 +215,7 @@ import Fir.Execution.TraceFollow
 import Fir.Execution.TraceFollowStep
 import Fir.Execution.TraceCalleeDiverge
 import Fir.Execution.TraceReplaceDiverge
+import Fir.Execution.TraceLiftFrom
 import Fir.Execution.TraceScript
 import Fir.Execution.MemoryEndModes
 import Fir.Core.Observe

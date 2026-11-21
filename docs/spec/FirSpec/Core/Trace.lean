@@ -45,8 +45,11 @@ module $`M`, if $`@g` with the new body $`b`, run in $`M[g := b]` from given
 memories, refines $`@g` in $`M`, every function of $`M` is refined over the
 spec's traced runs by itself with $`@g`'s new body in $`M[g := b]`, with no
 budget, whatever the parameter types of $`@g` and whatever $`b` does to the
-memories: every core op has finitely many outcomes. So it is at every
-world.
+memories: every core op has finitely many outcomes. The traced layer's own
+theorem for a dialect that shows events proves it, with no `LiftsMem`: the
+core's traced semantics is the lift of its semantics with memory, so the
+hypothesis from given memories gives the traced one from every traced
+state. So it is at every world.
 :::
 
 :::readable Fir.Core.traceOpsMonotone Fir.Core.opsTraceFinite (fingerprint := "16856423220812675737")

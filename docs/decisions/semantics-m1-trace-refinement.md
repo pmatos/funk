@@ -23,8 +23,9 @@ that each return and each UB of a caller in a module that does is allowed
 by the old (`TraceAhead.lean` to `TraceReplace.lean`), and, when its ops
 have finitely many outcomes given the world's answers, that each divergence
 is too, so congruence in the callee in full (`TraceBranch.lean` to
-`TraceReplaceDiverge.lean`). The core's and CoreGpu's congruence in the
-callee through that engine is not implemented yet (#233, stage 3c-2b).
+`TraceReplaceDiverge.lean`). The core's and CoreGpu's refined arguments
+and congruence in the callee are proved by those engines, with no
+`LiftsMem` (`TraceLiftFrom.lean` bridges the hypothesis with memory).
 
 ## Refinement over traced runs
 
@@ -52,8 +53,8 @@ semantics-m1-trace.md.
   theorems exist, so the spec's traced runs would have none meanwhile.
 - **A dialect with events.** Its refined arguments and congruence in the
   callee are the traced layer's own theorems (#233, stages 3b and 3c),
-  which are to prove the core's statements again, unchanged, once the core
-  shows events. Divergence needs one source trace at every budget. An op with
+  which prove the core's and CoreGpu's statements, unchanged, so they keep
+  holding once the core shows events. Divergence needs one source trace at every budget. An op with
   infinitely many outcomes `c` can show, on a poison argument, an event
   that differs with each `c` and is refined by the target's, then take `c`
   silent steps and return. The target then falls silent after its event,
@@ -153,3 +154,16 @@ semantics-m1-trace.md.
   at every budget, which cutting a callee down to a smaller budget breaks:
   each cut can cost `W` steps of fuel for each of the callee's steps, so the
   deadlines would grow at every move.
+- **The core's hypothesis, taken to traces.** The core and CoreGpu keep
+  their hypothesis of congruence in the callee with memory: `@g`, run from
+  given memories, refines the old `@g`. Their traced semantics is the lift
+  of their semantics with memory (`DialectTrace.ofMem`), so a traced run
+  from a traced state shows no act and ends as the run from its memories,
+  each return keeping what that state lets escape. That takes the
+  hypothesis to the traced one from every traced state
+  (`Func.traceRunsFrom_isRefinedBy_of_memRunsFrom`), which the traced
+  layer's own theorem asks, by unfolding `ofMem` rather than through the
+  class `LiftsMem`. Once the core shows events (#239), its traced
+  semantics is no longer this lift, and the bridge no longer applies.
+  Rejected: restate it over traced runs now, which changes
+  the statement of a #384 guarantee.

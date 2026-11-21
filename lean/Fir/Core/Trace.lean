@@ -2,6 +2,8 @@ import Fir.Core.MemoryCallRefine
 import Fir.Core.Observe
 import Fir.Execution.TraceRefine
 import Fir.Execution.TraceDiverge
+import Fir.Execution.TraceReplaceDiverge
+import Fir.Execution.TraceLiftFrom
 
 /-!
 # The core's traced runs
@@ -32,11 +34,15 @@ and the lift onto the traced state keeps it. They also meet the hypothesis
 of that layer's divergence (`Fir.Execution.TraceFinite`): each has finitely
 many outcomes with memory, so finitely many given the world's answers.
 
-So refined arguments is proved by the traced layer's own theorem for a
-dialect that shows events (`Fir.Execution.TraceDiverge`), as it stays once
-the core shows events and its traced semantics is no longer this lift.
-Congruence in the callee is proved from what holds with memory until stage
-3c of #233 gives the traced layer's own theorem, with the same statement.
+So both are proved by the traced layer's own theorems for a dialect that
+shows events, as they stay once the core shows events and its traced
+semantics is no longer this lift: refined arguments by
+`Fir.Execution.TraceDiverge`, congruence in the callee by
+`Fir.Execution.TraceReplaceDiverge`. Congruence in the callee keeps its
+hypothesis with memory: since the core's traced semantics is the lift, a run
+from a traced state ends as the run from its memories, so that hypothesis
+gives the traced one (`Fir.Execution.TraceLiftFrom`). Neither proof uses
+`LiftsMem`.
 -/
 
 namespace Fir
@@ -104,7 +110,9 @@ new module from given memories, refines `@g` in the old, refines every
 function of the module over the spec's traced runs, calls and recursion
 included, wherever a run names the core's memories. It asks for no budget,
 whatever the parameter types of `@g` and whatever its new body does to the
-memories: every core op has finitely many outcomes. -/
+memories: every core op has finitely many outcomes. It is proved by the
+traced layer's own theorem for a dialect that shows events, its hypothesis
+with memory taken to the traced one by the lift. -/
 theorem trace_replaceBody_isRefinedBy_of_from (hM : M.Valid) {g : Func CoreDialect}
     (hg : g ∈ M.funcs) (b : Region CoreDialect)
     (h : letI := DialectMemDenote.denoteAt (d := CoreDialect) lay ρ L;
@@ -114,8 +122,10 @@ theorem trace_replaceBody_isRefinedBy_of_from (hM : M.Valid) {g : Func CoreDiale
     (hf : f ∈ M.funcs) :
     f.observedRuns lay ρ L μ M ⊑
       (f.replaceBody g.name b).observedRuns lay ρ L μ (M.replaceBody g.name b) :=
-  Func.traceRuns_replaceBody_isRefinedBy_of_opsFinite lay ρ L μ _ Ty.isRefinedBy_refl
-    Ty.isRefinedBy_trans (opsFinite lay ρ L) hM hg b h hf
+  Func.traceRuns_replaceBody_isRefinedBy lay ρ L μ _ (opsTraceFinite lay ρ L)
+    (fun g _ => traceOpsMonotone lay ρ L g) Ty.isRefinedBy_refl Ty.isRefinedBy_trans
+    (fun {e₁} => (e₁ : Empty).elim) hM.symbolsUnique hg b
+    (fun p => Func.traceRunsFrom_isRefinedBy_of_memRunsFrom lay ρ L (h (p.1, p.2.mem))) hf
 
 /-- Congruence in the callee over traced runs, at every world: under the
 hypotheses of congruence in the callee from given memories, on every
