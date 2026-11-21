@@ -41,6 +41,24 @@ pub fn file(name: &str, text: &str) -> String {
     path.to_string_lossy().into_owned()
 }
 
+/// Writes `contents` to a new executable file at `path`.
+///
+/// A child process writes the file, never the test's own process. The tests
+/// in one binary run on parallel threads. While this process holds a file
+/// open for writing, a child that another thread forks at that moment holds
+/// it open too, until that child execs. Running the file in that window
+/// fails with "Text file busy" (ETXTBSY). Renaming the file does not help,
+/// since the open descriptor follows the file, not its name.
+pub fn write_executable(path: &Path, contents: &[u8]) {
+    let out = with_stdin(
+        Command::new("sh")
+            .args(["-c", "cat > \"$0\" && chmod 755 \"$0\""])
+            .arg(path),
+        contents,
+    );
+    assert!(out.status.success(), "{}", text(&out.stderr));
+}
+
 /// Runs funk with `args` in the current directory and `stdin` as input.
 pub fn funk(args: &[&str], stdin: &str) -> Output {
     funk_in(Path::new("."), args, stdin)
@@ -48,20 +66,23 @@ pub fn funk(args: &[&str], stdin: &str) -> Output {
 
 /// Runs funk with `args` in the directory `cwd`.
 pub fn funk_in(cwd: &Path, args: &[&str], stdin: &str) -> Output {
-    let mut child = Command::new(env!("CARGO_BIN_EXE_funk"))
-        .current_dir(cwd)
-        .args(args)
+    with_stdin(
+        Command::new(env!("CARGO_BIN_EXE_funk"))
+            .current_dir(cwd)
+            .args(args),
+        stdin.as_bytes(),
+    )
+}
+
+/// Runs `cmd` with `stdin` as its input and gives what it wrote.
+fn with_stdin(cmd: &mut Command, stdin: &[u8]) -> Output {
+    let mut child = cmd
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
         .spawn()
         .unwrap();
-    child
-        .stdin
-        .take()
-        .unwrap()
-        .write_all(stdin.as_bytes())
-        .unwrap();
+    child.stdin.take().unwrap().write_all(stdin).unwrap();
     child.wait_with_output().unwrap()
 }
 
