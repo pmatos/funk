@@ -11,8 +11,8 @@ pointer, with the memories in which its allocation has an address, or UB
 when no address may be given. So:
 
 * it always has an outcome, and it has finitely many;
-* it writes no unit of any memory, and keeps the kind, alignment, size and
-  liveness of every allocation, and the frames;
+* it writes no unit of any memory, and keeps the kind, alignment, size,
+  liveness and constness of every allocation, and the frames;
 * it reads no memory but its own, and gives no address in any other memory;
 * from memories that refine others it gives the same integer, or UB in
   both, and memories that refine the others'.

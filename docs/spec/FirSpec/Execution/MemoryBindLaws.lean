@@ -36,7 +36,7 @@ so does the sequence: each of its results is one of $`f`'s, after one of
 $`c`'s finitely many.
 :::
 
-:::readable Fir.WritesNot.bind Fir.AllocatesNot.bind (pin := Fir.WritesNot) (pin := Fir.AllocatesNot) (fingerprint := "11010922900940451825")
+:::readable Fir.WritesNot.bind Fir.AllocatesNot.bind (pin := Fir.WritesNot) (pin := Fir.AllocatesNot) (fingerprint := "16386966639632753512")
 *Theorems: a sequence touches what its parts touch.* When neither $`c`
 nor any $`f(a)` writes a unit of the memory $`x`, the sequence writes
 none: the contents of $`x` before it are a prefix of those after $`c`,

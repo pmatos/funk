@@ -117,8 +117,8 @@ above applies (#214). Until #214 this form asked that $`g` have no pointer
 parameter, as the human ruled on #373 (2026-11-13). A core function
 reaches no memory when no function in its reach has an
 $`\mathsf{alloca}`, a load, a store, a copy, a move or a fill, the core
-ops that touch memory. Its hypothesis is refinement
-with memory, from the empty memories, which says nothing of a callee that
+ops that touch memory. Its hypothesis is refinement with memory, from the
+memories a run starts with, which says nothing of a callee that
 touches memory; such a callee uses the theorem from given memories above.
 
 Congruence goes through the lawful class, so it asks for a valid module, as

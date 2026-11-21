@@ -1,4 +1,4 @@
-import Fir.Execution.MemoryObligations
+import Fir.Execution.RunStart
 import Fir.Memory.FrameLaws
 import Fir.Execution.Lawful
 
@@ -8,9 +8,10 @@ import Fir.Execution.Lawful
 A run with memory is a run of the interpreter in the state layer over the
 set monad, by the dialect's semantics with memory at a naming of its
 memories, each with its layout entry (the section on memory obligations):
-it starts from the empty
-memories of a run, outside every call, and each path that ends carries the
-memories as they are at its end. Until observations at the end of a run
+it starts from the memories that hold the run's starting allocations, its
+table's globals, outside every call (the section on the memories a run
+starts with), and each path that ends carries the memories as they are at
+its end. Until observations at the end of a run
 are designed ([#233](https://github.com/pmatos/funk/issues/233)), an
 observer sees what the run returns and not its memories, so the runs with
 memory of a function are runs in the sense of the outcomes, and fuel
@@ -205,16 +206,17 @@ variable [DialectEffects d] [DialectMemDenote d] (lay : N → MemLayout)
   (ρ : DialectEffects.Mem d → N) (L : RunItems)
 
 /-- The runs with memory of the function `f` of the module `M`, where a run
-names the dialect's memory `x` as `ρ x`, whose layout entry is `lay (ρ x)`:
-its run in the state layer over the set monad, by the dialect's
-semantics with memory at that naming, from the empty memories, at each
-budget, on each argument vector of its parameter types. An observer sees
-what it returns. -/
+names the dialect's memory `x` as `ρ x`, whose layout entry is `lay (ρ x)`,
+and gives the items `L`: its run in the state layer over the set monad, by
+the dialect's semantics with memory at that naming, from the memories that
+hold `L`'s starting allocations, at each budget, on each argument vector of
+its parameter types. An observer sees what it returns. -/
 def Func.memRuns (M : Module d) (f : Func d) :
     FuncRuns (HVector toType (f.params.map (·.2))) (List (DVal d)) :=
   letI := DialectMemDenote.denoteAt (d := d) lay ρ L
   fun args fuel => Functor.map (f := SetM) Prod.fst
-    ((f.run M (m := StateT (Memories N (unitsOf lay)) SetM) args fuel).run Memories.empty)
+    ((f.run M (m := StateT (Memories N (unitsOf lay)) SetM) args fuel).run
+      (RunItems.start d lay ρ L))
 
 variable [DialectDenote d SetM]
 

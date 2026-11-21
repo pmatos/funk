@@ -14,7 +14,7 @@ changes under it.
 
 #doc (Manual) "The sum of dialects: readable blocks" =>
 
-:::moduleDocs (fingerprint := "5018115411565907299")
+:::moduleDocs (fingerprint := "10395136750643285530")
 :::
 
 :::readable Fir.Dialect.over Fir.Dialect.sum (fingerprint := "6781788953757055949")
@@ -162,7 +162,7 @@ $`e` names the base's memory $`x` as
 $`\mathrm{ofBase}(x) = \mathrm{join}(\mathsf{inl}\ x)`.
 :::
 
-:::readable Fir.Dialect.sum.instDialectEffects Fir.Dialect.sum.instDialectCall Fir.Dialect.sum.instDialectDenote (pin := Fir.Effects.map) (fingerprint := "4989984237654859011")
+:::readable Fir.Dialect.sum.instDialectEffects Fir.Dialect.sum.instDialectCall Fir.Dialect.sum.instDialectDenote (pin := Fir.Effects.map) (fingerprint := "8279686189698651286")
 *Definition: how an op of a sum runs.* The memories of the sum are
 $`e`'s, $`M_e`, which name the base's: so a memory has one name in the
 sum, whichever side names it (ADR-2026-11-09-2306). An op of the sum has
@@ -171,6 +171,9 @@ its side's
 a base op's with its memories renamed by $`\mathrm{ofBase}`:
 
 $$`\mathrm{eff}(\mathsf{inl}\ p) = \mathrm{ofBase}(\mathrm{eff}_b(p)) \qquad \mathrm{eff}(\mathsf{inr}\ q) = \mathrm{eff}_{b.\mathrm{over}(e)}(q)`
+
+The sum's numbered memories are the base's, by those names:
+$`\mathrm{num}(n) = \mathrm{ofBase}(\mathrm{num}_b(n))`.
 
 It calls the function that it calls on its side. It runs by its side's
 rule: a base op takes its operands moved down to the base's types, and its

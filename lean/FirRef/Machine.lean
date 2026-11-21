@@ -3,7 +3,7 @@ import FirRef.RunAt
 
 /-!
 `fir-ref run` runs the spec's interpreter in the state layer over the tree of
-choices, from the empty memories, and walks the tree
+choices, from the memories that hold the run's globals, and walks the tree
 (`docs/decisions/fir-ref-command-line.md#scripted-and-exhaustive-modes`, the
 spec's section on modes with memory). The spec's `Func.runOps` recurses once
 per op it runs, through the tree's `bind`, and a call runs its callee inside

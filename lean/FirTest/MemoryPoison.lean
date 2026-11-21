@@ -55,7 +55,7 @@ instance : DialectCall PeekDialect := ⟨fun _ => none⟩
 the memory, may hit UB and may produce poison. -/
 instance : DialectEffects PeekDialect :=
   ⟨Unit, fun _ => .propagates,
-    fun _ => { reads := .these [()], mayUB := true, mayPoison := true }⟩
+    fun _ => { reads := .these [()], mayUB := true, mayPoison := true }, fun _ => none⟩
 
 instance : DialectValidation PeekDialect where
   validTy _ := True

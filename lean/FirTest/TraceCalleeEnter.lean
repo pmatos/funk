@@ -127,12 +127,11 @@ theorem caller_diverges :
     traceObservable (caller.traceRuns lay Empty.elim RunItems.empty (fun _ => ()) AddrRule.ignore
       loopModule .nil) (.diverge []) := by
   letI := stepSem
-  have hb := TBranch.tShows (R := fun i => (cs { (TraceState.init : St) with
-      mem := (TraceState.init : St).mem.enter } i).exh _ loopModule)
+  have hb := TBranch.tShows (R := fun i => (cs { s₀ with mem := s₀.mem.enter } i).exh _ loopModule)
     (fun i => (caller_moves _ i).tStep (DialectTrace.stepAt_oneStep lay Empty.elim RunItems.empty)) 0
   rw [acts_silent fun i => by cases i <;> rfl] at hb
   have hb' := hb.congr (TCfg.exh_iff_traceFrom (M := loopModule) (g := caller) (a := .nil)
-    (s := TraceState.init) rfl)
+    (s := s₀) rfl)
   exact (Func.traceRuns_diverge_iff_from lay Empty.elim RunItems.empty _ _).2 (diverge_of_tShows hb')
 
 /-! # The source allows it -/

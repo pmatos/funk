@@ -17,7 +17,7 @@ when the Lean changes under it.
 :::moduleDocs (fingerprint := "8200240555650958190")
 :::
 
-:::readable Fir.Memory.Resolver Fir.Memory.Resolver.canonical (pin := Fir.Memory.Place) (fingerprint := "1042354504430014978")
+:::readable Fir.Memory.Resolver Fir.Memory.Resolver.canonical (pin := Fir.Memory.Place) (fingerprint := "7276955279853646180")
 *Definition: an address resolver.* An address resolver $`k` for a memory
 maps the number $`c` of integers the run has turned back into pointers of
 that memory before, the places of the memory's blocks and an address $`z` to the

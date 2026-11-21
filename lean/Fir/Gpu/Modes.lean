@@ -11,10 +11,10 @@ at a work-item, the run's input with its arguments: a function of the
 module, or a kernel of one of its device modules, nested at any depth, in
 the module of its table (`Module.nest`). The modes run it as they run the
 core alone (the section on the core's modes): with memory, in the state
-layer over the tree of choices, from the empty memories, each memory with
-its entry in the module's data layout, which a nested table shares with
-its host, and the run gives each op the items of the module of its
-table. The run names the sum's memories by the core's numbers
+layer over the tree of choices, from the memories that hold the globals of
+its table, each memory with its entry in the module's data layout, which a
+nested table shares with its host, and the run gives each op the items of
+the module of its table. The run names the sum's memories by the core's numbers
 (`memName`): `gpu` has no memory of its own, so its names are the core's,
 and work-group memory is the memory of the host's layout that an
 allocation's result names.
@@ -99,12 +99,13 @@ theorem memMapsDenote (ρ : DialectEffects.Mem CoreGpu → N) (L : RunItems) :
 
 /-- The tree of a run with memory of the function `f` of the module `M` at
 the work-item, on `args` with `fuel` steps, that the modes walk: from the
-empty memories, each memory with its entry in `M`'s data layout, named by
-its number. -/
+memories that hold the globals of `M`'s own table, each memory with its
+entry in `M`'s data layout, named by its number. -/
 def modeTree (M : Module CoreGpu) (f : Func CoreGpu) (args : HVector toType (f.params.map (·.2)))
     (fuel : Nat) : ChoiceTree Core.Op (Except Stuck (Result (List (DVal CoreGpu)))) :=
   letI := memTreeDenote M.layout.entry memName M.runItems
-  f.memTree (unitsOf M.layout.entry) M args fuel
+  f.memTree (unitsOf M.layout.entry) (RunItems.start CoreGpu M.layout.entry memName M.runItems) M
+    args fuel
 
 /-- A leaf of the tree that the modes walk. -/
 abbrev Leaf := ChoiceTree.Leaf Core.Op (Except Stuck (Result (List (DVal CoreGpu))))

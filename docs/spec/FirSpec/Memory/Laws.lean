@@ -14,7 +14,7 @@ changes under it.
 
 #doc (Manual) "Memory laws: readable blocks" =>
 
-:::moduleDocs (fingerprint := "6036295745442037520")
+:::moduleDocs (fingerprint := "2273788873020270991")
 :::
 
 :::readable Fir.Memory.Block.write_length (fingerprint := "6572027941022401979")
@@ -60,17 +60,22 @@ $`n` units from $`o` are not all inside it, the access of $`n` units
 through $`(a, o)` faults with $`\mathsf{outOfBounds}`.
 :::
 
-:::readable Fir.Memory.Memory.load_eq_error Fir.Memory.Memory.store_eq_error (fingerprint := "7541163938030258180")
+:::readable Fir.Memory.Memory.load_eq_error Fir.Memory.Memory.store_eq_error Fir.Memory.Memory.store_of_locate_error (fingerprint := "14793333635472226744")
 *Theorem: loads and stores fault as their accesses do.* A load of $`n`
-units faults exactly when its access of $`n` units does, and a store of
-$`\vec{y}` exactly when its access of $`|\vec{y}|` units does, each for the
-same reason.
+units faults exactly when its access of $`n` units does, for the same
+reason. A store of $`\vec{y}` faults exactly when its access of
+$`|\vec{y}|` units does, for the same reason, or when that access lands in
+a constant block, with $`\mathsf{constant}`. So a store whose access
+faults faults for the same reason.
 :::
 
-:::readable Fir.Memory.Memory.load_of_locate Fir.Memory.Memory.store_of_locate (fingerprint := "17546964793698600514")
+:::readable Fir.Memory.Memory.load_of_locate Fir.Memory.Memory.store_of_locate Fir.Memory.Memory.store_constant Fir.Memory.Memory.store_ok_const (fingerprint := "17045714653690257927")
 *Theorem: what a successful access does.* When an access lands in the
 block $`b` of $`a` at offset $`o`, a load gives $`b`'s units from $`o` on,
-and a store of $`\vec{y}` gives $`M` with $`M[a] := b[o := \vec{y}]`.
+and a store of $`\vec{y}` gives $`M` with $`M[a] := b[o := \vec{y}]` when
+$`b` is not constant, and faults with $`\mathsf{constant}` when it is,
+wherever in $`b` it lands. So a store that succeeds landed in a block that
+is not constant.
 :::
 
 :::readable Fir.Memory.Memory.store_eq_ok (fingerprint := "93568961109510418")
@@ -85,12 +90,12 @@ pointer $`(|M|, 0)`: provenance for the new allocation, which no allocation
 had before, and its first unit.
 :::
 
-:::readable Fir.Memory.Memory.alloc_blocks_lt Fir.Memory.Memory.alloc_blocks_new (fingerprint := "7885593531571407399")
+:::readable Fir.Memory.Memory.alloc_blocks_lt Fir.Memory.Memory.alloc_blocks_new (fingerprint := "15079332274801187479")
 *Theorem: an allocation adds one block and changes none.* After an
 allocation of $`n` units of kind $`k`, aligned to $`\alpha`, every
 allocation $`a < |M|` has the block it had, and the new allocation $`|M|`
-has the live block $`(k, \alpha, \mathsf{poison}^n, \mathsf{true}, \bot)`,
-with no address.
+has the live block $`(k, \alpha, \mathsf{poison}^n, \mathsf{true}, \bot, \mathsf{false})`,
+with no address, not constant.
 :::
 
 :::readable Fir.Memory.Memory.locate_alloc (fingerprint := "2186274606770818381")
@@ -112,10 +117,10 @@ gives $`M'`, then $`M'[a] = M[a]` for every allocation $`a` that $`p` has
 no provenance for.
 :::
 
-:::readable Fir.Memory.Memory.store_shape (fingerprint := "3355720674628488789")
+:::readable Fir.Memory.Memory.store_shape (fingerprint := "8899709965963732239")
 *Theorem: a store keeps every allocation's shape.* If a store gives
-$`M'`, then for every $`a`, $`M'[a]` has the kind, alignment, size and
-liveness of $`M[a]`, and $`M'` has a block for $`a` exactly when $`M` has
+$`M'`, then for every $`a`, $`M'[a]` has the kind, alignment, size,
+liveness and constness of $`M[a]`, and $`M'` has a block for $`a` exactly when $`M` has
 one.
 :::
 

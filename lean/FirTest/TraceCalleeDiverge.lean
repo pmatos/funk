@@ -111,12 +111,11 @@ theorem quiet_diverges :
     traceObservable (quiet.traceRuns lay Empty.elim RunItems.empty (fun _ => ()) AddrRule.ignore
       newModule .nil) (.diverge []) := by
   letI := stepSem
-  have hb := TBranch.tShows (R := fun i => (qs { (TraceState.init : St) with
-      mem := (TraceState.init : St).mem.enter } i).exh _ newModule)
+  have hb := TBranch.tShows (R := fun i => (qs { s₀ with mem := s₀.mem.enter } i).exh _ newModule)
     (fun i => (quiet_moves _ i).tStep (DialectTrace.stepAt_oneStep lay Empty.elim RunItems.empty)) 0
   rw [acts_silent fun _ => actsOf_tick] at hb
   have hb' := hb.congr (TCfg.exh_iff_traceFrom (M := newModule) (g := quiet) (a := .nil)
-    (s := TraceState.init) rfl)
+    (s := s₀) rfl)
   exact (Func.traceRuns_diverge_iff_from lay Empty.elim RunItems.empty _ _).2 (diverge_of_tShows hb')
 
 /-! # `@loud` shows an act forever -/
@@ -201,8 +200,7 @@ theorem loud_reacts :
     traceObservable (loud.traceRuns lay Empty.elim RunItems.empty (fun _ => ()) AddrRule.ignore
       newModule .nil) (.reacts fun _ => act₀) := by
   letI := stepSem
-  have hb := TBranch.tShows (R := fun i => (ls { (TraceState.init : St) with
-      mem := (TraceState.init : St).mem.enter } i).exh _ newModule)
+  have hb := TBranch.tShows (R := fun i => (ls { s₀ with mem := s₀.mem.enter } i).exh _ newModule)
     (fun i => (loud_moves _ i).tStep (DialectTrace.stepAt_oneStep lay Empty.elim RunItems.empty)) 0
   have hall : TBranch.acts lt 0 = fun _ => some act₀ := by
     funext p
@@ -212,7 +210,7 @@ theorem loud_reacts :
     rw [TBranch.acts_eq hb, lt_acts _ _ _ (List.mem_of_getElem? hb)]
   rw [hall] at hb
   have hb' := hb.congr (TCfg.exh_iff_traceFrom (M := newModule) (g := loud) (a := .nil)
-    (s := TraceState.init) rfl)
+    (s := s₀) rfl)
   obtain ⟨t, ht, hdiv, hact⟩ := hb'.toObservable fun _ _ => rfl
   refine (Func.traceRuns_reacts_iff_from lay Empty.elim RunItems.empty _ _).2 ?_
   match t, hdiv, hact with

@@ -13,7 +13,7 @@ A callee runs from the memories its caller reached, and its caller goes on
 from the memories it leaves. So the hypothesis compares the new function in
 the new module with `@g` in the old _from every memories_, the memories they
 end with included, as their runs from given memories: refinement of runs
-with memory alone, from the empty memories, says nothing of a call made
+with memory alone, from the memories a run starts with, says nothing of a call made
 from other memories. The conclusion holds of every function of the module
 in the same sense, and so of its runs with memory.
 
@@ -200,6 +200,6 @@ theorem Func.memRuns_replaceBody_isRefinedBy_of_bound
     (fun op hvo hc => LawfulDialectMonotone.monotone op hvo hc lay ρ L)
   have hr := Func.memRunsFrom_replaceBody_isRefinedBy hmono hrefl htrans hM.symbolsUnique hg b
     hbound h hf
-  exact ⟨hr, fun a => Func.memRuns_isRefinedBy_of_from lay ρ L (hr (a, Memories.empty))⟩
+  exact ⟨hr, fun a => Func.memRuns_isRefinedBy_of_from lay ρ L (hr (a, RunItems.start d lay ρ L))⟩
 
 end Fir

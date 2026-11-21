@@ -25,6 +25,7 @@ memory. -/
   effects
     | .store .. => { mayUB := true }
     | op => Core.Op.effects op
+  numbered := some
 
 /-- A `store` of an `i8` through a pointer of memory 0 is a valid op
 instance. -/

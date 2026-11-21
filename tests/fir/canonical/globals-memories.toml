@@ -2,8 +2,13 @@
 # units with 32-bit pointers (ADR-2026-11-09-1546). A unit of memory 1
 # holds up to 65535, a pointer of memory 1 takes two of its units and one
 # of memory 0 four; a nested module holds a global of its own, which names
-# only its own table's globals. The backend does not realise memory 1, so
-# the test is interpreter-only.
+# only its own table's globals. A run holds its own table's globals only
+# (#237 Q3): a host run starts with @narrow as memory 0's allocation 0, so
+# its alloca gets id 1, while a run of @dev's function holds only @cell,
+# in memory 1, so its alloca in memory 0 gets id 0. The backend does not
+# realise memory 1, so the tests are interpreter-only.
 tests = [
   { func = "@wide_size", expect = ["8"] },
+  { func = "@after_narrow", expect = ["ptr(1, 0)"] },
+  { func = "@dev::@first", expect = ["ptr(0, 0)"] },
 ]

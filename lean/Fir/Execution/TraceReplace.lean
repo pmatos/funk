@@ -14,8 +14,8 @@ it is read for whole functions, for a dialect that shows events:
   source's, is allowed by its traced runs in the source: a return by UB
   after acts that it first shows, refined, or by a return after acts that
   its own refine one by one, of values that its own refine, in a traced
-  state that its own refines. So it is for the traced runs from the empty
-  memories, whose end of a return its own refines
+  state that its own refines. So it is for the traced runs from the
+  memories a run starts with, whose end of a return its own refines
   (`End.isRefinedBy_of_mem`).
 * _Replacing a callee's body gives calls refined._ In a module whose
   symbols are unique, replace the body of its function `@g` with one under
@@ -120,18 +120,19 @@ theorem Func.traceRunsFrom_ub_allowed
   exact ⟨.ub (Step.actsOf mt) r, ⟨N, mt, Func.traceFrom_ub_iff.2 ⟨_, _, hen, hN⟩, rfl⟩,
     hle.getElem?⟩
 
-/-! # From the empty memories -/
+/-! # From the memories a run starts with -/
 
 variable (μ : Nat → N) (ar : AddrRule)
 
 omit [TyRefinement d.Ty] in
 /-- A return of a function's traced runs is a return of its traced runs from
-the empty memories with nothing escaped, seen at its end; and each such
-return is one. -/
+the memories the run starts with and nothing escaped, seen at its end; and
+each such return is one. -/
 theorem Func.traceRuns_ret_iff_from {n : Nat} {mt : List (Step (DialectTrace.Acts d))}
     {o : End (unitsOf lay) μ ar (List (DVal d))} :
     f.traceRuns lay ρ L μ ar M a n (.ok (.ok (.ret o), mt)) ↔
-      ∃ vs s₁, f.traceRunsFrom lay ρ L M (a, TraceState.init) n (.ok (.ok (.ret (vs, s₁)), mt)) ∧
+      ∃ vs s₁, f.traceRunsFrom lay ρ L M (a, TraceState.init (RunItems.start d lay ρ L)) n
+          (.ok (.ok (.ret (vs, s₁)), mt)) ∧
         o = ⟨vs, s₁.mem, s₁.escaped⟩ := by
   constructor
   · rintro ⟨e, he, ho⟩
@@ -150,12 +151,13 @@ theorem Func.traceRuns_ret_iff_from {n : Nat} {mt : List (Step (DialectTrace.Act
       cases ho
 
 omit [TyRefinement d.Ty] in
-/-- UB of a function's traced runs is UB of its traced runs from the empty
-memories with nothing escaped, after the same marked trace; and each such
-UB is one. -/
+/-- UB of a function's traced runs is UB of its traced runs from the memories
+the run starts with and nothing escaped, after the same marked trace; and
+each such UB is one. -/
 theorem Func.traceRuns_ub_iff_from {n : Nat} {mt : List (Step (DialectTrace.Acts d))} {r : String} :
     f.traceRuns lay ρ L μ ar M a n (.error (r, mt)) ↔
-      f.traceRunsFrom lay ρ L M (a, TraceState.init) n (.error (r, mt)) := by
+      f.traceRunsFrom lay ρ L M (a, TraceState.init (RunItems.start d lay ρ L)) n
+        (.error (r, mt)) := by
   constructor
   · rintro ⟨e, he, ho⟩
     match e, he, ho with

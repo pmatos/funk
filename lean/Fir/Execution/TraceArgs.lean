@@ -197,9 +197,9 @@ theorem Func.traceRuns_path_allowed
     (hx : f.traceRuns lay ρ L μ ar M a' n o) (hne : ∀ st mt, o ≠ .ok (.error st, mt)) :
     letI := DialectTrace.stepAt (d := d) lay ρ L
     ∃ e e', (f.run M (m := TraceM (Step (DialectTrace.Acts d)) (TraceState N (unitsOf lay))) a n).run
-        TraceState.init e ∧
+        (TraceState.init (RunItems.start d lay ρ L)) e ∧
       (f.run M (m := TraceM (Step (DialectTrace.Acts d)) (TraceState N (unitsOf lay))) a' n).run
-        TraceState.init e' ∧
+        (TraceState.init (RunItems.start d lay ρ L)) e' ∧
       o = e'.map (fun p => (p.2.2.endOf μ ar p.1, p.2.1)) ∧ TraceEnd.Allows Result.Finished e e' := by
   letI := DialectTrace.stepAt (d := d) lay ρ L
   obtain ⟨e', he', rfl⟩ := hx

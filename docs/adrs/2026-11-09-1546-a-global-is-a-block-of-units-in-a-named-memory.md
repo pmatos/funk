@@ -13,13 +13,17 @@ Tier: direction; area: semantics
   `internal` (the default) or `export`.
 - **Its allocation.** Each global is one allocation of kind global, live for
   the whole run. An op gets its address by symbol. A frontend writes initial
-  data as units and relocations, as an assembler does.
+  data as units and relocations, as an assembler does. A run starts with the
+  globals of its own function's table only, and a global's units past its
+  initializer hold zeros; writing a constant global is UB when the write
+  runs, not a verifier error (the human's rulings of 2026-11-20 on #237,
+  Q1 to Q3).
 - **Linkage.** An `export` global is visible to code that funk did not
   compile and is observed at the end of a run. An `internal` global is
   observed only once its address escapes (ADR-2026-11-09-1540). Weak, common
   and visibility linkage wait for the C frontend (M4).
 
-[semantics-m1-design.md](../decisions/semantics-m1-design.md) states each
+[semantics-m1-globals.md](../decisions/semantics-m1-globals.md) states each
 rule. The human ruled this on 2026-11-09, on #209.
 
 ## Why
