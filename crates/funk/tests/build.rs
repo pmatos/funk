@@ -279,7 +279,7 @@ fn build_with_a_warning(tool: &str) -> (Output, PathBuf) {
         "#!/bin/sh\n'{}' \"$@\" || exit\necho '{tool}: warning: shim' >&2\n",
         real.display()
     );
-    write_executable(&shim, &script);
+    write_executable(&shim, script.as_bytes());
     let src = dir.join("seven.fir");
     std::fs::write(&src, SEVEN).unwrap();
     let exe = dir.join("seven");

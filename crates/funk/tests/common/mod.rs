@@ -49,19 +49,17 @@ pub fn file(name: &str, text: &str) -> String {
 /// it open too, until that child execs. Running the file in that window
 /// fails with "Text file busy" (ETXTBSY). Renaming the file does not help,
 /// since the open descriptor follows the file, not its name.
-pub fn write_executable(path: &Path, contents: &str) {
-    let out = Command::new("sh")
-        .args(["-c", "printf %s \"$1\" > \"$0\""])
+pub fn write_executable(path: &Path, contents: &[u8]) {
+    let mut child = Command::new("sh")
+        .args(["-c", "cat > \"$0\" && chmod 755 \"$0\""])
         .arg(path)
-        .arg(contents)
-        .output()
+        .stdin(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()
         .unwrap();
+    child.stdin.take().unwrap().write_all(contents).unwrap();
+    let out = child.wait_with_output().unwrap();
     assert!(out.status.success(), "{}", text(&out.stderr));
-    #[cfg(unix)]
-    {
-        use std::os::unix::fs::PermissionsExt;
-        std::fs::set_permissions(path, std::fs::Permissions::from_mode(0o755)).unwrap();
-    }
 }
 
 /// Runs funk with `args` in the current directory and `stdin` as input.
