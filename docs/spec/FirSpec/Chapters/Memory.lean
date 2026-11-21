@@ -29,7 +29,8 @@ any memories, and refinement with memory, which refines memories unit by
 unit and asks each op to be monotone from memories that refine others.
 Between the model and the effect, it says which addresses an exposed
 allocation may be given and which one `fir-ref` gives, how a run's address
-policy picks one, and how a value of
+policy picks one, how a run's resolver picks the allocation that an integer
+turned back into a pointer points into, and how a value of
 an integer, a float or a pointer type becomes units of a memory, and units
 a value again, at every byte order. It ends with traces: the events that a
 run shows to the world outside it, the layer in which a run shows them, and
@@ -63,6 +64,10 @@ event.
 {includeReadable "." Fir.Memory.Policy "Address policies" FirSpec.Memory.Policy (level := 1)}
 
 {includeReadable "." Fir.Memory.PolicyLaws "Address policy laws" FirSpec.Memory.PolicyLaws (level := 1)}
+
+{includeReadable "." Fir.Memory.Resolver "Address resolvers" FirSpec.Memory.Resolver (level := 1)}
+
+{includeReadable "." Fir.Memory.ResolverLaws "Address resolver laws" FirSpec.Memory.ResolverLaws (level := 1)}
 
 {includeReadable "." Fir.Memory.Encode "Values in units" FirSpec.Memory.Encode (level := 1)}
 
@@ -139,6 +144,8 @@ event.
 {includeReadable "." Fir.Execution.MemoryCopyLaws "Copies of units in the state layer" FirSpec.Execution.MemoryCopyLaws (level := 1)}
 
 {includeReadable "." Fir.Execution.MemoryExposeLaws "Exposing in the state layer" FirSpec.Execution.MemoryExposeLaws (level := 1)}
+
+{includeReadable "." Fir.Execution.MemoryFromAddrLaws "Turning integers into pointers in the state layer" FirSpec.Execution.MemoryFromAddrLaws (level := 1)}
 
 {includeReadable "." Fir.Execution.MemoryPolicyRuns "Runs under every address policy" FirSpec.Execution.MemoryPolicyRuns (level := 1)}
 

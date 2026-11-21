@@ -19,7 +19,8 @@ section says when the memories of one run refine those of another:
   in the order they were made. So both have the same allocations, each with
   its kind, alignment, size, liveness and address;
 * the memories of a run are refined by memories with the same frames, in
-  which each memory refines the memory of the same name.
+  which each memory refines the memory of the same name, and which have
+  turned as many integers back into pointers of each memory.
 
 Refinement of memories is reflexive and transitive. What a run does to its
 memories keeps it:
@@ -228,9 +229,10 @@ theorem Memory.IsRefinedBy.storeAligned {M M' : Memory u} (h : M ⊑ M') (p : Po
 variable {Mem : Type} {unit : Mem → Nat} [DecidableEq Mem]
 
 /-- The memories of a run are refined by memories with the same frames, in
-which each memory refines the memory of the same name. -/
+which each memory refines the memory of the same name, and with the same
+count of integers turned back into pointers of each memory. -/
 def Memories.IsRefinedBy (S S' : Memories Mem unit) : Prop :=
-  S.frames = S'.frames ∧ ∀ x, S.mem x ⊑ S'.mem x
+  S.frames = S'.frames ∧ (∀ x, S.mem x ⊑ S'.mem x) ∧ S.rebuilds = S'.rebuilds
 
 instance : HRefinement (Memories Mem unit) (Memories Mem unit) := ⟨Memories.IsRefinedBy⟩
 
@@ -238,12 +240,12 @@ namespace Memories
 
 /-- Refinement of the memories of a run is reflexive. -/
 theorem isRefinedBy_refl (S : Memories Mem unit) : S ⊑ S :=
-  ⟨rfl, fun x => Memory.isRefinedBy_refl (S.mem x)⟩
+  ⟨rfl, fun x => Memory.isRefinedBy_refl (S.mem x), rfl⟩
 
 /-- Refinement of the memories of a run is transitive. -/
 theorem isRefinedBy_trans {S₁ S₂ S₃ : Memories Mem unit} (h₁ : S₁ ⊑ S₂) (h₂ : S₂ ⊑ S₃) :
     S₁ ⊑ S₃ :=
-  ⟨h₁.1.trans h₂.1, fun x => Memory.isRefinedBy_trans (h₁.2 x) (h₂.2 x)⟩
+  ⟨h₁.1.trans h₂.1, fun x => Memory.isRefinedBy_trans (h₁.2.1 x) (h₂.2.1 x), h₁.2.2.trans h₂.2.2⟩
 
 /-- Entering a call keeps refinement. -/
 theorem IsRefinedBy.enter {S S' : Memories Mem unit} (h : S ⊑ S') : S.enter ⊑ S'.enter :=
@@ -252,16 +254,16 @@ theorem IsRefinedBy.enter {S S' : Memories Mem unit} (h : S ⊑ S') : S.enter �
 /-- Replacing a memory by one that refines another's keeps refinement. -/
 theorem IsRefinedBy.set {S S' : Memories Mem unit} (h : S ⊑ S') (x : Mem)
     {m m' : Memory (unit x)} (hm : m ⊑ m') : S.set x m ⊑ S'.set x m' := by
-  refine ⟨h.1, fun y => ?_⟩
+  refine ⟨h.1, fun y => ?_, h.2.2⟩
   by_cases hxy : x = y
   · subst hxy
     simpa only [Memories.set_mem_self] using hm
-  · simpa only [Memories.set_mem_ne _ _ hxy] using h.2 y
+  · simpa only [Memories.set_mem_ne _ _ hxy] using h.2.1 y
 
 /-- Freeing an allocation keeps refinement. -/
 theorem IsRefinedBy.free {S S' : Memories Mem unit} (h : S ⊑ S') (x : Mem) (a : AllocId) :
     S.free x a ⊑ S'.free x a :=
-  h.set x ((h.2 x).free a)
+  h.set x ((h.2.1 x).free a)
 
 /-- Freeing each allocation of a list keeps refinement. -/
 theorem IsRefinedBy.freeAll : ∀ {S S' : Memories Mem unit}, S ⊑ S' → ∀ l : List (Mem × AllocId),
@@ -297,10 +299,10 @@ theorem IsRefinedBy.alloc {S S' : Memories Mem unit} (h : S ⊑ S') (x : Mem) (k
     (n al : Nat) :
     (S.alloc x k n al).1 = (S'.alloc x k n al).1 ∧
       (S.alloc x k n al).2 ⊑ (S'.alloc x k n al).2 := by
-  obtain ⟨hp, hm⟩ := (h.2 x).alloc k n al
+  obtain ⟨hp, hm⟩ := (h.2.1 x).alloc k n al
   refine ⟨hp, ?_⟩
   have hs := h.set x hm
-  have hl : (S.mem x).blocks.length = (S'.mem x).blocks.length := List.IsRefinedBy.length_eq (h.2 x)
+  have hl : (S.mem x).blocks.length = (S'.mem x).blocks.length := List.IsRefinedBy.length_eq (h.2.1 x)
   simp only [Memories.alloc, hl]
   split
   · exact hs.record x _
@@ -312,7 +314,7 @@ refine the first's. -/
 theorem IsRefinedBy.load {S S' : Memories Mem unit} (h : S ⊑ S') (x : Mem) (p : Pointer)
     (n al : Nat) : (∃ f, S.load x p n al = .error f ∧ S'.load x p n al = .error f) ∨
       ∃ us us', S.load x p n al = .ok us ∧ S'.load x p n al = .ok us' ∧ us ⊑ us' :=
-  (h.2 x).loadAligned p n al
+  (h.2.1 x).loadAligned p n al
 
 /-- A store, through the same pointer, of units that refine others, to
 memories that refine each other, faults for the same reason in both, or
@@ -322,7 +324,7 @@ theorem IsRefinedBy.store {S S' : Memories Mem unit} (h : S ⊑ S') (x : Mem) (p
     (∃ f, S.store x p us al = .error f ∧ S'.store x p us' al = .error f) ∨
       ∃ T T', S.store x p us al = .ok T ∧ S'.store x p us' al = .ok T' ∧ T ⊑ T' := by
   unfold Memories.store
-  rcases (h.2 x).storeAligned p hu al with ⟨f, h₁, h₂⟩ | ⟨N, N', h₁, h₂, hN⟩
+  rcases (h.2.1 x).storeAligned p hu al with ⟨f, h₁, h₂⟩ | ⟨N, N', h₁, h₂, hN⟩
   · rw [h₁, h₂]
     exact .inl ⟨f, rfl, rfl⟩
   · rw [h₁, h₂]

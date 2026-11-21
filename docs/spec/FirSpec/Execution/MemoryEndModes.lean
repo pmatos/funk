@@ -17,7 +17,7 @@ build fails when the Lean changes under it.
 :::moduleDocs (fingerprint := "18357958049201045590")
 :::
 
-:::readable Fir.Func.memEndTree (pin := Fir.TraceState.endOf) (pin := Fir.Memory.Memories.empty) (fingerprint := "13463135974439720683")
+:::readable Fir.Func.memEndTree (pin := Fir.TraceState.endOf) (pin := Fir.Memory.Memories.empty) (fingerprint := "3432219675624935408")
 *Definition: the tree of a run with memory that sees each return at its
 end.* Where the units of the memory $`x` are $`u(x)` bits wide, the memory
 numbered $`n` is $`\mu(n)` and addresses are compared by the rule
