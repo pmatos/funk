@@ -17,9 +17,10 @@ to `TraceArgs.lean`), and, when its ops have finitely many outcomes given
 the world's answers, divergence too, so refined arguments in full
 (`TraceSteps.lean` to `TraceDiverge.lean`); the core and CoreGpu prove
 theirs that way. For congruence in the callee over the traced runs of such
-a dialect, the spec proves that each return and each UB of a caller in the
-new module is allowed by the old (`TraceAhead.lean` to
-`TraceReplace.lean`). Divergence across the replaced callee is not
+a dialect, the spec proves that replacing a callee's body by one that
+refines it makes the new module run each call as the old one does, and
+that each return and each UB of a caller in a module that does is allowed
+by the old (`TraceAhead.lean` to `TraceReplace.lean`). Divergence across the replaced callee is not
 implemented yet (#233, stage 3c-2), nor are the core's and CoreGpu's
 congruence in the callee through that engine.
 
@@ -136,4 +137,5 @@ semantics-m1-trace.md.
   at each budget, and a black box speaks only of behaviours, never of one
   path out of fuel, so it needs an argument of its own, under the ruled
   hypothesis that each op has finitely many outcomes given the world's
-  answers.
+  answers. Rejected: reuse in-step divergence across the black box, which
+  a replaced body that takes a different number of steps breaks.

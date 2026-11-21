@@ -1,5 +1,7 @@
 import Fir.Execution.TraceBlackBox
-import Fir.Execution.TraceDiverge
+import Fir.Execution.TraceKonig
+import Fir.Execution.TraceTruncate
+import Fir.Execution.TraceFiniteRuns
 
 /-!
 # Refined arguments over traced runs from a given traced state
@@ -12,10 +14,11 @@ arguments that refine others, a poison by any value, and from a traced state
 that refines another, its traced runs refine its traced runs on those others
 from that other state, the traced state each return ends in included.
 
-The proof is the one for the traced runs from the empty memories
-(`Fir.Execution.TraceDiverge`), from any traced state. The two runs go in
-step (`Func.traceRun_allowed` starts from any traced states that refine each
-other). Each return and UB of the target's is allowed by one of the
+The proof is the one for the traced runs from the empty memories, from any
+traced state; those runs (`Fir.Execution.TraceDiverge`) are these from one
+traced state and take their truncation and finiteness from here. The two
+runs go in step (`Func.traceRun_allowed` starts from any traced states that
+refine each other). Each return and UB of the target's is allowed by one of the
 source's; at each budget, each path of the target's that runs out of fuel is
 allowed by one of the source's. The source's traced runs from a traced state
 truncate, and have finitely many traces at each budget when every op has

@@ -27,7 +27,7 @@ so it does not meet the hypothesis (`FirTest.TraceDiverge`). The argument
 for this form, that with such an op a target could show acts forever that
 no single run of the source shows, is on paper; it is not checked in Lean.
 The human ruled the hypothesis; its form by position is this module's,
-recorded on `docs/decisions/semantics-m1-trace.md`. The toy `emit` of
+recorded on `docs/decisions/semantics-m1-trace-refinement.md`. The toy `emit` of
 `FirTest.TraceDialect`, which shows one event and takes any answer, meets
 it: the stream fixes the answer.
 

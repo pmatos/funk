@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Refined arguments over traced runs: returns, UB and each budget: readable blocks" =>
 
-:::moduleDocs (fingerprint := "8788149785860377095")
+:::moduleDocs (fingerprint := "8059929117529026060")
 :::
 
 :::readable Fir.Result.Finished Fir.Result.finishEnd Fir.TraceEnd.Allows.finishEnd (fingerprint := "3788084618345794415")
@@ -40,9 +40,10 @@ run of $`f` on $`\vec{v}'` from $`s'` that is not stuck is allowed by a
 path of its run on $`\vec{v}` from $`s` at the same budget.
 :::
 
-:::readable Fir.List.IsRefinedPrefix.getElem? Fir.Func.traceRuns_path_allowed (fingerprint := "14898970764171423054")
-*Theorem: a refined prefix, place by place.* A refined prefix of $`l'` is
-refined, at each of its places, by the element of $`l'` there.
+:::readable Fir.List.IsRefinedPrefix.getElem? Fir.List.isRefinedPrefix_of_getElem? Fir.Func.traceRuns_path_allowed (fingerprint := "1470237507736381649")
+*Theorems: a refined prefix, place by place.* A refined prefix of $`l'` is
+refined, at each of its places, by the element of $`l'` there; and a list
+so refined at each of its places is a refined prefix of $`l'`.
 
 *Theorem: the traced runs of a dialect with events.* For a dialect whose
 ops are monotone by its rules in the traced layer, at $`\ell`, $`\rho` and

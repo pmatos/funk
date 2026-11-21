@@ -6,8 +6,10 @@ dialect with events, without divergence (ADR-2026-11-09-1540, stage 3c-1 of
 #233), on the toy emit dialect of `FirTest.TraceDialect`, whose op `emit`
 shows the event `0` to the world:
 
-* refined arguments from a given traced state: `emitMain`, run from a traced
-  state in which an allocation escaped, refines itself, divergence included;
+* refined arguments from a given traced state: `outMain` of
+  `FirTest.TraceDiverge`, run on poison from a traced state, is refined by
+  `outMain` run on `5` from it, the traced state each return ends in
+  included, divergence included;
 * replacing `emitMain`'s body by itself, which refines it, gives a module
   that runs each call as `emitModule` does, in the traced layer;
 * so each return and each UB of `emitMain`'s traced runs in that module is
@@ -21,19 +23,18 @@ open Fir Fir.Memory FirTest.TraceDialect FirTest.TraceArgs FirTest.TraceDiverge
 /-- Refinement of the emit dialect's typed values is reflexive. -/
 theorem dval_refl (x : DVal EmitDialect) : x ⊑ x := ⟨rfl, Core.Ty.isRefinedBy_refl _⟩
 
-/-- A traced state in which one allocation of the one memory escaped. -/
-abbrev escaped : TraceState Unit (unitsOf lay) := ⟨Memories.empty, [((), 0)]⟩
-
-/-- `emitMain`'s traced runs from a traced state in which an allocation
-escaped refine themselves, the traced state each return ends in included:
-refined arguments from a given traced state, divergence included. -/
-example : traceObservable (emitMain.traceRunsFrom lay Empty.elim RunItems.empty emitModule
-      (.nil, escaped)) ⊑
-    traceObservable (emitMain.traceRunsFrom lay Empty.elim RunItems.empty emitModule
-      (.nil, escaped)) :=
-  Func.traceRunsFrom_isRefinedBy_of_args lay Empty.elim RunItems.empty emit_traceFinite
-    (fun g _ => traceOpsMonotone g) (traceOpsMonotone emitMain) trivial
-    (TraceState.isRefinedBy_refl _)
+/-- Refined operands from a traced state: `outMain` run on poison is refined
+by `outMain` run on the value `5`, from the traced state it starts in, the
+traced state each return ends in included, at every outcome, divergence
+included. -/
+example (s : TraceState Unit (unitsOf lay)) :
+    traceObservable (outMain.traceRunsFrom lay Empty.elim RunItems.empty outModule
+      (.cons .poison .nil, s)) ⊑
+    traceObservable (outMain.traceRunsFrom lay Empty.elim RunItems.empty outModule
+      (.cons (.value 5) .nil, s)) :=
+  Func.traceRunsFrom_isRefinedBy_of_args lay Empty.elim RunItems.empty out_traceFinite
+    (fun _ _ _ _ o _ _ => out_monotone o.op) (fun _ _ o _ _ => out_monotone o.op)
+    ⟨trivial, trivial⟩ (TraceState.isRefinedBy_refl s)
 
 /-- `emitMain` with its own body, in `emitModule` with that body, refines
 `emitMain` in `emitModule`, from every traced state: replacing a body by

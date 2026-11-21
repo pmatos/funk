@@ -14,12 +14,11 @@ pins their fingerprint; the build fails when the Lean changes under it.
 
 #doc (Manual) "Every return and UB of the target, allowed, call by call: readable blocks" =>
 
-:::moduleDocs (fingerprint := "12540545153301896865")
+:::moduleDocs (fingerprint := "2205903777115634162")
 :::
 
-:::readable Fir.TraceEnd.addLeft_zero Fir.TraceCallsRefined.callee_allowed (fingerprint := "5062575103932604989")
-*Theorems: a callee, allowed.* No more steps left leave a way of ending as
-it is. A return or UB of a call's callee in the target, in its frame, is
+:::readable Fir.TraceCallsRefined.callee_allowed (fingerprint := "13187924534594752958")
+*Theorem: a callee, allowed.* A return or UB of a call's callee in the target, in its frame, is
 allowed at some budget by the source's callee in its frame, on arguments
 and from a traced state that the target's refine: the same function, when
 its run of ops from a frame entered is allowed (the induction), or a

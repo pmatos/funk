@@ -55,6 +55,12 @@ theorem TraceEnd.Done.addLeft (j : Nat) : ∀ {e : TraceEnd B σ (Except Stuck (
     e.Done → (e.addLeft j).Done
   | .ok (.ok (.ret _), _, _), _ | .error _, _ => trivial
 
+/-- No more steps left leave a way of ending as it is. -/
+theorem TraceEnd.addLeft_zero :
+    ∀ e : TraceEnd B σ (Except Stuck (Result (V × Nat))), e.addLeft 0 = e
+  | .ok (.ok (.ret _), _, _) | .ok (.ok .fuelExhausted, _, _) | .ok (.error _, _, _)
+  | .error _ => rfl
+
 /-- Adding steps left commutes with a trace before. -/
 theorem TraceEnd.addLeft_after (j : Nat) (t : List B) :
     ∀ e : TraceEnd B σ (Except Stuck (Result (V × Nat))),

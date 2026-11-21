@@ -124,6 +124,11 @@ instance : HRefinement (TraceState Mem unit) (TraceState Mem unit) :=
 theorem TraceState.isRefinedBy_refl (s : TraceState Mem unit) : s ⊑ s :=
   ⟨Memories.isRefinedBy_refl _, rfl⟩
 
+/-- Refinement of traced states is transitive. -/
+theorem TraceState.isRefinedBy_trans {s s' s'' : TraceState Mem unit} (h : s ⊑ s')
+    (h' : s' ⊑ s'') : s ⊑ s'' :=
+  ⟨Memories.isRefinedBy_trans h.1 h'.1, h.2.trans h'.2⟩
+
 /-- Entering a frame keeps refinement of traced states. -/
 theorem TraceState.IsRefinedBy.enter {s s' : TraceState Mem unit} (h : s ⊑ s') :
     ({ s with mem := s.mem.enter } : TraceState Mem unit) ⊑ { s' with mem := s'.mem.enter } :=

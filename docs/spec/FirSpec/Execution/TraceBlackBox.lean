@@ -14,18 +14,16 @@ pins their fingerprint; the build fails when the Lean changes under it.
 
 #doc (Manual) "Two modules in the traced layer, compared call by call: readable blocks" =>
 
-:::moduleDocs (fingerprint := "8248175019737299155")
+:::moduleDocs (fingerprint := "9564740219285441388")
 :::
 
-:::readable Fir.TraceEnd.withState Fir.List.isRefinedPrefix_of_getElem? Fir.Step.actsOf_append Fir.TraceState.isRefinedBy_trans (fingerprint := "13274779993049902374")
+:::readable Fir.TraceEnd.withState Fir.Step.actsOf_append (fingerprint := "16142718993487628509")
 *Definition: the end state of a return.* A path of a run ends, with the
 traced state of each return: $`\mathsf{ret}~\vec{w}` in the traced state
 $`s` becomes $`\mathsf{ret}~(\vec{w}, s)`.
 
-*Theorems.* A list refined, at each of its places, by the element of $`l'`
-there is refined by a prefix of $`l'`. The acts of $`m \mathbin{+\!\!+} m'`
-are those of $`m`, then those of $`m'`. Refinement of traced states is
-transitive.
+*Theorem.* The acts of $`m \mathbin{+\!\!+} m'` are those of $`m`, then
+those of $`m'`.
 :::
 
 :::readable Fir.Func.traceFrom Fir.Func.traceFrom_ret_iff Fir.Func.traceFrom_ub_iff Fir.Func.traceFrom_exhausted_iff (fingerprint := "7661402147659757432")

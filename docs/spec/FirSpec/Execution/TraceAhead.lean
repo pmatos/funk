@@ -14,18 +14,18 @@ fails when the Lean changes under it.
 
 #doc (Manual) "More fuel, in the traced layer: readable blocks" =>
 
-:::moduleDocs (fingerprint := "14320851546995970494")
+:::moduleDocs (fingerprint := "6490133230434031735")
 :::
 
-:::readable Fir.TraceEnd.Done Fir.TraceEnd.addLeft Fir.TraceEnd.Done.notStuck Fir.TraceEnd.Done.of_after Fir.TraceEnd.Done.addLeft Fir.TraceEnd.addLeft_after Fir.TraceEnd.addLeft_exit (fingerprint := "10220205688230433748")
+:::readable Fir.TraceEnd.Done Fir.TraceEnd.addLeft Fir.TraceEnd.Done.notStuck Fir.TraceEnd.Done.of_after Fir.TraceEnd.Done.addLeft Fir.TraceEnd.addLeft_zero Fir.TraceEnd.addLeft_after Fir.TraceEnd.addLeft_exit (fingerprint := "938134985421456261")
 *Definitions: done, and more steps left.* A way of ending of a traced run
 of ops is _done_ when it is a return or UB; running out of fuel and being
 stuck are not. $`e + j` is $`e` with $`j` more steps left when it is a
 return, and $`e` otherwise.
 
 *Theorems.* A way of ending that is done is not stuck, and is done before
-a trace when it is after it; more steps left keep it done. Adding steps
-left commutes with a trace before and with leaving a frame.
+a trace when it is after it; more steps left keep it done. No more steps
+left leave a way of ending as it is. Adding steps left commutes with a trace before and with leaving a frame.
 :::
 
 :::readable Fir.Func.traceOps_up Fir.Func.traceCall_up (fingerprint := "4430711345801820165")

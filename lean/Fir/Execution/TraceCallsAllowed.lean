@@ -42,13 +42,6 @@ variable {A : Type} [HRefinement A A] {Mem : Type} {unit : Mem → Nat} [Decidab
   {d : Dialect} [TyDenote d.Ty] [DecidableEq d.Ty] [DialectSignature d] [DialectCall d]
   [DialectDenote d (TraceM (Step A) (TraceState Mem unit))] [TyRefinement d.Ty]
 
-omit [HRefinement A A] in
-/-- No more steps left leave a way of ending as it is. -/
-theorem TraceEnd.addLeft_zero {V σ : Type} :
-    ∀ e : TraceEnd (Step A) σ (Except Stuck (Result (V × Nat))), e.addLeft 0 = e
-  | .ok (.ok (.ret _), _, _) | .ok (.ok .fuelExhausted, _, _) | .ok (.error _, _, _)
-  | .error _ => rfl
-
 /-- A return or UB of a call's callee in the target, in its frame, is
 allowed by the source's callee in its frame: the same function, by the
 induction `ih`, or a black box. The induction is asked only of a function

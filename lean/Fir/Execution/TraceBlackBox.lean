@@ -46,21 +46,6 @@ def TraceEnd.withState : TraceEnd B σ (Except Stuck (Result V)) →
   | .ok (.error st, t, _) => .ok (.error st, t)
   | .error u => .error u
 
-/-- A list refined, at each of its places, by the element of another there,
-is refined by a prefix of the other. -/
-theorem List.isRefinedPrefix_of_getElem? [HRefinement A A] :
-    ∀ {l l' : List A}, (∀ (i : Nat) (a : A), l[i]? = some a → ∃ b, l'[i]? = some b ∧ a ⊑ b) →
-      List.IsRefinedPrefix l l'
-  | [], l', _ => List.isRefinedPrefix_nil l'
-  | a :: l, l', h => by
-    obtain ⟨b, hb, hab⟩ := h 0 a rfl
-    match l', hb with
-    | b' :: l', hb =>
-      cases hb
-      obtain ⟨m, hm, hp⟩ := List.isRefinedPrefix_of_getElem? (l := l) (l' := l')
-        fun i x hx => h (i + 1) x hx
-      exact ⟨b :: m, ⟨hab, hm⟩, (List.prefix_cons_inj _).2 hp⟩
-
 /-- The acts of two marked traces, one after the other, are the acts of the
 first, then those of the second. -/
 theorem Step.actsOf_append (mt mt' : List (Step A)) :
@@ -70,11 +55,6 @@ theorem Step.actsOf_append (mt mt' : List (Step A)) :
 section
 
 variable {Mem : Type} {unit : Mem → Nat} [DecidableEq Mem]
-
-/-- Refinement of traced states is transitive. -/
-theorem TraceState.isRefinedBy_trans {s s' s'' : TraceState Mem unit} (h : s ⊑ s')
-    (h' : s' ⊑ s'') : s ⊑ s'' :=
-  ⟨Memories.isRefinedBy_trans h.1 h'.1, h.2.trans h'.2⟩
 
 variable {d : Dialect} [TyDenote d.Ty] [DecidableEq d.Ty] [DialectSignature d] [DialectCall d]
   [DialectDenote d (TraceM (Step A) (TraceState Mem unit))]
