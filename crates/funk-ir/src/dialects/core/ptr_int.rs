@@ -75,17 +75,15 @@ impl OpSpec for PtrInt {
     /// Reads and allocates in its memory; `ptr_expose` may be UB
     /// (`Core.Op.effects`).
     fn effects(&self, op: &OpTypes<'_>) -> Effects {
-        let memory = || {
-            Memories::These(
-                self.shape(op)
-                    .map(|(n, _)| n.to_string())
-                    .into_iter()
-                    .collect(),
-            )
-        };
+        let memory = Memories::These(
+            self.shape(op)
+                .map(|(n, _)| n.to_string())
+                .into_iter()
+                .collect(),
+        );
         Effects {
-            reads: memory(),
-            allocates: memory(),
+            reads: memory.clone(),
+            allocates: memory,
             may_ub: matches!(self, Self::Expose),
             ..Effects::PURE
         }
