@@ -14,10 +14,10 @@ pins their fingerprint; the build fails when the Lean changes under it.
 
 #doc (Manual) "Integer conversion rules: readable blocks" =>
 
-:::moduleDocs (fingerprint := "13130962456887167427")
+:::moduleDocs (fingerprint := "13885978049565204400")
 :::
 
-:::readable Fir.Core.truncInt (fingerprint := "7173827129809632083")
+:::readable Fir.Core.truncInt (fingerprint := "11625177795074027605")
 *Definition: the integer of a number, truncated.* For a number $`u` of
 Lean's float model, $`\mathrm{trunc}(u)` is $`0` when $`u` is a zero of
 either sign, the integer that the model's $`\mathrm{roundToInt}` gives
@@ -34,7 +34,7 @@ $`N \ge 1`, and $`\mathrm{fits}_N(\mathit{false}, k)` when
 $`0 \le k < 2^N`. At $`N = 0` only $`0` fits.
 :::
 
-:::readable Fir.Core.floatToInt (fingerprint := "8506929966831958126")
+:::readable Fir.Core.floatToInt (fingerprint := "2329913191408748203")
 *Definition: the rules of $`\mathsf{fptosi}` and $`\mathsf{fptoui}`.* For
 every format $`\mathsf{float}\langle e,m \rangle`, whose format in Lean's
 model is $`F`, every width $`N`, and $`a \in \mathbb{B}^{1+e+m}`, let

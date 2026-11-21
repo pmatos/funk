@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Spaces, line feeds and lists: readable blocks" =>
 
-:::moduleDocs (fingerprint := "12752801447417409235")
+:::moduleDocs (fingerprint := "5822979333639282657")
 :::
 
 :::readable Fir.Text.SpellsAny Fir.Text.Spells.nil (pin := Fir.Text.Lexes) (pin := Fir.Text.Spells) (fingerprint := "2470327400403327257")
@@ -160,7 +160,7 @@ These read a printed text piece by piece from its first character.
 then $`c` is at the end of a token.
 :::
 
-:::readable Fir.Text.SpellsEach Fir.Text.SpellsEach.map Fir.Text.SpellsEach.append (pin := Fir.Text.Spells) (fingerprint := "9745749773683873276")
+:::readable Fir.Text.SpellsEach Fir.Text.SpellsEach.map Fir.Text.SpellsEach.append (pin := Fir.Text.Spells) (fingerprint := "10264622543212751494")
 *Definition and theorems: each string of a list spells its tokens.* A list
 of strings $`s_1, \dots, s_n` spells the lists of tokens
 $`t_1, \dots, t_m` _one by one_ when $`n = m` and

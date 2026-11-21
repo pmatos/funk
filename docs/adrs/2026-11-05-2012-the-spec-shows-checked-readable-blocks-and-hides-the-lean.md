@@ -23,7 +23,8 @@ Tier: direction; area: spec-site
   a declaration only refers to counts by its name unless pinned. A
   definition's own body includes the helpers that Lean generates to hold
   it, its recursion and its pattern matchers, followed transitively; the
-  human ruled so on 2026-11-16 (#418). A document explains every
+  human ruled so on 2026-11-16 (#418). A helper counts by its type and
+  value, not by its name (2026-11-21, #476). A document explains every
   declaration of its module exactly once.
 
 The human chose literate Lean rendered with Verso on 2026-10-29 (P1 on #5).

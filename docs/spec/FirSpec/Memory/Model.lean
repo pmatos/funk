@@ -14,7 +14,7 @@ changes under it.
 
 #doc (Manual) "The memory model: readable blocks" =>
 
-:::moduleDocs (fingerprint := "9217148254226109143")
+:::moduleDocs (fingerprint := "13318954097277568896")
 :::
 
 :::readable Fir.Memory.AllocId (fingerprint := "11401156343561318334")
@@ -108,7 +108,7 @@ $`M[a]`. Each memory of a module is one such list, with its own
 allocations and its own unit width $`u`.
 :::
 
-:::readable Fir.Memory.Fault Fir.Memory.Fault.reason (fingerprint := "9636559819525766068")
+:::readable Fir.Memory.Fault Fir.Memory.Fault.reason (fingerprint := "3802553443931824070")
 *Definition: a fault.* An access that fails is immediate UB, for one of
 four reasons (ADR-2026-11-09-1542; the human's ruling of 2026-11-11 on
 #231 for the last):
@@ -180,7 +180,7 @@ allocations when it returns (ADR-2026-11-09-1548), and an external call
 frees a heap allocation.
 :::
 
-:::readable Fir.Memory.Memory.locate (fingerprint := "6588442222825434563")
+:::readable Fir.Memory.Memory.locate (fingerprint := "1049162986385104119")
 *Definition: where an access lands.* An access of $`n` units through the
 pointer $`(a^?, o)` lands in the allocation $`a`, at offset $`o`, when all
 of these hold; otherwise it faults with the first that fails:
@@ -192,20 +192,20 @@ of these hold; otherwise it faults with the first that fails:
   $`o + n \le |\vec{x}|`; otherwise $`\mathsf{outOfBounds}`.
 :::
 
-:::readable Fir.Memory.Memory.load (fingerprint := "12821837952330531767")
+:::readable Fir.Memory.Memory.load (fingerprint := "2878384574588793941")
 *Definition: loading.* Loading $`n` units through $`p` gives the $`n`
 units of its allocation's block from its offset on, $`\vec{x}[o \,..\, o + n]`,
 or the fault of its access.
 :::
 
-:::readable Fir.Memory.Memory.store (fingerprint := "2630385052387491038")
+:::readable Fir.Memory.Memory.store (fingerprint := "5030741408177305603")
 *Definition: storing.* Storing the units $`\vec{y}` through $`p` writes
 them into its allocation's block at its offset, $`M[a] := M[a][o := \vec{y}]`,
 or gives the fault of its access, an access of $`|\vec{y}|` units. No other
 unit and no other allocation changes.
 :::
 
-:::readable Fir.Memory.Memory.aligned (fingerprint := "4670851012301340972")
+:::readable Fir.Memory.Memory.aligned (fingerprint := "2489683034287928732")
 *Definition: an aligned access.* An access through the pointer
 $`(a^?, o)` aligned to $`\alpha` units is _aligned_ in $`M` when, if
 $`M` has the block $`M[a] = (k, \alpha_b, \vec{x}, \ell)`,
@@ -223,7 +223,7 @@ So an access aligned to 4 into a block aligned to 2 is misaligned, even
 at offset 0, and one aligned to 1 is always aligned.
 :::
 
-:::readable Fir.Memory.Memory.loadAligned Fir.Memory.Memory.storeAligned (fingerprint := "6409458446759359343")
+:::readable Fir.Memory.Memory.loadAligned Fir.Memory.Memory.storeAligned (fingerprint := "13237962399437252429")
 *Definition: aligned loads and stores.* An op's load or store carries
 an alignment, and a misaligned access is immediate UB (the human's ruling
 of 2026-11-11 on #231). The aligned load of $`n` units through $`p`,

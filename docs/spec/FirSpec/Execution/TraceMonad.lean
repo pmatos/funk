@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "The traced layer: readable blocks" =>
 
-:::moduleDocs (fingerprint := "16127750939844578303")
+:::moduleDocs (fingerprint := "14674346564593165921")
 :::
 
 :::readable Fir.Paths Fir.Paths.pure_bind Fir.Paths.bind_pure Fir.Paths.bind_assoc (pin := Fir.Paths.instMonad) (pin := Fir.Paths.instLawfulMonad) (fingerprint := "8066813908157793877")
@@ -27,7 +27,7 @@ $`s \mathbin{>\!\!>\!\!=} f = \{ b \mid \exists a \in s,\ b \in f(a) \}`.
 $`s` then `pure` is $`s`, and binds associate.
 :::
 
-:::readable Fir.TraceEnd Fir.TraceM Fir.TraceEnd.after Fir.TraceEnd.after_nil Fir.TraceEnd.after_after (fingerprint := "5867186402808184210")
+:::readable Fir.TraceEnd Fir.TraceM Fir.TraceEnd.after Fir.TraceEnd.after_nil Fir.TraceEnd.after_after (fingerprint := "852068654348943304")
 *Definition: the traced layer.* A computation of the traced layer, for acts
 $`A` and a state $`\sigma`, maps a state $`S` to the set of the ways it may
 end: with a result, the trace $`t` it showed and the state,
@@ -37,7 +37,7 @@ before its own trace. After no trace it is as it was, and after $`t` then
 $`t'` it is as after $`t \mathbin{+\!\!+} t'`.
 :::
 
-:::readable Fir.TraceM.bind_apply Fir.TraceM.pure_bind Fir.TraceM.bind_pure Fir.TraceM.bind_assoc (pin := Fir.TraceM.instMonad) (pin := Fir.TraceM.instLawfulMonad) (fingerprint := "5157119272785740253")
+:::readable Fir.TraceM.bind_apply Fir.TraceM.pure_bind Fir.TraceM.bind_pure Fir.TraceM.bind_assoc (pin := Fir.TraceM.instMonad) (pin := Fir.TraceM.instLawfulMonad) (fingerprint := "9278533127588639807")
 *Definition: sequences in the traced layer.* $`\mathrm{pure}(x)(S) =
 \{\mathsf{ok}(x, [], S)\}`, which shows nothing. A sequence
 $`x \mathbin{>\!\!>\!\!=} f` ends, from $`S`, in each way that $`f(a)`
@@ -81,7 +81,7 @@ choice of bits, a choice of a NaN to a choice of a NaN, and UB to UB for the
 same reason.
 :::
 
-:::readable Fir.TraceEnd.mapActs Fir.TraceEnd.mapActs_after Fir.TraceM.mapActs Fir.TraceM.mapActs_pure Fir.TraceM.mapActs_bind Fir.MonadMorphism.mapActs (fingerprint := "4656448102884711578")
+:::readable Fir.TraceEnd.mapActs Fir.TraceEnd.mapActs_after Fir.TraceM.mapActs Fir.TraceM.mapActs_pure Fir.TraceM.mapActs_bind Fir.MonadMorphism.mapActs (fingerprint := "7387589793969748606")
 *Definition: mapping the acts of traces.* For $`g` that maps each act to a
 list of acts, $`\mathrm{map}_g(x)` is $`x` with each trace
 $`[a_1, \ldots, a_n]` replaced by $`g(a_1) \mathbin{+\!\!+} \cdots

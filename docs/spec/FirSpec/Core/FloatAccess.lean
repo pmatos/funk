@@ -14,10 +14,10 @@ fails when the Lean changes under it.
 
 #doc (Manual) "Float load and store rules: readable blocks" =>
 
-:::moduleDocs (fingerprint := "1023514822293366223")
+:::moduleDocs (fingerprint := "8898764745509703924")
 :::
 
-:::readable Fir.Core.loadFloatResult Fir.Core.loadFloatRule Fir.Core.storeFloatRule (pin := Fir.Core.loadShape) (pin := Fir.Core.storeAlign) (pin := Fir.Core.storeUnits) (pin := Fir.MonadMemory) (pin := Fir.MonadUB) (pin := Fir.Memory.decodeInt) (pin := Fir.Memory.encodeInt) (pin := Fir.Core.Op) (fingerprint := "11706105352422278287")
+:::readable Fir.Core.loadFloatResult Fir.Core.loadFloatRule Fir.Core.storeFloatRule (pin := Fir.Core.loadShape) (pin := Fir.Core.storeAlign) (pin := Fir.Core.storeUnits) (pin := Fir.MonadMemory) (pin := Fir.MonadUB) (pin := Fir.Memory.decodeInt) (pin := Fir.Memory.encodeInt) (pin := Fir.Core.Op) (fingerprint := "7961064845500987245")
 *Definition: the rules of the load and store of a float.* Let a run's
 memories have the layout entries $`\ell`, and let the run name the core's
 memory $`x` as $`\rho(x)`. For $`\mathsf{load}_N~o~\mathsf{float}\langle e,m \rangle~a`
@@ -50,7 +50,7 @@ $`o` does not change the rules: validation accepts only
 $`\mathsf{nonatomic}`.
 :::
 
-:::readable Fir.Core.storeFloatRule_eq Fir.Core.loadFloatResult_bits Fir.Core.loadFloatRule_sameUnits (pin := Fir.Core.loadRule) (pin := Fir.Core.storeRule) (pin := Fir.Core.loadResult) (fingerprint := "8992630105893003897")
+:::readable Fir.Core.storeFloatRule_eq Fir.Core.loadFloatResult_bits Fir.Core.loadFloatRule_sameUnits (pin := Fir.Core.loadRule) (pin := Fir.Core.storeRule) (pin := Fir.Core.loadResult) (fingerprint := "13402484017719002983")
 *Theorems: a float in memory is the integer of its bits.* The store of a
 float of $`\mathsf{float}\langle e,m \rangle` is the
 {ref "The-fir-specification--Memory--Store-rules"}[store] of

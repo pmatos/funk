@@ -16,7 +16,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Data layouts: readable blocks" =>
 
-:::moduleDocs (fingerprint := "7978383261378779154")
+:::moduleDocs (fingerprint := "8051266887080306328")
 :::
 
 :::readable Fir.ByteOrder (fingerprint := "2717303684540409010")
@@ -83,7 +83,7 @@ endian and integral. So a module whose text has no layout has memory 0
 alone, with this entry.
 :::
 
-:::readable Fir.DataLayout.memory? Fir.DataLayout.Declares Fir.DataLayout.decidableDeclares (fingerprint := "6947329172092717128")
+:::readable Fir.DataLayout.memory? Fir.DataLayout.Declares Fir.DataLayout.decidableDeclares (fingerprint := "558980606470596082")
 *Definition: the memories of a layout.* The entry of memory $`n` in the
 layout $`L`, $`L(n)`, is the first entry of $`L` whose number is $`n`; when
 there is none, it is the default entry for memory 0, and nothing for any

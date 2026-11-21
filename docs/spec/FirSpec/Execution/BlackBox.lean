@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Calls as black boxes: readable blocks" =>
 
-:::moduleDocs (fingerprint := "10579296919402268")
+:::moduleDocs (fingerprint := "16743666677925459205")
 :::
 
 :::readable Fir.HVector.cast Fir.HVector.toDVals_cast Fir.HVector.forall₂_cast (fingerprint := "1918683470415412202")
@@ -26,7 +26,7 @@ proofs below need it where a call's operand types are only known to equal
 a callee's parameter types.
 :::
 
-:::readable Fir.SomeUB Fir.Allowed (fingerprint := "15850016290791185122")
+:::readable Fir.SomeUB Fir.Allowed (fingerprint := "9757086561719592615")
 *Definitions: UB at some budget, and a source that allows a path of the
 target.* The proofs of the
 next sections compare a run of ops in a source module with a run in a
@@ -91,7 +91,7 @@ call of a black box is compared by the black box's facts. With no black
 box, $`M'` is $`M`, which is the case of refined arguments.
 :::
 
-:::readable Fir.Ev.addLeft Fir.Func.call_cont (pin := Fir.Ahead) (fingerprint := "12686946709652136888")
+:::readable Fir.Ev.addLeft Fir.Func.call_cont (pin := Fir.Ahead) (fingerprint := "17730031090408344216")
 *Definition and theorem: a caller goes on after its callee at the sum of
 their budgets.*
 For an end $`e` of a run of ops, $`e + k` is $`e` with $`k` more steps
@@ -123,7 +123,7 @@ budget together from its callee's budget and that of the rest of the
 caller's ops after the call.
 :::
 
-:::readable Fir.Func.run_inv Fir.Func.runs_ret_inv Fir.Func.runs_ub_inv Fir.Func.runs_exh_inv Fir.Func.runs_of_runOps (pin := Fir.Func.run) (pin := Fir.Func.runs) (pin := Fir.Ev.dropLeft) (fingerprint := "347099442734359853")
+:::readable Fir.Func.run_inv Fir.Func.runs_ret_inv Fir.Func.runs_ub_inv Fir.Func.runs_exh_inv Fir.Func.runs_of_runOps (pin := Fir.Func.run) (pin := Fir.Func.runs) (pin := Fir.Ev.dropLeft) (fingerprint := "5088488433844769487")
 *Theorems: the run of a function is the run of its entry block.* For a
 function $`g` run in a module $`M`, an argument vector $`a` of its parameter
 types and a budget $`N`, the
@@ -148,7 +148,7 @@ This is the bridge between the black box's facts, which speak of whole
 functions, and the proofs, which follow runs of ops.
 :::
 
-:::readable Fir.BlackBox.sig (pin := Fir.Func.enter) (fingerprint := "5668868580235786461")
+:::readable Fir.BlackBox.sig (pin := Fir.Func.enter) (fingerprint := "4259801247140973906")
 *Theorem: a call that enters a black box's target passes arguments of the
 source's parameter types.* Let $`(g, g')` be a black box. If entering
 $`g'` with the typed values of a vector of the types $`t^*` starts, then
@@ -157,7 +157,7 @@ types against the parameters', and the black box gives $`g'` the
 parameter types of $`g`.
 :::
 
-:::readable Fir.BlackBox.allowed (pin := Fir.Allowed) (pin := Fir.SomeUB) (pin := Fir.BlackBox) (fingerprint := "11753293654355774249")
+:::readable Fir.BlackBox.allowed (pin := Fir.Allowed) (pin := Fir.SomeUB) (pin := Fir.BlackBox) (fingerprint := "17579115411910792492")
 *Theorem: a black box's source allows what its target does.* Let
 $`(g, g')` be a black box from $`M` to $`M'`, and let the vectors of
 values $`a` and $`a'`, of the same types, satisfy $`a_i \sqsubseteq a'_i`

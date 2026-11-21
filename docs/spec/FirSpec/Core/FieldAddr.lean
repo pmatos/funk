@@ -14,10 +14,10 @@ when the Lean changes under it.
 
 #doc (Manual) "Field address rules: readable blocks" =>
 
-:::moduleDocs (fingerprint := "16923402170189853415")
+:::moduleDocs (fingerprint := "3256719000068462278")
 :::
 
-:::readable Fir.Core.fieldOffset (pin := Fir.LayoutPlace) (pin := Fir.FieldPlace) (fingerprint := "1637129964727855705")
+:::readable Fir.Core.fieldOffset (pin := Fir.LayoutPlace) (pin := Fir.FieldPlace) (fingerprint := "1381404191931665028")
 *Definition: the offset of a field's element.* For a layout $`l` that a
 run gives, as the
 {ref "The-fir-specification--Memory--The-items-a-run-gives-each-op"}[items]
@@ -30,7 +30,7 @@ from one of its elements to the next. When the run gives no layout, or the
 layout has no field $`j`, $`\mathrm{off}(l, j, k) = 0`.
 :::
 
-:::readable Fir.Core.fieldAddrValue Fir.Core.elemAddrValue (pin := Fir.Core.movePointer) (fingerprint := "16911647874396956026")
+:::readable Fir.Core.fieldAddrValue Fir.Core.elemAddrValue (pin := Fir.Core.movePointer) (fingerprint := "8832158983824908894")
 *Definitions: the rules of $`\mathsf{fieldaddr}`.* For every pointer $`p`
 and $`k \in \mathbb{B}^W`:
 
@@ -45,7 +45,7 @@ it keeps the pointer's provenance, and the result may leave its
 allocation, so the rule is never UB.
 :::
 
-:::readable Fir.Core.fieldAddrResult (fingerprint := "4875547781883285764")
+:::readable Fir.Core.fieldAddrResult (fingerprint := "1501344450018490940")
 *Definition: the result of $`\mathsf{fieldaddr}`.* On its operands, the
 one result of $`\mathsf{fieldaddr}~s~j~N~w` in the layout $`l` is the
 field's address when $`w` is none, and the element's address when it

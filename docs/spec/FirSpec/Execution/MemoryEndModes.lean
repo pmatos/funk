@@ -17,7 +17,7 @@ build fails when the Lean changes under it.
 :::moduleDocs (fingerprint := "18357958049201045590")
 :::
 
-:::readable Fir.Func.memEndTree (pin := Fir.TraceState.endOf) (pin := Fir.Memory.Memories.empty) (fingerprint := "13463135974439720683")
+:::readable Fir.Func.memEndTree (pin := Fir.TraceState.endOf) (pin := Fir.Memory.Memories.empty) (fingerprint := "16427919938113091154")
 *Definition: the tree of a run with memory that sees each return at its
 end.* Where the units of the memory $`x` are $`u(x)` bits wide, the memory
 numbered $`n` is $`\mu(n)` and addresses are compared by the rule
@@ -46,7 +46,7 @@ empty memories, and the set of a tree keeps mapping a function over its
 results.
 :::
 
-:::readable Fir.Func.memEndExplore_outcomes Fir.Func.memEndScript_outcomes Fir.Func.memEndExploreNaN_outcomes (pin := Fir.Run.outcomes) (pin := Fir.ChoiceTree.Leaf.pathEnd) (fingerprint := "6416687254847543603")
+:::readable Fir.Func.memEndExplore_outcomes Fir.Func.memEndScript_outcomes Fir.Func.memEndExploreNaN_outcomes (pin := Fir.Run.outcomes) (pin := Fir.ChoiceTree.Leaf.pathEnd) (fingerprint := "12181074373516238390")
 *Theorems: the modes give the outcomes of the run with memory, seen at
 their ends.* With the same hypotheses, let $`R_k` be the run with memory
 of $`f` on $`\vec{v}` at fuel $`k`, each return seen at its end. If
@@ -62,7 +62,7 @@ $`\mathrm{out}(R_k)`, and when no path it lists made a NaN choice, it
 lists every outcome of $`R_k`.
 :::
 
-:::readable Fir.Func.traceObservable_of_memEnd (pin := Fir.TOutcome.ofOutcome) (fingerprint := "17507013962650223852")
+:::readable Fir.Func.traceObservable_of_memEnd (pin := Fir.TOutcome.ofOutcome) (fingerprint := "8958438485668529890")
 *Theorem: a return or UB that a mode reports is a traced outcome.* For a
 dialect whose ops show no event, a return or UB of the run with memory at
 some fuel, each return seen at its end, is an outcome of the function's

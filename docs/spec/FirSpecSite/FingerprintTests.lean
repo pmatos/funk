@@ -11,16 +11,24 @@ open Lean Elab Command
 
 namespace FirSpecSite.FingerprintTests
 
-/-- The fingerprint of the declaration `n`, in the current namespace, once the command `src` is elaborated. -/
-def hashAfter (src : String) (n : Name) : CommandElabM UInt64 :=
+/-- Elaborates the commands `srcs` in order. -/
+def elabAll (srcs : List String) : CommandElabM Unit :=
+  for src in srcs do
+    match Parser.runParserCategory (← getEnv) `command src with
+    | .ok stx => elabCommand stx
+    | .error e => throwError "cannot parse {src}: {e}"
+
+/-- The fingerprint of the declaration `n`, in the current namespace, once the commands `srcs` are elaborated. -/
+def hashAfterAll (srcs : List String) (n : Name) : CommandElabM UInt64 :=
   withoutModifyingEnv do
     let n := (← getCurrNamespace) ++ n
-    let stx ← match Parser.runParserCategory (← getEnv) `command src with
-      | .ok stx => pure stx
-      | .error e => throwError "cannot parse {src}: {e}"
-    elabCommand stx
-    let some h := declHash (← getEnv) n | throwError "{src} does not declare {n}"
+    elabAll srcs
+    let some h := declHash (← getEnv) n | throwError "{srcs} do not declare {n}"
     return h
+
+/-- The fingerprint of the declaration `n`, in the current namespace, once the command `src` is elaborated. -/
+def hashAfter (src : String) (n : Name) : CommandElabM UInt64 :=
+  hashAfterAll [src] n
 
 /-- Fails unless the two versions `old` and `new` of `n` have different fingerprints. -/
 def expectChange (what : String) (n : Name) (old new : String) : CommandElabM Unit := do
@@ -123,5 +131,33 @@ def expectSame (what : String) (n : Name) (old new : String) : CommandElabM Unit
      def fpTotal : Nat := fpCount 3
      def fpCount (n : Nat) : Nat := n + 2
      end"
+
+/-!
+A matcher counts by what it says, not by its name. Lean reuses the matcher
+of an earlier definition of the same shape: here `fpShape` uses
+`fpIsZero.match_1`. Without `fpIsZero`, `fpShape` gets a matcher of its own,
+`fpShape.match_1`, with the same body, and its fingerprint must stay.
+-/
+
+#eval show CommandElabM Unit from do
+  let isZero := "def fpIsZero : Nat → Bool | 0 => true | _ => false"
+  let shape := "def fpShape : Nat → Nat | 0 => 1 | _ => 2"
+  let ns ← getCurrNamespace
+  let shared ← withoutModifyingEnv do
+    elabAll [isZero, shape]
+    let some (.defnInfo d) := (← getEnv).find? (ns ++ `fpShape) | throwError "no fpShape"
+    return d.value.getUsedConstants.contains (ns ++ `fpIsZero.match_1)
+  unless shared do
+    throwError "fpShape does not reuse the matcher of fpIsZero, so this test checks nothing"
+  if (← hashAfterAll [isZero, shape] `fpShape) != (← hashAfter shape `fpShape) then
+    throwError "the fingerprint of fpShape changes with the name of the matcher it uses"
+
+/-! A change to a matcher that the definition shares with another still counts. -/
+
+#eval show CommandElabM Unit from do
+  let isZero := "def fpIsZero : Nat → Bool | 0 => true | _ => false"
+  if (← hashAfterAll [isZero, "def fpShape : Nat → Nat | 0 => 1 | _ => 2"] `fpShape) ==
+      (← hashAfterAll [isZero, "def fpShape : Nat → Nat | 1 => 1 | _ => 2"] `fpShape) then
+    throwError "the fingerprint of fpShape misses a change to the patterns of a matcher it shares"
 
 end FirSpecSite.FingerprintTests

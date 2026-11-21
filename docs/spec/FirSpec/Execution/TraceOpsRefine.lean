@@ -14,10 +14,10 @@ when the Lean changes under it.
 
 #doc (Manual) "A traced run of ops on refined environments and states: readable blocks" =>
 
-:::moduleDocs (fingerprint := "13385020937265988547")
+:::moduleDocs (fingerprint := "16486856803880700312")
 :::
 
-:::readable Fir.Result.InStep Fir.TraceEnd.Allows.exitFrame Fir.TraceEnd.Allows.ub_prefix (fingerprint := "15489573539634553777")
+:::readable Fir.Result.InStep Fir.TraceEnd.Allows.exitFrame Fir.TraceEnd.Allows.ub_prefix (fingerprint := "17434285451285169466")
 *Definition: in step.* What a source's run of ops ends with allows, in
 step, what the target's ends with when both return, the second values
 refining the first's, with the same steps left, or both run out of fuel.

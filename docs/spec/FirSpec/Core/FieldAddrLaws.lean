@@ -14,10 +14,10 @@ when the Lean changes under it.
 
 #doc (Manual) "Field address obligations: readable blocks" =>
 
-:::moduleDocs (fingerprint := "17763416730736720874")
+:::moduleDocs (fingerprint := "3837551866316034595")
 :::
 
-:::readable Fir.Core.fieldAddr_denote Fir.Core.fieldAddr_ownRuleHas (pin := Fir.Core.memDenoteAt) (pin := Fir.Core.fieldAddrResult) (fingerprint := "9626035846567565884")
+:::readable Fir.Core.fieldAddr_denote Fir.Core.fieldAddr_ownRuleHas (pin := Fir.Core.memDenoteAt) (pin := Fir.Core.fieldAddrResult) (fingerprint := "16347293802887180548")
 *Theorems: $`\mathsf{fieldaddr}` with memory.* In the
 {ref "The-fir-specification--Memory--The-state-layer"}[state layer] over
 the set monad, at every layout, naming and record $`L` of the items a run
@@ -34,7 +34,7 @@ in none, ends with the memories it started with and the same result from
 any others, and has one outcome from any memories.
 :::
 
-:::readable Fir.Core.fieldAddrResult_poison Fir.Core.fieldAddrResult_defined Fir.Core.fieldAddrResult_isRefinedBy (pin := Fir.Core.fieldAddrValue) (pin := Fir.Core.elemAddrValue) (fingerprint := "4399134642438483786")
+:::readable Fir.Core.fieldAddrResult_poison Fir.Core.fieldAddrResult_defined Fir.Core.fieldAddrResult_isRefinedBy (pin := Fir.Core.fieldAddrValue) (pin := Fir.Core.elemAddrValue) (fingerprint := "15429627891656503254")
 *Theorems: the result of $`\mathsf{fieldaddr}` is strict and keeps
 refinement.* A poison operand gives a poison pointer, a pointer and an
 index that are not poison give a pointer, and on operands that refine
@@ -52,7 +52,7 @@ None of these asks anything of the record: a layout or field it does not
 give moves the pointer by 0.
 :::
 
-:::readable Fir.Core.fieldAddr_memPropagates Fir.Core.fieldAddrZero Fir.Core.fieldAddr_memReturnsOnDefined (pin := Fir.MemPropagatesPoison) (pin := Fir.MemReturnsOnDefined) (fingerprint := "18195508658308300564")
+:::readable Fir.Core.fieldAddr_memPropagates Fir.Core.fieldAddrZero Fir.Core.fieldAddr_memReturnsOnDefined (pin := Fir.MemPropagatesPoison) (pin := Fir.MemReturnsOnDefined) (fingerprint := "9447603566033993853")
 *Theorems: $`\mathsf{fieldaddr}` propagates poison with memory.* A poison
 operand gives a poison pointer, and it is never UB, so it meets both
 poison clauses with memory. On the pointer with no provenance at offset 0,

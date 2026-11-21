@@ -14,7 +14,7 @@ changes under it.
 
 #doc (Manual) "Address policies: readable blocks" =>
 
-:::moduleDocs (fingerprint := "14695328045529409545")
+:::moduleDocs (fingerprint := "822173333255341496")
 :::
 
 :::readable Fir.Memory.Place Fir.Memory.Memory.places (pin := Fir.Memory.Block.shape) (fingerprint := "12043594272512453898")
@@ -31,7 +31,7 @@ the places of its blocks and an allocation $`a` to the address it
 proposes for $`a`, or to none. The canonical policy proposes none.
 :::
 
-:::readable Fir.Memory.Memory.admits Fir.Memory.Memory.fallback Fir.Memory.Memory.choose (pin := Fir.Memory.Memory.fits) (pin := Fir.Memory.Memory.canonical) (pin := Fir.Memory.alignUp) (fingerprint := "13704921170293938087")
+:::readable Fir.Memory.Memory.admits Fir.Memory.Memory.fallback Fir.Memory.Memory.choose (pin := Fir.Memory.Memory.fits) (pin := Fir.Memory.Memory.canonical) (pin := Fir.Memory.alignUp) (fingerprint := "14642826520430930220")
 *Definitions: the addresses that may be given, and the one given.* Between
 the bounds $`lo` and $`hi`, the address $`z` may be given to the
 allocation $`a` of $`M`, with $`M[a] = (k, \alpha, \vec{x}, \ell, y^?)`,
@@ -61,7 +61,7 @@ given, the run's UB gives the reason "an exposure that no address fits"
 (Q5).
 :::
 
-:::readable Fir.Memory.Memories.expose (pin := Fir.Memory.Memory.addrOf) (pin := Fir.Memory.Memory.expose) (fingerprint := "9232441416124050514")
+:::readable Fir.Memory.Memories.expose (pin := Fir.Memory.Memory.addrOf) (pin := Fir.Memory.Memory.expose) (fingerprint := "7634160338223627702")
 *Definition: exposing a pointer.* Exposing the pointer $`p = (a^?, o)` of
 the memory $`x` of $`S`, of $`P`-bit pointers, under the policy $`g`,
 gives an integer of $`P` bits and the memories after:

@@ -14,10 +14,10 @@ changes under it.
 
 #doc (Manual) "The canonical printer: readable blocks" =>
 
-:::moduleDocs (fingerprint := "4176489267812084703")
+:::moduleDocs (fingerprint := "2090149123835374223")
 :::
 
-:::readable Fir.Attr.print (pin := Fir.Text.quote) (pin := Fir.Text.printInt) (pin := Fir.Text.printSymbol) (fingerprint := "470254955115097083")
+:::readable Fir.Attr.print (pin := Fir.Text.quote) (pin := Fir.Text.printInt) (pin := Fir.Text.printSymbol) (fingerprint := "4746284299703548192")
 *Definition: an attribute in text.* The text of an
 {ref "The-fir-specification--Text-format--Grammar"}[attribute] $`a`,
 $`\mathrm{print}(a)`, is:
@@ -34,7 +34,7 @@ arguments of an applied attribute are separated by a comma and a space, and
 attribute that its dialect writes it as.
 :::
 
-:::readable Fir.printLocRef Fir.Location.print (pin := Fir.Location) (pin := Fir.Text.quote) (fingerprint := "5987085474027999097")
+:::readable Fir.printLocRef Fir.Location.print (pin := Fir.Location) (pin := Fir.Text.quote) (fingerprint := "2243100064111957526")
 *Definition: a location reference and a location in text.* The
 {ref "The-fir-specification--Abstract-syntax--Locations"}[location reference]
 $`r` is written `@` followed by $`r` in decimal. Each location is written
@@ -63,7 +63,7 @@ to the block $`\ell` that passes $`x_1, \dots, x_n` is written
 `^ℓ(%x₁, …, %xₙ)`, and `^ℓ` when $`n = 0`.
 :::
 
-:::readable Fir.printKind Fir.Operation.print Fir.Region.printList Fir.Block.printList Fir.Operation.printList (pin := Fir.Operation) (pin := Fir.Block) (fingerprint := "6419673843248603316")
+:::readable Fir.printKind Fir.Operation.print Fir.Region.printList Fir.Block.printList Fir.Operation.printList (pin := Fir.Operation) (pin := Fir.Block) (fingerprint := "3423740573209482487")
 *Definition: an op, with its regions and their blocks, in text.* An op at
 the indentation $`n` is one line, made of, in order:
 
@@ -103,7 +103,7 @@ So `toy.cell @c() -> toy.flag 1 {`, then `}` on the next line, is an item
 of the kind `toy.cell` (ADR-2026-11-09-1543).
 :::
 
-:::readable Fir.Func.print Fir.printDialects Fir.Item.print Fir.Item.printList (pin := Fir.Text.printSymbol) (fingerprint := "2893342539488743545")
+:::readable Fir.Func.print Fir.printDialects Fir.Item.print Fir.Item.printList (pin := Fir.Text.printSymbol) (fingerprint := "8688855538144420502")
 *Definition: a function, a dialect set, and items, in text.* A function at
 the indentation $`n`, with the symbol $`s`, the parameters $`p^*`, the
 result types $`t_1, \dots, t_m` and the body $`b^*`, is written:
@@ -142,7 +142,7 @@ separated by `, `, then a line feed and an empty line. So
 memory 1.
 :::
 
-:::readable Fir.LocTable.print Fir.Module.print (fingerprint := "1506697349741948061")
+:::readable Fir.LocTable.print Fir.Module.print (fingerprint := "4912561992023267577")
 *Definition: the location table, and a module, in text.* The
 {ref "The-fir-specification--Abstract-syntax--Locations"}[location table]
 is written `locs {` and a line feed, then each entry $`r = \mathit{loc}`

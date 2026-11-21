@@ -14,10 +14,10 @@ when the Lean changes under it.
 
 #doc (Manual) "Comparison and selection rules: readable blocks" =>
 
-:::moduleDocs (fingerprint := "3378634788283947035")
+:::moduleDocs (fingerprint := "3832601918343440319")
 :::
 
-:::readable Fir.Core.Pred.holds (pin := Fir.Core.Pred) (pin := BitVec.slt) (pin := BitVec.sle) (pin := BitVec.ult) (pin := BitVec.ule) (fingerprint := "16197912548578788400")
+:::readable Fir.Core.Pred.holds (pin := Fir.Core.Pred) (pin := BitVec.slt) (pin := BitVec.sle) (pin := BitVec.ult) (pin := BitVec.ule) (fingerprint := "7461743572155578652")
 *Definition: when a predicate holds.* For every width $`N`, each of the ten
 {ref "The-fir-specification--Abstract-syntax--Core-ops"}[predicates] holds
 of two vectors $`a, b \in \mathbb{B}^N`, the set of vectors of $`N` bits,
@@ -35,7 +35,7 @@ unsigned: at $`\mathsf{i8}`, all ones is $`-1` read as signed, less than 1,
 and 255 read as unsigned, greater.
 :::
 
-:::readable Fir.Core.icmpValues (fingerprint := "3221404108141075342")
+:::readable Fir.Core.icmpValues (fingerprint := "8919548224517041082")
 *Definition: the rule of $`\mathsf{icmp}`.* For every width $`N` and
 predicate $`p`, $`\mathsf{icmp}_N~p` of two vectors of bits is the
 $`\mathsf{i1}` value 1 when $`p` holds of them and 0 when it does not; a
@@ -52,7 +52,7 @@ $`\mathsf{icmp}` is never UB, and it
 itself is poison, not 1.
 :::
 
-:::readable Fir.Core.selectValues (fingerprint := "11600337188986448253")
+:::readable Fir.Core.selectValues (fingerprint := "8717583804580155073")
 *Definition: the rule of $`\mathsf{select}`.* For every width $`N`,
 $`\mathsf{select}_N` takes an $`\mathsf{i1}` condition $`c` and two values
 $`a` and $`b` of $`\mathsf{i}N`. It gives $`a`, as it is, when $`c` is 1,
@@ -80,7 +80,7 @@ $`\mathsf{ult}`, $`\mathsf{ule}`, $`\mathsf{ugt}` and $`\mathsf{uge}`.
 $`\mathsf{eq}` and $`\mathsf{ne}` read the signed order.
 :::
 
-:::readable Fir.Core.comparesAs (pin := Fir.Core.Pred.all) (pin := Fir.Core.icmpValues) (pin := Fir.Core.predResults) (fingerprint := "11852322406675591124")
+:::readable Fir.Core.comparesAs (pin := Fir.Core.Pred.all) (pin := Fir.Core.icmpValues) (pin := Fir.Core.predResults) (fingerprint := "17675169085649043592")
 *Definition: a test that two values compare in given orders.* For two
 vectors $`a` and $`b` of $`N` bits and orders $`s` and $`u`, the test holds
 when $`\mathsf{icmp}_N~p\,(a, b)`, for each predicate $`p` in the order

@@ -23,7 +23,7 @@ by $`k` is $`k` run on $`a`. The proofs below follow the decoder one step
 at a time with it.
 :::
 
-:::readable Fir.mapM_decodeType (pin := Fir.Text.decodeType) (fingerprint := "10718087776537962991")
+:::readable Fir.mapM_decodeType (pin := Fir.Text.decodeType) (fingerprint := "4261371137450438094")
 *Theorem: result types decode back.* For every dialect with a
 {ref "The-fir-specification--Text-format--Grammar"}[text format], all
 types as written $`(a_1, q_1), \dots, (a_n, q_n)` and types
@@ -34,7 +34,7 @@ decoding each $`(a_i, q_i)` with the
 order, gives $`t_1, \dots, t_n`.
 :::
 
-:::readable Fir.Func.WellFormed.decodeFunc_eq (pin := Fir.Text.decodeFunc) (pin := Fir.Func.WellFormed) (fingerprint := "1470720099245077143")
+:::readable Fir.Func.WellFormed.decodeFunc_eq (pin := Fir.Text.decodeFunc) (pin := Fir.Func.WellFormed) (fingerprint := "9227893326778520995")
 *Theorem: a well-formed function decodes back.* For every dialect with
 signatures, validation rules and a text format whose text is lawful, every
 {ref "The-fir-specification--Text-format--Round-trips"}[well-formed]
@@ -54,7 +54,7 @@ a body of the core's kind, which is the kind of a well-formed function's
 body.
 :::
 
-:::readable Fir.isDialectWord_ne Fir.DialectItem.WellFormed.decodeItem_eq (pin := Fir.Text.decodeDialectItem) (pin := Fir.DialectItem.WellFormed) (fingerprint := "11008678865619550061")
+:::readable Fir.isDialectWord_ne Fir.DialectItem.WellFormed.decodeItem_eq (pin := Fir.Text.decodeDialectItem) (pin := Fir.DialectItem.WellFormed) (fingerprint := "4896239694472320298")
 *Theorems: an item of a dialect's kind decodes back.* A word of a dialect
 holds a `.`, so it is neither `func`, `module`, `aggregate` nor `global`.
 For every dialect with
@@ -65,7 +65,7 @@ result types and its parameters decode back, and its attributes are kept
 as they were read.
 :::
 
-:::readable Fir.decodeFields_eq Fir.Aggregate.WellFormed.decodeItem_eq (pin := Fir.Text.decodeAggregate) (pin := Fir.Aggregate.WellFormed) (fingerprint := "8170585867673597594")
+:::readable Fir.decodeFields_eq Fir.Aggregate.WellFormed.decodeItem_eq (pin := Fir.Text.decodeAggregate) (pin := Fir.Aggregate.WellFormed) (fingerprint := "6806333278178658295")
 *Theorems: an aggregate's layout decodes back.* Fields whose numbers are
 within the limit and whose types are written as types and decode back
 decode back from the attributes they write, at any positions. So for every
@@ -75,7 +75,7 @@ kind is `aggregate`, it has no parameters or results, its body is no
 blocks, and its memory, size, alignment and fields decode back.
 :::
 
-:::readable Fir.Func.WellFormed.decodeItem_eq Fir.Item.WellFormed.decodeItem_eq Fir.Item.WellFormed.decodeItems_eq Fir.Global.decodeItem_eq (pin := Fir.Text.decodeItem) (pin := Fir.Text.decodeItems) (fingerprint := "9334469755896633598")
+:::readable Fir.Func.WellFormed.decodeItem_eq Fir.Item.WellFormed.decodeItem_eq Fir.Item.WellFormed.decodeItems_eq Fir.Global.decodeItem_eq (pin := Fir.Text.decodeItem) (pin := Fir.Text.decodeItems) (fingerprint := "5192367858759324950")
 *Theorems: items decode back.* For every dialect with signatures,
 validation rules and a lawful text:
 
@@ -100,7 +100,7 @@ its numbers are within the limit, since its attributes read back. The last two t
 another, and are proved together by induction on the items.
 :::
 
-:::readable Fir.decodeLayout_eq (pin := Fir.Text.decodeMemLayout) (fingerprint := "10099140561503703068")
+:::readable Fir.decodeLayout_eq (pin := Fir.Text.decodeMemLayout) (fingerprint := "1330681782989961273")
 *Theorem: a data layout decodes back.* For every data layout whose entries
 are within the limit, and all entries as written that are, positions
 aside, what its entries write, decoding them, in order, gives the layout

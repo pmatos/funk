@@ -14,7 +14,7 @@ changes under it.
 
 #doc (Manual) "Streams of acts and branches of moves: readable blocks" =>
 
-:::moduleDocs (fingerprint := "8498302368409173853")
+:::moduleDocs (fingerprint := "7136385774755592332")
 :::
 
 :::readable Fir.Step.upTo_append_of_ticks_le Fir.Step.prefix_upTo (fingerprint := "9444690325363593714")
@@ -56,7 +56,7 @@ deadline of the acts left after $`t`'s, or $`F` when $`t` shows all $`k`.
 shows the stream $`\mathrm{acts}(t) \cdot S` with those deadlines.
 :::
 
-:::readable Fir.TBranch.pre Fir.TBranch.fuel Fir.TBranch.pre_prefix Fir.TBranch.ticks_pre_le Fir.TBranch.realized (fingerprint := "16755554167404986090")
+:::readable Fir.TBranch.pre Fir.TBranch.fuel Fir.TBranch.pre_prefix Fir.TBranch.ticks_pre_le Fir.TBranch.realized (fingerprint := "14978829185162282791")
 *Definitions: a branch of moves.* A branch is runs $`R_0, R_1, \ldots`, each
 going on to the next by the move of $`t_i` with fuel $`F_i`. From run $`i`,
 $`j` moves have the marked trace $`t_i \mathbin{+\!\!+} \cdots

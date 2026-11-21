@@ -14,10 +14,10 @@ fails when the Lean changes under it.
 
 #doc (Manual) "Running out of fuel, followed back: readable blocks" =>
 
-:::moduleDocs (fingerprint := "11724589784008791995")
+:::moduleDocs (fingerprint := "9380698261376246191")
 :::
 
-:::readable Fir.AllowedBelow (pin := Fir.SomeUB) (fingerprint := "10749783197299227757")
+:::readable Fir.AllowedBelow (pin := Fir.SomeUB) (fingerprint := "5321053586452845177")
 *Definition: a source that allows a path at a budget, with a ratio of
 steps.* Let $`B` be a number, $`S` a source, a run of ops at every budget
 $`N`, written $`S_N`, and $`N` one budget. $`S` _allows at_ $`N`, _with
@@ -39,7 +39,7 @@ returns while leaving at least $`B` times the steps that the source
 leaves, plus $`B`.
 :::
 
-:::readable Fir.AllowedBelow.of_someUB Fir.AllowedBelow.of_exhausted Fir.AllowedBelow.of_step Fir.AllowedBelow.of_not (pin := Fir.AllowedBelow) (pin := Fir.SomeUB) (fingerprint := "3574073310605514308")
+:::readable Fir.AllowedBelow.of_someUB Fir.AllowedBelow.of_exhausted Fir.AllowedBelow.of_step Fir.AllowedBelow.of_not (pin := Fir.AllowedBelow) (pin := Fir.SomeUB) (fingerprint := "48704659921273952")
 *Theorems: four ways to show that a source allows a path at a budget.* Let
 $`S` and $`C` be sources and $`B`, $`N` and $`N'` numbers.
 
@@ -54,7 +54,7 @@ The third is how the proof below steps back from what the source does
 after one op to the whole.
 :::
 
-:::readable Fir.BlackBox.allowedBelow (pin := Fir.AllowedBelow) (pin := Fir.BlackBox) (fingerprint := "8200322354336656422")
+:::readable Fir.BlackBox.allowedBelow (pin := Fir.AllowedBelow) (pin := Fir.BlackBox) (fingerprint := "9691397632252272610")
 *Theorem: a black box's source allows its target's path at a budget.* Let
 $`(g, g')` be a
 {ref "The-fir-specification--Execution--Calls-as-black-boxes"}[black box]
@@ -81,7 +81,7 @@ returns at $`N_0` what the black box allows, leaving at most $`N_0`
 steps, which keeps the ratio.
 :::
 
-:::readable Fir.CallsRefined.callee_allowedBelow (pin := Fir.CallsRefined) (pin := Fir.AllowedBelow) (fingerprint := "3962455410732317106")
+:::readable Fir.CallsRefined.callee_allowedBelow (pin := Fir.CallsRefined) (pin := Fir.AllowedBelow) (fingerprint := "10166698370237723870")
 *Theorem: the source's callee allows what the target's callee does, at a
 budget.* Let the target module $`M'` run each call as the source $`M`
 does, with the bound $`\beta`, each symbol naming the same function in
@@ -106,7 +106,7 @@ The same function is covered by the induction, and a black box by the
 previous theorem.
 :::
 
-:::readable Fir.Func.runOps_allowedBelow (pin := Fir.AllowedBelow) (pin := Fir.CallsRefined) (pin := Fir.MonotoneOps) (pin := Fir.Func.OpsMonotone) (fingerprint := "17063697035579180377")
+:::readable Fir.Func.runOps_allowedBelow (pin := Fir.AllowedBelow) (pin := Fir.CallsRefined) (pin := Fir.MonotoneOps) (pin := Fir.Func.OpsMonotone) (fingerprint := "5552548996655207485")
 *Theorem: every path of the target that runs out of fuel or returns is
 allowed by the source at a budget.* Let the target module $`M'` run each
 call as the source $`M` does, with the bound $`\beta`: each symbol names

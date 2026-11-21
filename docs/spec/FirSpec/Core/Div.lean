@@ -14,10 +14,10 @@ changes under it.
 
 #doc (Manual) "Division rules: readable blocks" =>
 
-:::moduleDocs (fingerprint := "14809941573750801012")
+:::moduleDocs (fingerprint := "18305218036002901242")
 :::
 
-:::readable Fir.Core.divEv (pin := Fir.Ev) (pin := BitVec.intMin) (fingerprint := "802875302567598932")
+:::readable Fir.Core.divEv (pin := Fir.Ev) (pin := BitVec.intMin) (fingerprint := "13443207776266710720")
 *Definition: how a division ends.* Take the name $`\mathit{op}` of a
 division or remainder op, whether it is signed, and a function $`q` that
 gives its result on two vectors of $`N` bits. On a dividend $`a` and a
@@ -54,7 +54,7 @@ poison. A division ends in one of these two ways and never chooses, so
 this definition is a function to its ending.
 :::
 
-:::readable Fir.Core.sdivWith Fir.Core.udivWith (pin := Fir.Core.divEv) (pin := BitVec.sdiv) (pin := BitVec.srem) (pin := BitVec.udiv) (pin := BitVec.umod) (fingerprint := "17746293830008180023")
+:::readable Fir.Core.sdivWith Fir.Core.udivWith (pin := Fir.Core.divEv) (pin := BitVec.sdiv) (pin := BitVec.srem) (pin := BitVec.udiv) (pin := BitVec.umod) (fingerprint := "18247827072416290614")
 *Definition: the rules of $`\mathsf{sdiv}` and $`\mathsf{udiv}`.* For every
 width $`N`, with or without the flag $`\mathsf{exact}`, each ends as the
 cases of how a division ends say, $`\mathsf{sdiv}` as a signed op and $`\mathsf{udiv}` as
@@ -78,7 +78,7 @@ only after the cases of UB, so a division that is UB with $`\mathsf{exact}`
 is UB without it.
 :::
 
-:::readable Fir.Core.sremValues Fir.Core.uremValues (pin := Fir.Core.divEv) (pin := BitVec.srem) (pin := BitVec.umod) (fingerprint := "17644229670611273327")
+:::readable Fir.Core.sremValues Fir.Core.uremValues (pin := Fir.Core.divEv) (pin := BitVec.srem) (pin := BitVec.umod) (fingerprint := "15649128438450055310")
 *Definition: the rules of $`\mathsf{srem}` and $`\mathsf{urem}`.* For every
 width $`N`, each ends as the cases of how a division ends say, $`\mathsf{srem}` as a
 signed op and $`\mathsf{urem}` as an unsigned one, with these results:
@@ -92,7 +92,7 @@ remainder of $`\mathsf{srem}` has the sign of the dividend: $`-7` by 2
 leaves $`-1`, and 7 by $`-2` leaves 1.
 :::
 
-:::readable Fir.Core.ruleOfEv (pin := Fir.Ev) (pin := Fir.MonadUB) (fingerprint := "6840700457354812949")
+:::readable Fir.Core.ruleOfEv (pin := Fir.Ev) (pin := Fir.MonadUB) (fingerprint := "9902701329321964503")
 *Definition: a rule that may end with UB, for every way of computing.* Let
 $`g` give, on two values $`a` and $`b` of $`\mathsf{i}N`, a result or
 immediate UB with a reason. For every way of computing with the

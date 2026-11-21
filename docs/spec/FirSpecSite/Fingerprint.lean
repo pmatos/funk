@@ -20,7 +20,10 @@ of it, since its stored value only names them. These are the body of a
 recursive definition (`f._f`, `f._unary`, or `f._mutual`, which holds the
 whole mutual block), its case splits (`f._sparseCasesOn_1`), and its
 pattern matchers (`f.match_1`), followed transitively, so a recursive
-definition of a mutual block covers the bodies of the whole block. Any
+definition of a mutual block covers the bodies of the whole block. A
+helper counts by its type and value, not by its name: Lean may reuse a
+matcher made for another definition of the same shape, or name the helper
+afresh when that definition goes, and neither changes the fingerprint. Any
 other definition that the declaration only refers to counts by its name: a
 change to that definition's body does not change the fingerprint. A
 readable block that restates such a definition pins it as well, with
@@ -48,29 +51,40 @@ def isHelper (env : Environment) (c : Name) : Bool :=
       | _ => false
   | _ => false
 
-/-- The helpers that the value `e` uses, then those that theirs use, in the order first met. -/
-def helpers (env : Environment) (e : Expr) : Array Name := Id.run do
-  let mut found : Array Name := #[]
-  let mut seen : NameSet := {}
-  let mut next := #[e]
-  while !next.isEmpty do
-    let mut later := #[]
-    for v in next do
-      for c in v.getUsedConstants do
-        if !seen.contains c && isHelper env c then
-          seen := seen.insert c
-          found := found.push c
-          if let some (.defnInfo d) := env.find? c then
-            later := later.push d.value
-    next := later
-  return found
+/-- `e` with each helper in `hashes` replaced by a placeholder that carries its hash and keeps its universe levels. -/
+def withHelperHashes (hashes : NameMap UInt64) (e : Expr) : Expr :=
+  e.replace fun
+    | .const c us => (hashes.find? c).map fun h => .const (.num `_helper h.toNat) us
+    | _ => none
 
-/-- The hash of the definition body `e`, with the type and value of each of its helpers. -/
+mutual
+/--
+The hash of the helper `c`: its type and its value, but not its name. The
+state keeps the hash of each helper met. Helpers form no cycle, since Lean
+adds a definition only after every constant it uses, so this ends.
+-/
+partial def helperHash (env : Environment) (c : Name) : StateM (NameMap UInt64) UInt64 := do
+  if let some h := (← get).find? c then return h
+  let some ci := env.find? c | return 0
+  let value ← match ci.value? with
+    | some v => contentHash env v
+    | none => pure 0
+  let h := mixHash (← contentHash env ci.type) value
+  modify (·.insert c h)
+  return h
+
+/-- The hash of `e`, in which each helper counts by its hash, not by its name. -/
+partial def contentHash (env : Environment) (e : Expr) : StateM (NameMap UInt64) UInt64 := do
+  let mut hashes : NameMap UInt64 := {}
+  for c in e.getUsedConstants do
+    if isHelper env c then
+      hashes := hashes.insert c (← helperHash env c)
+  return hash (withHelperHashes hashes e)
+end
+
+/-- The hash of the definition body `e`, with the type and value of each helper it reaches. -/
 def bodyHash (env : Environment) (e : Expr) : UInt64 :=
-  (helpers env e).foldl (init := hash e) fun h c =>
-    match env.find? c with
-    | some ci => mixHash h (mixHash (hash ci.type) (ci.value?.map hash |>.getD 0))
-    | none => h
+  (contentHash env e).run' {}
 
 /-- The hash of what the declaration `n` says, or none when there is no such declaration. -/
 def declHash (env : Environment) (n : Name) : Option UInt64 := do

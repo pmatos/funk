@@ -14,10 +14,10 @@ when the Lean changes under it.
 
 #doc (Manual) "Stores in text: readable blocks" =>
 
-:::moduleDocs (fingerprint := "1166509462577244941")
+:::moduleDocs (fingerprint := "3995601268363858518")
 :::
 
-:::readable Fir.Core.decodeStore (pin := Fir.Core.decodeOrdering) (pin := Fir.Core.decodeAlign) (fingerprint := "16340718634028510098")
+:::readable Fir.Core.decodeStore (pin := Fir.Core.decodeOrdering) (pin := Fir.Core.decodeAlign) (fingerprint := "1511514921116942130")
 *Definition: the text of $`\mathsf{store}`.* The attributes of
 $`\mathsf{store}_N~o~W~a` are those of a load, written as
 $`\mathrm{loadattrs}(o, a)`: the word of its ordering $`o`, then

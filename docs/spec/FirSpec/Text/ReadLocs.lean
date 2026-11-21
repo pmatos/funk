@@ -14,10 +14,10 @@ fails when the Lean changes under it.
 
 #doc (Manual) "Reading the location table and the module: readable blocks" =>
 
-:::moduleDocs (fingerprint := "2383612488627667304")
+:::moduleDocs (fingerprint := "4224841250267329477")
 :::
 
-:::readable Fir.Text.readNat Fir.Text.readLocRef (pin := Fir.Location.limit) (fingerprint := "17924608290208954957")
+:::readable Fir.Text.readNat Fir.Text.readLocRef (pin := Fir.Location.limit) (fingerprint := "5393639674024808394")
 *Definition: reading the numbers of a location.* A line or a column is an
 integer token that is not negative, and must be below $`2^{32}`: a larger
 one is an error at the number, such as "a line 4294967296 is out of range:
@@ -26,7 +26,7 @@ line" or "expected a column". A location reference inside a location is a
 location reference token, whose bound the lexer has checked.
 :::
 
-:::readable Fir.Text.readRange Fir.Text.readLocArgs Fir.Text.readLocation (pin := Fir.Location) (fingerprint := "6196289399648009074")
+:::readable Fir.Text.readRange Fir.Text.readLocArgs Fir.Text.readLocation (pin := Fir.Location) (fingerprint := "7172543767662253139")
 *Definition: reading a location.* A
 {ref "The-fir-specification--Abstract-syntax--Locations"}[location] is
 read by its first token:
@@ -44,7 +44,7 @@ read by its first token:
   other token is an error, "expected a location".
 :::
 
-:::readable Fir.Text.readLocEntries Fir.Text.readLocs (fingerprint := "15076379118351119691")
+:::readable Fir.Text.readLocEntries Fir.Text.readLocs (fingerprint := "3776626726584328438")
 *Definition: reading the location table.* The table is the word `locs`,
 then `{`, then its entries, then `}`. An entry is a location reference,
 `=` and a location, and entries are read as long as a location reference
@@ -52,7 +52,7 @@ follows. The entries are kept in the order they are written; whether
 their references increase is checked by validation, not here.
 :::
 
-:::readable Fir.Text.readModule (pin := Fir.Text.readDialects) (fingerprint := "7974728789468219818")
+:::readable Fir.Text.readModule (pin := Fir.Text.readDialects) (fingerprint := "16943554201182800461")
 *Definition: reading a module.* A module is its dialect set, then its
 data layout, then its items, read at the top level, then its location table, which must start with the word `locs`,
 then the end of the text. Anything else after the items is an error,

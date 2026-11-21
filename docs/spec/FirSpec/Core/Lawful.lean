@@ -17,7 +17,7 @@ build fails when the Lean changes under it.
 :::moduleDocs (fingerprint := "11746787569716277188")
 :::
 
-:::readable Fir.Core.Op.propagates_all Fir.Core.load_propagatesPoison Fir.Core.store_propagatesPoison Fir.Core.loadPtr_propagatesPoison Fir.Core.storePtr_propagatesPoison Fir.Core.loadFloat_propagatesPoison Fir.Core.storeFloat_propagatesPoison Fir.Core.memCopy_propagatesPoison Fir.Core.memSet_propagatesPoison Fir.Core.fieldAddr_propagatesPoison (pin := Fir.Core.Op.poisonClass) (pin := Fir.PropagatesPoison) (pin := Fir.PoisonOut) (pin := Fir.UBByOwnRules) (pin := Fir.HVector.IsFilledBy) (fingerprint := "7725863538073868586")
+:::readable Fir.Core.Op.propagates_all Fir.Core.load_propagatesPoison Fir.Core.store_propagatesPoison Fir.Core.loadPtr_propagatesPoison Fir.Core.storePtr_propagatesPoison Fir.Core.loadFloat_propagatesPoison Fir.Core.storeFloat_propagatesPoison Fir.Core.memCopy_propagatesPoison Fir.Core.memSet_propagatesPoison Fir.Core.fieldAddr_propagatesPoison (pin := Fir.Core.Op.poisonClass) (pin := Fir.PropagatesPoison) (pin := Fir.PoisonOut) (pin := Fir.UBByOwnRules) (pin := Fir.HVector.IsFilledBy) (fingerprint := "18156769555710649521")
 *Theorem: each core op that propagates poison does.* For every
 {ref "The-fir-specification--Abstract-syntax--Core-ops"}[core op] $`o`
 whose
@@ -53,7 +53,7 @@ $`\mathsf{call}`, are poison
 exceptions with rules of their own.
 :::
 
-:::readable Fir.Core.pos_of_typesValid Fir.Core.Op.returnsOnDefined_valid (pin := Fir.TypesValid) (pin := Fir.Core.Ty.Valid) (pin := Fir.Core.maxWidth) (pin := Fir.ReturnsOnDefined) (fingerprint := "18398628007073684114")
+:::readable Fir.Core.pos_of_typesValid Fir.Core.Op.returnsOnDefined_valid (pin := Fir.TypesValid) (pin := Fir.Core.Ty.Valid) (pin := Fir.Core.maxWidth) (pin := Fir.ReturnsOnDefined) (fingerprint := "12057025655462038934")
 *Theorems: a valid core op instance with an operand of type
 $`\mathsf{i}N` has $`N > 0`, and each valid core op that propagates poison returns a
 result on defined operands.*

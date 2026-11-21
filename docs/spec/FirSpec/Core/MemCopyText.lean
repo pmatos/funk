@@ -14,10 +14,10 @@ when the Lean changes under it.
 
 #doc (Manual) "Copies and moves in text: readable blocks" =>
 
-:::moduleDocs (fingerprint := "7413539133302507612")
+:::moduleDocs (fingerprint := "2557598902953324294")
 :::
 
-:::readable Fir.Core.CopyKind.name Fir.Core.decodeMemCopy (pin := Fir.Core.decodeOrdering) (fingerprint := "7292480981258337133")
+:::readable Fir.Core.CopyKind.name Fir.Core.decodeMemCopy (pin := Fir.Core.decodeOrdering) (fingerprint := "1438967698719833527")
 *Definitions: how a copy and a move are read.* A copy is named `memcpy`
 and a move `memmove`. Each reads from one attribute, the word of its
 ordering $`o`, and from the operand types

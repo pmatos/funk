@@ -42,7 +42,7 @@ Let $`g` give a computation for each value, and let $`e` be an end.
   $`s` may end with $`\mathsf{ub}~r` and $`e = \mathsf{ub}~r`.
 :::
 
-:::readable Fir.Func.StepPath Fir.Func.stepPath_iff (pin := Fir.Func.runOps) (pin := Fir.Ev.NotStuck) (fingerprint := "17737400429298713491")
+:::readable Fir.Func.StepPath Fir.Func.stepPath_iff (pin := Fir.Func.runOps) (pin := Fir.Ev.NotStuck) (fingerprint := "16487862995499737923")
 *Definition and theorem: the eight ways a step goes on.* Write
 $`\mathrm{run}_M(n, f, E, o^*)` for the
 {ref "The-fir-specification--Execution--The-interpreter"}[run of the ops]
@@ -101,7 +101,7 @@ one step at a time. This says once every case of a step, so that they need
 not unfold the interpreter.
 :::
 
-:::readable Fir.Func.run_runOps_zero Fir.Func.run_runOps_nil (pin := Fir.Func.runOps) (pin := Fir.Ev.NotStuck) (fingerprint := "12982409194922544711")
+:::readable Fir.Func.run_runOps_zero Fir.Func.run_runOps_nil (pin := Fir.Func.runOps) (pin := Fir.Ev.NotStuck) (fingerprint := "12932249148938976759")
 *Theorems: a run with no fuel, and a block with no op left.* For every
 module $`M`, function $`f`, environment $`E`, ops $`o^*` and budget $`n`:
 

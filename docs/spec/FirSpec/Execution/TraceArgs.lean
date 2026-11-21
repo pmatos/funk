@@ -14,10 +14,10 @@ when the Lean changes under it.
 
 #doc (Manual) "Refined arguments over traced runs: returns, UB and each budget: readable blocks" =>
 
-:::moduleDocs (fingerprint := "8059929117529026060")
+:::moduleDocs (fingerprint := "15199897234921488607")
 :::
 
-:::readable Fir.Result.Finished Fir.Result.finishEnd Fir.TraceEnd.Allows.finishEnd (fingerprint := "3788084618345794415")
+:::readable Fir.Result.Finished Fir.Result.finishEnd Fir.TraceEnd.Allows.finishEnd (fingerprint := "12436577599928051256")
 *Definition: finished runs.* A run of a function finishes a run of its
 entry block's ops: a return gives back its values, without the steps
 left. What a source's run of a function ends with allows what the

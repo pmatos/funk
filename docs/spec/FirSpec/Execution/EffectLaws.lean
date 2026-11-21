@@ -17,7 +17,7 @@ when the Lean changes under it.
 :::moduleDocs (fingerprint := "5995152268045501351")
 :::
 
-:::readable Fir.NeverUBSetM Fir.MakesNoPoisonSetM (pin := Fir.HVector.Any) (fingerprint := "12739601592114391496")
+:::readable Fir.NeverUBSetM Fir.MakesNoPoisonSetM (pin := Fir.HVector.Any) (fingerprint := "12165503546245796802")
 *Definitions: never UB and makes no poison, in the set monad.* An op $`o`
 _never ends in UB in the set monad_ when, on every operand vector
 $`\vec{v}` and for every reason $`r`: if $`o` is not a terminator,
@@ -39,7 +39,7 @@ by the dialect's
 {ref "The-fir-specification--Memory--Memory-obligations"}[semantics with memory].
 :::
 
-:::readable Fir.MakesNoPoison (pin := Fir.HVector.Any) (fingerprint := "12621916453885750521")
+:::readable Fir.MakesNoPoison (pin := Fir.HVector.Any) (fingerprint := "5646546198483330131")
 *Definition: makes no poison.* An op $`o` that is not a terminator _makes
 no poison_ when, wherever a run names the dialect's memories by $`\rho`, on
 every operand vector $`\vec{v}` with no poison element and from every

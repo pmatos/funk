@@ -14,10 +14,10 @@ build fails when the Lean changes under it.
 
 #doc (Manual) "Runs with memory at every budget: readable blocks" =>
 
-:::moduleDocs (fingerprint := "8816838592959850863")
+:::moduleDocs (fingerprint := "3368760154218919778")
 :::
 
-:::readable Fir.Result.mapVal Fir.SetM.run_map Fir.LeavesAtMost.mapVal Fir.Ahead.mapVal (fingerprint := "4927281303421206073")
+:::readable Fir.Result.mapVal Fir.SetM.run_map Fir.LeavesAtMost.mapVal Fir.Ahead.mapVal (fingerprint := "7766632884357331668")
 *Definition and theorems: mapping what a run returns.* $`\mathrm{mapVal}_F`
 maps the value that a return carries by $`F` and keeps the steps it leaves,
 and keeps $`\mathsf{fuel\_exhausted}` as it is. A path of $`f \mathbin{<\$>} s` ends with $`f(a)` for a result $`a` of
@@ -51,7 +51,7 @@ the budget, each step from the memories that the step before it ended
 with; a call enters a frame from the same memories in both runs.
 :::
 
-:::readable Fir.Result.finish Fir.Ahead.finish_up Fir.Ahead.finish_down (fingerprint := "3864791877929268310")
+:::readable Fir.Result.finish Fir.Ahead.finish_up Fir.Ahead.finish_down (fingerprint := "17953558838840232054")
 *Definition and theorems: what a function does with its ops' run.* A
 function returns what its entry block's ops return, mapped, and runs out of
 fuel when they do. When the ops with more fuel are ahead, each return or

@@ -14,10 +14,10 @@ when the Lean changes under it.
 
 #doc (Manual) "The state layer: readable blocks" =>
 
-:::moduleDocs (fingerprint := "4736759684321896864")
+:::moduleDocs (fingerprint := "1224818815667396876")
 :::
 
-:::readable Fir.instMonadChoiceStateT Fir.instMonadUBStateT Fir.instMonadFrameStateT Fir.instMonadMemoryStateT Fir.MonadMorphism.state (fingerprint := "9158537784273844497")
+:::readable Fir.instMonadChoiceStateT Fir.instMonadUBStateT Fir.instMonadFrameStateT Fir.instMonadMemoryStateT Fir.MonadMorphism.state (fingerprint := "16474419904620766245")
 *Definition: the state layer.* Over a monad $`m`, a computation of the
 state layer takes the memories $`S` before it, and is a computation of
 $`m` whose results are pairs $`(a, S')` of a result and the memories

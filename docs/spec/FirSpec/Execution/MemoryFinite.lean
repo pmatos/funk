@@ -27,7 +27,7 @@ computation of the set monad with finitely many results, lifted into the
 state layer, has finitely many outcomes: from $`S` it ends with $`S`.
 :::
 
-:::readable Fir.ChoiceTree.toSet_finitelyMany (pin := Fir.ChoiceTree.toSet) (fingerprint := "10510629318963973529")
+:::readable Fir.ChoiceTree.toSet_finitelyMany (pin := Fir.ChoiceTree.toSet) (fingerprint := "2935720627878860214")
 *Theorem: a tree of choices has finitely many results.* The set of the ways
 a tree's paths end has finitely many results: a leaf has at most one, and a
 choice of $`w` bits has $`2^w` subtrees, each with finitely many.

@@ -14,10 +14,10 @@ when the Lean changes under it.
 
 #doc (Manual) "The pointers of the core's values: readable blocks" =>
 
-:::moduleDocs (fingerprint := "16947091722005604509")
+:::moduleDocs (fingerprint := "16007648291897809029")
 :::
 
-:::readable Fir.PoisonOr.ptrsOf Fir.PoisonOr.mapPtr Fir.Core.Ty.ptrs Fir.Core.Ty.mapPtrs (fingerprint := "14569961712294482548")
+:::readable Fir.PoisonOr.ptrsOf Fir.PoisonOr.mapPtr Fir.Core.Ty.ptrs Fir.Core.Ty.mapPtrs (fingerprint := "5898179764076997420")
 *Definition: the pointers of a core value.* A value of $`\mathtt{ptr}\langle
 n\rangle` that is the pointer $`p` holds $`(n, p)`; poison and the values of
 integer and float types hold none. Replacing by $`f` gives $`f_n(p)`, or

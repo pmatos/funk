@@ -17,7 +17,7 @@ pins their fingerprint; the build fails when the Lean changes under it.
 :::moduleDocs (fingerprint := "7467467483758013189")
 :::
 
-:::readable Fir.Core.find_fpred_name Fir.Core.name_of_find_fpred (pin := Fir.Core.FPred.name) (pin := Fir.Core.FPred.all) (fingerprint := "4595827450233367391")
+:::readable Fir.Core.find_fpred_name Fir.Core.name_of_find_fpred (pin := Fir.Core.FPred.name) (pin := Fir.Core.FPred.all) (fingerprint := "13867665473772905769")
 *Theorems: a float predicate is found by its name, and only by it.* For
 every float predicate $`p`, looking $`\mathrm{name}(p)` up in the list of
 the fourteen float predicates finds $`p`; and for every string $`s`, a
@@ -35,7 +35,7 @@ that reading takes back put the attributes back together. The proof
 that the core dialect's text is lawful uses them for this op.
 :::
 
-:::readable Fir.Core.decodeFBin_eq Fir.Core.decodeFUnary_eq Fir.Core.decodeFma_eq (pin := Fir.Core.decodeFBin) (pin := Fir.Core.decodeFUnary) (pin := Fir.Core.decodeFma) (fingerprint := "17736563499205844938")
+:::readable Fir.Core.decodeFBin_eq Fir.Core.decodeFUnary_eq Fir.Core.decodeFma_eq (pin := Fir.Core.decodeFBin) (pin := Fir.Core.decodeFUnary) (pin := Fir.Core.decodeFma) (fingerprint := "3756660217162955262")
 *Theorems: a float op of arithmetic decodes only from its own spelling.*
 If $`\mathsf{fadd}`, $`\mathsf{fsub}`, $`\mathsf{fmul}`,
 $`\mathsf{fdiv}`, $`\mathsf{frem}` or $`\mathsf{fmod}` decodes from the attributes $`a^*` and the types $`t^*`
@@ -50,7 +50,7 @@ takes back put the attributes back together. The proof that every core op reads 
 for these ops.
 :::
 
-:::readable Fir.Core.decodeBitcast_eq (pin := Fir.Core.decodeBitcast) (fingerprint := "4884971220709374630")
+:::readable Fir.Core.decodeBitcast_eq (pin := Fir.Core.decodeBitcast) (fingerprint := "17639310656817296234")
 *Theorem: a bit cast decodes only from its own spelling.* If
 $`\mathtt{bitcast}` decodes from the attributes $`a^*` and the types
 $`t^*` and $`r^*`, the op it gives, in either direction, is written
@@ -58,7 +58,7 @@ $`\mathtt{bitcast}`, has no attributes, so $`a^*` is empty, and has the
 operand and result types $`t^*` and $`r^*`.
 :::
 
-:::readable Fir.Core.decodeIntToFloat_eq (pin := Fir.Core.decodeIntToFloat) (fingerprint := "16410626810055295878")
+:::readable Fir.Core.decodeIntToFloat_eq (pin := Fir.Core.decodeIntToFloat) (fingerprint := "17486050249969018976")
 *Theorem: a conversion from an integer decodes only from its own
 spelling.* If $`\mathtt{sitofp}` or $`\mathtt{uitofp}` decodes from the
 attributes $`a^*` and the types $`t^*` and $`r^*`, the op it gives is
@@ -67,7 +67,7 @@ $`[\mathtt{round}(r)]` for the mode $`r` it carries, and has the operand
 and result types $`t^*` and $`r^*`.
 :::
 
-:::readable Fir.Core.decodeFpext_eq Fir.Core.decodeFptrunc_eq (pin := Fir.Core.decodeFpext) (pin := Fir.Core.decodeFptrunc) (fingerprint := "12704849528167814365")
+:::readable Fir.Core.decodeFpext_eq Fir.Core.decodeFptrunc_eq (pin := Fir.Core.decodeFpext) (pin := Fir.Core.decodeFptrunc) (fingerprint := "16746252512186896610")
 *Theorems: a conversion between formats decodes only from its own
 spelling.* If $`\mathtt{fpext}` or $`\mathtt{fptrunc}` decodes from the
 attributes $`a^*` and the types $`t^*` and $`r^*`, the op it gives is
@@ -76,7 +76,7 @@ $`\mathtt{fpext}` and $`[\mathtt{round}(r)]` for $`\mathtt{fptrunc}` with the mo
 and has the operand and result types $`t^*` and $`r^*`.
 :::
 
-:::readable Fir.Core.decodeFloatToInt_eq (pin := Fir.Core.decodeFloatToInt) (fingerprint := "11384312465432405206")
+:::readable Fir.Core.decodeFloatToInt_eq (pin := Fir.Core.decodeFloatToInt) (fingerprint := "1601019727321301722")
 *Theorem: a conversion to an integer decodes only from its own spelling.*
 If $`\mathtt{fptosi}` or $`\mathtt{fptoui}` decodes from the attributes
 $`a^*` and the types $`t^*` and $`r^*`, the op it gives is written with

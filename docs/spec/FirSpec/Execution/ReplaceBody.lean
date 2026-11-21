@@ -14,10 +14,10 @@ when the Lean changes under it.
 
 #doc (Manual) "Replacing a body: readable blocks" =>
 
-:::moduleDocs (fingerprint := "14231632584969205328")
+:::moduleDocs (fingerprint := "689416677316748861")
 :::
 
-:::readable Fir.Func.replaceBody Fir.Item.replaceBody Fir.Module.replaceBody (fingerprint := "9923372320846237749")
+:::readable Fir.Func.replaceBody Fir.Item.replaceBody Fir.Module.replaceBody (fingerprint := "1574474257110430692")
 *Definition: replacing the body of the function with a symbol.* For a
 symbol $`s` and a region $`b`, $`f[s \leftarrow b]` is the function $`f`
 with the body $`b` when the symbol of $`f` is $`s`, and $`f` unchanged
