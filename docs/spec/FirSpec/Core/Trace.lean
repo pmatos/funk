@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "The core's traced runs: readable blocks" =>
 
-:::moduleDocs (fingerprint := "4887261015418406495")
+:::moduleDocs (fingerprint := "12943859493615772163")
 :::
 
 :::readable Fir.Core.instDialectTrace Fir.Core.liftsMem Fir.Core.instInhabitedAnswer (fingerprint := "9825455798937681785")
@@ -31,7 +31,10 @@ memories, over the spec's traced runs:
 
 $$`\vec{v} \sqsubseteq \vec{v}' \implies \mathrm{observed}(f, \vec{v}) \sqsubseteq \mathrm{observed}(f, \vec{v}')`
 
-calls and recursion included. So at every world, each outcome of $`f` on
+calls and recursion included, divergence too. The traced layer's own
+theorem for a dialect that shows events proves it, with no hypothesis: the
+core's ops are monotone in the traced layer and have finitely many
+outcomes given the world's answers. So at every world, each outcome of $`f` on
 $`\vec{v}'` is allowed by an outcome of $`f` on $`\vec{v}`, which shows
 the same answers.
 :::
@@ -46,9 +49,14 @@ memories: every core op has finitely many outcomes. So it is at every
 world.
 :::
 
-:::readable Fir.Core.traceOpsMonotone (fingerprint := "8322739222347623941")
+:::readable Fir.Core.traceOpsMonotone Fir.Core.opsTraceFinite (fingerprint := "16856423220812675737")
 *Theorem: the core meets the traced obligation.* Every core function's
 ops that run by their own rule are monotone in the core's traced
 semantics, wherever a run names the core's memories: each is monotone with memory, and
 the lift onto the traced state keeps it.
+
+*Theorem: the core meets the hypothesis of divergence.* Every core op
+that runs by its own rule has finitely many outcomes in the core's traced
+semantics, given the world's answers: it has finitely many with memory,
+and the lift keeps it.
 :::

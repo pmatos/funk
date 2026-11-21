@@ -22,7 +22,11 @@ and at every world, with no hypothesis beyond those they have with memory:
   sum has finitely many outcomes.
 
 Its ops meet the obligation of the traced layer for a dialect that shows
-events (`Fir.Execution.TraceObligations`), as the core's do.
+events (`Fir.Execution.TraceObligations`), and the hypothesis of that
+layer's divergence (`Fir.Execution.TraceFinite`), as the core's do. So
+refined arguments is proved by the traced layer's own theorem
+(`Fir.Execution.TraceDiverge`), and congruence in the callee from what
+holds with memory until stage 3c of #233.
 -/
 
 namespace Fir.Gpu
@@ -52,19 +56,29 @@ theorem traceOpsMonotone (g : Func CoreGpu) :
     g.TraceOpsMonotone (DialectTrace.Acts CoreGpu) (TraceState N (unitsOf lay)) :=
   Func.TraceOpsMonotone.ofMem lay ρ L (memOpsMonotone lay ρ L g)
 
+/-- Every op of the sum that runs by its own rule has finitely many outcomes
+in the sum's traced semantics, given the world's answers, wherever a run
+names the sum's memories: each has finitely many with memory, and the lift
+onto the traced state keeps it. -/
+theorem opsTraceFinite :
+    letI := DialectTrace.traceAt (d := CoreGpu) lay ρ L
+    OpsTraceFinite CoreGpu (DialectTrace.Event CoreGpu) (DialectTrace.Answer CoreGpu)
+      (TraceState N (unitsOf lay)) :=
+  OpsTraceFinite.ofMem lay ρ L (opsFinite lay ρ L)
+
 /-- Refined arguments over traced runs: on arguments that refine others, the
 spec's traced runs of every function of every module of the sum, a module
 of a nested table included, refine its traced runs on those others, the end
 of each return included, calls and recursion included, wherever a run names
-the sum's memories. -/
+the sum's memories. It is proved by the traced layer's own theorem for a
+dialect that shows events: the sum's ops are monotone in the traced layer
+and have finitely many outcomes given the world's answers. -/
 theorem trace_args_isRefinedBy (M : Module CoreGpu) (f : Func CoreGpu)
     {a a' : HVector toType (f.params.map (·.2))} (h : a.Forall₂ TyRefinement.IsRefinedBy a') :
     traceObservable (f.observedRuns lay ρ L μ M a) ⊑
       traceObservable (f.observedRuns lay ρ L μ M a') :=
-  letI := DialectMemDenote.denoteAt (d := CoreGpu) lay ρ L
-  Func.traceRuns_isRefinedBy_of_from lay ρ L μ _ isRefinedBy_trans
-    (Func.memRunsFrom_args_isRefinedBy M (fun g _ => memOpsMonotone lay ρ L g) f
-      (memOpsMonotone lay ρ L f) h (Memory.Memories.isRefinedBy_refl _))
+  Func.traceRuns_isRefinedBy_of_args lay ρ L μ _ isRefinedBy_trans (opsTraceFinite lay ρ L)
+    (fun g _ => traceOpsMonotone lay ρ L g) (traceOpsMonotone lay ρ L f) h
 
 /-- Refined arguments over traced runs, at every world: on arguments that
 refine others, each outcome that the spec's traced runs of a function of the
