@@ -217,7 +217,9 @@ fn with_no_stack_limit_a_data_limit_bounds_a_recursive_run() {
 fn the_report_shows_control_bytes_in_the_program_s_path_escaped() {
     let exe = build("recursion-path", &recursive());
     let odd = exe.with_file_name("ever\nmore");
-    std::fs::copy(&exe, &odd).unwrap();
+    // A copy would open the new file for writing in this process, which a
+    // concurrent fork can make "Text file busy"; see `write_executable`.
+    std::fs::hard_link(&exe, &odd).unwrap();
     let shown = odd.display().to_string().replace('\n', "\\x0a");
     ran_out(
         &run_limited(LIMIT, &odd, &["@forever", "0"]),

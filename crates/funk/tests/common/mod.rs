@@ -41,6 +41,29 @@ pub fn file(name: &str, text: &str) -> String {
     path.to_string_lossy().into_owned()
 }
 
+/// Writes `contents` to a new executable file at `path`.
+///
+/// A child process writes the file, never the test's own process. The tests
+/// in one binary run on parallel threads. While this process holds a file
+/// open for writing, a child that another thread forks at that moment holds
+/// it open too, until that child execs. Running the file in that window
+/// fails with "Text file busy" (ETXTBSY). Renaming the file does not help,
+/// since the open descriptor follows the file, not its name.
+pub fn write_executable(path: &Path, contents: &str) {
+    let out = Command::new("sh")
+        .args(["-c", "printf %s \"$1\" > \"$0\""])
+        .arg(path)
+        .arg(contents)
+        .output()
+        .unwrap();
+    assert!(out.status.success(), "{}", text(&out.stderr));
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        std::fs::set_permissions(path, std::fs::Permissions::from_mode(0o755)).unwrap();
+    }
+}
+
 /// Runs funk with `args` in the current directory and `stdin` as input.
 pub fn funk(args: &[&str], stdin: &str) -> Output {
     funk_in(Path::new("."), args, stdin)

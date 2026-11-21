@@ -6,7 +6,7 @@ mod common;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Output};
 
-use common::{DEAD, SEVEN, dir, expect, funk, funk_in, text, try_build};
+use common::{DEAD, SEVEN, dir, expect, funk, funk_in, text, try_build, write_executable};
 
 /// A function with a parameter of `i7`, a value of `i33` and one of `i256`.
 const ODD: &str = "func @odd(%a: i7) -> i7 {\n^entry:\n  %c: i33 = const 1 @1\n  %w: i256 = const 2 @2\n  ret %a @3\n}\n\nlocs {\n  @1 = \"w.c\":1:1 to 1:5\n  @2 = name(\"wide\")\n  @3 = unknown\n}\n";
@@ -279,9 +279,7 @@ fn build_with_a_warning(tool: &str) -> (Output, PathBuf) {
         "#!/bin/sh\n'{}' \"$@\" || exit\necho '{tool}: warning: shim' >&2\n",
         real.display()
     );
-    std::fs::write(&shim, script).unwrap();
-    use std::os::unix::fs::PermissionsExt;
-    std::fs::set_permissions(&shim, std::fs::Permissions::from_mode(0o755)).unwrap();
+    write_executable(&shim, &script);
     let src = dir.join("seven.fir");
     std::fs::write(&src, SEVEN).unwrap();
     let exe = dir.join("seven");
