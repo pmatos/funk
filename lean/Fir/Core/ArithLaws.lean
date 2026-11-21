@@ -13,9 +13,10 @@ operands with no poison. Every op that runs by a rule of its own, which is
 every core op but `call`, must also be total, with some outcome on every
 operand vector, and monotone, so that refining its operands refines what it
 does. Each proof is about fir's execution rules, read in the set monad, so
-these sections cover the ops that touch no memory: `alloca`, `load` and
-`store` have no rule there and meet their obligations with memory, each by
-its own rule. With every
+these sections cover the ops that touch no memory and read no item of the
+run: `alloca`, the loads and stores, `fieldAddr`, `memCopy` and `memSet`
+have no rule there and meet their obligations with memory, each by its own
+rule (`docs/decisions/semantics-effects.md#soundness`). With every
 obligation met, the core dialect is lawful with memory, and refinement is
 compositional: run on arguments that refine others, every function's
 behaviour refines its behaviour on those others, calls and recursion

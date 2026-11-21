@@ -127,7 +127,7 @@ def decodeLoop : List (DFrame d) → Except ParseError (List (Item d))
       match Text.decodeAggregate kindPos name params results attrs body with
       | .ok i => decodeLoop (.items (i :: done) sis :: fs)
       | .error e => .error e
-    else if kind = "data" then
+    else if kind = "global" then
       match Text.decodeGlobal kindPos name params results attrs body with
       | .ok i => decodeLoop (.items (i :: done) sis :: fs)
       | .error e => .error e
@@ -136,7 +136,7 @@ def decodeLoop : List (DFrame d) → Except ParseError (List (Item d))
       | .ok i => decodeLoop (.items (i :: done) sis :: fs)
       | .error e => .error e
     else errorAt kindPos ("unknown item kind " ++ kind ++
-      ": the kinds are func, module, aggregate, data and the words of dialects")
+      ": the kinds are func, module, aggregate, global and the words of dialects")
   | _ => .ok []
 termination_by fs => dWeight fs
 decreasing_by
@@ -178,11 +178,11 @@ theorem decodeItem_mk (kind : String) (kindPos : TextPos) (name : String) (param
         | .blocks (_ :: _) => errorAt kindPos "a module's body holds items, not blocks"
         | .items ds is => do pure (.module name ds (← Text.decodeItems is))
       else if kind = "aggregate" then Text.decodeAggregate kindPos name params results attrs body
-      else if kind = "data" then Text.decodeGlobal kindPos name params results attrs body
+      else if kind = "global" then Text.decodeGlobal kindPos name params results attrs body
       else if isDialectWord kind then
         Text.decodeDialectItem kind kindPos name params results attrs body
       else errorAt kindPos ("unknown item kind " ++ kind ++
-        ": the kinds are func, module, aggregate, data and the words of dialects") := by
+        ": the kinds are func, module, aggregate, global and the words of dialects") := by
   rw [Text.decodeItem.eq_def]
   rfl
 

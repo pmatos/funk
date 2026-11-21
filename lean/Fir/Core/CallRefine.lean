@@ -56,10 +56,9 @@ namespace Fir.Core
 
 /-- Every core terminator and every core op with no callee is monotone, at
 every width: every core op but `call`. `alloca`, the loads and stores,
-of an integer, a pointer or a float, `memCopy` and `memSet` have no rule in the set
-monad, so no
-outcome there, and are monotone in it at once; each is monotone with
-memory by its own rule. -/
+of an integer, a pointer or a float, `fieldAddr`, `memCopy` and `memSet`
+have no rule in the set monad, so no outcome there, and are monotone in it
+at once; each is monotone with memory by its own rule. -/
 theorem Op.monotone_all : (op : Op) →
     Fir.isTerminator (d := CoreDialect) op = true ∨ callee? (d := CoreDialect) op = none →
     OpMonotone (d := CoreDialect) op

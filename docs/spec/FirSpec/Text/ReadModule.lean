@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "The module read back: readable blocks" =>
 
-:::moduleDocs (fingerprint := "10038798888393306731")
+:::moduleDocs (fingerprint := "14901324028528581880")
 :::
 
 :::readable Fir.readDialectName_reads Fir.readDialects_reads (pin := Fir.Text.readDialectName) (pin := Fir.Text.readDialects) (pin := Fir.dialectsTokens) (fingerprint := "4869094606769137639")
@@ -38,13 +38,13 @@ until no comma follows. An entry writes a type, so the reader of types
 reads it back.
 :::
 
-:::readable Fir.Item.kind Fir.Item.tokens_eq Fir.head_items Fir.isDialectWord_not_reserved Fir.Item.TypesWritable Fir.Item.TypesWritableList Fir.Item.typesWritableList_iff Fir.itemsEnd (pin := Fir.Item.tokens) (pin := Fir.Func.types) (pin := Fir.DialectItem.types) (fingerprint := "3624157075979933388")
+:::readable Fir.Item.kind Fir.Item.tokens_eq Fir.head_items Fir.isDialectWord_not_reserved Fir.Item.TypesWritable Fir.Item.TypesWritableList Fir.Item.typesWritableList_iff Fir.itemsEnd (pin := Fir.Item.tokens) (pin := Fir.Func.types) (pin := Fir.DialectItem.types) (fingerprint := "13743465840238432287")
 *Definitions: an item's kind, and the types it writes.* The kind of an
 item is `func` for a function, `module` for a nested module, `aggregate`
-for an aggregate's layout, `data` for a global, and its own kind for an item of a dialect's
+for an aggregate's layout, `global` for a global, and its own kind for an item of a dialect's
 kind, and the tokens of an item start with $`\mathsf{word}` of its kind.
 So the tokens of a list of items, then more tokens, start with the word
-`func`, the word `module`, the word `aggregate`, the word `data` or a word
+`func`, the word `module`, the word `aggregate`, the word `global` or a word
 of a dialect, or,
 when the list is empty, as the tokens after it do. An item
 writes its types as types when, for a function $`f`, $`\mathrm{tyattr}(t)`
@@ -74,7 +74,7 @@ with a {ref "The-fir-specification--Text-format--Grammar"}[text format]:
 
 A function, and an item of a dialect's kind, read back by the theorems of
 the previous section, and so do an aggregate's layout and a global, as
-the items of kind `aggregate` and `data` that write them. A nested
+the items of kind `aggregate` and `global` that write them. A nested
 module reads back as its symbol, `(`, no parameters since `)` follows, `)`,
 no results and no attributes since `{` follows, `{`, then its body: no
 blocks when `}` follows, which is the tree of a module with no dialect set
@@ -104,7 +104,7 @@ $$`\begin{aligned} & \mathrm{toks}(\mathit{ts}) = \mathrm{tokens}(m)~\mathsf{eof
 
 Here $`\mathrm{readmodule}` is the reader of a module. This is the second
 step of the round trip. The reader reads the dialect set first, which the
-word `layout`, an item's kind, `func`, `module`, `aggregate`, `data` or a
+word `layout`, an item's kind, `func`, `module`, `aggregate`, `global` or a
 word of a dialect, or
 the table's `locs` ends,
 then the data layout, which an item's kind or `locs` ends. Of all the readers,

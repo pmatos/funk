@@ -387,7 +387,7 @@ theorem Aggregate.WellFormed.tokens {a : Aggregate d} (h : a.WellFormed) :
 omit [DialectSignature d] in
 /-- Every token of a global can be written. -/
 theorem Global.tokens_writable (g : Global) : ∀ t ∈ (g.item (d := d)).tokens, t.Writable :=
-  DialectItem.tokens_writable (i := g.item) (by show isWord "data"; decide) (fun _ h => by cases h)
+  DialectItem.tokens_writable (i := g.item) (by show isWord "global"; decide) (fun _ h => by cases h)
     (fun _ h => by simp [Global.item, DialectItem.types] at h)
     (Attr.AllWritable.of_mem g.attr_writable)
 

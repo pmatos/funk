@@ -18,7 +18,8 @@ its grid (`WorkItem.Valid`) has each id below its size and each number below
 A question of `gpu` takes no operand, reads, writes and allocates in no
 memory, is never UB and never gives poison. So it runs by its rule in the
 set monad and keeps the memories, at every naming of its memories: it is
-tied to the set monad, as the core's ops that touch no memory are.
+tied to the set monad, as the core's ops that touch no memory and read
+no item of the run are.
 
 `gpu.work_group_alloca` allocates as `alloca` does (the section on stack
 allocation), in the memory of its result, with the units and the alignment

@@ -1,13 +1,13 @@
 layout memory(1, unit(16), pointer(32), little)
 
-data @wide() memory(1) size(8) align(2) constant units(65535, 1) addr(@wide, 1) addr(@narrow) {
+global @wide() memory(1) size(8) align(2) const units(65535, 1) addr(@wide, 1) addr(@narrow) {
 }
 
-data @narrow() size(8) align(8) {
+global @narrow() size(8) align(8) {
 }
 
 module @dev() {
-  data @cell() memory(1) size(2) align(2) export addr(@cell) {
+  global @cell() memory(1) size(2) align(2) export addr(@cell) {
   }
 
 }
