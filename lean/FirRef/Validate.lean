@@ -179,12 +179,21 @@ def funcUnitWidths (f : Func d) : List (Nat × Nat) :=
 
 @[csimp] theorem unitWidths_eq_funcUnitWidths : @Func.unitWidths = @funcUnitWidths := rfl
 
+/-- `Func.addrWidths`, compiled after `allBlocks_eq_allBlocks`, as
+`funcTypes` is. -/
+def funcAddrWidths (f : Func d) : List (Nat × Nat) :=
+  (f.allBlocks.flatMap (·.body)).flatMap fun o => opAddrs o.op
+
+@[csimp] theorem addrWidths_eq_funcAddrWidths : @Func.addrWidths = @funcAddrWidths := rfl
+
 /-- `SymbolTable.memoryProblems`, compiled after `types_eq_funcTypes`,
-`attrTypes_eq_funcAttrTypes` and `unitWidths_eq_funcUnitWidths`. -/
+`attrTypes_eq_funcAttrTypes`, `unitWidths_eq_funcUnitWidths` and
+`addrWidths_eq_funcAddrWidths`. -/
 def tableMemoryProblems (l : DataLayout) (t : SymbolTable d) : List Problem :=
   t.funcs.filterMap (fun f => memoryProblem f.name (l.missing (f.types ++ f.attrTypes))) ++
   t.dialectItems.filterMap (fun i => memoryProblem i.name (l.missing i.types)) ++
-  t.funcs.filterMap (fun f => unitsProblem l f.name f.unitWidths)
+  t.funcs.filterMap (fun f => unitsProblem l f.name f.unitWidths) ++
+  t.funcs.filterMap (fun f => addrsProblem l f.name f.addrWidths)
 
 @[csimp] theorem memoryProblems_eq_tableMemoryProblems :
     @SymbolTable.memoryProblems = @tableMemoryProblems := rfl

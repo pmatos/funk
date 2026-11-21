@@ -14,10 +14,10 @@ changes under it.
 
 #doc (Manual) "A load declared without a read: readable blocks" =>
 
-:::moduleDocs (fingerprint := "15999591516898269711")
+:::moduleDocs (fingerprint := "12581419916932827577")
 :::
 
-:::readable Fir.Core.Unlawful.loadNoRead Fir.Core.Unlawful.load_typesValid (pin := Fir.Core.Op.effects) (fingerprint := "11503720423451268421")
+:::readable Fir.Core.Unlawful.loadNoRead Fir.Core.Unlawful.load_typesValid (pin := Fir.Core.Op.effects) (fingerprint := "5652815387741734217")
 *Definition: a declaration without a read.* The declaration gives every
 core op its
 {ref "The-fir-specification--Execution--Core-effects"}[effects],

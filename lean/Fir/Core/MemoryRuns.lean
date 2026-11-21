@@ -8,17 +8,17 @@ import Fir.Execution.MemoryPoison
 # Every valid core function, with memory
 
 Every core op but `alloca`, the loads `load`, `loadPtr` and `loadFloat`,
-the stores `store`, `storePtr` and `storeFloat`, `memCopy` and `memSet`
-touches no memory, and of those every op but `fieldAddr` reads no item of
+the stores `store`, `storePtr` and `storeFloat`, `memCopy`, `memSet`,
+`ptrExpose` and `ptrFromInt` touches no memory, and of those every op but `fieldAddr` reads no item of
 the run either. Each op that touches no memory and reads no item runs with
 memory by its rule in the set monad and keeps the memories, so it is tied
 (the section on the core's rules with memory). So the core's obligations
 with memory follow op by op (`Core.Op.memCases`), each from the op's own
 tie and what the op meets in the set monad, and for `alloca`, the loads and
-stores, `fieldAddr`, `memCopy` and `memSet` from their own rules with
-memory (the sections on the stack allocation, load, store, pointer load,
-pointer store, float load, float store, field address, copy and move, and
-fill obligations):
+stores, `fieldAddr`, `memCopy`, `memSet`, `ptrExpose` and `ptrFromInt`
+from their own rules with memory (the sections on the stack allocation,
+load, store, pointer load, pointer store, float load, float store, field
+address, copy and move, fill, and pointers as integers obligations):
 
 * _the core dialect is lawful in its totality_: each core terminator and
   each core op with no callee is total with memory: total in the set monad
@@ -35,7 +35,8 @@ module with memory_, wherever a run names the core's memories: it runs
 within the module, and each core terminator is tied. Every core op that runs
 by its own rule is monotone with memory at every width, valid or not. No
 theorem below asks that the core lift the set monad: `alloca`, the loads
-and stores, `fieldAddr`, `memCopy` and `memSet`, which have no tie and are
+and stores, `fieldAddr`, `memCopy`, `memSet`, `ptrExpose` and
+`ptrFromInt`, which have no tie and are
 not terminators, join them with their own cases of monotonicity with memory
 and their own totality.
 
@@ -65,7 +66,8 @@ callee: every core op has finitely many outcomes (the section on congruence
 in a core callee).
 
 These are the core's guarantees, for the whole core dialect, `alloca`, the
-loads and stores, `fieldAddr`, `memCopy` and `memSet` included: the three
+loads and stores, `fieldAddr`, `memCopy`, `memSet`, `ptrExpose` and
+`ptrFromInt` included: the three
 lawful classes with memory and the lawful class of its effects, progress
 and no stuck path, refined arguments, and congruence in the callee from
 given memories. The statements without memory cover only
@@ -91,7 +93,8 @@ namespace Fir
 its own rule has an outcome from any memories, at every layout and naming:
 each op that touches no memory and reads no item of the run from its own
 tie and its totality in the set monad, and `alloca`, the loads and stores,
-`fieldAddr`, `memCopy` and `memSet` each by its own rule. -/
+`fieldAddr`, `memCopy`, `memSet`, `ptrExpose` and `ptrFromInt` each by
+its own rule. -/
 instance Core.lawfulDialectTotal : LawfulDialectTotal CoreDialect :=
   ⟨fun op _ hc => Core.Op.memCases (P := fun op =>
       (isTerminator (d := CoreDialect) op = true ∨ callee? (d := CoreDialect) op = none) →
@@ -107,13 +110,15 @@ instance Core.lawfulDialectTotal : LawfulDialectTotal CoreDialect :=
     (fun o e m a n _ => Core.storeFloat_memTotal o e m a n)
     (fun s j n w _ => Core.fieldAddr_memTotal s j n w)
     (fun k o w n _ => Core.memCopy_memTotal k o w n)
-    (fun o v w n _ => Core.memSet_memTotal o v w n) hc⟩
+    (fun o v w n _ => Core.memSet_memTotal o v w n)
+    (fun n w _ => Core.ptrExpose_memTotal n w) (fun n w _ => Core.ptrFromInt_memTotal n w) hc⟩
 
 /-- The core dialect is lawful in its monotonicity: each core op that runs
 by its own rule is monotone with memory, at every layout and naming: each op
 that touches no memory and reads no item of the run from its own tie and
 its monotonicity in the set monad, and `alloca`, the loads and stores,
-`fieldAddr`, `memCopy` and `memSet` each by its own rule. -/
+`fieldAddr`, `memCopy`, `memSet`, `ptrExpose` and `ptrFromInt` each by
+its own rule. -/
 instance Core.lawfulDialectMonotone : LawfulDialectMonotone CoreDialect :=
   ⟨fun op _ hc => Core.Op.memCases (P := fun op =>
       (isTerminator (d := CoreDialect) op = true ∨ callee? (d := CoreDialect) op = none) →
@@ -129,14 +134,16 @@ instance Core.lawfulDialectMonotone : LawfulDialectMonotone CoreDialect :=
     (fun o e m a n _ => Core.storeFloat_memMonotone o e m a n)
     (fun s j n w _ => Core.fieldAddr_memMonotone s j n w)
     (fun k o w n _ => Core.memCopy_memMonotone k o w n)
-    (fun o v w n _ => Core.memSet_memMonotone o v w n) hc⟩
+    (fun o v w n _ => Core.memSet_memMonotone o v w n)
+    (fun n w _ => Core.ptrExpose_memMonotone n w) (fun n w _ => Core.ptrFromInt_memMonotone n w) hc⟩
 
 /-- The core dialect is lawful in its poison with memory: each valid core op
 instance that propagates poison propagates it with memory, and returns a
 result on some defined operands, at every layout and naming: each op that
 touches no memory and reads no item of the run from its own tie and its
 poison obligations in the set monad, and `alloca`, the loads and stores,
-`fieldAddr`, `memCopy` and `memSet` each by its own rule. -/
+`fieldAddr`, `memCopy`, `memSet`, `ptrExpose` and `ptrFromInt` each by
+its own rule. -/
 instance Core.lawfulDialectMemPoison : LawfulDialectMemPoison CoreDialect where
   poison_isRefinedBy _ := Core.Ty.poison_isRefinedBy
   propagates op _ hc := Core.Op.memCases (P := fun op =>
@@ -152,7 +159,8 @@ instance Core.lawfulDialectMemPoison : LawfulDialectMemPoison CoreDialect where
     (fun o e m a n _ => Core.storeFloat_memPropagates o e m a n)
     (fun s j n w _ => Core.fieldAddr_memPropagates s j n w)
     (fun k o w n _ => Core.memCopy_memPropagates k o w n)
-    (fun o v w n _ => Core.memSet_memPropagates o v w n) hc
+    (fun o v w n _ => Core.memSet_memPropagates o v w n) (fun _ _ h => nomatch h)
+    (fun n w _ => Core.ptrFromInt_memPropagates n w) hc
   returnsOnDefined op hv hc := Core.Op.memCases (P := fun op => TypesValid (d := CoreDialect) op →
       poisonClass (d := CoreDialect) op = .propagates → MemReturnsOnDefined (d := CoreDialect) op) op
     (fun op hm hi hv hc => MemReturnsOnDefined.ofLifts (Core.Op.liftsSetM op hm hi)
@@ -166,7 +174,8 @@ instance Core.lawfulDialectMemPoison : LawfulDialectMemPoison CoreDialect where
     (fun o e m a n _ _ => Core.storeFloat_memReturnsOnDefined o e m a n)
     (fun s j n w _ _ => Core.fieldAddr_memReturnsOnDefined s j n w)
     (fun k o w n _ _ => Core.memCopy_memReturnsOnDefined k o w n)
-    (fun o v w n _ _ => Core.memSet_memReturnsOnDefined o v w n) hv hc
+    (fun o v w n _ _ => Core.memSet_memReturnsOnDefined o v w n) (fun _ _ _ h => nomatch h)
+    (fun n w _ _ => Core.ptrFromInt_memReturnsOnDefined n w) hv hc
 
 namespace Core
 
@@ -190,7 +199,8 @@ theorem Op.liftsSetM_of_terminator {op : Op} (h : Fir.isTerminator (d := CoreDia
 /-- Every core terminator and every core op with no callee is monotone with
 memory, at every width, layout and naming: every core op but `call`. Each
 tied op is monotone in the set monad, and `alloca`, the loads and stores,
-`fieldAddr`, `memCopy` and `memSet` are monotone by their own rules. -/
+`fieldAddr`, `memCopy`, `memSet`, `ptrExpose` and `ptrFromInt` are
+monotone by their own rules. -/
 theorem Op.memMonotone_all (op : Op)
     (h : Fir.isTerminator (d := CoreDialect) op = true ∨ callee? (d := CoreDialect) op = none) :
     MemMonotone (d := CoreDialect) op :=
@@ -206,7 +216,8 @@ theorem Op.memMonotone_all (op : Op)
     (fun o e m a n _ => storeFloat_memMonotone o e m a n)
     (fun s j n w _ => fieldAddr_memMonotone s j n w)
     (fun k o w n _ => memCopy_memMonotone k o w n)
-    (fun o v w n _ => memSet_memMonotone o v w n) h
+    (fun o v w n _ => memSet_memMonotone o v w n)
+    (fun n w _ => ptrExpose_memMonotone n w) (fun n w _ => ptrFromInt_memMonotone n w) h
 
 /-- A core function that runs within a module runs within it with memory,
 wherever a run names the core's memories: each of its terminators is tied. -/

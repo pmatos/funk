@@ -308,6 +308,9 @@ instance instDialectValidation [DialectValidation base] [DialectValidation (base
   opUnits
     | .inl o => opUnits o
     | .inr o => opUnits (d := base.over e) o
+  opAddrs
+    | .inl o => opAddrs o
+    | .inr o => opAddrs (d := base.over e) o
   validItem := ValidItem
   fieldShape lay n
     | .inl t => fieldShape lay n t

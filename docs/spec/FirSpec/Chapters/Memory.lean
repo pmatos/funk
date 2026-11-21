@@ -165,6 +165,8 @@ event.
 
 {includeReadable "." Fir.Core.MemSet "Fill rules" FirSpec.Core.MemSet (level := 1)}
 
+{includeReadable "." Fir.Core.PtrInt "Rules of pointers as integers" FirSpec.Core.PtrInt (level := 1)}
+
 {includeReadable "." Fir.Core.FieldAddr "Field address rules" FirSpec.Core.FieldAddr (level := 1)}
 
 {includeReadable "." Fir.Core.MemRules "The core's rules with memory" FirSpec.Core.MemRules (level := 1)}
@@ -194,6 +196,8 @@ event.
 {includeReadable "." Fir.Core.MemSetLaws "Fill obligations" FirSpec.Core.MemSetLaws (level := 1)}
 
 {includeReadable "." Fir.Core.MemSetPoison "Fill poison obligations" FirSpec.Core.MemSetPoison (level := 1)}
+
+{includeReadable "." Fir.Core.PtrIntLaws "Pointers as integers obligations" FirSpec.Core.PtrIntLaws (level := 1)}
 
 {includeReadable "." Fir.Core.FieldAddrLaws "Field address obligations" FirSpec.Core.FieldAddrLaws (level := 1)}
 

@@ -50,6 +50,8 @@ module's kernels included, and the modes that `fir-ref run` walks.
 
 {includeReadable "." Fir.Gpu.Runs "Runs of the core and gpu" FirSpec.Gpu.Runs (level := 1)}
 
+{includeReadable "." Fir.Gpu.AddressLaws "Gpu addresses and declared allocations" FirSpec.Gpu.AddressLaws (level := 1)}
+
 {includeReadable "." Fir.Gpu.Modes "Modes of the core and gpu" FirSpec.Gpu.Modes (level := 1)}
 
 {includeReadable "." Fir.Gpu.Trace "Traced runs of the core and gpu" FirSpec.Gpu.Trace (level := 1)}
