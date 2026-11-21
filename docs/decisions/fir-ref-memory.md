@@ -24,8 +24,9 @@ the module of its table (`Module.nest`), with its host's layout. Everything
 below holds of them as of the core's.
 
 `Core.scripted`, `Core.exhaustive` and `Core.sampled` walk `Core.modeTree`:
-the run in the state layer over the tree of choices, from the empty memories,
-with the memories dropped at the end of each path. A mode runs a module with
+the run in the state layer over the tree of choices, from the memories that
+hold the globals of the module's own table (semantics-m1-globals.md), with
+the memories dropped at the end of each path. A mode runs a module with
 its own layout: each memory `n` of the run has `M.layout.entry n`, its entry
 in the module's data layout, which gives its unit, byte order and pointer
 width (ADR-2026-11-12-1821, ADR-2026-11-13-0906), and the run names the

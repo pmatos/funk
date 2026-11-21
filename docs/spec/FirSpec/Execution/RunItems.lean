@@ -14,10 +14,10 @@ when the Lean changes under it.
 
 #doc (Manual) "The items a run gives each op: readable blocks" =>
 
-:::moduleDocs (fingerprint := "17615802389443933027")
+:::moduleDocs (fingerprint := "3735612867492249398")
 :::
 
-:::readable Fir.FieldPlace Fir.LayoutPlace Fir.RunItems Fir.RunItems.empty Fir.RunItems.withAddrs (pin := Fir.Memory.Policy.canonical) (fingerprint := "17370728466934174662")
+:::readable Fir.FieldPlace Fir.LayoutPlace Fir.StartAlloc Fir.RunItems Fir.RunItems.empty Fir.RunItems.withAddrs (pin := Fir.Memory.Policy.canonical) (fingerprint := "3385168423609539833")
 *Definition: the items a run gives each op.* An op may name an item of
 its module by its symbol, as `call` names a function. A run gives each
 op's rule the items that ops name, beside each memory's layout entry (the
@@ -38,6 +38,16 @@ spec's runs replace it by every policy in turn
 ({ref "The-fir-specification--Memory--Runs-under-every-address-policy"}[runs under every policy]):
 $`L[\mathrm{addrs} := g]` is $`L` with the policies $`g`.
 
+Last, the record lists the allocations the run starts with,
+$`L.\mathrm{starts}`, in order, none unless the run says otherwise. A
+starting allocation $`(n, k, \alpha, c, \vec{x})` lives in the memory
+that the data layout numbers $`n`: it has the kind $`k`, the alignment
+$`\alpha`, it is constant when $`c` is, and $`\vec{x}_u` are its units in
+a memory of $`u`-bit units. Each global of the run's table gives one
+({ref "The-fir-specification--Memory--The-memories-a-run-starts-with"}[the memories a run starts with]);
+a function's address will give another, of the kind `function` (the
+human's ruling of 2026-11-19 on #235).
+
 The record is the same for every dialect: its numbers count units of a
 memory of the module, and a step is already rounded, so no rule needs a
 dialect's types to read it, and a sum gives it to both its sides as it
@@ -49,7 +59,7 @@ field of this record, and the statements of those obligations and
 guarantees stay as they are.
 :::
 
-:::readable Fir.Field.place Fir.Aggregate.place Fir.RunItems.ofTable Fir.Module.runItems (pin := Fir.Field.shape) (pin := Fir.roundUp) (fingerprint := "3512774839403646024")
+:::readable Fir.Field.place Fir.Aggregate.place Fir.Global.startId? Fir.InitPiece.startUnits Fir.Global.start Fir.RunItems.ofTable Fir.Module.runItems (pin := Fir.Field.shape) (pin := Fir.roundUp) (pin := Fir.InitPiece.unitCount) (pin := Fir.Memory.encodePtr) (fingerprint := "4286216880147342255")
 *Definition: the items of a table.* In the memory $`n` of a module whose
 data layout is $`l`, a field of the type $`t` is placed at its offset,
 with its count, and with the step $`\mathrm{roundUp}(u, a)`, where one
@@ -57,8 +67,25 @@ value of $`t` takes $`u` units aligned to $`a`; a type that may not be a
 field has no units, and so a step of $`0`. A layout is placed by placing
 each of its fields in its own memory.
 
+A global $`g` of $`T` starts as the allocation of kind `global` in its
+memory $`n`, with its alignment and its constness. Its units are its
+initializer's pieces in order, cut to its size $`S`, then zeros up to
+$`S` (the human's ruling of 2026-11-20 on #237, Q1): $`\mathsf{units}(U,
+\ldots)` gives each $`U` cut to $`u` bits, $`\mathsf{zeros}(N)` gives
+$`N` zeros, and $`\mathsf{addr}(@s, K)` gives the pointer to the global
+$`@s` of $`T` plus $`K` as a store of it writes it, $`\mathrm{encodePtr}`
+of the memory $`m` of $`@s`, in the $`\mathrm{unitCount}` units that
+validation counts, the units of $`m`'s pointer width in memory $`n`. That
+pointer's id is $`@s`'s place among the globals of $`T` in memory $`m`,
+counted from $`0`, which is where the run starts it. An address of a
+symbol that names no global of $`T`, which validation rejects, gives no
+units.
+
 A run of a function of the symbol table $`T` gives each op the first
-layout of $`T` with each symbol, placed, under the canonical policy. A
+layout of $`T` with each symbol, placed, under the canonical policy, and
+starts with the allocation of each global of $`T`, in $`T`'s order: the
+globals of its own table, not those of a table nested in it or around it
+(the human's ruling of 2026-11-20 on #237, Q3). A
 module's own items,
 $`\mathrm{items}(M)`, are those of its own table, in its data layout:
 the items that the runs the modes report give each op.

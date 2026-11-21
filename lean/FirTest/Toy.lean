@@ -108,7 +108,7 @@ poison, as its rule does, and it is pure, since its rule gives a defined
 result on a defined operand and is never UB. The toy dialect has no memory
 of its own: its memories are the core's. -/
 instance : DialectEffects ToyDialect :=
-  ⟨DialectEffects.Mem CoreDialect ⊕ Empty, fun _ => .propagates, fun _ => {}⟩
+  ⟨DialectEffects.Mem CoreDialect ⊕ Empty, fun _ => .propagates, fun _ => {}, fun _ => none⟩
 
 /-- The toy dialect's memories are the core's, and none of its own. -/
 instance : DialectMemOver CoreDialect (Ext Op) := ⟨Empty, id, id, fun _ => rfl, fun _ => rfl⟩

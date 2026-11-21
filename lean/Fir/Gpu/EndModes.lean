@@ -10,8 +10,9 @@ import Fir.Execution.MemoryEndModes
 return, its end (ADR-2026-11-09-1540). Its modes walk the tree of the run
 with memory that sees each return at its end, the spec's
 (`Func.memEndTree`), as the modes of the core and `gpu` walk the tree that
-sees a return as its values: from the empty memories, each memory with its
-entry in the module's data layout, named by its number. The end of a
+sees a return as its values: from the memories that hold the globals of
+its table, each memory with its entry in the module's data layout, named
+by its number. The end of a
 return compares no addresses (`ObservedEnd`), and the memory numbered `n`
 is the memory `n` of the run.
 
@@ -41,12 +42,13 @@ abbrev EndLeaf (M : Module CoreGpu) := ChoiceTree.Leaf Core.Op (Except Stuck (Re
 
 /-- The tree of a run with memory of the function `f` of the module `M` at
 the work-item, on `args` with `fuel` steps, each return seen at its end:
-from the empty memories, each memory with its entry in `M`'s data layout,
-named by its number. -/
+from the memories that hold the globals of `M`'s own table, each memory
+with its entry in `M`'s data layout, named by its number. -/
 def endTree (M : Module CoreGpu) (f : Func CoreGpu) (args : HVector toType (f.params.map (·.2)))
     (fuel : Nat) : ChoiceTree Core.Op (Except Stuck (Result (RunEnd M))) :=
   letI := memTreeDenote M.layout.entry memName M.runItems
-  f.memEndTree (unitsOf M.layout.entry) id AddrRule.ignore M args fuel
+  f.memEndTree (unitsOf M.layout.entry) id AddrRule.ignore
+    (RunItems.start CoreGpu M.layout.entry memName M.runItems) M args fuel
 
 /-- Exhaustive mode on the function `f` of the module `M` at the work-item,
 each return seen at its end. -/

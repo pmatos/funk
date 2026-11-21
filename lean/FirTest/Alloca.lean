@@ -35,7 +35,7 @@ def alloca (k : AllocKind) (t : Ty) (c : Nat) (a : Option Nat) (n : Nat) (S : Me
   runOn (allocaRule lay id k t c a n) S
 
 /-- The shape of each block of memory `x`: kind, alignment, units, live. -/
-def shapes (S : Mems) (x : Nat) : List (AllocKind × Nat × Nat × Bool) :=
+def shapes (S : Mems) (x : Nat) : List (AllocKind × Nat × Nat × Bool × Bool) :=
   (S.mem x).blocks.map Block.shape
 
 /-- Inside a call, four `i32`, then twelve `i8` aligned to 4, in memory 0. -/
@@ -49,21 +49,21 @@ def twice : Option (Pointer × Pointer × Mems) := do
 
 -- Four `i32` take 16 units aligned to 4; twelve `i8` aligned to 4 take 12.
 #guard (twice.map fun (_, _, S) => shapes S 0) ==
-  some [(.stack, 4, 16, true), (.stack, 4, 12, true)]
+  some [(.stack, 4, 16, true, false), (.stack, 4, 12, true, false)]
 
 -- Both are recorded in the innermost frame, the later one first.
 #guard (twice.map fun (_, _, S) => S.frames) == some [[(0, 1), (0, 0)]]
 
 -- Leaving the call frees both and pops the frame.
 #guard (twice.map fun (_, _, S) => (shapes S.exit 0, S.exit.frames)) ==
-  some ([(.stack, 4, 16, false), (.stack, 4, 12, false)], [])
+  some ([(.stack, 4, 16, false, false), (.stack, 4, 12, false, false)], [])
 
 -- A callee's frame frees only its own allocations: the caller's stays live.
 #guard (do
     let (_, S) ← alloca .stack (.int 32) 1 none 0 Memories.empty.enter
     let (_, S) ← alloca .stack (.int 64) 2 none 0 S.enter
     pure (shapes S.exit 0)) ==
-  some [(.stack, 4, 4, true), (.stack, 8, 16, false)]
+  some [(.stack, 4, 4, true, false), (.stack, 8, 16, false, false)]
 
 -- The natural alignment of `iN` in memory 0 is the least power of two that
 -- is at least its units: 1 for `i1` and `i8`, 4 for `i24` and `i32`, 8 for
@@ -71,22 +71,22 @@ def twice : Option (Pointer × Pointer × Mems) := do
 #guard [1, 8, 24, 32, 64, 128].map (fun w =>
     (alloca .stack (.int w) 1 none 0 Memories.empty.enter).map fun r => shapes r.2 0) ==
   ([(1, 1), (1, 1), (3, 4), (4, 4), (8, 8), (16, 16)] : List (Nat × Nat)).map fun (u, a) =>
-    some [(AllocKind.stack, a, u, true)]
+    some [(AllocKind.stack, a, u, true, false)]
 
 -- An alignment of the op's own replaces the natural one, and a count of 0
 -- allocates no units, though validation rejects it.
 #guard ((alloca .stack (.int 32) 1 (some 16) 0 Memories.empty.enter).map fun (_, S) =>
-    shapes S 0) == some [(.stack, 16, 4, true)]
+    shapes S 0) == some [(.stack, 16, 4, true, false)]
 #guard ((alloca .stack (.int 32) 0 none 0 Memories.empty.enter).map fun (_, S) =>
-    shapes S 0) == some [(.stack, 4, 0, true)]
+    shapes S 0) == some [(.stack, 4, 0, true, false)]
 
 -- The largest alignment that validation accepts, `2^23`, is recorded as it is.
 #guard ((alloca .stack (.int 8) 1 (some (2 ^ 23)) 0 Memories.empty.enter).map fun (_, S) =>
-    shapes S 0) == some [(.stack, 8388608, 1, true)]
+    shapes S 0) == some [(.stack, 8388608, 1, true, false)]
 
 -- A pointer element takes the units of its memory's pointers: 8 in memory 0.
 #guard ((alloca .stack (.ptr 0) 2 none 0 Memories.empty.enter).map fun (_, S) =>
-    shapes S 0) == some [(.stack, 8, 16, true)]
+    shapes S 0) == some [(.stack, 8, 16, true, false)]
 
 -- An allocation in memory 1 gets its own first id, and leaves memory 0 as it
 -- was.
@@ -94,14 +94,14 @@ def twice : Option (Pointer × Pointer × Mems) := do
     let (_, S) ← alloca .stack (.int 32) 1 none 0 Memories.empty.enter
     let (q, S) ← alloca .stack (.int 8) 3 none 1 S
     pure (q, shapes S 0, shapes S 1, S.frames)) ==
-  some (⟨some 0, 0⟩, [(.stack, 4, 4, true)], [(.stack, 1, 3, true)], [[(1, 0), (0, 0)]])
+  some (⟨some 0, 0⟩, [(.stack, 4, 4, true, false)], [(.stack, 1, 3, true, false)], [[(1, 0), (0, 0)]])
 
 -- A heap allocation, which validation rejects in M1, is recorded in no
 -- frame, so leaving the call keeps it live.
 #guard (do
     let (_, S) ← alloca .heap (.int 32) 1 none 0 Memories.empty.enter
     pure (S.frames, shapes S.exit 0)) ==
-  some ([[]], [(.heap, 4, 4, true)])
+  some ([[]], [(.heap, 4, 4, true, false)])
 
 /-! # Axioms -/
 

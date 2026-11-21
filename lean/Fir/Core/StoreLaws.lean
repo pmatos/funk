@@ -56,7 +56,7 @@ theorem Memory.Memory.storeAligned_error_length {u : Nat} {M : Memory u} {p : Po
   | ok M' =>
     rw [hs] at h
     obtain ⟨a, b, o, hloc, -⟩ := Memory.store_eq_ok hs
-    rw [Memory.store_of_locate (us := us') (by rw [hl]; exact hloc)]
+    rw [Memory.store_of_locate (us := us') (by rw [hl]; exact hloc) (Memory.store_ok_const hs hloc)]
     cases ha : M.aligned p al <;> simp_all
 
 /-- Whether a store to the memories of a run faults, and why, depends on how
@@ -255,7 +255,7 @@ theorem store_memReturnsOnDefined : MemReturnsOnDefined (d := CoreDialect) (.sto
     rw [Memories.alloc_mem_self, Memories.alloc_fst]
     rw [Memory.storeAligned_of_aligned (by rw [← Memory.alloc_fst, Memory.aligned_alloc]; simp)]
     exact ⟨_, Memory.store_of_locate (Memory.locate_eq_ok.2 ⟨rfl, Memory.alloc_blocks_new _ _ _ _,
-      rfl, Int.le_refl 0, by simp, rfl⟩)⟩
+      rfl, Int.le_refl 0, by simp, rfl⟩) rfl⟩
   obtain ⟨M', hM'⟩ := hs
   refine ⟨HVector.cons (f := toType) (a := Ty.int w) (.value 0#w : PoisonOr (BitVec w))
     (HVector.cons (f := toType) (a := Ty.ptr n) (.value q.1 : PoisonOr Pointer) .nil), ?_, q.2,

@@ -246,8 +246,8 @@ above.
   others and memories that refine others, with the same allocations
   escaped, give ends of returns that refine each other under the renaming
   of every allocation to itself (`End.isRefinedBy_of_mem`). So, for a
-  dialect with no event, refinement from the empty memories, the memories
-  each run ends with included, gives refinement of its traced runs
+  dialect with no event, refinement from the memories a run starts with,
+  the memories each run ends with included, gives refinement of its traced runs
   (`Func.traceRuns_isRefinedBy_of_from`), and refined arguments and
   congruence in the callee from given memories hold over its traced runs
   and at every world (`Fir.Execution.TraceRefine`). The core and CoreGpu

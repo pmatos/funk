@@ -40,6 +40,7 @@ import FirTest.ValidateNested
 import FirTest.Layout
 import FirTest.Aggregate
 import FirTest.Global
+import FirTest.GlobalStart
 import FirTest.LocTable
 import FirTest.Dominance
 import FirTest.OverCore

@@ -14,16 +14,17 @@ when the Lean changes under it.
 
 #doc (Manual) "Exposure laws: readable blocks" =>
 
-:::moduleDocs (fingerprint := "18234445801150838708")
+:::moduleDocs (fingerprint := "6027608012345001473")
 :::
 
-:::readable Fir.Memory.Block.giveAddr_shape Fir.Memory.Block.giveAddr_units Fir.Memory.Block.giveAddr_live Fir.Memory.Block.giveAddr_write (pin := Fir.Memory.Block.giveAddr) (fingerprint := "9446545998985700524")
+:::readable Fir.Memory.Block.giveAddr_const Fir.Memory.Block.giveAddr_shape Fir.Memory.Block.giveAddr_units Fir.Memory.Block.giveAddr_live Fir.Memory.Block.giveAddr_write (pin := Fir.Memory.Block.giveAddr) (fingerprint := "2438581652375946545")
 *Theorems: an address changes no block's contents.* Giving a block an
-address keeps its shape, its units and its liveness, and writing to it
+address keeps its constness, its shape, its units and its liveness, and
+writing to it
 then is giving the address to the block written.
 :::
 
-:::readable Fir.Memory.Memory.expose_getElem? Fir.Memory.Memory.expose_map Fir.Memory.Memory.expose_shapes Fir.Memory.Memory.expose_contents (pin := Fir.Memory.Memory.expose) (fingerprint := "370279529706085936")
+:::readable Fir.Memory.Memory.expose_getElem? Fir.Memory.Memory.expose_map Fir.Memory.Memory.expose_shapes Fir.Memory.Memory.expose_contents (pin := Fir.Memory.Memory.expose) (fingerprint := "3705352669373799904")
 *Theorems: what exposing changes.* After exposing $`a` at $`z`, the
 block $`a` is $`\mathrm{give}_z(M[a])` and every other block is as it
 was. So exposing keeps whatever of each block giving it an address keeps:

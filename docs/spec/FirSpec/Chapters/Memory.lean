@@ -82,6 +82,8 @@ event.
 
 {includeReadable "." Fir.Execution.RunItems "The items a run gives each op" FirSpec.Execution.RunItems (level := 1)}
 
+{includeReadable "." Fir.Execution.RunStart "The memories a run starts with" FirSpec.Execution.RunStart (level := 1)}
+
 {includeReadable "." Fir.Execution.MemoryObligations "Memory obligations" FirSpec.Execution.MemoryObligations (level := 1)}
 
 {includeReadable "." Fir.Execution.MemoryObligationLaws "Meeting the memory obligations" FirSpec.Execution.MemoryObligationLaws (level := 1)}

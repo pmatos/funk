@@ -10,7 +10,7 @@ with included, refines its behaviour on those others. It holds for every
 function of every module, calls and recursion included, when the
 terminators and the ops with no callee of the function and of the module's
 functions are monotone with memory. A function's runs with memory start
-from the empty memories, which refine themselves, so on arguments that
+from the memories its run's items give, which refine themselves, so on arguments that
 refine others, its runs with memory refine its runs with memory on those
 others.
 

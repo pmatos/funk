@@ -53,7 +53,7 @@ and at most one that ends, so it has
 {ref "The-fir-specification--Memory--Ops-of-finitely-many-outcomes"}[finitely many].
 :::
 
-:::readable Fir.copyUnits_writesNot Fir.copyUnits_allocatesNot (pin := Fir.WritesNot) (pin := Fir.AllocatesNot) (fingerprint := "6269409950966512556")
+:::readable Fir.copyUnits_writesNot Fir.copyUnits_allocatesNot (pin := Fir.WritesNot) (pin := Fir.AllocatesNot) (fingerprint := "10534258331264215629")
 *Theorems: a copy of units writes only its own memory.* For every memory
 $`y \ne x`, a copy of units in $`x` meets the
 {ref "The-fir-specification--Memory--Memory-obligations"}[obligation]
@@ -63,7 +63,7 @@ the load's and the store's, by the laws of
 {ref "The-fir-specification--Memory--Sequences-in-the-state-layer"}[sequences].
 :::
 
-:::readable Fir.copyUnits_readsNot (pin := Fir.ReadsNot) (pin := Fir.ReadsNot.Match) (fingerprint := "8027040892816428317")
+:::readable Fir.copyUnits_readsNot (pin := Fir.ReadsNot) (pin := Fir.ReadsNot.Match) (fingerprint := "11374704810397003222")
 *Theorem: a copy of units reads only its own memory.* For every memory
 $`y \ne x`, a copy of units in $`x` meets the
 {ref "The-fir-specification--Memory--Memory-obligations"}[obligation]

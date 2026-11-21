@@ -218,8 +218,9 @@ yet. Memory is a state layer over the way of computing
   memory state their semantics in a monad with `MonadMemory`. Progress, fuel
   monotonicity and refinement for them are proved over the layer, and
   `fir-ref` walks the layer over the tree of choices (#231).
-- Runs with memory start from empty memories. Until #233 builds what a run
-  shows, an observer of a run with memory sees its returned values only.
+- Runs with memory start from memories that hold the globals of the run's
+  table, constant ones in constant blocks that a store faults on
+  (semantics-m1-globals.md). Until #233 builds what a run shows, an observer of a run with memory sees its returned values only.
 - A proper tail call replaces its caller's frame, so the caller's stack
   allocations are freed before the callee runs. The tail-call ticket adds a
   second frame operation that leaves the current frame and enters a fresh one

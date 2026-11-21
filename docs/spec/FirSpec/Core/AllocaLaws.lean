@@ -56,7 +56,7 @@ with memory: it never ends in UB, from any memories, since
 never does, and its result, a pointer, is never poison.
 :::
 
-:::readable Fir.Core.alloca_writesNot Fir.Core.alloca_readsNot Fir.Core.alloca_allocatesNot (pin := Fir.OwnRuleHas) (pin := Fir.WritesNot) (pin := Fir.ReadsNot) (pin := Fir.AllocatesNot) (fingerprint := "3517418981541783496")
+:::readable Fir.Core.alloca_writesNot Fir.Core.alloca_readsNot Fir.Core.alloca_allocatesNot (pin := Fir.OwnRuleHas) (pin := Fir.WritesNot) (pin := Fir.ReadsNot) (pin := Fir.AllocatesNot) (fingerprint := "18063477742767487594")
 *Theorems: $`\mathsf{alloca}` touches memory only by allocating where it
 declares.* At every layout $`\ell` and naming $`\rho`, and for every memory
 $`y` of the run, $`\mathsf{alloca}_N` by its own rule writes no unit of

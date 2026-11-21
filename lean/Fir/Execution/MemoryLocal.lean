@@ -157,7 +157,7 @@ theorem Func.memNeverStuck_of_local (hv : f.Valid ctx)
   have hmem : e ∈ f.blocks := List.mem_of_mem_head? he
   have hns := Func.local_memNoStuck hv hn hm n e hmem 0 _
     (List.length_pos_iff.2 (hv.blocksNonEmpty e hmem)) (Env.scoped_params hv he hep args)
-    Memories.empty.enter
+    (RunItems.start d lay ρ L).enter
   rw [List.drop_zero] at hns
   rw [Func.memRuns_enter lay ρ L M f args n (Func.enter_entry he hep args)] at h
   exact NoStuck.finish _ (NoStuck.map Result.withState hns) st h
@@ -178,7 +178,7 @@ theorem Func.memProgress_of_local [LawfulDialectTotal d] (hv : f.Valid ctx)
     (fun _ hb o ho => LawfulDialectTotal.total o.op (hv.typesValid hb ho) (.inr (hn _ hb o ho))
       lay ρ L)
     n e hmem 0 _ (List.length_pos_iff.2 (hv.blocksNonEmpty e hmem))
-    (Env.scoped_params hv he hep args) Memories.empty.enter
+    (Env.scoped_params hv he hep args) (RunItems.start d lay ρ L).enter
   rw [List.drop_zero] at hhp
   obtain ⟨ev, hev⟩ := HasPath.finish Prod.fst (HasPath.map Result.withState hhp)
   replace hev : f.memRuns lay ρ L M args n ev := by

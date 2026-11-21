@@ -53,14 +53,15 @@ poison value of each valid core type is refined by every value of the
 type.
 :::
 
-:::readable Fir.Core.funcRuns (pin := Fir.Func.memRuns) (fingerprint := "9538173135972044021")
+:::readable Fir.Core.funcRuns (pin := Fir.Func.memRuns) (fingerprint := "16372422744327105670")
 *Definition: the runs of a function of a core module.* For a core module
 $`M` and a core function $`f`, the runs of $`f` are its
 {ref "The-fir-specification--Memory--Runs-with-memory"}[runs with memory]
 at the module's layout, where the core's memory $`x` is the module's memory
 $`x`: on each vector $`v^*` of values of its parameter types, poison
 included, and at each budget $`n`, the run of the interpreter in the state
-layer over the set monad, from the empty memories, with $`n` steps of fuel,
+layer over the set monad, from the memories that hold the globals of the
+module's own table, with $`n` steps of fuel,
 by the core's semantics with memory, with each memory's entry in the
 module's data layout and the items of the module's own table
 ({ref "The-fir-specification--Memory--The-items-a-run-gives-each-op"}[items]).
@@ -156,6 +157,7 @@ $`\vec{v} \sqsubseteq \vec{v}'`, calls and recursion included: every core
 op that runs by its own rule is monotone at every width and tied, so it is
 monotone with memory, and the
 {ref "The-fir-specification--Memory--Refined-arguments-and-memories"}[theorem on refined arguments and memories]
-applies from the empty memories. So a call on arguments that refine others
+applies from the memories a run starts with, which refine themselves. So a
+call on arguments that refine others
 refines the call on those others.
 :::

@@ -14,10 +14,10 @@ changes under it.
 
 #doc (Manual) "A load declared without a read: readable blocks" =>
 
-:::moduleDocs (fingerprint := "15999591516898269711")
+:::moduleDocs (fingerprint := "9163177060593772845")
 :::
 
-:::readable Fir.Core.Unlawful.loadNoRead Fir.Core.Unlawful.load_typesValid (pin := Fir.Core.Op.effects) (fingerprint := "11503720423451268421")
+:::readable Fir.Core.Unlawful.loadNoRead Fir.Core.Unlawful.load_typesValid (pin := Fir.Core.Op.effects) (fingerprint := "7734886575516389221")
 *Definition: a declaration without a read.* The declaration gives every
 core op its
 {ref "The-fir-specification--Execution--Core-effects"}[effects],
@@ -27,7 +27,7 @@ out $`\mathsf{reads}(N)`. The load of a pointer keeps its read. A load of
 an $`\mathsf{i8}` through a pointer of memory 0 is a valid op instance.
 :::
 
-:::readable Fir.Core.Unlawful.oneUnit Fir.Core.Unlawful.loadShape_i8 Fir.Core.Unlawful.oneUnit_load₀ Fir.Core.Unlawful.oneUnit_load₁ (pin := Fir.Memory.Memories.load) (fingerprint := "11559823878291058494")
+:::readable Fir.Core.Unlawful.oneUnit Fir.Core.Unlawful.loadShape_i8 Fir.Core.Unlawful.oneUnit_load₀ Fir.Core.Unlawful.oneUnit_load₁ (pin := Fir.Memory.Memories.load) (fingerprint := "12872963178263191196")
 *Definitions and theorems: one unit of memory.* $`S_b` is the memories of
 8-bit units whose memory 0 holds one live allocation of one unit, with no
 address, aligned

@@ -11,7 +11,8 @@ obligation that an op that stores and does nothing else declares:
 * it always has an outcome, and it has finitely many;
 * it writes no unit of any memory but its own;
 * it neither allocates nor frees in any memory: a store keeps the kind,
-  alignment, size and liveness of every allocation, and the frames;
+  alignment, size, liveness and constness of every allocation, and the
+  frames;
 * it reads no memory, its own included
   (`docs/decisions/semantics-effects.md#soundness`): replace a memory by
   any memory of the same allocations, and the store faults for the same
@@ -41,7 +42,7 @@ theorem Memory.unitAt_eq (M : Memory u) (a i : Nat) :
   simp [Memory.unitAt, List.head?_drop]
 
 /-- Two memories of the same allocations have, at each id, blocks of the
-same kind, alignment, size and liveness. -/
+same kind, alignment, size, liveness and constness. -/
 theorem Memory.shape_getElem? {M M' : Memory u} (h : M.allocs = M'.allocs) (a : Nat) :
     (M.blocks[a]?).map Block.shape = (M'.blocks[a]?).map Block.shape := by
   have := congrArg (·[a]?) h
@@ -93,7 +94,7 @@ theorem Memory.storeAligned_allocs {M M' : Memory u} (h : M.allocs = M'.allocs) 
     | error f' =>
       rw [hs, hm] at hl
       cases hl
-      rw [store_eq_error.2 hs, store_eq_error.2 hm]
+      rw [store_of_locate_error hs, store_of_locate_error hm]
       exact .inl ⟨f, rfl, rfl⟩
     | ok r => rw [hs, hm] at hl; cases hl
   | ok r =>
@@ -105,7 +106,16 @@ theorem Memory.storeAligned_allocs {M M' : Memory u} (h : M.allocs = M'.allocs) 
       rw [hs, hm] at hl
       simp only [Except.map, Except.ok.injEq, Prod.mk.injEq] at hl
       obtain ⟨rfl, rfl⟩ := hl
-      rw [store_of_locate hs, store_of_locate hm]
+      have k := Memory.shape_getElem? h a
+      rw [(Memory.locate_eq_ok.1 hs).2.1, (Memory.locate_eq_ok.1 hm).2.1] at k
+      have hc : b'.const = b.const := by
+        simp only [Option.map_some, Option.some.injEq, Block.shape, Prod.mk.injEq] at k
+        exact k.2.2.2.2.symm
+      cases hb : b.const
+      case true =>
+        rw [store_constant hs hb, store_constant hm (hc.trans hb)]
+        exact .inl ⟨_, rfl, rfl⟩
+      rw [store_of_locate hs hb, store_of_locate hm (hc.trans hb)]
       cases M.aligned p al
       · exact .inl ⟨_, rfl, rfl⟩
       · exact .inr ⟨a, b, b', o, rfl, rfl, rfl, rfl⟩
@@ -240,7 +250,7 @@ theorem store_readsNot_self : ReadsNot x (MonadMemory.store (m := SM) x p us al)
         List.length_drop]
       congr 1
       simp only [Prod.mk.injEq]
-      refine ⟨k.1.symm, k.2.1.symm, by omega, k.2.2.2.symm⟩
+      refine ⟨k.1.symm, k.2.1.symm, by omega, k.2.2.2.1.symm, k.2.2.2.2.symm⟩
     · obtain ⟨-, hb, -, h0, hn, rfl⟩ := Memory.locate_eq_ok.1 hs
       obtain ⟨-, hb', -, -, hn', -⟩ := Memory.locate_eq_ok.1 hm'
       simp only [Memories.set_mem_self, Memory.unitAt_eq, List.getElem?_set]

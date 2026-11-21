@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Traced runs of a dialect with no event: readable blocks" =>
 
-:::moduleDocs (fingerprint := "17291432827740839230")
+:::moduleDocs (fingerprint := "10762966644135900264")
 :::
 
 :::readable Fir.DialectTrace.ofMem Fir.DialectTrace.ofMem_liftsMem (fingerprint := "58147739265247047")
@@ -44,31 +44,33 @@ and a live allocation's units refine the other's. A dangling pointer is
 seen as poison, which every value refines.
 :::
 
-:::readable Fir.Result.memEnd Fir.Func.memEndRuns_eq Fir.SetM.map_iff (fingerprint := "501306269731120220")
+:::readable Fir.Result.memEnd Fir.Func.memEndRuns_eq Fir.SetM.map_iff (fingerprint := "14736022310476980214")
 *Definition: the end of a run from given memories.* A path of a run from
 given memories that returns $`(\vec{v}, S)` is seen as returning the end
 $`\langle \vec{v}, S, []\rangle`, with nothing escaped; a path out of
 fuel or stuck is seen as it is.
 
 *Theorem: the runs with memory, seen at each end, are the runs from the
-empty memories.* The runs with memory of a function, each return seen at
-its end, are its runs from the empty memories, each path seen so. A
+memories a run starts with.* The runs with memory of a function, each
+return seen at its end, are its runs from $`\mathrm{start}(L)`, each path
+seen so. A
 computation of the set monad whose results are mapped by $`g` ends with
 $`g(a)` for each result $`a`, or with its UB.
 :::
 
-:::readable Fir.Func.memEndRuns_ret_iff Fir.Func.memEndRuns_ub_iff Fir.Func.memEndRuns_exhausted_iff (fingerprint := "4381006843574056328")
+:::readable Fir.Func.memEndRuns_ret_iff Fir.Func.memEndRuns_ub_iff Fir.Func.memEndRuns_exhausted_iff (fingerprint := "10208948591819177243")
 *Theorems: the outcomes of the runs with memory, seen at each end.* At
 each budget, a run with memory returns the end $`\langle \vec{v}, S,
-E\rangle` exactly when $`E = []` and the run from the empty memories
+E\rangle` exactly when $`E = []` and the run from $`\mathrm{start}(L)`
 returns $`(\vec{v}, S)`; it hits UB, or runs out of fuel, exactly when the
-run from the empty memories does.
+run from $`\mathrm{start}(L)` does.
 :::
 
-:::readable Fir.Func.memEndRuns_isRefinedBy_of_from Fir.Func.traceRuns_isRefinedBy_of_from (fingerprint := "10702848726150139002")
-*Theorem: refinement from the empty memories gives traced refinement.*
-When the refinement of values is transitive, and the behaviour of $`f` on
-$`\vec{v}` from the empty memories, the memories it ends with included, is
+:::readable Fir.Func.memEndRuns_isRefinedBy_of_from Fir.Func.traceRuns_isRefinedBy_of_from (fingerprint := "8335039658620344789")
+*Theorem: refinement from the memories a run starts with gives traced
+refinement.* When the refinement of values is transitive, and the
+behaviour of $`f` on $`\vec{v}` from $`\mathrm{start}(L)`, the memories
+it ends with included, is
 refined by that of $`f'` on $`\vec{v}'` in $`M'`:
 
 * the behaviour with memory of $`f`, each return seen at its end, is

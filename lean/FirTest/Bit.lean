@@ -157,7 +157,7 @@ instance : DialectDenote BitDialect SetM where
 result on a defined operand and is never UB. The bit dialect has no memory
 of its own: its memories are the core's. -/
 instance : DialectEffects BitDialect :=
-  ⟨DialectEffects.Mem CoreDialect ⊕ Empty, fun _ => .propagates, fun _ => {}⟩
+  ⟨DialectEffects.Mem CoreDialect ⊕ Empty, fun _ => .propagates, fun _ => {}, fun _ => none⟩
 
 /-- The bit dialect's memories are the core's, and none of its own. -/
 instance : DialectMemOver CoreDialect BitExt := ⟨Empty, id, id, fun _ => rfl, fun _ => rfl⟩

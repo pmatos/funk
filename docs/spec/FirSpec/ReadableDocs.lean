@@ -189,6 +189,7 @@ import FirSpec.Execution.StatePaths
 import FirSpec.Execution.MemoryMonotone
 import FirSpec.Execution.MemoryObligations
 import FirSpec.Execution.RunItems
+import FirSpec.Execution.RunStart
 import FirSpec.Execution.MemoryObligationLaws
 import FirSpec.Execution.MemoryTotal
 import FirSpec.Execution.MemoryAllocLaws

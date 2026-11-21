@@ -70,14 +70,14 @@ theorem Func.memRunsFrom_ret_iff {vs : List (DVal d)} {S' : Memories N (unitsOf 
   letI := DialectMemDenote.denoteAt (d := d) lay ρ L
   constructor
   · intro h
-    obtain ⟨h1, h2⟩ := Func.memRunsFrom_ignoresMemory hfree hf hs a S Memories.empty n
+    obtain ⟨h1, h2⟩ := Func.memRunsFrom_ignoresMemory hfree hf hs a S (RunItems.start d lay ρ L) n
       (Ev.notStuck_ok _) h
     simp only [Ev.mapRet, atMem, Ev.ok.injEq, Except.ok.injEq, Result.ret.injEq, Prod.mk.injEq,
       true_and] at h1
     exact ⟨h1.symm, (Func.memRuns_ret_iff lay ρ L).2 ⟨_, h2⟩⟩
   · rintro ⟨rfl, h⟩
     obtain ⟨T, hT⟩ := (Func.memRuns_ret_iff lay ρ L).1 h
-    exact (Func.memRunsFrom_ignoresMemory hfree hf hs a Memories.empty S' n (Ev.notStuck_ok _)
+    exact (Func.memRunsFrom_ignoresMemory hfree hf hs a (RunItems.start d lay ρ L) S' n (Ev.notStuck_ok _)
       hT).2
 
 /-- A function that reaches no memory hits UB from given memories
@@ -87,8 +87,8 @@ theorem Func.memRunsFrom_ub_iff {r : String} :
     (f.memRunsFrom M (a, S) n).outcomes (.ub r) ↔ (f.memRuns lay ρ L M a n).outcomes (.ub r) := by
   letI := DialectMemDenote.denoteAt (d := d) lay ρ L
   exact ⟨fun h => (Func.memRuns_ub_iff lay ρ L).2 (Func.memRunsFrom_ignoresMemory hfree hf hs a S
-      Memories.empty n (Ev.notStuck_ub _) h).2,
-    fun h => (Func.memRunsFrom_ignoresMemory hfree hf hs a Memories.empty S n (Ev.notStuck_ub _)
+      (RunItems.start d lay ρ L) n (Ev.notStuck_ub _) h).2,
+    fun h => (Func.memRunsFrom_ignoresMemory hfree hf hs a (RunItems.start d lay ρ L) S n (Ev.notStuck_ub _)
       ((Func.memRuns_ub_iff lay ρ L).1 h)).2⟩
 
 /-- A function that reaches no memory runs out of fuel from given
@@ -98,7 +98,7 @@ theorem Func.memRunsFrom_exhausted_iff_memRuns :
     (f.memRunsFrom M (a, S) n).outcomes .fuelExhausted ↔
       (f.memRuns lay ρ L M a n).outcomes .fuelExhausted := by
   letI := DialectMemDenote.denoteAt (d := d) lay ρ L
-  exact (Func.memRunsFrom_exhausted_iff hfree hf hs a S Memories.empty n).trans
+  exact (Func.memRunsFrom_exhausted_iff hfree hf hs a S (RunItems.start d lay ρ L) n).trans
     (Func.memRuns_exhausted_iff lay ρ L).symm
 
 end

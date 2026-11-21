@@ -14,12 +14,12 @@ changes under it.
 
 #doc (Manual) "Address policies: readable blocks" =>
 
-:::moduleDocs (fingerprint := "14695328045529409545")
+:::moduleDocs (fingerprint := "15742346352244797877")
 :::
 
-:::readable Fir.Memory.Place Fir.Memory.Memory.places (pin := Fir.Memory.Block.shape) (fingerprint := "12043594272512453898")
+:::readable Fir.Memory.Place Fir.Memory.Memory.places (pin := Fir.Memory.Block.shape) (fingerprint := "13640327301364052681")
 *Definition: what a policy sees.* The place of a block is its shape, its
-kind, alignment, size and liveness, with its address $`y^?`. The places of
+kind, alignment, size, liveness and constness, with its address $`y^?`. The places of
 a memory $`M` are the places of its blocks, in the order the allocations
 were made. They hold no unit, so memories that refine each other have the
 same places.

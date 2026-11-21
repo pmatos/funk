@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Runs with memory: readable blocks" =>
 
-:::moduleDocs (fingerprint := "12849962360392001063")
+:::moduleDocs (fingerprint := "6451966887789372780")
 :::
 
 :::readable Fir.MonadMorphism.liftState Fir.MonadMorphism.liftState_mapsFrame (fingerprint := "8015592493867984939")
@@ -96,15 +96,18 @@ The proof is the
 for the lift, which keeps each op's semantics and keeps frames.
 :::
 
-:::readable Fir.Func.memRuns (pin := Fir.Memory.Memories.empty) (fingerprint := "692039884217690596")
+:::readable Fir.Func.memRuns (pin := Fir.RunItems.start) (fingerprint := "3669976583252430497")
 *Definition: the runs with memory of a function.* Where a run names the
 dialect's memory $`x` as $`\rho(x)`, whose layout entry is
 $`\ell(\rho(x))`, and gives each op the items $`L`, the run with memory of
 the function $`f` of the module $`M` on $`\vec{v}` with $`k` steps is its
 run in the state layer over the set monad, by the dialect's semantics with
-memory at $`\ell`, $`\rho` and $`L`, from the empty memories. A run of a
-module gives each memory its entry in the module's data layout, and each
-op the items of the module's own table, as `fir-ref`'s modes do. An observer sees what
+memory at $`\ell`, $`\rho` and $`L`, from
+{ref "The-fir-specification--Memory--The-memories-a-run-starts-with"}[the memories a run starts with],
+$`\mathrm{start}(L)`, which hold $`L`'s starting allocations, the globals
+of the run's table. A run of a module gives each memory its entry in the
+module's data layout, and each op the items of the module's own table, as
+`fir-ref`'s modes do. An observer sees what
 it returns, not the memories it ends with,
 until observations at the end of a run are designed (#233). So the runs
 with memory of a function are runs in the sense of the

@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Effect sets: readable blocks" =>
 
-:::moduleDocs (fingerprint := "5477438145515818991")
+:::moduleDocs (fingerprint := "7613445263233262038")
 :::
 
 :::readable Fir.PoisonClass (fingerprint := "2496376182887207449")
@@ -78,7 +78,7 @@ other effects. A dialect's ops are seen so in a larger dialect that holds
 its memories among others.
 :::
 
-:::readable Fir.DialectEffects (pin := Fir.Effects) (fingerprint := "5406815133426605090")
+:::readable Fir.DialectEffects (pin := Fir.Effects) (fingerprint := "4035704469606631643")
 *Definition: the effect class.* Each dialect names its memories, and gives
 each of its ops $`o` a
 {ref "The-fir-specification--Execution--Poison-classes"}[poison class],
@@ -92,4 +92,10 @@ ADR-2026-11-09-1541).
 The poison class says how the op treats poison operands; the effect
 $`\mathsf{mayPoison}` says whether a result may be poison when no operand is
 (ADR-2026-11-09-1541).
+
+A dialect also says which of its memories a module's data layout numbers:
+$`\mathrm{num}(n)` is its memory that the layout numbers $`n`, if it has
+one, and none by default. A run starts with each global's allocation in
+the memory of its number
+({ref "The-fir-specification--Memory--The-memories-a-run-starts-with"}[the memories a run starts with]).
 :::

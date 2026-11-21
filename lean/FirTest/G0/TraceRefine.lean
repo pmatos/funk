@@ -52,8 +52,8 @@ theorem traceRuns_isRefinedBy_of_from (d : Dialect) [TyDenote d.Ty] [DecidableEq
     {M M' : Module d} {f f' : Func d} {a : HVector toType (f.params.map (·.2))}
     {a' : HVector toType (f'.params.map (·.2))}
     (h : letI := DialectMemDenote.denoteAt (d := d) lay ρ L
-      observable (f.memRunsFrom M (a, (Memories.empty : Memories N (unitsOf lay)))) ⊑
-        observable (f'.memRunsFrom M' (a', (Memories.empty : Memories N (unitsOf lay))))) :
+      observable (f.memRunsFrom M (a, (RunItems.start d lay ρ L))) ⊑
+        observable (f'.memRunsFrom M' (a', (RunItems.start d lay ρ L)))) :
     traceObservable (f.traceRuns lay ρ L μ ar M a) ⊑
       traceObservable (f'.traceRuns lay ρ L μ ar M' a') :=
   Func.traceRuns_isRefinedBy_of_from lay ρ L μ ar htrans h

@@ -35,7 +35,7 @@ what the op runs by its own rule when it holds of the rule on every
 operand vector.
 :::
 
-:::readable Fir.Core.memCopy_writesNot Fir.Core.memCopy_readsNot Fir.Core.memCopy_allocatesNot (pin := Fir.WritesNot) (pin := Fir.ReadsNot) (pin := Fir.AllocatesNot) (pin := Fir.Core.Op.effects) (fingerprint := "9490332005867249144")
+:::readable Fir.Core.memCopy_writesNot Fir.Core.memCopy_readsNot Fir.Core.memCopy_allocatesNot (pin := Fir.WritesNot) (pin := Fir.ReadsNot) (pin := Fir.AllocatesNot) (pin := Fir.Core.Op.effects) (fingerprint := "2749538663317925154")
 *Theorems: a copy or a move touches only its own memory.* For every
 memory $`x` other than $`\rho(N)`, the memory it declares that it reads
 and writes, $`\mathsf{memCopy}_N~k~o~W` writes no unit of $`x` and does

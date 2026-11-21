@@ -14,10 +14,10 @@ fails when the Lean changes under it.
 
 #doc (Manual) "Stores in the state layer: readable blocks" =>
 
-:::moduleDocs (fingerprint := "11939021943992604842")
+:::moduleDocs (fingerprint := "13617852752948260425")
 :::
 
-:::readable Fir.Memory.Memory.unitAt_eq Fir.Memory.Memory.shape_getElem? Fir.Memory.Memory.locate_allocs (pin := Fir.Memory.Memory.unitAt) (pin := Fir.Memory.Memory.allocs) (pin := Fir.Memory.Memory.locate) (fingerprint := "9578872755073861021")
+:::readable Fir.Memory.Memory.unitAt_eq Fir.Memory.Memory.shape_getElem? Fir.Memory.Memory.locate_allocs (pin := Fir.Memory.Memory.unitAt) (pin := Fir.Memory.Memory.allocs) (pin := Fir.Memory.Memory.locate) (fingerprint := "4395230573399054201")
 *Theorems: memories of the same allocations.* The unit at offset $`i` of
 the allocation $`a` is the $`i`th unit of the $`a`th block, when both
 exist. Two memories of the same
@@ -27,22 +27,23 @@ access lands in both at the same allocation and offset, or faults in both
 for the same reason.
 :::
 
-:::readable Fir.Memory.Block.write_getElem? Fir.Memory.Memory.allocs_store (fingerprint := "16472162406053145901")
+:::readable Fir.Memory.Block.write_getElem? Fir.Memory.Memory.allocs_store (fingerprint := "6517931489991249741")
 *Theorems: what a write holds.* After writing $`\vec{y}` at offset $`o` of
 a block, with $`o + |\vec{y}|` at most its size, its unit at $`i` is
 $`\vec{y}[i - o]` when $`o \le i < o + |\vec{y}|`, and the unit it held
 at $`i` otherwise. A store keeps a memory's allocations.
 :::
 
-:::readable Fir.Memory.Memory.storeAligned_allocs (fingerprint := "12621097333191375768")
+:::readable Fir.Memory.Memory.storeAligned_allocs (fingerprint := "3057312064874757357")
 *Theorem: a store to memories of the same allocations.* An aligned store
 of $`\vec{y}` through $`p` to two memories of the same allocations faults
-for the same reason in both, misaligned included, or lands in both in the
+for the same reason in both, misaligned and constant included, since their
+blocks are constant together, or lands in both in the
 same allocation $`a` at the same offset $`o`, and writes $`\vec{y}` at
 $`o` of the block of $`a` in each.
 :::
 
-:::readable Fir.store_apply Fir.store_ok (pin := Fir.instMonadMemoryStateT) (pin := Fir.Memory.Memories.store) (fingerprint := "12479088072758132017")
+:::readable Fir.store_apply Fir.store_ok (pin := Fir.instMonadMemoryStateT) (pin := Fir.Memory.Memories.store) (fingerprint := "17144758115695165099")
 *Theorems: how a store ends.* In the
 {ref "The-fir-specification--Memory--The-state-layer"}[state layer] over
 the set monad, the
@@ -62,16 +63,17 @@ and at most one that ends, so it has
 {ref "The-fir-specification--Memory--Ops-of-finitely-many-outcomes"}[finitely many].
 :::
 
-:::readable Fir.store_writesNot Fir.store_allocatesNot (pin := Fir.WritesNot) (pin := Fir.AllocatesNot) (fingerprint := "3270893543825609799")
+:::readable Fir.store_writesNot Fir.store_allocatesNot (pin := Fir.WritesNot) (pin := Fir.AllocatesNot) (fingerprint := "11886057350646087782")
 *Theorems: a store writes only its own memory.* For every memory
 $`y \ne x`, a store to $`x` meets the
 {ref "The-fir-specification--Memory--Memory-obligations"}[obligation]
 that it writes no unit of $`y`: $`y` is unchanged. For every memory $`y`,
 $`x` included, it neither allocates nor frees in $`y`: a store keeps the
-kind, alignment, size and liveness of every allocation, and the frames.
+kind, alignment, size, liveness and constness of every allocation, and
+the frames.
 :::
 
-:::readable Fir.store_readsNot_ne Fir.store_readsNot_self Fir.store_readsNot (pin := Fir.ReadsNot) (pin := Fir.ReadsNot.Match) (fingerprint := "9265379715884538705")
+:::readable Fir.store_readsNot_ne Fir.store_readsNot_self Fir.store_readsNot (pin := Fir.ReadsNot) (pin := Fir.ReadsNot.Match) (fingerprint := "3154124953088058554")
 *Theorems: a store reads no memory.* For every memory $`y`, a store to
 $`x` meets the
 {ref "The-fir-specification--Memory--Memory-obligations"}[obligation]
