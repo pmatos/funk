@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Refined arguments over traced runs: returns, UB and each budget: readable blocks" =>
 
-:::moduleDocs (fingerprint := "3788918816789127072")
+:::moduleDocs (fingerprint := "3291428997500435743")
 :::
 
 :::readable Fir.Result.Finished Fir.Result.finishEnd Fir.TraceEnd.Allows.finishEnd (fingerprint := "3788084618345794415")
@@ -40,9 +40,10 @@ run of $`f` on $`\vec{v}'` from $`s'` that is not stuck is allowed by a
 path of its run on $`\vec{v}` from $`s` at the same budget.
 :::
 
-:::readable Fir.List.IsRefinedPrefix.getElem? Fir.Func.traceRuns_path_allowed (fingerprint := "1113848085572077889")
-*Theorem: a refined prefix, place by place.* A refined prefix of $`l'` is
-refined, at each of its places, by the element of $`l'` there.
+:::readable Fir.List.IsRefinedPrefix.getElem? Fir.List.isRefinedPrefix_of_getElem? Fir.Func.traceRuns_path_allowed (fingerprint := "12677472985277159966")
+*Theorems: a refined prefix, place by place.* A refined prefix of $`l'` is
+refined, at each of its places, by the element of $`l'` there; and a list
+so refined at each of its places is a refined prefix of $`l'`.
 
 *Theorem: the traced runs of a dialect with events.* For a dialect whose
 ops are monotone by its rules in the traced layer, at $`\ell`, $`\rho` and
@@ -72,5 +73,6 @@ $`\vec{v} \sqsubseteq \vec{v}'`, a poison by any value:
   ends that refine each other.
 
 Divergence, silent or with acts forever, needs one trace of the source at
-every budget, and the next stage gives it.
+every budget, which the section on refined arguments, divergence included,
+gives.
 :::

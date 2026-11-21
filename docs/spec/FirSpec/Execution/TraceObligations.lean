@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Monotonicity in the traced layer: readable blocks" =>
 
-:::moduleDocs (fingerprint := "6212536383839346428")
+:::moduleDocs (fingerprint := "13628687690477263636")
 :::
 
 :::readable Fir.Step.IsRefinedBy (pin := Fir.instHRefinementStep) (fingerprint := "9259369860302064242")
@@ -42,14 +42,14 @@ each act $`a` to the act $`\mathsf{act}~a` of a marked trace keeps
 refinement and refined prefixes.
 :::
 
-:::readable Fir.TraceState.isRefinedBy_refl Fir.TraceState.IsRefinedBy.enter Fir.TraceState.IsRefinedBy.exit (pin := Fir.instHRefinementTraceState) (fingerprint := "16439252411456698260")
+:::readable Fir.TraceState.isRefinedBy_refl Fir.TraceState.isRefinedBy_trans Fir.TraceState.IsRefinedBy.enter Fir.TraceState.IsRefinedBy.exit (pin := Fir.instHRefinementTraceState) (fingerprint := "12969031787064880444")
 *Definition: refined traced states.* A traced state $`\langle S, E\rangle`
 is refined by $`\langle S', E'\rangle` when $`S \sqsubseteq S'` and
 $`E = E'`: the same allocations escaped, in the same order, so the world
 names each by the same handle.
 
-*Theorems.* A traced state refines itself, and entering or leaving a frame
-keeps refinement.
+*Theorems.* A traced state refines itself, refinement of traced states is
+transitive, and entering or leaving a frame keeps refinement.
 :::
 
 :::readable Fir.TraceEnd.trace Fir.TraceEnd.trace_after (fingerprint := "4406253799945635138")

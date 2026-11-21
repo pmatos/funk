@@ -27,8 +27,8 @@ refined by its own, since memories that refine others, with the same
 allocations escaped, give ends that refine each other
 (`End.isRefinedBy_of_mem`). At each budget, each path that runs out of fuel
 is allowed in the same way. Divergence needs one trace of the source for
-every budget, which the next stage of #233 gives under its hypothesis that
-each op has finitely many outcomes given the world's answers.
+every budget, which `Fir.Execution.TraceDiverge` gives under the hypothesis
+that each op has finitely many outcomes given the world's answers.
 -/
 
 namespace Fir
@@ -156,6 +156,21 @@ theorem List.IsRefinedPrefix.getElem? {A : Type} [HRefinement A A] {l l' : List 
   obtain ⟨b, hb, hab⟩ := List.IsRefinedBy.getElem?_some hm i a ha
   have hi : i < m.length := (List.getElem?_eq_some_iff.1 hb).1
   exact ⟨b, by rw [List.getElem?_append_left hi]; exact hb, hab⟩
+
+/-- A list refined, at each of its places, by the element of another there,
+is refined by a prefix of the other. -/
+theorem List.isRefinedPrefix_of_getElem? {A : Type} [HRefinement A A] :
+    ∀ {l l' : List A}, (∀ (i : Nat) (a : A), l[i]? = some a → ∃ b, l'[i]? = some b ∧ a ⊑ b) →
+      List.IsRefinedPrefix l l'
+  | [], l', _ => List.isRefinedPrefix_nil l'
+  | a :: l, l', h => by
+    obtain ⟨b, hb, hab⟩ := h 0 a rfl
+    match l', hb with
+    | b' :: l', hb =>
+      cases hb
+      obtain ⟨m, hm, hp⟩ := List.isRefinedPrefix_of_getElem? (l := l) (l' := l')
+        fun i x hx => h (i + 1) x hx
+      exact ⟨b :: m, ⟨hab, hm⟩, (List.prefix_cons_inj _).2 hp⟩
 
 section
 

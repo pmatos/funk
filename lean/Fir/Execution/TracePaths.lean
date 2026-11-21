@@ -45,6 +45,15 @@ theorem TraceEnd.notStuck_ok (a : α) (t : List B) (s : σ) :
     TraceEnd.NotStuck (Except.ok (Except.ok a, t, s) : TraceEnd B σ (Except ε α)) :=
   fun _ _ _ h => by cases h
 
+/-- A way of ending that is not stuck is not stuck after a trace. -/
+theorem TraceEnd.NotStuck.after {t : List B} {e : TraceEnd B σ (Except ε α)}
+    (h : TraceEnd.NotStuck e) : TraceEnd.NotStuck (e.after t) := by
+  rcases e with ⟨_, _⟩ | ⟨y, t', s⟩
+  · exact TraceEnd.notStuck_error _ _
+  · rcases y with er | a
+    · exact absurd rfl (h er t' s)
+    · exact TraceEnd.notStuck_ok _ _ _
+
 /-- A way of ending that allows another is not stuck, when the relation on
 what they give relates no stuck path to anything. -/
 theorem TraceEnd.Allows.notStuck [HRefinement B B] [HRefinement σ σ] {γ : Type}
