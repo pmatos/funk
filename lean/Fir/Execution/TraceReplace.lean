@@ -28,7 +28,9 @@ it is read for whole functions, for a dialect that shows events:
   both modules.
 
 Divergence of the target across a black box, silent or with acts forever,
-is stage 3c-2 of #233: the two runs do not go in step there.
+needs an argument of its own, since the two runs do not go in step there:
+`Fir.Execution.TraceCalleeDiverge` gives it, and
+`Fir.Execution.TraceReplaceDiverge` completes congruence in the callee.
 -/
 
 namespace Fir

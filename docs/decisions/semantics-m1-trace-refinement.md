@@ -20,9 +20,11 @@ theirs that way. For congruence in the callee over the traced runs of such
 a dialect, the spec proves that replacing a callee's body by one that
 refines it makes the new module run each call as the old one does, and
 that each return and each UB of a caller in a module that does is allowed
-by the old (`TraceAhead.lean` to `TraceReplace.lean`). Divergence across the replaced callee is not
-implemented yet (#233, stage 3c-2), nor are the core's and CoreGpu's
-congruence in the callee through that engine.
+by the old (`TraceAhead.lean` to `TraceReplace.lean`), and, when its ops
+have finitely many outcomes given the world's answers, that each divergence
+is too, so congruence in the callee in full (`TraceBranch.lean` to
+`TraceReplaceDiverge.lean`). The core's and CoreGpu's congruence in the
+callee through that engine is not implemented yet (#233, stage 3c-2b).
 
 ## Refinement over traced runs
 
@@ -132,10 +134,22 @@ semantics-m1-trace.md.
   budget and the rest's at another give the whole's at their sum plus one.
   Rejected: allow in step, as refined arguments do, which a replaced body
   with a different number of steps breaks.
-- **Divergence across the callee.** It is stage 3c-2 of #233. In-step
-  divergence (`TRun.ExhaustedAllowed`) compares the two runs tick for tick
-  at each budget, and a black box speaks only of behaviours, never of one
-  path out of fuel, so it needs an argument of its own, under the ruled
-  hypothesis that each op has finitely many outcomes given the world's
-  answers. Rejected: reuse in-step divergence across the black box, which
-  a replaced body that takes a different number of steps breaks.
+- **Divergence across the callee, move by move.** In-step divergence
+  (`TRun.ExhaustedAllowed`) compares the two runs tick for tick at each
+  budget, and a black box speaks only of behaviours, never of one path out
+  of fuel. So the target is followed move by move: an op with one of its
+  outcomes, entering a callee, or a callee's whole return (`TCfg.Move`).
+  Under the ruled hypothesis that each op has finitely many outcomes given
+  the world's answers, a pigeonhole step finds a move that infinitely many
+  of the target's paths take (`TGood.move`). The target's branch of such
+  moves shows its whole stream (`TBranchT.exhaustive`), and the source
+  follows it move for move, or allows the stream by UB or by the black box
+  (`TCfg.Follows.allows`). Rejected: reuse in-step divergence across the
+  black box, which a replaced body that takes a different number of steps
+  breaks.
+- **The target's stream at unboundedly many budgets.** The pigeonhole step
+  asks of a run that it show its stream for each number of acts at
+  unboundedly many budgets (`TGood`), not at every budget. Rejected: ask it
+  at every budget, which cutting a callee down to a smaller budget breaks:
+  each cut can cost `W` steps of fuel for each of the callee's steps, so the
+  deadlines would grow at every move.

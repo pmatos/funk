@@ -279,6 +279,17 @@ import FirSpec.Execution.TraceBlackBox
 import FirSpec.Execution.TraceCallsAllowed
 import FirSpec.Execution.TraceArgsFrom
 import FirSpec.Execution.TraceReplace
+import FirSpec.Execution.TraceBranch
+import FirSpec.Execution.TraceMoves
+import FirSpec.Execution.TraceMoveCases
+import FirSpec.Execution.TraceGood
+import FirSpec.Execution.TraceMoveSel
+import FirSpec.Execution.TraceTargetBranch
+import FirSpec.Execution.TraceShowsObs
+import FirSpec.Execution.TraceFollow
+import FirSpec.Execution.TraceFollowStep
+import FirSpec.Execution.TraceCalleeDiverge
+import FirSpec.Execution.TraceReplaceDiverge
 import FirSpec.Core.Trace
 import FirSpec.Execution.MemoryEndModes
 import FirSpec.Execution.MemoryModes
