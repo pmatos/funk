@@ -72,5 +72,6 @@ $`\vec{v} \sqsubseteq \vec{v}'`, a poison by any value:
   ends that refine each other.
 
 Divergence, silent or with acts forever, needs one trace of the source at
-every budget, and the next stage gives it.
+every budget, which the section on refined arguments, divergence included,
+gives.
 :::

@@ -234,6 +234,22 @@ event.
 
 {includeReadable "." Fir.Execution.TraceArgs "Refined arguments over traced runs: returns, UB and each budget" FirSpec.Execution.TraceArgs (level := 1)}
 
+{includeReadable "." Fir.Execution.TraceSteps "The first steps of a marked trace" FirSpec.Execution.TraceSteps (level := 1)}
+
+{includeReadable "." Fir.Execution.TraceFinite "Ops of finitely many outcomes, given the world's answers" FirSpec.Execution.TraceFinite (level := 1)}
+
+{includeReadable "." Fir.Execution.TraceKonig "Divergence of a traced run, by König's lemma" FirSpec.Execution.TraceKonig (level := 1)}
+
+{includeReadable "." Fir.Execution.TraceChain "Calls between two steps" FirSpec.Execution.TraceChain (level := 1)}
+
+{includeReadable "." Fir.Execution.TracePace "The fuel of a return" FirSpec.Execution.TracePace (level := 1)}
+
+{includeReadable "." Fir.Execution.TraceTruncate "Truncating a traced run" FirSpec.Execution.TraceTruncate (level := 1)}
+
+{includeReadable "." Fir.Execution.TraceFiniteRuns "Finitely many traces at one budget" FirSpec.Execution.TraceFiniteRuns (level := 1)}
+
+{includeReadable "." Fir.Execution.TraceDiverge "Refined arguments over traced runs, divergence included" FirSpec.Execution.TraceDiverge (level := 1)}
+
 {includeReadable "." Fir.Core.Trace "The core's traced runs" FirSpec.Core.Trace (level := 1)}
 
 {includeReadable "." Fir.Execution.MemoryEndModes "Modes that see the end of a return" FirSpec.Execution.MemoryEndModes (level := 1)}

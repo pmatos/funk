@@ -1,7 +1,7 @@
 import Fir.Core.MemoryCallRefine
 import Fir.Core.Observe
 import Fir.Execution.TraceRefine
-import Fir.Execution.TraceObligationLaws
+import Fir.Execution.TraceDiverge
 
 /-!
 # The core's traced runs
@@ -28,11 +28,15 @@ every world, with no hypothesis beyond those they have with memory:
 
 Its ops meet the obligation of the traced layer for a dialect that shows
 events (`Fir.Execution.TraceObligations`): each is monotone with memory,
-and the lift onto the traced state keeps it.
+and the lift onto the traced state keeps it. They also meet the hypothesis
+of that layer's divergence (`Fir.Execution.TraceFinite`): each has finitely
+many outcomes with memory, so finitely many given the world's answers.
 
-Once the core shows events, its traced semantics is no longer this lift,
-and these theorems are proved by the theorems of the traced layer (stages
-3b and 3c of #233), with the same statements.
+So refined arguments is proved by the traced layer's own theorem for a
+dialect that shows events (`Fir.Execution.TraceDiverge`), as it stays once
+the core shows events and its traced semantics is no longer this lift.
+Congruence in the callee is proved from what holds with memory until stage
+3c of #233 gives the traced layer's own theorem, with the same statement.
 -/
 
 namespace Fir
@@ -52,21 +56,37 @@ namespace Core
 variable {M : Module CoreDialect} {f : Func CoreDialect} {N : Type} [DecidableEq N]
   (lay : N → MemLayout) (ρ : DialectEffects.Mem CoreDialect → N) (L : RunItems) (μ : Nat → N)
 
+/-- Every core function's ops that run by their own rule are monotone in the
+core's traced semantics, wherever a run names the core's memories: each is
+monotone with memory, and the lift onto the traced state keeps it. -/
+theorem traceOpsMonotone (g : Func CoreDialect) :
+    letI := DialectTrace.traceAt (d := CoreDialect) lay ρ L
+    g.TraceOpsMonotone (DialectTrace.Acts CoreDialect) (TraceState N (unitsOf lay)) :=
+  Func.TraceOpsMonotone.ofMem lay ρ L fun _ _ o _ hc => Op.memMonotone_all o.op hc lay ρ L
+
+/-- Every core op that runs by its own rule has finitely many outcomes in
+the core's traced semantics, given the world's answers, wherever a run names
+the core's memories: each has finitely many with memory, and the lift onto
+the traced state keeps it. -/
+theorem opsTraceFinite :
+    letI := DialectTrace.traceAt (d := CoreDialect) lay ρ L
+    OpsTraceFinite CoreDialect (DialectTrace.Event CoreDialect) (DialectTrace.Answer CoreDialect)
+      (TraceState N (unitsOf lay)) :=
+  OpsTraceFinite.ofMem lay ρ L (opsFinite lay ρ L)
+
 /-- Refined arguments over traced runs: on arguments that refine others, a
 poison by any value, the spec's traced runs of every function of every core
 module refine its traced runs on those others, the end of each return
 included, calls and recursion included, wherever a run names the core's
-memories. -/
+memories. It is proved by the traced layer's own theorem for a dialect
+that shows events: the core's ops are monotone in the traced layer and have
+finitely many outcomes given the world's answers. -/
 theorem trace_args_isRefinedBy (M : Module CoreDialect) (f : Func CoreDialect)
     {a a' : HVector toType (f.params.map (·.2))} (h : a.Forall₂ TyRefinement.IsRefinedBy a') :
     traceObservable (f.observedRuns lay ρ L μ M a) ⊑
       traceObservable (f.observedRuns lay ρ L μ M a') :=
-  letI := DialectMemDenote.denoteAt (d := CoreDialect) lay ρ L
-  have hm : ∀ g : Func CoreDialect, g.MemOpsMonotone N (unitsOf lay) :=
-    fun _ _ _ o _ hc => Op.memMonotone_all o.op hc lay ρ L
-  Func.traceRuns_isRefinedBy_of_from lay ρ L μ _ Ty.isRefinedBy_trans
-    (Func.memRunsFrom_args_isRefinedBy M (fun g _ => hm g) f (hm f) h
-      (Memory.Memories.isRefinedBy_refl _))
+  Func.traceRuns_isRefinedBy_of_args lay ρ L μ _ Ty.isRefinedBy_trans (opsTraceFinite lay ρ L)
+    (fun g _ => traceOpsMonotone lay ρ L g) (traceOpsMonotone lay ρ L f) h
 
 /-- Refined arguments over traced runs, at every world: on arguments that
 refine others, each outcome that the spec's traced runs of a function of a
@@ -77,14 +97,6 @@ theorem trace_args_isRefinedBy_world (M : Module CoreDialect) (f : Func CoreDial
     ∀ w t, (traceObservable (f.observedRuns lay ρ L μ M a')).atWorld w t →
       ∃ s, traceObservable (f.observedRuns lay ρ L μ M a) s ∧ s ⊑ t :=
   TBehaviour.isRefinedBy_iff_world.1 (trace_args_isRefinedBy lay ρ L μ M f h)
-
-/-- Every core function's ops that run by their own rule are monotone in the
-core's traced semantics, wherever a run names the core's memories: each is
-monotone with memory, and the lift onto the traced state keeps it. -/
-theorem traceOpsMonotone (g : Func CoreDialect) :
-    letI := DialectTrace.traceAt (d := CoreDialect) lay ρ L
-    g.TraceOpsMonotone (DialectTrace.Acts CoreDialect) (TraceState N (unitsOf lay)) :=
-  Func.TraceOpsMonotone.ofMem lay ρ L fun _ _ o _ hc => Op.memMonotone_all o.op hc lay ρ L
 
 /-- Congruence in the callee over traced runs: replacing the body of a
 function `@g` of a valid core module with one under which `@g`, run in the

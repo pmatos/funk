@@ -191,6 +191,14 @@ import Fir.Execution.TracePaths
 import Fir.Execution.TraceStepPaths
 import Fir.Execution.TraceOpsRefine
 import Fir.Execution.TraceArgs
+import Fir.Execution.TraceSteps
+import Fir.Execution.TraceFinite
+import Fir.Execution.TraceKonig
+import Fir.Execution.TraceChain
+import Fir.Execution.TracePace
+import Fir.Execution.TraceTruncate
+import Fir.Execution.TraceFiniteRuns
+import Fir.Execution.TraceDiverge
 import Fir.Execution.TraceScript
 import Fir.Execution.MemoryEndModes
 import Fir.Core.Observe
