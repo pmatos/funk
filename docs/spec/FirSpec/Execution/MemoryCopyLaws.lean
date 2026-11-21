@@ -35,7 +35,7 @@ access through both pointers, so a copy of no units still faults through
 a pointer with no provenance, or into a freed allocation.
 :::
 
-:::readable Fir.copyUnits_load Fir.copyUnits_apply (pin := Fir.instMonadMemoryStateT) (fingerprint := "9945837637494627467")
+:::readable Fir.copyUnits_load Fir.copyUnits_apply (pin := Fir.instMonadMemoryStateT) (fingerprint := "18419824855619742446")
 *Theorems: how a copy of units ends.* In the
 {ref "The-fir-specification--Memory--The-state-layer"}[state layer] over
 the set monad, a copy of units ends from the memories $`S` as the store of

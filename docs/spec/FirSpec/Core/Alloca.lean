@@ -46,7 +46,7 @@ $`\mathsf{bf16}` are aligned to 2 units, $`\mathsf{f32}` to 4,
 $`\mathsf{f64}` to 8 and $`\mathsf{f128}` to 16.
 :::
 
-:::readable Fir.Core.Ty.defaultAlign Fir.Core.allocaShape Fir.Core.allocaRule (pin := Fir.MonadMemory) (pin := Fir.Core.Op) (fingerprint := "10947181491181092035")
+:::readable Fir.Core.Ty.defaultAlign Fir.Core.allocaShape Fir.Core.allocaRule (pin := Fir.MonadMemory) (pin := Fir.Core.Op) (fingerprint := "14773220625118106683")
 *Definition: the rule of $`\mathsf{alloca}`.* Let a run's memories have
 the layout entries $`\ell`, and let the run name the core's memory $`x`
 as $`\rho(x)`. For $`\mathsf{alloca}_N~k~t~c~a`, which allocates $`c`
@@ -85,7 +85,7 @@ The count $`c`, and so $`n`, has no bound, as the human ruled on
 error of the run, as a deep recursion is, and not a rule of the spec.
 :::
 
-:::readable Fir.Core.Ty.fieldShape_eq_allocaShape (pin := Fir.Core.Ty.fieldShape) (fingerprint := "13248221461977826623")
+:::readable Fir.Core.Ty.fieldShape_eq_allocaShape (pin := Fir.Core.Ty.fieldShape) (fingerprint := "18093245466459853265")
 *Theorem: a field takes what one allocated value takes.* For every map
 $`\ell` from memories to their layout entries, every memory $`n` and every
 core type $`t`, an integer, a float or a pointer, the units and the alignment that a field of

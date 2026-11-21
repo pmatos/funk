@@ -51,17 +51,6 @@ def Ty.memory : Ty → Option Nat
   | .ptr n => some n
   | _ => none
 
-/-- An integer or a pointer type: the types whose field in an aggregate's
-layout takes what one value that `alloca` allocates takes
-(`Ty.fieldShape_eq_allocaShape`). A float type is not yet a field (#264),
-though `alloca` allocates floats. -/
-def Ty.IsElem : Ty → Prop
-  | .int _ | .ptr _ => True
-  | .float _ _ => False
-
-instance : DecidablePred Ty.IsElem := fun t => by
-  cases t <;> unfold Ty.IsElem <;> infer_instance
-
 /-- The least power of two that is at least `n`, `Nat.nextPowerOfTwo`
 written as a loop of at most `n` doublings, by structural recursion, so that
 the rules of validation that use it rest on no axiom. -/

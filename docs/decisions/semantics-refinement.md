@@ -203,7 +203,8 @@ alignment is not covered yet, as with the other limits of this proof device
 below.
 No access reaches a freed block, so its units are not compared, and a store to
 a block that is then freed may be dropped. Refined memories have the same
-frames and allocations, each memory refined block by block
+frames, allocations and counts of integers turned back into pointers
+(`semantics-m1-addresses.md`), each memory refined block by block
 (`lean/Fir/Memory/Refine.lean`). Entering and leaving a call, allocating,
 freeing, loading and storing keep it. The human ruled on #231 on 2026-11-11
 that a punned load gives poison and that a pointer's fragments keep its

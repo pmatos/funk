@@ -17,7 +17,8 @@ keeps the effects of the monad below it, and adds two:
   each load and store an aligned access, and an access that faults,
   misaligned included, is the monad's UB, with the fault's reason
   (ADR-2026-11-09-1542). Exposing a pointer that no address may be given is the
-  monad's UB too;
+  monad's UB too. Turning an integer back into a pointer has one outcome,
+  and counts the call in the memories;
 * a frame enters a call before its computation and leaves it after, so a
   call's stack allocations are freed when it returns
   (ADR-2026-11-09-1548).
@@ -70,6 +71,7 @@ instance instMonadMemoryStateT [Monad m] [MonadUB m] :
   expose x g P p S := match S.expose x g P p with
     | some r => pure r
     | none => MonadUB.ub noAddressReason
+  fromAddr x k P i S := pure (S.fromAddr x k P i)
 
 /-!
 # Morphisms through the layer
@@ -142,6 +144,14 @@ variable [MonadUB m] [MonadUB n]
 theorem MonadMorphism.state_alloc (x : Mem) (k : AllocKind) (size al : Nat) :
     (φ.state (Memories Mem unit)).map (MonadMemory.alloc x k size al) =
       MonadMemory.alloc (m := StateT (Memories Mem unit) n) x k size al := by
+  funext S
+  exact φ.map_pure _
+
+/-- A morphism through the layer keeps turning integers back into
+pointers. -/
+theorem MonadMorphism.state_fromAddr (x : Mem) (k : Resolver) (P : Nat) (i : BitVec P) :
+    (φ.state (Memories Mem unit)).map (MonadMemory.fromAddr x k P i) =
+      MonadMemory.fromAddr (m := StateT (Memories Mem unit) n) x k P i := by
   funext S
   exact φ.map_pure _
 

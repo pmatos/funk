@@ -1,5 +1,5 @@
 import Fir.Validation.Layout
-import Fir.Memory.Policy
+import Fir.Memory.Resolver
 
 /-!
 # The items a run gives each op
@@ -24,6 +24,13 @@ spec's runs are those of every policy (the section on runs under every
 address policy), while `fir-ref` follows the canonical layout, the policy
 that proposes nothing. So a run made from its module gives the canonical
 policy, and the spec's runs replace it by each policy in turn.
+
+It carries the run's address resolver for each memory too, by its number:
+which allocation the run proposes for an integer that an op turns back
+into a pointer (the section on address resolvers). `fir-ref` follows the
+canonical resolver, which proposes none, so a run made from its module
+gives it, and the spec's runs replace it by each resolver that they keep
+(the section on runs under every address policy).
 
 Every obligation and guarantee over the semantics with memory holds for
 every such record, with no hypothesis on it, so for every address policy.
@@ -56,18 +63,23 @@ structure LayoutPlace where
   fields : List FieldPlace
 
 /-- The items of a module that a run gives each op's rule: the layout of
-each aggregate, by its symbol, if there is one, and the address policy of
-each memory, by its number, which is the canonical one unless the run says
-otherwise. -/
+each aggregate, by its symbol, if there is one, and the address policy and
+resolver of each memory, by its number, which are the canonical ones unless
+the run says otherwise. -/
 structure RunItems where
   layout? : Name → Option LayoutPlace
   addrs : Nat → Memory.Policy := fun _ => Memory.Policy.canonical
+  resolvers : Nat → Memory.Resolver := fun _ => Memory.Resolver.canonical
 
 /-- The items of a run that gives no item, under the canonical layout. -/
 def RunItems.empty : RunItems := { layout? := fun _ => none }
 
 /-- The items `L` under the address policy `g` of each memory. -/
 def RunItems.withAddrs (L : RunItems) (g : Nat → Memory.Policy) : RunItems := { L with addrs := g }
+
+/-- The items `L` under the address resolver `k` of each memory. -/
+def RunItems.withResolvers (L : RunItems) (k : Nat → Memory.Resolver) : RunItems :=
+  { L with resolvers := k }
 
 variable {d : Dialect} [DialectValidation d]
 
