@@ -44,6 +44,22 @@ theorem g'_ret (s : St) :
 /-- The marked trace of one step shows no act. -/
 theorem actsOf_tick : Step.actsOf ([.tick] : List (Step (DialectTrace.Acts CallDialect))) = [] := rfl
 
+/-- A branch whose moves show no act shows the empty stream. -/
+theorem acts_silent {t : Nat → List (Step (DialectTrace.Acts CallDialect))}
+    (ht : ∀ i, Step.actsOf (t i) = []) : TBranch.acts t 0 = fun _ => none := by
+  have hpre : ∀ j i, Step.actsOf (TBranch.pre t i j) = [] := by
+    intro j
+    induction j with
+    | zero => intro i; rfl
+    | succ j ih => intro i; simp only [TBranch.pre, Step.actsOf_append, ht, ih]; rfl
+  funext p
+  cases ha : TBranch.acts t 0 p with
+  | none => rfl
+  | some a =>
+    obtain ⟨j, hj⟩ := TBranch.acts_some ha
+    rw [hpre] at hj
+    cases hj
+
 /-- A run that shows the empty stream at every budget diverges silently after
 no act. -/
 theorem diverge_of_tShows {R : Nat → TRun (DialectTrace.Acts CallDialect)
@@ -98,22 +114,7 @@ theorem quiet_diverges :
   have hb := TBranch.tShows (R := fun i => (qs { (TraceState.init : St) with
       mem := (TraceState.init : St).mem.enter } i).exh _ newModule)
     (fun i => (quiet_moves _ i).tStep (DialectTrace.stepAt_oneStep lay Empty.elim RunItems.empty)) 0
-  have hnone : TBranch.acts (fun _ => ([.tick] : List (Step (DialectTrace.Acts CallDialect)))) 0 =
-      fun _ => none := by
-    have hpre : ∀ j i, Step.actsOf (TBranch.pre (fun _ => ([.tick] : List (Step
-        (DialectTrace.Acts CallDialect)))) i j) = [] := by
-      intro j
-      induction j with
-      | zero => intro i; rfl
-      | succ j ih => intro i; simp only [TBranch.pre, Step.actsOf_append, actsOf_tick, ih]; rfl
-    funext p
-    cases ha : TBranch.acts (fun _ => ([.tick] : List (Step (DialectTrace.Acts CallDialect)))) 0 p with
-    | none => rfl
-    | some a =>
-      obtain ⟨j, hj⟩ := TBranch.acts_some ha
-      rw [hpre] at hj
-      cases hj
-  rw [hnone] at hb
+  rw [acts_silent fun _ => actsOf_tick] at hb
   have hb' := hb.congr (TCfg.exh_iff_traceFrom (M := newModule) (g := quiet) (a := .nil)
     (s := TraceState.init) rfl)
   exact (Func.traceRuns_diverge_iff_from lay Empty.elim RunItems.empty _ _).2 (diverge_of_tShows hb')

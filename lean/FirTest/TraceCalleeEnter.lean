@@ -130,21 +130,7 @@ theorem caller_diverges :
   have hb := TBranch.tShows (R := fun i => (cs { (TraceState.init : St) with
       mem := (TraceState.init : St).mem.enter } i).exh _ loopModule)
     (fun i => (caller_moves _ i).tStep (DialectTrace.stepAt_oneStep lay Empty.elim RunItems.empty)) 0
-  have hnone : TBranch.acts ct 0 = fun _ => none := by
-    have hct : ∀ i, Step.actsOf (ct i) = [] := fun i => by cases i <;> rfl
-    have hpre : ∀ j i, Step.actsOf (TBranch.pre ct i j) = [] := by
-      intro j
-      induction j with
-      | zero => intro i; rfl
-      | succ j ih => intro i; simp only [TBranch.pre, Step.actsOf_append, hct, ih]; rfl
-    funext p
-    cases ha : TBranch.acts ct 0 p with
-    | none => rfl
-    | some a =>
-      obtain ⟨j, hj⟩ := TBranch.acts_some ha
-      rw [hpre] at hj
-      cases hj
-  rw [hnone] at hb
+  rw [acts_silent fun i => by cases i <;> rfl] at hb
   have hb' := hb.congr (TCfg.exh_iff_traceFrom (M := loopModule) (g := caller) (a := .nil)
     (s := TraceState.init) rfl)
   exact (Func.traceRuns_diverge_iff_from lay Empty.elim RunItems.empty _ _).2 (diverge_of_tShows hb')
