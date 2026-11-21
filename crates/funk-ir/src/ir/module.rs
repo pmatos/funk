@@ -158,6 +158,13 @@ pub fn trim_attrs(mut attrs: Vec<Vec<Attr>>) -> Vec<Vec<Attr>> {
     attrs
 }
 
+/// Whether the lists of attributes `attrs` of `n` places are in the form a
+/// [`Func`] holds them in (`AttrsTrimmed`): at most one list per place, and
+/// no empty list at the end.
+pub fn attrs_trimmed(attrs: &[Vec<Attr>], n: usize) -> bool {
+    attrs.len() <= n && attrs.last().is_none_or(|a| !a.is_empty())
+}
+
 impl Func {
     /// The attributes of the parameter at `i`: none past those held.
     pub fn param_attrs_of(&self, i: usize) -> &[Attr] {

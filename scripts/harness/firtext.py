@@ -320,13 +320,6 @@ class Reader:
         while (t := self.peek()) is not None and t.kind in ATTR_START:
             self.attr()
 
-    def types(self) -> tuple[str, ...]:
-        out = [self.type()]
-        while self.at(","):
-            self.take(",")
-            out.append(self.type())
-        return tuple(out)
-
     def type(self) -> str:
         return self.attr()
 

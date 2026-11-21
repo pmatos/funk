@@ -373,14 +373,9 @@ impl Registry {
     /// claims carries none.
     pub fn sig_attrs(&self, ty: &Type, attrs: &[Attr]) -> bool {
         let name = word_dialect(&ty.name).unwrap_or(CORE);
-        match self.dialect(name) {
-            Some(d) => d
-                .types
-                .iter()
-                .find(|t| t.check(ty).is_some())
-                .map_or(attrs.is_empty(), |t| t.sig_attrs(ty, attrs)),
-            None => attrs.is_empty(),
-        }
+        self.dialect(name)
+            .and_then(|d| d.types.iter().find(|t| t.check(ty).is_some()))
+            .map_or(attrs.is_empty(), |t| t.sig_attrs(ty, attrs))
     }
 
     /// The units and the alignment of a field of type `ty` in the memory

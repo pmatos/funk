@@ -19,7 +19,7 @@ use super::Diagnostic;
 use super::cfg::Cfg;
 use super::ops;
 use crate::ir::names::is_name;
-use crate::ir::{Attr, Block, Func, LocRef, Part, Region, SymbolTable, Type};
+use crate::ir::{Block, Func, LocRef, Part, Region, SymbolTable, Type, attrs_trimmed};
 use crate::registry::{FuncContext, Registry, TypeCheck};
 
 /// What a function is checked against: its module's symbols and location
@@ -203,10 +203,9 @@ fn check_signature(f: &Func, reg: &Registry, out: &mut Vec<Diagnostic>) {
             "the function's parameters end in ...: a fir function is not variadic, only an external declaration is".into(),
         ));
     }
-    let trimmed = |attrs: &[Vec<Attr>], n: usize| {
-        attrs.len() <= n && attrs.last().is_none_or(|a| !a.is_empty())
-    };
-    if !trimmed(&f.param_attrs, f.params.len()) || !trimmed(&f.result_attrs, f.results.len()) {
+    if !attrs_trimmed(&f.param_attrs, f.params.len())
+        || !attrs_trimmed(&f.result_attrs, f.results.len())
+    {
         out.push(at(
             f,
             None,
