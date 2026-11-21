@@ -250,6 +250,16 @@ event.
 
 {includeReadable "." Fir.Execution.TraceDiverge "Refined arguments over traced runs, divergence included" FirSpec.Execution.TraceDiverge (level := 1)}
 
+{includeReadable "." Fir.Execution.TraceAhead "More fuel, in the traced layer" FirSpec.Execution.TraceAhead (level := 1)}
+
+{includeReadable "." Fir.Execution.TraceBlackBox "Two modules in the traced layer, compared call by call" FirSpec.Execution.TraceBlackBox (level := 1)}
+
+{includeReadable "." Fir.Execution.TraceCallsAllowed "Every return and UB of the target, allowed, call by call" FirSpec.Execution.TraceCallsAllowed (level := 1)}
+
+{includeReadable "." Fir.Execution.TraceArgsFrom "Refined arguments over traced runs from a given traced state" FirSpec.Execution.TraceArgsFrom (level := 1)}
+
+{includeReadable "." Fir.Execution.TraceReplace "Congruence in the callee over traced runs: returns and UB" FirSpec.Execution.TraceReplace (level := 1)}
+
 {includeReadable "." Fir.Core.Trace "The core's traced runs" FirSpec.Core.Trace (level := 1)}
 
 {includeReadable "." Fir.Execution.MemoryEndModes "Modes that see the end of a return" FirSpec.Execution.MemoryEndModes (level := 1)}

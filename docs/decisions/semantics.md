@@ -19,7 +19,8 @@ this page and an ADR disagree, the page wins, and the ADR is fixed or deleted
 - semantics-m1-memory-access.md: aligned accesses, loads and stores in M1;
 - semantics-m1-addresses.md: the addresses of exposed allocations in M1;
 - semantics-m1-dialects.md: dialects, levels and the second dialect in M1;
-- semantics-m1-trace.md: what an M1 run shows.
+- semantics-m1-trace.md: what an M1 run shows;
+- semantics-m1-trace-refinement.md: refinement over M1 traced runs.
 
 The rows of the fir v0 decision record (E0, S2, H1, H2 and H3 on this page, S4
 on semantics-refinement.md and S7 on semantics-interpreter.md) were agreed with
