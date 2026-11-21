@@ -11,7 +11,8 @@ semantics with memory, lifted:
   poison argument is refined by `@fact` on `5`, and so at every world;
 * congruence in the callee over traced runs: `@count` is refined by itself
   in the module where `@g` has no blocks (`FirTest.RefineCallsFrom`), and so
-  at every world.
+  at every world. The traced layer's own theorem proves it (stage 3c-2b),
+  from the hypothesis with memory that `@g` meets.
 -/
 
 namespace FirTest
@@ -84,6 +85,12 @@ theorem count_traceIsRefinedBy_world (L : RunItems) :
 
 /-- info: 'Fir.Core.trace_args_isRefinedBy_world' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.trace_args_isRefinedBy_world
+
+/-- info: 'Fir.Func.traceRunsFrom_isRefinedBy_of_memRunsFrom' depends on axioms: [propext, Quot.sound] -/
+#guard_msgs in #print axioms Fir.Func.traceRunsFrom_isRefinedBy_of_memRunsFrom
+
+/-- info: 'Fir.Func.traceRunsFrom_noActs_ofMem' depends on axioms: [propext, Quot.sound] -/
+#guard_msgs in #print axioms Fir.Func.traceRunsFrom_noActs_ofMem
 
 /-- info: 'Fir.Core.trace_replaceBody_isRefinedBy_of_from' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.trace_replaceBody_isRefinedBy_of_from

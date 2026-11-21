@@ -151,12 +151,15 @@ one with no way to end in the layer, so the theorem above maps the core's
 semantics in the set monad to its semantics with memory, op by op. The
 core's obligations with memory follow from each op's own tie
 ({ref "The-fir-specification--Memory--Core-functions-with-memory"}[core functions with memory]).
-$`\mathsf{alloca}`, $`\mathsf{load}` and $`\mathsf{store}` are not tied:
-none has a rule in the set monad, and each meets each obligation with
-memory by its own rule
+$`\mathsf{alloca}`, the loads and stores of an integer, a pointer or a
+float, the copies and moves and the fills, the core ops that touch memory,
+are not tied: none has a rule in the set monad, and each meets each
+obligation with memory by its own rule
 ({ref "The-fir-specification--Memory--Stack-allocation-obligations"}[stack allocation obligations],
 {ref "The-fir-specification--Memory--Load-obligations"}[load obligations],
-{ref "The-fir-specification--Memory--Store-obligations"}[store obligations]).
+{ref "The-fir-specification--Memory--Store-obligations"}[store obligations],
+{ref "The-fir-specification--Memory--Copy-and-move-obligations"}[copy and move obligations],
+{ref "The-fir-specification--Memory--Fill-obligations"}[fill obligations]).
 $`\mathsf{fieldaddr}` is not tied either: its rule reads the layout that
 $`L` gives, so it has no rule in the set monad, and it meets each
 obligation with memory by its own rule

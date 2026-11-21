@@ -178,9 +178,9 @@ capping the natural alignment at the pointer's.
   "allocates in memory `N`". It has no rule in the set monad, so the core
   dialect no longer meets the lawful class there; its obligations with
   memory are proved op by op, and `alloca`'s by its own rule
-  (`lean/Fir/Core/AllocaLaws.lean`). A core function that reaches no
-  `alloca`, no `load` and no `store` reaches no memory
-  (`Core.reachesNoMemory`). The semantics with
+  (`lean/Fir/Core/AllocaLaws.lean`). A core function that reaches no op
+  that touches memory, no `alloca`, load, store, `memCopy` or `memSet`,
+  reaches no memory (`Core.reachesNoMemory`). The semantics with
   memory carries the core's guarantees (below).
 
 A `volatile` attribute on loads and stores makes the access an event of the
@@ -247,9 +247,15 @@ would hold with no condition, with the memory ops beside it (option C),
 which changes the dialect's structure where the versions with memory
 already cover every op.
 
+`fieldaddr`, which came after that ruling (ADR-2026-11-18-2041), touches no
+memory but reads an item of the run, which the set monad does not have, so
+the statements over the set monad leave it out too: they cover the ops that
+touch no memory and read no item (`Core.Op.readsItems`). The semantics with
+memory carries its guarantees, by its own rule and proofs.
+
 These hold for every core op, and for every function of a valid core
-module, `alloca`, the loads and stores, `memcpy`, `memmove` and `memset`
-included:
+module, `alloca`, the loads and stores, `fieldaddr`, `memcpy`, `memmove`
+and `memset` included:
 
 - the lawful classes with memory: `Core.lawfulDialectTotal`,
   `Core.lawfulDialectMonotone` and `Core.lawfulDialectMemPoison`

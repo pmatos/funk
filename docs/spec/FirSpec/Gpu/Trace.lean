@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "The traced runs of the core and gpu: readable blocks" =>
 
-:::moduleDocs (fingerprint := "1163198360710099317")
+:::moduleDocs (fingerprint := "15335213052167836552")
 :::
 
 :::readable Fir.Gpu.coreGpu_instDialectTrace Fir.Gpu.coreGpu_liftsMem Fir.Gpu.coreGpu_instInhabitedAnswer (fingerprint := "5090117320657069958")
@@ -29,7 +29,9 @@ lifts its semantics with memory, and the world has one answer.
 function of every module of the sum, a module of a nested table included,
 wherever a run names the sum's memories, the spec's traced runs on
 arguments that refine others refine its traced runs on those others, calls
-and recursion included, and so at every world.
+and recursion included, divergence too, and so at every world. The traced
+layer's own theorem for a dialect that shows events proves it, with no
+hypothesis.
 :::
 
 :::readable Fir.Gpu.trace_replaceBody_isRefinedBy_of_from Fir.Gpu.trace_replaceBody_isRefinedBy_of_from_world (fingerprint := "1852494778727179770")
@@ -38,5 +40,18 @@ table $`t` of a valid module $`M`, if $`@g` of $`t` with the new body $`b`,
 run in $`M.\mathrm{nest}(t)[g := b]` from given memories, refines $`@g` in
 $`M.\mathrm{nest}(t)`, every function of $`t` is refined over the spec's
 traced runs by itself with $`@g`'s new body, with no budget: every op of the
-sum has finitely many outcomes. So it is at every world.
+sum has finitely many outcomes. The traced layer's own theorem for a dialect
+that shows events proves it, with no `LiftsMem`, the hypothesis from given
+memories taken to the traced one by the lift. So it is at every world.
+:::
+
+:::readable Fir.Gpu.traceOpsMonotone Fir.Gpu.opsTraceFinite (fingerprint := "7865552718645386286")
+*Theorem: the sum meets the traced obligation.* Every function of the sum
+has its ops that run by their own rule monotone in the sum's traced
+semantics, wherever a run names the sum's memories: each is monotone with
+memory, and the lift onto the traced state keeps it.
+
+*Theorem: the sum meets the hypothesis of divergence.* Every op of the sum
+that runs by its own rule has finitely many outcomes in its traced
+semantics, given the world's answers.
 :::
