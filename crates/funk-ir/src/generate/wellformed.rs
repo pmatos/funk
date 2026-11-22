@@ -137,11 +137,13 @@ pub fn module(rng: &mut Rng, dialects: Dialects) -> Module {
         let Item::Func(f) = item else { continue };
         let mut shaper = Shaper::new(f, &symbols, &keys, dialects == Dialects::CoreAndToy);
         shaper.reshape(rng, f);
-        if !f.body.blocks.is_empty() && !rng.one_in(3) {
-            shaper.add_field_addrs(rng, f, &layouts);
-        }
-        if !f.body.blocks.is_empty() && rng.one_in(3) {
-            shaper.add_global_addrs(rng, f, &globals);
+        if !f.body.blocks.is_empty() {
+            if !rng.one_in(3) {
+                shaper.add_field_addrs(rng, f, &layouts);
+            }
+            if rng.one_in(3) {
+                shaper.add_global_addrs(rng, f, &globals);
+            }
         }
     }
     if rng.one_in(2) {
