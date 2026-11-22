@@ -5,8 +5,9 @@ import FirTest.DialectSet
 Tests of external declarations (ADR-2026-11-09-1547): their text, which
 reads back and prints as itself, and the headers that do not decode; and
 the rules of a valid declaration: its markers, its types, the memories its
-types name and the words of its types. A call to a declaration stays
-rejected until the run can make one (#239).
+types name and the words of its types. Validation still rejects a call to
+a declaration, which the run hands to the external-call rule
+(`FirTest.ExtCall`); #239's next stage lets validation accept it.
 `crates/funk-ir/tests/extern_decl.rs` checks the same texts, so the two
 parsers agree on each and the two validators give the same problems for
 each declaration; on the call they share only the verdict.
@@ -67,8 +68,8 @@ def externText (ps rs : String) : String := oneFunc ("extern @g(" ++ ps ++ ")" +
 #guard valid ("layout memory(1, unit(8), pointer(64), little)\n\n" ++ externText "%p: ptr(1)" "")
 #guard checks (oneFunc "extern @f() {\n}\n\nfunc @f() {\n^e:\n  ret @0\n}\n")
   ["the symbol @f names more than one item"]
--- A call to a declaration does not validate yet: the run cannot make one
--- until the external call rule (#239).
+-- A call to a declaration does not validate yet: validation accepts it with
+-- #239's next stage, which gives the core's external call its event.
 #guard checks (oneFunc ("extern @g(%a: i32) -> i32 {\n}\n\n" ++
     "func @f(%a: i32) -> i32 {\n^e:\n  %r: i32 = call @g %a @0\n  ret %r @0\n}\n"))
   ["the op refers to @g, which names no function", "the op breaks its dialect's own rule"]

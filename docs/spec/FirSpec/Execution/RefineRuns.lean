@@ -23,8 +23,8 @@ that runs each call as the source does.* In every dialect, let the target
 module $`M'`
 run each call as the source module $`M` does, with some bound $`\beta`:
 each symbol names the same function in both, or a
-{ref "The-fir-specification--Execution--Calls-as-black-boxes"}[black box].
-Let every function of $`M` have
+{ref "The-fir-specification--Execution--Calls-as-black-boxes"}[black box],
+and both declare the same symbols. Let every function of $`M` have
 {ref "The-fir-specification--Execution--Returns-and-UB___-followed-back"}[monotone ops],
 and let $`f` be a function with monotone ops. Then for all argument
 vectors $`a` and $`a'` of the parameter types of $`f` with

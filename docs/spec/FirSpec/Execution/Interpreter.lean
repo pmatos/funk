@@ -200,8 +200,8 @@ its caller has left, so a caller and all its callees share one budget
 {ref "The-fir-specification--Execution--The-runs-of-a-function___-and-fuel-monotonicity"}[the runs of a function]
 shows, so $`\min(k, n)` is $`k`; the minimum makes it plain that the
 budget shrinks at every step, so that every run ends, however deep its
-calls go. When the callee or the external-call rule is stuck or ends
-with UB, so does the caller.
+calls go. When the callee is stuck or ends with UB, so does the caller;
+when the external-call rule ends with UB, so does the caller.
 :::
 
 :::readable Fir.Func.run (pin := Fir.Run) (pin := Fir.Func.enter) (pin := Fir.Func.runOps) (fingerprint := "11400075815864987633")

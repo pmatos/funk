@@ -70,7 +70,8 @@ more steps.
 *Theorem: the source's callee allows what the target's callee does.* Let
 the target module $`M'` run each call as the source $`M` does, with the
 bound $`\beta`: each symbol names the same function in both, or a
-{ref "The-fir-specification--Execution--Calls-as-black-boxes"}[black box]. Let every function of $`M` have monotone ops. Let the
+{ref "The-fir-specification--Execution--Calls-as-black-boxes"}[black box], and both declare the same symbols. Let every function of
+$`M` have monotone ops. Let the
 symbol $`s`
 name the function $`g_0` in $`M'`, let $`a \sqsubseteq a'`, position by
 position, be vectors of values of the same types, and let entering $`g_0`
@@ -98,8 +99,8 @@ what its target does.
 *Theorem: every return and every UB of the target is allowed by the
 source.* Let the target module $`M'` run each call as the source $`M`
 does, with some bound $`\beta`: each symbol names the same function in
-both, or a {ref "The-fir-specification--Execution--Calls-as-black-boxes"}[black box]. Let every function of $`M` have monotone
-ops. Then for every budget $`n`, every function $`f` with monotone ops,
+both, or a {ref "The-fir-specification--Execution--Calls-as-black-boxes"}[black box], and both declare the same symbols. Let
+every function of $`M` have monotone ops. Then for every budget $`n`, every function $`f` with monotone ops,
 all {ref "The-fir-specification--Execution--Refined-environments"}[environments]
 $`E \sqsubseteq E'` and every list of ops $`o^*` with monotone ops,
 every end $`e'` of the target's run $`\mathrm{run}_{M'}(n, f, E', o^*)`
