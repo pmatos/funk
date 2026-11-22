@@ -75,8 +75,8 @@ pub(super) fn check_words(t: Table<'_>, reg: &Registry, out: &mut Vec<Diagnostic
             ));
         }
     }
+    let outside = |w| word_dialect(w).filter(|x| !t.dialects.iter().any(|d| d == x));
     for a in t.aggregates() {
-        let outside = |w| word_dialect(w).filter(|x| !t.dialects.iter().any(|d| d == x));
         if let Some(x) = in_types(a.types(), &outside) {
             out.push(Diagnostic::at_block(
                 &a.name,
@@ -88,7 +88,6 @@ pub(super) fn check_words(t: Table<'_>, reg: &Registry, out: &mut Vec<Diagnostic
         }
     }
     for e in t.externs() {
-        let outside = |w| word_dialect(w).filter(|x| !t.dialects.iter().any(|d| d == x));
         if let Some(x) = in_types(e.types(), &outside) {
             out.push(Diagnostic::at_block(
                 &e.name,
