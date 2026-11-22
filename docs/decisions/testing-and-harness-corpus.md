@@ -150,9 +150,12 @@ is one policy of many.
 
 The address of a global `globaladdr` has a table of its own too
 (`pointer_cells.GLOBALS`, #237): one cell, whatever its global and its
-memory. Only the interpreter-only side has it (`coverage.Side.global_addrs`),
-filled by `globaladdr.fir` and `globaladdr-memories.fir`, until the backend
-lowers globals (stage 3 of #237).
+memory. Both sides have it (`coverage.Side.global_addrs`), since the
+backend lowers it as an address relative to `%rip` (stage 3 of #237): the
+interpreter-only side's is filled by `globaladdr.fir` and
+`globaladdr-memories.fir`, the differential side's by `globaladdr.fir` and
+`globals-programs.fir`, whose tests return what a global's address
+reaches, never the address.
 
 A test exercises each op of the function it runs and of every function it calls,
 directly or through others. A function of a nested module, such as a kernel

@@ -26,9 +26,9 @@ class Tests(unittest.TestCase):
             with self.subTest(op=bad), self.assertRaises(CellError):
                 of_op(bad)
 
-    def test_only_the_interpreter_side_has_it_until_the_backend_lowers_it(self):
+    def test_both_sides_have_it_since_the_backend_lowers_it(self):
         sides = {side.name: side for side in coverage.SIDES}
-        self.assertFalse(sides["differential"].global_addrs)
+        self.assertTrue(sides["differential"].global_addrs)
         self.assertTrue(sides["interpreter"].global_addrs)
         found = cells.cells((8,), offsets=(8,), global_addrs=True)
         self.assertEqual(

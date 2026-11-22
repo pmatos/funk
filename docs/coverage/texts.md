@@ -298,6 +298,9 @@ The texts of the ops that turn pointers into integers and back,
 `ptr_expose` and `ptr_from_int` (#232), are listed in
 [texts-addresses.md](texts-addresses.md).
 
+The texts of globals and `globaladdr` (#237) are listed in
+[texts-globals.md](texts-globals.md).
+
 The texts of the gpu dialect (#212) are listed in
 [texts-gpu.md](texts-gpu.md).
 

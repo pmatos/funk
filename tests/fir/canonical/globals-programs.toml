@@ -1,0 +1,28 @@
+# Tests of globals-programs.fir: programs over globals, on fir-ref and as
+# native code (#237 stage 3). The backend places each global in .rodata,
+# .data or .bss, an addr piece is a relocation, and globaladdr is an
+# address relative to %rip. @pick follows @picks, a constant, exported
+# table of pointers into @nums at offsets 12, 4 and 0. @nth walks a list
+# of three nodes linked by addr pieces. @ticks calls @tick, which bumps
+# @count, an all-zero global, n times in one run. @copy_nums copies the
+# constant @nums into @buf, an exported all-zero global. @self_offset
+# loads @self's pointer into itself and returns the difference of the two
+# addresses, 8, and the unit it reaches. @wide_aligned takes the address
+# of @wide, a global of memory 1 aligned to 256, modulo 256, which every
+# address the spec may give agrees on, and reads @wide through a pointer
+# of memory 1 that the constant @to_wide holds. No test returns an
+# address.
+tests = [
+  { func = "@pick", args = ["0"] },
+  { func = "@pick", args = ["1"] },
+  { func = "@pick", args = ["2"] },
+  { func = "@nth", args = ["0"] },
+  { func = "@nth", args = ["1"] },
+  { func = "@nth", args = ["2"] },
+  { func = "@ticks", args = ["0"] },
+  { func = "@ticks", args = ["5"] },
+  { func = "@copy_nums", args = ["0"] },
+  { func = "@copy_nums", args = ["3"] },
+  { func = "@self_offset" },
+  { func = "@wide_aligned" },
+]

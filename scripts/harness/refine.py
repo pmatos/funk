@@ -144,8 +144,8 @@ def refines(ref: Outcome, native, types) -> Judgement:
 
     Native code's end is its values, with no event, nothing escaped and no
     live allocation: a module that `funk build` builds calls nothing outside
-    it and emits no global, and a function's stack allocations are freed
-    when it returns. A pointer result is an address, which refines only a
+    it, its globals are seen by no observer until #233, and a function's
+    stack allocations are freed when it returns. A pointer result is an address, which refines only a
     poison or dangling pointer of fir-ref's (`ends.refined`).
     """
     if ref.kind == UB:

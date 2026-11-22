@@ -91,8 +91,9 @@ an event, which the harness judges from #213's stage 3, or whose memory
 `fir-ref` could not walk, makes the test invalid.
 
 Native code's end is its values, with no event, nothing escaped and no live
-allocation: `funk build` emits no global and calls nothing outside the
-module, and a function's stack allocations are freed when it returns. So
+allocation: `funk build` calls nothing outside the module, an observer
+sees none of its globals until #233 says what it sees of an `export` one,
+and a function's stack allocations are freed when it returns. So
 values alone judge a test only where `fir-ref`'s end observes nothing, and
 a native pointer result, an address, refines only a poison or dangling
 pointer. Native runs report memory once they can hold it (#213, stage 2).
