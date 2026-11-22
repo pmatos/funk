@@ -15,7 +15,8 @@ use crate::dialects::core::{MAX_MEMORY, int_width, ptr_type};
 use crate::ir::{Attr, Block, Def, Func, Item, Op};
 
 /// Adds `fieldaddr` ops to two in three of the functions of `items`, a
-/// nested module's, which may name the layouts of `items`.
+/// nested module's, which may name the layouts of `items`, and `globaladdr`
+/// ops to one in three, which may name the globals of `items`.
 pub(super) fn add_to_items(rng: &mut Rng, items: &mut [Item]) {
     let symbols: Vec<String> = items
         .iter()
@@ -27,18 +28,29 @@ pub(super) fn add_to_items(rng: &mut Rng, items: &mut [Item]) {
         .filter_map(Item::as_aggregate)
         .map(|a| a.name.clone())
         .collect();
+    let globals: Vec<String> = items
+        .iter()
+        .filter_map(Item::as_global)
+        .map(|g| g.name.clone())
+        .collect();
     for item in items {
         let Item::Func(f) = item else { continue };
-        if !f.body.blocks.is_empty() && !rng.one_in(3) {
-            let mut shaper = Shaper::new(f, &symbols, &[], false);
+        if f.body.blocks.is_empty() {
+            continue;
+        }
+        let mut shaper = Shaper::new(f, &symbols, &[], false);
+        if !rng.one_in(3) {
             shaper.add_field_addrs(rng, f, &layouts);
+        }
+        if rng.one_in(3) {
+            shaper.add_global_addrs(rng, f, &globals);
         }
     }
 }
 
 /// A block of `blocks`, which must not be empty: one of them, or in one
 /// draw of two a block of a region of one of its ops, at any depth.
-fn any_block<'b>(rng: &mut Rng, blocks: &'b mut [Block]) -> &'b mut Block {
+pub(super) fn any_block<'b>(rng: &mut Rng, blocks: &'b mut [Block]) -> &'b mut Block {
     let b = rng.below(blocks.len() as u64) as usize;
     let block = &mut blocks[b];
     let owners: Vec<usize> = (0..block.ops.len())
@@ -146,7 +158,7 @@ impl Shaper<'_> {
     }
 
     /// A new pointer of memory `n`, which the caller defines.
-    fn define_pointer(&mut self, rng: &mut Rng, n: u32) -> Def {
+    pub(super) fn define_pointer(&mut self, rng: &mut Rng, n: u32) -> Def {
         let name = Self::fresh(rng, &mut self.taken);
         self.pointers.push((name.clone(), n));
         Def::new(name, ptr_type(n))

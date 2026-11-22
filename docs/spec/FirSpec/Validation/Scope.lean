@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Scope and symbols: readable blocks" =>
 
-:::moduleDocs (fingerprint := "15099674176827109952")
+:::moduleDocs (fingerprint := "18311425090648361345")
 :::
 
 :::readable Fir.Func.blocks Fir.Region.allBlocks Fir.Block.allBlocks Fir.Operation.regionBlocks Fir.Func.allBlocks (fingerprint := "9127946111391752751")
@@ -161,20 +161,23 @@ symbol table: $`\mathrm{funcs}(\mathrm{table}(M)) = \mathrm{funcs}(M)` and
 $`\mathrm{symtab}_{\mathrm{table}(M)} = \mathrm{symtab}_M`.
 :::
 
-:::readable Fir.LayoutRef Fir.Aggregate.ref Fir.SymbolTable.layouts Fir.OpContext (fingerprint := "14317796907801914433")
+:::readable Fir.LayoutRef Fir.Aggregate.ref Fir.SymbolTable.layouts Fir.SymbolTable.globalMems Fir.OpContext (fingerprint := "9999499089856945988")
 *Definition: the context of an op.* A dialect's rule for an op may look at
-three things beyond the op itself, and at nothing else: the module's symbol
-table, the result types of the function that holds the op, and the
-aggregates' layouts of the op's table. An _op context_ $`C` holds them:
-$`\mathrm{symtab}_C(s)` gives the function type of the symbol $`s`, or is
-undefined, $`\mathrm{results}_C` is the list of result types, and
-$`\mathrm{layouts}_C(s)` gives the layout with the symbol $`s`, or is
-undefined. The rule of an op sees a layout as its memory and, for each of
+four things beyond the op itself, and at nothing else: the module's symbol
+table, the result types of the function that holds the op, the
+aggregates' layouts of the op's table, and the memories of its globals. An
+_op context_ $`C` holds them: $`\mathrm{symtab}_C(s)` gives the function
+type of the symbol $`s`, or is undefined, $`\mathrm{results}_C` is the
+list of result types, $`\mathrm{layouts}_C(s)` gives the layout with the
+symbol $`s`, or is undefined, and $`\mathrm{globals}_C(s)` gives the
+memory of the global with the symbol $`s`, or is undefined. The rule of an op sees a layout as its memory and, for each of
 its fields in order, its count, or none for a field that is not repeated;
 a table gives each symbol its first layout with that symbol, as a
 {ref "The-fir-specification--Memory--The-items-a-run-gives-each-op"}[run]
-does. The core dialect reads the first for $`\mathsf{call}`, the second
-for $`\mathsf{ret}` and the third for $`\mathsf{fieldaddr}` (#236).
+does, and each symbol its first global with that symbol, as a run places
+it. The core dialect reads the first for $`\mathsf{call}`, the second
+for $`\mathsf{ret}`, the third for $`\mathsf{fieldaddr}` (#236) and the
+fourth for $`\mathsf{globaladdr}` (#237).
 :::
 
 :::readable Fir.FuncContext Fir.DialectView Fir.DialectView.id (fingerprint := "5122442552274979552")

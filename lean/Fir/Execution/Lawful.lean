@@ -32,7 +32,7 @@ valid module holds no other instance:
   refine others, and on replacing a callee's body, whatever the new body.
 
 The core dialect does not meet the lawful class: `alloca`, the loads and
-stores, `fieldAddr`, `memCopy` and `memSet` have no rule in the set monad
+stores, `fieldAddr`, `globalAddr`, `memCopy` and `memSet` have no rule in the set monad
 (`docs/decisions/semantics-effects.md#soundness`). So the theorems below
 that take the class do not apply to it. Its guarantees are stated with
 memory, those ops included: progress for

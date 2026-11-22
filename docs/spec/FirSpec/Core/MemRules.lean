@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "The core's rules with memory: readable blocks" =>
 
-:::moduleDocs (fingerprint := "17533518403829229151")
+:::moduleDocs (fingerprint := "7251363247573169221")
 :::
 
 :::readable Fir.Core.freezeValue_map Fir.Core.ruleOfEv_map Fir.Core.exitOfEv_map (pin := Fir.MonadMorphism.KeepsChoiceUB) (pin := Fir.Core.freezeValue) (pin := Fir.Core.ruleOfEv) (pin := Fir.Core.exitOfEv) (fingerprint := "2405690779588688594")
@@ -52,7 +52,7 @@ keeps UB; and an op with no rule, as $`\mathsf{call}`, maps by the
 hypothesis on $`z_m` and $`z_n`.
 :::
 
-:::readable Fir.Core.Op.memDenote? Fir.Core.Op.memExit? Fir.Core.memDenoteIn (pin := Fir.Core.denoteWith) (pin := Fir.MonadMemory) (pin := Fir.Core.allocaRule) (fingerprint := "13426403448606302764")
+:::readable Fir.Core.Op.memDenote? Fir.Core.Op.memExit? Fir.Core.memDenoteIn (pin := Fir.Core.denoteWith) (pin := Fir.MonadMemory) (pin := Fir.Core.allocaRule) (fingerprint := "11279235307015720758")
 *Definition: the core's rules with memory.* Let $`m` be a monad with
 choice, UB and the
 {ref "The-fir-specification--Memory--The-memory-effect"}[memory effect] on
@@ -88,8 +88,12 @@ into one; these are the core ops
 that touch memory, and none has a rule without memory. The rule with
 memory of $`\mathsf{fieldaddr}~s~j` is its
 {ref "The-fir-specification--Memory--Field-address-rules"}[result] in the
-layout $`L.\mathrm{layout}(s)`, given at once: it touches no memory, but
-it reads an item, so it too has no rule without memory. Every other op
+layout $`L.\mathrm{layout}(s)`, given at once, and that of
+$`\mathsf{globaladdr}~s` its
+{ref "The-fir-specification--Memory--Global-address-rules"}[result] where
+$`L.\mathrm{global}(s)` places the global $`s`, given at once: neither
+touches memory, but each reads an item, so neither has a rule without
+memory. Every other op
 touches no memory and reads no item, so its
 rule with memory, as an op that is not a terminator and as a terminator,
 is its
@@ -106,8 +110,8 @@ monads $`m` and $`n` with choice, UB and the memory effect, a morphism
 $`\varphi` from $`m` to $`n` that keeps choice, UB, allocation, loads,
 stores, exposing and turning integers back into pointers maps the core's semantics with memory in $`m` at $`\ell`, $`\rho` and
 $`L` to its semantics with memory in $`n`, op by op, when it maps what an
-op with no rule does. $`\mathsf{fieldaddr}` maps because its rule gives
-its result at once, and $`\varphi(\mathsf{pure}~r) = \mathsf{pure}~r`.
+op with no rule does. $`\mathsf{fieldaddr}` and $`\mathsf{globaladdr}`
+map because their rules give their results at once, and $`\varphi(\mathsf{pure}~r) = \mathsf{pure}~r`.
 Every other op but $`\mathsf{alloca}`, the loads, the stores, the
 copies and moves, the fills, $`\mathsf{ptr\_expose}` and
 $`\mathsf{ptr\_from\_int}` follows from the theorem above; $`\mathsf{alloca}` maps because
@@ -148,7 +152,8 @@ fills do.
 :::readable Fir.Core.Op.liftsSetM (pin := Fir.OpLiftsSetM) (fingerprint := "6022338225824521883")
 *Theorem: every core op that touches no memory and reads no item is tied.*
 For every core op $`p` but $`\mathsf{alloca}`, the loads, the stores,
-$`\mathsf{fieldaddr}`, the copies and moves and the fills, at every
+$`\mathsf{fieldaddr}`, $`\mathsf{globaladdr}`, the copies and moves, the
+fills, $`\mathsf{ptr\_expose}` and $`\mathsf{ptr\_from\_int}`, at every
 layout $`\ell`,
 naming $`\rho` and record of items $`L`, on every operand vector, $`p`'s meaning with
 memory is its meaning in the set monad, lifted into the state layer: it
@@ -160,16 +165,19 @@ semantics in the set monad to its semantics with memory, op by op. The
 core's obligations with memory follow from each op's own tie
 ({ref "The-fir-specification--Memory--Core-functions-with-memory"}[core functions with memory]).
 $`\mathsf{alloca}`, the loads and stores of an integer, a pointer or a
-float, the copies and moves and the fills, the core ops that touch memory,
-are not tied: none has a rule in the set monad, and each meets each
+float, the copies and moves, the fills, $`\mathsf{ptr\_expose}` and
+$`\mathsf{ptr\_from\_int}`, the core ops that touch memory, are not tied: none has a rule in the set monad, and each meets each
 obligation with memory by its own rule
 ({ref "The-fir-specification--Memory--Stack-allocation-obligations"}[stack allocation obligations],
 {ref "The-fir-specification--Memory--Load-obligations"}[load obligations],
 {ref "The-fir-specification--Memory--Store-obligations"}[store obligations],
 {ref "The-fir-specification--Memory--Copy-and-move-obligations"}[copy and move obligations],
-{ref "The-fir-specification--Memory--Fill-obligations"}[fill obligations]).
-$`\mathsf{fieldaddr}` is not tied either: its rule reads the layout that
-$`L` gives, so it has no rule in the set monad, and it meets each
-obligation with memory by its own rule
-({ref "The-fir-specification--Memory--Field-address-obligations"}[field address obligations]).
+{ref "The-fir-specification--Memory--Fill-obligations"}[fill obligations],
+{ref "The-fir-specification--Memory--Pointers-as-integers-obligations"}[pointers as integers obligations]).
+$`\mathsf{fieldaddr}` and $`\mathsf{globaladdr}` are not tied either:
+their rules read the layout or the global's start that $`L` gives, so
+they have no rule in the set monad, and they meet each obligation with
+memory by their own rules
+({ref "The-fir-specification--Memory--Field-address-obligations"}[field address obligations],
+{ref "The-fir-specification--Memory--Global-address-obligations"}[global address obligations]).
 :::

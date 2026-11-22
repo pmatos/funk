@@ -39,7 +39,8 @@ global of the table, in the table's order (the section on the memories a
 run starts with). Each lives in the memory of its number for the whole
 run, with the global's alignment, its constness, and its initializer's
 units followed by zeros up to its size (the human's ruling of 2026-11-20 on
-#237, Q1). A run holds the globals of its own function's table only (Q3):
+#237, Q1). The record gives, for each global's symbol, its memory and its
+allocation's id there, which `globalAddr` reads (#237). A run holds the globals of its own function's table only (Q3):
 a nested module's globals are its kernels', as an op of a table names only
 the items of that table.
 
@@ -53,6 +54,9 @@ stay as they are.
 A run's record and validation read a table's layouts alike: each takes the
 first layout with a symbol, so an op that validation accepts finds, in
 every run, the layout it was checked against (`RunItems.ofTable_ref`).
+They read its globals alike too: each takes the first global with a
+symbol, so an op that validation accepts finds, in every run, a global of
+the memory it was checked against (`RunItems.ofTable_globalMem`).
 -/
 
 namespace Fir
@@ -89,13 +93,15 @@ structure StartAlloc where
 /-- The items of a module that a run gives each op's rule: the layout of
 each aggregate, by its symbol, if there is one, the address policy and
 resolver of each memory, by its number, which are the canonical ones unless
-the run says otherwise, and the allocations the run starts with, in
-order. -/
+the run says otherwise, the allocations the run starts with, in order, and
+where each global starts, by its symbol, if there is one: its memory and
+its allocation's id in that memory. -/
 structure RunItems where
   layout? : Name → Option LayoutPlace
   addrs : Nat → Memory.Policy := fun _ => Memory.Policy.canonical
   resolvers : Nat → Memory.Resolver := fun _ => Memory.Resolver.canonical
   starts : List StartAlloc := []
+  global? : Name → Option (Nat × Memory.AllocId) := fun _ => none
 
 /-- The items of a run that gives no item, under the canonical layout. -/
 def RunItems.empty : RunItems := { layout? := fun _ => none }
@@ -164,12 +170,14 @@ def Global.start (l : DataLayout) (gs : List Global) (g : Global) : StartAlloc :
 
 /-- The items that a run of a function of the symbol table `t`, in a module
 whose data layout is `l`, gives each op: the first aggregate's layout of
-`t` with each symbol, placed, under the canonical layout, and the
-allocation of each of `t`'s globals, in order. The layouts are placed once,
-not at each lookup. -/
+`t` with each symbol, placed, under the canonical layout, the allocation of
+each of `t`'s globals, in order, and where each global of `t` starts, as
+an address in an initializer reads it (`Global.startId?`). The layouts are
+placed once, not at each lookup. -/
 def RunItems.ofTable (l : DataLayout) (t : SymbolTable d) : RunItems :=
   let placed := t.aggregates.map fun a => (a.name, a.place l)
-  { layout? := fun s => placed.lookup s, starts := t.globals.map (Global.start l t.globals) }
+  { layout? := fun s => placed.lookup s, starts := t.globals.map (Global.start l t.globals),
+    global? := Global.startId? t.globals }
 
 /-- The items that a run of a function of a module's own table gives each
 op. -/
@@ -198,5 +206,18 @@ theorem RunItems.ofTable_ref (l : DataLayout) (t : SymbolTable d) (s : Name) :
       have h'' : (a.name == s) = false := by simp; exact h
       simp only [List.map_cons, List.lookup, h', List.find?, h'']
       exact ih
+
+/-- The run gives an op the global that validation checks it against: the
+first global of the table with each symbol starts in the memory that
+validation sees for it (`SymbolTable.globalMems`). So an op that validation
+accepts in a table finds its global, of the same memory, in each run of a
+function of the table. -/
+theorem RunItems.ofTable_globalMem (l : DataLayout) (t : SymbolTable d) (s : Name) :
+    ((RunItems.ofTable l t).global? s).map (·.1) = t.globalMems s := by
+  show (Global.startId? t.globals s).map (·.1) = (t.globals.find? (·.name == s)).map (·.mem)
+  unfold Global.startId?
+  rw [List.find?_eq_getElem?_findIdx]
+  dsimp only
+  split <;> rename_i h <;> simp [h]
 
 end Fir

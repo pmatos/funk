@@ -171,6 +171,8 @@ event.
 
 {includeReadable "." Fir.Core.FieldAddr "Field address rules" FirSpec.Core.FieldAddr (level := 1)}
 
+{includeReadable "." Fir.Core.GlobalAddr "Global address rules" FirSpec.Core.GlobalAddr (level := 1)}
+
 {includeReadable "." Fir.Core.MemRules "The core's rules with memory" FirSpec.Core.MemRules (level := 1)}
 
 {includeReadable "." Fir.Core.AllocaLaws "Stack allocation obligations" FirSpec.Core.AllocaLaws (level := 1)}
@@ -202,6 +204,8 @@ event.
 {includeReadable "." Fir.Core.PtrIntLaws "Pointers as integers obligations" FirSpec.Core.PtrIntLaws (level := 1)}
 
 {includeReadable "." Fir.Core.FieldAddrLaws "Field address obligations" FirSpec.Core.FieldAddrLaws (level := 1)}
+
+{includeReadable "." Fir.Core.GlobalAddrLaws "Global address obligations" FirSpec.Core.GlobalAddrLaws (level := 1)}
 
 {includeReadable "." Fir.Core.TreeRules "The core dialect in the tree of choices" FirSpec.Core.TreeRules (level := 1)}
 

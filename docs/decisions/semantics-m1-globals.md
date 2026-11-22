@@ -42,9 +42,9 @@ takes the units of one pointer of `@s`'s memory. A valid global names a
 declared memory and a power-of-two alignment, gives units that fit its
 memory's unit, takes addresses of globals of its own table only, and has
 an initializer no larger than its size. The spec, `fir-ref fmt` and
-`validate`, and `funk-ir` read, print and check globals, and a run starts
-with them (below); no op names one until the address op, and the backend
-leaves them out, until #237's later stages.
+`validate`, and `funk-ir` read, print and check globals, a run starts
+with them, and the op `globaladdr` gives a global's address (below); the
+backend leaves both out until #237's stage 3.
 The words `global` and `const` are ADR-2026-11-09-1546's: the human ruled
 on 2026-11-20 (#237 Q4) that a global keeps them, and that the G0 check, on
 the Lean and the Rust side, lists both with `align` among the words generic
@@ -101,3 +101,30 @@ will be another starting allocation, of the kind `function` (#235). This
 is the agent's design for #237, not a ruling. Rejected: a start given to
 each run as an argument, which would change the statements of the
 guarantees.
+
+## The address of a global
+
+`%p: ptr(N) = globaladdr @g` gives a pointer to the first unit of the global
+`@g` (ADR-2026-11-09-1546, spelled as ADR-2026-11-19-0124 says). It has one
+attribute, the symbol, no operands and one pointer result. Validation
+accepts it when `@g` names a global of the op's own table, the first global
+with that symbol, whose memory is `N`: as `call` names its callee, a
+function of a nested module names its own module's globals and not its
+parent's, and the reverse. Effects: pure. Poison class: propagates, with no
+operand, and it never gives poison.
+
+Its rule reads the run's items (`Op.readsItems`), as `fieldaddr`'s does:
+`RunItems.global?` gives each global's memory and allocation id, filled by
+`RunItems.ofTable` from `Global.startId?`, the same function that gives an
+`addr(@g, K)` piece its pointer, so the op and an initializer cannot name
+different allocations. The pointer has the global's allocation as its
+provenance and offset 0. A record that places no global `@g` gives the
+pointer with no provenance at offset 0, through which every access is UB, so
+the op is never UB and never gives poison for every record, and its laws,
+and the #384 guarantees, hold with no hypothesis on the record. A store
+through it to a constant global is UB when it runs (Q2 above). Validation
+and the run read a table's globals alike (`RunItems.ofTable_globalMem`).
+This is the agent's design for #237 stage 2b, not a ruling. Rejected: a
+poison result for a symbol the record does not place, which would make the
+op one that may give poison for some records, and so break the obligation
+that a pure op makes none for every record.

@@ -137,6 +137,12 @@ sides have them: the differential side's are filled by
 side's by `fieldaddr.fir`, `fieldaddr-programs-memories.fir` and the
 interpreter-only tests of `fieldaddr-programs.fir`.
 
+The address of a global `globaladdr` has a table of its own too
+(`pointer_cells.GLOBALS`, #237): one cell, whatever its global and its
+memory. Only the interpreter-only side has it (`coverage.Side.global_addrs`),
+filled by `globaladdr.fir` and `globaladdr-memories.fir`, until the backend
+lowers globals (stage 3 of #237).
+
 A test exercises each op of the function it runs and of every function it calls,
 directly or through others. A function of a nested module, such as a kernel
 `@dev::@k`, counts too, and its calls go to its own module's functions (#406).

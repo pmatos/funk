@@ -166,6 +166,12 @@ it to an op (`RunItems.ofTable`). -/
 def SymbolTable.layouts (t : SymbolTable d) (s : Name) : Option LayoutRef :=
   (t.aggregates.find? (·.name == s)).map Aggregate.ref
 
+/-- The memory of the global that each symbol of a table names, as the rule
+of an op sees it: its first global with that symbol, as the run gives its
+allocation to an op (`RunItems.ofTable`). -/
+def SymbolTable.globalMems (t : SymbolTable d) (s : Name) : Option Nat :=
+  (t.globals.find? (·.name == s)).map (·.mem)
+
 mutual
 /-- The symbol tables that an item holds, at any depth: none for a
 function, an item of a dialect's kind, an aggregate's layout or a global, and a nested
@@ -226,14 +232,17 @@ theorem Item.mem_tablesIn {i : Item d} : ∀ {is : List (Item d)}, i ∈ is →
 
 /--
 What a dialect's op rules may look at: the module's symbol table, the
-result types of the enclosing function, and the aggregates' layouts of the
+result types of the enclosing function, the aggregates' layouts of the
 table, as the rule of an op sees them, for an op that names a layout, as
-the core's `fieldAddr` does (#236).
+the core's `fieldAddr` does (#236), and the memory of each global of the
+table, for an op that names a global, as the core's `globalAddr` does
+(#237).
 -/
 structure OpContext (d : Dialect) where
   symbols : Name → Option (FuncType d)
   results : List d.Ty
   layouts : Name → Option LayoutRef
+  globals : Name → Option Nat
 
 /--
 What a dialect's function rule may look at beside the function: the module's

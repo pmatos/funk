@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "The validation check: readable blocks" =>
 
-:::moduleDocs (fingerprint := "4401003086318381878")
+:::moduleDocs (fingerprint := "3897596925874507832")
 :::
 
 :::readable Fir.DecidableDialectValidation (fingerprint := "12727554318359214280")
@@ -76,21 +76,22 @@ So a message holds no line break and no hidden character, whatever names
 the module uses.
 :::
 
-:::readable Fir.Lookup Fir.Lookup.Agrees (fingerprint := "17137389718356524543")
+:::readable Fir.Lookup Fir.Lookup.Agrees (fingerprint := "17592538360427786981")
 *Definition: what the check of a function looks up, and when it agrees with
-a context.* The check of a function asks three questions of its module:
+a context.* The check of a function asks four questions of its module:
 the function type of a symbol, $`\mathrm{symtab}(s)`, whether the location
-table has the reference $`r`, $`\mathrm{hasloc}(r)`, and the layout of a
-symbol, $`\mathrm{layouts}(s)`. A _lookup_ answers
+table has the reference $`r`, $`\mathrm{hasloc}(r)`, the layout of a
+symbol, $`\mathrm{layouts}(s)`, and the memory of the global of a symbol,
+$`\mathrm{globals}(s)`. A _lookup_ answers
 them; a module builds its lookup once, as hash tables, so that every
 question takes about constant time.
 
 A lookup _agrees_ with a
 {ref "The-fir-specification--Validation--The-general-rules"}[module context]
-$`C` when it gives the same symbol table and the same layouts, and has
-exactly the references of $`C`:
+$`C` when it gives the same symbol table, the same layouts and the same
+globals, and has exactly the references of $`C`:
 
-$$`\mathrm{symtab} = \mathrm{symtab}_C \qquad \mathrm{layouts} = \mathrm{layouts}_C`
+$$`\mathrm{symtab} = \mathrm{symtab}_C \qquad \mathrm{layouts} = \mathrm{layouts}_C \qquad \mathrm{globals} = \mathrm{globals}_C`
 
 $$`\mathrm{hasloc}(r) \iff r \in \mathrm{locs}_C \ \text{ for every } r`
 

@@ -39,6 +39,7 @@ def samples : List Op :=
    .fptrunc .rtz 5 10 8 7] ++
   [.ptradd 0 64, .ptradd 1 8, .ptradd maxMemory 1] ++
   [.fieldAddr "pair" 1 0 none, .fieldAddr "row" 0 1 (some 64), .fieldAddr "a b" 3 maxMemory (some 1)] ++
+  [.globalAddr "msg" 0, .globalAddr "cell" 1, .globalAddr "a b" maxMemory] ++
   [.alloca .stack (.int 32) 1 none 0, .alloca .stack (.int 8) 12 (some 4) 1,
    .alloca .heap (.ptr 2) 0 (some 3) maxMemory, .alloca .global (.float 8 23) 2 none 0] ++
   [.load .nonatomic 32 none 0, .load .nonatomic 1 (some 4) 1, .load .seqCst 128 (some 3) maxMemory,

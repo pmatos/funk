@@ -32,8 +32,12 @@ Tier: direction; area: semantics
 - **What it leaves to the run.** A global is still one allocation of
   kind `global` (ADR-2026-11-09-1546), apart from the kind `function`
   that the human ruled for a function's address on 2026-11-19 (#235).
-  Its allocation is one of the allocations a run starts with; its address
-  op and `addr(@f)` of a function come in #237's later stages.
+  Its allocation is one of the allocations a run starts with; `addr(@f)`
+  of a function comes in #237's last stage.
+- **The address op.** `%p: ptr(N) = globaladdr @g` takes no operands and
+  gives a pointer to the first unit of `@g`'s allocation, as an `addr(@g)`
+  piece does. It is valid when `@g` names a global of the op's own table
+  in memory `N`, the first with that symbol, and it is pure.
 
 ## Why
 

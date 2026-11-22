@@ -92,7 +92,8 @@ as it checks `Core.Op.poisonClass` (ADR-2026-11-03-0600). The sets
   conversions between formats, `fpext` and `fptrunc`, whose NaN results are
   defined values too (ADR-2026-11-09-1549), the pointer offset `ptradd`
   (ADR-2026-11-13-0251) and the field address `fieldAddr`, which move a
-  pointer and keep its provenance. `call`'s own set is empty: its callee's
+  pointer and keep its provenance, and the address of a global
+  `globalAddr` (#237). `call`'s own set is empty: its callee's
   summary carries its effects (ADR-2026-11-09-1541).
 - May produce poison: `poison`, the shifts, `add`, `sub` and `mul` with a
   flag, `sdiv` and `udiv` with `exact`, `fcmp` and the float arithmetic
@@ -226,9 +227,10 @@ the ops that touch memory: `alloca` (`AllocaLaws.lean`), `load` and `store`
 (`LoadPtrLaws.lean`, `StorePtrLaws.lean`), `loadFloat` and `storeFloat`
 (`LoadFloatLaws.lean`, `StoreFloatLaws.lean`), `memCopy` and `memSet`
 (`MemCopyLaws.lean`, `MemCopyPoison.lean`, `MemSetLaws.lean`,
-`MemSetPoison.lean`), and `ptrExpose` and `ptrFromInt` (`PtrIntLaws.lean`). With them is `fieldAddr` (`FieldAddrLaws.lean`), which
-touches no memory but reads items: its rule reads the layout it names from
-the run's items, which the set monad does not have.
+`MemSetPoison.lean`), and `ptrExpose` and `ptrFromInt` (`PtrIntLaws.lean`). With them are `fieldAddr` (`FieldAddrLaws.lean`) and
+`globalAddr` (`GlobalAddrLaws.lean`), which touch no memory but read items:
+their rules read the layout or the global they name from the run's items,
+which the set monad does not have.
 `Core.memDenoteIn_mapsDenote` asks the morphism to keep loads, stores,
 exposing and turning integers back into pointers as well, which
 `MonadMorphism.state_load`, `MonadMorphism.state_store`,
@@ -247,7 +249,7 @@ effect tests are stated over runs with memory. Congruence in the callee is too:
 for a callee that touches no memory it asks that each op that declares no
 memory effect ignore the memories (`OpsIgnoreMemory`, in
 `lean/Fir/Execution/MemoryFree.lean`), which each tied core op meets by its
-tie and `fieldAddr` by its own rule (`Core.opsIgnoreMemory`;
+tie and `fieldAddr` and `globalAddr` by their own rules (`Core.opsIgnoreMemory`;
 semantics-refinement.md#refinement-with-memory); the ops that touch memory
 declare a memory effect, so they are not asked. The
 test of the tie, that the core's runs with memory are its runs in the set

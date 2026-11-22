@@ -14,7 +14,7 @@ fails when the Lean changes under it.
 
 #doc (Manual) "Semantics the obligations reject: readable blocks" =>
 
-:::moduleDocs (fingerprint := "17809389726305487216")
+:::moduleDocs (fingerprint := "2819713131841008668")
 :::
 
 :::readable Fir.Core.Unlawful.add_typesValid Fir.Core.Unlawful.sdiv_typesValid (pin := Fir.TypesValid) (fingerprint := "5393438447920550166")
@@ -55,7 +55,7 @@ turns every poison operand into UB, which would undo the deferral that
 poison exists for.
 :::
 
-:::readable Fir.Core.Unlawful.sdivOld Fir.Core.Unlawful.oldSDiv Fir.Core.Unlawful.oldSDiv_not_monotone Fir.Core.Unlawful.oldSDiv_unlawful (pin := Fir.LawfulDialectPoison) (pin := Fir.OpMonotone) (pin := Fir.Ev.IsRefinedBy) (pin := Fir.Core.Ty.IsRefinedBy) (fingerprint := "13705990327199069138")
+:::readable Fir.Core.Unlawful.sdivOld Fir.Core.Unlawful.oldSDiv Fir.Core.Unlawful.oldSDiv_not_monotone Fir.Core.Unlawful.oldSDiv_unlawful (pin := Fir.LawfulDialectPoison) (pin := Fir.OpMonotone) (pin := Fir.Ev.IsRefinedBy) (pin := Fir.Core.Ty.IsRefinedBy) (fingerprint := "3976338991510185566")
 *Definition: the rejected rule for $`\mathsf{sdiv}`.* Under it, a poison
 dividend by $`-1` gives poison. For $`a, b \in \llbracket \mathsf{i}N \rrbracket`:
 

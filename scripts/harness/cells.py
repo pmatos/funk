@@ -61,6 +61,9 @@ has neither operands nor attributes, is a cell at each width of its result
 - The field address `fieldaddr` is a cell for each width of its index,
   and one with no index, at the side's field widths, on both sides, since
   the backend lowers it as address arithmetic (`pointer_cells.py`, #236).
+- The address of a global `globaladdr` is one cell, on the
+  interpreter-only side until the backend lowers it (`pointer_cells.py`,
+  #237).
 - `memcpy`, `memmove` and `memset` are a cell for each width of their
   length, at the side's pointer widths, on both sides, since the backend
   lowers them to funk's own runtime routines (`copy_cells.py`, #234).
@@ -98,10 +101,13 @@ from gpu_cells import (
 )
 from pointer_cells import (
     FIELD_ADDR,
+    GLOBAL_ADDR,
     POINTER,
     POINTER_OPS,
     field_address,
     field_table,
+    global_address,
+    global_table,
     pointer_cell,
 )
 from refine import bits_of
@@ -209,6 +215,7 @@ OPS = (
     *FLOAT_TO_INT,
     *POINTER_OPS,
     FIELD_ADDR,
+    GLOBAL_ADDR,
     *(op for op, _ in VALUES if op != "func"),
 )
 
@@ -226,6 +233,7 @@ def catalog(
     fields: tuple[int, ...] = (),
     copies: bool = False,
     addresses: tuple[int, ...] = (),
+    global_addrs: bool = False,
 ) -> tuple[Table, ...]:
     """One side's taxonomy, expanded once for enumeration and display.
 
@@ -371,6 +379,8 @@ def catalog(
         tables.append(Table(GPU_MEMORY, elements, (row,)))
     if fields:
         tables.append(field_table(tuple(map(ty, fields))))
+    if global_addrs:
+        tables.append(global_table())
     if copies:
         tables.append(copies_table(tuple(map(ty, offsets))))
     if addresses:
@@ -387,12 +397,21 @@ def cells(
     fields: tuple[int, ...] = (),
     copies: bool = False,
     addresses: tuple[int, ...] = (),
+    global_addrs: bool = False,
 ) -> list[Cell]:
     """Every actual cell of one side, in catalog order."""
     return [
         cell
         for table in catalog(
-            widths, formats, offsets, gpu, memory, fields, copies, addresses
+            widths,
+            formats,
+            offsets,
+            gpu,
+            memory,
+            fields,
+            copies,
+            addresses,
+            global_addrs,
         )
         for row in table.rows
         for cell in row.entries
@@ -452,6 +471,8 @@ def of_op(op: Op) -> set[Cell]:
         return {pointer_cell(op)}
     if op.name == FIELD_ADDR:
         return {field_address(op)}
+    if op.name == GLOBAL_ADDR:
+        return {global_address(op)}
     if op.name in MEM_OPS:
         return {copy_cell(op)}
     if op.name in ADDRESS_OPS:

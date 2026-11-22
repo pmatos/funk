@@ -17,7 +17,7 @@ pins their fingerprint; the build fails when the Lean changes under it.
 :::moduleDocs (fingerprint := "15085586242917980642")
 :::
 
-:::readable Fir.Core.Op.effects_touchesNoMemory Fir.Core.Op.touchesMemory_false Fir.Core.reachesNoMemory Fir.Core.reachesNoMemory_of_all (pin := Fir.Core.Op.effects) (fingerprint := "2025831786181426322")
+:::readable Fir.Core.Op.effects_touchesNoMemory Fir.Core.Op.touchesMemory_false Fir.Core.reachesNoMemory Fir.Core.reachesNoMemory_of_all (pin := Fir.Core.Op.effects) (fingerprint := "634682361875928498")
 *Theorems: a core op declares a memory effect exactly when it touches
 memory, and a core function with no allocation, load, store, copy, move,
 fill or turn of a pointer into an integer or back in reach reaches no
@@ -45,12 +45,14 @@ core's memories, each core op that declares no memory effect ignores the
 memories: such an op touches no memory, so either it reads no item and is
 {ref "The-fir-specification--Memory--The-core___s-rules-with-memory"}[tied],
 running by its rule in the set monad and keeping the memories, or it is
-$`\mathsf{fieldaddr}`, which reads an item, not memory, and
-{ref "The-fir-specification--Memory--Field-address-obligations"}[gives its result at once]
-and keeps them.
+$`\mathsf{fieldaddr}` or $`\mathsf{globaladdr}`, which read an item, not
+memory, and give their results at once and keep them
+({ref "The-fir-specification--Memory--Field-address-obligations"}[field address obligations],
+{ref "The-fir-specification--Memory--Global-address-obligations"}[global address obligations]).
 $`\mathsf{alloca}`, the loads and stores, of an integer, a pointer or a
-float, the copies and moves and the fills, which touch memory, declare
-it, so they are not asked.
+float, the copies and moves, the fills, $`\mathsf{ptr\_expose}` and
+$`\mathsf{ptr\_from\_int}`, which touch memory, declare it, so they are
+not asked.
 :::
 
 :::readable Fir.Core.opsFinite (pin := Fir.Core.Op.liftsSetM) (pin := Fir.OpsFinite) (fingerprint := "15692013965595329733")
@@ -69,13 +71,18 @@ by its own rule; the loads and stores of an integer, a pointer or a
 float have no tie either, and have at most one that ends
 ({ref "The-fir-specification--Memory--Load-obligations"}[load obligations],
 {ref "The-fir-specification--Memory--Store-obligations"}[store obligations]).
-$`\mathsf{fieldaddr}` has no tie, and has
-{ref "The-fir-specification--Memory--Field-address-obligations"}[one outcome]
-by its own rule. The copies and moves and the fills have no tie either,
+$`\mathsf{fieldaddr}` and $`\mathsf{globaladdr}` have no tie, and have
+one outcome by their own rules
+({ref "The-fir-specification--Memory--Field-address-obligations"}[field address obligations],
+{ref "The-fir-specification--Memory--Global-address-obligations"}[global address obligations]).
+The copies and moves and the fills have no tie either,
 and have at most one that ends for each length, of which a poison length
 chooses one of finitely many
 ({ref "The-fir-specification--Memory--Copy-and-move-obligations"}[copy and move obligations],
 {ref "The-fir-specification--Memory--Fill-obligations"}[fill obligations]).
+$`\mathsf{ptr\_expose}` and $`\mathsf{ptr\_from\_int}` have no tie, and
+have finitely many by their own rules
+({ref "The-fir-specification--Memory--Pointers-as-integers-obligations"}[pointers as integers obligations]).
 :::
 
 :::readable Fir.Core.replaceBody_isRefinedBy_of_from Fir.Core.caller_isRefinedBy_of_from (fingerprint := "3664423118415088410")

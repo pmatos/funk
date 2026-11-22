@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Core rules: readable blocks" =>
 
-:::moduleDocs (fingerprint := "6921522426549223349")
+:::moduleDocs (fingerprint := "17536140510780449916")
 :::
 
 :::readable Fir.Core.Ty.Valid Fir.Core.Ty.memory (pin := Fir.Core.maxWidth) (pin := Fir.Core.floatWidth) (fingerprint := "744407091263889301")
@@ -50,11 +50,12 @@ in every module, and $`\mathsf{ptr}\langle N \rangle` with $`N \ge 1` is in
 a module whose layout declares memory $`N` (ADR-2026-11-12-1821).
 :::
 
-:::readable Fir.Core.Op.symbolRefs (fingerprint := "8462773498065661004")
+:::readable Fir.Core.Op.symbolRefs (fingerprint := "14697847205720360782")
 *Definition: the symbols a core op refers to.* $`\mathsf{call}~f : t^* \to r^*`
 refers to the symbol $`f` of its callee: its list of symbols is the
 one-element sequence $`(f)`. No other core op refers to a function:
-$`\mathsf{fieldaddr}` names a layout, which its own rule checks.
+$`\mathsf{fieldaddr}` names a layout and $`\mathsf{globaladdr}` a global,
+which their own rules check.
 
 $$`\mathrm{refs}(\mathsf{call}~f : t^* \to r^*) = (f)`
 
@@ -63,7 +64,7 @@ $$`\mathrm{refs}(\mathit{op}) = \epsilon \ \text{ for every other op}`
 The general rules check that $`f` names a function of the module.
 :::
 
-:::readable Fir.Core.Op.attrTypes (fingerprint := "1014562022847701047")
+:::readable Fir.Core.Op.attrTypes (fingerprint := "4172422755499661638")
 *Definition: the types a core op carries.* $`\mathsf{alloca}_N~k~t~c~a`
 carries the type $`t` that it allocates values of in its attributes, when
 $`t` is valid:
@@ -79,7 +80,7 @@ core op carries a type of its own: $`\mathsf{call}`'s are its callee's, and
 $`\mathsf{ret}`'s the function's results.
 :::
 
-:::readable Fir.Core.Op.addrWidths (fingerprint := "11542101545915289889")
+:::readable Fir.Core.Op.addrWidths (fingerprint := "8896024128672350661")
 *Definition: the pointer widths a core op asks.*
 $`\mathsf{ptr\_expose}_N~W` and $`\mathsf{ptr\_from\_int}_N~W` turn
 pointers of memory $`N` into integers of $`\mathsf{i}W`, or back, so each
@@ -94,7 +95,7 @@ $`\mathsf{ptr}` into an $`\mathsf{i32}` is not valid where memory 0 has
 64-bit pointers, and neither is one of a non-integral memory.
 :::
 
-:::readable Fir.Core.Op.unitWidths (fingerprint := "3633754972103385810")
+:::readable Fir.Core.Op.unitWidths (fingerprint := "3022310587127404671")
 *Definition: the unit widths a core op asks.* $`\mathsf{memset}_N~o~V~W`
 writes values of $`\mathsf{i}V` in the units of memory $`N`, so it asks
 that they be $`V` bits wide (the human's ruling on #251: a fill writes
@@ -133,7 +134,7 @@ So every core type may be a field (#236). These are the units and the
 alignment that $`\mathsf{alloca}` gives one value of a field's type.
 :::
 
-:::readable Fir.Core.FBin.mode Fir.Core.FUnary.mode Fir.LayoutRef.admits Fir.Core.Op.Valid (pin := Fir.isPowerOfTwo) (pin := Fir.MemLayout.limit) (pin := Fir.MemLayout.ValidAlign) (fingerprint := "5451221050399015448")
+:::readable Fir.Core.FBin.mode Fir.Core.FUnary.mode Fir.LayoutRef.admits Fir.Core.Op.Valid (pin := Fir.isPowerOfTwo) (pin := Fir.MemLayout.limit) (pin := Fir.MemLayout.ValidAlign) (fingerprint := "14760602530455253019")
 *Definition: the core rules of an op.* Beyond its signature, which the
 {ref "The-fir-specification--Validation--The-general-rules"}[general rules]
 check, a core op obeys these rules in its op context $`C`:
@@ -188,13 +189,16 @@ $$`\frac{o = \mathsf{nonatomic}}{C \vdash \mathsf{memcpy}_{N}~o~W~\text{valid}} 
 
 $$`\frac{\mathrm{layouts}_C(s) = l \qquad \mathrm{mem}(l) = N \qquad j < |\mathrm{fields}(l)| \qquad \text{the field } j \text{ of } l \text{ is repeated, when } W \text{ is given}}{C \vdash \mathsf{fieldaddr}_{N(,W)}~s~j~\text{valid}}`
 
+$$`\frac{\mathrm{globals}_C(s) = N}{C \vdash \mathsf{globaladdr}_{N}~s~\text{valid}}`
+
 $$`\frac{\mathit{op} \text{ is another core op}}{C \vdash \mathit{op}~\text{valid}}`
 
 Here $`\mathrm{results}_C` is the result types of the function that holds
 the op, $`\mathrm{symtab}_C` the module's
 {ref "The-fir-specification--Validation--Scope-and-symbols"}[symbol table],
-and $`\mathrm{layouts}_C` the aggregates' layouts of the op's table, each
-as its memory and whether each of its fields is repeated.
+$`\mathrm{layouts}_C` the aggregates' layouts of the op's table, each
+as its memory and whether each of its fields is repeated, and
+$`\mathrm{globals}_C` the memory of each global of the op's table.
 
 * $`\mathsf{ret}` returns values of the function's result types, any number
   of them.
@@ -275,6 +279,10 @@ as its memory and whether each of its fields is repeated.
   repeated field (#236). The index's value is not checked: an element out
   of the field's range is an address, as for $`\mathsf{ptradd}` (the
   human's ruling of 2026-11-16 on #236, Q3 A).
+* $`\mathsf{globaladdr}` names a global of its own table, the first with
+  its symbol, whose memory is that of its result (#237). An op names only
+  the items of its own table, as $`\mathsf{call}` does, so a function of a
+  nested module names its own module's globals and not its parent's.
 * $`\mathsf{memcpy}`, $`\mathsf{memmove}` and $`\mathsf{memset}` have the
   ordering $`\mathsf{nonatomic}`. Their operand types are checked as every
   type is, and the data layout checks that a $`\mathsf{memset}`'s value

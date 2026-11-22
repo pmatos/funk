@@ -119,11 +119,22 @@ theorem Module.layouts_replaceBody (M : Module d) (s : Name) (b : Region d) :
   funext x
   simp only [SymbolTable.layouts, h]
 
+/-- Replacing a body keeps the globals of the module's own table. -/
+theorem Module.globals_replaceBody (M : Module d) (s : Name) (b : Region d) :
+    (M.replaceBody s b).table.globals = M.table.globals := by
+  simp only [SymbolTable.globals, Module.table, Module.replaceBody, List.filterMap_map]
+  congr 1
+  funext i
+  cases i <;> rfl
+
 /-- Replacing a body keeps the context in which the module's functions are
 checked. -/
 theorem Module.context_replaceBody (M : Module d) (s : Name) (b : Region d) :
     (M.replaceBody s b).context = M.context := by
-  simp only [Module.context, Module.symbols_replaceBody, Module.layouts_replaceBody]
+  have hg : (M.replaceBody s b).table.globalMems = M.table.globalMems := by
+    funext x
+    simp only [SymbolTable.globalMems, Module.globals_replaceBody]
+  simp only [Module.context, Module.symbols_replaceBody, Module.layouts_replaceBody, hg]
   rfl
 
 /-- Replacing a body keeps every symbol of the module's own table. -/
@@ -145,14 +156,6 @@ table. -/
 theorem Module.aggregates_replaceBody (M : Module d) (s : Name) (b : Region d) :
     (M.replaceBody s b).table.aggregates = M.table.aggregates := by
   simp only [SymbolTable.aggregates, Module.table, Module.replaceBody, List.filterMap_map]
-  congr 1
-  funext i
-  cases i <;> rfl
-
-/-- Replacing a body keeps the globals of the module's own table. -/
-theorem Module.globals_replaceBody (M : Module d) (s : Name) (b : Region d) :
-    (M.replaceBody s b).table.globals = M.table.globals := by
-  simp only [SymbolTable.globals, Module.table, Module.replaceBody, List.filterMap_map]
   congr 1
   funext i
   cases i <;> rfl

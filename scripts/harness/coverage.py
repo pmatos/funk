@@ -38,8 +38,9 @@ class Side(NamedTuple):
     whether it has the cells of the `gpu` dialect, the float formats of
     its loads, stores and allocations, the widths of `fieldaddr`'s index
     that it has cells at, whether it has the cells of `memcpy`,
-    `memmove` and `memset`, and the widths of the integers of `ptr_expose`
-    and `ptr_from_int` that it has cells at."""
+    `memmove` and `memset`, the widths of the integers of `ptr_expose`
+    and `ptr_from_int` that it has cells at, and whether it has the cell of
+    `globaladdr`."""
 
     name: str
     title: str
@@ -51,6 +52,7 @@ class Side(NamedTuple):
     fields: tuple[int, ...] = ()
     copies: bool = False
     addresses: tuple[int, ...] = ()
+    global_addrs: bool = False
 
     def taxonomy(self) -> dict:
         """The side's arguments of `cells.catalog` and `cells.cells`."""
@@ -63,6 +65,7 @@ class Side(NamedTuple):
             "fields": self.fields,
             "copies": self.copies,
             "addresses": self.addresses,
+            "global_addrs": self.global_addrs,
         }
 
     def catalog(self) -> tuple[cells.Table, ...]:
@@ -94,6 +97,7 @@ SIDES = (
         fields=cells.FIELD_INTERPRETER,
         copies=True,
         addresses=ADDRESS_INTERPRETER,
+        global_addrs=True,
     ),
 )
 
@@ -195,6 +199,7 @@ SECTIONS = {
         "",
     ),
     "fields": ("Field addresses, with no index or by an index", ("op",), "by "),
+    "globals": ("Addresses of globals", ("op",), ""),
     "values": ("Passed and returned values", ("op", "what"), ""),
     "copies": ("Copies, moves and fills, by the width of their length", ("op",), ""),
     "addresses": (
@@ -252,6 +257,8 @@ def catalog_table(counts: Counter, spec: cells.Table) -> list[str]:
             if spec.kind == "bitcasts"
             else "no index"
             if spec.kind == "fields"
+            else "tests"
+            if spec.kind == "globals"
             else "no value"
             for t in spec.columns
         ),
@@ -264,7 +271,7 @@ def catalog_row(counts: Counter, kind: str, row: cells.Row) -> list[str]:
     """Format a row's labels and cell counts, retaining applicability blanks."""
     if kind == "float_conversions":
         shown = [code(row.key)]
-    elif kind in ("pointers", "fields", "gpu_memory", "copies", "addresses"):
+    elif kind in ("pointers", "fields", "globals", "gpu_memory", "copies", "addresses"):
         shown = [code(row.op)]
     elif kind == "values":
         shown = [code(row.op), WHAT[row.op][row.key]]

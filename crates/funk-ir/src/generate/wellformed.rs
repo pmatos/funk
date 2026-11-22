@@ -29,6 +29,9 @@
 //! - field addresses, `fieldaddr`, of the module's layout or of a symbol
 //!   that names none, of fields of any number, with or without an index
 //!   (`field_addr.rs`, #236);
+//! - addresses of globals, `globaladdr`, of the module's global or of a
+//!   symbol that names none, with a pointer of any memory
+//!   (`global_addr.rs`, #237);
 //! - globals of any numbers, flags and initializers (ADR-2026-11-09-1546),
 //!   spelled as ADR-2026-11-19-0124 says.
 //!
@@ -59,6 +62,7 @@ mod aggregate;
 mod attr;
 mod field_addr;
 mod global;
+mod global_addr;
 mod items;
 mod layout;
 mod locs;
@@ -123,12 +127,21 @@ pub fn module(rng: &mut Rng, dialects: Dialects) -> Module {
     let keys: Vec<LocRef> = m.locs.entries.iter().map(|(r, _)| *r).collect();
     let aggregate = rng.one_in(3).then(|| aggregate::aggregate(rng));
     let layouts: Vec<String> = aggregate.iter().map(|a| a.name.clone()).collect();
+    let global = rng.one_in(3).then(|| global::global(rng));
+    let globals: Vec<String> = global
+        .iter()
+        .filter_map(|g| g.as_global())
+        .map(|g| g.name.clone())
+        .collect();
     for item in &mut m.items {
         let Item::Func(f) = item else { continue };
         let mut shaper = Shaper::new(f, &symbols, &keys, dialects == Dialects::CoreAndToy);
         shaper.reshape(rng, f);
         if !f.body.blocks.is_empty() && !rng.one_in(3) {
             shaper.add_field_addrs(rng, f, &layouts);
+        }
+        if !f.body.blocks.is_empty() && rng.one_in(3) {
+            shaper.add_global_addrs(rng, f, &globals);
         }
     }
     if rng.one_in(2) {
@@ -147,9 +160,9 @@ pub fn module(rng: &mut Rng, dialects: Dialects) -> Module {
         let at = rng.below(m.items.len() as u64 + 1) as usize;
         m.items.insert(at, Item::Aggregate(a));
     }
-    if rng.one_in(3) {
+    if let Some(g) = global {
         let at = rng.below(m.items.len() as u64 + 1) as usize;
-        m.items.insert(at, global::global(rng));
+        m.items.insert(at, g);
     }
     if rng.one_in(4) {
         m.items.push(Item::Module(nested(rng, 3)));
@@ -166,9 +179,10 @@ struct Shaper<'m> {
     /// Whether [`TOY_OP`] may be used.
     toy: bool,
     /// Every value the function defines, at any depth, with its type, but
-    /// the pointers of `field_addr.rs`.
+    /// the pointers of `field_addr.rs` and `global_addr.rs`.
     values: Vec<(String, Type)>,
-    /// The pointers that `field_addr.rs` defines, with their memories.
+    /// The pointers that `field_addr.rs` and `global_addr.rs` define, with
+    /// their memories.
     pointers: Vec<(String, u32)>,
     /// Every value name taken: defined, or named as undefined.
     taken: Vec<String>,
