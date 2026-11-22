@@ -44,6 +44,8 @@ def Op.sig : Op → List Ty
   | .storeFloat _ e m _ n => [.float e m, .ptr n]
   | .memCopy _ _ w n => [.ptr n, .ptr n, i w]
   | .memSet _ v w n => [.ptr n, i v, i w]
+  | .ptrExpose n _ => [.ptr n]
+  | .ptrFromInt _ w => [i w]
   | .freeze w => [i w]
   | .condBr => [i 1]
   | .ret ts => ts
@@ -61,7 +63,8 @@ def Op.returnTypes : Op → List Ty
   | .ofBits e m => [.float e m]
   | .sitofp _ _ e m | .uitofp _ _ e m => [.float e m]
   | .fpext _ _ e' m' | .fptrunc _ _ _ e' m' => [.float e' m']
-  | .ptradd n _ | .fieldAddr _ _ n _ | .alloca _ _ _ _ n => [.ptr n]
+  | .ptradd n _ | .fieldAddr _ _ n _ | .alloca _ _ _ _ n | .ptrFromInt n _ => [.ptr n]
+  | .ptrExpose _ w => [i w]
   | .fptosi _ _ n | .fptoui _ _ n => [i n]
   | .load _ w _ _ => [i w]
   | .loadPtr _ m _ _ => [.ptr m]

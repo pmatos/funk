@@ -7,8 +7,10 @@ wins, and the ADR is fixed or deleted (ADR-2026-11-09-1610).
 These are decided designs, and the spec and the tools implement only some of
 them yet: `ptr` has values (ADR-2026-11-09-1542), and its ops so far are
 `ptradd` (ADR-2026-11-13-0251), `alloca` (ADR-2026-11-14-0915), `load`
-and `store` (ADR-2026-11-14-2316), and `memcpy`, `memmove` and `memset`
-(ADR-2026-11-18-2131). M0 has no
+and `store` (ADR-2026-11-14-2316), `memcpy`, `memmove` and `memset`
+(ADR-2026-11-18-2131), and `ptr_expose` and `ptr_from_int` in the spec,
+`fir-ref`, the Rust IR and the corpus (ADR-2026-11-09-1542; #232,
+semantics-m1-addresses.md). M0 has no
 global data (ADR-2026-11-09-1546). `funk`, `fir-ref fmt`, `fir-ref
 validate` and `fir-ref run` read the core and the second dialect, `gpu`
 (ADR-2026-11-09-1545; semantics-m1-dialects.md). Each M1 feature goes through every layer

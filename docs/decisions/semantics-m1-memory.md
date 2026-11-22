@@ -121,7 +121,8 @@ trace. The access cannot be removed, duplicated or reordered with other events
 
 The spec gives one memory of this model, for a unit of any width, in
 `lean/Fir/Memory/`, with its accesses and their laws. `alloca`, `load`,
-`store` (#231), `memcpy`, `memmove` and `memset` (#234) are the ops that use memory
+`store` (#231), `memcpy`, `memmove` and `memset` (#234), and
+`ptr_expose` and `ptr_from_int` (#232) are the ops that use memory
 yet. Memory is a state layer over the way of computing
 (ADR-2026-11-10-2350):
 
@@ -167,8 +168,7 @@ to enumerate memory names, which may be infinite.
 ## The core's guarantees
 
 The semantics with memory carries the guarantees for the whole core
-dialect, `alloca`, the loads and stores, `memcpy`, `memmove` and `memset`
-included.
+dialect, every op that touches memory included (`Core.Op.touchesMemory`).
 The statements without memory cover only the code that touches none: those
 over the set monad cover the ops other than those, and those that ask a
 function to reach no memory cover such
@@ -185,8 +185,7 @@ touch no memory and read no item (`Core.Op.readsItems`). The semantics with
 memory carries its guarantees, by its own rule and proofs.
 
 These hold for every core op, and for every function of a valid core
-module, `alloca`, the loads and stores, `fieldaddr`, `memcpy`, `memmove`
-and `memset` included:
+module, the ops that touch memory and `fieldaddr` included:
 
 - the lawful classes with memory: `Core.lawfulDialectTotal`,
   `Core.lawfulDialectMonotone` and `Core.lawfulDialectMemPoison`
@@ -219,8 +218,7 @@ kernels included (`lean/Fir/Gpu/Runs.lean`, #212; semantics-m1-dialects.md).
 
 Each new op with no tie, one that touches memory or reads the run's items,
 keeps every one of them holding, with its own rule with memory and its own
-proofs: the memory ops `alloca`, the loads and stores, `memCopy` and
-`memSet` do, and so does `fieldAddr`, which touches no memory but reads
+proofs: each op that touches memory does, and so does `fieldAddr`, which touches no memory but reads
 items. `Core.Op.memCases` joins them to the tied ops
 (semantics-effects.md#soundness lists each op's laws files).
 

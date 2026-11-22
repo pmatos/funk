@@ -14,7 +14,7 @@ changes under it.
 
 #doc (Manual) "Lifting an extension: readable blocks" =>
 
-:::moduleDocs (fingerprint := "7338813519795914603")
+:::moduleDocs (fingerprint := "5406622678386996500")
 :::
 
 :::readable Fir.Dialect.lift Fir.Dialect.lift.instDialectName Fir.Dialect.lift.instTyDenote Fir.Dialect.lift.instTyPoison Fir.Dialect.lift.instTyRefinement Fir.Dialect.lift.instDecidableEqOp Fir.Dialect.lift.instDecidableEqTy (fingerprint := "6665268587926334873")
@@ -60,7 +60,7 @@ This is the rule for a base op in a sum (ADR-2026-11-09-2353), with $`e` in
 place of the base. It can be decided when $`e`'s rule can.
 :::
 
-:::readable Fir.Dialect.lift.instDialectSignature Fir.Dialect.lift.instDialectValidation Fir.Dialect.lift.instDecidableDialectValidation (fingerprint := "7727476563765089431")
+:::readable Fir.Dialect.lift.instDialectSignature Fir.Dialect.lift.instDialectValidation Fir.Dialect.lift.instDecidableDialectValidation (fingerprint := "6997857919757039128")
 *Definition: the signature and the rules of the lift.* An op of the lift
 has $`e`'s signature, with its types included by $`\hat\iota`:
 
@@ -71,7 +71,7 @@ owns regions of kinds as in $`e`. A type of $`B` is valid, names a
 memory, takes its units as a field and allows attributes after it in a
 signature, as $`B` says, and an own type of $`e` as $`e` says. An op refers to the symbols that $`e`
 says, carries the types that $`e` says, included by $`\hat\iota`, asks
-the unit widths that $`e` says, and obeys its rule as above. A function obeys $`e`'s function rule
+the unit widths and the pointer widths that $`e` says, and obeys its rule as above. A function obeys $`e`'s function rule
 through the lift's view. The lift registers $`e`'s region kinds, and a
 region of one of them obeys $`e`'s rule for it through the lift's view;
 so do $`e`'s kinds of item and an item of one of them.

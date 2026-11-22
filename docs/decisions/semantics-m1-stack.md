@@ -73,7 +73,7 @@ capping the natural alignment at the pointer's.
   dialect no longer meets the lawful class there; its obligations with
   memory are proved op by op, and `alloca`'s by its own rule
   (`lean/Fir/Core/AllocaLaws.lean`). A core function that reaches no op
-  that touches memory, no `alloca`, load, store, `memCopy` or `memSet`,
-  reaches no memory (`Core.reachesNoMemory`). The semantics with
+  that touches memory, no `alloca`, load, store, `memCopy`, `memSet`,
+  `ptrExpose` or `ptrFromInt`, reaches no memory (`Core.reachesNoMemory`). The semantics with
   memory carries the core's guarantees
   ([semantics-m1-memory.md](semantics-m1-memory.md#the-cores-guarantees)).

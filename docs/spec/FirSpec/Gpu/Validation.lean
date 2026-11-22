@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "The GPU dialect's rules: readable blocks" =>
 
-:::moduleDocs (fingerprint := "8473911090618198965")
+:::moduleDocs (fingerprint := "3099560313766457118")
 :::
 
 :::readable Fir.Gpu.ValidTy Fir.Gpu.instDecidableValidTy (fingerprint := "4133016473030974221")
@@ -44,7 +44,7 @@ it checks every type. So work-group memory is any memory that the host's
 data layout declares. Whether the rule holds is decided.
 :::
 
-:::readable Fir.Gpu.instDialectValidation Fir.Gpu.instDecidableDialectValidation (fingerprint := "1161848801302982745")
+:::readable Fir.Gpu.instDialectValidation Fir.Gpu.instDecidableDialectValidation (fingerprint := "2773044911369836278")
 *Definition: the rules of `gpu`, and their check.* `gpu` accepts the
 core's valid types, its ops refer to no symbol, an allocation carries its
 type, it adds no rule for a

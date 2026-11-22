@@ -166,8 +166,14 @@ import Fir.Core.MemCopyPoison
 import Fir.Core.MemSet
 import Fir.Core.MemSetLaws
 import Fir.Core.MemSetPoison
+import Fir.Core.PtrIntText
+import Fir.Core.PtrInt
+import Fir.Core.PtrIntLaws
 import Fir.Core.FieldAddrLaws
 import Fir.Core.EffectLaws
+import Fir.Core.EffectUnlawful
+import Fir.Core.AddressLaws
+import Fir.Execution.AddressObligations
 import Fir.Core.MemoryRuns
 import Fir.Core.MemoryCallRefine
 import Fir.Core.TreeRules
@@ -311,6 +317,7 @@ import Fir.Sum.Dialect
 import Fir.Sum.TextLaws
 import Fir.Sum.PoisonLaws
 import Fir.Sum.EffectLaws
+import Fir.Sum.AddressLaws
 import Fir.Sum.Inclusion
 import Fir.Sum.Lift
 import Fir.Sum.LiftTextLaws
@@ -332,6 +339,7 @@ import Fir.Validation.Nest
 import Fir.Gpu.Semantics
 import Fir.Gpu.WorkGroup
 import Fir.Gpu.Runs
+import Fir.Gpu.AddressLaws
 import Fir.Gpu.Modes
 import Fir.Gpu.Trace
 import Fir.Gpu.EndModes

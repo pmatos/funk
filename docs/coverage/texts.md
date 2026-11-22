@@ -294,6 +294,10 @@ The texts of aggregates' layouts and the field address `fieldaddr`
 The texts of the copies, moves and sets `memcpy`, `memmove` and `memset`
 (#234) are listed in [texts-memops.md](texts-memops.md).
 
+The texts of the ops that turn pointers into integers and back,
+`ptr_expose` and `ptr_from_int` (#232), are listed in
+[texts-addresses.md](texts-addresses.md).
+
 The texts of the gpu dialect (#212) are listed in
 [texts-gpu.md](texts-gpu.md).
 

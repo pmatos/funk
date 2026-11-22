@@ -17,7 +17,11 @@
 //! carry in their attributes, op by op. Last, a function an op of which
 //! writes values into the units of a memory whose units are not as wide,
 //! such as a `memset` of an `i16` into memory 0, gets one diagnostic, which
-//! names the first such memory (`unitsProblem`).
+//! names the first such memory (`unitsProblem`). Then a function an op of
+//! which turns the pointers of a memory into integers, or back, of a width
+//! that is not its pointers', or of a memory that the layout marks
+//! non-integral, such as a `ptr_expose` of a `ptr` into an `i32`, gets one
+//! diagnostic, which names the first such memory (`addrsProblem`).
 
 use std::collections::{HashMap, HashSet};
 
@@ -25,7 +29,7 @@ use super::Diagnostic;
 use crate::ir::Part;
 use crate::ir::layout::memory;
 use crate::ir::{ByteOrder, Func, MemLayout, Table, Type};
-use crate::registry::{OpTypes, Registry};
+use crate::registry::{OpSpec, OpTypes, Registry};
 
 /// The rules of the layout's entries (`DataLayout.problems`): each entry's
 /// problems in order, then each memory declared more than once.
@@ -71,8 +75,10 @@ pub(super) fn check_entries(layout: &[MemLayout], out: &mut Vec<Diagnostic>) {
 }
 
 /// The rule that `layout` declares each memory that a type of the table
-/// `t` names, and gives units as wide as the values that its functions' ops
-/// write into them (`SymbolTable.MemoriesIn`).
+/// `t` names, gives units as wide as the values that its functions' ops
+/// write into them, and pointers as wide as the integers that its
+/// functions' ops turn them into, in integral memories
+/// (`SymbolTable.MemoriesIn`).
 pub(super) fn check_memories(
     t: Table<'_>,
     layout: &[MemLayout],
@@ -105,9 +111,13 @@ pub(super) fn check_memories(
             out.push(problem(&i.name, n));
         }
     }
+    let entry = |n| memory(layout, n).unwrap_or(MemLayout::DEFAULT);
     for f in asking {
-        if let Some((n, w)) = first_unit_width(f, layout, reg) {
-            let unit = memory(layout, n).unwrap_or(MemLayout::DEFAULT).unit;
+        let unit_ops =
+            attr_ops(f).filter(|o| reg.op(&o.name).is_some_and(|s| s.asks_unit_widths()));
+        let bad = |(n, w): (u32, u32)| entry(n).unit != w;
+        if let Some((n, w)) = first_width(f, unit_ops, reg, |s, op| s.unit_widths(op), bad) {
+            let unit = entry(n).unit;
             out.push(Diagnostic::at_block(
                 &f.name,
                 None,
@@ -117,15 +127,43 @@ pub(super) fn check_memories(
             ));
         }
     }
+    for f in t.funcs() {
+        let mut addr_ops = all_ops(f)
+            .filter(|o| reg.op(&o.name).is_some_and(|s| s.asks_addr_widths()))
+            .peekable();
+        if addr_ops.peek().is_none() {
+            continue;
+        }
+        let bad = |(n, w): (u32, u32)| entry(n).pointer != w || entry(n).non_integral;
+        if let Some((n, w)) = first_width(f, addr_ops, reg, |s, op| s.addr_widths(op), bad) {
+            let message = if entry(n).non_integral {
+                format!(
+                    "an op turns pointers of memory {n} into integers or back, but the memory is non-integral"
+                )
+            } else {
+                let pointer = entry(n).pointer;
+                format!(
+                    "an op turns pointers of memory {n} into integers of {w} bits or back, but its pointers have {pointer} bits"
+                )
+            };
+            out.push(Diagnostic::at_block(&f.name, None, message));
+        }
+    }
 }
 
-/// The first memory, with the width of the values written into it, whose
-/// units an op of `f` writes values of that are not as wide as them
-/// (`unitsProblem` over `Func.unitWidths`). An op whose operands are not
+/// The first pair of a memory and a width that `widths` gives for one of the
+/// ops `ops` of `f` and that is `bad`: `unitsProblem` over `Func.unitWidths`
+/// and `addrsProblem` over `Func.addrWidths`. An op whose operands are not
 /// defined, or which does not decode, asks for none: the rules of ops
-/// report it. Only a function with an op whose spec asks unit widths gets
-/// here, and only those ops have their operands typed.
-fn first_unit_width(f: &Func, layout: &[MemLayout], reg: &Registry) -> Option<(u32, u32)> {
+/// report it. Only the ops `ops`, whose specs ask, have their operands
+/// typed.
+fn first_width<'f>(
+    f: &'f Func,
+    mut ops: impl Iterator<Item = &'f crate::ir::Op>,
+    reg: &Registry,
+    widths: fn(&dyn OpSpec, &OpTypes<'_>) -> Vec<(u32, u32)>,
+    bad: impl Fn((u32, u32)) -> bool,
+) -> Option<(u32, u32)> {
     let mut types: HashMap<&str, &Type> = HashMap::new();
     let defs = f.body.parts().flat_map(|part| match part {
         Part::Block(b) => b
@@ -138,8 +176,8 @@ fn first_unit_width(f: &Func, layout: &[MemLayout], reg: &Registry) -> Option<(u
     for d in f.params.iter().chain(defs) {
         types.entry(d.name.as_str()).or_insert(&d.ty);
     }
-    attr_ops(f).find_map(|o| {
-        let spec = reg.op(&o.name).filter(|s| s.asks_unit_widths())?;
+    ops.find_map(|o| {
+        let spec = reg.op(&o.name)?;
         let operands: Vec<Type> = o
             .operands
             .iter()
@@ -152,15 +190,12 @@ fn first_unit_width(f: &Func, layout: &[MemLayout], reg: &Registry) -> Option<(u
             results: &results,
         };
         spec.decode(&op).ok()?;
-        spec.unit_widths(&op)
-            .into_iter()
-            .find(|&(n, w)| memory(layout, n).unwrap_or(MemLayout::DEFAULT).unit != w)
+        widths(spec, &op).into_iter().find(|&q| bad(q))
     })
 }
 
-/// The ops of `f`'s blocks that have attributes: the only ones that may
-/// carry a type or ask a unit width.
-fn attr_ops(f: &Func) -> impl Iterator<Item = &crate::ir::Op> {
+/// The ops of `f`'s blocks, at any depth.
+fn all_ops(f: &Func) -> impl Iterator<Item = &crate::ir::Op> {
     f.body
         .parts()
         .filter_map(|part| match part {
@@ -168,7 +203,12 @@ fn attr_ops(f: &Func) -> impl Iterator<Item = &crate::ir::Op> {
             _ => None,
         })
         .flatten()
-        .filter(|o| !o.attrs.is_empty())
+}
+
+/// The ops of `f`'s blocks that have attributes: the only ones that may
+/// carry a type or ask a unit width.
+fn attr_ops(f: &Func) -> impl Iterator<Item = &crate::ir::Op> {
+    all_ops(f).filter(|o| !o.attrs.is_empty())
 }
 
 fn problem(sym: &str, n: u32) -> Diagnostic {

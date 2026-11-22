@@ -12,7 +12,7 @@ import Fir.Core.FloatOpTextLaws
 
 /-!
 The core dialect's text is lawful: it meets the seven laws of a lawful
-text, for all 50 of its ops and every type. The laws are proved for every
+text, for all 52 of its ops and every type. The laws are proved for every
 op instance, valid or not: every width, `0` included, every predicate, every
 combination of flags, `true` and `false` at `i1`, every float constant at
 every format, and `ret` and `call` with any number of operands and results. A type reads back from how it is
@@ -217,6 +217,8 @@ theorem Op.decode_encode (o : Op) : Op.decode o.name o.attrs o.sig o.returnTypes
     simpa [Op.name, Op.attrs, Op.sig, Op.returnTypes, Op.decode] using decodeMemSet_loadAttrs o v w n
   | fptosi e m n | fptoui e m n =>
     simp [Op.name, Op.attrs, Op.sig, Op.returnTypes, Op.decode, decodeFloatToInt, i]
+  | ptrExpose n w | ptrFromInt n w =>
+    simp [Op.name, Op.attrs, Op.sig, Op.returnTypes, Op.decode, decodePtrExpose, decodePtrFromInt]
   | _ =>
     simp [Op.name, Op.attrs, Op.sig, Op.returnTypes, Op.decode, binWidth, decodeWrap_attrs, bare,
       decodeCast, plainBinOps, find_pred_name, i, List.lookup]
@@ -356,6 +358,10 @@ theorem Op.encode_decode {n : String} {as : List Attr} {ts rs : List Ty} {o : Op
   · exact decodeMemCopy_eq h -- memcpy
   · exact decodeMemCopy_eq h -- memmove
   · exact decodeMemSet_eq h -- memset
+  · obtain ⟨_, _, rfl, rfl, rfl, rfl⟩ := decodePtrExpose_eq h -- ptr_expose
+    exact ⟨rfl, rfl, rfl, rfl⟩
+  · obtain ⟨_, _, rfl, rfl, rfl, rfl⟩ := decodePtrFromInt_eq h -- ptr_from_int
+    exact ⟨rfl, rfl, rfl, rfl⟩
   · exact decodeFloatToInt_eq (signed := true) h -- fptosi
   · exact decodeFloatToInt_eq (signed := false) h -- fptoui
   · -- srem, urem, and, or, xor, shl, lshr and ashr
@@ -441,7 +447,7 @@ namespace Fir
 
 /-! # The laws -/
 
-/-- The core dialect's text meets the eight laws, for all 50 core ops and
+/-- The core dialect's text meets the eight laws, for all 52 core ops and
 every core type. -/
 theorem Core.lawfulDialectText : LawfulDialectText CoreDialect where
   decodeOp_encode := Core.Op.decode_encode
