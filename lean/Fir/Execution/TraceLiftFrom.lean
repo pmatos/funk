@@ -2,24 +2,28 @@ import Fir.Execution.TraceLift
 import Fir.Execution.TraceArgsFrom
 
 /-!
-# Traced runs from a traced state, for a dialect with no event
+# Traced runs from a traced state, for a dialect that lifts its semantics with memory
 
-A dialect whose ops show no event has, as its traced semantics, its semantics
-with memory, lifted onto the memories of the traced state
-(`DialectTrace.ofMem`). Its traced runs from a traced state `s` then show no
-act and let nothing more escape: they end as its runs from the memories of
-`s`, each return carrying the traced state with the memories it ends with and
-the allocations `s` lets escape (`Func.traceRunsFrom_noActs_ofMem`).
+A dialect whose traced semantics lifts its semantics with memory onto the
+memories of the traced state (`LiftsMem`), as a dialect whose ops show no
+event does (`DialectTrace.ofMem`), shows no act on its traced runs. Its
+traced runs from a traced state `s` then show no act and let nothing more
+escape: they end as its runs from the memories of `s`, each return carrying
+the traced state with the memories it ends with and the allocations `s`
+lets escape (`Func.traceRunsFrom_noActs`).
 
 So for such a dialect, refinement of runs from given memories gives
 refinement of traced runs from given traced states, the traced state each
 return ends in included (`Func.traceRunsFrom_isRefinedBy_of_memRunsFrom`).
 The core and CoreGpu state congruence in the callee with a hypothesis with
 memory; this bridge takes it to the hypothesis that the traced layer's own
-theorem asks (`Func.traceRuns_replaceBody_isRefinedBy`). It unfolds the
-lift itself, each op's traced semantics being its lift by definition, so the
-core's and CoreGpu's proofs name no `LiftsMem`. It holds only while a
-dialect's traced semantics is that lift.
+theorem asks (`Func.traceRuns_replaceBody_isRefinedBy`). The core has
+events, the external calls, but none of its ops shows one, and no run makes
+an external call until the run hands a call to a declaration to the core's
+external-call rule (#239). So the bridge holds of the core and CoreGpu only
+until then; congruence in the callee over traced runs then takes its
+hypothesis over traced runs from every traced state (the human's ruling of
+2026-11-21 on #239, Q3).
 -/
 
 namespace Fir
@@ -42,23 +46,20 @@ def Result.withEscaped {V : Type} (s : TraceState N (unitsOf lay)) :
 
 variable {M : Module d} {f : Func d}
 
-/-- The traced runs from a traced state of a function of a dialect whose ops
-show no event, with the lifted traced semantics, show no act, and end as its
-runs from the memories of that state, each return carrying the traced state
-with the memories it ends with and the allocations that state lets
+/-- The traced runs from a traced state of a function of a dialect whose
+traced semantics lifts its semantics with memory show no act, and end as
+its runs from the memories of that state, each return carrying the traced
+state with the memories it ends with and the allocations that state lets
 escape. -/
-theorem Func.traceRunsFrom_noActs_ofMem (a : HVector toType (f.params.map (·.2)))
-    (s : TraceState N (unitsOf lay)) (n : Nat) :
-    letI := DialectTrace.ofMem d
+theorem Func.traceRunsFrom_noActs [DialectTrace d] [LiftsMem d]
+    (a : HVector toType (f.params.map (·.2))) (s : TraceState N (unitsOf lay)) (n : Nat) :
     letI := DialectMemDenote.denoteAt (d := d) lay ρ L
     (f.traceRunsFrom lay ρ L M (a, s) n).NoActs
       (Functor.map (f := SetM) (Result.withEscaped lay s) (f.memRunsFrom M (a, s.mem) n)) := by
-  letI := DialectTrace.ofMem d
   letI := DialectMemDenote.denoteAt (d := d) lay ρ L
   letI := DialectTrace.traceAt (d := d) lay ρ L
   letI := DialectTrace.stepAt (d := d) lay ρ L
-  have hlift : (MonadMorphism.traceMem N (unitsOf lay) (DialectTrace.Acts d)).MapsDenote (d := d) :=
-    ⟨fun _ _ => rfl, fun _ _ => rfl⟩
+  have hlift := LiftsMem.lifts (d := d) lay ρ L
   have hY : TraceM.mapActs Step.acts
       ((f.run M (m := TraceM (Step (DialectTrace.Acts d)) (TraceState N (unitsOf lay))) a n).run) =
       TraceM.liftMem (f.run M (m := StateT (Memories N (unitsOf lay)) SetM) a n).run :=
@@ -200,20 +201,19 @@ theorem Result.withEscaped_exhausted_iff {V : Type} {s : TraceState N (unitsOf l
 variable [TyRefinement d.Ty]
 
 /-- Refinement of runs from the memories of a traced state gives refinement of
-traced runs from that state, for a dialect whose ops show no event, with the
-lifted traced semantics: the traced state each return ends in included. -/
-theorem Func.traceRunsFrom_isRefinedBy_of_memRunsFrom {M' : Module d} {f' : Func d}
+traced runs from that state, for a dialect whose traced semantics lifts its
+semantics with memory: the traced state each return ends in included. -/
+theorem Func.traceRunsFrom_isRefinedBy_of_memRunsFrom [DialectTrace d] [LiftsMem d]
+    {M' : Module d} {f' : Func d}
     {a : HVector toType (f.params.map (·.2))} {a' : HVector toType (f'.params.map (·.2))}
     {s : TraceState N (unitsOf lay)}
     (h : letI := DialectMemDenote.denoteAt (d := d) lay ρ L
       observable (f.memRunsFrom M (a, s.mem)) ⊑ observable (f'.memRunsFrom M' (a', s.mem))) :
-    letI := DialectTrace.ofMem d
     traceObservable (f.traceRunsFrom lay ρ L M (a, s)) ⊑
       traceObservable (f'.traceRunsFrom lay ρ L M' (a', s)) := by
-  letI := DialectTrace.ofMem d
   letI := DialectMemDenote.denoteAt (d := d) lay ρ L
-  rw [traceObservable_of_noActs (Func.traceRunsFrom_noActs_ofMem lay ρ L a s),
-    traceObservable_of_noActs (Func.traceRunsFrom_noActs_ofMem lay ρ L a' s)]
+  rw [traceObservable_of_noActs (Func.traceRunsFrom_noActs lay ρ L a s),
+    traceObservable_of_noActs (Func.traceRunsFrom_noActs lay ρ L a' s)]
   refine TBehaviour.ofBehaviour_isRefinedBy_iff.2 fun t ht => ?_
   have hub : ∀ {r : String}, observable (f.memRunsFrom M (a, s.mem)) (.ub r) →
       observable (fun n => Functor.map (f := SetM) (Result.withEscaped lay s)

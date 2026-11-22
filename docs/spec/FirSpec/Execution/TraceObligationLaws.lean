@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Ops monotone in the traced layer: readable blocks" =>
 
-:::moduleDocs (fingerprint := "14664865824699207852")
+:::moduleDocs (fingerprint := "10600768087550873029")
 :::
 
 :::readable Fir.TraceEnd.trace_mapActs Fir.TraceEnd.Allows.mapActs Fir.TraceRefinedBy.step (fingerprint := "6627922759765765824")
@@ -32,12 +32,33 @@ monotone in the traced layer of marked traces, where it runs after a step.
 So is each op of a function whose ops are.
 :::
 
-:::readable Fir.TraceRefinedBy.liftMem Fir.OpTraceMonotone.ofMem Fir.Func.TraceOpsMonotone.ofMem (fingerprint := "5519996737546212163")
-*Theorems: the lift of the semantics with memory.* Computations of the
-state layer that refine each other, lifted onto the memories of the traced
-state, refine each other in the traced layer: the lift shows nothing and
-keeps what escaped, so results, memories and UB keep their refinement. In
-the traced semantics of a dialect whose ops show no event, an op monotone
-with memory is monotone in the traced layer, and so is each op of a
-function whose ops are monotone with memory.
+:::readable Fir.TraceRefinedBy.liftMem (fingerprint := "2252719804679232894")
+*Theorem: the lift keeps refinement.* Computations of the state layer that
+refine each other, lifted onto the memories of the traced state, refine
+each other in the traced layer: the lift shows nothing and keeps what
+escaped, so results, memories and UB keep their refinement.
+:::
+
+:::readable Fir.OpLiftsMem Fir.OpLiftsMem.ofMem Fir.LiftsMem.opLiftsMem (fingerprint := "17298859364641870274")
+*Definition: an op that lifts its rule with memory.* At $`\ell`, $`\rho`
+and $`L`, the op $`op` lifts its rule with memory in a dialect's traced
+semantics when, on every operands $`\vec{v}`, its traced rule is its rule
+with memory, lifted onto the memories of the traced state, as an op that is
+not a terminator and as a terminator:
+
+$$`\mathrm{trace}(op)(\vec{v}) = \mathrm{lift}(\mathrm{mem}(op)(\vec{v}))`
+
+It shows no event and keeps what escaped. Every op of a dialect whose ops
+show no event lifts its rule, and so does every op of a dialect whose
+traced semantics lifts its semantics with memory. A dialect may show events
+by other rules, as the core does by its external calls, while each of its
+ops lifts its rule.
+:::
+
+:::readable Fir.OpTraceMonotone.ofLift Fir.OpTraceMonotone.ofMem Fir.Func.TraceOpsMonotone.ofLift Fir.Func.TraceOpsMonotone.ofMem (fingerprint := "3241664838180622674")
+*Theorems: ops that lift their rule are monotone.* An op that lifts its rule
+with memory, and is monotone with memory, is monotone in the traced layer;
+so is each op of a function whose ops are monotone with memory, in a
+dialect whose ops each lift their rule. In particular, in the traced
+semantics of a dialect whose ops show no event.
 :::

@@ -82,6 +82,7 @@ import FirTest.TraceCalleeEnter
 import FirTest.WorldScript
 import FirTest.ObserveEnd
 import FirTest.CoreTrace
+import FirTest.CoreEvent
 import FirTest.MemoryPoison
 import FirTest.MemoryObligations
 import FirTest.MemoryRefine

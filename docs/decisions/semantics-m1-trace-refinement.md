@@ -25,8 +25,9 @@ by the old (`TraceAhead.lean` to `TraceReplace.lean`), and, when its ops
 have finitely many outcomes given the world's answers, that each divergence
 is too, so congruence in the callee in full (`TraceBranch.lean` to
 `TraceReplaceDiverge.lean`). The core's and CoreGpu's refined arguments
-and congruence in the callee are proved by those engines, with no
-`LiftsMem` (`TraceLiftFrom.lean` bridges the hypothesis with memory).
+and congruence in the callee are proved by those engines
+(`TraceLiftFrom.lean` bridges the hypothesis with memory while their
+traced semantics lifts their semantics with memory, `LiftsMem`).
 
 ## Refinement over traced runs
 
@@ -35,10 +36,20 @@ semantics-m1-trace.md.
 
 - **A dialect with no event.** Its traced semantics is its semantics with
   memory, lifted onto the memories of the traced state
-  (`DialectTrace.ofMem`), so it lifts it (`LiftsMem`) by construction. The
-  core and CoreGpu have this traced semantics until their events exist.
-  Rejected: a traced semantics written op by op for the core now, which
-  #239 would rewrite once the core shows its first event.
+  (`DialectTrace.ofMem`), so it lifts it (`LiftsMem`) by construction.
+  `gpu` has this traced semantics.
+- **The core's traced semantics, op by op.** The core's is its own
+  (`Core.instDialectTrace`, #239): its events are external calls
+  (`Core.Event`), and each op runs by its rule with memory, lifted
+  (`OpLiftsMem`), since under the human's ruling of 2026-11-21 an external
+  call runs by a rule of its own, not an op's. So the core's ops meet the
+  traced obligation and the hypothesis of divergence from their
+  monotonicity and finiteness with memory (`OpTraceMonotone.ofLift`,
+  `OpsTraceFinite.ofLift`). CoreGpu's is the sum of the core's and
+  `gpu`'s (`Dialect.sum.instDialectTrace`), which lifts its semantics with
+  memory when both sides do (`Dialect.sum.liftsMem`). Rejected: keep
+  `DialectTrace.ofMem` for the core, whose events are none, so a run of the
+  core could never show an external call.
 - **From memory to the end of a return.** Returned values that refine
   others and memories that refine others, with the same allocations
   escaped, give ends of returns that refine each other under the renaming
@@ -159,14 +170,15 @@ semantics-m1-trace.md.
   deadlines would grow at every move.
 - **The core's hypothesis, taken to traces.** The core and CoreGpu keep
   their hypothesis of congruence in the callee with memory: `@g`, run from
-  given memories, refines the old `@g`. Their traced semantics is the lift
-  of their semantics with memory (`DialectTrace.ofMem`), so a traced run
-  from a traced state shows no act and ends as the run from its memories,
-  each return keeping what that state lets escape. That takes the
-  hypothesis to the traced one from every traced state
-  (`Func.traceRunsFrom_isRefinedBy_of_memRunsFrom`), which the traced
-  layer's own theorem asks, by unfolding `ofMem` rather than through the
-  class `LiftsMem`. Once the core shows events (#239), its traced
-  semantics is no longer this lift, and the bridge no longer applies.
-  Rejected: restate it over traced runs now, which changes
-  the statement of a #384 guarantee.
+  given memories, refines the old `@g`. Their traced semantics lifts their
+  semantics with memory (`LiftsMem`): no op shows an event, and no run
+  makes an external call yet. So a traced run from a traced state shows no
+  act and ends as the run from its memories, each return keeping what that
+  state lets escape. That takes the hypothesis to the traced one from every
+  traced state (`Func.traceRunsFrom_isRefinedBy_of_memRunsFrom`), which the
+  traced layer's own theorem asks. Once a run can make an external call
+  (#239), the core's traced semantics no longer lifts its semantics with
+  memory, the bridge no longer applies, and the hypothesis is over traced
+  runs from every traced state, as the human ruled on 2026-11-21, on #239.
+  Rejected: restate it over traced runs before then, which changes the
+  statement of a #384 guarantee.

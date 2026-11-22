@@ -14,14 +14,17 @@ when the Lean changes under it.
 
 #doc (Manual) "The core's traced runs: readable blocks" =>
 
-:::moduleDocs (fingerprint := "12943859493615772163")
+:::moduleDocs (fingerprint := "13662823649430197855")
 :::
 
-:::readable Fir.Core.instDialectTrace Fir.Core.liftsMem Fir.Core.instInhabitedAnswer (fingerprint := "9825455798937681785")
-*Definition: the core's traced semantics.* The core shows no event yet, so
-its traced semantics is its semantics with memory, lifted onto the memories
-of the traced state; it lifts its semantics with memory, and the world has
-one answer.
+:::readable Fir.Core.instDialectTrace Fir.Core.liftsMem Fir.Core.instInhabitedAnswer (fingerprint := "9308984198974203001")
+*Definition: the core's traced semantics.* The core's events are its
+external calls, which the world answers with a reply and its actions on
+escaped memory; the default answer has no results and no actions. Each op
+runs by its rule with memory, lifted onto the memories of the traced
+state, and shows no event: an external call is not an op's rule. So, until
+a run can make an external call, the core's traced semantics lifts its
+semantics with memory.
 :::
 
 :::readable Fir.Core.trace_args_isRefinedBy Fir.Core.trace_args_isRefinedBy_world (fingerprint := "16027320472332802630")
@@ -46,17 +49,22 @@ memories, refines $`@g` in $`M`, every function of $`M` is refined over the
 spec's traced runs by itself with $`@g`'s new body in $`M[g := b]`, with no
 budget, whatever the parameter types of $`@g` and whatever $`b` does to the
 memories: every core op has finitely many outcomes. The traced layer's own
-theorem for a dialect that shows events proves it, with no `LiftsMem`: the
-core's traced semantics is the lift of its semantics with memory, so the
-hypothesis from given memories gives the traced one from every traced
-state. So it is at every world.
+theorem for a dialect that shows events proves it: the core's traced
+semantics lifts its semantics with memory, so the hypothesis from given
+memories gives the traced one from every traced state. So it is at every
+world.
 :::
 
-:::readable Fir.Core.traceOpsMonotone Fir.Core.opsTraceFinite (fingerprint := "16856423220812675737")
+:::readable Fir.Core.opLiftsMem Fir.Core.traceOpsMonotone Fir.Core.opsTraceFinite (fingerprint := "15847308182329661481")
+*Theorem: each core op lifts its rule.* In the core's traced semantics,
+each core op runs by its rule with memory, lifted onto the memories of the
+traced state, by definition.
+
 *Theorem: the core meets the traced obligation.* Every core function's
 ops that run by their own rule are monotone in the core's traced
-semantics, wherever a run names the core's memories: each is monotone with memory, and
-the lift onto the traced state keeps it.
+semantics, wherever a run names the core's memories: each lifts its rule
+with memory and is monotone with memory, and the lift onto the traced
+state keeps it.
 
 *Theorem: the core meets the hypothesis of divergence.* Every core op
 that runs by its own rule has finitely many outcomes in the core's traced

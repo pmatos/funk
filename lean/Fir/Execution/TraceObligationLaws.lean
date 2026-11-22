@@ -14,11 +14,13 @@ monotonicity:
   acts keeps their refinement, and UB after the acts _t_ becomes UB after
   the step and _t_. So an op monotone by its dialect's rule in the traced
   layer is monotone in the traced layer of marked traces.
-* _The lift of the semantics with memory._ A dialect whose ops show no event
-  runs each op by its rule with memory, on the memories of the traced state
-  (`DialectTrace.ofMem`). The lift shows nothing and keeps what escaped, so
-  results and memories that refine others, and UB, stay so. An op monotone
-  with memory is then monotone in the traced layer.
+* _The lift of the semantics with memory._ An op may run, in a dialect's
+  traced semantics, by its rule with memory, on the memories of the traced
+  state (`OpLiftsMem`), as every op of a dialect whose ops show no event
+  does (`DialectTrace.ofMem`), and every op of the core, whose events come
+  from external calls, not from its ops. The lift shows nothing and keeps
+  what escaped, so results and memories that refine others, and UB, stay
+  so. An op monotone with memory is then monotone in the traced layer.
 -/
 
 namespace Fir
@@ -127,8 +129,55 @@ end
 section
 
 variable {d : Dialect} [TyDenote d.Ty] [DialectSignature d] [DialectEffects d] [DialectMemDenote d]
-  [TyRefinement d.Ty] {N : Type} [DecidableEq N] (lay : N → MemLayout)
-  (ρ : DialectEffects.Mem d → N) (L : RunItems)
+  {N : Type} [DecidableEq N] (lay : N → MemLayout) (ρ : DialectEffects.Mem d → N) (L : RunItems)
+
+/-- The op `op` runs, in a dialect's traced semantics, by its rule with
+memory, lifted onto the memories of the traced state, wherever a run names
+the dialect's memories by `ρ` and gives each op the items `L`: it shows no
+event and keeps what escaped. A dialect may show events by other rules,
+such as the core's external calls, while each of its ops lifts its rule with
+memory. -/
+def OpLiftsMem [DialectTrace d] (op : d.Op) : Prop :=
+  letI := DialectMemDenote.denoteAt (d := d) lay ρ L
+  letI := DialectTrace.traceAt (d := d) lay ρ L
+  ∀ args : HVector toType (sig op),
+    TraceM.liftMem (DialectDenote.denote (m := StateT (Memories N (unitsOf lay)) SetM) op args) =
+        DialectDenote.denote (m := TraceM (DialectTrace.Acts d) (TraceState N (unitsOf lay))) op args ∧
+      TraceM.liftMem (DialectDenote.exit (m := StateT (Memories N (unitsOf lay)) SetM) op args) =
+        DialectDenote.exit (m := TraceM (DialectTrace.Acts d) (TraceState N (unitsOf lay))) op args
+
+/-- In the lifted traced semantics of a dialect whose ops show no event,
+each op lifts its rule with memory. -/
+theorem OpLiftsMem.ofMem (op : d.Op) :
+    letI := DialectTrace.ofMem d
+    OpLiftsMem lay ρ L op :=
+  fun _ => ⟨rfl, rfl⟩
+
+/-- In a dialect whose traced semantics lifts its semantics with memory,
+each op lifts its rule with memory. -/
+theorem LiftsMem.opLiftsMem [DecidableEq d.Ty] [DialectCall d] [DialectTrace d] [LiftsMem d]
+    (op : d.Op) : OpLiftsMem lay ρ L op := by
+  letI := DialectMemDenote.denoteAt (d := d) lay ρ L
+  letI := DialectTrace.traceAt (d := d) lay ρ L
+  exact fun args => ⟨(LiftsMem.lifts lay ρ L).denote op args, (LiftsMem.lifts lay ρ L).exit op args⟩
+
+variable [TyRefinement d.Ty]
+
+/-- An op that lifts its rule with memory in a dialect's traced semantics,
+and is monotone with memory, is monotone in the traced layer. -/
+theorem OpTraceMonotone.ofLift [DialectTrace d] {op : d.Op} (hl : OpLiftsMem lay ρ L op)
+    (h : letI := DialectMemDenote.denoteAt (d := d) lay ρ L
+      OpMemMonotone (σ := Memories N (unitsOf lay)) op) :
+    letI := DialectTrace.traceAt (d := d) lay ρ L
+    OpTraceMonotone (B := DialectTrace.Acts d) (σ := TraceState N (unitsOf lay)) op := by
+  letI := DialectMemDenote.denoteAt (d := d) lay ρ L
+  letI := DialectTrace.traceAt (d := d) lay ρ L
+  intro args args' hr
+  refine ⟨fun hT => ?_, fun hT => ?_⟩
+  · rw [← (hl args).1, ← (hl args').1]
+    exact TraceRefinedBy.liftMem ((h args args' hr).1 hT)
+  · rw [← (hl args).2, ← (hl args').2]
+    exact TraceRefinedBy.liftMem ((h args args' hr).2 hT)
 
 /-- In the traced semantics of a dialect whose ops show no event, an op
 monotone with memory is monotone in the traced layer. -/
@@ -138,10 +187,21 @@ theorem OpTraceMonotone.ofMem {op : d.Op}
     letI := DialectTrace.ofMem d
     letI := DialectTrace.traceAt (d := d) lay ρ L
     OpTraceMonotone (B := DialectTrace.Acts d) (σ := TraceState N (unitsOf lay)) op :=
-  fun args args' hr => ⟨fun hT => TraceRefinedBy.liftMem ((h args args' hr).1 hT),
-    fun hT => TraceRefinedBy.liftMem ((h args args' hr).2 hT)⟩
+  letI := DialectTrace.ofMem d
+  OpTraceMonotone.ofLift lay ρ L (OpLiftsMem.ofMem lay ρ L op) h
 
 variable [DialectCall d]
+
+/-- In a dialect's traced semantics where each op lifts its rule with
+memory, a function whose ops are monotone with memory has ops monotone in
+the traced layer. -/
+theorem Func.TraceOpsMonotone.ofLift [DialectTrace d] {f : Func d}
+    (hl : ∀ op : d.Op, OpLiftsMem lay ρ L op)
+    (h : letI := DialectMemDenote.denoteAt (d := d) lay ρ L
+      f.MemOpsMonotone N (unitsOf lay)) :
+    letI := DialectTrace.traceAt (d := d) lay ρ L
+    f.TraceOpsMonotone (DialectTrace.Acts d) (TraceState N (unitsOf lay)) :=
+  fun b hb o ho hc => OpTraceMonotone.ofLift lay ρ L (hl o.op) (h b hb o ho hc)
 
 /-- In the traced semantics of a dialect whose ops show no event, a function
 whose ops are monotone with memory has ops monotone in the traced layer. -/
@@ -151,7 +211,8 @@ theorem Func.TraceOpsMonotone.ofMem {f : Func d}
     letI := DialectTrace.ofMem d
     letI := DialectTrace.traceAt (d := d) lay ρ L
     f.TraceOpsMonotone (DialectTrace.Acts d) (TraceState N (unitsOf lay)) :=
-  fun b hb o ho hc => OpTraceMonotone.ofMem lay ρ L (h b hb o ho hc)
+  letI := DialectTrace.ofMem d
+  Func.TraceOpsMonotone.ofLift lay ρ L (OpLiftsMem.ofMem lay ρ L) h
 
 end
 
