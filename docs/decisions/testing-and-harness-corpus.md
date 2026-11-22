@@ -137,6 +137,17 @@ sides have them: the differential side's are filled by
 side's by `fieldaddr.fir`, `fieldaddr-programs-memories.fir` and the
 interpreter-only tests of `fieldaddr-programs.fir`.
 
+`ptr_expose` and `ptr_from_int` have a table of their own
+(`address_cells.py`, #232): a cell for each width of their integer, which
+the data layout makes the width of the memory's pointers. The
+interpreter-only side has `i32` and `i64`, and the differential side
+`i64`, since the backend lowers both ops as moves in the memories of 64-bit
+pointers that it realises (stage 5 of #232). The differential cells are
+filled by `tests/fir/canonical/ptr-int.fir` and `ptr-int-programs.fir`,
+whose tests return what an address reaches or what every address the spec
+may give agrees on, never an address, since `fir-ref`'s canonical layout
+is one policy of many.
+
 The address of a global `globaladdr` has a table of its own too
 (`pointer_cells.GLOBALS`, #237): one cell, whatever its global and its
 memory. Only the interpreter-only side has it (`coverage.Side.global_addrs`),

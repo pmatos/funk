@@ -7,10 +7,12 @@ data layout asks that the integer be as wide as the memory's pointers, so
 the columns are the pointer widths of the memories that the corpus
 declares: `i32`, and `i64`, the default memory's.
 
-The cells are on the interpreter side only: the backend lowers the two ops
-in stage 5 of #232. A test that returns an exposed address depends on the
-canonical layout that `fir-ref` follows, so the corpus returns what the
-address reaches, or the difference of two addresses, never the address.
+The backend lowers both ops as moves (stage 5 of #232) in a memory of
+64-bit pointers, the only pointers it realises, so the differential side
+has the `i64` cells and the interpreter-only side both. A test that returns
+an exposed address depends on the canonical layout that `fir-ref` follows,
+so the corpus returns what the address reaches, or the difference of two
+addresses, never the address.
 """
 
 from cell_types import Cell, CellError, Row, Table, is_pointer
@@ -19,6 +21,7 @@ from pointer_cells import is_int
 
 ADDRESSES = "addresses"
 ADDRESS_OPS = ("ptr_expose", "ptr_from_int")
+ADDRESS_DIFFERENTIAL = (64,)
 ADDRESS_INTERPRETER = (32, 64)
 
 

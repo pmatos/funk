@@ -17,14 +17,15 @@ use super::{Cx, Lower, Unlowered};
 use crate::asm::Reg;
 
 pub(super) fn lowering(name: &str) -> Option<Lower> {
-    (name == "bitcast").then_some(bitcast)
+    (name == "bitcast").then_some(copy)
 }
 
 /// `%b: i32 = bitcast %f` and `%f: f32 = bitcast %b`: `%x`'s slot, copied
-/// to the result's.
-fn bitcast(cx: &mut Cx<'_>, op: &Op) -> Result<(), Unlowered> {
+/// to the result's. `ptr_expose` and `ptr_from_int` lower so too
+/// (`ptr_int.rs`).
+pub(super) fn copy(cx: &mut Cx<'_>, op: &Op) -> Result<(), Unlowered> {
     let ([x], [r]) = (op.operands.as_slice(), op.results.as_slice()) else {
-        return Err("bitcast takes one operand and defines one value".into());
+        return Err(format!("{} takes one operand and defines one value", op.name).into());
     };
     cx.width(&r.name)?;
     cx.width(x)?;

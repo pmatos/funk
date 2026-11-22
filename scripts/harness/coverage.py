@@ -23,7 +23,7 @@ from typing import NamedTuple
 import cells
 import corpus
 import firtext
-from address_cells import ADDRESS_INTERPRETER
+from address_cells import ADDRESS_DIFFERENTIAL, ADDRESS_INTERPRETER
 from cells import Cell
 from pointer_cells import MEMORY_FLOAT_DIFFERENTIAL, MEMORY_FLOAT_INTERPRETER
 
@@ -85,6 +85,7 @@ SIDES = (
         memory=MEMORY_FLOAT_DIFFERENTIAL,
         fields=cells.FIELD_DIFFERENTIAL,
         copies=True,
+        addresses=ADDRESS_DIFFERENTIAL,
     ),
     Side(
         "interpreter",

@@ -17,11 +17,28 @@ exposing such a pointer gives back its integer. A poison integer gives a
 poison pointer, and exposing a poison pointer is UB.
 `ptr-int-memories.fir` does the same in memory 1, of 32-bit pointers, with
 `i32` addresses. No test returns an exposed address, which depends on the
-canonical layout that `fir-ref` follows. The backend lowers neither op
-until #232's fifth stage, so every test of these texts is
+canonical layout that `fir-ref` follows. When the third stage added them,
+the backend lowered neither op, so every test of these texts was
 interpreter-only.
 
 `reject/ptr-int.toml` holds the texts that do not decode, an attribute, a
 pointer where an integer is or the reverse, and those that the data layout
 rejects: an integer that is not as wide as the memory's pointers, and
 either op in a memory marked `nonintegral`.
+
+#232's fifth stage lowers both ops as moves
+([x86-64-backend-lowering-memory.md](../decisions/x86-64-backend-lowering-memory.md#pointers-as-integers)),
+so each test of `ptr-int.fir` whose result does not depend on an address
+runs as native code too and declares its result: the round trip, the
+address plus 0 and plus 4, the difference of two addresses, and an integer
+that no exposed allocation holds turned into a pointer and exposed again.
+A test of poison or UB stays interpreter-only, and so does every test of
+`ptr-int-memories.fir`, whose memory of 32-bit pointers the backend does
+not realise. `ptr-int-programs.fir` runs round trips of an address on both:
+stored in memory and loaded back, passed to a call that stores through it,
+and stepped by 4 through an array in a loop; it also returns an address
+modulo its allocation's alignment, 64, and whether it is 0, which every
+address the spec may give agrees on. It makes the round trip in memory 1,
+of 64-bit pointers too, and turns an address of memory 0 into a pointer of
+memory 1, which has no exposed allocation, so a load through it is UB, an
+interpreter-only test.
