@@ -78,14 +78,15 @@ poison class through `DialectEffects`: `propagates` or `exception`
 (ADR-2026-10-29-2006). Rejected: propagation in prose only, as LLVM's reference
 states it. An op whose rules forget to propagate poison would go unnoticed.
 
-In the core dialect, 44 ops propagate and eight are exceptions. The 44 are
+In the core dialect, 45 ops propagate and eight are exceptions. The 45 are
 `const`, the float constant and `poison`, which have no operands, `add`, `sub`
 and `mul`, the four divisions, the bitwise ops and shifts, `icmp`, the width
 changes, `fcmp`, the three ops of float arithmetic, the two bit casts, the
 two conversions from integers, `sitofp` and `uitofp`, the two conversions
 between formats, `fpext` and `fptrunc` (ADR-2026-11-09-1549), the pointer
 offset `ptradd` (ADR-2026-11-13-0251), the field address `fieldaddr`
-(#236), the two conversions to integers,
+(#236), the address of a global `globaladdr`, which has no operands (#237),
+the two conversions to integers,
 `fptosi` and `fptoui`, the stack allocation `alloca`, which has no operands
 (ADR-2026-11-14-0915), `load`, which is UB on a poison pointer, as some
 pointer in its place faults (ADR-2026-11-14-2316), and `store`, which is UB
@@ -178,8 +179,8 @@ rejections of `Core.Unlawful` hold with memory (`Core.Unlawful.memUnlawful`).
 The core meets them op by op (`lean/Fir/Core/MemoryRuns.lean`,
 through `Core.Op.memCases`): each op that touches no memory and reads no
 item of the run by its tie and its obligations in the set monad, and
-`alloca`, the loads and stores, `fieldAddr`, `memCopy` and `memSet` by
-their own rules (semantics-effects.md#soundness lists their files). Since
+`alloca`, the loads and stores, `fieldAddr`, `globalAddr`, `memCopy` and
+`memSet` by their own rules (semantics-effects.md#soundness lists their files). Since
 `alloca` has no rule in the set monad, the core no longer meets
 `LawfulDialectPoison`, and `Core.lawfulDialectPoison` went in stage 4d-2 of
 #231. Rejected: a rule for `alloca` in the set monad, which has no

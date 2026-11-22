@@ -14,20 +14,21 @@ when the Lean changes under it.
 
 #doc (Manual) "Core poison classes: readable blocks" =>
 
-:::moduleDocs (fingerprint := "6309986095054526749")
+:::moduleDocs (fingerprint := "10467259851330748233")
 :::
 
-:::readable Fir.Core.Op.poisonClass (fingerprint := "18219783078239276984")
-*Definition: the poison class of each core op.* Forty-four core ops
+:::readable Fir.Core.Op.poisonClass (fingerprint := "14816339387676642636")
+*Definition: the poison class of each core op.* Forty-five core ops
 {ref "The-fir-specification--Execution--Poison-classes"}[propagate poison],
 and eight are exceptions:
 
-$$`\begin{aligned} \mathsf{propagates}:\ & \mathsf{const}_N,\ \mathsf{const}_{e,m},\ \mathsf{poison},\ \mathsf{add}, \\ & \mathsf{sub},\ \mathsf{mul},\ \mathsf{sdiv},\ \mathsf{udiv}, \\ & \mathsf{srem},\ \mathsf{urem},\ \mathsf{and},\ \mathsf{or}, \\ & \mathsf{xor},\ \mathsf{shl},\ \mathsf{lshr},\ \mathsf{ashr}, \\ & \mathsf{icmp},\ \mathsf{fcmp},\ \mathsf{zext},\ \mathsf{sext},\ \mathsf{trunc}, \\ & \mathit{fbin},\ \mathit{funary},\ \mathsf{fma},\ \mathsf{bitcast}^{\to \mathsf{i}},\ \mathsf{bitcast}^{\mathsf{i} \to}, \\ & \mathsf{sitofp},\ \mathsf{uitofp},\ \mathsf{fpext},\ \mathsf{fptrunc},\ \mathsf{ptradd}, \\ & \mathsf{fieldaddr},\ \mathsf{fptosi},\ \mathsf{fptoui},\ \mathsf{alloca}, \\ & \mathsf{load},\ \mathsf{store},\ \mathsf{load}~\mathsf{ptr},\ \mathsf{store}~\mathsf{ptr}, \\ & \mathsf{load}~\mathsf{float},\ \mathsf{store}~\mathsf{float},\ \mathsf{memcpy}, \\ & \mathsf{memmove},\ \mathsf{memset},\ \mathsf{ptr\_from\_int} \end{aligned}`
+$$`\begin{aligned} \mathsf{propagates}:\ & \mathsf{const}_N,\ \mathsf{const}_{e,m},\ \mathsf{poison},\ \mathsf{add}, \\ & \mathsf{sub},\ \mathsf{mul},\ \mathsf{sdiv},\ \mathsf{udiv}, \\ & \mathsf{srem},\ \mathsf{urem},\ \mathsf{and},\ \mathsf{or}, \\ & \mathsf{xor},\ \mathsf{shl},\ \mathsf{lshr},\ \mathsf{ashr}, \\ & \mathsf{icmp},\ \mathsf{fcmp},\ \mathsf{zext},\ \mathsf{sext},\ \mathsf{trunc}, \\ & \mathit{fbin},\ \mathit{funary},\ \mathsf{fma},\ \mathsf{bitcast}^{\to \mathsf{i}},\ \mathsf{bitcast}^{\mathsf{i} \to}, \\ & \mathsf{sitofp},\ \mathsf{uitofp},\ \mathsf{fpext},\ \mathsf{fptrunc},\ \mathsf{ptradd}, \\ & \mathsf{fieldaddr},\ \mathsf{globaladdr},\ \mathsf{fptosi},\ \mathsf{fptoui},\ \mathsf{alloca}, \\ & \mathsf{load},\ \mathsf{store},\ \mathsf{load}~\mathsf{ptr},\ \mathsf{store}~\mathsf{ptr}, \\ & \mathsf{load}~\mathsf{float},\ \mathsf{store}~\mathsf{float},\ \mathsf{memcpy}, \\ & \mathsf{memmove},\ \mathsf{memset},\ \mathsf{ptr\_from\_int} \end{aligned}`
 
 $$`\begin{aligned} \mathsf{exception}:\ & \mathsf{select},\ \mathsf{freeze},\ \mathsf{br}, \\ & \mathsf{cond\_br},\ \mathsf{ret},\ \mathsf{unreachable},\ \mathsf{call}, \\ & \mathsf{ptr\_expose} \end{aligned}`
 
-$`\mathsf{alloca}`, like $`\mathsf{const}` and $`\mathsf{poison}`, has
-no operands, so it propagates poison whatever its rule. $`\mathsf{load}`
+$`\mathsf{alloca}` and $`\mathsf{globaladdr}`, like $`\mathsf{const}` and
+$`\mathsf{poison}`, have no operands, so they propagate poison whatever
+their rules. $`\mathsf{load}`
 is UB on a poison pointer, since some defined pointer in its place faults,
 so it propagates poison too, and so does $`\mathsf{store}`, which gives no
 result and is UB on a poison pointer for the same reason; a poison value

@@ -178,14 +178,15 @@ would hold with no condition, with the memory ops beside it (option C),
 which changes the dialect's structure where the versions with memory
 already cover every op.
 
-`fieldaddr`, which came after that ruling (ADR-2026-11-18-2041), touches no
-memory but reads an item of the run, which the set monad does not have, so
-the statements over the set monad leave it out too: they cover the ops that
+`fieldaddr`, which came after that ruling (ADR-2026-11-18-2041), and
+`globaladdr` (#237) touch no memory but read an item of the run, which the
+set monad does not have, so the statements over the set monad leave them
+out too: they cover the ops that
 touch no memory and read no item (`Core.Op.readsItems`). The semantics with
-memory carries its guarantees, by its own rule and proofs.
+memory carries their guarantees, by their own rules and proofs.
 
 These hold for every core op, and for every function of a valid core
-module, the ops that touch memory and `fieldaddr` included:
+module, the ops that touch memory, `fieldaddr` and `globaladdr` included:
 
 - the lawful classes with memory: `Core.lawfulDialectTotal`,
   `Core.lawfulDialectMonotone` and `Core.lawfulDialectMemPoison`
@@ -208,7 +209,9 @@ layouts to every op's rule and that these guarantees gain that argument.
 `fieldaddr` is the first op that reads it (ADR-2026-11-18-2041): it has a
 rule only with memory, as `alloca` and the loads and stores do, and meets
 each obligation by its own proofs (`lean/Fir/Core/FieldAddrLaws.lean`), so
-the guarantees keep their statements with no new hypothesis.
+the guarantees keep their statements with no new hypothesis. `globaladdr`
+reads where its global starts in the same record, in the same way
+(`lean/Fir/Core/GlobalAddrLaws.lean`).
 Rejected: the parser looking a layout up when it reads an op (Q1 B), which
 changes every dialect's text laws.
 
@@ -218,8 +221,8 @@ kernels included (`lean/Fir/Gpu/Runs.lean`, #212; semantics-m1-dialects.md).
 
 Each new op with no tie, one that touches memory or reads the run's items,
 keeps every one of them holding, with its own rule with memory and its own
-proofs: each op that touches memory does, and so does `fieldAddr`, which touches no memory but reads
-items. `Core.Op.memCases` joins them to the tied ops
+proofs: each op that touches memory does, and so do `fieldAddr` and
+`globalAddr`, which touch no memory but read items. `Core.Op.memCases` joins them to the tied ops
 (semantics-effects.md#soundness lists each op's laws files).
 
 PR #382 narrowed these statements, which now cover memory-free code; beside

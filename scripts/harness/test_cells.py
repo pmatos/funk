@@ -116,6 +116,7 @@ def decoded_attrs(text: str, floats: str) -> dict[str, tuple[str, ...]]:
         "decodeFieldAddr": ("",),
         "decodePtrExpose": ("",),
         "decodePtrFromInt": ("",),
+        "decodeGlobalAddr": ("",),
     }
     by_ctor = {
         "decodeFBin": op_attrs(floats, "FBin"),
@@ -209,6 +210,7 @@ class Tests(unittest.TestCase):
                 "loadAttrs o a",
                 "loadAttrs o none",
                 "fieldAddrAttrs s i",
+                "globalAddrAttrs s",
                 "[]",
             },
         )

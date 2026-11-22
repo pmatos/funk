@@ -14,7 +14,7 @@ changes under it.
 
 #doc (Manual) "The sum of dialects: readable blocks" =>
 
-:::moduleDocs (fingerprint := "14908437782333029107")
+:::moduleDocs (fingerprint := "244278249107158259")
 :::
 
 :::readable Fir.Dialect.over Fir.Dialect.sum (fingerprint := "6781788953757055949")
@@ -66,16 +66,16 @@ round. $`\uparrow` moves a vector of values of the base's types $`t^*` to
 the sum's types $`(\mathsf{inl}\ t)^*`, and $`\downarrow` moves it back.
 :::
 
-:::readable Fir.Dialect.sum.baseFuncType Fir.Dialect.sum.baseSymbols Fir.Dialect.sum.baseContext Fir.Dialect.sum.extContext (fingerprint := "674412169518538575")
+:::readable Fir.Dialect.sum.baseFuncType Fir.Dialect.sum.baseSymbols Fir.Dialect.sum.baseContext Fir.Dialect.sum.extContext (fingerprint := "7428965217829615759")
 *Definition: the context that each side sees.* A function type of the sum
 is a function type of the base when all its types are the base's. The base
 sees the symbols whose types it can write, and no other. It sees the op
 context $`C` of the sum only when it can write the result types of $`C`:
 
-$$`\mathrm{base}(C) = (\mathrm{symtab}_C|_b,\ r^*,\ \mathrm{layouts}_C) \quad\text{when } \mathrm{results}_C = (\mathsf{inl}\ r)^*`
+$$`\mathrm{base}(C) = (\mathrm{symtab}_C|_b,\ r^*,\ \mathrm{layouts}_C,\ \mathrm{globals}_C) \quad\text{when } \mathrm{results}_C = (\mathsf{inl}\ r)^*`
 
-and has no context otherwise. A layout names no type, so the base sees all
-the layouts of $`C`. The extension $`e` sees all of $`C`, since
+and has no context otherwise. A layout and a global's memory name no
+type, so the base sees all the layouts and globals of $`C`. The extension $`e` sees all of $`C`, since
 its types are the sum's.
 :::
 

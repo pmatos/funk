@@ -199,8 +199,8 @@ variable [DialectValidation d] [LawfulDialectText d]
 /-- A function valid in a context whose location references are those of a
 valid location table is well formed. -/
 theorem Func.Valid.wellFormed {locs : LocTable} {syms : Name → Option (FuncType d)}
-    {lts : Name → Option LayoutRef} {f : Func d}
-    (hf : f.Valid ⟨syms, locs.map (·.1), lts⟩) (hl : LocTable.Valid locs) : f.WellFormed := by
+    {lts : Name → Option LayoutRef} {gms : Name → Option Nat} {f : Func d}
+    (hf : f.Valid ⟨syms, locs.map (·.1), lts, gms⟩) (hl : LocTable.Valid locs) : f.WellFormed := by
   have hdef : ∀ x t, f.typeOf x = some t → isName x := by
     intro x t ht
     unfold Func.typeOf at ht
@@ -210,7 +210,7 @@ theorem Func.Valid.wellFormed {locs : LocTable} {syms : Name → Option (FuncTyp
       have hx : (p.1 == x) = true := List.find?_some (p := fun y : Name × d.Ty => y.1 == x) hp
       rw [← beq_iff_eq.mp hx]
       exact hf.names p (List.mem_of_find?_eq_some hp)
-  have hgen : ∀ o ∈ f.allOps, f.RegionsValid ⟨syms, locs.map (·.1), lts⟩ o ∧
+  have hgen : ∀ o ∈ f.allOps, f.RegionsValid ⟨syms, locs.map (·.1), lts, gms⟩ o ∧
       o.operands.map f.typeOf = (sig o.op).map some ∧ o.results.map (·.2) = returnTypes o.op ∧
       (∀ s ∈ o.succs, isName s.label ∧ ∀ a ∈ s.args, isName a) ∧ o.loc ∈ locs.map (·.1) := by
     intro o ho

@@ -10,7 +10,7 @@ types validation accepts, from the obligations that each op family
 proves, in the sections from the
 constant obligations to the branch obligations:
 
-* _Propagation._ Each of the 44 ops that propagate poison does, at every
+* _Propagation._ Each of the 45 ops that propagate poison does, at every
   width and float format: `const` at an integer and at a float type,
   `poison`, the arithmetic, the four divisions, the bitwise ops and
   shifts, `icmp`, `fcmp`, the width changes, the float arithmetic, the
@@ -18,10 +18,10 @@ constant obligations to the branch obligations:
   formats, the pointer offset, the conversions to integers, `alloca`,
   which has no operands, and the loads and stores, `load`, `store`,
   `loadPtr`, `storePtr`, `loadFloat` and `storeFloat`, the field address
-  `fieldAddr`, the copy or move `memCopy`, the fill `memSet` and
-  `ptrFromInt`, which have no outcome in the set monad.
+  `fieldAddr`, `globalAddr`, the copy or move `memCopy`, the fill `memSet`
+  and `ptrFromInt`, which have no outcome in the set monad.
 * _A result on defined operands._ Each of them but `alloca`, the loads
-  and stores, `fieldAddr`, `memCopy`, `memSet` and `ptrFromInt` returns a result on some operand vector with no poison. `poison` does on the empty
+  and stores, `fieldAddr`, `globalAddr`, `memCopy`, `memSet` and `ptrFromInt` returns a result on some operand vector with no poison. `poison` does on the empty
   vector, where its result is poison: the obligation asks for a result, not
   for a defined one (ADR-2026-10-29-2006). The four divisions do only at a
   width above zero, and validation accepts `iN` only for N of at least
@@ -34,22 +34,22 @@ constant obligations to the branch obligations:
   with no callee is total and monotone, at every width: every core op but
   `call`, which the obligations leave out, since its meaning is its
   callee's run (ADR-2026-10-29-2006), and `alloca`, the loads and
-  stores, `fieldAddr`, `memCopy`, `memSet`, `ptrExpose` and `ptrFromInt`,
-  which are monotone at once but not
+  stores, `fieldAddr`, `globalAddr`, `memCopy`, `memSet`, `ptrExpose` and
+  `ptrFromInt`, which are monotone at once but not
   total, since they have no rule in the set monad.
 
 So the core dialect as a whole does not meet the lawful class of the set
-monad: `alloca`, the loads and stores, `fieldAddr`, `memCopy`, `memSet`,
-`ptrExpose` and `ptrFromInt` have no
+monad: `alloca`, the loads and stores, `fieldAddr`, `globalAddr`,
+`memCopy`, `memSet`, `ptrExpose` and `ptrFromInt` have no
 outcome there. What this section proves covers the ops that touch no
 memory and read no item of the run. The core's guarantees are those of the
 semantics with memory, which each op meets: a tied op from its tie and what
 it meets here, and `alloca`, the loads and stores, `fieldAddr`,
-`memCopy`, `memSet`, `ptrExpose` and `ptrFromInt` by their own rules (the
-sections on the stack allocation, load, store, pointer load, pointer
-store, float load, float store, field address, copy and move, fill, and
-pointers as integers obligations and on every valid core function, with
-memory).
+`globalAddr`, `memCopy`, `memSet`, `ptrExpose` and `ptrFromInt` by their
+own rules (the sections on the stack allocation, load, store, pointer
+load, pointer store, float load, float store, field address, global
+address, copy and move, fill, and pointers as integers obligations and on
+every valid core function, with memory).
 -/
 
 namespace Fir.Core
@@ -116,6 +116,13 @@ theorem fieldAddr_propagatesPoison (s : String) (j n : Nat) (w : Option Nat) :
   poisonOut _ _ _ hrs := hrs.elim
   ubByOwnRules _ _ _ hub := hub.elim
 
+/-- `globalAddr` propagates poison in the set monad, where it has no
+outcome: its rule reads the run's items. -/
+theorem globalAddr_propagatesPoison (s : String) (n : Nat) :
+    PropagatesPoison (d := CoreDialect) (.globalAddr s n) where
+  poisonOut _ _ _ hrs := hrs.elim
+  ubByOwnRules _ _ _ hub := hub.elim
+
 /-- Each core op that propagates poison does, at every width. -/
 theorem Op.propagates_all : (op : Op) → Fir.poisonClass (d := CoreDialect) op = .propagates →
     PropagatesPoison (d := CoreDialect) op
@@ -160,6 +167,7 @@ theorem Op.propagates_all : (op : Op) → Fir.poisonClass (d := CoreDialect) op 
   | .memSet o v w n, _ => memSet_propagatesPoison o v w n
   | .ptrFromInt n w, _ => ptrFromInt_propagatesPoison n w
   | .fieldAddr s j n w, _ => fieldAddr_propagatesPoison s j n w
+  | .globalAddr s n, _ => globalAddr_propagatesPoison s n
   | .fptosi e m n, _ => floatToInt_propagatesPoison e m n true
   | .fptoui e m n, _ => floatToInt_propagatesPoison e m n false
   | .poison w, _ => poison_propagatesPoison w
@@ -175,8 +183,8 @@ theorem pos_of_typesValid {op : Op} {w : Nat} (hv : TypesValid (d := CoreDialect
 /-- Each valid core op instance that touches no memory, reads no item of
 the run and propagates poison returns a result on some operand vector
 with no poison. The divisions need their width above zero, which validation gives. `alloca`,
-the loads and stores, `fieldAddr`, `memCopy`, `memSet` and `ptrFromInt` return one
-with memory, by
+the loads and stores, `fieldAddr`, `globalAddr`, `memCopy`, `memSet` and
+`ptrFromInt` return one with memory, by
 their own rules. -/
 theorem Op.returnsOnDefined_valid : (op : Op) → op.touchesMemory = false →
     op.readsItems = false → TypesValid (d := CoreDialect) op →
@@ -220,6 +228,6 @@ theorem Op.returnsOnDefined_valid : (op : Op) → op.touchesMemory = false →
   | .storePtr .., h, _, _, _ | .loadFloat .., h, _, _, _ | .storeFloat .., h, _, _, _
   | .memCopy .., h, _, _, _ | .memSet .., h, _, _, _ | .ptrExpose .., h, _, _, _
   | .ptrFromInt .., h, _, _, _ => nomatch h
-  | .fieldAddr .., _, h, _, _ => nomatch h
+  | .fieldAddr .., _, h, _, _ | .globalAddr .., _, h, _, _ => nomatch h
 
 end Fir.Core

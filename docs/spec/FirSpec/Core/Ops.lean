@@ -14,10 +14,10 @@ pins their fingerprint; the build fails when the Lean changes under it.
 
 #doc (Manual) "Core ops: readable blocks" =>
 
-:::moduleDocs (fingerprint := "10526301684177883347")
+:::moduleDocs (fingerprint := "11960897865273487084")
 :::
 
-:::readable Fir.Core.Op (pin := Fir.Core.Op.Valid) (fingerprint := "4471709406390641274")
+:::readable Fir.Core.Op (pin := Fir.Core.Op.Valid) (fingerprint := "5996042547449664215")
 *Ops.* An op of the core dialect carries the width $`N` of the integers it
 works on, or the format $`\mathsf{float}\langle e,m \rangle` of the floats
 it works on, so the types of its operands and results follow from it.
@@ -242,6 +242,18 @@ fieldAddr \mathsf{fieldaddr}_{N}~s~j \mid \mathsf{fieldaddr}_{N,W}~s~j
   (ADR-2026-11-18-2041). It is never UB, and a poison operand gives
   poison.
 
+*Addresses of globals* give a pointer to a global (#237).
+
+```grammar Fir.Core.Op
+\mathit{op}
+-          \dots
+globalAddr \mathsf{globaladdr}_{N}~s
+```
+
+* $`\mathsf{globaladdr}_{N}~s` gives a pointer of
+  $`\mathsf{ptr}\langle N \rangle` to the first unit of the global $`s`.
+  It is never UB and never gives poison.
+
 *Stack allocation* makes room in a memory for the current call (#231; the
 human's ruling of 2026-11-14 on #378).
 
@@ -453,8 +465,8 @@ narrows, $`\mathsf{ret}` returns its function's result types,
 $`\mathsf{call}` names a function of its type, a conversion between
 formats goes the way its name says, the ops that round carry the mode
 $`\mathsf{rne}`, the float ops carry no reserved word of their fast-math
-flags, and $`\mathsf{fieldaddr}` names a layout of its memory with the
-field it asks. $`\mathsf{alloca}`, the loads and the stores have the
-rules given with them above, and the other ops have no core rule of their
-own.
+flags, $`\mathsf{fieldaddr}` names a layout of its memory with the field
+it asks, and $`\mathsf{globaladdr}` names a global of its own table in
+its memory. $`\mathsf{alloca}`, the loads and the stores have the rules
+given with them above, and the other ops have no core rule of their own.
 :::

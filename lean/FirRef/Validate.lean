@@ -296,8 +296,8 @@ instance (priority := high) decidableValid (m : Module d) : Decidable m.Valid :=
 `decidableValid` is. -/
 instance (priority := high) decidableFuncValid (ctx : ModuleContext d) (f : Func d) :
     Decidable (f.Valid ctx) :=
-  decidable_of_iff _ (Func.problems_eq_nil (lk := ⟨ctx.symbols, fun r => decide (r ∈ ctx.locKeys), ctx.layouts⟩)
-    ⟨rfl, by simp, rfl⟩)
+  decidable_of_iff _ (Func.problems_eq_nil (lk := ⟨ctx.symbols, fun r => decide (r ∈ ctx.locKeys), ctx.layouts, ctx.globals⟩)
+    ⟨rfl, by simp, rfl, rfl⟩)
 
 /-- `decidableValid` is the spec's instance, so `decide` gives the same
 answer with either. -/

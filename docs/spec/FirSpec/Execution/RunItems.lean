@@ -14,10 +14,10 @@ when the Lean changes under it.
 
 #doc (Manual) "The items a run gives each op: readable blocks" =>
 
-:::moduleDocs (fingerprint := "1616836093585390743")
+:::moduleDocs (fingerprint := "9141546586703785228")
 :::
 
-:::readable Fir.FieldPlace Fir.LayoutPlace Fir.StartAlloc Fir.RunItems Fir.RunItems.empty Fir.RunItems.withAddrs Fir.RunItems.withResolvers (pin := Fir.Memory.Policy.canonical) (pin := Fir.Memory.Resolver.canonical) (fingerprint := "9492155803483734559")
+:::readable Fir.FieldPlace Fir.LayoutPlace Fir.StartAlloc Fir.RunItems Fir.RunItems.empty Fir.RunItems.withAddrs Fir.RunItems.withResolvers (pin := Fir.Memory.Policy.canonical) (pin := Fir.Memory.Resolver.canonical) (fingerprint := "11698783885250333117")
 *Definition: the items a run gives each op.* An op may name an item of
 its module by its symbol, as `call` names a function. A run gives each
 op's rule the items that ops name, beside each memory's layout entry (the
@@ -53,20 +53,23 @@ $`\alpha`, it is constant when $`c` is, and $`\vec{x}_u` are its units in
 a memory of $`u`-bit units. Each global of the run's table gives one
 ({ref "The-fir-specification--Memory--The-memories-a-run-starts-with"}[the memories a run starts with]);
 a function's address will give another, of the kind `function` (the
-human's ruling of 2026-11-19 on #235).
+human's ruling of 2026-11-19 on #235). With them, $`L.\mathrm{global}(s)`
+gives where the global with the symbol $`s` starts, if there is one: its
+memory's number $`m` and its allocation's id in that memory, which
+$`\mathsf{globaladdr}` reads (#237); none unless the run says otherwise.
 
 The record is the same for every dialect: its numbers count units of a
 memory of the module, and a step is already rounded, so no rule needs a
 dialect's types to read it, and a sum gives it to both its sides as it
 is. Every obligation and guarantee of the semantics with memory holds for
 every record $`L`, with no hypothesis on it, and so for every address
-policy. So a later item that an op
-names, the address of a function (#235) or of a global (#237), is a new
-field of this record, and the statements of those obligations and
+policy. So an item that an op
+names, the address of a global (#237) and later that of a function
+(#235), is a new field of this record, and the statements of those obligations and
 guarantees stay as they are.
 :::
 
-:::readable Fir.Field.place Fir.Aggregate.place Fir.Global.startId? Fir.InitPiece.startUnits Fir.Global.start Fir.RunItems.ofTable Fir.Module.runItems (pin := Fir.Field.shape) (pin := Fir.roundUp) (pin := Fir.InitPiece.unitCount) (pin := Fir.Memory.encodePtr) (fingerprint := "13332017425000655519")
+:::readable Fir.Field.place Fir.Aggregate.place Fir.Global.startId? Fir.InitPiece.startUnits Fir.Global.start Fir.RunItems.ofTable Fir.Module.runItems (pin := Fir.Field.shape) (pin := Fir.roundUp) (pin := Fir.InitPiece.unitCount) (pin := Fir.Memory.encodePtr) (fingerprint := "555063838255734094")
 *Definition: the items of a table.* In the memory $`n` of a module whose
 data layout is $`l`, a field of the type $`t` is placed at its offset,
 with its count, and with the step $`\mathrm{roundUp}(u, a)`, where one
@@ -92,7 +95,10 @@ A run of a function of the symbol table $`T` gives each op the first
 layout of $`T` with each symbol, placed, under the canonical policy and
 resolver, and starts with the allocation of each global of $`T`, in $`T`'s
 order: the globals of its own table, not those of a table nested in it or
-around it (the human's ruling of 2026-11-20 on #237, Q3). A
+around it (the human's ruling of 2026-11-20 on #237, Q3). It places each
+global of $`T` as an address in an initializer reads it: the first global
+of $`T` with a symbol, in its memory, at its place among the globals of
+$`T` in that memory. A
 module's own items,
 $`\mathrm{items}(M)`, are those of its own table, in its data layout:
 the items that the runs the modes report give each op.
@@ -109,4 +115,16 @@ reads, $`\mathrm{layouts}_T(s)`: both are the first layout of $`T` with
 that symbol, or none. So an op that validation accepts in $`T` finds, in
 every run, a layout of $`s` of the memory and with the fields it was
 checked against.
+:::
+
+:::readable Fir.RunItems.ofTable_globalMem (pin := Fir.SymbolTable.globalMems) (pin := Fir.Global.startId?) (fingerprint := "11026496696803375363")
+*Theorem: a run gives an op the global that validation checks it
+against.* For every data layout $`l`, table $`T` and symbol $`s`, the
+memory in which a run of a function of $`T` places the global $`s` is the
+memory that
+{ref "The-fir-specification--Validation--Scope-and-symbols"}[validation]
+reads for it, $`\mathrm{globals}_T(s)`: both are the first global of $`T`
+with that symbol, or none. So a $`\mathsf{globaladdr}` that validation
+accepts in $`T` finds, in every run, a global of $`s` in the memory it
+was checked against.
 :::

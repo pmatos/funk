@@ -56,8 +56,8 @@ namespace Fir.Core
 
 /-- Every core terminator and every core op with no callee is monotone, at
 every width: every core op but `call`. `alloca`, the loads and stores,
-of an integer, a pointer or a float, `fieldAddr`, `memCopy`, `memSet`,
-`ptrExpose` and `ptrFromInt` have no rule in the set monad, so no outcome there, and are monotone in it
+of an integer, a pointer or a float, `fieldAddr`, `globalAddr`, `memCopy`,
+`memSet`, `ptrExpose` and `ptrFromInt` have no rule in the set monad, so no outcome there, and are monotone in it
 at once; each is monotone with memory by its own rule. -/
 theorem Op.monotone_all : (op : Op) →
     Fir.isTerminator (d := CoreDialect) op = true ∨ callee? (d := CoreDialect) op = none →
@@ -104,7 +104,8 @@ theorem Op.monotone_all : (op : Op) →
   | .call .., h => by rcases h with h | h <;> cases h
   | .alloca .., _ | .load .., _ | .store .., _ | .loadPtr .., _ | .storePtr .., _
   | .loadFloat .., _ | .storeFloat .., _ | .memCopy .., _ | .memSet .., _ | .fieldAddr .., _
-  | .ptrExpose .., _ | .ptrFromInt .., _ => fun _ _ _ => ⟨fun _ _ he => he.elim, fun h => nomatch h⟩
+  | .ptrExpose .., _ | .ptrFromInt .., _ | .globalAddr .., _ =>
+    fun _ _ _ => ⟨fun _ _ he => he.elim, fun h => nomatch h⟩
 
 /-- Every terminator and every op with no callee of every core function is
 monotone, valid or not. -/

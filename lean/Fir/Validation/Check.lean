@@ -124,13 +124,14 @@ def labelRef (l : Name) : String := "^" ++ if isName l then l else Text.quote l
 /--
 What the check of a function looks up in its module: the type of the
 function that each symbol names, whether the location table has a
-reference, and the layout that each symbol names. A module builds each as
-a hash table, once.
+reference, the layout that each symbol names, and the memory of the global
+that each symbol names. A module builds each as a hash table, once.
 -/
 structure Lookup (d : Dialect) where
   symbols : Name → Option (FuncType d)
   hasLoc : LocRef → Bool
   layouts : Name → Option LayoutRef
+  globals : Name → Option Nat
 
 /-- A lookup that agrees with a module context: the same symbols, and the
 same references. -/
@@ -138,5 +139,6 @@ structure Lookup.Agrees (lk : Lookup d) (ctx : ModuleContext d) : Prop where
   symbols : lk.symbols = ctx.symbols
   hasLoc : ∀ r, lk.hasLoc r = true ↔ r ∈ ctx.locKeys
   layouts : lk.layouts = ctx.layouts
+  globals : lk.globals = ctx.globals
 
 end Fir

@@ -249,7 +249,7 @@ def generalProblems (lk : Lookup d) (f : Func d) (t : FuncTables d) (at_ : Strin
         "gives " ++ toString (returnTypes o.op).length)]),
   (symbolRefs o.op).filterMap (fun g => if (lk.symbols g).isSome then none else
     some (at_ ("the op refers to " ++ Text.printSymbol g ++ ", which names no function"))) ++
-  (if validOp ⟨lk.symbols, f.results, lk.layouts⟩ o.op then [] else
+  (if validOp ⟨lk.symbols, f.results, lk.layouts, lk.globals⟩ o.op then [] else
     [at_ "the op breaks its dialect's own rule"]) ++
   (if lk.hasLoc o.loc then [] else
     [at_ ("location reference @" ++ toString o.loc ++ " is not in the location table")]))
@@ -340,7 +340,7 @@ theorem innerOpProblems_eq_nil {lk : Lookup d} {ctx : ModuleContext d} {f : Func
   simp only [innerOpProblems, generalProblems, succCountProblems, Func.InnerOpValid,
     List.append_eq_nil_iff, regionProblems_eq_nil h, ite_nil_eq_nil, sameLists_iff,
     Func.scope_fun, beq_iff_eq, or_isEmpty_eq_true, List.flatMap_eq_nil_iff, Func.scope_contains,
-    List.filterMap_eq_nil_iff, ite_none_eq_none, h.symbols, h.hasLoc, h.layouts, and_assoc]
+    List.filterMap_eq_nil_iff, ite_none_eq_none, h.symbols, h.hasLoc, h.layouts, h.globals, and_assoc]
 
 /-- The check of the ops inside an op's regions decides that each obeys the
 general rules. -/
@@ -367,6 +367,6 @@ theorem opProblems_eq_nil {lk : Lookup d} {ctx : ModuleContext d} {f : Func d} {
     regionProblems_eq_nil h, ite_nil_eq_nil, sameLists_iff,
     Func.scope_fun, beq_iff_eq, eq_beq_iff, or_isEmpty_eq_true,
     List.flatMap_eq_nil_iff, succProblems_eq_nil, useProblems_eq_nil hl,
-    List.filterMap_eq_nil_iff, ite_none_eq_none, h.symbols, h.hasLoc, h.layouts, and_assoc]
+    List.filterMap_eq_nil_iff, ite_none_eq_none, h.symbols, h.hasLoc, h.layouts, h.globals, and_assoc]
 
 end Fir

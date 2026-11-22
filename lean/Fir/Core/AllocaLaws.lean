@@ -37,8 +37,8 @@ variable (k : AllocKind) (t : Ty) (c : Nat) (a : Option Nat) (n : Nat)
 /-- A property holds of every core op when it holds of each op that
 touches no memory and reads no item of the run, of `alloca`, of `load`, of
 `store`, of `loadPtr`, of `storePtr`, of `loadFloat`, of `storeFloat`, of
-`fieldAddr`, of `memCopy`, of `memSet`, of `ptrExpose` and of `ptrFromInt`. So an
-obligation with memory is met op by op:
+`fieldAddr`, of `globalAddr`, of `memCopy`, of `memSet`, of `ptrExpose` and
+of `ptrFromInt`. So an obligation with memory is met op by op:
 by its tie for the first, and by its own rule for each op that touches
 memory or reads the run's items. -/
 theorem Op.memCases {P : Op → Prop} (op : Op)
@@ -47,13 +47,14 @@ theorem Op.memCases {P : Op → Prop} (op : Op)
     (hs : ∀ o w a n, P (.store o w a n)) (hlp : ∀ o mp a n, P (.loadPtr o mp a n))
     (hsp : ∀ o mp a n, P (.storePtr o mp a n)) (hlf : ∀ o e m a n, P (.loadFloat o e m a n))
     (hsf : ∀ o e m a n, P (.storeFloat o e m a n)) (hf : ∀ s j n w, P (.fieldAddr s j n w))
+    (hg : ∀ s n, P (.globalAddr s n))
     (hmc : ∀ k o w n, P (.memCopy k o w n)) (hms : ∀ o v w n, P (.memSet o v w n))
     (hexp : ∀ n w, P (.ptrExpose n w)) (hfrom : ∀ n w, P (.ptrFromInt n w)) :
     P op := by
   cases hm : op.touchesMemory
   · cases hi : op.readsItems
     · exact ht op hm hi
-    · cases op <;> first | exact hf .. | cases hi
+    · cases op <;> first | exact hf .. | exact hg .. | cases hi
   · cases op <;> first
       | exact ha .. | exact hl .. | exact hs .. | exact hlp .. | exact hsp .. | exact hlf ..
       | exact hsf .. | exact hmc .. | exact hms .. | exact hexp .. | exact hfrom .. | cases hm
@@ -73,14 +74,14 @@ theorem Op.touchesMemory_false_of_denote {op : Op}
   | _ => rfl
 
 /-- A core op with an outcome in the set monad reads no item of the run:
-`fieldAddr` has none there. -/
+`fieldAddr` and `globalAddr` have none there. -/
 theorem Op.readsItems_false_of_denote {op : Op}
     {args : HVector toType (Fir.sig (d := CoreDialect) op)}
     {e : Ev (HVector toType (Fir.returnTypes (d := CoreDialect) op))}
     (h : DialectDenote.denote (m := SetM) (d := CoreDialect) op args e) :
     op.readsItems = false := by
   cases op with
-  | fieldAddr => exact h.elim
+  | fieldAddr | globalAddr => exact h.elim
   | _ => rfl
 
 /-- The result vector of `alloca`, from the pointer it allocates. -/

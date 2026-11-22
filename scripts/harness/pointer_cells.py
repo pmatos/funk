@@ -26,6 +26,11 @@ or of a repeated field's first element, whatever its layout and field, as
 a call's callee is not part of its cell. Its cells are at the side's field
 widths, `cells.FIELD_DIFFERENTIAL` and `cells.FIELD_INTERPRETER`: the
 backend lowers an index of each width it lowers (stage 4 of #236).
+
+The address of a global `globaladdr` (#237) is one cell, whatever its
+global and its memory, as a call's callee is not part of its cell. Only
+the interpreter-only side has it until the backend lowers it (stage 3 of
+#237).
 """
 
 from cell_types import Cell, CellError, Row, Table, is_pointer
@@ -36,6 +41,9 @@ POINTER_OPS = ("ptradd", "alloca", "load", "store")
 # The field address, and its table of cells (#236).
 FIELD_ADDR = "fieldaddr"
 FIELDS = "fields"
+# The address of a global, and its table of one cell (#237).
+GLOBAL_ADDR = "globaladdr"
+GLOBALS = "globals"
 # The column of the pointer cells of `alloca`, `load` and `store`.
 POINTER = "ptr"
 # The float formats of `alloca`, `load` and `store` on each side (#264).
@@ -142,3 +150,24 @@ def field_table(widths: tuple[str, ...]) -> Table:
     columns = ("", *widths)
     row = Row(FIELD_ADDR, "", tuple(Cell(FIELDS, FIELD_ADDR, "", t) for t in columns))
     return Table(FIELDS, columns, (row,))
+
+
+def global_address(op: Op) -> Cell:
+    """The cell of a `globaladdr`: one, whatever its global's symbol and
+    the memory of its result. Any other text of it does not decode, so it
+    is not a cell."""
+    attrs_decode = len(op.attrs) == 1 and op.attrs[0].startswith("@")
+    if (
+        attrs_decode
+        and not op.operands
+        and len(op.results) == 1
+        and is_pointer(op.results[0])
+    ):
+        return Cell(GLOBALS, op.name, "", "")
+    raise CellError(f"{op.name} of {op.operands} to {op.results} is not a cell")
+
+
+def global_table() -> Table:
+    """The table of `globaladdr`'s one cell."""
+    row = Row(GLOBAL_ADDR, "", (Cell(GLOBALS, GLOBAL_ADDR, "", ""),))
+    return Table(GLOBALS, ("",), (row,))

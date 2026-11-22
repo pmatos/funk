@@ -68,6 +68,8 @@ import Fir.Core.PtrAccess
 import Fir.Core.FloatAccess
 import Fir.Core.FieldAddr
 import Fir.Core.FieldAddrText
+import Fir.Core.GlobalAddr
+import Fir.Core.GlobalAddrText
 import Fir.Core.FloatToInt
 import Fir.Core.Control
 import Fir.Core.Branch
@@ -172,6 +174,7 @@ import Fir.Core.PtrIntText
 import Fir.Core.PtrInt
 import Fir.Core.PtrIntLaws
 import Fir.Core.FieldAddrLaws
+import Fir.Core.GlobalAddrLaws
 import Fir.Core.EffectLaws
 import Fir.Core.EffectUnlawful
 import Fir.Core.AddressLaws

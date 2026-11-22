@@ -207,9 +207,9 @@ theorem summary_noPoison (d : Dialect) [TyDenote d.Ty] [DecidableEq d.Ty] [TyPoi
 The core dialect declares a class and a set of effects for each of its ops,
 case by case: `Core.Op.poisonClass` and `Core.Op.effects` have no case for
 the rest, so a new core op does not build until it has both, and
-`scripts/check_g0.py` fails if a case for the rest comes back. Forty-four
+`scripts/check_g0.py` fails if a case for the rest comes back. Forty-five
 ops propagate poison and eight are exceptions (ADR-2026-10-29-2006). The
-samples of the core ops name all 54 of their names, the float constant
+samples of the core ops name all 55 of their names, the float constant
 sharing `const`'s, the two bit casts `bitcast`, a copy and a move
 `memcpy` and `memmove`, a fill `memset`, and `ptr_expose` and
 `ptr_from_int`, and the checks below pin both on them.
@@ -220,19 +220,19 @@ it; no other core op declares an effect on memory, and no core op is observable,
 yet (ADR-2026-11-09-1541).
 -/
 
-#guard (Core.samples.map Core.Op.name).eraseDups.length == 54
+#guard (Core.samples.map Core.Op.name).eraseDups.length == 55
 #guard ((Core.samples.filter (Core.Op.poisonClass · == .propagates)).map Core.Op.name).eraseDups ==
   ["const", "add", "sub", "mul", "sdiv", "udiv", "srem", "urem", "and", "or", "xor", "shl", "lshr",
    "ashr", "zext", "sext", "trunc", "poison", "icmp", "fcmp", "fadd", "fsub", "fmul", "fdiv", "fneg",
    "fabs", "sqrt", "fma", "frem", "fmod", "bitcast", "sitofp", "uitofp",
-   "fpext", "fptrunc", "ptradd", "fieldaddr", "alloca", "load", "store", "fptosi", "fptoui",
-   "memcpy", "memmove", "memset", "ptr_from_int"]
+   "fpext", "fptrunc", "ptradd", "fieldaddr", "globaladdr", "alloca", "load", "store", "fptosi",
+   "fptoui", "memcpy", "memmove", "memset", "ptr_from_int"]
 #guard ((Core.samples.filter (Core.Op.poisonClass · == .exception)).map Core.Op.name).eraseDups ==
   ["select", "freeze", "br", "cond_br", "ret", "unreachable", "call", "ptr_expose"]
 #guard ((Core.samples.filter (Core.Op.effects · == {})).map Core.Op.name).eraseDups ==
   ["const", "add", "and", "or", "xor", "select", "zext", "sext", "trunc", "freeze", "call", "icmp",
    "fcmp", "fadd", "fdiv", "fneg", "fabs", "bitcast", "sitofp", "uitofp", "fpext", "fptrunc",
-   "ptradd", "fieldaddr"]
+   "ptradd", "fieldaddr", "globaladdr"]
 #guard ((Core.samples.filter (·.effects.mayUB)).map Core.Op.name).eraseDups ==
   ["sdiv", "udiv", "srem", "urem", "cond_br", "unreachable", "load", "store", "memcpy", "memmove",
    "memset", "ptr_expose"]

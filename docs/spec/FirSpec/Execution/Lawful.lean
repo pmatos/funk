@@ -17,7 +17,7 @@ when the Lean changes under it.
 :::moduleDocs (fingerprint := "12360667126087243427")
 :::
 
-:::readable Fir.Func.Valid.typesValid (pin := Fir.TypesValid) (pin := Fir.Func.Valid) (pin := Fir.Func.OpValid) (fingerprint := "4244348434945729385")
+:::readable Fir.Func.Valid.typesValid (pin := Fir.TypesValid) (pin := Fir.Func.Valid) (pin := Fir.Func.OpValid) (fingerprint := "12496478562471923820")
 *Theorem: every op of a valid function is a valid op instance.* In every
 dialect with its validation rules, let the function $`f` be
 {ref "The-fir-specification--Validation--The-general-rules"}[valid]
@@ -68,8 +68,9 @@ instance. No path of such a run is stuck either, whatever its ops do, as
 that section proves.
 
 The core dialect is not lawful in the set monad, since
-$`\mathsf{alloca}`, the loads and stores, $`\mathsf{fieldaddr}`, the
-copies and moves and the fills have no rule there, so this
+$`\mathsf{alloca}`, the loads and stores, $`\mathsf{fieldaddr}`,
+$`\mathsf{globaladdr}`, the copies and moves, the fills,
+$`\mathsf{ptr\_expose}` and $`\mathsf{ptr\_from\_int}` have no rule there, so this
 theorem does not apply to
 it. Progress for every function of a valid core module is stated with
 memory, in the section on

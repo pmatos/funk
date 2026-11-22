@@ -8,6 +8,7 @@ import Fir.Core.PtrIntText
 import Fir.Core.FloatText
 import Fir.Core.FloatOpText
 import Fir.Core.FieldAddrText
+import Fir.Core.GlobalAddrText
 import Fir.Text.Grammar
 
 /-!
@@ -67,6 +68,8 @@ results, which are written where those values are defined.
   the number of its field, and takes a pointer and, for an element of a
   repeated field, an index: `%q: ptr = fieldaddr @pair 1 %p @1` and
   `%e: ptr = fieldaddr @row 0 %p, %k @1` (#236).
+* `globalAddr` is written `globaladdr`, with the symbol of its global, and
+  takes no operands: `%p: ptr = globaladdr @msg @1` (#237).
 * `alloca` has its kind, the type it allocates, its count when it is not
   1, and `align(A)` when it gives an alignment, and gives a pointer of the
   memory it allocates in: `%p: ptr = alloca stack i32 4 @1`
@@ -179,7 +182,8 @@ def Op.name : Op → String
   | .zext .. => "zext" | .sext .. => "sext" | .trunc .. => "trunc"
   | .toBits .. | .ofBits .. => "bitcast" | .sitofp .. => "sitofp" | .uitofp .. => "uitofp"
   | .fpext .. => "fpext" | .fptrunc .. => "fptrunc"
-  | .ptradd .. => "ptradd" | .fieldAddr .. => "fieldaddr" | .alloca .. => "alloca"
+  | .ptradd .. => "ptradd" | .fieldAddr .. => "fieldaddr" | .globalAddr .. => "globaladdr"
+  | .alloca .. => "alloca"
   | .load .. | .loadPtr .. | .loadFloat .. => "load"
   | .store .. | .storePtr .. | .storeFloat .. => "store"
   | .fptosi .. => "fptosi" | .fptoui .. => "fptoui" | .memCopy k .. => k.name
@@ -210,6 +214,7 @@ def Op.attrs : Op → List Attr
   | .sdiv _ e | .udiv _ e => if e then [.word "exact"] else []
   | .call f _ _ => [.sym f]
   | .fieldAddr s i _ _ => fieldAddrAttrs s i
+  | .globalAddr s _ => globalAddrAttrs s
   | .alloca k t c a _ => allocaAttrs k t c a
   | .load o _ a _ | .store o _ a _ | .loadPtr o _ a _ | .storePtr o _ a _
   | .loadFloat o _ _ a _ | .storeFloat o _ _ a _ => loadAttrs o a
@@ -325,6 +330,7 @@ def Op.decode (n : String) (as : List Attr) (ts rs : List Ty) : Option Op :=
   | "fptrunc" => decodeFptrunc as ts rs
   | "ptradd" => decodePtrAdd as ts rs
   | "fieldaddr" => decodeFieldAddr as ts rs
+  | "globaladdr" => decodeGlobalAddr as ts rs
   | "alloca" => decodeAlloca as ts rs
   | "load" => decodeLoad as ts rs
   | "store" => decodeStore as ts rs
