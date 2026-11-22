@@ -197,6 +197,8 @@ functions, blocks and ops.
 
 {includeReadable "." Fir.Core.MemSetText "Fills in text" FirSpec.Core.MemSetText (level := 2)}
 
+{includeReadable "." Fir.Core.PtrIntText "Pointers as integers in text" FirSpec.Core.PtrIntText (level := 2)}
+
 {includeReadable "." Fir.Core.FieldAddrText "Field addresses in text" FirSpec.Core.FieldAddrText (level := 2)}
 
 {includeReadable "." Fir.Core.TextSamples "The core dialect's text, checked" FirSpec.Core.TextSamples (level := 2)}
@@ -336,6 +338,8 @@ extensions written apart combine in one sum.
 {includeReadable "." Fir.Sum.PoisonLaws "A sum's poison obligations" FirSpec.Sum.PoisonLaws (level := 2)}
 
 {includeReadable "." Fir.Sum.EffectLaws "A sum's effect obligations" FirSpec.Sum.EffectLaws (level := 2)}
+
+{includeReadable "." Fir.Sum.AddressLaws "A sum's address obligations" FirSpec.Sum.AddressLaws (level := 2)}
 
 {includeReadable "." Fir.Sum.Inclusion "Inclusions of types" FirSpec.Sum.Inclusion (level := 2)}
 

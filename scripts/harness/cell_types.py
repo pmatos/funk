@@ -2,14 +2,15 @@
 every module of cells shares (ADR-2026-11-03-0557). `cells.py` gives the cell set,
 `conversion_cells.py` the cells of the conversions, `pointer_cells.py`
 those of the pointer ops, `gpu_cells.py` those of the `gpu` dialect, and
-`copy_cells.py` those of `memcpy`, `memmove` and `memset`."""
+`copy_cells.py` those of `memcpy`, `memmove` and `memset`, and
+`address_cells.py` those of `ptr_expose` and `ptr_from_int`."""
 
 from typing import NamedTuple
 
 
 class Cell(NamedTuple):
     """`table` is `ops`, `floats`, `casts`, `conversions`, `pointers`,
-    `fields`, `values`, `gpu` or `copies`.
+    `fields`, `values`, `gpu`, `copies` or `addresses`.
     `row` is a flag set or predicate, the source type of a width change or a
     conversion, or what a value row passes, and empty for a pointer op;
     `width` is a width, a float format, the result type of a width change
@@ -20,7 +21,8 @@ class Cell(NamedTuple):
     is passed. A `fieldaddr`'s `width` is the type of its index, empty
     with none. A `gpu` op's `row` is its dimension and its `width` the
     `i32` it gives; a copy's, a move's or a fill's `width` is the width of
-    its length."""
+    its length, and a `ptr_expose`'s or a `ptr_from_int`'s the width of
+    its integer."""
 
     table: str
     op: str

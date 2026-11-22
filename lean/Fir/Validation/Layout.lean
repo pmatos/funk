@@ -14,7 +14,10 @@ function's parameters, results, block arguments and op results, the types
 that its ops carry in their attributes, and the parameters and results of
 an item of a dialect's kind or of an external declaration, at any depth. An op that writes values into the
 units of a memory, such as the core's `memSet`, asks that the layout give
-that memory units as wide as those values (`opUnits`). A
+that memory units as wide as those values (`opUnits`), and an op that
+turns a memory's pointers into integers or back, such as the core's
+`ptrExpose`, asks that the layout give that memory pointers as wide as
+those integers and not mark it non-integral (`opAddrs`). A
 nested module has no layout of its own, so its types name the memories of
 the module that holds it.
 
@@ -106,18 +109,35 @@ instance DataLayout.decidableHasUnits (l : DataLayout) (q : Nat × Nat) :
     Decidable (l.HasUnits q) :=
   inferInstanceAs (Decidable (_ = _))
 
+/-- The memories whose pointers a function's ops turn into integers or
+back, each with the width of the integer, op by op, at any depth
+(`opAddrs`). -/
+def Func.addrWidths (f : Func d) : List (Nat × Nat) := f.allOps.flatMap fun o => opAddrs o.op
+
+/-- The layout gives the memory `q.1` pointers of `q.2` bits, and does not
+mark it non-integral, so its pointers may become integers of `q.2` bits. -/
+def DataLayout.HasAddrs (l : DataLayout) (q : Nat × Nat) : Prop :=
+  (l.entry q.1).pointer = q.2 ∧ (l.entry q.1).nonIntegral = false
+
+instance DataLayout.decidableHasAddrs (l : DataLayout) (q : Nat × Nat) :
+    Decidable (l.HasAddrs q) :=
+  inferInstanceAs (Decidable (_ ∧ _))
+
 /-- The memories that the types of a symbol table name are in the layout:
 each type that each of its functions states, each that each of its items
 of a dialect's kind states, each that each of its external declarations
 states, and each that an op of each of its functions carries in its
-attributes. And the layout gives each memory whose units an
-op of its functions writes values of units as wide as those values. -/
+attributes. And the layout gives each memory whose units an op of its
+functions writes values of units as wide as those values, and each memory
+whose pointers an op of its functions turns into integers or back pointers
+as wide as those integers, and integral. -/
 structure SymbolTable.MemoriesIn (l : DataLayout) (t : SymbolTable d) : Prop where
   funcs : ∀ f ∈ t.funcs, ∀ ty ∈ f.types, l.HasMemoryOf ty
   dialectItems : ∀ i ∈ t.dialectItems, ∀ ty ∈ i.types, l.HasMemoryOf ty
   externs : ∀ e ∈ t.externs, ∀ ty ∈ e.types, l.HasMemoryOf ty
   attrs : ∀ f ∈ t.funcs, ∀ ty ∈ f.attrTypes, l.HasMemoryOf ty
   units : ∀ f ∈ t.funcs, ∀ q ∈ f.unitWidths, l.HasUnits q
+  addrs : ∀ f ∈ t.funcs, ∀ q ∈ f.addrWidths, l.HasAddrs q
 
 /-- The layout has each memory that the types of a module name, in each of
 its symbol tables: its own and that of each nested module. -/

@@ -158,14 +158,15 @@ bits have 2 to the power _w_ options. The ops that have their own rules with mem
 `Core.Op.memCases` names (semantics-effects.md#soundness), count by them:
 `alloca` and `fieldAddr` have one outcome, the loads `load`, `loadPtr` and
 `loadFloat` and the stores `store`, `storePtr` and `storeFloat` at most one
-that ends, and `memCopy` and `memSet` at most one that ends for each
-length, of which a poison length chooses one of finitely many
+that ends, `memCopy` and `memSet` at most one that ends for each
+length, of which a poison length chooses one of finitely many, and
+`ptrExpose` and `ptrFromInt` at most one that ends
 (`Core.alloca_finitelyMany` and its siblings in each op's laws file). So
 `Core.replaceBody_isRefinedBy_of_from` holds for every core callee,
 pointers and memory included, and `Core.replaceBody_isRefinedBy` for every
 core callee that reaches no memory, pointers included: one with no op
-that touches memory in its reach, no `alloca`, load, store, `memCopy` or
-`memSet` (`Core.reachesNoMemory`).
+that touches memory in its reach, no `alloca`, load, store, `memCopy`,
+`memSet`, `ptrExpose` or `ptrFromInt` (`Core.reachesNoMemory`).
 Nothing asks that every core function reach no memory. The hypothesis is passed to the theorems, as
 `OpsIgnoreMemory` is, not added to a lawful class, so no dialect's
 obligations change. Refined arguments need no finiteness, since they
@@ -261,8 +262,8 @@ pointer-parameter condition, through
 that reaches no memory before and after, refinement with memory is
 refinement from given memories (`Func.memRunsFrom_isRefinedBy_of_memRuns`),
 and congruence with ops of finitely many outcomes applies. The ops that
-touch memory, `alloca`, the loads and stores, `memCopy` and `memSet`,
-declare memory effects, so a core function reaches no memory only when
+touch memory, `alloca`, the loads and stores, `memCopy`, `memSet`,
+`ptrExpose` and `ptrFromInt`, declare memory effects, so a core function reaches no memory only when
 none is in its reach (`Core.reachesNoMemory`), and these two
 theorems cover such a `@g`; for the whole core,
 `Core.replaceBody_isRefinedBy_of_from` asks nothing of it

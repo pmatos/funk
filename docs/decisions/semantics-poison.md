@@ -78,7 +78,7 @@ poison class through `DialectEffects`: `propagates` or `exception`
 (ADR-2026-10-29-2006). Rejected: propagation in prose only, as LLVM's reference
 states it. An op whose rules forget to propagate poison would go unnoticed.
 
-In the core dialect, 43 ops propagate and seven are exceptions. The 43 are
+In the core dialect, 44 ops propagate and eight are exceptions. The 44 are
 `const`, the float constant and `poison`, which have no operands, `add`, `sub`
 and `mul`, the four divisions, the bitwise ops and shifts, `icmp`, the width
 changes, `fcmp`, the three ops of float arithmetic, the two bit casts, the
@@ -97,7 +97,18 @@ length of 0, are UB on a poison pointer otherwise, and run a poison length
 as some length, chosen, so that it is UB only where some length is, and
 `memset` (`memSet`), which follows the same rules and writes a poison value
 as poison units (ADR-2026-11-18-2131; the human's ruling of 2026-11-19 on
-#234). `select`, `freeze` and `cond_br` are
+#234), and `ptr_from_int` (`ptrFromInt`), which gives a poison pointer for
+a poison integer and counts the call as a defined integer does, so that
+memories that refine others keep counting as many calls (#232).
+`ptr_expose` (`ptrExpose`) is an exception: a poison pointer is immediate
+UB. It cannot propagate: exposing a defined pointer may give its allocation
+an address, refinement of memories compares addresses, so a poison result
+with the memories unchanged would not be refined by the run on a pointer
+in its place; and the UB is not that of some pointer in its place, since
+exposing a pointer with no provenance is never UB, so the obligation of a
+propagating op rejects it. The rulings of #232 leave no other choice (stage
+3, #232). Rejected: poison in, poison out, which breaks monotonicity under
+refinement that compares addresses. `select`, `freeze` and `cond_br` are
 exceptions with their own rules. `br`, `ret` and `call` are exceptions that pass
 values on as they are, to block arguments, the caller or the callee.
 `unreachable` is an exception that is always UB, which the obligations below
@@ -194,7 +205,7 @@ of the progress proof with calls (`Module.calls_hasPath`,
 them). `Core.Op.monotone_all` holds for every core op that meets the guard:
 every core op but `call`. `Core.Op.total_all` holds for those that also
 touch no memory and read no item of the run (`Core.Op.touchesMemory`,
-`Core.Op.readsItems`): every one but `call` and the ten ops that
+`Core.Op.readsItems`): every one but `call` and the twelve ops that
 `Core.Op.memCases` gives their own rules, which semantics-effects.md#soundness
 lists. With memory every core op that meets the guard is total
 (`Core.lawfulDialectTotal`). Rejected: a stand-in rule

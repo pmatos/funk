@@ -9,7 +9,9 @@ kind and each external declaration whose types, or for a function the types that
 in their attributes, name a memory that the layout does not declare, the
 first such memory (ADR-2026-11-12-1821), and for each function whose ops
 write values into the units of a memory whose units are not as wide, the
-first such memory. The check of an aggregate's layout
+first such memory, and for each function whose ops turn pointers of a
+memory into integers, or back, of a width that is not its pointers', or of
+a non-integral memory, the first such memory. The check of an aggregate's layout
 names each rule of a valid layout that it breaks, and each field that is not
 placed (ADR-2026-11-16-1546).
 -/
@@ -94,25 +96,47 @@ theorem unitsProblem_eq_none (l : DataLayout) (sym : Name) (qs : List (Nat × Na
     unitsProblem l sym qs = none ↔ ∀ q ∈ qs, l.HasUnits q := by
   simp [unitsProblem, List.find?_eq_none]
 
+/-- A problem for a function whose ops turn the pointers of a memory into
+integers, or back, of a width that is not its pointers', or of a memory
+that the layout marks non-integral: it names the first such memory. -/
+def addrsProblem (l : DataLayout) (sym : Name) (qs : List (Nat × Nat)) : Option Problem :=
+  (qs.find? fun q => !decide (l.HasAddrs q)).map fun q =>
+    { message := if (l.entry q.1).nonIntegral then
+        "an op turns pointers of memory " ++ toString q.1 ++
+          " into integers or back, but the memory is non-integral"
+      else "an op turns pointers of memory " ++ toString q.1 ++ " into integers of " ++
+        toString q.2 ++ " bits or back, but its pointers have " ++
+        toString (l.entry q.1).pointer ++ " bits",
+      func := sym }
+
+theorem addrsProblem_eq_none (l : DataLayout) (sym : Name) (qs : List (Nat × Nat)) :
+    addrsProblem l sym qs = none ↔ ∀ q ∈ qs, l.HasAddrs q := by
+  simp only [addrsProblem, Option.map_eq_none_iff, List.find?_eq_none, Bool.not_eq_eq_eq_not,
+    Bool.not_true, decide_eq_false_iff_not, Decidable.not_not]
+
 /-- The problems of the memories that a symbol table's types name: one for
 each function, then one for each item of a dialect's kind, then one for
 each external declaration, whose types name a memory that the layout does
-not declare, then one for each function
-whose ops write values into units that are not as wide. A function's types
+not declare, then one for each function whose ops write values into units
+that are not as wide, then one for each function whose ops turn pointers
+into integers, or back, that its memory does not allow. A function's types
 are those it states, then those its ops carry in their attributes. -/
 def SymbolTable.memoryProblems (l : DataLayout) (t : SymbolTable d) : List Problem :=
   t.funcs.filterMap (fun f => memoryProblem f.name (l.missing (f.types ++ f.attrTypes))) ++
   t.dialectItems.filterMap (fun i => memoryProblem i.name (l.missing i.types)) ++
   t.externs.filterMap (fun e => memoryProblem e.name (l.missing e.types)) ++
-  t.funcs.filterMap (fun f => unitsProblem l f.name f.unitWidths)
+  t.funcs.filterMap (fun f => unitsProblem l f.name f.unitWidths) ++
+  t.funcs.filterMap (fun f => addrsProblem l f.name f.addrWidths)
 
 theorem SymbolTable.memoryProblems_eq_nil (l : DataLayout) (t : SymbolTable d) :
     t.memoryProblems l = [] ↔ t.MemoriesIn l := by
   simp only [SymbolTable.memoryProblems, List.append_eq_nil_iff, List.filterMap_eq_nil_iff,
-    memoryProblem_eq_none, DataLayout.missing_eq_nil, List.mem_append, unitsProblem_eq_none]
-  exact ⟨fun ⟨⟨⟨a, b⟩, e⟩, u⟩ => ⟨fun f hf ty h => a f hf ty (.inl h), b, e,
-      fun f hf ty h => a f hf ty (.inr h), u⟩,
-    fun ⟨a, b, e, c, u⟩ => ⟨⟨⟨fun f hf ty h => h.elim (a f hf ty) (c f hf ty), b⟩, e⟩, u⟩⟩
+    memoryProblem_eq_none, DataLayout.missing_eq_nil, List.mem_append, unitsProblem_eq_none,
+    addrsProblem_eq_none]
+  exact ⟨fun ⟨⟨⟨⟨a, b⟩, e⟩, u⟩, x⟩ => ⟨fun f hf ty h => a f hf ty (.inl h), b, e,
+      fun f hf ty h => a f hf ty (.inr h), u, x⟩,
+    fun ⟨a, b, e, c, u, x⟩ =>
+      ⟨⟨⟨⟨fun f hf ty h => h.elim (a f hf ty) (c f hf ty), b⟩, e⟩, u⟩, x⟩⟩
 
 section
 variable [DecidableDialectValidation d]

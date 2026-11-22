@@ -36,8 +36,10 @@ choice effect, and the divisions,
   arithmetic rules to the width change rules. `call` has none: its meaning
   is its callee's run. `alloca`, and the loads `load`, `loadPtr` and
   `loadFloat`, the stores `store`, `storePtr` and `storeFloat`, the
-  copy or move `memCopy` and the fill `memSet` have none either: they allocate, read
-  and write, so each rule needs the memory effect, and is
+  copy or move `memCopy`, the fill `memSet`, and `ptrExpose` and
+  `ptrFromInt`, which turn pointers into integers and back, have none
+  either: they allocate, read and write, so each rule needs the memory
+  effect, and is
   one of the core's rules with memory. Nor has the field address
   `fieldAddr`: it reads the layout it names in the items that the run
   gives each op, so its rule too is one of the core's rules with memory.
@@ -47,7 +49,8 @@ choice effect, and the divisions,
   a function, when it touches memory, or when it reads the run's items.
   Every core op has rules: each family gave its ops theirs, the call rules
   name the callee of `call`, and `alloca`, the loads and stores,
-  `fieldAddr`, `memCopy` and `memSet` have their rules with memory.
+  `fieldAddr`, `memCopy`, `memSet`, `ptrExpose` and `ptrFromInt` have
+  their rules with memory.
 
 An op has no rules when its dialect's semantics gives it none. The rule for
 such an op, first written while its family had not landed, is the one the spec
@@ -98,19 +101,22 @@ variable {m : Type → Type} [Monad m]
 
 /-- The core ops that touch memory: `alloca`, which allocates, `load`,
 `loadPtr` and `loadFloat`, which read, `store`, `storePtr` and
-`storeFloat`, which write, `memCopy`, which reads and writes, and
-`memSet`, which writes. Each has a
+`storeFloat`, which write, `memCopy`, which reads and writes,
+`memSet`, which writes, and `ptrExpose` and `ptrFromInt`, which read the
+addresses of their memory and allocate in it. Each has a
 rule only in a monad with the memory effect (the section on the core's
 rules with memory). -/
 def Op.touchesMemory : Op → Bool
   | .alloca .. | .load .. | .store .. | .loadPtr .. | .storePtr .. | .loadFloat ..
-  | .storeFloat .. | .memCopy .. | .memSet .. => true
+  | .storeFloat .. | .memCopy .. | .memSet .. | .ptrExpose .. | .ptrFromInt .. => true
   | _ => false
 
-/-- The core ops whose rules read the items that the run gives each op:
-`fieldAddr`, which reads the layout it names. It touches no memory, but
-the set monad has no run and no items, so it too has a rule only with
-memory (the section on the core's rules with memory). -/
+/-- The core ops that touch no memory but whose rules read the items that
+the run gives each op: `fieldAddr`, which reads the layout it names. The
+set monad has no run and no items, so it too has a rule only with memory
+(the section on the core's rules with memory). `ptrExpose` and
+`ptrFromInt` read the run's address policy and resolver, but they touch
+memory, so they are not marked here. -/
 def Op.readsItems : Op → Bool
   | .fieldAddr .. => true
   | _ => false
@@ -118,8 +124,8 @@ def Op.readsItems : Op → Bool
 /-- The rule of each core op that is not a terminator, in any monad with
 the choice and UB effects; `none` for `call`, whose meaning is its
 callee's run, for `alloca`, the loads `load`, `loadPtr` and `loadFloat`,
-the stores `store`, `storePtr` and `storeFloat`, `memCopy` and `memSet`,
-whose rules need memory, for `fieldAddr`, whose rule needs the run's items,
+the stores `store`, `storePtr` and `storeFloat`, `memCopy`, `memSet`,
+`ptrExpose` and `ptrFromInt`, whose rules need memory, for `fieldAddr`, whose rule needs the run's items,
 and for the terminators. -/
 def Op.denote? [MonadChoice m] [MonadUB m] : (op : Op) →
     Option (HVector toType (Fir.sig (d := CoreDialect) op) →
@@ -226,7 +232,8 @@ def Op.hasRules (op : Op) : Bool :=
 -- Every core op has rules: one instance of each, `add` with each of its
 -- flags, and `icmp` and `fcmp` with each of their predicates among them. `call`'s are
 -- its callee's run, and those of `alloca`, the loads and stores, `fieldAddr`,
--- `memCopy` and `memSet` are their rules with memory: none of them has an
+-- `memCopy`, `memSet`, `ptrExpose` and `ptrFromInt` are their rules with
+-- memory: none of them has an
 -- entry in `Op.denote?`.
 #guard (samples.filter Op.hasRules).map Op.name == samples.map Op.name
 #guard WrapFlags.all.all fun f => (Op.add 1 f).hasRules && (Op.sub 7 f).hasRules
@@ -269,6 +276,8 @@ def Op.hasRules (op : Op) : Bool :=
   (Op.memCopy .copy .nonatomic 64 0).hasRules && (Op.memCopy .move .seqCst 1 1).hasRules
 #guard ((Op.memSet .nonatomic 8 64 0).denote? (m := SetM)).isNone &&
   (Op.memSet .nonatomic 8 64 0).hasRules && (Op.memSet .seqCst 16 1 1).hasRules
+#guard ((Op.ptrExpose 0 64).denote? (m := SetM)).isNone && (Op.ptrExpose 0 64).hasRules &&
+  ((Op.ptrFromInt 1 32).denote? (m := SetM)).isNone && (Op.ptrFromInt 1 32).hasRules
 
 /-- The core dialect's semantics in a monad `m` from two tables of rules,
 `den` for the ops that are not terminators and `ex` for the terminators:

@@ -14,10 +14,10 @@ fails when the Lean changes under it.
 
 #doc (Manual) "A store declared without a write: readable blocks" =>
 
-:::moduleDocs (fingerprint := "12655844275180322662")
+:::moduleDocs (fingerprint := "9290732865669960387")
 :::
 
-:::readable Fir.Core.Unlawful.storeNoWrite Fir.Core.Unlawful.store_typesValid (pin := Fir.Core.Op.effects) (fingerprint := "1611772627437551183")
+:::readable Fir.Core.Unlawful.storeNoWrite Fir.Core.Unlawful.store_typesValid (pin := Fir.Core.Op.effects) (fingerprint := "3908580887421272480")
 *Definition: a declaration without a write.* The declaration gives every
 core op its
 {ref "The-fir-specification--Execution--Core-effects"}[effects],

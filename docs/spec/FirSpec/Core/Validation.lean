@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Core rules: readable blocks" =>
 
-:::moduleDocs (fingerprint := "11486370241118401466")
+:::moduleDocs (fingerprint := "6921522426549223349")
 :::
 
 :::readable Fir.Core.Ty.Valid Fir.Core.Ty.memory (pin := Fir.Core.maxWidth) (pin := Fir.Core.floatWidth) (fingerprint := "744407091263889301")
@@ -50,7 +50,7 @@ in every module, and $`\mathsf{ptr}\langle N \rangle` with $`N \ge 1` is in
 a module whose layout declares memory $`N` (ADR-2026-11-12-1821).
 :::
 
-:::readable Fir.Core.Op.symbolRefs (fingerprint := "17705138793972318009")
+:::readable Fir.Core.Op.symbolRefs (fingerprint := "8462773498065661004")
 *Definition: the symbols a core op refers to.* $`\mathsf{call}~f : t^* \to r^*`
 refers to the symbol $`f` of its callee: its list of symbols is the
 one-element sequence $`(f)`. No other core op refers to a function:
@@ -63,7 +63,7 @@ $$`\mathrm{refs}(\mathit{op}) = \epsilon \ \text{ for every other op}`
 The general rules check that $`f` names a function of the module.
 :::
 
-:::readable Fir.Core.Op.attrTypes (fingerprint := "16621200450031835539")
+:::readable Fir.Core.Op.attrTypes (fingerprint := "1014562022847701047")
 *Definition: the types a core op carries.* $`\mathsf{alloca}_N~k~t~c~a`
 carries the type $`t` that it allocates values of in its attributes, when
 $`t` is valid:
@@ -79,7 +79,22 @@ core op carries a type of its own: $`\mathsf{call}`'s are its callee's, and
 $`\mathsf{ret}`'s the function's results.
 :::
 
-:::readable Fir.Core.Op.unitWidths (fingerprint := "7024771246569661941")
+:::readable Fir.Core.Op.addrWidths (fingerprint := "11542101545915289889")
+*Definition: the pointer widths a core op asks.*
+$`\mathsf{ptr\_expose}_N~W` and $`\mathsf{ptr\_from\_int}_N~W` turn
+pointers of memory $`N` into integers of $`\mathsf{i}W`, or back, so each
+asks that memory $`N`'s pointers be $`W` bits wide (the human's ruling of
+2026-11-18 on #232, Q2) and that memory $`N` be integral (the human's
+ruling of 2026-11-11 on #231):
+
+$$`\mathrm{opaddrs}(\mathsf{ptr\_expose}_N~W) = \mathrm{opaddrs}(\mathsf{ptr\_from\_int}_N~W) = ((N, W)) \qquad \mathrm{opaddrs}(\mathit{op}) = \epsilon \ \text{ for every other op}`
+
+The data layout's rules check both: a $`\mathsf{ptr\_expose}` of a
+$`\mathsf{ptr}` into an $`\mathsf{i32}` is not valid where memory 0 has
+64-bit pointers, and neither is one of a non-integral memory.
+:::
+
+:::readable Fir.Core.Op.unitWidths (fingerprint := "3633754972103385810")
 *Definition: the unit widths a core op asks.* $`\mathsf{memset}_N~o~V~W`
 writes values of $`\mathsf{i}V` in the units of memory $`N`, so it asks
 that they be $`V` bits wide (the human's ruling on #251: a fill writes
@@ -118,7 +133,7 @@ So every core type may be a field (#236). These are the units and the
 alignment that $`\mathsf{alloca}` gives one value of a field's type.
 :::
 
-:::readable Fir.Core.FBin.mode Fir.Core.FUnary.mode Fir.LayoutRef.admits Fir.Core.Op.Valid (pin := Fir.isPowerOfTwo) (pin := Fir.MemLayout.limit) (pin := Fir.MemLayout.ValidAlign) (fingerprint := "8033722880951947079")
+:::readable Fir.Core.FBin.mode Fir.Core.FUnary.mode Fir.LayoutRef.admits Fir.Core.Op.Valid (pin := Fir.isPowerOfTwo) (pin := Fir.MemLayout.limit) (pin := Fir.MemLayout.ValidAlign) (fingerprint := "5451221050399015448")
 *Definition: the core rules of an op.* Beyond its signature, which the
 {ref "The-fir-specification--Validation--The-general-rules"}[general rules]
 check, a core op obeys these rules in its op context $`C`:

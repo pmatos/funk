@@ -1,0 +1,25 @@
+# Tests of ptr-int.fir (#232): a pointer exposed and turned back into a
+# pointer reaches its allocation, and an exposed address plus an offset
+# reaches the allocation at that offset, its end included, where an access
+# is out of bounds. Two exposed addresses of one allocation differ by the
+# offsets of their pointers. An address that no exposed allocation holds
+# gives a pointer with no provenance, and an access through it is UB, and
+# exposing such a pointer gives back its integer. A poison integer gives a
+# poison pointer, and exposing a poison pointer is UB. No test returns an
+# exposed address, which depends on the canonical layout. The backend
+# lowers neither op until stage 5 of #232, so each test is
+# interpreter-only.
+tests = [
+  { func = "@round_trip", args = ["42"], expect = ["42"] },
+  { func = "@round_trip", args = ["poison"], expect = ["poison"] },
+  { func = "@at", args = ["7", "-9", "0"], expect = ["7"] },
+  { func = "@at", args = ["7", "-9", "4"], expect = ["-9"] },
+  { func = "@at", args = ["7", "-9", "8"], expect = "ub" },
+  { func = "@at", args = ["7", "-9", "-4"], expect = "ub" },
+  { func = "@at", args = ["7", "-9", "poison"], expect = "ub" },
+  { func = "@distance", expect = ["4"] },
+  { func = "@never", args = ["0"], expect = "ub" },
+  { func = "@never", args = ["4096"], expect = "ub" },
+  { func = "@back", args = ["77"], expect = ["77"] },
+  { func = "@back", args = ["poison"], expect = "ub" },
+]

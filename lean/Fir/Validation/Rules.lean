@@ -15,7 +15,8 @@ dialect set names each dialect once, by a word, and its data layout is
 valid, declares each memory that a type of the module names, the types
 that its ops carry in their attributes included (ADR-2026-11-12-1821), and
 gives each memory units as wide as the values that its ops write into
-them, and each of its aggregates' layouts is valid in it (ADR-2026-11-16-1546), as
+them, and integral pointers as wide as the integers its ops turn them
+into, and each of its aggregates' layouts is valid in it (ADR-2026-11-16-1546), as
 is each of its globals (ADR-2026-11-09-1546). A function is valid
 when its blocks, its ops and its successors obey the rules below, and each
 op obeys its dialect's rule.
@@ -261,8 +262,8 @@ theorem Module.dialectItems_of_flat {m : Module d} (flat : ∀ i ∈ m.items, i.
 
 /-- A module with no nested module is valid when its location table, its
 own table and its layout are, and the layout declares the memories of its
-functions' types and of the types that their ops carry, and gives units
-as wide as the values that their ops write into them. -/
+functions' types and of the types that their ops carry, and fits the
+units and the pointers that their ops ask for. -/
 theorem Module.valid_of_flat {m : Module d} (flat : ∀ i ∈ m.items, i.func?.isSome)
     (symbolsUnique : (m.items.map Item.name).Nodup) (locs : LocTable.Valid m.locs)
     (funcs : ∀ f ∈ m.funcs, f.Valid m.context) (dialectNames : ∀ x ∈ m.dialects, isWord x)
@@ -270,7 +271,8 @@ theorem Module.valid_of_flat {m : Module d} (flat : ∀ i ∈ m.items, i.func?.i
     (memories : ∀ f ∈ m.funcs, ∀ ty ∈ f.types, m.layout.HasMemoryOf ty := by decide +kernel)
     (attrMemories : ∀ f ∈ m.funcs, ∀ ty ∈ f.attrTypes, m.layout.HasMemoryOf ty := by
       decide +kernel)
-    (units : ∀ f ∈ m.funcs, ∀ q ∈ f.unitWidths, m.layout.HasUnits q := by decide +kernel) :
+    (units : ∀ f ∈ m.funcs, ∀ q ∈ f.unitWidths, m.layout.HasUnits q := by decide +kernel)
+    (addrs : ∀ f ∈ m.funcs, ∀ q ∈ f.addrWidths, m.layout.HasAddrs q := by decide +kernel) :
     m.Valid := by
   have hd := Module.dialectItems_of_flat flat
   have ha : m.table.aggregates = [] := List.filterMap_eq_nil_iff.mpr fun j hj => by
@@ -293,7 +295,7 @@ theorem Module.valid_of_flat {m : Module d} (flat : ∀ i ∈ m.items, i.func?.i
       have := flat j hj
       cases j <;> simp_all [Item.func?, Item.extern?]
     exact ⟨memories, fun i hi => by simp [hd] at hi, fun e h => by simp [he] at h, attrMemories,
-      units⟩
+      units, addrs⟩
   · simp only [Module.tables, Item.tablesIn_eq_nil flat, List.mem_singleton] at ht
     subst ht
     exact fun a h => by simp [ha] at h

@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "The general rules: readable blocks" =>
 
-:::moduleDocs (fingerprint := "3935421356940331190")
+:::moduleDocs (fingerprint := "16119489176877964014")
 :::
 
 :::readable Fir.ModuleContext (fingerprint := "6320046082962391219")
@@ -49,7 +49,7 @@ target (ADR-2026-10-29-2010). No branch may go to the entry block: it has
 no predecessors, and its arguments are the function's parameters.
 :::
 
-:::readable Fir.Func.RegionsValid (pin := Fir.DialectValidation) (fingerprint := "16342535182505557928")
+:::readable Fir.Func.RegionsValid (pin := Fir.DialectValidation) (fingerprint := "5308546481441313303")
 *Definition: the valid regions of an op.* Let $`o` be an op of the
 function $`f`, checked in the module context $`C`, let $`p` be its op
 instance, and let $`d` be the dialect. The regions of $`o` are valid when:
@@ -254,18 +254,19 @@ chapters on the text and on execution read a valid module through these,
 and look only at its own functions.
 :::
 
-:::readable Fir.Module.dialectItems_of_flat Fir.Module.valid_of_flat (fingerprint := "17436399538760444561")
+:::readable Fir.Module.dialectItems_of_flat Fir.Module.valid_of_flat (fingerprint := "14615332829573057705")
 *Theorem: a module with no nested module.* A module $`M` whose items are
 all functions has one table, its own. So $`M` is valid when the symbols of
 its items are distinct, its location table is valid, each of its functions
 is valid in $`\mathrm{ctx}(M)`, the names of $`\mathrm{dialects}(M)`
 are distinct words, its layout is valid, and the layout declares the
 memory of each type that its functions state and that their ops carry in
-their attributes, and gives units as wide as the values that their ops
-write into them ($`\mathrm{opunits}`). Such a module has no item of a
-dialect's kind, no aggregate's layout, no global and no external
-declaration. The last
-four conditions are checked by computation when they are not given, so
+their attributes, gives units as wide as the values that their ops write
+into them ($`\mathrm{opunits}`), and integral memories pointers as wide
+as their ops' integers ($`\mathrm{opaddrs}`).
+Such a module has no item of a dialect's kind, no aggregate's layout, no
+global and no external declaration. The last five conditions are checked
+by computation when they are not given, so
 the tests prove their modules valid this way with the first five.
 :::
 

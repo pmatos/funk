@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Core effects: readable blocks" =>
 
-:::moduleDocs (fingerprint := "16790106770193789825")
+:::moduleDocs (fingerprint := "3484219231566044875")
 :::
 
 :::readable Fir.Core.Mem (fingerprint := "11401156343561318334")
@@ -27,11 +27,12 @@ module has. The module's data layout declares the others by number
 {ref "The-fir-specification--Validation--The-data-layout___s-rules"}[the data layout's rules]).
 $`\mathsf{alloca}` names the memory of its result in its effects, and
 $`\mathsf{load}`, $`\mathsf{store}`, $`\mathsf{memcpy}`,
-$`\mathsf{memmove}` and $`\mathsf{memset}` the memory of their pointers;
-no other core op names a memory.
+$`\mathsf{memmove}`, $`\mathsf{memset}`, $`\mathsf{ptr\_expose}` and
+$`\mathsf{ptr\_from\_int}` the memory of their pointers; no other core op
+names a memory.
 :::
 
-:::readable Fir.Core.Op.effects (fingerprint := "4327253371606704340")
+:::readable Fir.Core.Op.effects (fingerprint := "16705256922747536990")
 *Definition: the effects of each core op.* For each
 {ref "The-fir-specification--Abstract-syntax--Core-ops"}[core op instance]:
 
@@ -52,6 +53,8 @@ $$`\mathsf{br},\ \mathsf{ret}:\ \{\mathsf{control}\} \qquad \mathsf{cond\_br},\ 
 $$`\mathsf{alloca}_N:\ \{\mathsf{allocates}(N)\} \qquad \mathsf{load}_N:\ \{\mathsf{reads}(N),\ \mathsf{mayUB},\ \mathsf{mayPoison}\}`
 
 $$`\mathsf{store}_N,\ \mathsf{memset}_N:\ \{\mathsf{writes}(N),\ \mathsf{mayUB}\} \qquad \mathsf{memcpy}_N,\ \mathsf{memmove}_N:\ \{\mathsf{reads}(N),\ \mathsf{writes}(N),\ \mathsf{mayUB}\}`
+
+$$`\mathsf{ptr\_expose}_N:\ \{\mathsf{reads}(N),\ \mathsf{allocates}(N),\ \mathsf{mayUB}\} \qquad \mathsf{ptr\_from\_int}_N:\ \{\mathsf{reads}(N),\ \mathsf{allocates}(N)\}`
 
 The load and store of a pointer, $`\mathsf{load}_N~o~\mathsf{ptr}\langle M \rangle~a`
 and $`\mathsf{store}_N~o~\mathsf{ptr}\langle M \rangle~a` (`loadPtr` and
@@ -91,6 +94,15 @@ may carry poison units. $`\mathsf{memset}_N` writes the memory $`N` of its
 pointer and may be UB, on a poison pointer or an access that faults,
 unless the length is 0; as $`\mathsf{store}_N`, it reads no memory and
 makes no poison, though it may write poison units.
+$`\mathsf{ptr\_expose}_N` and $`\mathsf{ptr\_from\_int}_N` read the
+memory $`N` of their pointer, since their results depend on its addresses,
+and allocate in it: exposing gives an allocation an address, which counts
+as allocating (the human's ruling of 2026-11-20 on #232, question B), and
+turning an integer back into a pointer counts the call, which counts as
+allocating too (the human's ruling of 2026-11-21 on #232).
+$`\mathsf{ptr\_expose}_N` may be UB, on a poison pointer or when no
+address may be given; $`\mathsf{ptr\_from\_int}_N` never is. On defined
+operands neither gives poison.
 $`\mathsf{call}`'s own rule only runs its callee, so its own set is empty;
 a call has its callee's effects. The definition lists every op, with no
 case for the rest, so a new core op does not build until it declares its

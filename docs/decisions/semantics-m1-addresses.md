@@ -15,10 +15,11 @@ pointer an operation of the memory effect, under an address policy
 `lean/Fir/Execution/MemoryExposeLaws.lean` and `MemoryPolicyRuns.lean`),
 and turning an integer back into a pointer one too, under an address
 resolver (`lean/Fir/Memory/Resolver.lean`, `ResolverLaws.lean` and
-`lean/Fir/Execution/MemoryFromAddrLaws.lean`). No op uses them yet:
-`ptr_expose` and `ptr_from_int` (the human's spelling of 2026-11-18, Q1),
-the Rust tools and the backend come in the stages after it. The spec's
-memory chapter renders all of them.
+`lean/Fir/Execution/MemoryFromAddrLaws.lean`). Stage 3 adds the core ops
+that use them, `ptr_expose` and `ptr_from_int` (the human's spelling of
+2026-11-18, Q1), to the spec, `fir-ref`, the Rust IR and verifier and
+the corpus (see "The ops" below). The backend comes in the stage after it.
+The spec's memory chapter renders all of them.
 
 ## Which addresses an allocation may be given
 
@@ -74,7 +75,8 @@ address. Allocating, freeing, loading and storing expose nothing in any
 memory, and exposing exposes nothing but in its own memory. Exposing counts
 as allocating in its memory, as a declared effect: an op that exposes
 declares that it allocates there (the human's ruling of 2026-11-20 on
-#232, question B), and stage 3 states it for `ptr_expose`. Rejected: a new
+#232, question B). `ptr_expose` declares it, and `LawfulDialectAddresses`
+states it for every op (semantics-effects.md). Rejected: a new
 declared effect, "exposes in memory m", which would add a field to every
 effect set, the Rust effects, the verifier and the function summaries.
 Also rejected: adding the address to `Memory.allocs`, which would make
@@ -205,8 +207,8 @@ Memories refine each other only when they have counted as many calls in
 each memory (`Memories.IsRefinedBy`), so turning an integer back in memories that
 refine each other gives the same pointer. The effect obligations do not
 see the count: turning an integer back writes, allocates and exposes
-nothing. Which declared effect covers the count comes with
-`ptr_from_int` in stage 3. _Counts no rebuild in x_ (`RebuildsNot`) is its
+nothing. The count is covered as an allocation is (the human's ruling of
+2026-11-21 on #232; see "The ops" below). _Counts no rebuild in x_ (`RebuildsNot`) is its
 own property: every other operation of the effect has it in every memory,
 and turning an integer back into a pointer in every memory but its own, so
 calls in different memories do not change each other's picks. Rejected:
@@ -226,3 +228,70 @@ under each policy and resolver lifts to the spec's behaviour when the
 target ends in UB under each resolver under which the source does
 (`Func.angelicBehaviour_isRefinedBy_of_each`), and in general when each
 resolver the target keeps is matched by one the source keeps.
+
+## The ops
+
+`ptr_expose` and `ptr_from_int` are core ops, `Core.Op.ptrExpose` and
+`Core.Op.ptrFromInt` (`lean/Fir/Core/PtrInt.lean`), with no attributes:
+`%a: i64 = ptr_expose %p` and `%q: ptr = ptr_from_int %a`. Each names its
+memory by its pointer's type and carries the integer's width in the other
+type, so an integer of any width reads back.
+
+- **Width and integral memories.** The module's data layout asks that the
+  integer be as wide as the memory's pointers (the human's ruling of
+  2026-11-18, Q2) and that the memory not be `nonintegral` (the human's
+  ruling of 2026-11-11 on #231). Each op lists its memory and width
+  (`DialectValidation.opAddrs`), and `SymbolTable.MemoriesIn` checks both,
+  as it checks the unit width of a `memset`. Rejected: an attribute that
+  repeats the width, which the types already give.
+- **Rules.** `ptr_expose` on a defined pointer is the memory effect's
+  `expose` under the run's policy for its memory (`RunItems.addrs`), at the
+  pointer width of the memory's entry; `ptr_from_int` on a defined integer
+  is `fromAddr` under the run's resolver (`RunItems.resolvers`). `fir-ref`
+  follows the canonical policy and resolver. `fir-ref run` does not
+  validate, so each rule cuts or pads an integer of another width.
+- **Poison.** A poison pointer makes `ptr_expose` immediate UB, so its
+  poison class is `exception`: the rulings leave no other choice
+  (semantics-poison.md). A poison integer makes `ptr_from_int` give a
+  poison pointer, and it still counts the call, so memories that refine
+  each other keep equal counts; it propagates poison.
+- **Effects.** `ptr_expose` reads and allocates in its memory and may be
+  UB. `ptr_from_int` reads and allocates in its memory and is never UB.
+  Both read: their results depend on the addresses of the memory, which
+  _no read_ lets differ.
+
+The Rust IR registers both ops (`crates/funk-ir/src/dialects/core/ptr_int.rs`)
+with the same effects, and `funk verify` checks the width and the integral
+memory with the layout's rules. The corpus runs both ops on `fir-ref`
+only, and `tests/fir/reject/ptr-int.toml` holds the texts that do not
+decode and those that the layout rejects
+([texts-addresses.md](../coverage/texts-addresses.md)). The backend comes
+in the next stage.
+
+The count of `ptr_from_int` counts as allocating in its memory, as
+exposing does: the human ruled on 2026-11-21, on #232, that `ptr_from_int`
+declares `reads(n)` and `allocates(n)`. `LawfulDialectAddresses` states
+that an op that does not declare an allocation counts no rebuild. Rejected:
+no declared effect beyond the read, so a pass may drop an unused
+`ptr_from_int` or reorder two of them, which the union over resolvers
+allows but a proof for each resolver does not; and a new effect for the
+count alone.
+
+## Addresses and the declared allocation
+
+The effect obligations compare units and shapes, not addresses or the
+count of integers turned back into pointers, so they cannot tell an op that
+exposes from one that does nothing. Exposing counts as allocating in its
+memory, as a declared effect (the human's ruling of 2026-11-20 on #232,
+question B). `LawfulDialectAddresses`, in
+`lean/Fir/Execution/AddressObligations.lean`, states it beside
+`LawfulDialectEffects`, whose statement every guarantee asks for and which
+stays as it is: an op that does not declare an allocation in a memory gives
+no allocation of it an address (`ExposesNot`) and counts no rebuild there
+(`RebuildsNot`). The core (`lean/Fir/Core/AddressLaws.lean`), `gpu` and the
+sum `CoreGpu` (`lean/Fir/Gpu/AddressLaws.lean`, `lean/Fir/Sum/AddressLaws.lean`)
+meet it. Rejected: adding both to `LawfulDialectEffects.allocatesNot`, which
+would change the statement of a class that the #384 guarantees ask for.
+
+The count is covered as an allocation is, by the human's ruling of
+2026-11-21 on #232: see "The ops" above.

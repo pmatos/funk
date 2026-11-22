@@ -4,6 +4,7 @@ import Fir.Core.LoadText
 import Fir.Core.StoreText
 import Fir.Core.MemCopyText
 import Fir.Core.MemSetText
+import Fir.Core.PtrIntText
 import Fir.Core.FloatText
 import Fir.Core.FloatOpText
 import Fir.Core.FieldAddrText
@@ -85,6 +86,11 @@ results, which are written where those values are defined.
 * `memSet` is written `memset`. Its one attribute is its ordering, and it
   takes the destination, the value and the length, and gives no result:
   `memset nonatomic %d, %v, %n @1`.
+* `ptrExpose` is written `ptr_expose` and `ptrFromInt` `ptr_from_int`.
+  Neither has attributes: `ptr_expose` takes a pointer and gives an
+  integer, `%a: i64 = ptr_expose %p @1`, and `ptr_from_int` takes an
+  integer and gives a pointer, `%q: ptr = ptr_from_int %a @1` (#232; the
+  human's ruling of 2026-11-18, Q1).
 * `fptosi` and `fptoui` have no attributes, since they truncate and do not
   round, and take a float of any format to an integer of any width:
   `%i: i32 = fptosi %f @1`.
@@ -120,8 +126,9 @@ The section on the core types in text gives how each type is written and
 read back, the section on stack allocation in text how `alloca` is, the
 section on loads in text how `load` is, the section on stores in text how
 `store` is, the section on copies and moves in text how `memcpy` and
-`memmove` are, the section on fills in text how `memset` is, and the section on field addresses in text how
-`fieldaddr` is.
+`memmove` are, the section on fills in text how `memset` is, the section
+on pointers as integers in text how `ptr_expose` and `ptr_from_int` are,
+and the section on field addresses in text how `fieldaddr` is.
 
 The values of `fir-ref`'s arguments, the values in its JSON output and the
 choices that scripted mode follows (see the section "Exhaustive, scripted
@@ -176,7 +183,7 @@ def Op.name : Op → String
   | .load .. | .loadPtr .. | .loadFloat .. => "load"
   | .store .. | .storePtr .. | .storeFloat .. => "store"
   | .fptosi .. => "fptosi" | .fptoui .. => "fptoui" | .memCopy k .. => k.name
-  | .memSet .. => "memset"
+  | .memSet .. => "memset" | .ptrExpose .. => "ptr_expose" | .ptrFromInt .. => "ptr_from_int"
   | .freeze _ => "freeze" | .poison _ => "poison" | .br => "br" | .condBr => "cond_br"
   | .ret _ => "ret" | .unreachable => "unreachable" | .call .. => "call"
 
@@ -324,6 +331,8 @@ def Op.decode (n : String) (as : List Attr) (ts rs : List Ty) : Option Op :=
   | "memcpy" => decodeMemCopy .copy as ts rs
   | "memmove" => decodeMemCopy .move as ts rs
   | "memset" => decodeMemSet as ts rs
+  | "ptr_expose" => decodePtrExpose as ts rs
+  | "ptr_from_int" => decodePtrFromInt as ts rs
   | "fptosi" => decodeFloatToInt true as ts rs
   | "fptoui" => decodeFloatToInt false as ts rs
   | _ => if let some mk := plainBinOps.lookup n then bare as ((binWidth ts rs).map mk) else none
