@@ -26,7 +26,7 @@ attribute starts after a space, so $`s` ends where it would end alone. And
 the text `...` lexes to the one token $`\texttt{...}`.
 :::
 
-:::readable Fir.Func.spellsParams Fir.Func.spellsResults (pin := Fir.Func.printParams) (pin := Fir.Func.printResults) (pin := Fir.Func.paramsTokens) (pin := Fir.Func.resultsTokens) (pin := Fir.Func.paramAttrsAll) (pin := Fir.Func.resultAttrsAll) (fingerprint := "16568871157526016144")
+:::readable Fir.Func.spellsParams Fir.Func.spellsResults (pin := Fir.Func.printParams) (pin := Fir.Func.printResults) (pin := Fir.Func.paramsTokens) (pin := Fir.Func.resultsTokens) (pin := Fir.Func.paramAttrsAll) (pin := Fir.Func.resultAttrsAll) (fingerprint := "15721662831336692504")
 *Theorems: a function's parameters and results lex back.* For every
 dialect with a {ref "The-fir-specification--Text-format--Grammar"}[text format]
 and every function $`f` whose parameters' tokens can be written, the

@@ -15,10 +15,10 @@ changes under it.
 
 #doc (Manual) "The freeze rule: readable blocks" =>
 
-:::moduleDocs (fingerprint := "5744432810684808763")
+:::moduleDocs (fingerprint := "17604058281976489269")
 :::
 
-:::readable Fir.Core.freezeValue (pin := Fir.MonadChoice) (pin := Fir.SetM.instMonadChoice) (pin := Fir.ChoiceTree.instMonadChoice) (fingerprint := "10833518651460130718")
+:::readable Fir.Core.freezeValue (pin := Fir.MonadChoice) (pin := Fir.SetM.instMonadChoice) (pin := Fir.ChoiceTree.instMonadChoice) (fingerprint := "8348760696289593728")
 *Definition: the rule of $`\mathsf{freeze}`.* For every width $`N`, for
 every way of computing with the
 {ref "The-fir-specification--Execution--Effects-and-op-semantics"}[choice effect],

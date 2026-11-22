@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "A dialect's traced runs: readable blocks" =>
 
-:::moduleDocs (fingerprint := "5562880980263733425")
+:::moduleDocs (fingerprint := "11601410767093888604")
 :::
 
 :::readable Fir.DialectTrace Fir.DialectTrace.Acts (pin := Fir.instHRefinementEvent) (fingerprint := "16873117125355051426")
@@ -35,7 +35,7 @@ runs by that rule, each act of its traces an act of the marked trace. A
 call shows no step of its own: the ops of its callee show theirs.
 :::
 
-:::readable Fir.TraceState.endOf Fir.Func.traceRuns Fir.Func.observedRuns Fir.Func.run_eraseSteps (pin := Fir.TraceState.init) (fingerprint := "2906358639670659672")
+:::readable Fir.TraceState.endOf Fir.Func.traceRuns Fir.Func.observedRuns Fir.Func.run_eraseSteps (pin := Fir.TraceState.init) (fingerprint := "16283772764567053589")
 *Definition: the traced runs of a function.* Where a run names the
 dialect's memory $`x` as $`\rho(x)`, whose layout entry is
 $`\ell(\rho(x))`, and gives each op the items $`L`, the traced run of the

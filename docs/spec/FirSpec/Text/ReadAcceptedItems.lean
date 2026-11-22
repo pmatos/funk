@@ -18,7 +18,7 @@ when the Lean changes under it.
 :::moduleDocs (fingerprint := "5077045112635492711")
 :::
 
-:::readable Fir.Text.readDialectName_writable Fir.Text.readDialects_writable (pin := Fir.Text.readDialectName) (pin := Fir.Text.readDialects) (fingerprint := "15138398096848537253")
+:::readable Fir.Text.readDialectName_writable Fir.Text.readDialects_writable (pin := Fir.Text.readDialectName) (pin := Fir.Text.readDialects) (fingerprint := "13401315235049743962")
 *Theorems: the names of a dialect set as read are words.* For every list
 of tokens that can be written, the reader of a dialect's name gives a
 word, since it reads a word token, and the reader of a dialect set gives
@@ -27,13 +27,13 @@ start of a module or of a body of items. Each leaves tokens that can be
 written.
 :::
 
-:::readable Fir.Text.readLayout_writable (pin := Fir.Text.readLayout) (fingerprint := "5445231149295570337")
+:::readable Fir.Text.readLayout_writable (pin := Fir.Text.readLayout) (fingerprint := "9540888891871736199")
 *Theorem: the entries of a layout as read are types.* For every list of
 tokens that can be written, the reader of a data layout gives entries
 written as types, and leaves tokens that can be written.
 :::
 
-:::readable Fir.Text.readParam_writable Fir.Text.readMoreParams_writable Fir.Text.readParams_writable Fir.Text.readResult_writable (pin := Fir.Text.readParam) (pin := Fir.Text.readMoreParams) (pin := Fir.Text.readParams) (pin := Fir.Text.readResult) (pin := Fir.Text.ReadsWritable) (fingerprint := "12761917161881908415")
+:::readable Fir.Text.readParam_writable Fir.Text.readMoreParams_writable Fir.Text.readParams_writable Fir.Text.readResult_writable (pin := Fir.Text.readParam) (pin := Fir.Text.readMoreParams) (pin := Fir.Text.readParams) (pin := Fir.Text.readResult) (pin := Fir.Text.ReadsWritable) (fingerprint := "17316352083107234733")
 *Theorems: parameters and results as read can be written.* For every list
 of tokens that can be written, the reader of a parameter gives a
 definition that can be written and attributes that can each be written,
@@ -43,7 +43,7 @@ as a type and attributes that can each be written. Each leaves tokens that
 can be written.
 :::
 
-:::readable Fir.Text.readItems_writable (pin := Fir.Text.readItems) (pin := Fir.Text.readItem) (pin := Fir.Text.ReadsWritable) (pin := Fir.Text.SItem.Writable) (pin := Fir.Text.SBody.Writable) (pin := Fir.Text.decodeItem) (fingerprint := "1648990028897086969")
+:::readable Fir.Text.readItems_writable (pin := Fir.Text.readItems) (pin := Fir.Text.readItem) (pin := Fir.Text.ReadsWritable) (pin := Fir.Text.SItem.Writable) (pin := Fir.Text.SBody.Writable) (pin := Fir.Text.decodeItem) (fingerprint := "16065082808397470620")
 *Theorem: items as read can be written.* For every list of tokens
 $`\mathit{ts}`, at the top of the module or inside the body of an item,
 the {ref "The-fir-specification--Text-format--Reading-the-grammar"}[reader of items]

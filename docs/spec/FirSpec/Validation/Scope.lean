@@ -14,10 +14,10 @@ when the Lean changes under it.
 
 #doc (Manual) "Scope and symbols: readable blocks" =>
 
-:::moduleDocs (fingerprint := "3032965009869543175")
+:::moduleDocs (fingerprint := "1516552578006188138")
 :::
 
-:::readable Fir.Func.blocks Fir.Region.allBlocks Fir.Block.allBlocks Fir.Operation.regionBlocks Fir.Func.allBlocks (fingerprint := "9127946111391752751")
+:::readable Fir.Func.blocks Fir.Region.allBlocks Fir.Block.allBlocks Fir.Operation.regionBlocks Fir.Func.allBlocks (fingerprint := "7213574439458321908")
 *Definition: the blocks of a function, at the top level and at any depth.*
 The body of a
 {ref "The-fir-specification--Abstract-syntax--Modules___-functions___-blocks-and-ops"}[function]
@@ -133,7 +133,7 @@ function, so no op refers to it as a callee: a call to an external
 declaration waits on the rule of an external call (#239).
 :::
 
-:::readable Fir.Item.tables Fir.Item.tablesIn Fir.Module.table Fir.Module.tables (fingerprint := "1266397326880986602")
+:::readable Fir.Item.tables Fir.Item.tablesIn Fir.Module.table Fir.Module.tables (fingerprint := "13085491841057711412")
 *Definition: the symbol tables of a module.* The tables that an item
 holds, at any depth, are none for a function, an item of a dialect's
 kind, an aggregate's layout, a global or an external declaration, and for

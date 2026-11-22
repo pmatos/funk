@@ -18,7 +18,7 @@ when the Lean changes under it.
 :::moduleDocs (fingerprint := "4452560916230905096")
 :::
 
-:::readable Fir.Core.UnaryStrict Fir.Core.UnaryStrict.isRefinedBy (pin := Fir.PoisonOr.IsRefinedBy) (fingerprint := "17026793923800410613")
+:::readable Fir.Core.UnaryStrict Fir.Core.UnaryStrict.isRefinedBy (pin := Fir.PoisonOr.IsRefinedBy) (fingerprint := "11046576134852048124")
 *Definition: a strict rule on one value.* A rule $`g` that maps a value of
 $`\mathsf{i}M` to a value of $`\mathsf{i}N` is _strict_ when
 $`g(\mathsf{poison}) = \mathsf{poison}`.
@@ -34,7 +34,7 @@ counterpart of the
 of binary ops, and gives the monotonicity of the width changes below.
 :::
 
-:::readable Fir.Core.unaryStrict_zextValue Fir.Core.unaryStrict_sextValue Fir.Core.unaryStrict_truncValue (pin := Fir.Core.zextValue) (pin := Fir.Core.sextValue) (pin := Fir.Core.truncValue) (fingerprint := "1985664155240496905")
+:::readable Fir.Core.unaryStrict_zextValue Fir.Core.unaryStrict_sextValue Fir.Core.unaryStrict_truncValue (pin := Fir.Core.zextValue) (pin := Fir.Core.sextValue) (pin := Fir.Core.truncValue) (fingerprint := "11001315733896883589")
 *Theorem: the width changes are strict.* For all widths $`M` and $`N`,
 the {ref "The-fir-specification--Execution--Width-change-rules"}[rules] of
 $`\mathsf{zext}`, $`\mathsf{sext}` and $`\mathsf{trunc}` from
@@ -43,7 +43,7 @@ the widths validation accepts, they put zeros above its bits, put copies of its 
 its low $`N` bits.
 :::
 
-:::readable Fir.Core.zext_propagatesPoison Fir.Core.zext_returnsOnDefined Fir.Core.zext_total Fir.Core.zext_monotone (pin := Fir.PropagatesPoison) (pin := Fir.PoisonOut) (pin := Fir.UBByOwnRules) (pin := Fir.ReturnsOnDefined) (pin := Fir.OpTotal) (pin := Fir.OpMonotone) (pin := Fir.Core.Op.denote?) (pin := Fir.Core.zextValue) (pin := Fir.Core.Op.Valid) (fingerprint := "7788740024487063799")
+:::readable Fir.Core.zext_propagatesPoison Fir.Core.zext_returnsOnDefined Fir.Core.zext_total Fir.Core.zext_monotone (pin := Fir.PropagatesPoison) (pin := Fir.PoisonOut) (pin := Fir.UBByOwnRules) (pin := Fir.ReturnsOnDefined) (pin := Fir.OpTotal) (pin := Fir.OpMonotone) (pin := Fir.Core.Op.denote?) (pin := Fir.Core.zextValue) (pin := Fir.Core.Op.Valid) (fingerprint := "15170726272322888596")
 *Theorem: $`\mathsf{zext}` is lawful.* For all widths $`m` and $`n`,
 under fir's execution rules, $`\mathsf{zext}_{m \to n}`, from $`\mathsf{i}m`
 to $`\mathsf{i}n`, meets every obligation of an op that
@@ -60,14 +60,14 @@ The theorems hold at every pair of widths, even where $`n \le m`, which
 validation rejects for $`\mathsf{zext}`: they need nothing of the widths.
 :::
 
-:::readable Fir.Core.sext_propagatesPoison Fir.Core.sext_returnsOnDefined Fir.Core.sext_total Fir.Core.sext_monotone (pin := Fir.PropagatesPoison) (pin := Fir.PoisonOut) (pin := Fir.UBByOwnRules) (pin := Fir.ReturnsOnDefined) (pin := Fir.OpTotal) (pin := Fir.OpMonotone) (pin := Fir.Core.Op.denote?) (pin := Fir.Core.sextValue) (fingerprint := "6924944978315314500")
+:::readable Fir.Core.sext_propagatesPoison Fir.Core.sext_returnsOnDefined Fir.Core.sext_total Fir.Core.sext_monotone (pin := Fir.PropagatesPoison) (pin := Fir.PoisonOut) (pin := Fir.UBByOwnRules) (pin := Fir.ReturnsOnDefined) (pin := Fir.OpTotal) (pin := Fir.OpMonotone) (pin := Fir.Core.Op.denote?) (pin := Fir.Core.sextValue) (fingerprint := "16579592632169514868")
 *Theorem: $`\mathsf{sext}` is lawful.* For all widths $`m` and $`n`,
 under fir's execution rules, $`\mathsf{sext}_{m \to n}`, from $`\mathsf{i}m`
 to $`\mathsf{i}n`, propagates poison, returns a result on defined operands,
 and is total and monotone, for the reasons that $`\mathsf{zext}` is.
 :::
 
-:::readable Fir.Core.trunc_propagatesPoison Fir.Core.trunc_returnsOnDefined Fir.Core.trunc_total Fir.Core.trunc_monotone (pin := Fir.PropagatesPoison) (pin := Fir.PoisonOut) (pin := Fir.UBByOwnRules) (pin := Fir.ReturnsOnDefined) (pin := Fir.OpTotal) (pin := Fir.OpMonotone) (pin := Fir.Core.Op.denote?) (pin := Fir.Core.truncValue) (fingerprint := "7733037802496927067")
+:::readable Fir.Core.trunc_propagatesPoison Fir.Core.trunc_returnsOnDefined Fir.Core.trunc_total Fir.Core.trunc_monotone (pin := Fir.PropagatesPoison) (pin := Fir.PoisonOut) (pin := Fir.UBByOwnRules) (pin := Fir.ReturnsOnDefined) (pin := Fir.OpTotal) (pin := Fir.OpMonotone) (pin := Fir.Core.Op.denote?) (pin := Fir.Core.truncValue) (fingerprint := "371467820122061850")
 *Theorem: $`\mathsf{trunc}` is lawful.* For all widths $`m` and $`n`,
 under fir's execution rules, $`\mathsf{trunc}_{m \to n}`, from $`\mathsf{i}m`
 to $`\mathsf{i}n`, propagates poison, returns a result on defined operands,

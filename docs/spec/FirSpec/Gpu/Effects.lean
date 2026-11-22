@@ -14,10 +14,10 @@ changes under it.
 
 #doc (Manual) "The GPU dialect's effects: readable blocks" =>
 
-:::moduleDocs (fingerprint := "14849123397262844484")
+:::moduleDocs (fingerprint := "16662304645557001358")
 :::
 
-:::readable Fir.Gpu.Op.effects Fir.Gpu.instDialectEffects (fingerprint := "5101052619392698901")
+:::readable Fir.Gpu.Op.effects Fir.Gpu.instDialectEffects (fingerprint := "10186069075612982759")
 *Definition: the effects of `gpu`.* Every question of `gpu` declares the
 empty effect set: it reads, writes, allocates and frees no memory, is never
 UB, makes no poison and is not control. An allocation declares one effect,

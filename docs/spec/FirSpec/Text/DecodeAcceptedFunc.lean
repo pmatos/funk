@@ -17,7 +17,7 @@ pins their fingerprint; the build fails when the Lean changes under it.
 :::moduleDocs (fingerprint := "8772201697031895531")
 :::
 
-:::readable Fir.mapM_decodeType_writable (pin := Fir.Text.decodeType) (fingerprint := "13728904447647436187")
+:::readable Fir.mapM_decodeType_writable (pin := Fir.Text.decodeType) (fingerprint := "867695579835723986")
 *Lemma: result types as read decode back to themselves.* Let $`d` be a
 dialect with a signature, validation rules and a text, whose text is
 {ref "The-fir-specification--Text-format--Grammar"}[lawful]. For every
@@ -33,7 +33,7 @@ which is the same decoder written another way, so that the decoder of a
 function can pass its own.
 :::
 
-:::readable Fir.decodeFunc_wellFormed (pin := Fir.Text.decodeFunc) (pin := Fir.Func.WellFormed) (pin := Fir.Func.typeOf) (pin := Fir.Func.defs) (pin := Fir.Func.types) (fingerprint := "12717166577573691148")
+:::readable Fir.decodeFunc_wellFormed (pin := Fir.Text.decodeFunc) (pin := Fir.Func.WellFormed) (pin := Fir.Func.typeOf) (pin := Fir.Func.defs) (pin := Fir.Func.types) (fingerprint := "199890216779133682")
 *Theorem: a function decoded from a tree that can be written is well
 formed.* Let $`d` be a dialect with a signature, validation rules and a
 text, whose text is lawful. For every symbol, list of parameters as read,
@@ -66,7 +66,7 @@ proof joins the two:
 These are the seven conditions of a well-formed function.
 :::
 
-:::readable Fir.decodeFunc_lengths Fir.Func.WellFormed.withAttrs Fir.Attr.allWritable_of_mem Fir.funcResultAttrs_wellFormed (pin := Fir.Text.funcResultAttrs) (pin := Fir.AttrsTrimmed) (fingerprint := "16348431447767716566")
+:::readable Fir.decodeFunc_lengths Fir.Func.WellFormed.withAttrs Fir.Attr.allWritable_of_mem Fir.funcResultAttrs_wellFormed (pin := Fir.Text.funcResultAttrs) (pin := Fir.AttrsTrimmed) (fingerprint := "12824557396872249153")
 *Lemmas: a decoded function's signature.* For every dialect with a
 signature, validation rules and a text:
 
@@ -83,7 +83,7 @@ signature, validation rules and a text:
   its results, and can be written.
 :::
 
-:::readable Fir.decodeFuncItem_wellFormed (pin := Fir.Text.decodeFuncItem) (pin := Fir.Text.funcBlocks) (fingerprint := "17245956541028204395")
+:::readable Fir.decodeFuncItem_wellFormed (pin := Fir.Text.decodeFuncItem) (pin := Fir.Text.funcBlocks) (fingerprint := "7211101242180399816")
 *Theorem: a `func` decoded from a tree that can be written is well
 formed.* Let $`d` be a dialect with a signature, validation rules and a
 text, whose text is lawful. For every `func` as read whose parameters can
@@ -96,7 +96,7 @@ blocks, which can be written, or nothing, and the function is decoded from
 them, and takes the attributes of its parameters in the short form too.
 :::
 
-:::readable Fir.decodeFunc_nil_body Fir.decodeExternItem_wellFormed (pin := Fir.Text.decodeExternItem) (pin := Fir.Text.externResultAttrs) (fingerprint := "593264924524035240")
+:::readable Fir.decodeFunc_nil_body Fir.decodeExternItem_wellFormed (pin := Fir.Text.decodeExternItem) (pin := Fir.Text.externResultAttrs) (fingerprint := "10004599081951232974")
 *Theorems: an external declaration decoded from a tree that can be written
 is well formed.* A function decoded with no blocks has a body of the
 core's kind with no blocks. So, for a dialect whose text is lawful, every

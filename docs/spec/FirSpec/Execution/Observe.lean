@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Pointers under a renaming: readable blocks" =>
 
-:::moduleDocs (fingerprint := "15259860282561422290")
+:::moduleDocs (fingerprint := "8450188009969374392")
 :::
 
 :::readable Fir.Renaming Fir.Renaming.Injective Fir.Renaming.id Fir.Renaming.comp Fir.Renaming.id_injective Fir.Renaming.Injective.comp (fingerprint := "13519277966737651583")
@@ -28,7 +28,7 @@ to itself, and $`R_1 ; R_2` renames $`a` to $`R_2(R_1(a))`.
 is $`R_1 ; R_2` when $`R_1` and $`R_2` are.
 :::
 
-:::readable Fir.Memory.Memories.freed Fir.Renaming.ptr Fir.Renaming.Covers (fingerprint := "14211988366169067097")
+:::readable Fir.Memory.Memories.freed Fir.Renaming.ptr Fir.Renaming.Covers (fingerprint := "5118820785626008416")
 *Definition: a pointer under a renaming.* The allocation $`a` of the memory
 $`x` is _freed_ in $`S` when $`S` has it and it is not live; a pointer into
 it is _dangling_. Where the memory numbered $`n` is $`\mu(n)`, the pointer
@@ -51,7 +51,7 @@ refines less; and a pointer that a replacement keeps, as $`q`, is in each
 value that refines the result.
 :::
 
-:::readable Fir.Memory.MemUnit.ptrs Fir.Memory.MemUnit.mapPtr (pin := Fir.instHasPtrsMemUnit) (fingerprint := "2455774951374563558")
+:::readable Fir.Memory.MemUnit.ptrs Fir.Memory.MemUnit.mapPtr (pin := Fir.instHasPtrsMemUnit) (fingerprint := "5323824944280981881")
 *Definition: the pointers of a unit.* A unit of memory holds the pointer of
 its fragment, if it is one, with the number of the pointer's memory.
 Replacing it gives the fragment of the replacement, or a poison unit.

@@ -14,10 +14,10 @@ when the Lean changes under it.
 
 #doc (Manual) "The first steps of a marked trace: readable blocks" =>
 
-:::moduleDocs (fingerprint := "14264933949386889879")
+:::moduleDocs (fingerprint := "9288981255202425439")
 :::
 
-:::readable Fir.Step.ticks Fir.Step.ticks_append (fingerprint := "11321973910066212008")
+:::readable Fir.Step.ticks Fir.Step.ticks_append (fingerprint := "14062082948252395904")
 *Definition: steps.* $`\mathrm{ticks}(m)` is the number of steps
 $`\mathsf{tick}` of the marked trace $`m`.
 

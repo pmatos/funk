@@ -14,10 +14,10 @@ changes under it.
 
 #doc (Manual) "How a run goes on by moves: readable blocks" =>
 
-:::moduleDocs (fingerprint := "8347916075972357956")
+:::moduleDocs (fingerprint := "5289966096198738249")
 :::
 
-:::readable Fir.TCfg.Calls Fir.TCfg.after Fir.TCfg.Calls.enter (fingerprint := "12944256590014716781")
+:::readable Fir.TCfg.Calls Fir.TCfg.after Fir.TCfg.Calls.enter (fingerprint := "5074106917374436140")
 *Definitions: a call.* The first op of a configuration calls $`g` of $`M`
 when it names $`g`, and $`g` enters at the ops $`b` with the environment
 $`\rho_g` on the call's arguments. After the call returns $`\vec{w}` in the

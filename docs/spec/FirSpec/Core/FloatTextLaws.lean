@@ -17,7 +17,7 @@ when the Lean changes under it.
 :::moduleDocs (fingerprint := "15271438408105338152")
 :::
 
-:::readable Fir.Core.hexValue_replicate_zero Fir.Core.readFloatLit_hexLit (pin := Fir.Text.hexValue) (pin := Fir.Core.hexLit) (pin := Fir.Core.readFloatLit) (fingerprint := "535600871052722966")
+:::readable Fir.Core.hexValue_replicate_zero Fir.Core.readFloatLit_hexLit (pin := Fir.Text.hexValue) (pin := Fir.Core.hexLit) (pin := Fir.Core.readFloatLit) (fingerprint := "11879778315968568124")
 *Theorem: leading zeros add nothing to hexadecimal digits.* The value of
 $`k` zeros followed by the digits $`\mathit{ds}` is the value of
 $`\mathit{ds}`.
@@ -37,7 +37,7 @@ gives digits that are not empty; and each character of the padded decimal
 digits of a number is a decimal digit.
 :::
 
-:::readable Fir.Core.decimalLayout_valid Fir.Core.hexLit_valid Fir.Core.decimalLit_valid Fir.Core.floatLit_valid (pin := Fir.FloatLit.valid) (pin := Fir.Core.decimalLayout) (pin := Fir.Core.decimalLit) (pin := Fir.Core.floatLit) (fingerprint := "2460314383056841334")
+:::readable Fir.Core.decimalLayout_valid Fir.Core.hexLit_valid Fir.Core.decimalLit_valid Fir.Core.floatLit_valid (pin := Fir.FloatLit.valid) (pin := Fir.Core.decimalLayout) (pin := Fir.Core.decimalLit) (pin := Fir.Core.floatLit) (fingerprint := "6083231692557651882")
 *Theorems: every spelling can be written.* A decimal that
 $`\mathrm{layout}` gives, hexadecimal bits, a decimal that
 $`\mathrm{declit}` gives, and so the spelling $`\mathrm{floatlit}(b)` of
@@ -47,7 +47,7 @@ float literals: a decimal's fraction is one or more decimal digits, and
 hexadecimal bits are one or more lowercase hexadecimal digits.
 :::
 
-:::readable Fir.Core.decodeFloatLit_floatLit Fir.Core.floatLit_of_decode (pin := Fir.Core.floatLit) (pin := Fir.Core.decodeFloatLit) (fingerprint := "2239459339742648409")
+:::readable Fir.Core.decodeFloatLit_floatLit Fir.Core.floatLit_of_decode (pin := Fir.Core.floatLit) (pin := Fir.Core.decodeFloatLit) (fingerprint := "8269087277147817831")
 *Theorem: the spelling of a float reads back as it.* For all bits $`b` of
 $`\mathsf{float}\langle e,m \rangle`,
 $`\mathrm{decodelit}_{e,m}(\mathrm{floatlit}_{e,m}(b)) = b`. The spelling

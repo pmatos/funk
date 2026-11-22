@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Ops, functions and the module: readable blocks" =>
 
-:::moduleDocs (fingerprint := "2885670740274900287")
+:::moduleDocs (fingerprint := "4920408618533007369")
 :::
 
 :::readable Fir.spells_lhs (pin := Fir.printDefs) (fingerprint := "7259325238878645560")
@@ -41,7 +41,7 @@ attributes with a space between each, then, when $`m + k > 0`, a space,
 and the uses `%`$`x_i` and the printed successors with `, ` between them.
 :::
 
-:::readable Fir.boundary_regions (pin := Fir.Region.printList) (fingerprint := "8094524736686318803")
+:::readable Fir.boundary_regions (pin := Fir.Region.printList) (fingerprint := "11416771909490010890")
 *Theorem: an op's regions, then a space, are at the end of a token.* For
 every dialect with a text format, indentation $`n`, list of regions and
 characters $`c`: the printed regions, then a space, then $`c`, are
@@ -50,7 +50,7 @@ starts with a space; this is what lets an op's last attribute, operand or
 successor be read whole before it.
 :::
 
-:::readable Fir.Operation.spells Fir.Region.spellsList Fir.Block.spellsList Fir.Operation.spellsList (pin := Fir.Operation.print) (pin := Fir.Region.printList) (pin := Fir.Block.printList) (pin := Fir.Operation.printList) (fingerprint := "14828146676244604093")
+:::readable Fir.Operation.spells Fir.Region.spellsList Fir.Block.spellsList Fir.Operation.spellsList (pin := Fir.Operation.print) (pin := Fir.Region.printList) (pin := Fir.Block.printList) (pin := Fir.Operation.printList) (fingerprint := "3548997616046406368")
 *Theorems: printed ops, regions and blocks spell their tokens before any
 characters.* For every dialect with a text format and every indentation
 $`n`:
@@ -75,7 +75,7 @@ characters. The four are proved together, since ops hold regions, which
 hold blocks of ops.
 :::
 
-:::readable Fir.Func.spells Fir.Extern.spells Fir.Item.spells Fir.Item.spellsList (pin := Fir.Func.print) (pin := Fir.Extern.print) (pin := Fir.Item.print) (pin := Fir.Item.printList) (fingerprint := "11377461039412023387")
+:::readable Fir.Func.spells Fir.Extern.spells Fir.Item.spells Fir.Item.spellsList (pin := Fir.Func.print) (pin := Fir.Extern.print) (pin := Fir.Item.print) (pin := Fir.Item.printList) (fingerprint := "4914819146336531736")
 *Theorems: a printed function, an item, and items, spell their tokens
 before any characters.* For every dialect with a text format and every
 indentation $`n`:
@@ -106,7 +106,7 @@ The theorems for an item and for a list of items are proved together, by
 induction on the items, since a nested module holds items.
 :::
 
-:::readable Fir.LocTable.spellsEntries Fir.LocTable.spells (pin := Fir.LocTable.print) (fingerprint := "10742844901172115056")
+:::readable Fir.LocTable.spellsEntries Fir.LocTable.spells (pin := Fir.LocTable.print) (fingerprint := "13120248097464997514")
 *Theorems: the printed location table spells its tokens before any
 characters.* For every location table whose tokens can all be written:
 
@@ -142,7 +142,7 @@ be written, printed as its dialect set, its data layout, its items and then
 its location table, spells $`\mathrm{tokens}(m)` before any characters.
 :::
 
-:::readable Fir.lex_print (pin := Fir.Text.lex) (pin := Fir.Module.tokens) (pin := Fir.Text.Tok.Writable) (fingerprint := "5963351127919059821")
+:::readable Fir.lex_print (pin := Fir.Text.lex) (pin := Fir.Module.tokens) (pin := Fir.Text.Tok.Writable) (fingerprint := "320719716705271199")
 *Theorem: lexing printed text gives its tokens.* For every dialect with a
 text format and every module $`m` whose tokens can all be
 {ref "The-fir-specification--Text-format--Lexing-printed-text"}[written],

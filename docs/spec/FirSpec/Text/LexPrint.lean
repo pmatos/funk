@@ -23,7 +23,7 @@ some text with a conversion to a string, and this lets the proofs read the
 text it gives as the string itself.
 :::
 
-:::readable Fir.Attr.spells Fir.Attr.spellsEach (pin := Fir.Attr.print) (pin := Fir.Attr.print.printList) (pin := Fir.Attr.tokens) (pin := Fir.Attr.tokens.tokensList) (fingerprint := "337041474587341469")
+:::readable Fir.Attr.spells Fir.Attr.spellsEach (pin := Fir.Attr.print) (pin := Fir.Attr.print.printList) (pin := Fir.Attr.tokens) (pin := Fir.Attr.tokens.tokensList) (fingerprint := "14703215925737673279")
 *Theorems: a printed attribute spells its tokens.* For every
 {ref "The-fir-specification--Text-format--Grammar"}[attribute] $`a`, or
 type, whose
@@ -45,7 +45,7 @@ printed attributes spell their tokens one by one; the two are proved
 together, since an argument may itself be an application.
 :::
 
-:::readable Fir.Location.spells (pin := Fir.Location.print) (pin := Fir.Location.tokens) (fingerprint := "11713857557735166265")
+:::readable Fir.Location.spells (pin := Fir.Location.print) (pin := Fir.Location.tokens) (fingerprint := "12032138191336272700")
 *Theorem: a printed location spells its tokens.* For every
 {ref "The-fir-specification--Abstract-syntax--Locations"}[location]
 $`\mathit{loc}` whose tokens can all be written:

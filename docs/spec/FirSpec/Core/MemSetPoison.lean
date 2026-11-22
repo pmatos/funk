@@ -14,10 +14,10 @@ when the Lean changes under it.
 
 #doc (Manual) "Fill poison obligations: readable blocks" =>
 
-:::moduleDocs (fingerprint := "2089767263116862518")
+:::moduleDocs (fingerprint := "5304071021223542753")
 :::
 
-:::readable Fir.Core.fillBits Fir.Core.setLenRule_ub_fill (pin := Fir.Core.setLenRule) (pin := Fir.Core.fillPtr) (fingerprint := "8922307283932155733")
+:::readable Fir.Core.fillBits Fir.Core.setLenRule_ub_fill (pin := Fir.Core.setLenRule) (pin := Fir.Core.fillPtr) (fingerprint := "3986803127324163141")
 *Theorems: poison operands are filled.* Let $`\mathrm{fillbits}(v)` be
 $`v` for a defined value and zero for poison. Wherever the rule of a
 defined length is UB from the memories $`S`, it is UB from $`S` on

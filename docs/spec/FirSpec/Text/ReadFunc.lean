@@ -34,7 +34,7 @@ attributes, ending in `...` when $`f` is variadic, as the reader of
 parameters writes them.
 :::
 
-:::readable Fir.Func.readsAs Fir.Func.reads (pin := Fir.Text.readItem) (pin := Fir.Func.tokens) (pin := Fir.Func.types) (pin := Fir.Func.defs) (pin := Fir.Func.allBlocks) (fingerprint := "3479545298563000921")
+:::readable Fir.Func.readsAs Fir.Func.reads (pin := Fir.Text.readItem) (pin := Fir.Func.tokens) (pin := Fir.Func.types) (pin := Fir.Func.defs) (pin := Fir.Func.allBlocks) (fingerprint := "13436916140713291117")
 *Theorems: a function reads back.* For every dialect with a
 {ref "The-fir-specification--Text-format--Grammar"}[text format], every
 function $`f` such that $`\mathrm{tyattr}(t)` is written as a type for

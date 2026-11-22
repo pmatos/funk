@@ -14,7 +14,7 @@ changes under it.
 
 #doc (Manual) "Streams and outcomes that diverge: readable blocks" =>
 
-:::moduleDocs (fingerprint := "1262399224788668426")
+:::moduleDocs (fingerprint := "9029128235250307377")
 :::
 
 :::readable Fir.Stream.IsRefinedBy Fir.Stream.ShowsRefined Fir.Stream.IsRefinedBy.cat Fir.Stream.ShowsRefined.cat Fir.List.isRefinedBy_of_getElem? (fingerprint := "263845681657554132")
@@ -30,7 +30,7 @@ $`l' \cdot T`. Lists with acts at the same places, each refined by the
 other's, refine each other.
 :::
 
-:::readable Fir.TOutcome.Diverges Fir.TOutcome.act?_closed Fir.TRun.exh Fir.TShows.ofObservable (fingerprint := "8434146031405778013")
+:::readable Fir.TOutcome.Diverges Fir.TOutcome.act?_closed Fir.TRun.exh Fir.TShows.ofObservable (fingerprint := "3472603537281514214")
 *Definitions.* An outcome diverges when it is $`\mathsf{diverge}~t` or
 $`\mathsf{reacts}~T`. The paths of a run that run out of fuel are taken by
 their marked traces at each budget.

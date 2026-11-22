@@ -14,10 +14,10 @@ when the Lean changes under it.
 
 #doc (Manual) "Truncating a traced run: readable blocks" =>
 
-:::moduleDocs (fingerprint := "16680259171863581099")
+:::moduleDocs (fingerprint := "2126016372777906657")
 :::
 
-:::readable Fir.TraceEnd.Truncated Fir.TraceEnd.Cut (fingerprint := "3670553915034550467")
+:::readable Fir.TraceEnd.Truncated Fir.TraceEnd.Cut (fingerprint := "703612785105317921")
 *Definition: a cut.* A path $`e` of a run of $`os` with $`n` steps of fuel
 is the path with the marked trace $`t` _truncated_ when $`e` runs out of
 fuel after $`t_0 \preceq t`, with $`\mathrm{ticks}(t_0) \le n`, and either

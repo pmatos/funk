@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Touching no memory: readable blocks" =>
 
-:::moduleDocs (fingerprint := "6858232676812530458")
+:::moduleDocs (fingerprint := "3285069421690955854")
 :::
 
 :::readable Fir.Effects.TouchesNoMemory Fir.Effects.TouchesNoMemory.of_le (pin := Fir.Effects) (pin := Fir.Effects.Le) (fingerprint := "10653422458642567564")
@@ -24,13 +24,13 @@ no memory when, for every memory $`x`, $`E` reads, writes and allocates in
 no $`x`. A set of effects below one that touches no memory touches none.
 :::
 
-:::readable Fir.MemSet.has_map Fir.Effects.TouchesNoMemory.of_map (pin := Fir.MemSet.map) (pin := Fir.Effects.map) (fingerprint := "16320932054895258353")
+:::readable Fir.MemSet.has_map Fir.Effects.TouchesNoMemory.of_map (pin := Fir.MemSet.map) (pin := Fir.Effects.map) (fingerprint := "12462740304720450513")
 *Theorems: renaming memories.* Rename the memories of a set of memories by
 $`f`: it holds $`f(x)` for each memory $`x` it held. So a set of effects
 that touches no memory once its memories are renamed touched none before.
 :::
 
-:::readable Fir.SymbolTable.ReachesNoMemory Fir.SymbolTable.ReachesNoMemory.of_summary Fir.SymbolTable.ReachesNoMemory.own Fir.SymbolTable.ReachesNoMemory.callee (pin := Fir.SymbolTable.reach) (pin := Fir.SymbolTable.summary) (fingerprint := "693763257247459157")
+:::readable Fir.SymbolTable.ReachesNoMemory Fir.SymbolTable.ReachesNoMemory.of_summary Fir.SymbolTable.ReachesNoMemory.own Fir.SymbolTable.ReachesNoMemory.callee (pin := Fir.SymbolTable.reach) (pin := Fir.SymbolTable.summary) (fingerprint := "10075804422516957477")
 *Definition and theorems: a function that reaches no memory.* The function
 of a symbol table named by $`s` reaches no memory when every function that
 the walk from $`s` reaches, $`s`'s own included, declares no memory effect
@@ -74,7 +74,7 @@ do not give it: they compare runs from memories with the same allocations
 only, and say nothing of the frames.
 :::
 
-:::readable Fir.Ev.notStuck_ok Fir.Ev.notStuck_ub Fir.Ev.mapRet Fir.atMemSteps Fir.atMem Fir.Ev.NotStuck.mapRet Fir.Ev.dropLeft_mapRet (pin := Fir.Ev.NotStuck) (pin := Fir.Ev.dropLeft) (fingerprint := "10513677557811942016")
+:::readable Fir.Ev.notStuck_ok Fir.Ev.notStuck_ub Fir.Ev.mapRet Fir.atMemSteps Fir.atMem Fir.Ev.NotStuck.mapRet Fir.Ev.dropLeft_mapRet (pin := Fir.Ev.NotStuck) (pin := Fir.Ev.dropLeft) (fingerprint := "13245764045631100930")
 *Definitions and theorems: a path with other memories.* A path that ends
 with a result, or in UB, is not stuck. A path of a run can have the
 memories it returns replaced: a return of $`((\vec{w}, S), k)` from a run

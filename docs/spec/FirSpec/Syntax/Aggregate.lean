@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Aggregates' layouts: readable blocks" =>
 
-:::moduleDocs (fingerprint := "1079449942917164172")
+:::moduleDocs (fingerprint := "16512087087286763015")
 :::
 
 :::readable Fir.Field Fir.Aggregate Fir.Aggregate.types Fir.Aggregate.limit Fir.Aggregate.InLimits (fingerprint := "7485320805007985135")
@@ -46,7 +46,7 @@ whose numbers are all within it is within its limits, and only such a
 layout can be written.
 :::
 
-:::readable Fir.InitPiece.InLimits Fir.Global.InLimits (fingerprint := "13179149203291508932")
+:::readable Fir.InitPiece.InLimits Fir.Global.InLimits (fingerprint := "8242317702000706507")
 *Definition: a global within its limits.* The numbers of a
 {ref "The-fir-specification--Abstract-syntax--Globals"}[global] are within
 its limits when its memory, size and alignment, each count of zeros and

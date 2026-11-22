@@ -17,7 +17,7 @@ when the Lean changes under it.
 :::moduleDocs (fingerprint := "1723282206056725990")
 :::
 
-:::readable Fir.Location.tokens_writable (pin := Fir.Location.numbers) (pin := Fir.Location.refs) (pin := Fir.Location.limit) (fingerprint := "18066471416399668887")
+:::readable Fir.Location.tokens_writable (pin := Fir.Location.numbers) (pin := Fir.Location.refs) (pin := Fir.Location.limit) (fingerprint := "8221064226904624502")
 *Theorem: a location whose numbers are in range has tokens that can be
 written.* For every
 {ref "The-fir-specification--Abstract-syntax--Locations"}[location]
@@ -34,7 +34,7 @@ locations, are all below $`2^{32}`, every token of the table can be
 written.
 :::
 
-:::readable Fir.regionBlocks_of_mem (pin := Fir.Operation.regionBlocks) (pin := Fir.Region.allBlocks) (fingerprint := "15663991457277891795")
+:::readable Fir.regionBlocks_of_mem (pin := Fir.Operation.regionBlocks) (pin := Fir.Region.allBlocks) (fingerprint := "11913494136054967426")
 *Lemma: an op's regions hold blocks below its list.* For every dialect,
 op $`o` of a list of ops, and block $`b` of the regions of $`o` at any
 depth, $`b` is among the blocks of the regions of the list's ops, at any
@@ -80,7 +80,7 @@ and every well-formed function $`f`:
   is empty.
 :::
 
-:::readable Fir.Func.WellFormed.blocks_tokens Fir.Func.WellFormed.ops_tokens Fir.Func.WellFormed.op_tokens Fir.Func.WellFormed.regions_tokens (pin := Fir.Block.allBlocks) (pin := Fir.Func.allBlocks) (pin := Fir.Func.allOps) (pin := Fir.Operation.regionBlocks) (pin := Fir.Region.allBlocks) (pin := Fir.Func.OpWellFormed) (pin := Fir.Location.limit) (fingerprint := "5018003644780287841")
+:::readable Fir.Func.WellFormed.blocks_tokens Fir.Func.WellFormed.ops_tokens Fir.Func.WellFormed.op_tokens Fir.Func.WellFormed.regions_tokens (pin := Fir.Block.allBlocks) (pin := Fir.Func.allBlocks) (pin := Fir.Func.allOps) (pin := Fir.Operation.regionBlocks) (pin := Fir.Region.allBlocks) (pin := Fir.Func.OpWellFormed) (pin := Fir.Location.limit) (fingerprint := "10212408721900111658")
 *Theorems: the blocks, ops and regions of a well-formed function have
 tokens that can be written.* For every dialect with signatures and a text
 format, and every well-formed function $`f`:
@@ -133,7 +133,7 @@ written, its result types are written as types, and its attributes can be
 written.
 :::
 
-:::readable Fir.dialectsTokens_writable Fir.layoutTokens_writable Fir.Item.WellFormed.tokens Fir.Item.WellFormed.tokensList Fir.Global.tokens_writable Fir.Module.WellFormed.tokens_writable (pin := Fir.Module.WellFormed) (pin := Fir.Item.WellFormed) (fingerprint := "8500291044175195370")
+:::readable Fir.dialectsTokens_writable Fir.layoutTokens_writable Fir.Item.WellFormed.tokens Fir.Item.WellFormed.tokensList Fir.Global.tokens_writable Fir.Module.WellFormed.tokens_writable (pin := Fir.Module.WellFormed) (pin := Fir.Item.WellFormed) (fingerprint := "16550710006365826813")
 *Theorems: well-formed items and modules have tokens that can be written.*
 For every dialect with signatures and a text format:
 

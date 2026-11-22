@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Divergence of a traced run, by König's lemma: readable blocks" =>
 
-:::moduleDocs (fingerprint := "11926795971279751067")
+:::moduleDocs (fingerprint := "8687281054855925100")
 :::
 
 :::readable Fir.TRun.Truncates Fir.TRun.FinitelyMany Fir.TRun.ExhaustedAllowed (fingerprint := "10165934631249344372")
@@ -60,7 +60,7 @@ budgets; its acts are $`t_0`. Cutting a path at a larger such budget
 serves every budget.
 :::
 
-:::readable Fir.kmax Fir.le_kmax Fir.kmax_mono (fingerprint := "15133766703469888420")
+:::readable Fir.kmax Fir.le_kmax Fir.kmax_mono (fingerprint := "15392962125152561983")
 *Definition.* $`\mathrm{kmax}_K(k)` is the largest of
 $`K(0), \ldots, K(k)`. It is at least each of them and grows with $`k`.
 :::

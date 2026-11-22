@@ -17,7 +17,7 @@ when the Lean changes under it.
 :::moduleDocs (fingerprint := "7105025194281100541")
 :::
 
-:::readable Fir.decodeDialectItem_wellFormed (pin := Fir.Text.decodeDialectItem) (pin := Fir.DialectItem.WellFormed) (fingerprint := "14159535660974727433")
+:::readable Fir.decodeDialectItem_wellFormed (pin := Fir.Text.decodeDialectItem) (pin := Fir.DialectItem.WellFormed) (fingerprint := "7592100644882303943")
 *Theorems: an item of a dialect's kind decoded from a tree that can be
 written is well formed.* For every dialect with a text format, whose text is lawful, and
 every item as read whose kind is a word of a dialect, whose parameters can
@@ -27,7 +27,7 @@ is well formed. Its body is then empty, its types decoded from attributes
 written as types, and its attributes kept as they were read.
 :::
 
-:::readable Fir.decodeFields_wellFormed Fir.decodeAggregate_wellFormed (pin := Fir.Text.decodeAggregate) (pin := Fir.Aggregate.WellFormed) (fingerprint := "5346658473864176252")
+:::readable Fir.decodeFields_wellFormed Fir.decodeAggregate_wellFormed (pin := Fir.Text.decodeAggregate) (pin := Fir.Aggregate.WellFormed) (fingerprint := "5354299050812513307")
 *Theorems: an aggregate's layout as decoded is well formed.* For a
 dialect whose text is lawful, fields decoded from attributes that can be
 written have their numbers within the limit, and their types are written
@@ -35,7 +35,7 @@ as types and decode back. So an aggregate's layout decoded from
 attributes that can be written is well formed.
 :::
 
-:::readable Fir.decodeItem_wellFormed Fir.decodeItems_wellFormed Fir.decodeGlobal_wellFormed (pin := Fir.Text.decodeItem) (pin := Fir.Text.decodeItems) (pin := Fir.Text.SItem.Writable) (fingerprint := "16888571256159249617")
+:::readable Fir.decodeItem_wellFormed Fir.decodeItems_wellFormed Fir.decodeGlobal_wellFormed (pin := Fir.Text.decodeItem) (pin := Fir.Text.decodeItems) (pin := Fir.Text.SItem.Writable) (fingerprint := "473785117131956788")
 *Theorems: items decoded from a tree that can be written are well formed.*
 Let $`d` be a dialect with a signature, validation rules and a text, whose
 text is lawful:
@@ -55,7 +55,7 @@ whose attributes read, so whose numbers are within the limit. The last two theor
 induction on the items.
 :::
 
-:::readable Fir.decodeLayout_inLimits (pin := Fir.Text.decodeMemLayout) (fingerprint := "9574340244746265937")
+:::readable Fir.decodeLayout_inLimits (pin := Fir.Text.decodeMemLayout) (fingerprint := "14876838575622296964")
 *Theorem: decoded entries are within the limit.* When the entries of a data
 layout as written decode, each entry they decode to is within the limit.
 :::

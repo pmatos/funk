@@ -14,10 +14,10 @@ changes under it.
 
 #doc (Manual) "Decoding: readable blocks" =>
 
-:::moduleDocs (fingerprint := "11903386304564042243")
+:::moduleDocs (fingerprint := "5702380221208244942")
 :::
 
-:::readable Fir.Text.Scope Fir.Text.decodeType Fir.Text.decodeDef Fir.Text.define (pin := Fir.DialectText) (fingerprint := "12263311160479661426")
+:::readable Fir.Text.Scope Fir.Text.decodeType Fir.Text.decodeDef Fir.Text.define (pin := Fir.DialectText) (fingerprint := "12760793514210106894")
 *Definition: the scope, and adding definitions to it.* The _scope_ of a
 function is a table that gives each value the function defines its type.
 A type written at the position $`p` is decoded with the dialect's
@@ -29,21 +29,21 @@ are added to the scope one by one, in order, and a value that is already
 in the scope is an error at its second definition, "is defined twice".
 :::
 
-:::readable Fir.Text.defineBlocks Fir.Text.defineOps Fir.Text.defineRegions (fingerprint := "15680766533129011072")
+:::readable Fir.Text.defineBlocks Fir.Text.defineOps Fir.Text.defineRegions (fingerprint := "2640997003899999537")
 *Definition: the first pass.* The first pass adds every definition of some
 blocks to the scope, at any depth, in the order of the text: for each
 block, its arguments, then, for each of its ops, the op's results and then
 the definitions of the blocks of its regions.
 :::
 
-:::readable Fir.Text.operandTypes (fingerprint := "12921155979828935619")
+:::readable Fir.Text.operandTypes (fingerprint := "7595020504766675867")
 *Definition: the types of an op's operands.* The type of each operand is
 the type that the scope gives its value. An operand whose value the
 function $`f` does not define is an error at the operand, "value `%x` is
 not defined in" $`f`.
 :::
 
-:::readable Fir.Text.decodeBlocks Fir.Text.decodeOps Fir.Text.decodeRegions (pin := Fir.DialectText) (fingerprint := "11624169546905247397")
+:::readable Fir.Text.decodeBlocks Fir.Text.decodeOps Fir.Text.decodeRegions (pin := Fir.DialectText) (fingerprint := "2356859425319654063")
 *Definition: the second pass.* The second pass decodes the blocks of a
 function, in its scope. A block keeps its label, and decodes its arguments
 and then its ops. Each op is decoded in this order:
@@ -61,7 +61,7 @@ The op keeps its results, its operands by name, its successors as written
 and its location reference.
 :::
 
-:::readable Fir.Text.decodeFunc (fingerprint := "1029637409521661969")
+:::readable Fir.Text.decodeFunc (fingerprint := "12026041559659901207")
 *Definition: decoding a function.* A function is decoded from its symbol,
 its parameters, its result types and its blocks: first its result types,
 then the scope, built by the first pass from its parameters and then its
@@ -71,7 +71,7 @@ the core's kind. The function carries no attributes and is not variadic:
 decoding an item of kind `func` adds them.
 :::
 
-:::readable Fir.Text.funcResultAttrs Fir.Text.funcBlocks Fir.Text.externResultAttrs Fir.Text.externResultAttrs_eq_ok Fir.Text.plainHeader (pin := Fir.trimAttrs) (fingerprint := "7507580022166707733")
+:::readable Fir.Text.funcResultAttrs Fir.Text.funcBlocks Fir.Text.externResultAttrs Fir.Text.externResultAttrs_eq_ok Fir.Text.plainHeader (pin := Fir.trimAttrs) (fingerprint := "11734190341452009901")
 *Definitions: the parts of an item's header.*
 
 * The attributes of a `func`'s results are those after each result's type,
@@ -93,7 +93,7 @@ decoding an item of kind `func` adds them.
   such attribute, or at the `...`.
 :::
 
-:::readable Fir.Text.decodeFuncItem Fir.Text.decodeExternItem Fir.Text.moduleHeader Fir.Text.decodeDialectItem Fir.Text.decodeItem Fir.Text.decodeGlobal Fir.Text.decodeItems Fir.Text.decodeItems_eq_mapM Fir.Text.decodeMemLayout Fir.Text.decodeModule (fingerprint := "13091461158526628841")
+:::readable Fir.Text.decodeFuncItem Fir.Text.decodeExternItem Fir.Text.moduleHeader Fir.Text.decodeDialectItem Fir.Text.decodeItem Fir.Text.decodeGlobal Fir.Text.decodeItems Fir.Text.decodeItems_eq_mapM Fir.Text.decodeMemLayout Fir.Text.decodeModule (fingerprint := "11696663353052414038")
 *Definition: decoding an item and a module.* An item decodes as a function,
 as an external declaration (ADR-2026-11-09-1547), as a nested module
 (ADR-2026-11-10-1510), as an aggregate's layout (ADR-2026-11-16-1546), as a
@@ -141,7 +141,7 @@ names known dialects, and whether the module's words keep to it, is a rule
 of validation, and so is whether a dialect registers the kind of an item.
 :::
 
-:::readable Fir.Text.decodeField Fir.Text.decodeAggregate (pin := Fir.Field.decode) (pin := Fir.Aggregate.decodeNumber) (fingerprint := "7135250991393573693")
+:::readable Fir.Text.decodeField Fir.Text.decodeAggregate (pin := Fir.Field.decode) (pin := Fir.Aggregate.decodeNumber) (fingerprint := "13490951931994727046")
 *Definitions: decoding an aggregate's layout.* A field decodes as
 $`\mathrm{decode}` of its attribute says, or is an error at the attribute.
 An item of kind `aggregate` decodes when it has no parameters, no results,
@@ -153,7 +153,7 @@ at the first of the three that does not decode, and at the first field that
 does not.
 :::
 
-:::readable Fir.parse (pin := Fir.Text.lex) (pin := Fir.Text.readModule) (fingerprint := "17491092743443124447")
+:::readable Fir.parse (pin := Fir.Text.lex) (pin := Fir.Text.readModule) (fingerprint := "2971154772166068196")
 *Definition: the parser.* The parser of a dialect with a
 {ref "The-fir-specification--Text-format--Grammar"}[text] reads a text in
 three steps, and stops at the first error, with its position: it

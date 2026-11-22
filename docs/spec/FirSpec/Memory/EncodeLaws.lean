@@ -101,7 +101,7 @@ of $`w > 0` bits in units of $`u > 0` bits, and for a pointer type that
 takes $`k > 0` units, whose pointer keeps its provenance.
 :::
 
-:::readable Fir.Memory.eq_of_isRefinedBy_noPoison Fir.Memory.replicate_poison_isRefinedBy (pin := Fir.Memory.MemUnit.IsRefinedBy) (fingerprint := "13427711929300860256")
+:::readable Fir.Memory.eq_of_isRefinedBy_noPoison Fir.Memory.replicate_poison_isRefinedBy (pin := Fir.Memory.MemUnit.IsRefinedBy) (fingerprint := "5851360751565770279")
 *Theorems: units that refine others.* A unit of bits or a fragment is
 {ref "The-fir-specification--Memory--Refining-memories"}[refined] only by
 itself, so units of which none is poison are refined only by themselves.

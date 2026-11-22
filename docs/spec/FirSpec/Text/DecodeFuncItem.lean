@@ -23,7 +23,7 @@ by $`k` is $`k` run on $`a`. The proofs below follow the decoder one step
 at a time with it.
 :::
 
-:::readable Fir.mapM_decodeType (pin := Fir.Text.decodeType) (fingerprint := "10718087776537962991")
+:::readable Fir.mapM_decodeType (pin := Fir.Text.decodeType) (fingerprint := "4261371137450438094")
 *Theorem: result types decode back.* For every dialect with a
 {ref "The-fir-specification--Text-format--Grammar"}[text format], all
 types as written $`(a_1, q_1), \dots, (a_n, q_n)` and types
@@ -34,7 +34,7 @@ decoding each $`(a_i, q_i)` with the
 order, gives $`t_1, \dots, t_n`.
 :::
 
-:::readable Fir.Func.WellFormed.decodeFunc_eq (pin := Fir.Text.decodeFunc) (pin := Fir.Func.WellFormed) (fingerprint := "16531824210818449984")
+:::readable Fir.Func.WellFormed.decodeFunc_eq (pin := Fir.Text.decodeFunc) (pin := Fir.Func.WellFormed) (fingerprint := "2828869244362646918")
 *Theorem: a well-formed function decodes back.* For every dialect with
 signatures, validation rules and a text format whose text is lawful, every
 {ref "The-fir-specification--Text-format--Round-trips"}[well-formed]
@@ -56,7 +56,7 @@ a body of the core's kind, which is the kind of a well-formed function's
 body.
 :::
 
-:::readable Fir.Func.WellFormed.funcResultAttrs_eq (pin := Fir.Text.funcResultAttrs) (fingerprint := "8284754845717941051")
+:::readable Fir.Func.WellFormed.funcResultAttrs_eq (pin := Fir.Text.funcResultAttrs) (fingerprint := "773847395156028776")
 *Theorem: a function's results' attributes decode back.* For every
 well-formed function $`f`, result types as written that are
 $`\mathrm{tyattr}(t)` for each result type $`t` of $`f`, attributes for
@@ -77,7 +77,7 @@ back by the theorems above, and its parameters' attributes, held in the
 short form, and whether it ends in `...` read back as $`f` holds them.
 :::
 
-:::readable Fir.Extern.decodeItem_eq (pin := Fir.Text.decodeExternItem) (pin := Fir.Extern.tree) (fingerprint := "10501287475221019104")
+:::readable Fir.Extern.decodeItem_eq (pin := Fir.Text.decodeExternItem) (pin := Fir.Extern.tree) (fingerprint := "9487409647583228183")
 *Theorem: an external declaration decodes back.* For every dialect with
 signatures, validation rules and a lawful text, and every external
 declaration $`e` whose header, the function with no blocks that it writes,

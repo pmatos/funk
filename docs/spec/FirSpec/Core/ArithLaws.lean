@@ -25,7 +25,7 @@ bits $`v` on its one operand vector, the empty one, as the integer
 $`\mathsf{const}` below does, so it meets both obligations.
 :::
 
-:::readable Fir.Core.const_returnsOnDefined Fir.Core.const_total (pin := Fir.ReturnsOnDefined) (pin := Fir.OpTotal) (pin := Fir.Core.constValue) (pin := Fir.Core.Op.denote?) (pin := Fir.instDialectDenoteCoreDialectSetM) (fingerprint := "8791455720470117624")
+:::readable Fir.Core.const_returnsOnDefined Fir.Core.const_total (pin := Fir.ReturnsOnDefined) (pin := Fir.OpTotal) (pin := Fir.Core.constValue) (pin := Fir.Core.Op.denote?) (pin := Fir.instDialectDenoteCoreDialectSetM) (fingerprint := "3497161255148512396")
 *Theorem: $`\mathsf{const}` returns a result on defined operands, and is
 total.* For every width $`w` and every vector $`c` of $`w` bits, under
 fir's execution rules, $`\mathsf{const}_w~c`
@@ -48,7 +48,7 @@ proves the other two obligations of $`\mathsf{const}` for any semantics;
 these two depend on its rule, so they are proved here.
 :::
 
-:::readable Fir.Core.poison_returnsOnDefined Fir.Core.poison_total Fir.Core.poison_denote (pin := Fir.ReturnsOnDefined) (pin := Fir.OpTotal) (pin := Fir.Core.poisonValue) (pin := Fir.Core.Op.denote?) (pin := Fir.instDialectDenoteCoreDialectSetM) (fingerprint := "826485666121872736")
+:::readable Fir.Core.poison_returnsOnDefined Fir.Core.poison_total Fir.Core.poison_denote (pin := Fir.ReturnsOnDefined) (pin := Fir.OpTotal) (pin := Fir.Core.poisonValue) (pin := Fir.Core.Op.denote?) (pin := Fir.instDialectDenoteCoreDialectSetM) (fingerprint := "7361582234996047524")
 *Theorem: $`\mathsf{poison}` returns a result on defined operands, and is
 total.* For every width $`w`, under fir's execution rules,
 $`\mathsf{poison}_w` returns a result on defined operands and is total
@@ -69,7 +69,7 @@ $`\mathsf{poison}` has, read in the set monad, so that a reader, or a
 proof, can rely on it producing poison and only poison.
 :::
 
-:::readable Fir.Core.addValues_poison Fir.Core.addValues_isRefinedBy (pin := Fir.Core.addValues) (pin := Fir.PoisonOr.IsRefinedBy) (fingerprint := "622402986991877352")
+:::readable Fir.Core.addValues_poison Fir.Core.addValues_isRefinedBy (pin := Fir.Core.addValues) (pin := Fir.PoisonOr.IsRefinedBy) (fingerprint := "10290981793964483266")
 *Theorem: a poison operand of the sum gives poison.* For every width
 $`N` and all $`a, b \in \llbracket \mathsf{i}N \rrbracket`, if
 $`a = \mathsf{poison}` or $`b = \mathsf{poison}`, the

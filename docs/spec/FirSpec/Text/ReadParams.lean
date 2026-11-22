@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Parameters and results read back: readable blocks" =>
 
-:::moduleDocs (fingerprint := "11435999027542391800")
+:::moduleDocs (fingerprint := "14201720020516143904")
 :::
 
 :::readable Fir.Text.eraseParam Fir.Text.paramTree Fir.Text.paramToks (fingerprint := "8907896217843250291")
@@ -33,7 +33,7 @@ is not `(`. So a reader of attributes after a definition or a type knows
 where they start, and where they end: at the first token that starts none.
 :::
 
-:::readable Fir.Text.readParam_reads (pin := Fir.Text.readParam) (fingerprint := "18138506252370753172")
+:::readable Fir.Text.readParam_reads (pin := Fir.Text.readParam) (fingerprint := "13828101902087794689")
 *Theorem: a parameter reads back.* For every dialect with a
 {ref "The-fir-specification--Text-format--Grammar"}[text format] and every
 parameter, a definition $`x` whose type is written as a type and
@@ -43,7 +43,7 @@ tokens as its tree and $`A`, up to positions, before any token that starts
 no attribute and is not `(`.
 :::
 
-:::readable Fir.Text.ellipsisToks Fir.Text.readMoreParams_reads (pin := Fir.Text.readMoreParams) (fingerprint := "9987731701386021766")
+:::readable Fir.Text.ellipsisToks Fir.Text.readMoreParams_reads (pin := Fir.Text.readMoreParams) (fingerprint := "12478983441963340848")
 *Definition and theorem: further parameters read back.* The tokens of an
 ending in `...` are `...` when no parameter comes before, `, ...` when one
 does, and nothing when the parameters do not end in it. For every dialect
@@ -54,7 +54,7 @@ $`v` after a parameter, as the parameters' trees and whether they end in
 `...`, before `)`.
 :::
 
-:::readable Fir.Text.paramsToks Fir.Text.readParams_reads (pin := Fir.Text.readParams) (fingerprint := "9705388915140983730")
+:::readable Fir.Text.paramsToks Fir.Text.readParams_reads (pin := Fir.Text.readParams) (fingerprint := "17969663586674202806")
 *Definition and theorem: an item's parameters read back.* The tokens of
 parameters $`p_1, \dots, p_n` that may end in `...` are those of each
 $`p_i`, separated by commas, then the ending. For every dialect with a text
@@ -66,7 +66,7 @@ tokens, and the reader of an item does not call this reader on it: it sees
 the `)` first.
 :::
 
-:::readable Fir.Text.eraseResult Fir.Text.resultToks Fir.Text.readResult_reads (pin := Fir.Text.readResult) (fingerprint := "18064222257306033632")
+:::readable Fir.Text.eraseResult Fir.Text.resultToks Fir.Text.readResult_reads (pin := Fir.Text.readResult) (fingerprint := "8438508868738177225")
 *Definitions and theorem: a result reads back.* A result as read, without
 positions, is its type, with a position, and its attributes; its tokens
 are the type's, then the attributes'. For every dialect with a text format
@@ -75,7 +75,7 @@ reads its tokens as its type and its attributes, up to positions, before
 any token that starts no attribute and is not `(`.
 :::
 
-:::readable Fir.Text.lastAttrs Fir.Text.lastAttrs_fst Fir.Text.lastAttrs_dropLast Fir.Text.lastAttrs_getLast Fir.Text.lastAttrs_tokens (fingerprint := "13422101506870577081")
+:::readable Fir.Text.lastAttrs Fir.Text.lastAttrs_fst Fir.Text.lastAttrs_dropLast Fir.Text.lastAttrs_getLast Fir.Text.lastAttrs_tokens (fingerprint := "13831378204259082705")
 *Definition and lemmas: an item's attributes after its last result.* An
 item of a dialect's kind writes its attributes $`A` after its results, and
 the grammar reads them as the last result's. $`\mathrm{last}(xs, A)` pairs

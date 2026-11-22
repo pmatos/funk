@@ -23,7 +23,7 @@ value of it is poison, and an environment is clean when no value it binds
 is.
 :::
 
-:::readable Fir.HVector.clean_toDVals Fir.mem_of_lookup Fir.Env.Clean.value Fir.Env.Clean.bind Fir.Env.Clean.params Fir.Env.Clean.mapM_value Fir.Env.Clean.operands (pin := Fir.HVector.Any) (fingerprint := "17688086001166822212")
+:::readable Fir.HVector.clean_toDVals Fir.mem_of_lookup Fir.Env.Clean.value Fir.Env.Clean.bind Fir.Env.Clean.params Fir.Env.Clean.mapM_value Fir.Env.Clean.operands (pin := Fir.HVector.Any) (fingerprint := "5920988429909161886")
 *Theorems: a clean environment gives clean values.* The values of an
 operand vector are clean exactly when no element of it is poison. A name
 that a list looks up is bound in it, so a value that a clean environment

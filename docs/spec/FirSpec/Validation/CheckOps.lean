@@ -14,10 +14,10 @@ when the Lean changes under it.
 
 #doc (Manual) "Checking ops: readable blocks" =>
 
-:::moduleDocs (fingerprint := "6124228354638691376")
+:::moduleDocs (fingerprint := "8879838920595129627")
 :::
 
-:::readable Fir.FuncTables Fir.Func.defSites Fir.Func.tables (fingerprint := "7308601972997214691")
+:::readable Fir.FuncTables Fir.Func.defSites Fir.Func.tables (fingerprint := "3089582122989733551")
 *Definition: the tables of a function.* Before it checks the ops of a
 function $`f`, the check builds five tables, once, from $`f` and a list
 $`\mathit{all}` of its blocks at any depth:
@@ -59,7 +59,7 @@ So each later check can look a fact up in a table and still be read as the
 rule that speaks of it.
 :::
 
-:::readable Fir.siteDominates Fir.siteDominates_iff (pin := Fir.Func.DominatesUse) (fingerprint := "16083016050146883062")
+:::readable Fir.siteDominates Fir.siteDominates_iff (pin := Fir.Func.DominatesUse) (fingerprint := "15346624507046952332")
 *Definition and theorem: whether a definition dominates a use, by search.*
 $`\mathrm{sitedom}(g, S, s, l, i)` is
 {ref "The-fir-specification--Validation--Dominance"}[dominance of a use]
@@ -76,7 +76,7 @@ of a block of $`\mathrm{blocks}(f)`:
 $$`\begin{aligned} & \mathrm{sitedom}(\mathrm{graph}(f), \mathrm{start}(f), s, l, i) \\ \iff\ & s \mathrel{\mathrm{dom}_f} (l, i) \end{aligned}`
 :::
 
-:::readable Fir.DefSite.why (fingerprint := "4514436066772604484")
+:::readable Fir.DefSite.why (fingerprint := "1430329553231606592")
 *Definition: why a definition does not dominate a use.* When the
 definition of $`x` at a site does not dominate its use in the block
 labelled $`l`, the problem says why, writing values and labels as the text
@@ -93,7 +93,7 @@ A parameter dominates every use, so its message, "`%x` is a parameter", is
 never given.
 :::
 
-:::readable Fir.useProblems Fir.useProblems_eq_nil (fingerprint := "8213222863609986861")
+:::readable Fir.useProblems Fir.useProblems_eq_nil (fingerprint := "6574640230401353349")
 *Definition and theorem: the check of a use.* The check of a use of $`x` by
 the op at index $`i` of the block labelled $`l` looks $`x` up in the sites
 table:
@@ -117,7 +117,7 @@ the check of the use gives no problem exactly when the use is
 $$`\begin{aligned} & \mathrm{useproblems}(x, l, i) = \epsilon \\ \iff\ & \mathrm{inscope}_f(x, l, i) \end{aligned}`
 :::
 
-:::readable Fir.succProblems Fir.succProblems_eq_nil (fingerprint := "1110267483566974852")
+:::readable Fir.succProblems Fir.succProblems_eq_nil (fingerprint := "337900791815518371")
 *Definition and theorem: the check of a successor.* The check of a
 successor $`l(x_1, \dots, x_n)` gives, in this order:
 
@@ -154,7 +154,7 @@ proofs of this chapter use them to read each
 line of a check as the premise it tests.
 :::
 
-:::readable Fir.kindRef Fir.regionProblems Fir.regionProblems_eq_nil (pin := Fir.Func.RegionsValid) (fingerprint := "1629452706077881221")
+:::readable Fir.kindRef Fir.regionProblems Fir.regionProblems_eq_nil (pin := Fir.Func.RegionsValid) (fingerprint := "7257454547532280542")
 *Definition and theorem: the check of an op's regions.* The check of the
 regions of an op $`o` of $`f` gives "the op's regions are not of the kinds
 that its op instance states" unless the kinds of its regions are those of
@@ -205,7 +205,7 @@ is valid:
 $$`\begin{aligned} & \mathrm{opproblems}(o) = \epsilon \\ \iff\ & C, f, b, i \vdash o~\text{valid} \end{aligned}`
 :::
 
-:::readable Fir.innerOpProblems Fir.Operation.innerProblems Fir.Func.scope_contains Fir.innerOpProblems_eq_nil Fir.Operation.innerProblems_eq_nil (pin := Fir.Func.InnerOpValid) (fingerprint := "13200077796922003492")
+:::readable Fir.innerOpProblems Fir.Operation.innerProblems Fir.Func.scope_contains Fir.innerOpProblems_eq_nil Fir.Operation.innerProblems_eq_nil (pin := Fir.Func.InnerOpValid) (fingerprint := "12833483187213599100")
 *Definitions and theorems: the check of the ops inside a region.* The check
 of an op inside a region tests the premises of the rule of a
 {ref "The-fir-specification--Validation--The-general-rules"}[valid op inside a region]

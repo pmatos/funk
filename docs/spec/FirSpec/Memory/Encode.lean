@@ -14,10 +14,10 @@ changes under it.
 
 #doc (Manual) "Values in units: readable blocks" =>
 
-:::moduleDocs (fingerprint := "6312425038868795460")
+:::moduleDocs (fingerprint := "8859107376669099632")
 :::
 
-:::readable Fir.ByteOrder.place (fingerprint := "12934028415236108255")
+:::readable Fir.ByteOrder.place (fingerprint := "1387320035964269632")
 *Definition: placing units in a byte order.* A value's units are given
 least significant first, $`\vec{x} = x_0 \ldots x_{k-1}`. The byte order
 places them in memory:
@@ -35,7 +35,7 @@ $`\lfloor (w + u - 1) / u \rfloor`. It is the number of units that a
 gives a value of $`w` bits, when $`u` is the entry's unit width.
 :::
 
-:::readable Fir.Memory.digits (fingerprint := "2794413090884504343")
+:::readable Fir.Memory.digits (fingerprint := "1656323654134768112")
 *Definition: the digits of a number.* The $`k` digits of $`n` in base
 $`2^u`, least significant first, are the units of bits
 
@@ -45,14 +45,14 @@ with $`\mathrm{digits}_0(n) = \epsilon`. Digits past the most significant
 one of $`n` are zero.
 :::
 
-:::readable Fir.Memory.unitsValue (fingerprint := "4073906498160042777")
+:::readable Fir.Memory.unitsValue (fingerprint := "15422602238863368590")
 *Definition: the number that units stand for.* Units of bits
 $`\mathsf{bits}~b_0 \ldots \mathsf{bits}~b_{k-1}`, least significant first,
 stand for $`\sum_i b_i \cdot 2^{u \cdot i}`. Units of which one is poison or
 a pointer's fragment stand for no number.
 :::
 
-:::readable Fir.Memory.encodeInt (fingerprint := "10114935081652925975")
+:::readable Fir.Memory.encodeInt (fingerprint := "12413034093893203737")
 *Definition: an integer in units.* A value of $`\mathsf{i}N`, $`N = w`, in
 units of $`u` bits placed in the byte order $`o`:
 
@@ -63,7 +63,7 @@ $`w`, and they are zero (ADR-2026-11-12-2125; the human ruled it on
 2026-11-11, on #231).
 :::
 
-:::readable Fir.Memory.decodeInt (fingerprint := "10567961331293090710")
+:::readable Fir.Memory.decodeInt (fingerprint := "3234443857560232685")
 *Definition: units as an integer.* Units $`\vec{x}` decode in the byte
 order $`o` as a value of $`\mathsf{i}N`, $`N = w`, to
 
@@ -82,7 +82,7 @@ $`p` of the memory $`m`, least significant first, are
 $`\mathsf{frag}~m~p~0 \ldots \mathsf{frag}~m~p~(k-1)`.
 :::
 
-:::readable Fir.Memory.encodePtr (fingerprint := "6537392644156778989")
+:::readable Fir.Memory.encodePtr (fingerprint := "13795844940903294260")
 *Definition: a pointer in units.* A value of the pointer type of the
 memory $`m`, which takes $`k` units, placed in the byte order $`o`:
 
@@ -92,7 +92,7 @@ Each unit holds a fragment of the pointer and its memory, so a pointer
 copied unit by unit keeps its provenance (ADR-2026-11-09-1542).
 :::
 
-:::readable Fir.Memory.decodePtr (fingerprint := "8623585869789606854")
+:::readable Fir.Memory.decodePtr (fingerprint := "5182368031574638617")
 *Definition: units as a pointer.* Units $`\vec{x}` decode in the byte order
 $`o` as a value of the pointer type of the memory $`m`, which takes $`k`
 units, to $`p` when $`\mathrm{place}_o(\vec{x})` is the $`k` fragments of

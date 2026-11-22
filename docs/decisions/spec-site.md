@@ -111,10 +111,20 @@ the document is elaborated:
   (`f.match_N`), followed transitively. So a recursive definition of a
   mutual block covers the bodies of the whole block. Theorems are never
   followed, so proofs stay out. The human ruled on 2026-11-16 (#418) to
-  port this from pmatos/mojo-grimoire#62, so both repositories share one
+  port this from pmatos/mojo-grimoire#62, so both repositories shared one
   implementation.
   Rejected: hashing only the stored value, which names the helpers without
   their bodies, so a block could drift from its Lean while the build passed.
+- A helper counts by its type and value, not by its name. Each helper that a
+  hashed term names, in a body, a statement, a type, a constructor's type
+  or a field's default, is replaced before hashing by a placeholder that
+  carries the hash of its own type and value. Lean reuses the matcher of another
+  definition of the same shape, and names it afresh when that definition
+  goes, so a name-based hash changed with an unrelated definition (#476).
+  The human ruled on 2026-11-21 (#476) to hash the body instead of the
+  name. Rejected: normalising the names of shared matchers before hashing,
+  and keeping the names with the false re-pins they force. So funk's hash
+  now differs from pmatos/mojo-grimoire's, which still hashes the names.
 - Any other definition that these only refer to counts by its name. A block
   whose prose restates such a definition, from any module, adds it with
   `(pin := P)`. The fingerprint then covers its body too.

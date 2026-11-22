@@ -17,7 +17,7 @@ fails when the Lean changes under it.
 :::moduleDocs (fingerprint := "10545675350943994887")
 :::
 
-:::readable Fir.Core.decodeMemCopy_loadAttrs Fir.Core.decodeMemCopy_eq Fir.Core.CopyKind.name_isWord (pin := Fir.Core.decodeMemCopy) (pin := Fir.Core.loadAttrs) (pin := Fir.Core.CopyKind.name) (fingerprint := "11556063497069557712")
+:::readable Fir.Core.decodeMemCopy_loadAttrs Fir.Core.decodeMemCopy_eq Fir.Core.CopyKind.name_isWord (pin := Fir.Core.decodeMemCopy) (pin := Fir.Core.loadAttrs) (pin := Fir.Core.CopyKind.name) (fingerprint := "2626854577034456726")
 *Theorems: every copy and move reads back from its spelling, and only from
 it.* For every kind $`k`, ordering $`o`, width $`W` and memory $`N`,
 valid or not:

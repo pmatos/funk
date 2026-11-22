@@ -17,14 +17,14 @@ when the Lean changes under it.
 :::moduleDocs (fingerprint := "17156832367123220430")
 :::
 
-:::readable Fir.nil_of_map_erase Fir.plainHeader_eq (pin := Fir.Text.plainHeader) (fingerprint := "8322068760473397634")
+:::readable Fir.nil_of_map_erase Fir.plainHeader_eq (pin := Fir.Text.plainHeader) (fingerprint := "11566037241645585007")
 *Lemmas: a header with no signature attributes is plain.* Lists of
 attributes that erase to empty lists are empty. So the header of an item
 whose parameters and results carry no attributes and whose parameters do
 not end in `...` is plain, at any positions.
 :::
 
-:::readable Fir.isDialectWord_ne Fir.DialectItem.WellFormed.decodeItem_eq (pin := Fir.Text.decodeDialectItem) (pin := Fir.DialectItem.WellFormed) (fingerprint := "9267309993534182180")
+:::readable Fir.isDialectWord_ne Fir.DialectItem.WellFormed.decodeItem_eq (pin := Fir.Text.decodeDialectItem) (pin := Fir.DialectItem.WellFormed) (fingerprint := "8799817166015756634")
 *Theorems: an item of a dialect's kind decodes back.* A word of a dialect
 holds a `.`, so it is neither `func`, `module`, `aggregate`, `global` nor
 `extern`.
@@ -36,7 +36,7 @@ result types and its parameters decode back, and its attributes are kept
 as they were read.
 :::
 
-:::readable Fir.decodeFields_eq Fir.Aggregate.WellFormed.decodeItem_eq (pin := Fir.Text.decodeAggregate) (pin := Fir.Aggregate.WellFormed) (fingerprint := "10443331945627595541")
+:::readable Fir.decodeFields_eq Fir.Aggregate.WellFormed.decodeItem_eq (pin := Fir.Text.decodeAggregate) (pin := Fir.Aggregate.WellFormed) (fingerprint := "2187614322805128002")
 *Theorems: an aggregate's layout decodes back.* Fields whose numbers are
 within the limit and whose types are written as types and decode back
 decode back from the attributes they write, at any positions. So for every
@@ -46,7 +46,7 @@ kind is `aggregate`, it has no parameters or results, its body is no
 blocks, and its memory, size, alignment and fields decode back.
 :::
 
-:::readable Fir.Item.WellFormed.decodeItem_eq Fir.Item.WellFormed.decodeItems_eq Fir.Global.decodeItem_eq (pin := Fir.Text.decodeItem) (pin := Fir.Text.decodeItems) (fingerprint := "916209730268986283")
+:::readable Fir.Item.WellFormed.decodeItem_eq Fir.Item.WellFormed.decodeItems_eq Fir.Global.decodeItem_eq (pin := Fir.Text.decodeItem) (pin := Fir.Text.decodeItems) (fingerprint := "7882002688714175266")
 *Theorems: items decode back.* For every dialect with signatures,
 validation rules and a lawful text:
 
@@ -68,7 +68,7 @@ its numbers are within the limit, since its attributes read back. The last two t
 another, and are proved together by induction on the items.
 :::
 
-:::readable Fir.decodeLayout_eq (pin := Fir.Text.decodeMemLayout) (fingerprint := "10099140561503703068")
+:::readable Fir.decodeLayout_eq (pin := Fir.Text.decodeMemLayout) (fingerprint := "1330681782989961273")
 *Theorem: a data layout decodes back.* For every data layout whose entries
 are within the limit, and all entries as written that are, positions
 aside, what its entries write, decoding them, in order, gives the layout

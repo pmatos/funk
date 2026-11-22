@@ -14,10 +14,10 @@ when the Lean changes under it.
 
 #doc (Manual) "The fuel of a return: readable blocks" =>
 
-:::moduleDocs (fingerprint := "13644898566718814199")
+:::moduleDocs (fingerprint := "4919280817137740757")
 :::
 
-:::readable Fir.TraceEnd.RetPaced Fir.TraceEnd.RetPaced.after_step (fingerprint := "6800816011288160283")
+:::readable Fir.TraceEnd.RetPaced Fir.TraceEnd.RetPaced.after_step (fingerprint := "18376876309332620377")
 *Definition: a paced return.* A return of a run of $`os` with $`n` steps of
 fuel, that leaves $`k` after a marked trace of $`m` steps, is paced by
 $`W` when $`k + m \le n`, $`0 < m`, and $`n + W \le k + W m + c + 1`,

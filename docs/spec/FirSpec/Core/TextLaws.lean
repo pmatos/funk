@@ -17,7 +17,7 @@ fails when the Lean changes under it.
 :::moduleDocs (fingerprint := "4921898316165009198")
 :::
 
-:::readable Fir.Core.decodeWrap_attrs Fir.Core.attrs_of_decodeWrap Fir.Core.attrs_of_decodeExact (pin := Fir.Core.WrapFlags.attrs) (pin := Fir.Core.decodeWrap) (pin := Fir.Core.decodeExact) (fingerprint := "8508249869924011798")
+:::readable Fir.Core.decodeWrap_attrs Fir.Core.attrs_of_decodeWrap Fir.Core.attrs_of_decodeExact (pin := Fir.Core.WrapFlags.attrs) (pin := Fir.Core.decodeWrap) (pin := Fir.Core.decodeExact) (fingerprint := "18127931667275396182")
 *Theorems: flags read back from their spelling, and only from it.* With
 $`\mathrm{flags}`, $`\mathrm{decodeflags}` and $`\mathrm{decodeexact}` of
 the {ref "The-fir-specification--Text-format--The-core-dialect-in-text"}[previous section]:
@@ -34,7 +34,7 @@ the {ref "The-fir-specification--Text-format--The-core-dialect-in-text"}[previou
 The proofs of the laws for $`\mathsf{add}` to $`\mathsf{udiv}` use them.
 :::
 
-:::readable Fir.Core.find_pred_name Fir.Core.name_of_find_pred (pin := Fir.Core.Pred.name) (pin := Fir.Core.Pred.all) (fingerprint := "2360766627162177571")
+:::readable Fir.Core.find_pred_name Fir.Core.name_of_find_pred (pin := Fir.Core.Pred.name) (pin := Fir.Core.Pred.all) (fingerprint := "18060769847502388923")
 *Theorems: a predicate is found by its name, and only by it.* For every
 predicate $`p`, looking $`\mathrm{name}(p)` up in the list of the ten
 predicates finds $`p`; and for every string $`s`, a predicate found by
@@ -42,14 +42,14 @@ looking $`s` up has the name $`s`. The proofs of the laws for
 $`\mathsf{icmp}` use them.
 :::
 
-:::readable Fir.Core.constAttr_of_ne_one Fir.Core.bitVec_one_cases (pin := Fir.Core.constAttr) (fingerprint := "7069144073951225592")
+:::readable Fir.Core.constAttr_of_ne_one Fir.Core.bitVec_one_cases (pin := Fir.Core.constAttr) (fingerprint := "14804345932671249175")
 *Theorems: the two cases of a constant.* For every width $`W \neq 1` and
 every $`W`-bit value $`v`, $`\mathrm{constattr}_W(v)` is the integer $`v`
 read as signed; and every 1-bit value is 1 or 0. They split the proofs for
 $`\mathsf{const}` into its two spellings.
 :::
 
-:::readable Fir.Core.binWidth_eq Fir.Core.binOp_eq Fir.Core.bare_eq Fir.Core.decodeCast_eq Fir.Core.plainBinOps_lookup (pin := Fir.Core.binWidth) (pin := Fir.Core.bare) (pin := Fir.Core.decodeCast) (pin := Fir.Core.plainBinOps) (fingerprint := "958117574825870309")
+:::readable Fir.Core.binWidth_eq Fir.Core.binOp_eq Fir.Core.bare_eq Fir.Core.decodeCast_eq Fir.Core.plainBinOps_lookup (pin := Fir.Core.binWidth) (pin := Fir.Core.bare) (pin := Fir.Core.decodeCast) (pin := Fir.Core.plainBinOps) (fingerprint := "17439193355917670174")
 *Theorems: what each step of reading an op back accepts.* Each says that a
 helper of $`\mathrm{decodeop}` succeeds only on the shape it reads:
 
@@ -71,7 +71,7 @@ They are the steps of the proof that an op reads back only from its own
 spelling.
 :::
 
-:::readable Fir.Core.decodePtrAdd_eq (pin := Fir.Core.decodePtrAdd) (fingerprint := "10693430974551034378")
+:::readable Fir.Core.decodePtrAdd_eq (pin := Fir.Core.decodePtrAdd) (fingerprint := "9373490844844402363")
 *Theorem: a pointer offset decodes only from its own spelling.* If
 $`\mathtt{ptradd}` decodes from the attributes $`a^*` and the types
 $`t^*` and $`r^*`, the op it gives is written $`\mathtt{ptradd}`, has no
@@ -80,7 +80,7 @@ $`t^*` and $`r^*`: a pointer and an integer, and a pointer of the same
 memory.
 :::
 
-:::readable Fir.Core.Op.decode_encode Fir.Core.Op.encode_decode (pin := Fir.Core.Op.sig) (pin := Fir.Core.Op.returnTypes) (fingerprint := "4978940440852421940")
+:::readable Fir.Core.Op.decode_encode Fir.Core.Op.encode_decode (pin := Fir.Core.Op.sig) (pin := Fir.Core.Op.returnTypes) (fingerprint := "13973693262638422492")
 *Theorems: every core op instance reads back from its spelling, and only
 from it.* For every core op instance $`o`, valid or not:
 
@@ -109,7 +109,7 @@ reads back as its bits:
 $`\mathrm{decodelit}_{e,m}(\mathrm{floatlit}_{e,m}(v)) = v`.
 :::
 
-:::readable Fir.Core.Op.name_isWord Fir.Core.Pred.name_isWord Fir.Core.FPred.name_isWord Fir.Core.Attr.allWritable_append Fir.Core.FastMath.attrs_writable Fir.Core.Op.attrs_writable (pin := Fir.isWord) (fingerprint := "13055863407114268067")
+:::readable Fir.Core.Op.name_isWord Fir.Core.Pred.name_isWord Fir.Core.FPred.name_isWord Fir.Core.Attr.allWritable_append Fir.Core.FastMath.attrs_writable Fir.Core.Op.attrs_writable (pin := Fir.isWord) (fingerprint := "14153241334340153476")
 *Theorems: core ops are written as tokens.* For every core op instance
 $`o`, $`\mathrm{opname}(o)` is a word and every attribute of
 $`\mathrm{opattrs}(o)` can be written; and the name of every predicate,

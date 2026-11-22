@@ -30,7 +30,7 @@ with no memory counts none, and mapping the results of one that counts
 none, or sequencing two that count none, counts none.
 :::
 
-:::readable Fir.fromAddr_apply Fir.fromAddr_keeps Fir.fromAddr_counts (pin := Fir.instMonadMemoryStateT) (pin := Fir.Memory.Memories.fromAddr) (fingerprint := "3392382673551480135")
+:::readable Fir.fromAddr_apply Fir.fromAddr_keeps Fir.fromAddr_counts (pin := Fir.instMonadMemoryStateT) (pin := Fir.Memory.Memories.fromAddr) (fingerprint := "3618422327033861952")
 *Theorems: how turning an integer into a pointer ends.* In the
 {ref "The-fir-specification--Memory--The-state-layer"}[state layer] over
 the set monad, the
