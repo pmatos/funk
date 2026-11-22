@@ -4,9 +4,10 @@
 # initializer, and @self points into itself. A run on fir-ref starts with
 # each global's allocation (#237 stage 2a), so the four globals of memory 0
 # take its ids 0 to 3 and @after_globals's alloca gets id 4. The address op
-# globaladdr has tests of its own, in globaladdr.fir; the backend's .data,
-# .rodata and .bss are stage 3. @after_globals returns a pointer, which native code
-# returns as an address, so its test is interpreter-only.
+# globaladdr has tests of its own, in globaladdr.fir, and since stage 3
+# native code holds the globals in .data, .rodata and .bss.
+# @after_globals returns a pointer, which native code returns as an
+# address, so its test is interpreter-only.
 tests = [
   { func = "@msg_size" },
   { func = "@after_globals", expect = ["ptr(4, 0)"] },

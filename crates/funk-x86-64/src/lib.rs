@@ -35,7 +35,10 @@
 //! functions extends no argument
 //! (`docs/decisions/x86-64-backend-abi.md#calls-between-funk-functions`),
 //! and passes an `i128` in two registers or in 16 aligned bytes of the
-//! stack (`docs/decisions/x86-64-backend-abi.md#arguments`).
+//! stack (`docs/decisions/x86-64-backend-abi.md#arguments`). The module's
+//! globals are data of the object file, and `globaladdr` takes their
+//! addresses relative to `%rip`
+//! (`docs/decisions/x86-64-backend-lowering-memory.md#globals`).
 //! Anything else is reported as a [`Diagnostic`] that carries the IR
 //! location of the op, or of the block for a parameter.
 //!

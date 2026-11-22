@@ -19,8 +19,11 @@ no `-0`, in the type's range. An `f32` or `f64` is its bits read as a signed
 integer, read and printed as an `i32` or `i64` is: a spelling internal to the
 harness, which converts it to and from the float literals of fir text
 (ADR-2026-11-11-1438). A pointer is its address, read and printed as an
-`i64` is (stage 5 of #231). A run starts with no allocation, so an address
-given on the command line points at nothing that the run made. The harness
+`i64` is (stage 5 of #231). A run starts with no allocation but the
+module's globals
+([x86-64-backend-lowering-memory.md](x86-64-backend-lowering-memory.md#globals)),
+and the harness passes no address of one, so an address given on the
+command line points at nothing that the run made. The harness
 passes no address in place of a poison pointer, so a test with a poison
 pointer argument is interpreter-only. A pointer result is the address, which
 says nothing of the spec's allocation and offset, so the harness compares no

@@ -86,6 +86,7 @@ SIDES = (
         fields=cells.FIELD_DIFFERENTIAL,
         copies=True,
         addresses=ADDRESS_DIFFERENTIAL,
+        global_addrs=True,
     ),
     Side(
         "interpreter",

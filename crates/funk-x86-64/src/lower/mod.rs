@@ -50,7 +50,9 @@
 //! `memset` call funk's own runtime routines (`memops.rs`), `ptr_expose` and
 //! `ptr_from_int` move an address (`ptr_int.rs`), and `alloca`
 //! moves `%rsp` below the frame at run time, which the stack need counts
-//! (`alloca.rs`, `docs/decisions/x86-64-backend-lowering-memory.md`).
+//! (`alloca.rs`, `docs/decisions/x86-64-backend-lowering-memory.md`). The
+//! module's globals follow its code and helpers as data, and `globaladdr`
+//! takes a global's address relative to `%rip` (`globals.rs`).
 
 mod alloca;
 mod arith;
@@ -69,6 +71,7 @@ mod float_convert;
 mod float_to_int;
 mod freeze;
 mod frem;
+mod globals;
 mod helpers;
 mod int_to_float;
 mod memops;
@@ -307,6 +310,7 @@ fn lowering(name: &str) -> Option<Lower> {
         .or_else(|| ptr_int::lowering(name))
         .or_else(|| memops::lowering(name))
         .or_else(|| alloca::lowering(name))
+        .or_else(|| globals::lowering(name))
 }
 
 /// A module's functions, lowered.
@@ -341,6 +345,7 @@ pub fn module(m: &Module) -> Result<Lowered, Vec<Diagnostic>> {
         }
     }
     helpers::append(&mut asm, &helpers);
+    globals::data(m, &mut asm, &mut out);
     asm.raw(NO_EXEC_STACK);
     if out.is_empty() {
         Ok(Lowered {

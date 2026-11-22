@@ -44,7 +44,9 @@ memory's unit, takes addresses of globals of its own table only, and has
 an initializer no larger than its size. The spec, `fir-ref fmt` and
 `validate`, and `funk-ir` read, print and check globals, a run starts
 with them, and the op `globaladdr` gives a global's address (below); the
-backend leaves both out until #237's stage 3.
+backend places them in `.rodata`, `.data` or `.bss` and lowers the op
+(#237 stage 3,
+[x86-64-backend-lowering-memory.md](x86-64-backend-lowering-memory.md#globals)).
 The words `global` and `const` are ADR-2026-11-09-1546's: the human ruled
 on 2026-11-20 (#237 Q4) that a global keeps them, and that the G0 check, on
 the Lean and the Rust side, lists both with `align` among the words generic

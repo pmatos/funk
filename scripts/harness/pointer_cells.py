@@ -28,9 +28,8 @@ widths, `cells.FIELD_DIFFERENTIAL` and `cells.FIELD_INTERPRETER`: the
 backend lowers an index of each width it lowers (stage 4 of #236).
 
 The address of a global `globaladdr` (#237) is one cell, whatever its
-global and its memory, as a call's callee is not part of its cell. Only
-the interpreter-only side has it until the backend lowers it (stage 3 of
-#237).
+global and its memory, as a call's callee is not part of its cell. Both
+sides have it: the backend lowers it as `leaq g(%rip)` (stage 3 of #237).
 """
 
 from cell_types import Cell, CellError, Row, Table, is_pointer
