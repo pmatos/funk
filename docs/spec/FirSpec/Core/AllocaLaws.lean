@@ -17,7 +17,7 @@ fails when the Lean changes under it.
 :::moduleDocs (fingerprint := "9652021669507390123")
 :::
 
-:::readable Fir.Core.Op.memCases Fir.Core.Op.touchesMemory_false_of_denote Fir.Core.Op.readsItems_false_of_denote (pin := Fir.Core.Op.touchesMemory) (pin := Fir.Core.Op.readsItems) (fingerprint := "42836859593160265")
+:::readable Fir.Core.Op.memCases Fir.Core.Op.touchesMemory_false_of_denote Fir.Core.Op.readsItems_false_of_denote (pin := Fir.Core.Op.touchesMemory) (pin := Fir.Core.Op.readsItems) (fingerprint := "6114135272076717574")
 *Theorems: the core ops, split by memory.* A property holds of every core
 op when it holds of each op that touches no memory and reads no item of
 the run, of every $`\mathsf{alloca}`, of every $`\mathsf{load}` and every

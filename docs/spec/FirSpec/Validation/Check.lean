@@ -14,10 +14,10 @@ when the Lean changes under it.
 
 #doc (Manual) "The validation check: readable blocks" =>
 
-:::moduleDocs (fingerprint := "4401003086318381878")
+:::moduleDocs (fingerprint := "1780650294258298201")
 :::
 
-:::readable Fir.DecidableDialectValidation (fingerprint := "12727554318359214280")
+:::readable Fir.DecidableDialectValidation (fingerprint := "320295170492242867")
 *Definition: a dialect whose own rules can be decided.* A dialect $`d` is
 _decidable_ when there is an algorithm that tells, for every type $`t` of
 $`d`, whether $`\vdash_d t~\text{valid}`, another that tells, for every

@@ -14,10 +14,10 @@ when the Lean changes under it.
 
 #doc (Manual) "The memories a run starts with: readable blocks" =>
 
-:::moduleDocs (fingerprint := "2299021729494554789")
+:::moduleDocs (fingerprint := "5482329221718497856")
 :::
 
-:::readable Fir.StartAlloc.block Fir.Memory.Memories.place Fir.Memory.Memories.ofStarts Fir.RunItems.start (pin := Fir.Memory.Memories.empty) (fingerprint := "3955111893373437394")
+:::readable Fir.StartAlloc.block Fir.Memory.Memories.place Fir.Memory.Memories.ofStarts Fir.RunItems.start (pin := Fir.Memory.Memories.empty) (fingerprint := "17821042395608482575")
 *Definition: the memories a run starts with.* A starting allocation
 $`(n, k, \alpha, c, \vec{x})` gives, in a memory of $`u`-bit units, the
 live block $`(k, \alpha, \vec{x}_u, \mathsf{true}, \bot, c)`: of its kind

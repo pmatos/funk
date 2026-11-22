@@ -23,7 +23,7 @@ characters of the word that writes $`\mathsf{i}N` are `i` followed by the
 decimal digits of $`N`. The proofs below read the width back through it.
 :::
 
-:::readable Fir.Core.aliasFormat_of_floatAlias Fir.Core.floatAlias_of_aliasFormat Fir.Core.Ty.decode_alias Fir.Core.Ty.decode_float (pin := Fir.Core.floatAlias) (pin := Fir.Core.aliasFormat) (pin := Fir.Core.decodeFloat) (fingerprint := "5632071653006825735")
+:::readable Fir.Core.aliasFormat_of_floatAlias Fir.Core.floatAlias_of_aliasFormat Fir.Core.Ty.decode_alias Fir.Core.Ty.decode_float (pin := Fir.Core.floatAlias) (pin := Fir.Core.aliasFormat) (pin := Fir.Core.decodeFloat) (fingerprint := "5554205147270655722")
 *Theorems: a float format and its alias name each other, and each float
 spelling reads back.* For every format $`(e, m)` and word $`n`,
 $`\mathrm{alias}(e, m) = n` exactly when $`\mathrm{format}(n) = (e, m)`.
@@ -33,7 +33,7 @@ $`\texttt{float}(e, m)` reads back as
 $`\mathsf{float}\langle e,m \rangle`.
 :::
 
-:::readable Fir.Core.Ty.decode_ptr Fir.Core.Ty.decode_attr Fir.Core.Ty.attr_decodeFloat Fir.Core.Ty.attr_decodePtr Fir.Core.Ty.attr_decode (pin := Fir.Core.maxWidth) (pin := Fir.Core.maxMemory) (pin := Fir.Core.decodePtr) (pin := Fir.Core.Ty.Valid) (pin := Fir.Core.Ty.attr) (pin := Fir.Core.Ty.decode) (fingerprint := "16926350811684067797")
+:::readable Fir.Core.Ty.decode_ptr Fir.Core.Ty.decode_attr Fir.Core.Ty.attr_decodeFloat Fir.Core.Ty.attr_decodePtr Fir.Core.Ty.attr_decode (pin := Fir.Core.maxWidth) (pin := Fir.Core.maxMemory) (pin := Fir.Core.decodePtr) (pin := Fir.Core.Ty.Valid) (pin := Fir.Core.Ty.attr) (pin := Fir.Core.Ty.decode) (fingerprint := "17839315796957089892")
 *Theorems: every valid core type reads back, and a type reads back only
 from its spelling.* A core type is
 {ref "The-fir-specification--Validation--Core-rules"}[valid] when it is
@@ -56,7 +56,7 @@ puts together. The first needs the width to be at most 16,777,215, since a
 wider type does not read back.
 :::
 
-:::readable Fir.Core.Ty.attr_isType (pin := Fir.isWord) (fingerprint := "1028914003604092075")
+:::readable Fir.Core.Ty.attr_isType (pin := Fir.isWord) (fingerprint := "14853979327517964364")
 *Theorem: every valid core type is written as a type.* For every valid
 core type $`t`, $`\mathrm{tyattr}(t)` is written as a type: a word, as
 $`\mathsf{i}N`, every alias and $`\texttt{ptr}` are, the word

@@ -17,7 +17,7 @@ fingerprint; the build fails when the Lean changes under it.
 :::moduleDocs (fingerprint := "15187118450536989398")
 :::
 
-:::readable Fir.Core.Op.neverUB_all (pin := Fir.Core.Op.effects) (pin := Fir.NeverUBSetM) (fingerprint := "18098656012515844890")
+:::readable Fir.Core.Op.neverUB_all (pin := Fir.Core.Op.effects) (pin := Fir.NeverUBSetM) (fingerprint := "12070343909554121890")
 *Theorem: each core op that does not declare may-UB never ends in UB in
 the set monad.*
 Every core op but $`\mathsf{sdiv}`, $`\mathsf{udiv}`, $`\mathsf{srem}`,
@@ -36,7 +36,7 @@ $`\mathsf{ptr\_from\_int}` none in the set monad, so none of them has an
 outcome by one.
 :::
 
-:::readable Fir.Core.defined₁ Fir.Core.defined₂ Fir.Core.not_any_of_ne (pin := Fir.HVector.Any) (pin := Fir.Core.Ty.IsPoison) (fingerprint := "17464123918340822883")
+:::readable Fir.Core.defined₁ Fir.Core.defined₂ Fir.Core.not_any_of_ne (pin := Fir.HVector.Any) (pin := Fir.Core.Ty.IsPoison) (fingerprint := "5463821433995101110")
 *Theorems: defined operands hold values.* An operand vector of one or two
 integers with no poison element holds values: $`(v)` is
 $`(\mathsf{value}~x)` for some $`x`, and $`(v_1, v_2)` is
@@ -44,7 +44,7 @@ $`(\mathsf{value}~x, \mathsf{value}~y)`. A vector of one integer that is
 not poison has no poison element.
 :::
 
-:::readable Fir.Core.defined₂Float Fir.Core.not_any_of_ne_float (pin := Fir.HVector.Any) (pin := Fir.Core.Ty.IsPoison) (fingerprint := "9456831933011364645")
+:::readable Fir.Core.defined₂Float Fir.Core.not_any_of_ne_float (pin := Fir.HVector.Any) (pin := Fir.Core.Ty.IsPoison) (fingerprint := "1300278285830191752")
 *Theorems: defined float operands hold values.* An operand vector of two
 floats of one format with no poison element holds values,
 $`(\mathsf{value}~x, \mathsf{value}~y)`; and a vector of one float that
@@ -53,7 +53,7 @@ the float $`\mathsf{const}` use them, as those for $`\mathsf{icmp}` and
 the integer $`\mathsf{const}` use the theorems above.
 :::
 
-:::readable Fir.Core.ruleOfEv_divEv_defined (pin := Fir.Core.divEv) (pin := Fir.Core.ruleOfEv) (fingerprint := "657474154116654491")
+:::readable Fir.Core.ruleOfEv_divEv_defined (pin := Fir.Core.divEv) (pin := Fir.Core.ruleOfEv) (fingerprint := "16932444275400016853")
 *Theorem: a division whose quotient is defined makes no poison.* If the
 quotient $`q(x, y)` is a value for all $`x` and $`y`, then on two values
 $`\mathsf{value}~x` and $`\mathsf{value}~y` the division with that
@@ -66,7 +66,7 @@ $`\mathsf{mul}` that does not declare $`\mathsf{mayPoison}` has no flags.*
 Its flags $`f` are neither $`\mathsf{nuw}` nor $`\mathsf{nsw}`.
 :::
 
-:::readable Fir.Core.Op.makesNoPoison_all (pin := Fir.Core.Op.effects) (pin := Fir.MakesNoPoisonSetM) (fingerprint := "15943501881943734980")
+:::readable Fir.Core.Op.makesNoPoison_all (pin := Fir.Core.Op.effects) (pin := Fir.MakesNoPoisonSetM) (fingerprint := "2044140662536004172")
 *Theorem: each core op that does not declare $`\mathsf{mayPoison}` makes no
 poison in the set monad.* On operands with no poison, $`\mathsf{const}`, $`\mathsf{add}`,
 $`\mathsf{sub}` and $`\mathsf{mul}` without flags, $`\mathsf{sdiv}` and
@@ -86,7 +86,7 @@ an integer, a pointer or a float declare $`\mathsf{mayPoison}`, so the
 obligation asks nothing of them.
 :::
 
-:::readable Fir.Core.Op.notControl_all (pin := Fir.Core.Op.effects) (fingerprint := "1921785165412561646")
+:::readable Fir.Core.Op.notControl_all (pin := Fir.Core.Op.effects) (fingerprint := "2524570001079532438")
 *Theorem: each core op that does not declare $`\mathsf{control}` is not a
 terminator.* The core terminators are $`\mathsf{br}`,
 $`\mathsf{cond\_br}`, $`\mathsf{ret}` and $`\mathsf{unreachable}`, and each

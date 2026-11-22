@@ -14,10 +14,10 @@ when the Lean changes under it.
 
 #doc (Manual) "The pointers of a sum's values: readable blocks" =>
 
-:::moduleDocs (fingerprint := "16661022798378911552")
+:::moduleDocs (fingerprint := "14395016963267628564")
 :::
 
-:::readable Fir.instTyPointersEmpty Fir.instTyPointersSum Fir.instTyPointersSumTy (fingerprint := "16661022798378911552")
+:::readable Fir.instTyPointersEmpty Fir.instTyPointersSum Fir.instTyPointersSumTy (fingerprint := "14395016963267628564")
 *Definition: the pointers of a sum's values.* A value of a summed type holds the
 pointers it holds on its own side, and replacing them acts on its own side,
 so the laws of values that hold pointers hold for the sum when they hold

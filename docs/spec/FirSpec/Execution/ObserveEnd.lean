@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "The end of a return: readable blocks" =>
 
-:::moduleDocs (fingerprint := "17526751156748906447")
+:::moduleDocs (fingerprint := "17341858152562055603")
 :::
 
 :::readable Fir.AddrRule Fir.AddrRule.ignore Fir.AddrRule.same Fir.AddrRule.exposed (fingerprint := "15094722826430448788")
@@ -35,7 +35,7 @@ The human ruled this on 2026-11-20, on #233. Rejected: $`\mathsf{same}`,
 under which a pass could not move an exposed allocation.
 :::
 
-:::readable Fir.Memory.Block.SeenIn Fir.Memory.Block.OptSeenIn (fingerprint := "2603236812975412409")
+:::readable Fir.Memory.Block.SeenIn Fir.Memory.Block.OptSeenIn (fingerprint := "785370159542493421")
 *Definition: an allocation seen in another.* The block $`b` of the source
 is seen in the block $`b'` of the target, its pointers replaced by $`f`,
 when both have the same kind, alignment, liveness and size, $`b.\mathrm{addr}

@@ -14,16 +14,16 @@ when the Lean changes under it.
 
 #doc (Manual) "Reading printed float literals: readable blocks" =>
 
-:::moduleDocs (fingerprint := "13713470698208417333")
+:::moduleDocs (fingerprint := "17014209289543897694")
 :::
 
-:::readable Fir.Text.expChars (pin := Fir.Text.printInt) (fingerprint := "15983803180195065560")
+:::readable Fir.Text.expChars (pin := Fir.Text.printInt) (fingerprint := "7109951634169996523")
 *Definition: the characters of an exponent.* The exponent part of a
 decimal float literal is `e` followed by the printed integer $`x`, when the
 literal has the exponent $`x`, and nothing when it has none.
 :::
 
-:::readable Fir.Text.lexEnd_boundary Fir.Text.ne_of_boundary (pin := Fir.Text.lexEnd) (pin := Fir.Text.Boundary) (pin := Fir.Text.isHexDigit) (fingerprint := "15622997921160268123")
+:::readable Fir.Text.lexEnd_boundary Fir.Text.ne_of_boundary (pin := Fir.Text.lexEnd) (pin := Fir.Text.Boundary) (pin := Fir.Text.isHexDigit) (fingerprint := "7563679440132338046")
 *Theorem: a literal may end at the end of a token.* When characters $`c`
 are {ref "The-fir-specification--Text-format--Maximal-munch"}[at the end of a token],
 the lexer's check that a number ends before $`c` passes.
@@ -33,7 +33,7 @@ the end of a token is not `e`, `x`, `.`, a lowercase hexadecimal digit or
 a decimal digit: each of those is a name character.
 :::
 
-:::readable Fir.Text.lexExponent_spells Fir.Text.notDigit_expChars (pin := Fir.Text.lexExponent) (pin := Fir.Text.expChars) (fingerprint := "7495856923112578706")
+:::readable Fir.Text.lexExponent_spells Fir.Text.notDigit_expChars (pin := Fir.Text.lexExponent) (pin := Fir.Text.expChars) (fingerprint := "18207226199260634213")
 *Theorem: an exponent reads back.* For every exponent $`x`, or none, and
 characters $`c` at the end of a token, the lexer reads the exponent part of
 $`x` followed by $`c` as $`x`, and leaves $`c`. A negative exponent is
@@ -44,7 +44,7 @@ characters at the end of a token does not start with a decimal digit, so
 the fraction before it ends where it starts.
 :::
 
-:::readable Fir.Text.takeWhile_digits' Fir.Text.lexFraction_spells (pin := Fir.Text.lexFraction) (pin := Fir.FloatLit.print) (fingerprint := "13813235846325136294")
+:::readable Fir.Text.takeWhile_digits' Fir.Text.lexFraction_spells (pin := Fir.Text.lexFraction) (pin := Fir.FloatLit.print) (fingerprint := "16331298417471525273")
 *Theorem: digits are taken up to the first non-digit.* When the characters
 $`\mathit{ds}` are all decimal digits and characters $`c` do not start
 with one, the digits at the start of $`\mathit{ds}~c` are $`\mathit{ds}`,
@@ -58,7 +58,7 @@ $`w`, as the decimal literal with sign $`s`, whole part $`w`, fraction
 $`f~\mathit{fs}` and exponent $`x`, and leaves $`c`.
 :::
 
-:::readable Fir.Text.whole_toDigits Fir.Text.lexFloat_dec (pin := Fir.Text.afterWhole) (pin := Fir.Text.wholeValue) (pin := Fir.Text.lexFloat) (fingerprint := "11399034949759365465")
+:::readable Fir.Text.whole_toDigits Fir.Text.lexFloat_dec (pin := Fir.Text.afterWhole) (pin := Fir.Text.wholeValue) (pin := Fir.Text.lexFloat) (fingerprint := "179451479908993673")
 *Theorem: the whole part of a printed number.* When the decimal digits of
 the number $`n` are $`d~\mathit{ds}` and characters $`c` do not start with
 a digit, the whole part of $`d~\mathit{ds}~c` is all of $`d~\mathit{ds}`:
@@ -72,7 +72,7 @@ digits, the exponent part of $`x` and characters $`c` at the end of a
 token as the decimal literal of those parts, and leaves $`c`.
 :::
 
-:::readable Fir.Text.lexHex_spells Fir.Text.lexFloat_hex (pin := Fir.Text.lexHex) (pin := Fir.Text.lexFloat) (fingerprint := "17361373945412455614")
+:::readable Fir.Text.lexHex_spells Fir.Text.lexFloat_hex (pin := Fir.Text.lexHex) (pin := Fir.Text.lexFloat) (fingerprint := "3923935390580938638")
 *Theorem: hexadecimal bits read back.* For one or more lowercase
 hexadecimal digits $`\mathit{ds}` and characters $`c` at the end of a
 token, the lexer reads $`\mathit{ds}~c` after `0x` as the literal of the
@@ -80,7 +80,7 @@ bits $`\mathit{ds}`, and leaves $`c`; and its reader of float literals
 reads `0`, `x`, $`\mathit{ds}` and $`c` the same way.
 :::
 
-:::readable Fir.Text.readsToken_dec Fir.Text.readsToken_negDec Fir.Text.readsToken_hex (pin := Fir.Text.ReadsToken) (pin := Fir.Text.lexToken) (pin := Fir.Text.lexNumber) (fingerprint := "6665106250985754402")
+:::readable Fir.Text.readsToken_dec Fir.Text.readsToken_negDec Fir.Text.readsToken_hex (pin := Fir.Text.ReadsToken) (pin := Fir.Text.lexToken) (pin := Fir.Text.lexNumber) (fingerprint := "2645602232590092205")
 *Theorems: each printed float literal is one token.* Followed by
 characters $`c` at the end of a token, the lexer reads as one token, and
 leaves $`c`:

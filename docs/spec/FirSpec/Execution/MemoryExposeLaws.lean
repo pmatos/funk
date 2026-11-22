@@ -31,7 +31,7 @@ no memory exposes nothing, and mapping the results of one that exposes
 nothing, or sequencing two that expose nothing, exposes nothing.
 :::
 
-:::readable Fir.expose_apply Fir.expose_ub Fir.expose_ok (pin := Fir.instMonadMemoryStateT) (pin := Fir.Memory.Memories.expose) (fingerprint := "10191073411681353167")
+:::readable Fir.expose_apply Fir.expose_ub Fir.expose_ok (pin := Fir.instMonadMemoryStateT) (pin := Fir.Memory.Memories.expose) (fingerprint := "16633280065312195036")
 *Theorems: how an exposure ends.* In the
 {ref "The-fir-specification--Memory--The-state-layer"}[state layer] over
 the set monad, the
@@ -63,7 +63,7 @@ every block keeps its units and its shape, and the frames are kept. For
 every memory $`y \ne x`, it exposes nothing in $`y`.
 :::
 
-:::readable Fir.ReadsNot.match_ok Fir.expose_readsNot_ne (pin := Fir.ReadsNot) (pin := Fir.ReadsNot.Match) (fingerprint := "770253900401340849")
+:::readable Fir.ReadsNot.match_ok Fir.expose_readsNot_ne (pin := Fir.ReadsNot) (pin := Fir.ReadsNot.Match) (fingerprint := "7602624054145757613")
 *Theorems: an exposure reads no other memory.* Results that differ only in
 the memory $`y`, as it was in one and replaced in the other, match. So for
 every memory $`y \ne x`, an exposure in $`x` meets the

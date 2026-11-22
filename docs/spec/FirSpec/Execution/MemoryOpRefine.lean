@@ -17,7 +17,7 @@ fails when the Lean changes under it.
 :::moduleDocs (fingerprint := "16953589169170558765")
 :::
 
-:::readable Fir.StateRefinedBy (pin := Fir.SetM.IsRefinedBy) (pin := Fir.Ev.IsRefinedBy) (fingerprint := "17236169283130294733")
+:::readable Fir.StateRefinedBy (pin := Fir.SetM.IsRefinedBy) (pin := Fir.Ev.IsRefinedBy) (fingerprint := "17486471239574396974")
 *Definition: computations with memory that refine others.* For a
 relation $`r` on results, a computation $`c'` of the
 {ref "The-fir-specification--Memory--The-state-layer"}[state layer]

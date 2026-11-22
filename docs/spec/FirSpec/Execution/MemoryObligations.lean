@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Memory obligations: readable blocks" =>
 
-:::moduleDocs (fingerprint := "15305036953839554828")
+:::moduleDocs (fingerprint := "8428101660617854912")
 :::
 
 :::readable Fir.Memory.Memory.allocs Fir.Memory.Memory.contents Fir.Memory.Memory.unitAt (fingerprint := "18330032551635612125")
@@ -58,7 +58,7 @@ it was. UB ends a path and shows no memory, so both speak only of the
 paths that end.
 :::
 
-:::readable Fir.ReadsNot.Match Fir.ReadsNot (fingerprint := "6933875917264666138")
+:::readable Fir.ReadsNot.Match Fir.ReadsNot (fingerprint := "445151934203958894")
 *Definition: no read.* A computation $`c` _does not read_ $`x` when it does
 not depend on the units of $`x`. For all memories of a run $`S` and every
 memory $`m` with $`\mathrm{allocs}(m) = \mathrm{allocs}(S.\mathit{mem}(x))`,

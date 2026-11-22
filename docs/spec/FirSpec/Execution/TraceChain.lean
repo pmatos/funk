@@ -14,10 +14,10 @@ when the Lean changes under it.
 
 #doc (Manual) "Calls between two steps: readable blocks" =>
 
-:::moduleDocs (fingerprint := "6541417603556152978")
+:::moduleDocs (fingerprint := "15049324546236197799")
 :::
 
-:::readable Fir.Module.callHead? Fir.Module.CallChain Fir.Module.CallChain.unique (fingerprint := "5470064264720434997")
+:::readable Fir.Module.callHead? Fir.Module.CallChain Fir.Module.CallChain.unique (fingerprint := "11229309543807958068")
 *Definition: chains of calls.* $`\mathrm{callHead}_M(os)` is the ops of
 the entry block of the function of $`M` that the first op of $`os` calls,
 when that op is a call of a function of $`M` with an entry block. The ops

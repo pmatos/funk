@@ -14,7 +14,7 @@ changes under it.
 
 #doc (Manual) "Arithmetic rules: readable blocks" =>
 
-:::moduleDocs (fingerprint := "3144856053727690053")
+:::moduleDocs (fingerprint := "4961439556298972230")
 :::
 
 :::readable Fir.Core.constValue Fir.Core.fconstValue Fir.Core.poisonValue (pin := Fir.PoisonOr) (fingerprint := "3857023460360503600")
@@ -38,7 +38,7 @@ never poison, and $`\mathsf{poison}_N` is poison on every run, which is how
 a program writes LLVM's poison constant. Neither is ever UB.
 :::
 
-:::readable Fir.Core.addValues (pin := BitVec.add) (fingerprint := "8519880849503749880")
+:::readable Fir.Core.addValues (pin := BitVec.add) (fingerprint := "15769669036108080539")
 *Definition: the rule of $`\mathsf{add}` without flags.* For every width
 $`N`, $`\mathsf{add}_N` of two vectors of bits is their sum modulo
 $`2^N`, and $`\mathsf{add}_N` of a poison operand, in either place, is

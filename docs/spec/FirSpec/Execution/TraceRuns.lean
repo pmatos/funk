@@ -14,10 +14,10 @@ when the Lean changes under it.
 
 #doc (Manual) "Traced runs: readable blocks" =>
 
-:::moduleDocs (fingerprint := "13205618656405231887")
+:::moduleDocs (fingerprint := "11627704792050292624")
 :::
 
-:::readable Fir.Step Fir.Step.acts Fir.Step.actsOf Fir.Step.upTo (fingerprint := "11181532848498611779")
+:::readable Fir.Step Fir.Step.acts Fir.Step.actsOf Fir.Step.upTo (fingerprint := "8705614873626702449")
 *Definition: a marked trace.* A marked trace is a list of steps
 $`\mathsf{tick}` and acts. Its acts, $`\mathrm{acts}(m)`, are its trace,
 the steps removed. What it shows in its first $`N` steps,
@@ -30,7 +30,7 @@ of the acts of $`m`. So a marked trace with no act shows none in its first
 steps.
 :::
 
-:::readable Fir.TRun Fir.traceObservable (fingerprint := "16348806797459813648")
+:::readable Fir.TRun Fir.traceObservable (fingerprint := "14692163008125237661")
 *Definition: a traced run.* A traced run at one budget is the set of the
 ways it may end, each with its marked trace: a result or a stuck path, or UB
 with its reason.

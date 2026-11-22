@@ -17,7 +17,7 @@ when the Lean changes under it.
 :::moduleDocs (fingerprint := "552254409804306718")
 :::
 
-:::readable Fir.Core.memCopy_denote (pin := Fir.Core.memCopyRule) (fingerprint := "14154648767080549574")
+:::readable Fir.Core.memCopy_denote (pin := Fir.Core.memCopyRule) (fingerprint := "14870968699586774585")
 *Theorems: $`\mathsf{memcpy}` and $`\mathsf{memmove}` run by their rule.*
 With memory, $`\mathsf{memCopy}_N~k~o~W` on the destination $`p`, the
 source $`q` and the length $`l` runs the
@@ -25,7 +25,7 @@ source $`q` and the length $`l` runs the
 $`\mathrm{memcopy}_{k,W,N}(p, q, l)`.
 :::
 
-:::readable Fir.Core.copyLenRule_cases Fir.Core.memCopyRule_cases Fir.Core.memCopy_ownRuleHas (pin := Fir.Core.copyLenRule) (pin := Fir.OwnRuleHas) (fingerprint := "9593497698176751475")
+:::readable Fir.Core.copyLenRule_cases Fir.Core.memCopyRule_cases Fir.Core.memCopy_ownRuleHas (pin := Fir.Core.copyLenRule) (pin := Fir.OwnRuleHas) (fingerprint := "17411526622186744591")
 *Theorems: the cases of the rule.* The rule of a defined length ends in
 one of three ways: it returns no result at once, it is UB, or it is the
 copy of units with no result. So a property holds of it when it holds of
@@ -35,7 +35,7 @@ what the op runs by its own rule when it holds of the rule on every
 operand vector.
 :::
 
-:::readable Fir.Core.memCopy_writesNot Fir.Core.memCopy_readsNot Fir.Core.memCopy_allocatesNot (pin := Fir.WritesNot) (pin := Fir.ReadsNot) (pin := Fir.AllocatesNot) (pin := Fir.Core.Op.effects) (fingerprint := "17275562722526290264")
+:::readable Fir.Core.memCopy_writesNot Fir.Core.memCopy_readsNot Fir.Core.memCopy_allocatesNot (pin := Fir.WritesNot) (pin := Fir.ReadsNot) (pin := Fir.AllocatesNot) (pin := Fir.Core.Op.effects) (fingerprint := "1440432968062374064")
 *Theorems: a copy or a move touches only its own memory.* For every
 memory $`x` other than $`\rho(N)`, the memory it declares that it reads
 and writes, $`\mathsf{memCopy}_N~k~o~W` writes no unit of $`x` and does

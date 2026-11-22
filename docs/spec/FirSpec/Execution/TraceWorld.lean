@@ -14,7 +14,7 @@ fails when the Lean changes under it.
 
 #doc (Manual) "The world and escaped memory: readable blocks" =>
 
-:::moduleDocs (fingerprint := "13706848254933526768")
+:::moduleDocs (fingerprint := "12820158441491566839")
 :::
 
 :::readable Fir.TraceState Fir.TraceState.init (fingerprint := "11675275375676584870")
@@ -61,7 +61,7 @@ each maps the interpreter's run of a dialect to its run by the images of
 the dialect's rules.
 :::
 
-:::readable Fir.TraceState.escape Fir.TraceM.escape Fir.TraceM.handle (fingerprint := "5306423327752119627")
+:::readable Fir.TraceState.escape Fir.TraceM.escape Fir.TraceM.handle (fingerprint := "12959848196715848449")
 *Definition: escaping.* The allocation $`(x, a)` escapes from $`(S, E)`
 with the handle $`k` when $`E_k = (x, a)`; when it is not in $`E`, it joins
 it at the end, with the handle $`|E|`. Only a live allocation escapes: an
@@ -74,7 +74,7 @@ the address, or an allocation that already escaped, reaches escape, in an
 order that never depends on allocation ids.
 :::
 
-:::readable Fir.WUnit Fir.WorldAct Fir.WUnit.resolve (fingerprint := "11727295630581856659")
+:::readable Fir.WUnit Fir.WorldAct Fir.WUnit.resolve (fingerprint := "12011024016762926984")
 *Definition: the world's actions.* The world writes units that are bits,
 poison, or the fragment $`i` of a pointer of the memory numbered $`m`, into
 the escaped allocation of handle $`h`, if any, at the offset $`o`. An
@@ -90,7 +90,7 @@ are $`w` bits wide: its bits taken modulo $`2^w`, or the fragment of a
 pointer into $`E_h`, which must belong to the pointer's memory.
 :::
 
-:::readable Fir.WorldAct.apply Fir.WorldAct.applyAll Fir.TraceM.ask (fingerprint := "14959616505777134246")
+:::readable Fir.WorldAct.apply Fir.WorldAct.applyAll Fir.TraceM.ask (fingerprint := "1409709518601825584")
 *Definition: the world takes its actions.* On $`(S, E)`, where the memory
 numbered $`n` is $`\mu(n)`:
 

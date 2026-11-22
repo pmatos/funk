@@ -17,7 +17,7 @@ fingerprint; the build fails when the Lean changes under it.
 :::moduleDocs (fingerprint := "3474095909161458154")
 :::
 
-:::readable Fir.Core.icmpValues_poison Fir.Core.icmpValues_isRefinedBy (pin := Fir.Core.icmpValues) (pin := Fir.PoisonOr.IsRefinedBy) (fingerprint := "14409066836408380352")
+:::readable Fir.Core.icmpValues_poison Fir.Core.icmpValues_isRefinedBy (pin := Fir.Core.icmpValues) (pin := Fir.PoisonOr.IsRefinedBy) (fingerprint := "8028753119795276173")
 *Theorem: a poison operand of a comparison gives poison.* For every
 {ref "The-fir-specification--Abstract-syntax--Core-ops"}[predicate]
 $`p`, width $`w` and $`a, b \in \llbracket \mathsf{i}w \rrbracket`, if
@@ -37,7 +37,7 @@ the {ref "The-fir-specification--Execution--Arithmetic-obligations"}[strict rule
 of binary ops, which keep the width, do not apply as they are stated.
 :::
 
-:::readable Fir.Core.icmp_propagatesPoison Fir.Core.icmp_returnsOnDefined Fir.Core.icmp_total Fir.Core.icmp_monotone (pin := Fir.PropagatesPoison) (pin := Fir.PoisonOut) (pin := Fir.UBByOwnRules) (pin := Fir.ReturnsOnDefined) (pin := Fir.OpTotal) (pin := Fir.OpMonotone) (pin := Fir.Core.Op.denote?) (pin := Fir.Core.icmpValues) (fingerprint := "17106495435948157722")
+:::readable Fir.Core.icmp_propagatesPoison Fir.Core.icmp_returnsOnDefined Fir.Core.icmp_total Fir.Core.icmp_monotone (pin := Fir.PropagatesPoison) (pin := Fir.PoisonOut) (pin := Fir.UBByOwnRules) (pin := Fir.ReturnsOnDefined) (pin := Fir.OpTotal) (pin := Fir.OpMonotone) (pin := Fir.Core.Op.denote?) (pin := Fir.Core.icmpValues) (fingerprint := "8986966581899920074")
 *Theorem: $`\mathsf{icmp}` is lawful, with every predicate.* For every
 predicate $`p` and width $`w`, under fir's execution rules,
 $`\mathsf{icmp}_w~p` meets every obligation of an op that
@@ -52,7 +52,7 @@ $`\mathsf{icmp}_w~p` meets every obligation of an op that
   operands, and that result keeps refinement, by the theorems above.
 :::
 
-:::readable Fir.Core.selectValues_isRefinedBy (pin := Fir.Core.selectValues) (pin := Fir.PoisonOr.IsRefinedBy) (fingerprint := "14897566654380221509")
+:::readable Fir.Core.selectValues_isRefinedBy (pin := Fir.Core.selectValues) (pin := Fir.PoisonOr.IsRefinedBy) (fingerprint := "9680477311189685840")
 *Theorem: selecting with refined operands refines the selection.* For
 every width $`w`, all $`c, c' \in \llbracket \mathsf{i1} \rrbracket` and
 all $`a, b, a', b' \in \llbracket \mathsf{i}w \rrbracket`, if
@@ -70,7 +70,7 @@ chosen operand on the right refines the one on the left. The operand not
 chosen plays no part, so it may be poison.
 :::
 
-:::readable Fir.Core.select_total Fir.Core.select_monotone (pin := Fir.OpTotal) (pin := Fir.OpMonotone) (pin := Fir.Core.Op.denote?) (pin := Fir.Core.selectValues) (fingerprint := "7770313459337633667")
+:::readable Fir.Core.select_total Fir.Core.select_monotone (pin := Fir.OpTotal) (pin := Fir.OpMonotone) (pin := Fir.Core.Op.denote?) (pin := Fir.Core.selectValues) (fingerprint := "1282207500562968899")
 *Theorem: $`\mathsf{select}` is total and monotone.* For every width
 $`w`, under fir's execution rules, $`\mathsf{select}_w` is
 {ref "The-fir-specification--Execution--Poison-classes"}[total] and

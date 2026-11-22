@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Round trips: readable blocks" =>
 
-:::moduleDocs (fingerprint := "9934922582506034649")
+:::moduleDocs (fingerprint := "14705646470480955677")
 :::
 
 :::readable Fir.Func.OpWellFormed (pin := Fir.Func.typeOf) (pin := Fir.DialectSignature) (pin := Fir.Location.limit) (fingerprint := "12115051900375411089")
@@ -58,7 +58,7 @@ and each type it states is written as a type and decodes back to itself.
 Its symbol can be any string.
 :::
 
-:::readable Fir.Func.WellFormed Fir.Item.WellFormed Fir.Item.WellFormedList Fir.Item.wellFormedList_iff Fir.Module.WellFormed Fir.Module.WellFormed.funcs (pin := Fir.Func.defs) (pin := Fir.Func.types) (pin := Fir.LocTable.InLimits) (pin := Fir.Location.numbers) (pin := Fir.Location.limit) (pin := Fir.Module.funcs) (fingerprint := "5392792188802292626")
+:::readable Fir.Func.WellFormed Fir.Item.WellFormed Fir.Item.WellFormedList Fir.Item.wellFormedList_iff Fir.Module.WellFormed Fir.Module.WellFormed.funcs (pin := Fir.Func.defs) (pin := Fir.Func.types) (pin := Fir.LocTable.InLimits) (pin := Fir.Location.numbers) (pin := Fir.Location.limit) (pin := Fir.Module.funcs) (fingerprint := "16797536178522952460")
 *Definition: a well-formed function, item and module.* A function
 $`f` is _well formed_ when:
 

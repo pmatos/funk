@@ -14,10 +14,10 @@ pins their fingerprint; the build fails when the Lean changes under it.
 
 #doc (Manual) "Copy and move poison obligations: readable blocks" =>
 
-:::moduleDocs (fingerprint := "11372635642308506761")
+:::moduleDocs (fingerprint := "9021519860637312524")
 :::
 
-:::readable Fir.Core.fillPtr Fir.Core.copyUnits_ub_of_noProv Fir.Core.copyStep_ub_of_noProv Fir.Core.copyLenRule_ub_fill (pin := Fir.Core.copyLenRule) (pin := Fir.copyUnits) (fingerprint := "1285946363963922073")
+:::readable Fir.Core.fillPtr Fir.Core.copyUnits_ub_of_noProv Fir.Core.copyStep_ub_of_noProv Fir.Core.copyLenRule_ub_fill (pin := Fir.Core.copyLenRule) (pin := Fir.copyUnits) (fingerprint := "894691924986592648")
 *Theorems: a poison pointer is filled by one with no provenance.* Let
 $`\mathrm{fill}(p)` be $`p` for a pointer and the pointer with no
 provenance and offset 0 for poison. A copy of units through a pointer with

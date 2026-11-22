@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "The data layout's rules: readable blocks" =>
 
-:::moduleDocs (fingerprint := "10305281309270059159")
+:::moduleDocs (fingerprint := "9783523461112804708")
 :::
 
 :::readable Fir.isPowerOfTwo (fingerprint := "18023849196204137947")
@@ -103,7 +103,7 @@ values. A $`\mathsf{memset}` of an $`\mathsf{i8}` into memory 0 is valid in
 every module, and one of an $`\mathsf{i16}` into memory 0 in none.
 :::
 
-:::readable Fir.roundUp Fir.Field.extent Fir.Field.shape Fir.Field.units (pin := Fir.DataLayout.entry) (fingerprint := "14882233610032021211")
+:::readable Fir.roundUp Fir.Field.extent Fir.Field.shape Fir.Field.units (pin := Fir.DataLayout.entry) (fingerprint := "13180737336646275355")
 *Definition: the units that a field takes.* $`\mathrm{roundup}(u, a)` is
 $`u` rounded up to a multiple of $`a`: $`\lceil u / a \rceil \cdot a`. Let
 $`\ell` be the data layout of a module and $`n` a memory. The shape of a
@@ -121,7 +121,7 @@ take 16 units. $`\mathrm{units}_{\ell,n}(F)` is the extent of $`F` at its
 shape, and 0 when its type may not be a field.
 :::
 
-:::readable Fir.Field.Placed Fir.Field.decidablePlaced Fir.Field.Apart Fir.Field.decidableApart (fingerprint := "6885983892333427621")
+:::readable Fir.Field.Placed Fir.Field.decidablePlaced Fir.Field.Apart Fir.Field.decidableApart (fingerprint := "14341084196512311946")
 *Definition: a placed field, and two fields apart.* A field $`F` at the
 offset $`o` is placed in a layout of memory $`n` with the size $`z` and
 the alignment $`A` when its type may be a field, with the shape $`(u, a)`,

@@ -14,10 +14,10 @@ when the Lean changes under it.
 
 #doc (Manual) "Pointers as integers in text: readable blocks" =>
 
-:::moduleDocs (fingerprint := "7898506130391121134")
+:::moduleDocs (fingerprint := "17001442409132687892")
 :::
 
-:::readable Fir.Core.decodePtrExpose Fir.Core.decodePtrFromInt (fingerprint := "8518324523717893176")
+:::readable Fir.Core.decodePtrExpose Fir.Core.decodePtrFromInt (fingerprint := "4136745922564928870")
 *Definition: reading the two ops.* $`\mathsf{ptr\_expose}` decodes with no
 attributes from one operand of $`\mathsf{ptr}\langle N\rangle` and one
 result of $`\mathsf{i}W`, as $`\mathsf{ptrExpose}~N~W`;

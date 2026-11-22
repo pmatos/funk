@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "The tree that the grammar reads: readable blocks" =>
 
-:::moduleDocs (fingerprint := "9841743166274500802")
+:::moduleDocs (fingerprint := "7867237137998446161")
 :::
 
 :::readable Fir.TextPos.zero (pin := Fir.TextPos) (fingerprint := "10810081565763310123")
@@ -36,7 +36,7 @@ A part $`v` written at a position $`p`, such as an operand or a result
 type, keeps $`v` and moves to $`p_0`: $`\mathrm{erase}(v, p) = (v, p_0)`.
 :::
 
-:::readable Fir.Text.SOp.erase Fir.Text.SRegion.eraseList Fir.Text.SBlock.eraseList Fir.Text.SOp.eraseList (pin := Fir.Text.SOp) (pin := Fir.Text.SBlock) (pin := Fir.Text.SRegion) (fingerprint := "13655663665520788773")
+:::readable Fir.Text.SOp.erase Fir.Text.SRegion.eraseList Fir.Text.SBlock.eraseList Fir.Text.SOp.eraseList (pin := Fir.Text.SOp) (pin := Fir.Text.SBlock) (pin := Fir.Text.SRegion) (fingerprint := "5942942916781160774")
 *Definitions: ops, regions and blocks without positions, at any depth.*
 $`\mathrm{erase}` of an
 {ref "The-fir-specification--Text-format--Reading-the-grammar"}[op as written]
@@ -49,7 +49,7 @@ list is erased element by element. The four definitions call one another,
 as an op may hold regions.
 :::
 
-:::readable Fir.Text.SItem.erase Fir.Text.SBody.erase Fir.Text.SItem.eraseList (pin := Fir.Text.SItem) (pin := Fir.Text.SBody) (fingerprint := "1392298856763579137")
+:::readable Fir.Text.SItem.erase Fir.Text.SBody.erase Fir.Text.SItem.eraseList (pin := Fir.Text.SItem) (pin := Fir.Text.SBody) (fingerprint := "15831747457449799339")
 *Definitions: items and their bodies without positions, at any depth.*
 $`\mathrm{erase}` of an
 {ref "The-fir-specification--Text-format--Reading-the-grammar"}[item as written]
@@ -85,7 +85,7 @@ definition $`x : T` is
 $$`\begin{aligned} & \mathrm{tree}(x : T) = \{\mathsf{name}~x,~\mathsf{pos}~p_0, \\ & \quad \mathsf{ty}~\mathrm{tyattr}(T),~\mathsf{ty\_pos}~p_0\} \end{aligned}`
 :::
 
-:::readable Fir.Operation.tree Fir.Region.treeList Fir.Block.treeList Fir.Operation.treeList (pin := Fir.Operation) (pin := Fir.Block) (pin := Fir.Region) (pin := Fir.DialectText) (fingerprint := "12050404344824343051")
+:::readable Fir.Operation.tree Fir.Region.treeList Fir.Block.treeList Fir.Operation.treeList (pin := Fir.Operation) (pin := Fir.Block) (pin := Fir.Region) (pin := Fir.DialectText) (fingerprint := "7738532564632021345")
 *Definitions: the trees of ops, regions and blocks.* The tree of an
 {ref "The-fir-specification--Abstract-syntax--Modules___-functions___-blocks-and-ops"}[op]
 with the op instance $`\iota` holds:
@@ -108,7 +108,7 @@ tree of a list is the tree of each element.
 each at $`p_0`.
 :::
 
-:::readable Fir.Func.tree Fir.moduleBody Fir.DialectItem.tree Fir.Item.tree Fir.Item.treeList Fir.Item.treeList_eq_map (pin := Fir.Func) (pin := Fir.Item) (pin := Fir.DialectText) (fingerprint := "14272980561491993597")
+:::readable Fir.Func.tree Fir.moduleBody Fir.DialectItem.tree Fir.Item.tree Fir.Item.treeList Fir.Item.treeList_eq_map (pin := Fir.Func) (pin := Fir.Item) (pin := Fir.DialectText) (fingerprint := "8754359967277851201")
 *Definitions: the tree of a function, and of an item.* The tree of a
 function $`f` is the item of kind `func`, at $`p_0`, with:
 

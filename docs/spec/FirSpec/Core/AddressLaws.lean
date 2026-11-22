@@ -26,7 +26,7 @@ runs allocations, loads, stores and choices of bits, which keep them, or
 keeps the memories.
 :::
 
-:::readable Fir.Core.lawfulDialectAddresses (pin := Fir.LawfulDialectAddresses) (pin := Fir.Core.Op.effects) (fingerprint := "6220257533217801178")
+:::readable Fir.Core.lawfulDialectAddresses (pin := Fir.LawfulDialectAddresses) (pin := Fir.Core.Op.effects) (fingerprint := "6677996133616850050")
 *Theorem: the core's declarations cover addresses.* Every core op that
 does not declare an allocation in a memory gives no address and counts no
 rebuild there: each tied op keeps the memories, each op above keeps every

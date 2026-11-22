@@ -63,7 +63,7 @@ some paths and have outcomes on others. Those paths would be missing from
 its behaviour, and a behaviour with fewer outcomes refines more sources.
 :::
 
-:::readable Fir.observable_eq_at (pin := Fir.observable) (fingerprint := "7468318783720020478")
+:::readable Fir.observable_eq_at (pin := Fir.observable) (fingerprint := "17271633751340737360")
 *Theorem: for a fuel-monotone run, the run at a budget that cannot run out
 of fuel shows exactly the observable behaviour.* Let $`R` be fuel-monotone, and let $`N` be a budget
 at which $`R` cannot run out of fuel:
@@ -81,7 +81,7 @@ a function by one run, at a budget large enough that no path runs out: the
 returns and UB of that run are exactly those of the function.
 :::
 
-:::readable Fir.observable_nonempty (pin := Fir.observable) (fingerprint := "11941901247835778774")
+:::readable Fir.observable_nonempty (pin := Fir.observable) (fingerprint := "1945028495447666056")
 *Theorem: with progress, the observable behaviour is not empty.* If a run
 $`R` has progress, then some outcome $`t` is in $`\mathrm{obs}(R)`.
 

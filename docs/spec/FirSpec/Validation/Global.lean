@@ -14,10 +14,10 @@ when the Lean changes under it.
 
 #doc (Manual) "A global's rules: readable blocks" =>
 
-:::moduleDocs (fingerprint := "1603798021618248444")
+:::moduleDocs (fingerprint := "6916921189686994937")
 :::
 
-:::readable Fir.Global.named? Fir.InitPiece.unitCount Fir.Global.initUnits (fingerprint := "7805004847244928603")
+:::readable Fir.Global.named? Fir.InitPiece.unitCount Fir.Global.initUnits (fingerprint := "15130458197272923178")
 *Definition: the units of an initializer.* Among the globals $`gs` of a
 table, $`\mathrm{named?}(gs, s)` is the first with the symbol $`s`. In the
 memory $`n` of a module whose data layout is $`\ell`, a piece
@@ -28,7 +28,7 @@ memory of the global $`s` names, as a pointer stored in $`n` does
 The units of a global's initializer are those of its pieces, summed.
 :::
 
-:::readable Fir.InitPiece.Fits Fir.Global.Valid Fir.Module.GlobalsValid (fingerprint := "7849443537142349256")
+:::readable Fir.InitPiece.Fits Fir.Global.Valid Fir.Module.GlobalsValid (fingerprint := "3370090529115352604")
 *Definition: a valid global.* A global $`G` of the memory $`n` is valid as
 an item of a table whose globals are $`gs`, in a module whose data layout
 is $`\ell`, when:

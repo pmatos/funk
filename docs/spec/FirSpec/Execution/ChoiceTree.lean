@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Choice trees: readable blocks" =>
 
-:::moduleDocs (fingerprint := "10605568880020517365")
+:::moduleDocs (fingerprint := "7868390134192167650")
 :::
 
 :::readable Fir.ChoiceKind (fingerprint := "408001718835782902")
@@ -59,7 +59,7 @@ choose      \mathsf{choose}~w~\mathit{kind}~(b \mapsto \mathit{tree}_b)
   bits.
 :::
 
-:::readable Fir.ChoiceTree.bind (pin := Fir.ChoiceTree.instMonad) (pin := Fir.ChoiceTree.instMonadChoice) (pin := Fir.ChoiceTree.instMonadUB) (fingerprint := "12192307583760560467")
+:::readable Fir.ChoiceTree.bind (pin := Fir.ChoiceTree.instMonad) (pin := Fir.ChoiceTree.instMonadChoice) (pin := Fir.ChoiceTree.instMonadUB) (fingerprint := "5806974808700586543")
 *Definition: the steps of a computation, as trees.* To run a tree $`t`,
 then $`g` on its result, $`t \mathbin{>\!\!>\!\!=} g` puts $`g(a)` in place
 of each leaf $`\mathsf{pure}~a` of $`t`, and keeps its other leaves and
@@ -96,7 +96,7 @@ them. `fir-ref`'s machine, which walks a run with memory, rests on these
 laws.
 :::
 
-:::readable Fir.ChoiceTree.toSet (fingerprint := "10467757622003674079")
+:::readable Fir.ChoiceTree.toSet (fingerprint := "523024136024485288")
 *Definition: the set of a tree.* The set $`\mathrm{set}(t)` of a tree $`t`
 holds the ways its paths end, as a computation of the
 {ref "The-fir-specification--Execution--Outcomes-and-behaviours"}[set monad]:
