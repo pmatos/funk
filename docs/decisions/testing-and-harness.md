@@ -76,6 +76,30 @@ passes when `fir-ref` gives the expected result: the same values, poison
 included, or UB with any reason, or fuel exhausted (ADR-2026-10-30-2135). Such a
 test may name its path with `choices`. Without it, a run that chooses fails.
 
+### The end of a return
+
+Every run of `fir-ref` passes `--world` with the empty script, so each path
+reports its trace and each return what escaped and the memory an observer
+reaches ([fir-ref-run-end.md](fir-ref-run-end.md)), as the human ruled on
+2026-11-20 (#466, Q1). A report without them fails. `ends.py` compares two
+ends as `End.SeenUnder` does: a one-to-one renaming built from the source's
+side, the escaped lists matched by place, a dangling pointer of the source
+poison, and each matched pair of allocations agreeing on kind, alignment,
+size and liveness, each live unit refined. No id and no address is
+compared, and the harness judges no event yet (#213, stage 3).
+
+Native code's end is its values, with no event, nothing escaped and no live
+allocation: `funk build` emits no global and calls nothing outside the
+module, and a function's stack allocations are freed when it returns. So
+values alone judge a test only where `fir-ref`'s end observes nothing, and
+a native pointer result, an address, refines only a poison or dangling
+pointer. Native runs report memory once they can hold it (#213, stage 2).
+A declared result names values only, so native code is judged against the
+outcome its witness gives, end included.
+
+Rejected: judging values alone, which passes a wrong store to memory that
+an observer sees.
+
 ### Poison arguments
 
 The human ruled on 2026-11-03 that `fir-ref run` takes `poison` as an argument,
@@ -119,7 +143,7 @@ and an adapter for tool runs, and returns the judgement and its explanation.
 `execution.py` supplies the process adapter, and focused tests supply an
 in-memory one that records every run. The corpus runner keeps validation,
 building once per module, interpreter-only tests and the report. The rules stay
-in `refine.py` and `sets.py`.
+in `refine.py`, `sets.py` and `ends.py`.
 
 A judgement on the reference side wins over a native failure. A decided test
 still runs native code once, when possible, for evidence. A recheck collects all

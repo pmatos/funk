@@ -71,7 +71,11 @@ tests = [
 - Without `expect`, the test is differential. It runs on `fir-ref`, in
   exhaustive mode, and as native code from `funk build`, and the native result
   must refine one of `fir-ref`'s outcomes: the same number of values, each
-  equal, or anything of its type where `fir-ref` returns poison. A run that
+  equal, or anything of its type where `fir-ref` returns poison, and its end
+  must refine the end of `fir-ref`'s return: what escaped and the memory an
+  observer reaches
+  ([testing-and-harness.md](../../docs/decisions/testing-and-harness.md#the-end-of-a-return)).
+  A run that
   makes no choice has one outcome. UB or fuel exhausted among the outcomes
   makes the test invalid, which counts as a failure: raise the fuel budget, or
   make the test interpreter-only. A run whose float op gives a NaN lists

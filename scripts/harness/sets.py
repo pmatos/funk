@@ -23,7 +23,6 @@ from refine import (
     FUEL_EXHAUSTED,
     INVALID,
     PASSED,
-    RETURN,
     STUCK,
     UB,
     Judgement,
@@ -122,14 +121,20 @@ def member(outcomes, native, types, what: str = "outcomes") -> Judgement:
         return native.judgement()
     if isinstance(native, str):
         return Judgement(FAILED, "native code fails where fir-ref returns")
+    same = ""
     for o in outcomes:
-        if refines(o, native, types).status == PASSED:
+        j = refines(o, native, types)
+        if j.status == PASSED:
             return Judgement(PASSED)
+        if not same and o.values == tuple(native):
+            # The values match, so the end of the return does not.
+            same = f"; where the values match, {j.why}"
     some = ", ".join(show_values(o.values) for o in outcomes[:3])
     more = ", ..." if len(outcomes) > 3 else ""
     return Judgement(
         FAILED,
-        f"the native result refines none of the {len(outcomes)} {what}: {some}{more}",
+        f"the native result refines none of the {len(outcomes)} {what}:"
+        f" {some}{more}{same}",
     )
 
 
@@ -162,11 +167,11 @@ CUT_SHORT = (
 )
 
 
-def judge_declared(results, native, types) -> Judgement:
+def judge_declared(witnessed, native, types) -> Judgement:
     """Judges a differential test on its declared results, once they are
-    checked."""
-    outcomes = tuple(Outcome(RETURN, r.values) for r in results)
-    return member(outcomes, native, types, "declared results")
+    checked: `witnessed` are the outcomes that their witnesses give, each
+    with the end of its return, which a declared result does not name."""
+    return member(tuple(witnessed), native, types, "declared results")
 
 
 def witness(i: int, r: Declared, got) -> Judgement | None:

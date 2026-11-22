@@ -15,6 +15,7 @@ invalid, as a run out of fuel does on the other side
 import re
 from dataclasses import dataclass
 
+import ends
 import float_text
 
 POISON = "poison"
@@ -67,11 +68,13 @@ def bits_of(ty: str) -> tuple[int, bool] | None:
 
 @dataclass(frozen=True)
 class Outcome:
-    """What `fir-ref run` reports for one run."""
+    """What `fir-ref run` reports for one run: with `--world`, a return also
+    gives its end (`ends.End`), which the harness reads from every run."""
 
     kind: str
     values: tuple[str, ...] = ()
     reason: str = ""
+    end: ends.End = ends.NOTHING
 
     def show(self) -> str:
         if self.kind == RETURN:
@@ -136,6 +139,12 @@ def refines(ref: Outcome, native, types) -> Judgement:
 
     `native` is the list of values that native code returns, or a string
     saying how it failed. `types` are the function's result types.
+
+    Native code's end is its values, with no event, nothing escaped and no
+    live allocation: a module that `funk build` builds calls nothing outside
+    it and emits no global, and a function's stack allocations are freed
+    when it returns. A pointer result is an address, which refines only a
+    poison or dangling pointer of fir-ref's (`ends.refined`).
     """
     if ref.kind == UB:
         return Judgement(INVALID, "UB allows any result, so the test proves nothing")
@@ -161,12 +170,20 @@ def refines(ref: Outcome, native, types) -> Judgement:
             FAILED, f"the function returns {len(types)} values, not {len(ref.values)}"
         )
     for i, (want, got, ty) in enumerate(zip(ref.values, native, types), 1):
-        if want == POISON:
+        if ends.pointer_memory(ty) is not None:
+            if not is_value(got, "i64"):
+                return Judgement(FAILED, f"value {i}, {got}, is not an address")
+        elif want == POISON:
             if not is_value(got, ty):
                 return Judgement(FAILED, f"value {i}, {got}, is not a value of {ty}")
         elif got != want:
             return Judgement(FAILED, f"value {i} is {got}, not {want}")
-    return Judgement(PASSED)
+    seen = tuple(
+        ends.ADDRESS if ends.pointer_memory(t) is not None else v
+        for v, t in zip(native, types)
+    )
+    why = ends.refined(ref.end, ref.values, ends.NOTHING, seen, types)
+    return Judgement(FAILED, why) if why else Judgement(PASSED)
 
 
 def expected(ref: Outcome, expect) -> Judgement:

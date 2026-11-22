@@ -79,11 +79,11 @@ class Stand(unittest.TestCase):
                 sys.stdout.write({reprint!r})
             if cmd == "run":
                 if "--exhaustive" in sys.argv:
-                    print('{{"kind":"outcomes","choices":0,"outcomes":[{{"kind":"return","values":["2"]}}]}}')
+                    print('{{"kind":"outcomes","choices":0,"outcomes":[{{"kind":"return","values":["2"],"trace":[],"escaped":[],"memory":[]}}]}}')
                 elif "--seed" in sys.argv:
-                    print('{{"kind":"return","values":["2"],"choices":1,"sequence":["7"]}}')
+                    print('{{"kind":"return","values":["2"],"trace":[],"escaped":[],"memory":[],"choices":1,"sequence":["7"]}}')
                 else:
-                    print('{{"kind":"return","values":["2"],"choices":0}}')
+                    print('{{"kind":"return","values":["2"],"trace":[],"escaped":[],"memory":[],"choices":0}}')
             """,
         )
 
@@ -183,7 +183,7 @@ class CompareTest(Stand):
             if sys.argv[1] == "validate":
                 print('{"verdict":"accepted","diagnostics":[]}')
             elif "--choice-bits" in sys.argv:
-                print('{"kind":"outcomes","choices":32,"outcomes":[{"kind":"return","values":["2"]}]}')
+                print('{"kind":"outcomes","choices":32,"outcomes":[{"kind":"return","values":["2"],"trace":[],"escaped":[],"memory":[]}]}')
             else:
                 print('{"kind":"choice-budget-exceeded","budget":16}')
             """,

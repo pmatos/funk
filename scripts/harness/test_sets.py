@@ -104,8 +104,7 @@ class NativeOutOfStack(unittest.TestCase):
         self.assertEqual((j.status, "4096 bytes" in j.why), (INVALID, True))
 
     def test_it_makes_a_test_on_declared_results_invalid(self):
-        declared = (Declared(("7",), ("3",)),)
-        j = judge_declared(declared, OutOfStack(4096), ["i8"])
+        j = judge_declared((ret("7"),), OutOfStack(4096), ["i8"])
         self.assertEqual((j.status, "4096 bytes" in j.why), (INVALID, True))
 
 
@@ -183,12 +182,14 @@ class Declarations(unittest.TestCase):
         self.assertEqual(status(sample(1, "exits with 2", [ZERO])), FAILED)
 
     def test_native_code_refines_a_declared_result(self):
-        both = [ZERO, Declared(("poison",), ("1",))]
-        self.assertEqual(judge_declared([ZERO], ("0",), ["i64"]).status, PASSED)
-        self.assertEqual(judge_declared([ZERO], ("1",), ["i64"]).status, FAILED)
+        # Each declared result as its witness gives it.
+        zero = [ret("0")]
+        both = [ret("0"), ret("poison")]
+        self.assertEqual(judge_declared(zero, ("0",), ["i64"]).status, PASSED)
+        self.assertEqual(judge_declared(zero, ("1",), ["i64"]).status, FAILED)
         self.assertIn(
             "none of the 1 declared results",
-            judge_declared([ZERO], ("1",), ["i64"]).why,
+            judge_declared(zero, ("1",), ["i64"]).why,
         )
         self.assertEqual(judge_declared(both, ("1",), ["i64"]).status, PASSED)
         self.assertEqual(judge_declared(both, "exits with 2", ["i64"]).status, FAILED)

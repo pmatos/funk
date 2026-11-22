@@ -163,7 +163,7 @@ class _Run:
         if isinstance(self.ref, BudgetExceeded) or (
             self.test.results and not self.ref.complete
         ):
-            return sets.judge_declared(self.test.results, native, self.types)
+            return sets.judge_declared(self.witnessed, native, self.types)
         j = sets.judge_set(self.ref, native, self.types)
         if self.ref.complete or j.status != FAILED:
             return j
@@ -230,11 +230,13 @@ class _Run:
 
     def _declared(self) -> Judgement | None:
         t = self.test
+        self.witnessed = []
         for i, r in enumerate(t.results, 1):
             got = self.runs.scripted(t.args, r.witness)
             j = sets.witness(i, r, got)
             if j is not None:
                 return j
+            self.witnessed.append(got.outcome)
         if isinstance(self.ref, Outcomes):
             j = sets.undeclared(self.ref, t.results)
             if j is not None or self.ref.complete:
