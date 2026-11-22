@@ -65,8 +65,9 @@ has neither operands nor attributes, is a cell at each width of its result
   length, at the side's pointer widths, on both sides, since the backend
   lowers them to funk's own runtime routines (`copy_cells.py`, #234).
 - `ptr_expose` and `ptr_from_int` are a cell for each width of their
-  integer, at the side's address widths, on the interpreter side only
-  until the backend lowers them (`address_cells.py`, #232).
+  integer, at the side's address widths, on both sides, since the
+  backend lowers them as moves in a memory of 64-bit pointers
+  (`address_cells.py`, #232).
 """
 
 from address_cells import ADDRESS_OPS, address_cell, addresses_table

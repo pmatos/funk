@@ -47,7 +47,8 @@
 //! entry x86-64 realises: 8-bit units and 64-bit pointers. `ptradd`, `load`
 //! and `store` work on addresses (`memory.rs`), `fieldaddr` adds a field's
 //! offset and its elements' strides (`field_addr.rs`), `memcpy`, `memmove` and
-//! `memset` call funk's own runtime routines (`memops.rs`), and `alloca`
+//! `memset` call funk's own runtime routines (`memops.rs`), `ptr_expose` and
+//! `ptr_from_int` move an address (`ptr_int.rs`), and `alloca`
 //! moves `%rsp` below the frame at run time, which the stack need counts
 //! (`alloca.rs`, `docs/decisions/x86-64-backend-lowering-memory.md`).
 
@@ -73,6 +74,7 @@ mod int_to_float;
 mod memops;
 mod memory;
 mod moves;
+mod ptr_int;
 mod stack;
 
 use std::collections::{HashMap, HashSet};
@@ -302,6 +304,7 @@ fn lowering(name: &str) -> Option<Lower> {
         .or_else(|| float_to_int::lowering(name))
         .or_else(|| memory::lowering(name))
         .or_else(|| field_addr::lowering(name))
+        .or_else(|| ptr_int::lowering(name))
         .or_else(|| memops::lowering(name))
         .or_else(|| alloca::lowering(name))
 }
