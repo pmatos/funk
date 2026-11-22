@@ -241,6 +241,24 @@ fn a_global_the_backend_cannot_place_is_reported_at_the_global() {
     }
 }
 
+/// `as` warns on `.zero 0`, and a build fails on any warning, so a global
+/// of size 0 and a `zeros(0)` piece write no `.zero`.
+#[test]
+fn empty_globals_and_pieces_build() {
+    let text = with_locs(
+        "global @none() size(0) align(1) {\n}\n\n\
+         global @some() size(2) align(1) units(1) zeros(0) units(2) {\n}\n\n\
+         global @tail() size(1) align(1) const zeros(0) {\n}\n\n\
+         func @f() -> i8 {\n^entry:\n  %g: ptr = globaladdr @some @0\n  \
+         %v: i8 = load nonatomic %g @0\n  ret %v @0\n}",
+    );
+    let asm = compile(&module(&text)).unwrap().module;
+    assert!(!asm.contains(".zero\t0"), "{asm}");
+    let exe = fresh("empty");
+    build(&module(&text), &exe).unwrap();
+    assert_eq!(run(&exe, "@f", &[]), "1");
+}
+
 #[test]
 fn a_nested_module_s_globals_are_left_out() {
     let text = with_locs(
