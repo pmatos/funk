@@ -1,8 +1,8 @@
 # Tests of ptr-int-memories.fir: in memory 1, of 32-bit pointers,
 # ptr_expose gives an i32 and ptr_from_int takes one (#232). The address of
 # an allocation and that address plus 2 both turn back into pointers into
-# it. The backend lowers neither op until stage 5 of #232, and does not
-# realise a memory of 32-bit pointers, so each test is interpreter-only.
+# it. The backend realises no memory of 32-bit pointers, so each test is
+# interpreter-only, though it lowers both ops (stage 5 of #232).
 tests = [
   { func = "@round_trip", args = ["21"], expect = ["42"] },
   { func = "@round_trip", args = ["-1"], expect = ["-2"] },
