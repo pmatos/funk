@@ -14,13 +14,13 @@ when the Lean changes under it.
 
 #doc (Manual) "Refined arguments over traced runs, divergence included: readable blocks" =>
 
-:::moduleDocs (fingerprint := "15255307916607136838")
+:::moduleDocs (fingerprint := "1628724513242499903")
 :::
 
-:::readable Fir.Func.traceRuns_exhausted_iff Fir.Func.traceRuns_exhausted_iff_from Fir.Func.traceRuns_truncates Fir.Func.traceRuns_finitelyMany (fingerprint := "8123228927819801441")
+:::readable Fir.Func.traceRuns_exhausted_iff Fir.Func.traceRuns_exhausted_iff_from Fir.Func.traceRuns_truncates Fir.Func.traceRuns_finitelyMany (fingerprint := "6720264937017352316")
 *Theorems.* A path of a function's traced runs that runs out of fuel is a
-path of its entry block's ops, in a frame from the empty memories with
-nothing escaped, that runs out of fuel after the same marked trace, and a
+path of its entry block's ops, in a frame from the memories that hold
+$`L`'s starting allocations, with nothing escaped, that runs out of fuel after the same marked trace, and a
 path of its traced runs from that traced state (those of the section on
 refined arguments from a given traced state) that does so. The
 traced runs of a function truncate, with any $`W > 0` that

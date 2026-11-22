@@ -42,8 +42,8 @@ namespace Fir.Memory
 variable {u : Nat}
 
 /-- What an address policy sees of a block: its shape, which is its kind,
-alignment, size and liveness, and its address. -/
-abbrev Place := (AllocKind × Nat × Nat × Bool) × Option Nat
+alignment, size, liveness and constness, and its address. -/
+abbrev Place := (AllocKind × Nat × Nat × Bool × Bool) × Option Nat
 
 /-- What an address policy sees of a memory: each block's shape and
 address, in the order the allocations were made. -/

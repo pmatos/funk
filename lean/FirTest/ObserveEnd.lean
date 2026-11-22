@@ -21,11 +21,11 @@ the one memory. -/
 abbrev E := ObservedEnd w (fun _ => ()) (List (DVal CoreDialect))
 
 /-- A live stack block of one byte holding `b`. -/
-def byte (b : Nat) : Block 8 := ⟨.stack, 1, [.bits (BitVec.ofNat 8 b)], true, none⟩
+def byte (b : Nat) : Block 8 := ⟨.stack, 1, [.bits (BitVec.ofNat 8 b)], true, none, false⟩
 
 /-- A live stack block of one unit holding the fragment of a pointer into
 `a`. -/
-def link (a : AllocId) : Block 8 := ⟨.stack, 1, [.frag 0 ⟨some a, 0⟩ 0], true, none⟩
+def link (a : AllocId) : Block 8 := ⟨.stack, 1, [.frag 0 ⟨some a, 0⟩ 0], true, none, false⟩
 
 /-- The memories whose one memory has the blocks `bs`. -/
 def mems (bs : List (Block 8)) : Memories Unit w := Memories.empty.set () ⟨bs⟩
@@ -96,7 +96,7 @@ example : ¬ (⟨[ptr 0, ptr 1], mems [byte 5, byte 5], []⟩ : E) ⊑
 /-! # Addresses -/
 
 /-- A live stack block of one byte holding 5, with the address `x`. -/
-def at5 (x : Option Nat) : Block 8 := ⟨.stack, 1, [.bits (BitVec.ofNat 8 5)], true, x⟩
+def at5 (x : Option Nat) : Block 8 := ⟨.stack, 1, [.bits (BitVec.ofNat 8 5)], true, x, false⟩
 
 /-- The spec does not compare addresses: an allocation the source exposed at
 64 is seen in one the target exposed elsewhere, or did not expose. -/
@@ -250,7 +250,7 @@ example : blocksOf ((WorldAct.store 1 0 [.bits 7]).apply (fun _ => ()) escaped5)
 example : ((WorldAct.alloc 0 4 2).apply (fun _ => ()) escaped5).map (·.escaped) =
     some [((), 0), ((), 1)] := by decide
 example : blocksOf (WorldAct.applyAll (fun _ => ()) [.alloc 0 1 0, .free 1] escaped5) =
-    some [byte 5, (⟨.heap, 1, [.poison], true, none⟩ : Block 8).kill] := by decide
+    some [byte 5, (⟨.heap, 1, [.poison], true, none, false⟩ : Block 8).kill] := by decide
 example : blocksOf ((WorldAct.free 0).apply (fun _ => ()) escaped5) = none := by decide
 
 /-- The world's answer to an event is in the act, with the actions it took,

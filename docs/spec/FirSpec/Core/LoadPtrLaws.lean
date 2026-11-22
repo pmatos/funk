@@ -28,7 +28,7 @@ So what it runs by its own rule has a property when its rule has it on
 every pointer.
 :::
 
-:::readable Fir.Core.loadPtr_writesNot Fir.Core.loadPtr_allocatesNot Fir.Core.loadPtr_readsNot (pin := Fir.WritesNot) (pin := Fir.ReadsNot) (pin := Fir.AllocatesNot) (fingerprint := "15595423325696301472")
+:::readable Fir.Core.loadPtr_writesNot Fir.Core.loadPtr_allocatesNot Fir.Core.loadPtr_readsNot (pin := Fir.WritesNot) (pin := Fir.ReadsNot) (pin := Fir.AllocatesNot) (fingerprint := "9490631418297476322")
 *Theorems: the load of a pointer touches memory only by reading where it
 declares.* At every layout $`\ell` and naming $`\rho`, it writes no unit
 of any memory, allocates and frees in none, and reads no memory but

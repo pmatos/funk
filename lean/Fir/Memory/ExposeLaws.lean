@@ -9,7 +9,8 @@ below say so, and say what the memory's other operations do to addresses:
 
 * Exposing gives the allocation the address only when it has none, and
   changes no other allocation's address.
-* It keeps every block's kind, alignment, size, liveness and units. So a
+* It keeps every block's kind, alignment, size, liveness, constness and
+  units. So a
   load, aligned or not, gives what it gave and faults for the same reason,
   whether an access is aligned is the same, and a store faults for the same
   reason and gives the memory it gave, exposed.
@@ -24,6 +25,10 @@ below say so, and say what the memory's other operations do to addresses:
 namespace Fir.Memory
 
 variable {u : Nat}
+
+/-- Giving a block an address keeps it constant or not. -/
+@[simp] theorem Block.giveAddr_const (x : Nat) (b : Block u) : (b.giveAddr x).const = b.const := by
+  unfold Block.giveAddr; split <;> rfl
 
 /-- Giving a block an address keeps its shape. -/
 @[simp] theorem Block.giveAddr_shape (x : Nat) (b : Block u) : (b.giveAddr x).shape = b.shape := by
@@ -153,8 +158,13 @@ theorem store_expose (M : Memory u) (a x : Nat) (p : Pointer) (us : List (MemUni
   | error f => rfl
   | ok r =>
     obtain ⟨a', b, o⟩ := r
-    simp only [Except.map, bind, Except.bind, pure, Except.pure, Except.ok.injEq]
-    congr 1
+    have hc : (if a = a' then b.giveAddr x else b).const = b.const := by
+      split <;> simp [Block.giveAddr_const]
+    simp only [Except.map, bind, Except.bind, hc]
+    cases b.const
+    case true => rfl
+    simp only [Bool.false_eq_true, ↓reduceIte, pure, Except.pure]
+    congr 2
     apply List.ext_getElem?
     intro j
     simp only [expose, List.getElem?_set, List.getElem?_modify, List.length_modify]
@@ -193,7 +203,10 @@ theorem addrOf_store {M M' : Memory u} {p : Pointer} {us : List (MemUnit u)}
   | error f => simp [hl, bind, Except.bind] at h
   | ok r =>
     obtain ⟨a', b, o⟩ := r
-    simp only [hl, bind, Except.bind, pure, Except.pure, Except.ok.injEq] at h
+    cases hc : b.const
+    case true => simp [hl, hc, bind, Except.bind, throw, throwThe, MonadExceptOf.throw] at h
+    simp only [hl, hc, bind, Except.bind, Bool.false_eq_true, ↓reduceIte, pure, Except.pure,
+      Except.ok.injEq] at h
     subst h
     have hb := (locate_eq_ok.mp hl).2.1
     unfold addrOf

@@ -15,7 +15,9 @@ this page and an ADR disagree, the page wins, and the ADR is fixed or deleted
 - semantics-floats.md: floating point;
 - semantics-floats-conversions.md: the conversions of floats;
 - semantics-m1-design.md: the M1 design, most of it not built yet;
-- semantics-m1-memory.md: M1's memory, its pointer ops and stack allocation;
+- semantics-m1-globals.md: M1's globals and the allocations a run starts with;
+- semantics-m1-memory.md: M1's memory and its pointer ops;
+- semantics-m1-stack.md: stack allocation in M1;
 - semantics-m1-memory-access.md: aligned accesses, loads and stores in M1;
 - semantics-m1-addresses.md: the addresses of exposed allocations in M1;
 - semantics-m1-dialects.md: dialects, levels and the second dialect in M1;
@@ -89,7 +91,7 @@ the word among other text, such as a message, stays allowed. Both checks take
 writes, as the human ruled on 2026-11-20 (#237 Q4; semantics-m1-design.md).
 `check_g0.py` also leaves out one attribute word, `align`, which the generic
 data layout line writes too, as the human ruled on 2026-11-14 (#382;
-semantics-m1-memory.md). `scripts/test_check_g0.py` and `g0.rs` plant
+semantics-m1-stack.md). `scripts/test_check_g0.py` and `g0.rs` plant
 `"poison"` alone in generic code, which fails, and a message that holds it,
 which passes. Generic code that one day needs the bare spelling takes it from
 the dialect through a class, or ADR-2026-11-03-0600 moves the line

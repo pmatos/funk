@@ -25,7 +25,7 @@ parameter types, such that
   the observable behaviour of the target's function, with the memories it
   ends with, refines that of the source's.
 The black box speaks of runs from any memories, not only of runs from the
-empty memories: a callee runs from the memories its caller reached, and its
+memories a run starts with: a callee runs from the memories its caller reached, and its
 caller goes on from those it leaves.
 
 A path of the target that runs out of fuel asks more of a black box than

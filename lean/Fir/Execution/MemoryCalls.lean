@@ -5,7 +5,8 @@ import Fir.Memory.Refine
 /-!
 # Runs of a function from given memories
 
-A run with memory starts from the empty memories, and an observer sees what
+A run with memory starts from the memories that hold its starting
+allocations, and an observer sees what
 it returns (the section on runs with memory). A call is a run of its callee
 too, but from the memories that its caller reached, and its caller goes on
 from the memories that the callee leaves. So refinement through calls with
@@ -22,9 +23,9 @@ is, with what they return finished:
   with, the frame left; it runs out of fuel when they do; it hits UB when
   they do;
 * it is fuel-monotone, as the runs with memory are;
-* the runs with memory of a function are its runs from the empty memories,
-  with the memories they end with dropped. So when its runs from the empty
-  memories refine others', so do its runs with memory.
+* the runs with memory of a function are its runs from the memories a run
+  starts with, with the memories they end with dropped. So when its runs
+  from those memories refine others', so do its runs with memory.
 
 A run in a call's frame with more fuel is ahead of the run with less, from
 the same memories, as the run in the frame's ops is, and gives back at most
@@ -247,7 +248,7 @@ theorem Func.memRunsFrom_exhausted_down {M : Module d} {f : Func d}
 
 end
 
-/-! # Runs with memory, from the empty memories -/
+/-! # Runs with memory, from the memories a run starts with -/
 
 section
 
@@ -256,24 +257,26 @@ variable {d : Dialect} [TyDenote d.Ty] [DecidableEq d.Ty] [DialectSignature d] [
   (lay : N → MemLayout) (ρ : DialectEffects.Mem d → N) (L : RunItems)
 
 omit [TyRefinement d.Ty] in
-/-- A run with memory is the run from the empty memories, with the memories
+/-- A run with memory is the run from the memories a run starts with, with
+the memories
 it ends with dropped. -/
 theorem Func.memRuns_eq_fromState (M : Module d) (f : Func d)
     (a : HVector toType (f.params.map (·.2))) (n : Nat) :
     letI := DialectMemDenote.denoteAt (d := d) lay ρ L
     f.memRuns lay ρ L M a n = (Prod.fst <$> fromState
-      (f.run M (m := StateT (Memories N (unitsOf lay)) SetM) a n) Memories.empty).run :=
+      (f.run M (m := StateT (Memories N (unitsOf lay)) SetM) a n) (RunItems.start d lay ρ L)).run :=
   fromState_fst _ _
 
 variable {M : Module d} {f : Func d} {a : HVector toType (f.params.map (·.2))} {n : Nat}
 
 omit [TyRefinement d.Ty] in
-/-- A run with memory returns what the run from the empty memories returns,
+/-- A run with memory returns what the run from the memories a run starts
+with returns,
 with whatever memories that run ends with. -/
 theorem Func.memRuns_ret_iff {vs : List (DVal d)} :
     letI := DialectMemDenote.denoteAt (d := d) lay ρ L
     (f.memRuns lay ρ L M a n).outcomes (.ret vs) ↔
-      ∃ T, (f.memRunsFrom M (a, (Memories.empty : Memories N (unitsOf lay))) n).outcomes
+      ∃ T, (f.memRunsFrom M (a, (RunItems.start d lay ρ L)) n).outcomes
         (.ret (vs, T)) := by
   letI := DialectMemDenote.denoteAt (d := d) lay ρ L
   simp only [Run.outcomes, Func.memRunsFrom, Func.memRuns_eq_fromState]
@@ -293,12 +296,13 @@ theorem Func.memRuns_ret_iff {vs : List (DVal d)} :
     · cases he
 
 omit [TyRefinement d.Ty] in
-/-- A run with memory hits UB exactly when the run from the empty memories
+/-- A run with memory hits UB exactly when the run from the memories a run
+starts with
 does. -/
 theorem Func.memRuns_ub_iff {r : String} :
     letI := DialectMemDenote.denoteAt (d := d) lay ρ L
     (f.memRuns lay ρ L M a n).outcomes (.ub r) ↔
-      (f.memRunsFrom M (a, (Memories.empty : Memories N (unitsOf lay))) n).outcomes (.ub r) := by
+      (f.memRunsFrom M (a, (RunItems.start d lay ρ L)) n).outcomes (.ub r) := by
   letI := DialectMemDenote.denoteAt (d := d) lay ρ L
   simp only [Run.outcomes, Func.memRunsFrom, Func.memRuns_eq_fromState]
   constructor
@@ -321,7 +325,7 @@ memories does. -/
 theorem Func.memRuns_exhausted_iff :
     letI := DialectMemDenote.denoteAt (d := d) lay ρ L
     (f.memRuns lay ρ L M a n).outcomes .fuelExhausted ↔
-      (f.memRunsFrom M (a, (Memories.empty : Memories N (unitsOf lay)))
+      (f.memRunsFrom M (a, (RunItems.start d lay ρ L))
         n).outcomes .fuelExhausted := by
   letI := DialectMemDenote.denoteAt (d := d) lay ρ L
   simp only [Run.outcomes, Func.memRunsFrom, Func.memRuns_eq_fromState]
@@ -342,13 +346,13 @@ theorem Func.memRuns_exhausted_iff :
     · cases he
 
 /-- The runs with memory of a function refine those of another when their
-runs from the empty memories do: they are those runs, with the memories they
+runs from the memories a run starts with do: they are those runs, with the memories they
 end with dropped. -/
 theorem Func.memRuns_isRefinedBy_of_from {M M' : Module d} {f f' : Func d}
     {a : HVector toType (f.params.map (·.2))} {a' : HVector toType (f'.params.map (·.2))}
     (h : letI := DialectMemDenote.denoteAt (d := d) lay ρ L
-      observable (f.memRunsFrom M (a, (Memories.empty : Memories N (unitsOf lay)))) ⊑
-        observable (f'.memRunsFrom M' (a', (Memories.empty : Memories N (unitsOf lay))))) :
+      observable (f.memRunsFrom M (a, (RunItems.start d lay ρ L))) ⊑
+        observable (f'.memRunsFrom M' (a', (RunItems.start d lay ρ L)))) :
     observable (f.memRuns lay ρ L M a) ⊑ observable (f'.memRuns lay ρ L M' a') := by
   letI := DialectMemDenote.denoteAt (d := d) lay ρ L
   intro t ht

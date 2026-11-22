@@ -14,10 +14,10 @@ fails when the Lean changes under it.
 
 #doc (Manual) "A store declared without a write: readable blocks" =>
 
-:::moduleDocs (fingerprint := "3378814284688220651")
+:::moduleDocs (fingerprint := "12655844275180322662")
 :::
 
-:::readable Fir.Core.Unlawful.storeNoWrite Fir.Core.Unlawful.store_typesValid (pin := Fir.Core.Op.effects) (fingerprint := "16673731773703891682")
+:::readable Fir.Core.Unlawful.storeNoWrite Fir.Core.Unlawful.store_typesValid (pin := Fir.Core.Op.effects) (fingerprint := "1611772627437551183")
 *Definition: a declaration without a write.* The declaration gives every
 core op its
 {ref "The-fir-specification--Execution--Core-effects"}[effects],
@@ -27,7 +27,7 @@ of a pointer keeps its write. A store of an $`\mathsf{i8}` through a
 pointer of memory 0 is a valid op instance.
 :::
 
-:::readable Fir.Core.Unlawful.storeAlign_i8 Fir.Core.Unlawful.oneUnit_store (pin := Fir.Memory.Memories.store) (pin := Fir.Core.Unlawful.oneUnit) (fingerprint := "499630171697357063")
+:::readable Fir.Core.Unlawful.storeAlign_i8 Fir.Core.Unlawful.oneUnit_store (pin := Fir.Memory.Memories.store) (pin := Fir.Core.Unlawful.oneUnit) (fingerprint := "3066702189612615173")
 *Theorems: a store of one unit.* An $`\mathsf{i8}` is stored to the
 default memory aligned to 1, so the store of the $`\mathsf{i8}` 1 through
 the pointer to the one unit of $`S_0`, the memories of the section on a

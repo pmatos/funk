@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Aligned access laws: readable blocks" =>
 
-:::moduleDocs (fingerprint := "12590413594868773260")
+:::moduleDocs (fingerprint := "3917783121082571897")
 :::
 
 :::readable Fir.Memory.Memory.aligned_one (pin := Fir.Memory.Memory.aligned) (fingerprint := "13858609998696589949")
@@ -48,7 +48,7 @@ first. Where the plain one succeeds but the access is not aligned, the
 aligned one faults as $`\mathsf{misaligned}`.
 :::
 
-:::readable Fir.Memory.Memory.aligned_of_shapes Fir.Memory.Memory.aligned_store (pin := Fir.Memory.Block.shape) (fingerprint := "10216916223102833512")
+:::readable Fir.Memory.Memory.aligned_of_shapes Fir.Memory.Memory.aligned_store (pin := Fir.Memory.Block.shape) (fingerprint := "7248669430136741410")
 *Theorems: alignment depends on no unit.* Two memories whose blocks have
 the same shapes, one by one, agree on whether each access is aligned:
 whether it is depends only on the alignment of its block and on its

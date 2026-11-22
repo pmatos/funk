@@ -203,7 +203,7 @@ theorem storeFloat_memReturnsOnDefined : MemReturnsOnDefined (d := CoreDialect) 
     rw [Memories.alloc_mem_self, Memories.alloc_fst]
     rw [Memory.storeAligned_of_aligned (by rw [← Memory.alloc_fst, Memory.aligned_alloc]; simp)]
     exact ⟨_, Memory.store_of_locate (Memory.locate_eq_ok.2 ⟨rfl, Memory.alloc_blocks_new _ _ _ _,
-      rfl, Int.le_refl 0, by simp, rfl⟩)⟩
+      rfl, Int.le_refl 0, by simp, rfl⟩) rfl⟩
   obtain ⟨M', hM'⟩ := hs
   refine ⟨HVector.cons (f := toType) (a := Ty.float fe fm) (.value 0#(floatWidth fe fm) : PoisonOr (BitVec (floatWidth fe fm)))
     (HVector.cons (f := toType) (a := Ty.ptr n) (.value q.1 : PoisonOr Pointer) .nil), ?_, q.2,

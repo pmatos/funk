@@ -20,7 +20,7 @@ callee over traced runs (`Fir.Execution.TraceReplace`):
   the body of its function `@g` with one under which `@g`, run in the new
   module from given traced states, refines `@g` in the old, refines every
   function of the module over its traced runs from given traced states, and
-  so over its traced runs from the empty memories
+  so over its traced runs from the memories a run starts with
   (`Func.traceRuns_replaceBody_isRefinedBy`). It asks what refined arguments
   over traced runs asks: monotone ops, ops of finitely many outcomes given the
   world's answers (the human's ruling of 2026-11-20, on #233), and transitive
@@ -105,28 +105,32 @@ variable (μ : Nat → N) (ar : AddrRule)
 
 omit [TyRefinement d.Ty] in
 /-- The traced runs of a function diverge silently after a trace exactly when
-its traced runs from the empty memories do: the same paths run out of fuel. -/
+its traced runs from the memories the run starts with do: the same paths run
+out of fuel. -/
 theorem Func.traceRuns_diverge_iff_from {a : HVector toType (f.params.map (·.2))}
     {tr : List (DialectTrace.Acts d)} :
     traceObservable (f.traceRuns lay ρ L μ ar M a) (.diverge tr) ↔
-      traceObservable (f.traceRunsFrom lay ρ L M (a, TraceState.init)) (.diverge tr) :=
+      traceObservable (f.traceRunsFrom lay ρ L M (a, TraceState.init (RunItems.start d lay ρ L)))
+        (.diverge tr) :=
   exists_congr fun _ => forall_congr' fun _ => exists_congr fun _ =>
     and_congr_left' (Func.traceRuns_exhausted_iff_from lay ρ L μ ar)
 
 omit [TyRefinement d.Ty] in
 /-- The traced runs of a function show an infinite trace exactly when its
-traced runs from the empty memories do: the same paths run out of fuel. -/
+traced runs from the memories the run starts with do: the same paths run out
+of fuel. -/
 theorem Func.traceRuns_reacts_iff_from {a : HVector toType (f.params.map (·.2))}
     {T : Nat → DialectTrace.Acts d} :
     traceObservable (f.traceRuns lay ρ L μ ar M a) (.reacts T) ↔
-      traceObservable (f.traceRunsFrom lay ρ L M (a, TraceState.init)) (.reacts T) :=
+      traceObservable (f.traceRunsFrom lay ρ L M (a, TraceState.init (RunItems.start d lay ρ L)))
+        (.reacts T) :=
   exists_congr fun _ => forall_congr' fun _ => exists_congr fun _ =>
     and_congr_left' (Func.traceRuns_exhausted_iff_from lay ρ L μ ar)
 
 variable [TyPointers d.Ty]
 
-/-- When a function's traced runs from the empty memories with nothing escaped
-refine another's, the traced state each return ends in included, its traced
+/-- When a function's traced runs from the memories a run starts with and
+nothing escaped refine another's, the traced state each return ends in included, its traced
 runs refine the other's, each return seen at its end, when refinement of
 values is transitive. -/
 theorem Func.traceRuns_isRefinedBy_of_traceRunsFrom
@@ -134,8 +138,9 @@ theorem Func.traceRuns_isRefinedBy_of_traceRunsFrom
       TyRefinement.IsRefinedBy v w → TyRefinement.IsRefinedBy u w)
     {f' : Func d} {a : HVector toType (f.params.map (·.2))}
     {a' : HVector toType (f'.params.map (·.2))}
-    (h : traceObservable (f.traceRunsFrom lay ρ L M (a, TraceState.init)) ⊑
-      traceObservable (f'.traceRunsFrom lay ρ L M' (a', TraceState.init))) :
+    (h : traceObservable (f.traceRunsFrom lay ρ L M (a, TraceState.init (RunItems.start d lay ρ L))) ⊑
+      traceObservable
+        (f'.traceRunsFrom lay ρ L M' (a', TraceState.init (RunItems.start d lay ρ L)))) :
     traceObservable (f.traceRuns lay ρ L μ ar M a) ⊑
       traceObservable (f'.traceRuns lay ρ L μ ar M' a') := by
   intro t' ht'
@@ -238,6 +243,6 @@ theorem Func.traceRuns_replaceBody_isRefinedBy
       (f.replaceBody g.name b).traceRuns lay ρ L μ ar (M.replaceBody g.name b) := fun a =>
   Func.traceRuns_isRefinedBy_of_traceRunsFrom lay ρ L μ ar htrans
     (Func.traceRunsFrom_replaceBody_isRefinedBy lay ρ L hfin hmono hrefl htrans htransE hnd hg b h hf
-      (a, TraceState.init))
+      (a, TraceState.init (RunItems.start d lay ρ L)))
 
 end Fir

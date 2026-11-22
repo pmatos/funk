@@ -7,7 +7,8 @@ ops of #231, `ptradd`, `alloca`, `load` and `store`, the field address of
 `memmove` and `memset`. It is the record: when
 this page and an ADR disagree, the page wins, and the ADR is fixed or deleted
 (ADR-2026-11-09-1610). The ops' meaning is on
-[semantics-m1-memory.md](semantics-m1-memory.md) and
+[semantics-m1-memory.md](semantics-m1-memory.md),
+[semantics-m1-stack.md](semantics-m1-stack.md) and
 [semantics-m1-memory-access.md](semantics-m1-memory-access.md).
 
 ## Pointers
@@ -151,7 +152,7 @@ replace.
 
 Each run of an `alloca` makes an allocation that lives until its call
 returns, so an `alloca` in a loop makes a new one on every pass
-([semantics-m1-memory.md](semantics-m1-memory.md#stack-allocation)). The
+([semantics-m1-stack.md](semantics-m1-stack.md#stack-allocation)). The
 backend moves `%rsp` down at run time, below the frame: by the allocation's
 bytes rounded up to 16, then down to its alignment, at least 16 so that
 `%rsp` stays aligned for calls. The new `%rsp` is the pointer. The epilogue's

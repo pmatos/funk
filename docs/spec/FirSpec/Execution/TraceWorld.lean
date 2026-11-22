@@ -14,16 +14,17 @@ fails when the Lean changes under it.
 
 #doc (Manual) "The world and escaped memory: readable blocks" =>
 
-:::moduleDocs (fingerprint := "7166734696564331001")
+:::moduleDocs (fingerprint := "13706848254933526768")
 :::
 
-:::readable Fir.TraceState Fir.TraceState.init (fingerprint := "3108308862273180019")
+:::readable Fir.TraceState Fir.TraceState.init (fingerprint := "11675275375676584870")
 *Definition: the traced state.* The state of a traced run is a pair
 $`(S, E)` of its memories $`S` and the list $`E` of the allocations that
 escaped to the world, each a pair $`(x, a)` of a memory and an allocation
 of it, in the order they escaped. The world names the allocation $`E_k` by
-its _handle_ $`k`. A run starts from $`(\varnothing, [])`: the empty
-memories, outside every call, and nothing escaped.
+its _handle_ $`k`. A run starts from $`(S_0, [])`: the memories $`S_0`
+that hold its starting allocations, outside every call, and nothing
+escaped.
 :::
 
 :::readable Fir.TraceM.liftMem Fir.TraceM.liftMem_pure Fir.TraceM.liftMem_bind Fir.MonadMorphism.traceMem (fingerprint := "8206400074006116789")

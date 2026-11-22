@@ -151,6 +151,6 @@ theorem Func.memRuns_replaceBody_isRefinedBy_of_opsFinite
     (fun op hvo hc => LawfulDialectMonotone.monotone op hvo hc lay ρ L)
   have hr := Func.memRunsFrom_replaceBody_isRefinedBy_of_opsFinite hmono hfin hrefl htrans
     hM.symbolsUnique hg b h hf
-  exact ⟨hr, fun a => Func.memRuns_isRefinedBy_of_from lay ρ L (hr (a, Memories.empty))⟩
+  exact ⟨hr, fun a => Func.memRuns_isRefinedBy_of_from lay ρ L (hr (a, RunItems.start d lay ρ L))⟩
 
 end Fir
