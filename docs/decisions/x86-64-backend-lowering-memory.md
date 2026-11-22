@@ -4,8 +4,9 @@ This page continues [x86-64-backend-lowering.md](x86-64-backend-lowering.md).
 It says what holds today for how the backend lowers pointers and the memory
 ops of #231, `ptradd`, `alloca`, `load` and `store`, the field address of
 #236, `fieldaddr`, the copies, moves and sets of #234, `memcpy`,
-`memmove` and `memset`, and the ops of #232 that turn pointers into
-integers and back, `ptr_expose` and `ptr_from_int`. It is the record: when
+`memmove` and `memset`, the ops of #232 that turn pointers into
+integers and back, `ptr_expose` and `ptr_from_int`, and the globals of
+#237 with their address, `globaladdr`. It is the record: when
 this page and an ADR disagree, the page wins, and the ADR is fixed or deleted
 (ADR-2026-11-09-1610). The ops' meaning is on
 [semantics-m1-memory.md](semantics-m1-memory.md),
@@ -109,6 +110,47 @@ human ruled on 2026-11-20 (#451); the harness already counts a differential
 test with UB among its outcomes as invalid, so no new check is needed.
 Rejected: masking or checking the integer at run time, which the spec does
 not ask for.
+
+## Globals
+
+Each global of the module's own table is a symbol of the object file,
+spelled as a function's is (`abi::symbol`), after the code and the runtime
+helpers (`lower/globals.rs`, #237 stage 3). A `const` global goes to
+`.rodata`, so a store to it faults, which the spec makes UB (#237 Q2); a
+writable global whose initializer gives only zero units to `.bss`; any
+other to `.data`. Each is aligned with `.balign` to its alignment, marked
+`.type @object` with its `.size`, and is `.globl` when it is `export`, a
+local symbol otherwise. Its initializer's units are bytes, an `addr(@g, K)`
+piece is the relocation `.quad g+K`, whose addend wraps at 64 bits as
+`ptradd`'s offset does, and the units past the initializer are zeros, as
+the human ruled on 2026-11-20 (#237 Q1). Each process runs one function,
+so each run starts with the initial units. The executable is not
+position-independent, so the relocations are resolved when it links.
+
+`%p: ptr<N> = globaladdr @g` is `leaq g(%rip), %rax` and a store to the
+result's slot. Validation makes `@g` a global of the op's own table and of
+memory `N`, and the backend reports the result unless it realises memory
+`N`, so every global that an op names is placed. A nested module's globals
+are left out with its functions, which `funk build` does not build, and a
+run holds its own table's globals only (#237 Q3).
+
+A global of a memory that the backend does not realise, of wider units or
+32-bit pointers, is reported at the global, and so is one with an `addr`
+piece to a global of such a memory: the backend places no unit that it
+cannot write as bytes. `leaq` and calls relative to `%rip` assume the small
+code model, in which code and data lie within 2 GiB, so the globals, each
+with the padding of its alignment, take at most 2^30 bytes, and each global
+past that is reported. Native code's addresses for globals are one address
+policy of the spec, as for every allocation, so a differential test
+returns what a global's address reaches, never the address
+(`tests/fir/canonical/globals-programs.fir`, `globaladdr.fir`). This is the
+agent's design for #237 stage 3, not a ruling. The stage plan names memory
+0; every memory of 8-bit units and 64-bit pointers is placed, since the
+backend realises each such memory as it realises memory 0, as the human
+ruled on 2026-11-15 (#399). Rejected: `.data.rel.ro` for a constant global
+with relocations, which only a position-independent executable needs; and
+leaving out a global that no op names, which would drop an `export`
+global's symbol.
 
 ## Loads and stores
 

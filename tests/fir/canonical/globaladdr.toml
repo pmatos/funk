@@ -8,21 +8,21 @@
 # follows. @bump reads @counter through the table and writes it back
 # through its own address. @write_msg stores to @msg, a constant global:
 # the program is valid, and the store is UB when it runs (#237 Q2).
-# @read_past reads @pad's one unit and the zeros after it. The backend
-# lowers globals and globaladdr in stage 3 and builds a module whole, so
-# each test is interpreter-only.
+# @read_past reads @pad's one unit and the zeros after it. Since stage 3
+# the backend places the globals and lowers globaladdr, so each test that
+# returns no address and whose run is not UB runs as native code too.
 tests = [
-  { func = "@msg_unit", args = ["0"], expect = ["104"] },
-  { func = "@msg_unit", args = ["1"], expect = ["105"] },
-  { func = "@msg_unit", args = ["2"], expect = ["0"] },
-  { func = "@msg_unit", args = ["7"], expect = ["0"] },
+  { func = "@msg_unit", args = ["0"] },
+  { func = "@msg_unit", args = ["1"] },
+  { func = "@msg_unit", args = ["2"] },
+  { func = "@msg_unit", args = ["7"] },
   { func = "@msg_unit", args = ["8"], expect = "ub" },
-  { func = "@follow", args = ["0"], expect = ["104"] },
-  { func = "@follow", args = ["1"], expect = ["105"] },
-  { func = "@follow", args = ["2"], expect = ["7"] },
-  { func = "@bump", args = ["5"], expect = ["12"] },
+  { func = "@follow", args = ["0"] },
+  { func = "@follow", args = ["1"] },
+  { func = "@follow", args = ["2"] },
+  { func = "@bump", args = ["5"] },
   { func = "@write_msg", args = ["1"], expect = "ub" },
-  { func = "@read_past", args = ["0"], expect = ["1"] },
-  { func = "@read_past", args = ["8"], expect = ["0"] },
+  { func = "@read_past", args = ["0"] },
+  { func = "@read_past", args = ["8"] },
   { func = "@addresses", expect = ["ptr(0, 0)", "ptr(1, 0)", "ptr(2, 0)"] },
 ]

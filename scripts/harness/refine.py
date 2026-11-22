@@ -143,10 +143,12 @@ def refines(ref: Outcome, native, types) -> Judgement:
     saying how it failed. `types` are the function's result types.
 
     Native code's end is its values, with no event, nothing escaped and no
-    live allocation: a module that `funk build` builds calls nothing outside
-    it and emits no global, and a function's stack allocations are freed
-    when it returns. A pointer result is an address, which refines only a
-    poison or dangling pointer of fir-ref's (`ends.refined`).
+    live allocation: a module that `funk build` builds calls nothing
+    outside it, the spec's end does not count its `export` globals among
+    an observer's roots yet (#237 stage 4), and a function's stack
+    allocations are freed when it returns. A pointer result is an
+    address, which refines only a poison or dangling pointer of fir-ref's
+    (`ends.refined`).
     """
     if ref.kind == UB:
         return Judgement(INVALID, "UB allows any result, so the test proves nothing")

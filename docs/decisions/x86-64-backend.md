@@ -10,7 +10,7 @@ built executable and its stack) and
 [x86-64-backend-lowering-floats.md](x86-64-backend-lowering-floats.md) for
 the floats and
 [x86-64-backend-lowering-memory.md](x86-64-backend-lowering-memory.md) for
-pointers and memory).
+pointers, memory and globals).
 
 ## The crate
 
@@ -63,7 +63,9 @@ operator.
 A build has two assembly files. One holds the module's functions and becomes
 the object file. It may end with the backend's own routines, such as the
 `i128` division helper
-([x86-64-backend-lowering.md](x86-64-backend-lowering.md#division-at-i128)).
+([x86-64-backend-lowering.md](x86-64-backend-lowering.md#division-at-i128)),
+and then with the module's globals as data
+([x86-64-backend-lowering-memory.md](x86-64-backend-lowering-memory.md#globals)).
 The other holds the executable's entry point and runtime. Both end with
 `.note.GNU-stack`, so the stack is not executable.
 
@@ -271,7 +273,7 @@ A register allocator must treat as clobbered:
 - `%xmm0` to `%xmm7` as argument registers of a call.
 - `%rax` and `%rcx` by a `load`, a `store`, a `ptradd` or a `fieldaddr`, and
   `%rdx` by an `i128` access.
-- `%rax` by a `ptr_expose` or a `ptr_from_int`.
+- `%rax` by a `ptr_expose`, a `ptr_from_int` or a `globaladdr`.
 - `%rax` and `%rcx` by an `alloca`, which also moves `%rsp` below the frame,
   so nothing in a frame may be addressed from `%rsp` after one.
 

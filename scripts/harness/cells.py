@@ -61,9 +61,9 @@ has neither operands nor attributes, is a cell at each width of its result
 - The field address `fieldaddr` is a cell for each width of its index,
   and one with no index, at the side's field widths, on both sides, since
   the backend lowers it as address arithmetic (`pointer_cells.py`, #236).
-- The address of a global `globaladdr` is one cell, on the
-  interpreter-only side until the backend lowers it (`pointer_cells.py`,
-  #237).
+- The address of a global `globaladdr` is one cell, on both sides, since
+  the backend lowers it as an address relative to `%rip`
+  (`pointer_cells.py`, #237).
 - `memcpy`, `memmove` and `memset` are a cell for each width of their
   length, at the side's pointer widths, on both sides, since the backend
   lowers them to funk's own runtime routines (`copy_cells.py`, #234).
