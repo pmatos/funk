@@ -59,7 +59,7 @@ poison value of each valid core type is refined by every value of the
 type.
 :::
 
-:::readable Fir.Core.funcRuns (pin := Fir.Func.memRuns) (fingerprint := "16372422744327105670")
+:::readable Fir.Core.funcRuns (pin := Fir.Func.memRuns) (fingerprint := "3176535881742537987")
 *Definition: the runs of a function of a core module.* For a core module
 $`M` and a core function $`f`, the runs of $`f` are its
 {ref "The-fir-specification--Memory--Runs-with-memory"}[runs with memory]

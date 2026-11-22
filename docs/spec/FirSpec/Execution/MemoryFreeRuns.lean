@@ -17,14 +17,14 @@ fails when the Lean changes under it.
 :::moduleDocs (fingerprint := "13870372205624324422")
 :::
 
-:::readable Fir.Func.memCall_ignoresMemory (pin := Fir.Func.memCall) (fingerprint := "4038606851964616677")
+:::readable Fir.Func.memCall_ignoresMemory (pin := Fir.Func.memCall) (fingerprint := "15096921286829602486")
 *Theorem: a call's frame keeps memories that its ops ignore.* When the run
 of a callee's ops from $`\mathrm{enter}(S)` ignores the memories, so does
 the run in the call's frame from $`S`: each return of the ops ends with
 $`\mathrm{enter}(S)`, and leaving the frame gives back $`S`.
 :::
 
-:::readable Fir.Module.memOps_ignoresMemory (pin := Fir.Func.memOps) (pin := Fir.OpsIgnoreMemory) (fingerprint := "4956512854030440429")
+:::readable Fir.Module.memOps_ignoresMemory (pin := Fir.Func.memOps) (pin := Fir.OpsIgnoreMemory) (fingerprint := "1065220523501721480")
 *Theorem: runs of a function that touches no memory ignore the memories.*
 Let the ops of the dialect ignore the memories where they touch none. Let
 $`f` be the function of $`M` with the symbol $`s`, which reaches no
@@ -41,7 +41,7 @@ not, in a frame, from the memories $`f` reached; the callee's run has
 less fuel, so the induction covers it.
 :::
 
-:::readable Fir.Func.memRunsFrom_ignoresMemory Fir.Func.memRunsFrom_exhausted_iff (pin := Fir.Func.memRunsFrom) (fingerprint := "1340689679392970907")
+:::readable Fir.Func.memRunsFrom_ignoresMemory Fir.Func.memRunsFrom_exhausted_iff (pin := Fir.Func.memRunsFrom) (fingerprint := "6204408882978189296")
 *Theorems: a function that touches no memory runs the same from any
 memories.* For such a function, every way its run from given memories
 $`S` ends that is not stuck returns $`S` if it returns, and the run from

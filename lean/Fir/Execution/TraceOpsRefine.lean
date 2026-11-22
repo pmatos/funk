@@ -4,8 +4,9 @@ import Fir.Execution.TraceStepPaths
 # A traced run of ops on environments and states that refine others
 
 Let every op that runs by its own rule, a terminator or an op with no
-callee, be monotone in the traced layer, among the ops of the module's
-functions and of the function that runs. Then, at every budget, every path
+callee, be monotone in the traced layer, and the external-call rule for
+each op that calls, among the ops of the module's functions and of the
+function that runs. Then, at every budget, every path
 of a traced run of ops that is not stuck, from an environment and a traced
 state that refine others, is allowed by a path of the run of the same ops
 from those others, at the same budget. Calls and recursion are included.
@@ -78,6 +79,7 @@ theorem TraceEnd.Allows.ub_prefix {r : String} {t t' : List B}
 
 variable [DecidableEq d.Ty] [DialectSignature d] [DialectCall d]
   [DialectDenote d (TraceM B (TraceState Mem unit))]
+  [DialectExtCall d (TraceM B (TraceState Mem unit))]
 
 /-- The way a call's callee ends, in its frame, in the target is allowed by a
 way it ends in the source, when the callee's run of ops from a traced state
@@ -120,7 +122,8 @@ theorem Func.traceOps_allowed {M : Module d}
     | n + 1, [], _, he' => exact absurd he' (Func.traceOps_nil hne)
     | n + 1, o :: os, hops, he' =>
       have ihn := ih n (Nat.lt_succ_self n)
-      have hmo := hops o List.mem_cons_self
+      have hmo := (hops o List.mem_cons_self).1
+      have hext := (hops o List.mem_cons_self).2
       have hops' : TraceMonotoneOps B (TraceState Mem unit) os :=
         fun o' h => hops o' (List.mem_cons_of_mem _ h)
       have src : ∀ {x}, TraceEnd.NotStuck x → Func.TStepPath M n f env o os s x →
@@ -216,5 +219,23 @@ theorem Func.traceOps_allowed {M : Module d}
             exact ⟨_, src ((hle₁.after ht).notStuck fun _ _ h => h)
               (.callRet hreg hargs hT hc hg hen he₀ hty hlen he₁), hle₁.after ht⟩
           · exact hx₀.elim
+      | extUB hreg hargs' hT hc hg hd hx =>
+        obtain ⟨args, hargs, hr⟩ := henv.operands hargs'
+        obtain ⟨e₀, he₀, hle⟩ := hext hT _ hc args _ hr s s' hS _ hx
+        rcases e₀ with ⟨r₀, t₀⟩ | ⟨_, _, _⟩
+        · exact ⟨_, ub (.extUB hreg hargs hT hc hg hd he₀), hle⟩
+        · exact hle.elim
+      | ext hreg hargs' hT hc hg hd hx hty' hlen' he =>
+        obtain ⟨args, hargs, hr⟩ := henv.operands hargs'
+        obtain ⟨e₀, he₀, hle⟩ := hext hT _ hc args _ hr s s' hS _ hx
+        rcases e₀ with ⟨r₀, t₀⟩ | ⟨vs, t₀, s₀⟩
+        · exact ⟨_, ub (.extUB hreg hargs hT hc hg hd he₀), TraceEnd.Allows.ub_prefix hle _⟩
+        · obtain ⟨hvs, ht, hs₀⟩ := hle
+          have hty := (DVals.types_eq_of_isRefinedBy hvs).trans hty'
+          have hlen := hlen'.trans (DVals.length_eq_of_isRefinedBy hvs).symm
+          obtain ⟨e₁, he₁, hle₁⟩ := ihn f _ _ os s₀ _ hf hops' (henv.zip_append _ hvs) hs₀ _ he
+            (TraceEnd.NotStuck.of_after hne)
+          exact ⟨_, src ((hle₁.after ht).notStuck fun _ _ h => h)
+            (.ext hreg hargs hT hc hg hd he₀ hty hlen he₁), hle₁.after ht⟩
 
 end Fir

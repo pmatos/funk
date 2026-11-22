@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Refined arguments over traced runs: returns, UB and each budget: readable blocks" =>
 
-:::moduleDocs (fingerprint := "656955984661709252")
+:::moduleDocs (fingerprint := "15319705388133441463")
 :::
 
 :::readable Fir.Result.Finished Fir.Result.finishEnd Fir.TraceEnd.Allows.finishEnd (fingerprint := "12436577599928051256")
@@ -27,20 +27,22 @@ first's, or both run out of fuel.
 *Theorem.* Finishing keeps one way of ending allowing another in step.
 :::
 
-:::readable Fir.Func.traceRun_iff Fir.Func.traceRun_allowed (fingerprint := "8379465532877309952")
+:::readable Fir.Func.traceRun_iff Fir.Func.traceRun_allowed (fingerprint := "572542105287050631")
 *Theorem: the traced run of a function.* A path of the traced run of $`f`
 on $`\vec{v}` that is not stuck finishes a path of its entry block's ops,
 run in its frame.
 
 *Theorem: refined arguments, in step.* When every terminator and every op
 with no callee of $`f` and of the module's functions is monotone in the
-traced layer, then on arguments $`\vec{v} \sqsubseteq \vec{v}'`, from
+traced layer,
+the external-call rule at each of their calls included, then on arguments
+$`\vec{v} \sqsubseteq \vec{v}'`, from
 traced states $`s \sqsubseteq s'`, at every budget $`n`, each path of the
 run of $`f` on $`\vec{v}'` from $`s'` that is not stuck is allowed by a
 path of its run on $`\vec{v}` from $`s` at the same budget.
 :::
 
-:::readable Fir.List.IsRefinedPrefix.getElem? Fir.List.isRefinedPrefix_of_getElem? Fir.Func.traceRuns_path_allowed (fingerprint := "12677472985277159966")
+:::readable Fir.List.IsRefinedPrefix.getElem? Fir.List.isRefinedPrefix_of_getElem? Fir.Func.traceRuns_path_allowed (fingerprint := "15236072140931212559")
 *Theorems: a refined prefix, place by place.* A refined prefix of $`l'` is
 refined, at each of its places, by the element of $`l'` there; and a list
 so refined at each of its places is a refined prefix of $`l'`.
@@ -53,10 +55,11 @@ that a path of its run on $`\vec{v}`, at the same budget, allows, from the
 memories that hold $`L`'s starting allocations, with nothing escaped.
 :::
 
-:::readable Fir.Func.traceRuns_exhausted_allowed Fir.Func.traceRuns_ub_allowed Fir.Func.traceRuns_ret_allowed (fingerprint := "14754067560585736861")
+:::readable Fir.Func.traceRuns_exhausted_allowed Fir.Func.traceRuns_ub_allowed Fir.Func.traceRuns_ret_allowed (fingerprint := "9696726311130883844")
 *Theorems: returns, UB and each budget.* For a dialect whose ops show
 events, when every terminator and every op with no callee of $`f` and of
-the module's functions is monotone in the traced layer, on arguments
+the module's functions is monotone in the traced layer,
+the external-call rule at each of their calls included, on arguments
 $`\vec{v} \sqsubseteq \vec{v}'`, a poison by any value:
 
 * at each budget, each path of the traced runs on $`\vec{v}'` that runs

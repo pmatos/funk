@@ -14,7 +14,7 @@ fails when the Lean changes under it.
 
 #doc (Manual) "More fuel, in the traced layer: readable blocks" =>
 
-:::moduleDocs (fingerprint := "5599654426933090476")
+:::moduleDocs (fingerprint := "448229227298871100")
 :::
 
 :::readable Fir.TraceEnd.Done Fir.TraceEnd.addLeft Fir.TraceEnd.Done.notStuck Fir.TraceEnd.Done.of_after Fir.TraceEnd.Done.addLeft Fir.TraceEnd.addLeft_zero Fir.TraceEnd.addLeft_after Fir.TraceEnd.addLeft_exit Fir.TraceEnd.Done.of_exit (fingerprint := "5576529788052026534")
@@ -30,7 +30,7 @@ trace before and with leaving a frame, and a way of ending done once a
 frame is left is done in it.
 :::
 
-:::readable Fir.Func.traceOps_up Fir.Func.traceCall_up (fingerprint := "4430711345801820165")
+:::readable Fir.Func.traceOps_up Fir.Func.traceCall_up (fingerprint := "336135563268836293")
 *Theorem: more fuel keeps a return and UB.* In every traced layer, from the
 same environment and traced state, each path $`e` of a run of ops at the
 budget $`n` that is done is the path $`e + j` of the run at $`n + j`: a

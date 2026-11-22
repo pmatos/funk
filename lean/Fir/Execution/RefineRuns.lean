@@ -99,6 +99,6 @@ theorem Func.runs_args_isRefinedBy (M : Module d) (hmono : ∀ g ∈ M.funcs, g.
     (f : Func d) (hf : f.OpsMonotone) {a a' : HVector toType (f.params.map (·.2))}
     (ha : a.Forall₂ TyRefinement.IsRefinedBy a') :
     observable (f.runs M a) ⊑ observable (f.runs M a') :=
-  Func.runs_isRefinedBy_of_calls hmono (bound := 0) (fun _ => .inl rfl) f hf ha
+  Func.runs_isRefinedBy_of_calls hmono (bound := 0) ⟨fun _ => .inl rfl, fun _ _ _ h => h⟩ f hf ha
 
 end Fir

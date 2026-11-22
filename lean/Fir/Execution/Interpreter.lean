@@ -1,4 +1,4 @@
-import Fir.Execution.Frame
+import Fir.Execution.ExtCall
 import Fir.Validation.Scope
 
 /-!
@@ -37,6 +37,12 @@ runs the entry block op by op:
   says, passes its operands to the callee, which the run looks up in the
   module by its symbol. The values that the callee returns are its
   results.
+* A call whose symbol names no function of the module, but an external
+  declaration that accepts the call's types, runs by the external-call
+  rule (`Fir.Execution.ExtCall`), the human's ruling of 2026-11-21 on #239:
+  it takes one step, and the values that the rule gives, of the call's
+  result types, are its results. In the layers with no world that rule is
+  UB.
 * Every function runs in a frame of its own, the callee of a call and the
   function that the run starts with alike: the run enters a frame before
   the function's first op and leaves it when the function returns, so that
@@ -60,8 +66,9 @@ makes each of these checks of a valid function:
   operands as its op instance takes and as many results as it gives;
 * a successor names a block of the function, and passes one value of the
   right type for each of that block's arguments;
-* a call names a function of the module, which the dialect's own
-  validation rule must ask, as the core rule for `call` does;
+* a call names a function of the module, or an external declaration
+  whose signature accepts the call's operand and result types, which the
+  dialect's own validation rule must ask;
 * the function has an entry block, which declares no arguments;
 * a call passes one value of the right type for each of its callee's
   parameters, and receives values of its own result types, which the
@@ -77,13 +84,16 @@ makes of them. A terminator's rule may jump only to a successor that the
 terminator has, while validation fixes only how many it has; the branch
 obligations prove it of `br` and `cond_br`. And a terminator may return
 only values of the function's result types, which the dialect's own rule
-must ask, as the core rule for `ret` does. One more condition is no check
-of its own: a terminator that jumps gives no results. The interpreter
-binds none for it, while validation puts them in scope in the blocks that
-its block dominates, so a use of one would be stuck. No core terminator
-has results. That condition is the dialect's obligation, not a rule of
-validation, until exceptions and unwinding are designed
-(ADR-2026-11-02-2248).
+must ask, as the core rule for `ret` does. A third check holds the
+external-call rule: it may give only values of the call's result types.
+No obligation asks that yet, since the rule is UB in every layer for now;
+#239's next stage, which gives the core's rule values, must. One more
+condition is no check of its own: a terminator that jumps gives no
+results. The interpreter binds none for it, while validation puts them in
+scope in the blocks that its block dominates, so a use of one would be
+stuck. No core terminator has results. That condition is the dialect's
+obligation, not a rule of validation, until exceptions and unwinding are
+designed (ADR-2026-11-02-2248).
 
 These checks are not all of validation. The interpreter checks that a value is
 defined, not that its definition dominates its use. So a run of a function that
@@ -98,10 +108,13 @@ calls and recursion included, so for every function of every valid core module
 
 The interpreter's own steps never drop a path. Each step goes on, ends the
 path with a result, or ends it stuck; only an op's semantics can branch.
-A path is lost only where an op has no outcome, which the totality
-obligation rules out for every op that the interpreter runs by its own
-rule: a terminator, or an op that calls no function. An op that calls a
-function runs its callee, never its own semantics.
+A path is lost only where an op or the external-call rule has no outcome.
+The totality obligation rules that out for every op that the interpreter
+runs by its own rule: a terminator, or an op that calls no function. No
+obligation asks it of the external-call rule yet: the rule is UB in every
+layer for now, which is an outcome, and #239's next stage must ask it of
+the rule it gives the core. An op that calls a function runs its callee,
+or the external-call rule, never its own semantics.
 
 Effects belong to the dialect, so the interpreter does not change when a
 dialect needs a new one. The core dialect's `freeze` chooses bits, and its
@@ -166,11 +179,23 @@ def Func.jump (f : Func d) (env : Env d) (succs : List Succ) (i : Nat) :
   else stuck s!"^{s.label} takes arguments of types other than its successor passes"
 
 variable [DialectSignature d] [DialectCall d] {m : Type → Type} [Monad m] [MonadFrame m]
-  [DialectDenote d m]
+  [DialectDenote d m] [DialectExtCall d m]
 
 /-- The function of the module `M` whose symbol is `s`. -/
 def Module.func? (M : Module d) (s : Name) : Option (Func d) :=
   M.funcs.find? (·.name == s)
+
+omit [TyDenote d.Ty] [DecidableEq d.Ty] [DialectSignature d] [DialectCall d] in
+/-- A symbol that names no function of the target module names none of the
+source either, when each symbol names the same function in both or
+functions in both. -/
+theorem Module.func?_none_of_calls {M M' : Module d} {P : Func d → Func d → Prop}
+    (h : ∀ s, M'.func? s = M.func? s ∨
+      ∃ g g', M.func? s = some g ∧ M'.func? s = some g' ∧ P g g')
+    {s : Name} (hg : M'.func? s = none) : M.func? s = none := by
+  rcases h s with h | ⟨_, _, _, h, _⟩
+  · exact h.symm.trans hg
+  · exact absurd (h.symm.trans hg) (by simp)
 
 /-- Where a run of the function `f` on the arguments `args` starts: the ops
 of its entry block, in an environment that binds each parameter to its
@@ -218,16 +243,26 @@ def Func.runOps (M : Module d) : Nat → Func d → Env d → List (Operation d)
           "an op names a number of results other than it gives")
         Func.runOps M n f env' os
       | some s =>
-        let some g := M.func? s | liftExcept (stuck s!"@{s} is not a function of the module")
-        let (body, genv) ← liftExcept (g.enter args.toDVals)
-        match ← inFrame (Func.runOps M n g genv body) with
-        | .fuelExhausted => pure .fuelExhausted
-        | .ret (vs, k) =>
-          if vs.map (·.1) = returnTypes o.op then
-            let env' ← liftExcept (env.bind (o.results.map (·.1)) vs
-              "an op names a number of results other than it gives")
-            Func.runOps M (min k n) f env' os
-          else liftExcept (stuck s!"@{s} returns values of types other than its call's result types")
+        match M.func? s with
+        | some g =>
+          let (body, genv) ← liftExcept (g.enter args.toDVals)
+          match ← inFrame (Func.runOps M n g genv body) with
+          | .fuelExhausted => pure .fuelExhausted
+          | .ret (vs, k) =>
+            if vs.map (·.1) = returnTypes o.op then
+              let env' ← liftExcept (env.bind (o.results.map (·.1)) vs
+                "an op names a number of results other than it gives")
+              Func.runOps M (min k n) f env' os
+            else liftExcept (stuck s!"@{s} returns values of types other than its call's result types")
+        | none =>
+          if M.declares s (sig o.op) (returnTypes o.op) then
+            let vs ← ExceptT.lift (DialectExtCall.extCall s args.toDVals (returnTypes o.op))
+            if vs.map (·.1) = returnTypes o.op then
+              let env' ← liftExcept (env.bind (o.results.map (·.1)) vs
+                "an op names a number of results other than it gives")
+              Func.runOps M n f env' os
+            else liftExcept (stuck s!"@{s} gives values of types other than its call's result types")
+          else liftExcept (stuck s!"@{s} is not a function or a declaration of the call's types")
 termination_by n _ _ _ => n
 decreasing_by
   all_goals first

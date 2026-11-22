@@ -87,6 +87,15 @@ theorem OpTraceMonotone.stepAt {op : d.Op}
   fun args args' hr => ⟨fun hT => ((h args args' hr).1 hT).step,
     fun hT => ((h args args' hr).2 hT).step⟩
 
+/-- An external-call rule monotone in the traced layer is monotone in the
+traced layer of marked traces, where it runs after a step. -/
+theorem ExtTraceMonotone.stepAt {g : Name} {ts rs : List d.Ty}
+    (h : letI := DialectTrace.traceAt (d := d) lay ρ L
+      ExtTraceMonotone (B := DialectTrace.Acts d) (σ := TraceState N (unitsOf lay)) g ts rs) :
+    letI := DialectTrace.stepAt (d := d) lay ρ L
+    ExtTraceMonotone (B := Step (DialectTrace.Acts d)) (σ := TraceState N (unitsOf lay)) g ts rs :=
+  fun args args' hr => (h args args' hr).step
+
 variable [DialectCall d]
 
 /-- A function whose ops are monotone by its dialect's rule in the traced
@@ -96,7 +105,8 @@ theorem Func.TraceOpsMonotone.stepAt {f : Func d}
       f.TraceOpsMonotone (DialectTrace.Acts d) (TraceState N (unitsOf lay))) :
     letI := DialectTrace.stepAt (d := d) lay ρ L
     f.TraceOpsMonotone (Step (DialectTrace.Acts d)) (TraceState N (unitsOf lay)) :=
-  fun b hb o ho hc => OpTraceMonotone.stepAt lay ρ L (h b hb o ho hc)
+  fun b hb o ho => ⟨fun hc => OpTraceMonotone.stepAt lay ρ L ((h b hb o ho).1 hc),
+    fun hT g hc => ExtTraceMonotone.stepAt lay ρ L ((h b hb o ho).2 hT g hc)⟩
 
 end
 
@@ -190,18 +200,35 @@ theorem OpTraceMonotone.ofMem {op : d.Op}
   letI := DialectTrace.ofMem d
   OpTraceMonotone.ofLift lay ρ L (OpLiftsMem.ofMem lay ρ L op) h
 
+omit [DialectMemDenote d] in
+/-- An external-call rule that lifts the rule with memory, UB, is monotone
+in the traced layer: it ends only in UB that shows no act, which allows
+every way of ending. -/
+theorem ExtTraceMonotone.ofLift [DialectTrace d]
+    (hl : letI := DialectTrace.traceAt (d := d) lay ρ L
+      (MonadMorphism.traceMem N (unitsOf lay) (DialectTrace.Acts d)).MapsExtCall (d := d))
+    (g : Name) (ts rs : List d.Ty) :
+    letI := DialectTrace.traceAt (d := d) lay ρ L
+    ExtTraceMonotone (B := DialectTrace.Acts d) (σ := TraceState N (unitsOf lay)) g ts rs :=
+  letI := DialectTrace.traceAt (d := d) lay ρ L
+  ExtTraceMonotone.of_ub
+    (fun g args rs => (hl g args rs).symm.trans (TraceM.liftMem_extCall g args rs)) g ts rs
+
 variable [DialectCall d]
 
 /-- In a dialect's traced semantics where each op lifts its rule with
-memory, a function whose ops are monotone with memory has ops monotone in
-the traced layer. -/
+memory, and so does the external-call rule, a function whose ops are
+monotone with memory has ops monotone in the traced layer. -/
 theorem Func.TraceOpsMonotone.ofLift [DialectTrace d] {f : Func d}
     (hl : ∀ op : d.Op, OpLiftsMem lay ρ L op)
+    (hlx : letI := DialectTrace.traceAt (d := d) lay ρ L
+      (MonadMorphism.traceMem N (unitsOf lay) (DialectTrace.Acts d)).MapsExtCall (d := d))
     (h : letI := DialectMemDenote.denoteAt (d := d) lay ρ L
       f.MemOpsMonotone N (unitsOf lay)) :
     letI := DialectTrace.traceAt (d := d) lay ρ L
     f.TraceOpsMonotone (DialectTrace.Acts d) (TraceState N (unitsOf lay)) :=
-  fun b hb o ho hc => OpTraceMonotone.ofLift lay ρ L (hl o.op) (h b hb o ho hc)
+  fun b hb o ho => ⟨fun hc => OpTraceMonotone.ofLift lay ρ L (hl o.op) (h b hb o ho hc),
+    fun _ g _ => ExtTraceMonotone.ofLift lay ρ L hlx g _ _⟩
 
 /-- In the traced semantics of a dialect whose ops show no event, a function
 whose ops are monotone with memory has ops monotone in the traced layer. -/
@@ -212,7 +239,7 @@ theorem Func.TraceOpsMonotone.ofMem {f : Func d}
     letI := DialectTrace.traceAt (d := d) lay ρ L
     f.TraceOpsMonotone (DialectTrace.Acts d) (TraceState N (unitsOf lay)) :=
   letI := DialectTrace.ofMem d
-  Func.TraceOpsMonotone.ofLift lay ρ L (OpLiftsMem.ofMem lay ρ L) h
+  Func.TraceOpsMonotone.ofLift lay ρ L (OpLiftsMem.ofMem lay ρ L) (fun _ _ _ => rfl) h
 
 end
 

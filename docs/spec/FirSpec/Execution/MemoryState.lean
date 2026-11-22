@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "The state layer: readable blocks" =>
 
-:::moduleDocs (fingerprint := "3879998764841435175")
+:::moduleDocs (fingerprint := "14893464455767568293")
 :::
 
 :::readable Fir.instMonadChoiceStateT Fir.instMonadUBStateT Fir.instMonadFrameStateT Fir.instMonadMemoryStateT Fir.MonadMorphism.state (fingerprint := "8937651886765150919")
@@ -46,6 +46,16 @@ the state layer over $`n`: it translates each computation at each state,
 $`x \mapsto (S \mapsto \varphi(x(S)))`.
 :::
 
+:::readable Fir.instDialectExtCallStateT Fir.extCall_stateT_setM Fir.extCall_stateT_setM_eq (pin := Fir.extCallUB) (fingerprint := "3121533852965512441")
+*Definition: the external-call rule in the state layer.* In the state
+layer over a way of computing, the external-call rule is the rule there,
+lifted: it neither reads nor changes the state.
+
+*Theorems.* So, over the set monad, an external call from any state $`S`
+ends in UB, and only so, for the reason that an external call has no
+meaning without a world: the layer with memory has no world either.
+:::
+
 :::readable Fir.MonadMorphism.state_mapsFrame Fir.MonadMorphism.state_choose Fir.MonadMorphism.state_chooseNaN Fir.MonadMorphism.state_ub (fingerprint := "12073770933935650719")
 *Theorem: a translation through the layer keeps its effects.* It keeps
 frames, since a frame of the layer is built from the monad's own steps.
@@ -67,7 +77,7 @@ loads, stores and exposures when $`\varphi` keeps UB, since each either
 ends at once with a value or is UB.
 :::
 
-:::readable Fir.ChoiceTree.toSetState Fir.Func.run_toSetState (fingerprint := "7548209782316162759")
+:::readable Fir.ChoiceTree.toSetState Fir.Func.run_toSetState (fingerprint := "13015231470910136122")
 *Definition: the set of a tree, with memory.* The
 {ref "The-fir-specification--Execution--Choice-trees"}[set of a tree],
 $`\mathrm{set}`, translated through the layer, maps the state layer over
@@ -76,11 +86,18 @@ frames, and, by the
 {ref "The-fir-specification--Execution--Monad-morphisms"}[interpreter's morphism theorem],
 the run of a function in the layer over the tree has, at each state, the
 run in the layer over the set monad as its set, when each op's semantics
-in the one has its semantics in the other as its set.
+in the one has its semantics in the other as its set. An external call is
+UB in both layers, so the set keeps it.
 :::
 
 :::readable Fir.ChoiceTree.toSetState_keeps (fingerprint := "11139396066526368901")
 *Theorem: the set of a tree keeps choice and UB through the layer.* The
 set of a tree, translated through the layer, keeps choice and UB, since
 $`\mathrm{set}` keeps them.
+:::
+
+:::readable Fir.ChoiceTree.toSetState_mapsExtCall (fingerprint := "6787513782530744460")
+*Theorem.* The set of a tree, translated through the layer, keeps the
+external-call rule: UB in the layer over the tree is UB in the layer over
+the set monad.
 :::

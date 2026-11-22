@@ -14,7 +14,7 @@ fails when the Lean changes under it.
 
 #doc (Manual) "Running out of fuel, followed back: readable blocks" =>
 
-:::moduleDocs (fingerprint := "9380698261376246191")
+:::moduleDocs (fingerprint := "2558283559610078291")
 :::
 
 :::readable Fir.AllowedBelow (pin := Fir.SomeUB) (fingerprint := "5321053586452845177")
@@ -54,7 +54,7 @@ The third is how the proof below steps back from what the source does
 after one op to the whole.
 :::
 
-:::readable Fir.BlackBox.allowedBelow (pin := Fir.AllowedBelow) (pin := Fir.BlackBox) (fingerprint := "9691397632252272610")
+:::readable Fir.BlackBox.allowedBelow (pin := Fir.AllowedBelow) (pin := Fir.BlackBox) (fingerprint := "7324696385271610887")
 *Theorem: a black box's source allows its target's path at a budget.* Let
 $`(g, g')` be a
 {ref "The-fir-specification--Execution--Calls-as-black-boxes"}[black box]
@@ -81,11 +81,11 @@ returns at $`N_0` what the black box allows, leaving at most $`N_0`
 steps, which keeps the ratio.
 :::
 
-:::readable Fir.CallsRefined.callee_allowedBelow (pin := Fir.CallsRefined) (pin := Fir.AllowedBelow) (fingerprint := "10166698370237723870")
+:::readable Fir.CallsRefined.callee_allowedBelow (pin := Fir.CallsRefined) (pin := Fir.AllowedBelow) (fingerprint := "8711143637199471452")
 *Theorem: the source's callee allows what the target's callee does, at a
 budget.* Let the target module $`M'` run each call as the source $`M`
 does, with the bound $`\beta`, each symbol naming the same function in
-both or a {ref "The-fir-specification--Execution--Calls-as-black-boxes"}[black box], and let every function of $`M` have
+both or a {ref "The-fir-specification--Execution--Calls-as-black-boxes"}[black box], with $`M` declaring each symbol that $`M'` declares, and let every function of $`M` have
 {ref "The-fir-specification--Execution--Returns-and-UB___-followed-back"}[monotone ops].
 Let the symbol $`s` name the function $`g_0` in $`M'`, let
 $`a \sqsubseteq a'`, position by position, be vectors of values of the
@@ -106,12 +106,12 @@ The same function is covered by the induction, and a black box by the
 previous theorem.
 :::
 
-:::readable Fir.Func.runOps_allowedBelow (pin := Fir.AllowedBelow) (pin := Fir.CallsRefined) (pin := Fir.MonotoneOps) (pin := Fir.Func.OpsMonotone) (fingerprint := "5552548996655207485")
+:::readable Fir.Func.runOps_allowedBelow (pin := Fir.AllowedBelow) (pin := Fir.CallsRefined) (pin := Fir.MonotoneOps) (pin := Fir.Func.OpsMonotone) (fingerprint := "4631087863213561350")
 *Theorem: every path of the target that runs out of fuel or returns is
 allowed by the source at a budget.* Let the target module $`M'` run each
 call as the source $`M` does, with the bound $`\beta`: each symbol names
-the same function in both, or a {ref "The-fir-specification--Execution--Calls-as-black-boxes"}[black box]. Let every function
-of $`M` have
+the same function in both, or a {ref "The-fir-specification--Execution--Calls-as-black-boxes"}[black box], and $`M` declares each symbol
+that $`M'` declares. Let every function of $`M` have
 {ref "The-fir-specification--Execution--Returns-and-UB___-followed-back"}[monotone ops].
 Then for every budget $`n`, every function $`f` with monotone ops, all
 {ref "The-fir-specification--Execution--Refined-environments"}[environments] $`E \sqsubseteq E'`, every list of ops

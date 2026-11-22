@@ -22,6 +22,13 @@ traced state it starts from may refine another:
   acts refining _t_: as for whole runs, UB in the source allows only a
   target that first shows the source's events.
 
+A call to an external declaration runs by the dialect's external-call rule
+(`Fir.Execution.ExtCall`), so the obligation asks it too: at the symbol and
+types of each call that goes to it, on arguments that refine others and
+from traced states that refine others, each way it may end is allowed by a
+way it may end on those others. A rule that is UB, as in a dialect whose
+ops show no event, meets it.
+
 The traced layer of marked traces runs an op by its dialect's rule after a
 step. The step and mapping each act to the act of a marked trace keep the
 obligation, so an op monotone by its dialect's rule is monotone in the
@@ -208,13 +215,39 @@ def OpTraceMonotone [DialectDenote d (TraceM B σ)] (op : d.Op) : Prop :=
       (isTerminator op = true → TraceRefinedBy Eq (DialectDenote.exit (m := TraceM B σ) op args)
         (DialectDenote.exit (m := TraceM B σ) op args'))
 
-variable [DialectCall d] [DialectDenote d (TraceM B σ)]
+/-- In a semantics in the traced layer, the external-call rule is monotone
+for a call of the declaration `g` on operands of the types `ts` for results
+of the types `rs`: on arguments of those types that refine others, what it
+gives refines what it gives on those others, from traced states that
+refine others. It is an obligation of its own, beside each op's, so that a
+dialect whose external calls show events can state the condition under
+which they are monotone (#239). -/
+def ExtTraceMonotone [DialectExtCall d (TraceM B σ)] (g : Name) (ts rs : List d.Ty) : Prop :=
+  ∀ args args' : HVector toType ts, args.Forall₂ TyRefinement.IsRefinedBy args' →
+    TraceRefinedBy (fun vs vs' : List (DVal d) => vs ⊑ vs')
+      (DialectExtCall.extCall (m := TraceM B σ) g args.toDVals rs)
+      (DialectExtCall.extCall (m := TraceM B σ) g args'.toDVals rs)
+
+omit [DialectSignature d] in
+/-- An external-call rule that is UB is monotone: UB that shows no act
+allows every way of ending. -/
+theorem ExtTraceMonotone.of_ub [DialectExtCall d (TraceM B σ)] {r : String}
+    (h : ∀ g args rs, DialectExtCall.extCall (m := TraceM B σ) g args rs =
+      (MonadUB.ub r : TraceM B σ (List (DVal d))))
+    (g : Name) (ts rs : List d.Ty) : ExtTraceMonotone (B := B) (σ := σ) g ts rs :=
+  fun args _ _ s _ _ e' _ => ⟨.error (r, []), by rw [h]; rfl, TraceEnd.Allows.of_ub _ e'⟩
+
+variable [DialectCall d] [DialectDenote d (TraceM B σ)] [DialectExtCall d (TraceM B σ)]
 
 variable (B σ) in
 /-- Every op of `os` that runs by its own rule, a terminator or an op with no
-callee, is monotone in the traced layer. -/
+callee, is monotone in the traced layer, and so is the external-call rule
+for each op of `os` that calls. -/
 def TraceMonotoneOps (os : List (Operation d)) : Prop :=
-  ∀ o ∈ os, isTerminator o.op = true ∨ callee? o.op = none → OpTraceMonotone (B := B) (σ := σ) o.op
+  ∀ o ∈ os, (isTerminator o.op = true ∨ callee? o.op = none →
+      OpTraceMonotone (B := B) (σ := σ) o.op) ∧
+    (isTerminator o.op = false → ∀ g, callee? o.op = some g →
+      ExtTraceMonotone (B := B) (σ := σ) g (sig o.op) (returnTypes o.op))
 
 variable (B σ) in
 /-- Every op of the function `f` that runs by its own rule is monotone in the

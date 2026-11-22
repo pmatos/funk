@@ -11,9 +11,10 @@ which a path of a run of ops with memory goes on from its first op, read
 from given memories (the section on how a run with memory ends):
 
 * A path that does not end stuck, with fuel left and an op to run, takes
-  one of the eight ways of a run in the set monad, each from the memories
+  one of the nine ways of a run in the set monad, each from the memories
   that the run starts from. A terminator's exit or an op's rule ends from
-  them, in UB or with the memories after it, from which the run goes on. A
+  them, in UB or with the memories after it, from which the run goes on;
+  an external call is UB with memory too. A
   call runs its callee in a frame: from them with a new frame entered, and
   each return leaves the frame. When the callee returns, the caller goes
   on, with the steps that the callee leaves, from the memories that the
@@ -218,6 +219,11 @@ inductive Func.MemStepPath (M : Module d) (n : Nat) (f : Func d) (env : Env d) (
       vs.map (·.1) = returnTypes o.op → (o.results.map (·.1)).length = vs.length →
       (Func.memOps M (min k n) f ((o.results.map (·.1)).zip vs ++ env) os S').run e →
       Func.MemStepPath M n f env o os S e
+  | extUB {args : HVector toType (sig o.op)} {s : Name} :
+      o.ownsCoreRegion = false → env.operands (sig o.op) o.operands = .ok args →
+      isTerminator o.op = false → callee? o.op = some s → M.func? s = none →
+      M.declares s (sig o.op) (returnTypes o.op) = true →
+      Func.MemStepPath M n f env o os S (.ub extCallUB)
 
 /-- A path of a run of ops with memory that is not stuck, from `S`, is a
 path that the first op goes on by, and every such path is a path of the
@@ -287,8 +293,15 @@ theorem Func.memStepPath_iff {M : Module d} {n : Nat} {f : Func d} {env : Env d}
               exact absurd ((run_liftExcept _ _).1 h) (hne _)
           · exact .callExh hreg' hargs hT' hc hg hen hr
           · exact .callUB hreg' hargs hT' hc hg hen hu
-        · rw [runFrom_stuck] at h
-          exact absurd ((run_liftExcept _ _).1 h) (hne _)
+        · rename_i hg
+          split at h
+          · rename_i hd
+            rcases runFrom_lift_bind.1 h with ⟨_, _, hvs, _⟩ | ⟨r, hr, rfl⟩
+            · cases (extCall_stateT_setM _ _ _ _ _).1 hvs
+            · cases (extCall_stateT_setM _ _ _ _ _).1 hr
+              exact .extUB hreg' hargs hT' hc hg hd
+          · rw [runFrom_stuck] at h
+            exact absurd ((run_liftExcept _ _).1 h) (hne _)
   · intro h
     simp only [Func.memOps, Func.runOps]
     cases h with
@@ -347,6 +360,13 @@ theorem Func.memStepPath_iff {M : Module d} {n : Nat} {f : Func d} {env : Env d}
       dsimp only
       rw [ite_eq_left hty]
       exact (runFrom_liftExcept_bind hne).2 ⟨_, Env.bind_ok _ _ hlen, h⟩
+    | extUB hreg hargs hT hc hg hd =>
+      rw [ite_eq_right (by simp [hreg])]
+      refine (runFrom_liftExcept_bind hne).2 ⟨_, hargs, ?_⟩
+      rw [ite_eq_right (by simp [hT])]
+      simp only [hc, hg]
+      simp only [hd, ↓reduceIte]
+      exact runFrom_lift_bind.2 (.inr ⟨_, (extCall_stateT_setM _ _ _ _ _).2 rfl, rfl⟩)
 
 /-- A run with memory with no fuel runs out of fuel, and only so. -/
 theorem Func.run_memOps_zero {M : Module d} {f : Func d} {env : Env d} {os : List (Operation d)}

@@ -88,7 +88,7 @@ theorem jump_congr (f : Func d) {e₁ e₂ : Env d} (h : Same e₁ e₂) (succs 
         · simp only [hl, ite_false, Agree]
 
 variable [DialectSignature d] [DialectCall d] {m : Type → Type} [Monad m] [MonadFrame m]
-  [DialectDenote d m]
+  [DialectDenote d m] [DialectExtCall d m]
 
 /-- The spec's computation of the rest of a run of `f` after its
 terminator `o`, on the operands `args`, exits to `x`, with `n` steps
@@ -113,6 +113,18 @@ def afterDenote (M : Module d) (n : Nat) (f : Func d) (env : Env d) (o : Operati
   let env' ← liftExcept (env.bind (o.results.map (·.1)) rs.toDVals
     "an op names a number of results other than it gives")
   Func.runOps M n f env' os
+
+/-- The spec's computation of the rest of a run of `f` after its call `o`
+to the external declaration `@s` gives the values `vs`, with the ops `os`
+after it and `n` steps left. -/
+def afterExt (M : Module d) (n : Nat) (f : Func d) (env : Env d) (o : Operation d)
+    (os : List (Operation d)) (s : Name) (vs : List (DVal d)) :
+    ExceptT Stuck m (Result (List (DVal d) × Nat)) :=
+  if vs.map (·.1) = returnTypes o.op then do
+    let env' ← liftExcept (env.bind (o.results.map (·.1)) vs
+      "an op names a number of results other than it gives")
+    Func.runOps M n f env' os
+  else liftExcept (stuck s!"@{s} gives values of types other than its call's result types")
 
 /-- The spec's computation of the rest of a run of `f` after its call `o`
 to `@s` gives `r`, with the ops `os` after it and `n` steps left after the
@@ -194,11 +206,23 @@ theorem runOps_denote [LawfulMonad m] (h : o.ownsCoreRegion = false)
 
 theorem runOps_noFunc [LawfulMonad m] (h : o.ownsCoreRegion = false)
     (ha : env.operands (sig o.op) o.operands = .ok args) (hT : isTerminator o.op = false)
-    {s : Name} (hc : callee? o.op = some s) (hg : M.func? s = none) :
+    {s : Name} (hc : callee? o.op = some s) (hg : M.func? s = none)
+    (hd : M.declares s (sig o.op) (returnTypes o.op) = false) :
     Func.runOps (m := m) M (n + 1) f env (o :: os) =
-      liftExcept (stuck s!"@{s} is not a function of the module") := by
+      liftExcept (stuck s!"@{s} is not a function or a declaration of the call's types") := by
   rw [Func.runOps]
-  simp only [h, ha, hT, hc, hg, Bool.false_eq_true, ↓reduceIte, liftExcept_ok_bind, stuck]
+  simp only [h, ha, hT, hc, hg, hd, Bool.false_eq_true, ↓reduceIte, liftExcept_ok_bind, stuck]
+
+theorem runOps_ext [LawfulMonad m] (h : o.ownsCoreRegion = false)
+    (ha : env.operands (sig o.op) o.operands = .ok args) (hT : isTerminator o.op = false)
+    {s : Name} (hc : callee? o.op = some s) (hg : M.func? s = none)
+    (hd : M.declares s (sig o.op) (returnTypes o.op) = true) :
+    Func.runOps (m := m) M (n + 1) f env (o :: os) =
+      ExceptT.lift (DialectExtCall.extCall s args.toDVals (returnTypes o.op)) >>=
+        afterExt M n f env o os s := by
+  rw [Func.runOps]
+  simp only [h, ha, hT, hc, hg, hd, Bool.false_eq_true, ↓reduceIte, liftExcept_ok_bind]
+  rfl
 
 theorem runOps_enter [LawfulMonad m] (h : o.ownsCoreRegion = false)
     (ha : env.operands (sig o.op) o.operands = .ok args) (hT : isTerminator o.op = false)
@@ -264,6 +288,19 @@ theorem afterExit_congr {n : Nat} (hrun : RunsSame (m := m) M n) (f : Func d) {e
       rw [liftExcept_ok_bind, liftExcept_ok_bind]
       exact hrun f e₁' e₂' b₁.body hs
 
+theorem afterExt_congr {n : Nat} (hrun : RunsSame (m := m) M n) (f : Func d) {e₁ e₂ : Env d}
+    (h : Same e₁ e₂) (o : Operation d) (os : List (Operation d)) (s : Name)
+    (vs : List (DVal d)) :
+    afterExt (m := m) M n f e₁ o os s vs = afterExt M n f e₂ o os s vs := by
+  unfold afterExt
+  split
+  · simp only [bind_eq]
+    split
+    · rw [liftExcept_ok_bind, liftExcept_ok_bind]
+      exact hrun f _ _ os (Same.append _ h)
+    · rfl
+  · rfl
+
 theorem afterCall_congr {n : Nat} (hrun : ∀ j ≤ n, RunsSame (m := m) M j) (f : Func d)
     {e₁ e₂ : Env d} (h : Same e₁ e₂) (o : Operation d) (os : List (Operation d)) (s : Name)
     (r : Result (List (DVal d) × Nat)) :
@@ -319,7 +356,14 @@ theorem runOps_congr (n : Nat) : RunsSame (m := m) M n := by
             exact afterDenote_congr (ihn n (Nat.le_refl n)) f h o os rs
           | some s =>
             cases hg : M.func? s with
-            | none => rw [runOps_noFunc hr' ha₁ hT hc hg, runOps_noFunc hr' ha hT hc hg]
+            | none =>
+              cases hd : M.declares s (sig o.op) (returnTypes o.op) with
+              | false => rw [runOps_noFunc hr' ha₁ hT hc hg hd, runOps_noFunc hr' ha hT hc hg hd]
+              | true =>
+                rw [runOps_ext hr' ha₁ hT hc hg hd, runOps_ext hr' ha hT hc hg hd]
+                congr 1
+                funext vs
+                exact afterExt_congr (ihn n (Nat.le_refl n)) f h o os s vs
             | some g =>
               cases he : g.enter args.toDVals with
               | error e => rw [runOps_enter hr' ha₁ hT hc hg he, runOps_enter hr' ha hT hc hg he]

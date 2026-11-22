@@ -20,7 +20,7 @@ once, every way in which a path of a run of ops goes on from its first
 op, so that the proofs need not unfold the interpreter:
 
 * A path that does not end stuck, with fuel left and an op to run, takes
-  one of eight ways. In each, the op owns no region of the core's kind and
+  one of nine ways. In each, the op owns no region of the core's kind and
   its operands are
   found. Then the op is a terminator, the last op of its block, whose
   exit hits UB, returns, or jumps to a block, where the run goes on with
@@ -29,7 +29,8 @@ op, so that the proofs need not unfold the interpreter:
   a function, which the run finds in the module and enters, and the
   callee hits UB, runs out of fuel, or returns values of the call's
   result types, which bind, and the run goes on with the steps that the
-  callee leaves.
+  callee leaves; or it calls an external declaration, which is UB in the
+  set monad, a layer with no world (`Fir.Execution.ExtCall`).
 * A run with no fuel runs out of fuel, and a block with no op left is
   stuck.
 * A run that runs out of fuel runs out of fuel with fewer steps too. It
@@ -131,6 +132,11 @@ inductive Func.StepPath (M : Module d) (n : Nat) (f : Func d) (env : Env d) (o :
       vs.map (·.1) = returnTypes o.op → (o.results.map (·.1)).length = vs.length →
       (Func.runOps (m := SetM) M (min k n) f ((o.results.map (·.1)).zip vs ++ env) os).run e →
       Func.StepPath M n f env o os e
+  | extUB {args : HVector toType (sig o.op)} {s : Name} :
+      o.ownsCoreRegion = false → env.operands (sig o.op) o.operands = .ok args →
+      isTerminator o.op = false → callee? o.op = some s → M.func? s = none →
+      M.declares s (sig o.op) (returnTypes o.op) = true →
+      Func.StepPath M n f env o os (.ub extCallUB)
 
 /-- A path of a run of ops that is not stuck is a path that the first op
 goes on by, and every such path is a path of the run. -/
@@ -200,7 +206,14 @@ theorem Func.stepPath_iff {M : Module d} {n : Nat} {f : Func d} {env : Env d} {o
               · exact absurd ((run_liftExcept _ _).1 h) (hne _)
           · exact absurd rfl (hne st)
           · exact .callUB hreg' hargs hT' hc hg hen hu
-        · exact absurd ((run_liftExcept _ _).1 h) (hne _)
+        · rename_i hg
+          split at h
+          · rename_i hd
+            rcases run_lift_bind.1 h with ⟨_, hvs, _⟩ | ⟨r, hr, rfl⟩
+            · cases hvs
+            · cases hr
+              exact .extUB hreg' hargs hT' hc hg hd
+          · exact absurd ((run_liftExcept _ _).1 h) (hne _)
   · intro h
     simp only [Func.runOps]
     cases h with
@@ -255,6 +268,13 @@ theorem Func.stepPath_iff {M : Module d} {n : Nat} {f : Func d} {env : Env d} {o
       dsimp only
       rw [ite_eq_left hty]
       exact (run_liftExcept_bind hne).2 ⟨_, Env.bind_ok _ _ hlen, h⟩
+    | extUB hreg hargs hT hc hg hd =>
+      rw [ite_eq_right (by simp [hreg])]
+      refine (run_liftExcept_bind hne).2 ⟨_, hargs, ?_⟩
+      rw [ite_eq_right (by simp [hT])]
+      simp only [hc, hg]
+      simp only [hd, ↓reduceIte]
+      exact run_lift_bind.2 (.inr ⟨_, rfl, rfl⟩)
 
 /-- A run with no fuel runs out of fuel, and only so. -/
 theorem Func.run_runOps_zero {M : Module d} {f : Func d} {env : Env d} {os : List (Operation d)}

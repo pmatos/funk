@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Replacing a body: readable blocks" =>
 
-:::moduleDocs (fingerprint := "2776180746827783347")
+:::moduleDocs (fingerprint := "6771104645172578604")
 :::
 
 :::readable Fir.Func.replaceBody Fir.Item.replaceBody Fir.Module.replaceBody (fingerprint := "16462803487075343210")
@@ -64,6 +64,12 @@ $`\mathrm{lookup}_M(s) = g`. A
 has unique symbols, so its calls of $`s` are calls of $`g`. In the module
 with $`g`'s body replaced by $`b`, $`s` finds $`g` with the body $`b`, and
 every other symbol finds what it finds in $`M`.
+:::
+
+:::readable Fir.Module.declares_replaceBody (pin := Fir.Module.declares) (fingerprint := "15837225825212608166")
+*Theorem: replacing a body keeps the declarations.* A module with the body
+of a function replaced declares each symbol for the same types as the
+module does: replacing a body changes no external declaration.
 :::
 
 :::readable Fir.Module.symbols_replaceBody Fir.Module.context_replaceBody Fir.Module.dialectItems_replaceBody Fir.Module.aggregates_replaceBody Fir.Module.layouts_replaceBody Fir.Module.globals_replaceBody Fir.Module.externs_replaceBody (pin := Fir.Module.symbols) (pin := Fir.Module.context) (fingerprint := "2786223183160312306")

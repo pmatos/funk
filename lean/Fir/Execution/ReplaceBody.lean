@@ -42,6 +42,15 @@ whose symbol is `s`: every other part of it is unchanged. -/
 def Module.replaceBody (M : Module d) (s : Name) (b : Region d) : Module d :=
   ⟨M.dialects, M.layout, M.items.map (Item.replaceBody s b), M.locs⟩
 
+/-- Replacing a body keeps the module's external declarations. -/
+@[simp] theorem Module.declares_replaceBody [DecidableEq d.Ty] (M : Module d) (s : Name)
+    (b : Region d) (x : Name) (ts rs : List d.Ty) :
+    (M.replaceBody s b).declares x ts rs = M.declares x ts rs := by
+  simp only [Module.declares, Module.replaceBody, List.any_map]
+  congr 1
+  funext i
+  cases i <;> rfl
+
 /-- The functions of `M` with a body replaced are those of `M`, each with
 its body replaced when its symbol is `s`. -/
 theorem Module.funcs_replaceBody (M : Module d) (s : Name) (b : Region d) :

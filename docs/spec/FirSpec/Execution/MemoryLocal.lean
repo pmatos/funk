@@ -14,10 +14,10 @@ fails when the Lean changes under it.
 
 #doc (Manual) "Progress and no stuck path with memory, without calls: readable blocks" =>
 
-:::moduleDocs (fingerprint := "15144980599101436386")
+:::moduleDocs (fingerprint := "3608240729281895531")
 :::
 
-:::readable Fir.Func.local_memNoStuck Fir.Func.local_memHasPath (pin := Fir.Func.MemInModule) (pin := Fir.HasOutcome) (fingerprint := "13219923234541825755")
+:::readable Fir.Func.local_memNoStuck Fir.Func.local_memHasPath (pin := Fir.Func.MemInModule) (pin := Fir.HasOutcome) (fingerprint := "220893370690942078")
 *Theorem: the run with memory of a valid function without calls, from any
 op of any of its blocks, from any memories, has no stuck path, and has a
 path when its ops have outcomes.* Let $`f` be valid in a module context

@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Ops of finitely many outcomes, given the world's answers: readable blocks" =>
 
-:::moduleDocs (fingerprint := "10241120728310508422")
+:::moduleDocs (fingerprint := "4083937775120015375")
 :::
 
 :::readable Fir.Act.Agrees Fir.Act.Agrees.of_prefix Fir.Act.agrees_append Fir.Act.Agrees.of_isRefinedPrefix (fingerprint := "14362968264670860557")
@@ -43,30 +43,38 @@ step. A computation with finitely many outcomes with memory, lifted onto
 the memories of the traced state, has finitely many in the traced layer.
 :::
 
-:::readable Fir.OpsTraceFinite Fir.OpsStepFinite Fir.OpsOneStep Fir.TraceM.step_ticks (fingerprint := "13655827372637288156")
+:::readable Fir.TraceFinitelyMany.ub (fingerprint := "17828076345672588217")
+*Theorem.* UB has finitely many outcomes, given the world's answers: its
+only one, UB with an empty trace.
+:::
+
+:::readable Fir.OpsTraceFinite Fir.OpsStepFinite Fir.OpsOneStep Fir.TraceM.step_ticks (fingerprint := "4775478515740754117")
 *Definition: the hypothesis.* $`\mathrm{OpsTraceFinite}`: every op that
 runs by its own rule, a terminator or an op with no callee, has finitely
 many outcomes in the traced layer, given the world's answers, on every
-operands, as an op that is not a terminator and as a terminator.
+operands, as an op that is not a terminator and as a terminator, and so
+does every external call, at every symbol, arguments and result types.
 $`\mathrm{OpsStepFinite}` is the same in the traced layer of marked
-traces. $`\mathrm{OpsOneStep}`: every path of every op shows exactly one
-step.
+traces. $`\mathrm{OpsOneStep}`: every path of every op and of every
+external call shows exactly one step.
 
 *Theorem.* After a step, each act of its traces an act of the marked trace,
 every path of a computation shows exactly one step.
 :::
 
-:::readable Fir.DialectTrace.stepAt_oneStep Fir.OpsTraceFinite.stepAt (fingerprint := "14223753183709414526")
+:::readable Fir.DialectTrace.stepAt_oneStep Fir.OpsTraceFinite.stepAt (fingerprint := "8481470131927335375")
 *Theorems: the step keeps the hypothesis.* In the traced layer of marked
-traces, at $`\ell`, $`\rho` and $`L`, every path of every op shows exactly
-one step, and ops with finitely many outcomes by the dialect's rule have
-finitely many there.
+traces, at $`\ell`, $`\rho` and $`L`, every path of every op and of every
+external call shows exactly one step, and ops and external calls with
+finitely many outcomes by the dialect's rules have finitely many there.
 :::
 
-:::readable Fir.OpsTraceFinite.ofLift Fir.OpsTraceFinite.ofMem (fingerprint := "17379445355191742434")
+:::readable Fir.OpsTraceFinite.ofLift Fir.OpsTraceFinite.ofMem (fingerprint := "9371961871677821393")
 *Theorem: ops that lift their rule have finitely many outcomes.* In a
-dialect whose ops each lift their rule with memory, ops of finitely many
-outcomes with memory have finitely many in the traced layer, given the
-world's answers: the lift shows nothing and keeps what escaped. In
+dialect whose ops each lift their rule with memory, and whose external-call
+rule is its rule with memory, UB, lifted, ops of finitely many outcomes
+with memory have finitely many in the traced layer, given the world's
+answers: the lift shows nothing and keeps what escaped, and UB is one
+outcome. In
 particular, in the traced semantics of a dialect whose ops show no event.
 :::

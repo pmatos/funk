@@ -17,7 +17,7 @@ build fails when the Lean changes under it.
 :::moduleDocs (fingerprint := "11013168914683781670")
 :::
 
-:::readable Fir.Module.replaceBody_memCallsRefined (pin := Fir.MemBlackBox) (pin := Fir.MemCallsRefined) (fingerprint := "12256594209290723460")
+:::readable Fir.Module.replaceBody_memCallsRefined (pin := Fir.MemBlackBox) (pin := Fir.MemCallsRefined) (fingerprint := "14816769190315853579")
 *Theorem: the module with a new body runs each call as the module does.*
 In a module $`M` whose symbols are unique, let every op of its functions
 that runs by its own rule be monotone with memory, and the refinement of

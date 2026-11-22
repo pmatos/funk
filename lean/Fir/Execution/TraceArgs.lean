@@ -18,7 +18,8 @@ stuck is allowed by a path of the run on the others, at the same budget:
 * UB after acts is allowed by UB after acts that they first show, refined.
 
 So, for a dialect whose ops show events, in a module whose terminators and
-ops with no callee are monotone in the traced layer, each return and each
+ops with no callee are monotone in the traced layer, and its external-call
+rule at each other call, each return and each
 UB of the traced runs of a function on arguments that refine others, a
 poison by any value, is allowed by its traced runs on those others: a
 return by UB after acts that the return first shows, refined, or by a
@@ -78,6 +79,7 @@ theorem TraceEnd.Allows.finishEnd :
 
 variable [DecidableEq d.Ty] [DialectSignature d] [DialectCall d]
   [DialectDenote d (TraceM B (TraceState Mem unit))]
+  [DialectExtCall d (TraceM B (TraceState Mem unit))]
 
 omit [HRefinement B B] [TyRefinement d.Ty] in
 /-- A path of the traced run of a function that is not stuck finishes a path

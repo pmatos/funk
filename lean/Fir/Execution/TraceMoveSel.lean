@@ -36,7 +36,8 @@ open Memory
 
 variable {E Ans : Type} {Mem : Type} {unit : Mem → Nat} [DecidableEq Mem]
   {d : Dialect} [TyDenote d.Ty] [DecidableEq d.Ty] [DialectSignature d] [DialectCall d]
-  [DialectDenote d (TraceM (Step (Act E Ans)) (TraceState Mem unit))] {M : Module d}
+  [DialectDenote d (TraceM (Step (Act E Ans)) (TraceState Mem unit))]
+  [DialectExtCall d (TraceM (Step (Act E Ans)) (TraceState Mem unit))] {M : Module d}
 
 /-- A configuration whose run shows a stream at unboundedly many budgets, for
 each number of acts, goes on by a move to a configuration whose run shows the

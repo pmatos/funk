@@ -59,7 +59,7 @@ choose      \mathsf{choose}~w~\mathit{kind}~(b \mapsto \mathit{tree}_b)
   bits.
 :::
 
-:::readable Fir.ChoiceTree.bind (pin := Fir.ChoiceTree.instMonad) (pin := Fir.ChoiceTree.instMonadChoice) (pin := Fir.ChoiceTree.instMonadUB) (fingerprint := "5806974808700586543")
+:::readable Fir.ChoiceTree.bind (pin := Fir.ChoiceTree.instMonad) (pin := Fir.ChoiceTree.instMonadChoice) (pin := Fir.ChoiceTree.instMonadUB) (pin := Fir.ChoiceTree.instDialectExtCall) (fingerprint := "1566237391874841111")
 *Definition: the steps of a computation, as trees.* To run a tree $`t`,
 then $`g` on its result, $`t \mathbin{>\!\!>\!\!=} g` puts $`g(a)` in place
 of each leaf $`\mathsf{pure}~a` of $`t`, and keeps its other leaves and
@@ -76,7 +76,8 @@ $`\mathsf{choose}~w~\mathsf{bits}~(b \mapsto \mathsf{pure}~b)`, the NaN
 choice of $`\mathsf{float}\langle e,m\rangle` is
 $`\mathsf{choose}~(m + 1)~(\mathsf{nan}~e)~(b \mapsto \mathsf{pure}~b)`, and
 {ref "The-fir-specification--Execution--Effects-and-op-semantics"}[UB]
-with a reason $`r` is the leaf $`\mathsf{ub}~r`. So the
+with a reason $`r` is the leaf $`\mathsf{ub}~r`. An external call is UB,
+as in the set monad: trees have no world to answer it. So the
 {ref "The-fir-specification--Execution--The-interpreter"}[interpreter],
 written once for any monad with these effects, also runs in trees.
 :::

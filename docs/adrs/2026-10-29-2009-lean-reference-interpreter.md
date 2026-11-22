@@ -27,6 +27,8 @@ Tier: direction; area: semantics
   its caller has left and gives back the rest, and the recursion is
   well-founded on the budget. Fuel must not change what a program means, nor
   any result of `fir-ref`.
+- **A call to a declaration** goes to the external-call rule, a part of the
+  semantics of its own (ruled 2026-11-21, #239 Q1).
 
 This is S7 of the fir v0 decision record, agreed on 2026-10-29 (#5). The
 human chose fir's own calculus on 2026-10-29 (PR #27), and ruled on
@@ -52,3 +54,5 @@ it. Lean is both. A Lean function must terminate, and fir programs may loop.
 - **Fuel in a state monad, or a call effect on the monad.** Fuel
   monotonicity would be about the wrong counter, and the set monad has no
   module.
+- **A separate op, `call_extern`,** which an indirect call (#235) could
+  not use.

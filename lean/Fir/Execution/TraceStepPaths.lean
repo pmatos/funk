@@ -9,7 +9,8 @@ once, every way in which a path of a run of ops in the traced layer goes on
 from its first op, from a given traced state:
 
 * A path that does not end stuck, with fuel left and an op to run, takes
-  one of eight ways. A terminator's exit or an op's rule ends from the
+  one of ten ways. A terminator's exit, an op's rule or the external-call
+  rule ends from the
   traced state, in UB after the acts it showed, or with the acts it showed
   and the traced state after it, from which the run goes on, after those
   acts. A call runs its callee in a frame: from the traced state with a new
@@ -42,6 +43,7 @@ theorem TraceM.run_inFrame (x : ExceptT ε (TraceM B (TraceState Mem unit)) α)
 
 variable {d : Dialect} [TyDenote d.Ty] [DecidableEq d.Ty] [DialectSignature d] [DialectCall d]
   [DialectDenote d (TraceM B (TraceState Mem unit))]
+  [DialectExtCall d (TraceM B (TraceState Mem unit))]
 
 variable (B) in
 /-- The run of ops in the traced layer, from the traced state `s`. -/
@@ -115,6 +117,23 @@ inductive Func.TStepPath (M : Module d) (n : Nat) (f : Func d) (env : Env d) (o 
       Func.traceCall B M n g genv body s (.ok (.ok (.ret (vs, k)), t, s')) →
       vs.map (·.1) = returnTypes o.op → (o.results.map (·.1)).length = vs.length →
       Func.traceOps B M (min k n) f ((o.results.map (·.1)).zip vs ++ env) os s' e →
+      Func.TStepPath M n f env o os s (e.after t)
+  | extUB {args : HVector toType (sig o.op)} {sym : Name} {r : String} {t : List B} :
+      o.ownsCoreRegion = false → env.operands (sig o.op) o.operands = .ok args →
+      isTerminator o.op = false → callee? o.op = some sym → M.func? sym = none →
+      M.declares sym (sig o.op) (returnTypes o.op) = true →
+      DialectExtCall.extCall (m := TraceM B (TraceState Mem unit)) sym args.toDVals
+        (returnTypes o.op) s (.error (r, t)) →
+      Func.TStepPath M n f env o os s (.error (r, t))
+  | ext {args : HVector toType (sig o.op)} {sym : Name} {vs : List (DVal d)} {t : List B}
+      {s' : TraceState Mem unit} {e} :
+      o.ownsCoreRegion = false → env.operands (sig o.op) o.operands = .ok args →
+      isTerminator o.op = false → callee? o.op = some sym → M.func? sym = none →
+      M.declares sym (sig o.op) (returnTypes o.op) = true →
+      DialectExtCall.extCall (m := TraceM B (TraceState Mem unit)) sym args.toDVals
+        (returnTypes o.op) s (.ok (vs, t, s')) →
+      vs.map (·.1) = returnTypes o.op → (o.results.map (·.1)).length = vs.length →
+      Func.traceOps B M n f ((o.results.map (·.1)).zip vs ++ env) os s' e →
       Func.TStepPath M n f env o os s (e.after t)
 
 /-- A path of a traced run of ops that is not stuck, from `s`, is a path that
@@ -193,7 +212,22 @@ theorem Func.tStepPath_iff {M : Module d} {n : Nat} {f : Func d} {env : Env d}
               exact .callExh hreg' hargs hT' hc hg hen hx
           · exact absurd he (hne st t s')
           · exact .callUB hreg' hargs hT' hc hg hen hr
-        · exact absurd h (TraceM.run_stuck hne)
+        · rename_i hg
+          split at h
+          · rename_i hd
+            rcases (TraceM.run_lift_bind _ _ _ _).1 h with ⟨vs, t, s', e', hvs, h, he⟩ |
+              ⟨r, t, hr, he⟩ <;> rw [he]
+            · have hne' := TraceEnd.NotStuck.of_after (he ▸ hne)
+              split at h
+              · obtain ⟨env₁, hb, h⟩ := (TraceM.run_liftExcept_bind hne').1 h
+                simp only [Env.bind] at hb
+                split at hb
+                · cases hb
+                  exact .ext hreg' hargs hT' hc hg hd hvs (by assumption) (by assumption) h
+                · cases hb
+              · exact absurd h (TraceM.run_stuck hne')
+            · exact .extUB hreg' hargs hT' hc hg hd hr
+          · exact absurd h (TraceM.run_stuck hne)
   · intro h
     simp only [Func.traceOps, Func.runOps]
     cases h with
@@ -250,6 +284,23 @@ theorem Func.tStepPath_iff {M : Module d} {n : Nat} {f : Func d} {env : Env d}
       refine (TraceM.run_liftExcept_bind hne).2 ⟨_, hen,
         (TraceM.run_except_bind _ _ _ _).2 (.inl ⟨_, _, _, _, hx, ?_, rfl⟩)⟩
       dsimp only
+      rw [ite_eq_left hty]
+      exact (TraceM.run_liftExcept_bind (TraceEnd.NotStuck.of_after hne)).2
+        ⟨_, Env.bind_ok _ _ hlen, h⟩
+    | extUB hreg hargs hT hc hg hd hx =>
+      rw [ite_eq_right (by simp [hreg])]
+      refine (TraceM.run_liftExcept_bind hne).2 ⟨_, hargs, ?_⟩
+      rw [ite_eq_right (by simp [hT])]
+      simp only [hc, hg]
+      simp only [hd, ↓reduceIte]
+      exact (TraceM.run_lift_bind _ _ _ _).2 (.inr ⟨_, _, hx, rfl⟩)
+    | ext hreg hargs hT hc hg hd hx hty hlen h =>
+      rw [ite_eq_right (by simp [hreg])]
+      refine (TraceM.run_liftExcept_bind hne).2 ⟨_, hargs, ?_⟩
+      rw [ite_eq_right (by simp [hT])]
+      simp only [hc, hg]
+      simp only [hd, ↓reduceIte]
+      refine (TraceM.run_lift_bind _ _ _ _).2 (.inl ⟨_, _, _, _, hx, ?_, rfl⟩)
       rw [ite_eq_left hty]
       exact (TraceM.run_liftExcept_bind (TraceEnd.NotStuck.of_after hne)).2
         ⟨_, Env.bind_ok _ _ hlen, h⟩

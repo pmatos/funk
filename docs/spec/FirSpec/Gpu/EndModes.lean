@@ -17,7 +17,7 @@ pins their fingerprint; the build fails when the Lean changes under it.
 :::moduleDocs (fingerprint := "9725111358824139138")
 :::
 
-:::readable Fir.Gpu.RunEnd Fir.Gpu.EndLeaf Fir.Gpu.endTree Fir.Gpu.exhaustiveEnd Fir.Gpu.exhaustiveNaNEnd Fir.Gpu.scriptedEnd Fir.Gpu.sampledEnd (pin := Fir.ObservedEnd) (pin := Fir.Func.memEndTree) (pin := Fir.ChoiceTree.explore) (pin := Fir.ChoiceTree.exploreNaN) (pin := Fir.ChoiceTree.script) (pin := Fir.ChoiceTree.sample) (fingerprint := "4064004875504480742")
+:::readable Fir.Gpu.RunEnd Fir.Gpu.EndLeaf Fir.Gpu.endTree Fir.Gpu.exhaustiveEnd Fir.Gpu.exhaustiveNaNEnd Fir.Gpu.scriptedEnd Fir.Gpu.sampledEnd (pin := Fir.ObservedEnd) (pin := Fir.Func.memEndTree) (pin := Fir.ChoiceTree.explore) (pin := Fir.ChoiceTree.exploreNaN) (pin := Fir.ChoiceTree.script) (pin := Fir.ChoiceTree.sample) (fingerprint := "11307820692733739624")
 *Definition: the modes on a function of the sum that see the end of each
 return.* At a work-item, for a function $`f` of a module $`M` of the sum,
 arguments $`\vec{v}` and fuel $`k`, the tree is the tree of $`f`'s run with
@@ -31,7 +31,7 @@ tree as they walk the tree that sees a return as its values.
 `fir-ref run --world` computes these four.
 :::
 
-:::readable Fir.Gpu.exhaustiveEnd_memOutcomes Fir.Gpu.exhaustiveNaNEnd_memOutcomes Fir.Gpu.scriptedEnd_memOutcomes Fir.Gpu.sampledEnd_memOutcomes (pin := Fir.Run.outcomes) (pin := Fir.ChoiceTree.Leaf.pathEnd) (pin := Fir.Func.memEndRuns) (fingerprint := "6255834500521588810")
+:::readable Fir.Gpu.exhaustiveEnd_memOutcomes Fir.Gpu.exhaustiveNaNEnd_memOutcomes Fir.Gpu.scriptedEnd_memOutcomes Fir.Gpu.sampledEnd_memOutcomes (pin := Fir.Run.outcomes) (pin := Fir.ChoiceTree.Leaf.pathEnd) (pin := Fir.Func.memEndRuns) (fingerprint := "8471554738724013232")
 *Theorems: the modes give the outcomes of the run with memory, seen at
 their ends.* At every work-item, within its choice budget, exhaustive mode
 on a function of the sum lists exactly the outcomes of its run with memory

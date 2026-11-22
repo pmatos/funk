@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Calls as black boxes: readable blocks" =>
 
-:::moduleDocs (fingerprint := "16743666677925459205")
+:::moduleDocs (fingerprint := "6479642496386002928")
 :::
 
 :::readable Fir.HVector.cast Fir.HVector.toDVals_cast Fir.HVector.forall₂_cast (fingerprint := "1918683470415412202")
@@ -75,14 +75,20 @@ bound is what the section on
 needs to relate the two budgets.
 :::
 
-:::readable Fir.CallsRefined (fingerprint := "8421904290561493711")
+:::readable Fir.CallsRefined (fingerprint := "8673431818244253080")
 *Definition: the target runs each call as the source does.* For modules
 $`M` and $`M'` and a bound $`\beta`, every symbol $`s` names the same
 function in both, $`\mathrm{lookup}_{M'}(s) = \mathrm{lookup}_M(s)`, or
 $`M` has a function $`g = \mathrm{lookup}_M(s)` and $`M'` a function
 $`g' = \mathrm{lookup}_{M'}(s)` such that $`(g, g')` is a black box with
-the bound $`\beta`. Here $`\mathrm{lookup}_M(s)` is the function that a
-call of $`s` runs in $`M`, as the
+the bound $`\beta`. And $`M'`
+{ref "The-fir-specification--Execution--The-external-call-rule"}[declares]
+no symbol for types that $`M` does not declare it for, so that a call
+that goes to the external-call rule in $`M'` goes to it in $`M` too.
+$`M` may declare more: where only $`M` declares a symbol, a call to it is
+stuck in $`M'`, and a stuck path asks nothing. Here
+$`\mathrm{lookup}_M(s)` is the function that a call of $`s` runs in $`M`,
+as the
 {ref "The-fir-specification--Execution--The-interpreter"}[interpreter]
 finds it.
 
@@ -91,7 +97,15 @@ call of a black box is compared by the black box's facts. With no black
 box, $`M'` is $`M`, which is the case of refined arguments.
 :::
 
-:::readable Fir.Ev.addLeft Fir.Func.call_cont (pin := Fir.Ahead) (fingerprint := "17730031090408344216")
+:::readable Fir.CallsRefined.ext (pin := Fir.Module.func?_none_of_calls) (fingerprint := "15179214298695894174")
+*Theorem: a call to a declaration in the target is one in the source.*
+When $`M'` runs each call as $`M` does, a symbol that names no function of
+$`M'` and that $`M'` declares for the types $`\vec{t}` and $`\vec{r}`
+names no function of $`M`, and $`M` declares it for those types too: the
+call goes to the external-call rule in both.
+:::
+
+:::readable Fir.Ev.addLeft Fir.Func.call_cont (pin := Fir.Ahead) (fingerprint := "269872429721377223")
 *Definition and theorem: a caller goes on after its callee at the sum of
 their budgets.*
 For an end $`e` of a run of ops, $`e + k` is $`e` with $`k` more steps
@@ -123,7 +137,7 @@ budget together from its callee's budget and that of the rest of the
 caller's ops after the call.
 :::
 
-:::readable Fir.Func.run_inv Fir.Func.runs_ret_inv Fir.Func.runs_ub_inv Fir.Func.runs_exh_inv Fir.Func.runs_of_runOps (pin := Fir.Func.run) (pin := Fir.Func.runs) (pin := Fir.Ev.dropLeft) (fingerprint := "5088488433844769487")
+:::readable Fir.Func.run_inv Fir.Func.runs_ret_inv Fir.Func.runs_ub_inv Fir.Func.runs_exh_inv Fir.Func.runs_of_runOps (pin := Fir.Func.run) (pin := Fir.Func.runs) (pin := Fir.Ev.dropLeft) (fingerprint := "15098015745051768587")
 *Theorems: the run of a function is the run of its entry block.* For a
 function $`g` run in a module $`M`, an argument vector $`a` of its parameter
 types and a budget $`N`, the
@@ -157,7 +171,7 @@ types against the parameters', and the black box gives $`g'` the
 parameter types of $`g`.
 :::
 
-:::readable Fir.BlackBox.allowed (pin := Fir.Allowed) (pin := Fir.SomeUB) (pin := Fir.BlackBox) (fingerprint := "17579115411910792492")
+:::readable Fir.BlackBox.allowed (pin := Fir.Allowed) (pin := Fir.SomeUB) (pin := Fir.BlackBox) (fingerprint := "12473010869142096937")
 *Theorem: a black box's source allows what its target does.* Let
 $`(g, g')` be a black box from $`M` to $`M'`, and let the vectors of
 values $`a` and $`a'`, of the same types, satisfy $`a_i \sqsubseteq a'_i`

@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Monad morphisms: readable blocks" =>
 
-:::moduleDocs (fingerprint := "15913667091825901869")
+:::moduleDocs (fingerprint := "14753127545083485105")
 :::
 
 :::readable Fir.MonadMorphism (fingerprint := "12632748386210839733")
@@ -113,13 +113,24 @@ Both what an op that is not a terminator gives and where a terminator
 goes are kept.
 :::
 
-:::readable Fir.Func.runOps_map Fir.Func.run_map (fingerprint := "14033910499676742431")
+:::readable Fir.MonadMorphism.MapsExtCall (pin := Fir.DialectExtCall) (fingerprint := "2375694968800135454")
+*Definition: a morphism that keeps the external-call rule.* A monad
+morphism $`\varphi` from $`m` to $`n` keeps a dialect's
+{ref "The-fir-specification--Execution--The-external-call-rule"}[external-call rule]
+when it maps the rule in $`m` to the rule in $`n`, at every symbol $`g`,
+arguments $`\vec{w}` and result types $`\vec{r}`:
+
+$$`\varphi(\mathrm{ext}^m(g, \vec{w}, \vec{r})) = \mathrm{ext}^n(g, \vec{w}, \vec{r})`
+:::
+
+:::readable Fir.Func.runOps_map Fir.Func.run_map (fingerprint := "15345249247616565274")
 *Theorem: the interpreter cannot tell the two monads apart.* Take any
 dialect, with what the interpreter needs of it: the values of its types,
 a test of whether two of its types are equal, its signatures, its calls,
-and a semantics of its ops in both $`m` and $`n`. Let $`\varphi` be a
-monad morphism from $`m` to $`n` that keeps the semantics of a dialect's
-ops and keeps frames, and $`\varphi_E` the translation that keeps errors,
+and a semantics of its ops and an external-call rule in both $`m` and
+$`n`. Let $`\varphi` be a monad morphism from $`m` to $`n` that keeps the
+semantics of a dialect's ops, keeps its external-call rule and keeps
+frames, and $`\varphi_E` the translation that keeps errors,
 for the errors of a stuck path. For every module $`M` of the dialect, every
 function $`f`, every vector of arguments $`\vec{v}` of $`f`'s parameter
 types and every fuel budget $`k`,
@@ -133,7 +144,8 @@ included;
 the second, about a whole function, follows from it.
 
 The interpreter is written once, for any monad, so the proof translates it
-step by step: each op's step and each call's frame by the hypotheses, and
+step by step: each op's step, each external call and each call's frame
+by the hypotheses, and
 every other step, such as looking up a value or calling a function,
 because the translation keeps the three steps. This is what ties `fir-ref`'s runs, in the tree of
 choices, to the run in the set monad that gives a function its meaning.

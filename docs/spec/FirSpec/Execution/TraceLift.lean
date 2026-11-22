@@ -14,21 +14,30 @@ when the Lean changes under it.
 
 #doc (Manual) "Traced runs of a dialect with no event: readable blocks" =>
 
-:::moduleDocs (fingerprint := "15688661461772215454")
+:::moduleDocs (fingerprint := "4912308063582415284")
 :::
 
-:::readable Fir.DialectTrace.ofMem Fir.DialectTrace.ofMem_liftsMem (fingerprint := "58147739265247047")
+:::readable Fir.DialectTrace.ofMem Fir.DialectTrace.ofMem_liftsMem (fingerprint := "10025041609519925043")
 *Definition: the traced semantics of a dialect with no event.* A dialect
 whose ops show no event has, as its
 {ref "The-fir-specification--Memory--A-dialect___s-traced-runs"}[traced semantics],
 no event, one answer, and each op's semantics with memory at $`\ell`,
 $`\rho` and $`L`, lifted onto the memories of the traced state: it shows
-nothing and keeps what escaped.
+nothing and keeps what escaped. Its external-call rule is its rule with
+memory, UB, lifted too.
 
 *Theorem: it lifts the semantics with memory.* So the lift onto the
 memories of the traced state maps each op's semantics with memory to its
-traced semantics, by definition, at every naming of its memories and all
+traced semantics, and the external-call rule to its rule, by definition,
+at every naming of its memories and all
 items a run gives each op.
+:::
+
+:::readable Fir.TraceM.liftMem_extCall Fir.TraceM.mapActs_ub Fir.TraceM.map_ub (fingerprint := "2074806373272519293")
+*Theorems: UB through the lift and maps.* The external-call rule with
+memory, UB, lifted onto the memories of the traced state, is UB, with the
+same reason: an external call has no meaning without a world. Mapping the
+acts of UB, or its result, gives the same UB.
 :::
 
 :::readable Fir.End.isRefinedBy_of_mem (fingerprint := "165268049498222231")

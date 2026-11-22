@@ -224,29 +224,34 @@ theorem opsTraceFinite_ofMem (d : Dialect) [TyDenote d.Ty] [DialectSignature d]
     OpsTraceFinite d (DialectTrace.Event d) (DialectTrace.Answer d) (TraceState N (unitsOf lay)) :=
   OpsTraceFinite.ofMem lay ρ L h
 
-/-- Every dialect whose ops each lift their rule with memory meets the
-obligation of the traced layer for every function whose ops are monotone
-with memory, whatever events it shows by other rules. -/
+/-- Every dialect whose ops each lift their rule with memory, and whose
+external-call rule lifts its rule with memory, meets the obligation of the
+traced layer for every function whose ops are monotone with memory. -/
 theorem traceOpsMonotone_ofLift (d : Dialect) [TyDenote d.Ty] [DialectSignature d]
     [DialectCall d] [DialectEffects d] [DialectMemDenote d] [DialectTrace d] [TyRefinement d.Ty]
     {N : Type} [DecidableEq N] (lay : N → MemLayout) (ρ : DialectEffects.Mem d → N)
     (L : RunItems) {f : Func d} (hl : ∀ op : d.Op, OpLiftsMem lay ρ L op)
+    (hlx : letI := DialectTrace.traceAt (d := d) lay ρ L
+      (MonadMorphism.traceMem N (unitsOf lay) (DialectTrace.Acts d)).MapsExtCall (d := d))
     (h : letI := DialectMemDenote.denoteAt (d := d) lay ρ L; f.MemOpsMonotone N (unitsOf lay)) :
     letI := DialectTrace.traceAt (d := d) lay ρ L
     f.TraceOpsMonotone (DialectTrace.Acts d) (TraceState N (unitsOf lay)) :=
-  Func.TraceOpsMonotone.ofLift lay ρ L hl h
+  Func.TraceOpsMonotone.ofLift lay ρ L hl hlx h
 
-/-- Every dialect whose ops each lift their rule with memory has ops of
-finitely many outcomes in the traced layer, given the world's answers, when
-they have finitely many with memory. -/
+/-- Every dialect whose ops each lift their rule with memory, and whose
+external-call rule lifts its rule with memory, has ops of finitely many
+outcomes in the traced layer, given the world's answers, when they have
+finitely many with memory. -/
 theorem opsTraceFinite_ofLift (d : Dialect) [TyDenote d.Ty] [DialectSignature d]
     [DialectCall d] [DialectEffects d] [DialectMemDenote d] [DialectTrace d] {N : Type}
     [DecidableEq N] (lay : N → MemLayout) (ρ : DialectEffects.Mem d → N) (L : RunItems)
     (hl : ∀ op : d.Op, OpLiftsMem lay ρ L op)
+    (hlx : letI := DialectTrace.traceAt (d := d) lay ρ L
+      (MonadMorphism.traceMem N (unitsOf lay) (DialectTrace.Acts d)).MapsExtCall (d := d))
     (h : letI := DialectMemDenote.denoteAt (d := d) lay ρ L; OpsFinite d N (unitsOf lay)) :
     letI := DialectTrace.traceAt (d := d) lay ρ L
     OpsTraceFinite d (DialectTrace.Event d) (DialectTrace.Answer d) (TraceState N (unitsOf lay)) :=
-  OpsTraceFinite.ofLift lay ρ L hl h
+  OpsTraceFinite.ofLift lay ρ L hl hlx h
 
 /-- Every module of every dialect bounds its chains of calls: some `W`
 exceeds the length of each by at least one. -/

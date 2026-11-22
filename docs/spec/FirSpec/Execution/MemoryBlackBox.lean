@@ -14,7 +14,7 @@ build fails when the Lean changes under it.
 
 #doc (Manual) "Calls as black boxes, with memory: readable blocks" =>
 
-:::moduleDocs (fingerprint := "14867928540724291770")
+:::moduleDocs (fingerprint := "10179189778517068381")
 :::
 
 :::readable Fir.MemAllowed Fir.MemAllowed.of_someUB Fir.MemAllowed.of_not Fir.MemAllowed.of_step (pin := Fir.SomeUB) (pin := Fir.Ev.addLeft) (fingerprint := "7657756953179574042")
@@ -31,7 +31,7 @@ way the whole ends at $`N_0 + N + 1`, with $`k` more steps left on a
 return.
 :::
 
-:::readable Fir.Func.memCall_allowed (pin := Fir.Func.memCall) (fingerprint := "10241409072351689052")
+:::readable Fir.Func.memCall_allowed (pin := Fir.Func.memCall) (fingerprint := "9813178354911526111")
 *Theorem: leaving a frame keeps what is allowed.* When each path of the
 target callee's ops, from $`\mathrm{enter}(S')`, is allowed by the source's
 from $`\mathrm{enter}(S)`, each path of the target callee in its frame from
@@ -49,7 +49,7 @@ at $`N_1 + N_2 + 1`, leaving $`k` more steps: with more fuel, the callee
 returns the same, with the same memories, and leaves more steps.
 :::
 
-:::readable Fir.FuncRuns.BoundedBy Fir.MemBlackBox Fir.MemCallsRefined Fir.MemCallsBounded (pin := Fir.Func.memRunsFrom) (fingerprint := "16686497948601024089")
+:::readable Fir.FuncRuns.BoundedBy Fir.MemBlackBox Fir.MemCallsRefined Fir.MemCallsBounded (pin := Fir.Func.memRunsFrom) (fingerprint := "9803968526532395029")
 *Definitions: bounded runs, black boxes with memory, and modules whose
 calls refine.* Runs $`f` are _bounded_ by the budget $`B` when, on each
 input, they diverge, or none of them with $`B` steps or more runs out of
@@ -62,7 +62,9 @@ included
 ({ref "The-fir-specification--Memory--Runs-from-given-memories"}[runs from given memories]).
 
 The target module _runs each call with memory as the source does_ when each
-symbol names the same function in both, or a black box with memory. A
+symbol names the same function in both, or a black box with memory, and
+the source declares each symbol that the target declares, for the same
+types. A
 callee runs from the memories its caller reached, so a black box speaks of
 runs from every memories, not only from the empty ones. Its _calls are
 bounded_ by $`\mathit{bound}` when the runs from given memories of each
@@ -70,6 +72,13 @@ function that $`M'` names where $`M` names another are bounded by
 $`\mathit{bound}`; the theorems on running out of fuel with memory,
 followed back, ask for it, and those for ops of finitely many outcomes do
 not.
+:::
+
+:::readable Fir.MemCallsRefined.ext (pin := Fir.Module.func?_none_of_calls) (fingerprint := "14555203535619476315")
+*Theorem: a call to a declaration in the target is one in the source, with
+memory.* When $`M'` runs each call with memory as $`M` does, a symbol that
+names no function of $`M'` and that $`M'` declares for the types of a call
+names no function of $`M`, and $`M` declares it for those types too.
 :::
 
 :::readable Fir.MemBlackBox.sig Fir.MemBlackBox.target_run Fir.Func.memRunsFrom_run_cast Fir.MemBlackBox.allowed (fingerprint := "2890945913562123854")

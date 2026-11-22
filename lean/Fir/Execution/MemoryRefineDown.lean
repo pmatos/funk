@@ -232,7 +232,7 @@ theorem MemCallsRefined.callee_allowedBelow {M M' : Module d} {bound : Nat}
     have hf := hmono g₀ (List.mem_of_find?_eq_some hg)
     exact ⟨g₀, (p'.1, genv), hg, hen, Func.memCall_allowedBelow
       (fun e₀ he₀ => ih hf (hf.enter hen') genv p'.2 hgenv _ _ hS.enter e₀ he₀) he'⟩
-  rcases hc s with h | ⟨g, g', hg, hg'', bb⟩
+  rcases hc.1 s with h | ⟨g, g', hg, hg'', bb⟩
   · exact absurd h hsame
   have hbdd := hbnd s g₀ hg' hsame
   rw [hg''] at hg'

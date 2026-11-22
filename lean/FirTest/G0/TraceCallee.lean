@@ -27,7 +27,8 @@ fuel returns as it did, with as many more steps left, and hits UB as it
 did. -/
 theorem traceOps_up {B : Type} (d : Dialect) [TyDenote d.Ty] [DecidableEq d.Ty]
     [DialectSignature d] [DialectCall d] {Mem : Type} {unit : Mem → Nat} [DecidableEq Mem]
-    [DialectDenote d (TraceM B (TraceState Mem unit))] {M : Module d} (j n : Nat) (f : Func d)
+    [DialectDenote d (TraceM B (TraceState Mem unit))]
+    [DialectExtCall d (TraceM B (TraceState Mem unit))] {M : Module d} (j n : Nat) (f : Func d)
     (env : Env d) (os : List (Operation d)) (s : TraceState Mem unit)
     (e : TraceEnd B (TraceState Mem unit) (Except Stuck (Result (List (DVal d) × Nat))))
     (h : Func.traceOps B M n f env os s e) (hd : e.Done) :
@@ -40,6 +41,7 @@ names the same function in both modules or a traced black box. -/
 theorem traceOps_tAllowed {A : Type} [HRefinement A A] (d : Dialect) [TyDenote d.Ty]
     [DecidableEq d.Ty] [DialectSignature d] [DialectCall d] [TyRefinement d.Ty] {Mem : Type}
     {unit : Mem → Nat} [DecidableEq Mem] [DialectDenote d (TraceM (Step A) (TraceState Mem unit))]
+    [DialectExtCall d (TraceM (Step A) (TraceState Mem unit))]
     {M M' : Module d} (hmono : ∀ g ∈ M.funcs, g.TraceOpsMonotone (Step A) (TraceState Mem unit))
     (hcalls : TraceCallsRefined A Mem unit M M') (n : Nat) (f : Func d) (env env' : Env d)
     (os : List (Operation d)) (s s' : TraceState Mem unit)

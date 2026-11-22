@@ -14,15 +14,17 @@ pins their fingerprint; the build fails when the Lean changes under it.
 
 #doc (Manual) "Congruence in the callee over traced runs: returns and UB: readable blocks" =>
 
-:::moduleDocs (fingerprint := "14157379922291510600")
+:::moduleDocs (fingerprint := "9414097386851560193")
 :::
 
-:::readable Fir.Func.traceRunsFrom_tAllowed Fir.Func.traceRunsFrom_ret_allowed Fir.Func.traceRunsFrom_ub_allowed (fingerprint := "16364180563286379087")
+:::readable Fir.Func.traceRunsFrom_tAllowed Fir.Func.traceRunsFrom_ret_allowed Fir.Func.traceRunsFrom_ub_allowed (fingerprint := "2714280520113377549")
 *Theorems: returns and UB from a traced state, call by call.* For a dialect
 whose ops show events, let the target module $`M'` run each call in the
 traced layer as the source $`M` does, and every terminator and every op
 with no callee of $`f` and of $`M`'s functions be monotone in the traced
-layer. On arguments $`\vec{v} \sqsubseteq \vec{v}'` and from traced states
+layer,
+the external-call rule at each of their calls included. On arguments
+$`\vec{v} \sqsubseteq \vec{v}'` and from traced states
 $`s \sqsubseteq s'`, each path of $`f`'s entry block's ops in its frame in
 $`M'` is allowed at some budget by $`f`'s in $`M`. So each
 $`\mathsf{ret}~t'~(\vec{w}', s_1')` of the traced runs of $`f` in $`M'`
@@ -40,7 +42,7 @@ memories that hold $`L`'s starting allocations, with nothing escaped, its values
 the traced state it ends in; UB is UB after the same marked trace.
 :::
 
-:::readable Fir.Func.traceRuns_calls_ret_allowed Fir.Func.traceRuns_calls_ub_allowed (fingerprint := "4890362510187057358")
+:::readable Fir.Func.traceRuns_calls_ret_allowed Fir.Func.traceRuns_calls_ub_allowed (fingerprint := "16725242360954730649")
 *Theorems: returns and UB of the traced runs.* Under the same hypotheses,
 on arguments $`\vec{v} \sqsubseteq \vec{v}'`, a poison by any value, each
 $`\mathsf{ret}~t'~o'` of the traced runs of $`f` in $`M'` is allowed by
@@ -51,11 +53,13 @@ escaped, give ends that refine each other. Each $`\mathsf{ub}~t'~r'` is
 allowed by UB after a refined prefix of $`t'`.
 :::
 
-:::readable Fir.Module.replaceBody_traceCallsRefined (fingerprint := "5846941672119686925")
+:::readable Fir.Module.replaceBody_traceCallsRefined (fingerprint := "459015107095542549")
 *Theorem: replacing a callee's body gives calls refined.* Let the symbols
 of $`M` be unique, every terminator and every op with no callee of its
-functions be monotone in the traced layer, every op have finitely many
-outcomes given the world's answers, and refinement of values and of events
+functions be monotone in the traced layer,
+the external-call rule at each of their calls included, every op and every
+external call have finitely many outcomes given the world's answers, and
+refinement of values and of events
 be transitive. Replace the body of its function $`g` by $`b`, so that
 $`g`, run in the new module $`M'` from given traced states, refines $`g`
 in $`M`. Then $`M'` runs each call in the traced layer as $`M` does: $`g`

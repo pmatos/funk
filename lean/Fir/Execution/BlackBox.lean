@@ -39,7 +39,10 @@ sections:
   and leaves more steps;
 * running out of fuel needs the black box's bound.
 
-A black-box call that the target runs is allowed by the source's call:
+A call to an external declaration runs by the external-call rule in both
+modules, since the source declares each symbol that the target does, and
+is UB in the set monad, in
+both. A black-box call that the target runs is allowed by the source's call:
 the target's callee starts on arguments of its parameter types, so the
 source's are of the source callee's, and the source's callee ends in a
 way that the black box allows.
@@ -96,10 +99,20 @@ structure BlackBox (M M' : Module d) (bound : Nat) (g g' : Func d) : Prop where
       ∀ m, bound ≤ m → ¬ (g'.runs M' a' m).outcomes .fuelExhausted
 
 /-- The target module `M'` runs each call as the source `M` does: each
-symbol names the same function in both, or a black box. -/
+symbol names the same function in both, or a black box, and the two
+source declares each symbol that the target declares, for the same
+types. -/
 def CallsRefined (M M' : Module d) (bound : Nat) : Prop :=
-  ∀ s, M'.func? s = M.func? s ∨
-    ∃ g g', M.func? s = some g ∧ M'.func? s = some g' ∧ BlackBox M M' bound g g'
+  (∀ s, M'.func? s = M.func? s ∨
+    ∃ g g', M.func? s = some g ∧ M'.func? s = some g' ∧ BlackBox M M' bound g g') ∧
+  ∀ s ts rs, M'.declares s ts rs = true → M.declares s ts rs = true
+
+/-- A symbol that the target module calls as an external declaration, the
+source calls as one too. -/
+theorem CallsRefined.ext {M M' : Module d} {bound : Nat} (hc : CallsRefined M M' bound)
+    {s : Name} {ts rs : List d.Ty} (hg : M'.func? s = none) (hd : M'.declares s ts rs = true) :
+    M.func? s = none ∧ M.declares s ts rs = true :=
+  ⟨Module.func?_none_of_calls hc.1 hg, hc.2 s ts rs hd⟩
 
 /-- The way a path ends, with `k` more steps left if it returns. -/
 def Ev.addLeft (k : Nat) :

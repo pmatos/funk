@@ -14,10 +14,10 @@ pins their fingerprint; the build fails when the Lean changes under it.
 
 #doc (Manual) "Refined arguments over traced runs from a given traced state: readable blocks" =>
 
-:::moduleDocs (fingerprint := "6999436301418715264")
+:::moduleDocs (fingerprint := "646806415934435627")
 :::
 
-:::readable Fir.Func.traceRunsFrom Fir.Func.traceRunsFrom_truncates Fir.Func.traceRunsFrom_finitelyMany (fingerprint := "7312098328382388690")
+:::readable Fir.Func.traceRunsFrom Fir.Func.traceRunsFrom_truncates Fir.Func.traceRunsFrom_finitelyMany (fingerprint := "9340626417269703949")
 *Definition: a function's traced runs from a traced state.* At $`\ell`,
 $`\rho` and $`L`, the traced runs of $`f` in $`M` from given traced states
 run $`f` on each argument vector from each traced state, each op that runs
@@ -25,15 +25,17 @@ by the dialect's rule showing a step before it, and return its values with
 the traced state each return ends in.
 
 *Theorems.* They truncate, with any $`W > 0` that exceeds the length of
-every chain of calls of the module by at least one. When every op that runs
-by its own rule has finitely many outcomes given the world's answers, they
+every chain of calls of the module by at least one. When every op that
+runs by its own rule, and every external call,
+has finitely many outcomes given the world's answers, they
 have finitely many traces at each budget.
 :::
 
-:::readable Fir.Func.traceRunsFrom_path_allowed Fir.Func.traceRunsFrom_isRefinedBy_of_args (fingerprint := "10410574046413561241")
+:::readable Fir.Func.traceRunsFrom_path_allowed Fir.Func.traceRunsFrom_isRefinedBy_of_args (fingerprint := "17212012496302029509")
 *Theorem: refined arguments from a traced state.* For a dialect whose ops
 show events, let every terminator and every op with no callee of $`f` and of
-the module's functions be monotone in the traced layer. At every budget,
+the module's functions be monotone in the traced layer,
+the external-call rule at each of their calls included. At every budget,
 each path of the traced runs of $`f` on $`\vec{v}'` from $`s'` that is not
 stuck is allowed in step by a path on $`\vec{v}` from $`s`, when
 $`\vec{v} \sqsubseteq \vec{v}'` and $`s \sqsubseteq s'`. When every op also

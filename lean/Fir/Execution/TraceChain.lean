@@ -15,7 +15,9 @@ budget has taken a known number of steps.
 The calls before a step form a _chain_. When the first op of the ops a run
 goes on with calls a function of the module, the run enters that function's
 entry block, whose first op may call another function, and so on, until an
-op that runs by its own rule. The chain depends only on the module, not on
+op that runs by its own rule, or a call of an external declaration, which
+runs by the external-call rule and shows a step too. The chain depends only
+on the module, not on
 values: an op's callee is its symbol's function, and the callee starts at
 its entry block. So each list of ops starts a chain of a fixed length, or
 an endless one.
@@ -88,6 +90,15 @@ theorem Module.callHead?_noCallee {o : Operation d} (os : List (Operation d))
     (hc : callee? o.op = none) : M.callHead? (o :: os) = none := by
   simp [Module.callHead?, hc]
 
+omit [TyDenote d.Ty] in
+omit [DecidableEq d.Ty] in
+/-- A call of a symbol that names no function of the module, as a call of
+an external declaration, starts no call. -/
+theorem Module.callHead?_noFunc {o : Operation d} (os : List (Operation d)) {sym : Name}
+    (hT : isTerminator o.op = false) (hc : callee? o.op = some sym) (hg : M.func? sym = none) :
+    M.callHead? (o :: os) = none := by
+  simp [Module.callHead?, hT, hc, hg]
+
 /-- A call of a function of the module that enters it starts a call of the
 ops of its entry block. -/
 theorem Module.callHead?_call {o : Operation d} (os : List (Operation d)) {sym : Name} {g : Func d}
@@ -138,6 +149,7 @@ open Memory
 
 variable {Mem : Type} {unit : Mem → Nat} [DecidableEq Mem] {B : Type}
   [DialectDenote d (TraceM B (TraceState Mem unit))]
+  [DialectExtCall d (TraceM B (TraceState Mem unit))]
 
 /-- A path that is not stuck of a traced run of ops that start no chain, an
 endless one, runs out of fuel and shows nothing. -/
@@ -183,5 +195,7 @@ theorem Func.traceOps_silent (n : Nat) :
       | callRet _ _ hT hc hg hen hx =>
         obtain ⟨_, h⟩ := callee hT hc hg hen hx (TraceEnd.notStuck_ok _ _ _)
         cases h
+      | extUB _ _ hT hc hg => exact (stop (Module.callHead?_noFunc os hT hc hg)).elim
+      | ext _ _ hT hc hg => exact (stop (Module.callHead?_noFunc os hT hc hg)).elim
 
 end Fir

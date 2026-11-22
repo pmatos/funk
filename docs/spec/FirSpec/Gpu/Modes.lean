@@ -43,7 +43,7 @@ its rules with memory, at every layout and naming of the sum's memories
 and every record of items.
 :::
 
-:::readable Fir.Gpu.modeTree Fir.Gpu.Leaf Fir.Gpu.exhaustive Fir.Gpu.scripted Fir.Gpu.sampled (pin := Fir.ChoiceTree.explore) (pin := Fir.ChoiceTree.script) (pin := Fir.ChoiceTree.sample) (pin := Fir.Func.memTree) (fingerprint := "15012274531061140136")
+:::readable Fir.Gpu.modeTree Fir.Gpu.Leaf Fir.Gpu.exhaustive Fir.Gpu.scripted Fir.Gpu.sampled (pin := Fir.ChoiceTree.explore) (pin := Fir.ChoiceTree.script) (pin := Fir.ChoiceTree.sample) (pin := Fir.Func.memTree) (fingerprint := "8549639289743445227")
 *Definition: the modes on a function of the sum.* At a work-item, for a
 function $`f` of a module $`M` of the sum, arguments $`\vec{v}` and fuel
 $`k`, the tree of $`f`'s run is its run with memory in the tree of choices,

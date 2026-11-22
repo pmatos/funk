@@ -30,7 +30,7 @@ the ops of one of its blocks, with its parameters bound to its arguments.
 An op that is not a terminator and has the callee $`c` calls $`c`.
 :::
 
-:::readable Fir.Func.memCall_ub Fir.Func.memCall_ret Fir.Module.memOps_notUB Fir.Module.memOps_clean (pin := Fir.NoUB) (pin := Fir.Func.memOps) (fingerprint := "11432641747953504554")
+:::readable Fir.Func.memCall_ub Fir.Func.memCall_ret Fir.Module.memOps_notUB Fir.Module.memOps_clean (pin := Fir.NoUB) (pin := Fir.Func.memOps) (fingerprint := "15998636603615217963")
 *Theorems: the ops of a function leave out what its summary leaves out,
 with memory.* A run in a call's frame hits UB only where its ops, run from
 the memories with a frame entered, hit UB, and returns what they return,
@@ -50,14 +50,15 @@ The proof is by induction on the budget, for every function of $`M` at
 once, from any memories, one
 {ref "The-fir-specification--Memory--The-ways-a-step-with-memory-goes-on"}[step with memory]
 at a time. An op that runs by its own rule leaves out each effect that the
-summary leaves out, so the hypothesis covers it. A call runs its callee,
+summary leaves out, so the hypothesis covers it. A call to a declaration
+counts as every effect, so a summary that leaves out may-UB rules it out. A call runs its callee,
 whose summary is below its caller's, with less fuel, from the memories its
 caller reached with a new frame entered, so the induction covers the
 callee's run, recursion included. For poison, the run keeps its
 environment clean.
 :::
 
-:::readable Fir.Module.summary_neverUB Fir.Module.summary_noPoison (pin := Fir.LawfulDialectEffects) (pin := Fir.Func.memRuns) (fingerprint := "1275865335785394527")
+:::readable Fir.Module.summary_neverUB Fir.Module.summary_noPoison (pin := Fir.LawfulDialectEffects) (pin := Fir.Func.memRuns) (fingerprint := "566225970729679746")
 *Theorems: function summaries are sound.* Let the dialect be lawful in
 its effects, every function of the module $`M` valid, and $`s` name the
 function $`f` of $`M`. Wherever a run names the dialect's memories, with
@@ -77,7 +78,7 @@ touches memory is covered too. A pass may rely on a summary as it relies
 on an op's effects (ADR-2026-11-09-1541).
 :::
 
-:::readable Fir.Module.summary_neverUB_from Fir.Module.summary_noPoison_from (pin := Fir.Func.memRunsFrom) (fingerprint := "11954185409221334898")
+:::readable Fir.Module.summary_neverUB_from Fir.Module.summary_noPoison_from (pin := Fir.Func.memRunsFrom) (fingerprint := "8567432542038493465")
 *Theorems: function summaries are sound from given memories.* Under the
 hypotheses of the previous theorems, the same holds of the
 {ref "The-fir-specification--Memory--Runs-from-given-memories"}[runs of $`f` from given memories],

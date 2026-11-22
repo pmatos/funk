@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "The fuel of a return: readable blocks" =>
 
-:::moduleDocs (fingerprint := "4919280817137740757")
+:::moduleDocs (fingerprint := "9536968496811566094")
 :::
 
 :::readable Fir.TraceEnd.RetPaced Fir.TraceEnd.RetPaced.after_step (fingerprint := "18376876309332620377")
@@ -27,8 +27,9 @@ where $`os` starts a chain of $`c` calls.
 return stays paced, one step of fuel later.
 :::
 
-:::readable Fir.Func.traceOps_retPaced (fingerprint := "17858191772949970459")
-*Theorem.* When every path of every op shows exactly one step, and $`W`
+:::readable Fir.Func.traceOps_retPaced (fingerprint := "2885416854423115048")
+*Theorem.* When every path of every op and of every external call shows
+exactly one step, and $`W`
 exceeds the length of every chain of calls of the module by at least one,
 every return of a traced run of ops is paced by $`W`.
 :::

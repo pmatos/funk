@@ -86,7 +86,8 @@ theorem TBranch.acts_isRefinedBy [HRefinement A A] {t t' : Nat → List (Step A)
 
 variable {E Ans : Type} [HRefinement E E] {Mem : Type} {unit : Mem → Nat} [DecidableEq Mem]
   {d : Dialect} [TyDenote d.Ty] [DecidableEq d.Ty] [DialectSignature d] [DialectCall d]
-  [DialectDenote d (TraceM (Step (Act E Ans)) (TraceState Mem unit))] [TyRefinement d.Ty]
+  [DialectDenote d (TraceM (Step (Act E Ans)) (TraceState Mem unit))]
+  [DialectExtCall d (TraceM (Step (Act E Ans)) (TraceState Mem unit))] [TyRefinement d.Ty]
   {M M' : Module d}
 
 /-- A target configuration that shows a closed stream at every budget is

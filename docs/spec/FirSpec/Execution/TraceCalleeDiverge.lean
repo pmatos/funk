@@ -14,7 +14,7 @@ changes under it.
 
 #doc (Manual) "Divergence across black boxes: readable blocks" =>
 
-:::moduleDocs (fingerprint := "14361489166790225992")
+:::moduleDocs (fingerprint := "3787497955749702246")
 :::
 
 :::readable Fir.Stream.eq_cat Fir.TBranch.acts_isRefinedBy (fingerprint := "17651258247569114743")
@@ -23,9 +23,11 @@ stream after $`|l|` places. When each move of one branch shows acts refined
 by the other's move, the streams of the two branches refine each other.
 :::
 
-:::readable Fir.TCfg.Follows.allows (fingerprint := "17141320751793050168")
-*Theorem: divergence across black boxes.* Let every path of every op show
-exactly one step, every op that runs by its own rule have finitely many
+:::readable Fir.TCfg.Follows.allows (fingerprint := "11220466069967125270")
+*Theorem: divergence across black boxes.* Let every path of every op and
+of every external call show
+exactly one step, every op that runs by its own rule, and every external call,
+have finitely many
 outcomes, given the world's answers, the target $`M'` run each call as the
 source $`M` does, and the ops of $`M`'s functions that run by their own rule
 be monotone. A target configuration that shows a closed stream $`T` at every

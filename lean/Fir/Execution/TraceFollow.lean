@@ -40,7 +40,8 @@ open Memory
 
 variable {A : Type} [HRefinement A A] {Mem : Type} {unit : Mem → Nat} [DecidableEq Mem]
   {d : Dialect} [TyDenote d.Ty] [DecidableEq d.Ty] [DialectSignature d] [DialectCall d]
-  [DialectDenote d (TraceM (Step A) (TraceState Mem unit))] {M M' : Module d}
+  [DialectDenote d (TraceM (Step A) (TraceState Mem unit))]
+  [DialectExtCall d (TraceM (Step A) (TraceState Mem unit))] {M M' : Module d}
 
 /-- The source allows the stream `T` from the configuration `c`: it hits UB
 after acts that `T` first shows, refined, or shows at every budget a stream

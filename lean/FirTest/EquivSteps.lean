@@ -59,7 +59,7 @@ theorem operands_cons {env : Env d} {t : d.Ty} {ts : List d.Ty} {x : Name} {xs :
   rfl
 
 variable [DialectSignature d] [DialectCall d] {m : Type → Type} [Monad m] [LawfulMonad m]
-  [MonadFrame m] [DialectDenote d m]
+  [MonadFrame m] [DialectDenote d m] [DialectExtCall d m]
 
 /-- One op that is not a terminator and calls no function, whose rule gives
 the results `rs` with no choice, no UB and no memory touched: the run binds

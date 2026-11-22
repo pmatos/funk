@@ -178,6 +178,13 @@ theorem Module.memOps_notUB (hv : ∀ g ∈ M.funcs, g.Valid ctx)
     exact ih n (Nat.lt_succ_self n) c g _ _ _ _ hg hcs (Func.enter_ops hen).1 (Func.memCall_ub hx)
   | callRet _ _ _ _ _ _ _ _ _ hrun =>
     exact ih _ (Nat.lt_succ_of_le (Nat.min_le_right _ _)) s f _ os _ r hf hs htail hrun
+  | extUB _ _ hT hc hg _ =>
+    have hg' : M.table.func? _ = none := hg
+    have hall : (M.table.opOwn o).mayUB = true := by
+      simp [SymbolTable.opOwn, Operation.call?_of hT hc, hg', Effects.callerView, Effects.join,
+        Effects.all]
+    have hle := M.table.summary_closed.own s f hf o (Func.mem_allOps hb ho)
+    exact absurd (hle.mayUB_false hs) (by simp [hall])
 
 /-- A run with memory of ops of a function of `M` returns no poison when the
 function's summary leaves out may produce poison and its environment has

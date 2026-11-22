@@ -14,7 +14,7 @@ build fails when the Lean changes under it.
 
 #doc (Manual) "Runs with memory at every budget: readable blocks" =>
 
-:::moduleDocs (fingerprint := "12536997600893172640")
+:::moduleDocs (fingerprint := "5018495861221384453")
 :::
 
 :::readable Fir.Result.mapVal Fir.SetM.run_map Fir.LeavesAtMost.mapVal Fir.Ahead.mapVal (fingerprint := "7766632884357331668")
@@ -37,7 +37,7 @@ caller does with a return that leaves $`j` more steps, from the memories
 that return ends with. A callee that runs out of fuel ends its caller so.
 :::
 
-:::readable Fir.Func.runOps_memLeft_le Fir.Func.runOps_memAhead (pin := Fir.LeavesAtMost) (pin := Fir.Ahead) (fingerprint := "16258431355073082387")
+:::readable Fir.Func.runOps_memLeft_le Fir.Func.runOps_memAhead (pin := Fir.LeavesAtMost) (pin := Fir.Ahead) (fingerprint := "5870097573062216413")
 *Theorems: a run of ops with memory at two budgets.* For every dialect
 whose ops have a semantics in the state layer, whatever they do to the
 memories, from every memories $`S`: a run of ops with $`n` steps of fuel
@@ -59,7 +59,7 @@ UB of the smaller run is one of the larger, and each of the larger is one
 of the smaller, unless the smaller can run out of fuel.
 :::
 
-:::readable Fir.fromState_fst Fir.Func.run_of_enter Fir.Func.fromState_run_stuck Fir.Func.run_fromState Fir.Func.run_fromState_stuck (fingerprint := "7283670085571937738")
+:::readable Fir.fromState_fst Fir.Func.run_of_enter Fir.Func.fromState_run_stuck Fir.Func.run_fromState Fir.Func.run_fromState_stuck (fingerprint := "4210996338437142997")
 *Theorems: the run of a function with memory.* What a computation of the
 layer may end with from $`S`, without the memories it ends with, is what
 it ends with read from $`S`, without them. A function that starts runs its

@@ -94,6 +94,10 @@ instance : MonadUB (ChoiceTree ε) := ⟨.ub⟩
 itself. -/
 instance : MonadFrame (ChoiceTree ε) := ⟨fun t => t⟩
 
+/-- The tree of choices has no world, so an external call is UB. -/
+instance {d : Dialect} [TyDenote d.Ty] : DialectExtCall d (ChoiceTree ε) :=
+  ⟨fun _ _ _ => MonadUB.ub extCallUB⟩
+
 /-- The set of the ways a tree's paths end. A path with no outcome adds
 nothing. -/
 def toSet : ChoiceTree ε α → SetM α

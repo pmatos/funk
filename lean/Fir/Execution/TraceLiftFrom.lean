@@ -64,7 +64,8 @@ theorem Func.traceRunsFrom_noActs [DialectTrace d] [LiftsMem d]
       ((f.run M (m := TraceM (Step (DialectTrace.Acts d)) (TraceState N (unitsOf lay))) a n).run) =
       TraceM.liftMem (f.run M (m := StateT (Memories N (unitsOf lay)) SetM) a n).run :=
     (congrArg ExceptT.run (Func.run_eraseSteps lay ρ L M f a n)).trans
-      (congrArg ExceptT.run (Func.run_map hlift MonadMorphism.traceMem_mapsFrame M f a n)).symm
+      (congrArg ExceptT.run (Func.run_map hlift (LiftsMem.liftsExt (d := d) lay ρ L)
+        MonadMorphism.traceMem_mapsFrame M f a n)).symm
   have hfwd : ∀ e, ((f.run M (m := TraceM (Step (DialectTrace.Acts d))
         (TraceState N (unitsOf lay))) a n).run s e) →
       TraceM.liftMem (A := DialectTrace.Acts d)
