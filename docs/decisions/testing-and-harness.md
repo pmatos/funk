@@ -113,9 +113,11 @@ pointer by its value, as the human ruled on 2026-11-22 (#213, Q2 A), and
 a stored one by its eight units, little endian. The global must have the
 source's kind, size and liveness, an address that is a multiple of its
 alignment, and units that refine the source's, each byte equal to a unit
-of bits. No native address is compared with `fir-ref`'s (#232). A stored
-part of a pointer that nothing relates, or of a pointer with no
-provenance, makes the test invalid. Rejected: comparing the addresses
+of bits. No native address is compared with `fir-ref`'s (#232). A pointer
+with no provenance, returned or stored, whose offset is `fir-ref`'s
+address, a stored part of a pointer that nothing relates, and an id that
+`fir-ref`'s memory never made cannot be related, and make the test invalid
+unless native code refines another outcome of the set. Rejected: comparing the addresses
 themselves, which the spec need not give as native code does.
 
 The spec's end does not count `export` globals among an observer's roots

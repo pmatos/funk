@@ -25,9 +25,10 @@ Tier: direction; area: testing-and-harness
   endian. The related global must have the source's kind, size and
   liveness, an address that is a multiple of its alignment, and units that
   refine the source's. No native address is compared with `fir-ref`'s.
-- **What it cannot relate.** A stored part of a pointer whose allocation
-  nothing relates, or of a pointer with no provenance, makes the test
-  invalid.
+- **What it cannot relate.** A pointer with no provenance, returned or
+  stored, a stored part of a pointer whose allocation nothing relates, and
+  an id that `fir-ref`'s memory never made make the test invalid, unless
+  native code refines another outcome.
 
 The human ruled the option (#213, Q1 B) and reading a returned address
 (#213, Q2 A) on 2026-11-22.

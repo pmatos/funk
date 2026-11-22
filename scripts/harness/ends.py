@@ -28,6 +28,8 @@ from collections import deque
 from dataclasses import dataclass
 
 POISON = "poison"
+# A signed decimal, as an integer value or an address is spelled.
+DECIMAL = re.compile(r"-?(0|[1-9][0-9]*)")
 POINTER = re.compile(r"ptr\((none|[0-9]+), (-?[0-9]+)\)")
 FRAGMENT = re.compile(r"frag\(([0-9]+), ptr\((none|[0-9]+), (-?[0-9]+)\), ([0-9]+)\)")
 POINTER_TYPE = re.compile(r"ptr(?:\(([0-9]+)\))?")
@@ -167,10 +169,18 @@ class _Renaming:
             return why
         return self.units(a, t, name)
 
-    def fields(self, a: Alloc, b: Alloc, t: tuple[int, int], name: str) -> str | None:
-        """Compares the kind, alignment, size and liveness of the source's
-        allocation `a`, called `name`, with its image `b`, of key `t`."""
-        for field in ("kind", "align", "size", "live"):
+    def fields(
+        self,
+        a: Alloc,
+        b: Alloc,
+        t: tuple[int, int],
+        name: str,
+        which=("kind", "align", "size", "live"),
+    ) -> str | None:
+        """Compares the fields `which`, by default the kind, alignment, size
+        and liveness, of the source's allocation `a`, called `name`, with
+        its image `b`, of key `t`."""
+        for field in which:
             if getattr(a, field) != getattr(b, field):
                 return (
                     f"{name} has {field} {getattr(a, field)}, and the target's"
@@ -232,7 +242,10 @@ def unjudged(source: End, target: End) -> str | None:
 
 def refined(source: End, want, target: End, got, types) -> str | None:
     """Why the target's end, with the returned values `got`, does not refine
-    the source's, with `want`, or None when it does. `types` are the result
-    types. Only pointer values are compared here: `refine.refines` compares
-    the others. The harness can judge both ends (`unjudged`)."""
+    the source's, with `want`, or None when it does, where both ends are
+    spelled as `fir-ref run --world` spells them. `types` are the result
+    types, and only pointer values are compared. The harness judges a
+    native end with `native_ends.refined`, through the same renaming; this
+    one states the rule on two of fir-ref's ends. The harness can judge
+    both ends (`unjudged`)."""
     return _Renaming(source, target).refined(want, got, types)

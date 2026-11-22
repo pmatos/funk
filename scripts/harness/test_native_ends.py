@@ -7,6 +7,7 @@ import tools
 from ends import Alloc, End
 from native_ends import Global, read_units, refined
 from refine import FAILED, INVALID, PASSED, RETURN, Outcome, Returned, refines
+from sets import member
 
 
 def block(alloc, *units, align=1, memory=0):
@@ -124,6 +125,28 @@ class Relation(unittest.TestCase):
         self.assertEqual(j.status, INVALID)
         self.assertIn("whose bytes are fir-ref's address", j.why)
 
+    def test_a_returned_pointer_with_no_provenance_is_invalid(self):
+        j = judge(End(), ("ptr(none, 0)",), (), ("0",))
+        self.assertEqual(j.status, INVALID)
+        self.assertIn("whose offset is fir-ref's address", j.why)
+
+    def test_an_id_that_fir_ref_never_made_is_invalid(self):
+        source = End(memory=(Alloc(0, 5, None),))
+        native = (Global("@g", 0, 4096, b"\x01"),)
+        j = judge(source, ("ptr(5, 0)",), native, ("4096",))
+        self.assertEqual(j.status, INVALID)
+        self.assertIn("never made", j.why)
+
+    def test_an_outcome_it_cannot_relate_makes_a_set_invalid(self):
+        unrelated = Outcome(RETURN, ("ptr(none, 0)",))
+        other = Outcome(RETURN, VALUES, end=SOURCE)
+        j = member((other, unrelated), Returned(("8192",), (TABLE,)), TYPES)
+        self.assertEqual(j.status, INVALID)
+        self.assertEqual(
+            member((other, unrelated), Returned(("8192",), NATIVE), TYPES).status,
+            PASSED,
+        )
+
     def test_values_alone_judge_an_end_that_observes_nothing(self):
         j = refines(Outcome(RETURN, ("7",)), Returned(("7",), NATIVE), ["i8"])
         self.assertEqual(j.status, PASSED)
@@ -131,7 +154,10 @@ class Relation(unittest.TestCase):
 
 class Reading(unittest.TestCase):
     def test_units_are_hexadecimal_bytes_and_runs_of_zeros(self):
-        self.assertEqual(read_units("0a00zeros(3)ff"), bytes([10, 0, 0, 0, 0, 255]))
+        units = read_units("0a00zeros(3)ff")
+        self.assertEqual(bytes(units), bytes([10, 0, 0, 0, 0, 255]))
+        self.assertEqual([units[i] for i in range(len(units))], [10, 0, 0, 0, 0, 255])
+        self.assertEqual(len(read_units("zeros(1073741824)")), 1 << 30)
         self.assertEqual(read_units(""), b"")
         for bad in ("0", "0A", "zeros(01)", "zeros()", "0a 0b"):
             self.assertIsNone(read_units(bad), bad)

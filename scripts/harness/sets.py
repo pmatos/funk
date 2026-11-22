@@ -124,18 +124,27 @@ def problem(outcomes) -> Judgement | None:
 
 def member(outcomes, native, types, what: str = "outcomes", shown=None) -> Judgement:
     """Native code's result refines one of `outcomes`. A failure lists the
-    values `shown`, by default those of `outcomes`."""
+    values `shown`, by default those of `outcomes`. When it refines none and
+    the harness cannot relate one of them to it (`native_ends`), the test
+    is invalid."""
     if isinstance(native, OutOfStack):
         return native.judgement()
     if isinstance(native, str):
         return Judgement(FAILED, "native code fails where fir-ref returns")
     same = ""
+    unrelated = None
     for o in outcomes:
         j = refines(o, native, types)
         if j.status == PASSED:
             return Judgement(PASSED)
-        if not same and j.why.startswith(END):
+        if j.status == INVALID:
+            unrelated = unrelated or j
+        elif not same and j.why.startswith(END):
             same = f"; where the values match, {j.why}"
+    if unrelated is not None:
+        # An outcome that the harness cannot relate to the native run may
+        # be the one it refines, so the test proves nothing.
+        return unrelated
     shown = [o.values for o in outcomes] if shown is None else shown
     some = ", ".join(show_values(v) for v in shown[:3])
     more = ", ..." if len(shown) > 3 else ""

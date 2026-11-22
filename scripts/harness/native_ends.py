@@ -18,10 +18,11 @@ gives addresses that native code need not (#232). A global is compared with
 its source allocation unit by unit: a unit of bits as its byte, and the
 fragment I of a pointer as byte I of the native address, read from the
 pointer's whole bytes where fir-ref holds all its fragments in order.
-What the harness cannot relate, such as a fragment of a pointer with no
-provenance, whose bytes are fir-ref's address, makes the test invalid.
+What the harness cannot relate, such as a pointer with no provenance,
+whose offset is fir-ref's address, makes the test invalid.
 """
 
+import bisect
 import re
 from dataclasses import dataclass
 
@@ -32,32 +33,71 @@ import ends
 # byte I of its address.
 POINTER_UNITS = 8
 UNITS = re.compile(r"(?:[0-9a-f]{2}|zeros\((?:0|[1-9][0-9]*)\))*")
-DECIMAL = re.compile(r"-?(0|[1-9][0-9]*)")
+DECIMAL = ends.DECIMAL
 PIECE = re.compile(r"([0-9a-f]{2})|zeros\(([0-9]+)\)")
+
+
+class Units:
+    """A global's units as its report gives them, runs of bytes and of
+    zeros, read one at a time without spelling out the zeros: a global may
+    take 2^30 of them, and most runs compare none."""
+
+    def __init__(self, pieces):
+        self.starts = []
+        self.pieces = []
+        size = 0
+        for p in pieces:
+            n = p if isinstance(p, int) else len(p)
+            if n:
+                self.starts.append(size)
+                self.pieces.append(p)
+                size += n
+        self.size = size
+
+    def __len__(self) -> int:
+        return self.size
+
+    def __getitem__(self, i: int) -> int:
+        if not 0 <= i < self.size:
+            raise IndexError(i)
+        k = bisect.bisect_right(self.starts, i) - 1
+        p = self.pieces[k]
+        return 0 if isinstance(p, int) else p[i - self.starts[k]]
+
+    def __bytes__(self) -> bytes:
+        return b"".join(bytes(p) for p in self.pieces)
+
+    def __eq__(self, other) -> bool:
+        return isinstance(other, (Units, bytes)) and bytes(self) == bytes(other)
+
+    __hash__ = None
 
 
 @dataclass(frozen=True)
 class Global:
-    """A global of the module as a native run reports it."""
+    """A global of the module as a native run reports it: its units are
+    `bytes` or `Units`."""
 
     name: str
     memory: int
     address: int
-    units: bytes
+    units: bytes | Units
 
 
-def read_units(text: str) -> bytes | None:
-    """The bytes of a global's `units` text: two hexadecimal digits a byte,
+def read_units(text: str) -> Units | None:
+    """The units of a global's `units` text: two hexadecimal digits a byte,
     and `zeros(N)` for N zero bytes; or None when it is not such a text."""
     if UNITS.fullmatch(text) is None:
         return None
-    out = bytearray()
+    pieces = []
     for m in PIECE.finditer(text):
-        if m.group(1) is not None:
-            out.append(int(m.group(1), 16))
+        if m.group(1) is None:
+            pieces.append(int(m.group(2)))
+        elif pieces and isinstance(pieces[-1], bytearray):
+            pieces[-1].append(int(m.group(1), 16))
         else:
-            out.extend(bytes(int(m.group(2))))
-    return bytes(out)
+            pieces.append(bytearray([int(m.group(1), 16)]))
+    return Units(pieces)
 
 
 class Unrelated(Exception):
@@ -101,13 +141,20 @@ class _Native(ends._Renaming):
                     return t
         return found[0]
 
+    def pointer(self, memory, want, got, where):
+        if want.startswith("ptr(none,"):
+            raise Unrelated(
+                f"{where} is {want}, a pointer with no provenance, whose offset"
+                " is fir-ref's address"
+            )
+        return super().pointer(memory, want, got, where)
+
     def fields(self, a, b, t, name):
-        for field in ("kind", "size", "live"):
-            if getattr(a, field) != getattr(b, field):
-                return (
-                    f"{name} has {field} {getattr(a, field)}, and the target's"
-                    f" {getattr(b, field)}"
-                )
+        if a.kind is None:
+            raise Unrelated(f"{name} is an id that fir-ref's memory never made")
+        why = super().fields(a, b, t, name, ("kind", "size", "live"))
+        if why is not None:
+            return why
         g = self.globals[t]
         if a.align and g.address % a.align:
             return (
@@ -153,7 +200,8 @@ class _Native(ends._Renaming):
         if start >= 0 and list(whole) == mine:
             if int(index) != 0:
                 return None
-            address = int.from_bytes(g.units[p : p + POINTER_UNITS], "little")
+            whole = bytes(g.units[j] for j in range(p, p + POINTER_UNITS))
+            address = int.from_bytes(whole, "little")
             return self.pointer(
                 int(memory), f"ptr({alloc}, {offset})", str(address), where
             )

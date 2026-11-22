@@ -31,7 +31,7 @@ INVALID = "invalid"
 # How a failure of the end of a return, not of its values, begins.
 END = "the end of the return: "
 
-DECIMAL = re.compile(r"-?(0|[1-9][0-9]*)")
+DECIMAL = ends.DECIMAL
 INT_TYPE = re.compile(r"i([1-9][0-9]*)")
 FLOAT_TYPE = re.compile(r"float\(([0-9]+), ([0-9]+)\)")
 # The float formats with an alias, as `(e, m)` (ADR-2026-11-11-0951).
