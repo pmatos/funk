@@ -9,8 +9,11 @@
 # through its own address. @write_msg stores to @msg, a constant global:
 # the program is valid, and the store is UB when it runs (#237 Q2).
 # @read_past reads @pad's one unit and the zeros after it. Since stage 3
-# the backend places the globals and lowers globaladdr, so each test that
-# returns no address and whose run is not UB runs as native code too.
+# the backend places the globals and lowers globaladdr, so each test whose
+# run is not UB runs as native code too. @addresses returns three
+# addresses, the ids 0 to 2 on fir-ref, which the harness relates to the globals that native code
+# reports with --memory, and @table's units hold two of them (#213 stage
+# 2).
 tests = [
   { func = "@msg_unit", args = ["0"] },
   { func = "@msg_unit", args = ["1"] },
@@ -25,4 +28,5 @@ tests = [
   { func = "@read_past", args = ["0"] },
   { func = "@read_past", args = ["8"] },
   { func = "@addresses", expect = ["ptr(0, 0)", "ptr(1, 0)", "ptr(2, 0)"] },
+  { func = "@addresses" },
 ]

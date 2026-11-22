@@ -115,6 +115,25 @@ fn a_function_that_calls_printf_runs_and_its_output_comes_first() {
     );
 }
 
+/// The table of globals is a weak reference of the entry file, which a
+/// dynamically linked program without globals resolves to none.
+#[test]
+fn a_program_linked_with_the_c_library_reports_its_memory() {
+    let exe = greet_in_c("memory", GREET_IN_C);
+    let out = Command::new(&exe)
+        .args(["--memory", "@greet", "41"])
+        .output()
+        .unwrap();
+    assert_eq!(
+        report(&out),
+        (
+            Some(0),
+            "C got 41\n{\"values\":[\"42\"],\"memory\":[]}\n".to_string(),
+            String::new()
+        )
+    );
+}
+
 #[test]
 fn a_bad_command_line_still_exits_with_2() {
     let exe = greet_in_c("usage", GREET_IN_C);

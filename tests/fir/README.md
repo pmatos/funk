@@ -117,8 +117,11 @@ or without `exact`, `srem`, `urem`, `icmp`, `select`, `br`, `cond_br`,
 `ptradd`, `fieldaddr`, `alloca`, `load`, `store`, `memcpy`, `memmove`,
 `memset`, `ptr_expose`, `ptr_from_int` and `globaladdr`, and globals, in a
 memory of 8-bit units and 64-bit pointers, such as the default one. A built
-function takes and returns a pointer as its address, so a test that returns
-a pointer, or passes a poison pointer, is interpreter-only. A test whose run reaches
+function takes and returns a pointer as its address, so a test that passes
+a poison pointer is interpreter-only, and a pointer result is judged by the
+global it points into, which native code reports with its memory
+(`docs/decisions/testing-and-harness.md#native-runs-report-memory`); other
+tests that return a pointer stay interpreter-only. A test whose run reaches
 `unreachable` is interpreter-only, since a native run of UB proves
 nothing. Tests of other widths go in modules whose tests are all
 interpreter-only, such as `tracer-i7.fir` and `widths.fir`.

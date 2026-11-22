@@ -25,6 +25,7 @@ from refine import (
     UB,
     Judgement,
     OutOfStack,
+    Returned,
     show_values,
 )
 from sets import BudgetExceeded, Outcomes, Path
@@ -53,7 +54,7 @@ class Runs(Protocol):
 
     def sampled(self, args: tuple[str, ...], seed: int) -> Path | str: ...
 
-    def native(self, args: tuple[str, ...]) -> tuple[str, ...] | OutOfStack | str: ...
+    def native(self, args: tuple[str, ...]) -> Returned | OutOfStack | str: ...
 
 
 @dataclass(frozen=True)

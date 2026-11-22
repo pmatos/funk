@@ -121,17 +121,20 @@ class Execution(unittest.TestCase):
             self.assertIn("not one JSON report", self.runs.scripted((), None))
 
     def test_native_uses_the_limited_runner_and_strict_decoder(self):
+        out = '{"values":["7"],"memory":[]}\n'
         with patch.object(
-            tools, "run_native", return_value=tools.Ran(0, '{"values":["7"]}\n', "")
+            tools, "run_native", return_value=tools.Ran(0, out, "")
         ) as run:
             self.assertEqual(self.runs.native(("0",)), ("7",))
-        run.assert_called_once_with(["exe", "@f", "0"])
+        run.assert_called_once_with(["exe", "--memory", "@f", "0"])
         with patch.object(
-            tools,
-            "run_native",
-            return_value=tools.Ran(0, '{"values":["7"]}\n', "unexpected error\n"),
+            tools, "run_native", return_value=tools.Ran(0, out, "unexpected error\n")
         ):
             self.assertIn("unexpected error", self.runs.native(("0",)))
+        with patch.object(
+            tools, "run_native", return_value=tools.Ran(0, '{"values":["7"]}\n', "")
+        ):
+            self.assertIn("prints", self.runs.native(("0",)))
 
     def test_unavailable_executable_is_exposed_without_starting_a_process(self):
         runs = ProcessRuns("fir-ref", FilePath("m.fir"), TEST, "is not built: failed")

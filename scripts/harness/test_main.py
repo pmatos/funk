@@ -39,8 +39,9 @@ if limits != OWN:
     sys.exit(f"{sys.argv[1]} runs under the limits {limits}, not {OWN}")
 """
 
-# The executable that the stand-in for funk builds prints its values only
-# when it runs under a limit on data and address space.
+# The executable that the stand-in for funk builds prints its values, and
+# an empty memory report, only when it runs under a limit on data and
+# address space and is given `--memory`.
 FUNK = """
 if sys.argv[1] == "build":
     out = sys.argv[sys.argv.index("-o") + 1]
@@ -49,8 +50,9 @@ if sys.argv[1] == "build":
         f.write('[ "$(ulimit -d)" != unlimited ] && [ "$(ulimit -v)" != unlimited ] || exit 3\\n')
         # Native code takes no poison, and gives 8 on the i32 minimum.
         f.write('case " $* " in *" poison "*) exit 4;; esac\\n')
-        f.write('case " $* " in *" -2147483648 "*) echo \\'{"values":["8"]}\\'; exit;; esac\\n')
-        f.write("echo '{\\"values\\":[\\"7\\"]}'\\n")
+        f.write('[ "$1" = --memory ] || exit 5\\n')
+        f.write('case " $* " in *" -2147483648 "*) echo \\'{"values":["8"],"memory":[]}\\'; exit;; esac\\n')
+        f.write("echo '{\\"values\\":[\\"7\\"],\\"memory\\":[]}'\\n")
     os.chmod(out, 0o755)
     print(json.dumps({"file": sys.argv[-1], "verdict": "accepted", "diagnostics": []}))
     sys.exit(0)

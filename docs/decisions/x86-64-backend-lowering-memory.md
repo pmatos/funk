@@ -125,7 +125,10 @@ piece is the relocation `.quad g+K`, whose addend wraps at 64 bits as
 `ptradd`'s offset does, and the units past the initializer are zeros, as
 the human ruled on 2026-11-20 (#237 Q1). Each process runs one function,
 so each run starts with the initial units. The executable is not
-position-independent, so the relocations are resolved when it links.
+position-independent, so the relocations are resolved when it links. A
+module with globals also defines the hidden table `__funk_globals`, which
+lists each placed global for the runtime's `--memory` report
+([x86-64-backend-executable.md](x86-64-backend-executable.md#reporting-memory)).
 
 `%p: ptr<N> = globaladdr @g` is `leaq g(%rip), %rax` and a store to the
 result's slot. Validation makes `@g` a global of the op's own table and of

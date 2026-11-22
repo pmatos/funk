@@ -7,7 +7,8 @@ trace and the end of each path as an observer sees them
 ADR-2026-11-09-1540). It is the record: when this page and an ADR disagree,
 the page wins, and the ADR is fixed or deleted (ADR-2026-11-09-1610). #213,
 the harness judging memory and external calls by refinement, reads the
-format below; the ADR that #213 asks for records how native runs report it.
+format below; ADR-2026-11-22-1336 records how native runs report theirs
+([testing-and-harness.md](testing-and-harness.md#native-runs-report-memory)).
 
 ## The option
 

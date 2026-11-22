@@ -22,6 +22,17 @@
 //! code model that `leaq` and calls relative to `%rip` assume keeps code
 //! and data within 2 GiB, so the globals, each with its alignment's
 //! padding, take at most 2^30 bytes, and the global past that is reported.
+//!
+//! A module with globals also gets the table `__funk_globals`, from which
+//! the runtime reports each global's address and units when the
+//! executable runs with `--memory`
+//! (`docs/decisions/x86-64-backend-executable.md#reporting-memory`). It
+//! is in the module's file because a global that is not `export` is a
+//! local symbol there. It is a hidden global symbol, and the entry file
+//! refers to it weakly, so a module without globals defines no data and
+//! reports an empty list.
+
+use std::fmt::Write as _;
 
 use funk_ir::text::print_symbol;
 use funk_ir::{Attr, Diagnostic, Global, InitPiece, Linkage, Module, Op};
@@ -64,6 +75,7 @@ fn global_addr(cx: &mut Cx<'_>, op: &Op) -> Result<(), Unlowered> {
 pub fn data(m: &Module, asm: &mut Asm, out: &mut Vec<Diagnostic>) {
     let table = m.symbols();
     let mut total: u64 = 0;
+    let mut placed = Vec::new();
     for g in m.items.iter().filter_map(|i| i.as_global()) {
         let mut why = realised(m, g.memory).err();
         for piece in &g.init {
@@ -100,9 +112,74 @@ pub fn data(m: &Module, asm: &mut Asm, out: &mut Vec<Diagnostic>) {
             (Some(t), None) => {
                 total = t;
                 global(asm, g);
+                placed.push(g);
             }
         }
     }
+    if !placed.is_empty() {
+        report_table(asm, &placed);
+    }
+}
+
+/// The table `__funk_globals`: the number of globals, then for each its
+/// report's text up to its address, that text's length, its address and
+/// its size, then the texts.
+fn report_table(asm: &mut Asm, globals: &[&Global]) {
+    asm.directive(format_args!(".section\t.rodata"));
+    asm.directive(format_args!(".p2align\t3"));
+    asm.directive(format_args!(".globl\t__funk_globals"));
+    asm.directive(format_args!(".hidden\t__funk_globals"));
+    asm.directive(format_args!(".type\t__funk_globals, @object"));
+    asm.label("__funk_globals");
+    asm.directive(format_args!(".quad\t{}", globals.len()));
+    let texts: Vec<String> = globals
+        .iter()
+        .enumerate()
+        .map(|(i, g)| report_text(i, g))
+        .collect();
+    for (i, (g, text)) in globals.iter().zip(&texts).enumerate() {
+        asm.directive(format_args!(
+            ".quad\t.Lfunk_global_text{i}, {}, {}, {}",
+            text.len(),
+            symbol(&g.name),
+            g.size
+        ));
+    }
+    for (i, text) in texts.iter().enumerate() {
+        asm.label(&format!(".Lfunk_global_text{i}"));
+        for line in text.as_bytes().chunks(PER_LINE) {
+            let bytes: Vec<String> = line.iter().map(u8::to_string).collect();
+            asm.directive(format_args!(".byte\t{}", bytes.join(", ")));
+        }
+    }
+}
+
+/// The JSON text that goes before the address of the `i`-th global `g` in
+/// the memory report: a comma after the first, then
+/// `{"global":"NAME","memory":N,"address":"`.
+fn report_text(i: usize, g: &Global) -> String {
+    let comma = if i == 0 { "" } else { "," };
+    let name = json_escape(&print_symbol(&g.name));
+    format!(
+        "{comma}{{\"global\":\"{name}\",\"memory\":{},\"address\":\"",
+        g.memory
+    )
+}
+
+/// `text` as the inside of a JSON string.
+fn json_escape(text: &str) -> String {
+    let mut out = String::with_capacity(text.len());
+    for c in text.chars() {
+        match c {
+            '"' => out.push_str("\\\""),
+            '\\' => out.push_str("\\\\"),
+            c if u32::from(c) < 0x20 => {
+                let _ = write!(out, "\\u{:04x}", u32::from(c));
+            }
+            c => out.push(c),
+        }
+    }
+    out
 }
 
 fn at(g: &Global, why: String) -> Diagnostic {

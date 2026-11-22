@@ -12,7 +12,8 @@ import subprocess
 from dataclasses import dataclass
 
 import ends
-from refine import FUEL_EXHAUSTED, RETURN, STUCK, UB, Outcome, OutOfStack
+import native_ends
+from refine import FUEL_EXHAUSTED, RETURN, STUCK, UB, Outcome, OutOfStack, Returned
 from sets import BudgetExceeded, Outcomes, Path
 
 TIMEOUT = 120
@@ -284,12 +285,15 @@ def outcomes(ran: Ran, world: bool = False) -> Outcomes | BudgetExceeded | str:
     return Outcomes(choices, tuple(found), complete)
 
 
-def native_values(ran: Ran) -> tuple[str, ...] | OutOfStack | str:
+def native_values(ran: Ran, memory: bool = False) -> Returned | OutOfStack | str:
     """The values that a built executable prints
     (docs/decisions/x86-64-backend-executable.md#running-one-function):
     `{"values":[...]}` and exit status 0, and nothing on standard error; or
     that the run outgrew its stack
-    (docs/decisions/testing-and-harness.md#a-run-that-outgrows-its-stack)."""
+    (docs/decisions/testing-and-harness.md#a-run-that-outgrows-its-stack).
+    With `memory`, the run was given `--memory`, and the line also holds
+    the module's globals
+    (docs/decisions/x86-64-backend-executable.md#reporting-memory)."""
     if ran.status != 0:
         ran_out = RAN_OUT.fullmatch(ran.stderr)
         if ran.status == 2 and not ran.stdout and ran_out:
@@ -299,9 +303,40 @@ def native_values(ran: Ran) -> tuple[str, ...] | OutOfStack | str:
     if obj is None:
         return no_report(ran)
     values = strings(obj.get("values"))
-    if values is None or list(obj) != ["values"] or ran.stderr:
+    keys = ["values", "memory"] if memory else ["values"]
+    found = read_globals(obj.get("memory")) if memory else ()
+    if values is None or found is None or list(obj) != keys or ran.stderr:
         return f"exits with 0 and prints {ran.stdout.strip()} {ran.stderr.strip()}"
-    return values
+    return Returned(values, found)
+
+
+def read_globals(items) -> tuple[native_ends.Global, ...] | None:
+    """The globals of a native memory report, each
+    `{"global":NAME,"memory":N,"address":"A","units":"U"}`, or None."""
+    if not isinstance(items, list):
+        return None
+    out = []
+    for g in items:
+        if not isinstance(g, dict) or list(g) != [
+            "global",
+            "memory",
+            "address",
+            "units",
+        ]:
+            return None
+        name, memory, address = g["global"], count(g["memory"]), g["address"]
+        units = (
+            native_ends.read_units(g["units"]) if isinstance(g["units"], str) else None
+        )
+        if not isinstance(name, str) or memory is None or units is None:
+            return None
+        if (
+            not isinstance(address, str)
+            or native_ends.DECIMAL.fullmatch(address) is None
+        ):
+            return None
+        out.append(native_ends.Global(name, memory, int(address), units))
+    return tuple(out)
 
 
 def verdict(ran: Ran) -> Verdict | str:
