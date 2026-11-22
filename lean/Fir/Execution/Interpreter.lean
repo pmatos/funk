@@ -88,12 +88,12 @@ must ask, as the core rule for `ret` does. A third check holds the
 external-call rule: it may give only values of the call's result types.
 No obligation asks that yet, since the rule is UB in every layer for now;
 #239's next stage, which gives the core's rule values, must. One more
-condition is no check of its own: a terminator that jumps gives no results. The interpreter
-binds none for it, while validation puts them in scope in the blocks that
-its block dominates, so a use of one would be stuck. No core terminator
-has results. That condition is the dialect's obligation, not a rule of
-validation, until exceptions and unwinding are designed
-(ADR-2026-11-02-2248).
+condition is no check of its own: a terminator that jumps gives no
+results. The interpreter binds none for it, while validation puts them in
+scope in the blocks that its block dominates, so a use of one would be
+stuck. No core terminator has results. That condition is the dialect's
+obligation, not a rule of validation, until exceptions and unwinding are
+designed (ADR-2026-11-02-2248).
 
 These checks are not all of validation. The interpreter checks that a value is
 defined, not that its definition dominates its use. So a run of a function that
@@ -113,9 +113,8 @@ The totality obligation rules that out for every op that the interpreter
 runs by its own rule: a terminator, or an op that calls no function. No
 obligation asks it of the external-call rule yet: the rule is UB in every
 layer for now, which is an outcome, and #239's next stage must ask it of
-the rule it gives the core. An op
-that calls a function runs its callee, or the external-call rule, never its
-own semantics.
+the rule it gives the core. An op that calls a function runs its callee,
+or the external-call rule, never its own semantics.
 
 Effects belong to the dialect, so the interpreter does not change when a
 dialect needs a new one. The core dialect's `freeze` chooses bits, and its
