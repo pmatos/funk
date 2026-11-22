@@ -14,10 +14,10 @@ pins their fingerprint; the build fails when the Lean changes under it.
 
 #doc (Manual) "Core ops: readable blocks" =>
 
-:::moduleDocs (fingerprint := "6100192088741328958")
+:::moduleDocs (fingerprint := "10526301684177883347")
 :::
 
-:::readable Fir.Core.Op (pin := Fir.Core.Op.Valid) (fingerprint := "13439952426825145566")
+:::readable Fir.Core.Op (pin := Fir.Core.Op.Valid) (fingerprint := "4471709406390641274")
 *Ops.* An op of the core dialect carries the width $`N` of the integers it
 works on, or the format $`\mathsf{float}\langle e,m \rangle` of the floats
 it works on, so the types of its operands and results follow from it.
@@ -355,6 +355,26 @@ memSet \mathsf{memset}_{N}~o~V~W
 The {ref "The-fir-specification--Validation--Core-rules"}[core rules]
 accept only the ordering $`\mathsf{nonatomic}`.
 
+*Pointers as integers* turn a pointer into the integer of its address and
+back (#232; ADR-2026-11-09-1542).
+
+```grammar Fir.Core.Op
+\mathit{op}
+-                    \dots
+ptrExpose,ptrFromInt \mathsf{ptr\_expose}_{N,W} \mid \mathsf{ptr\_from\_int}_{N,W}
+```
+
+* $`\mathsf{ptr\_expose}_{N,W}` (`ptrExpose`) exposes the allocation of a
+  pointer of $`\mathsf{ptr}\langle N \rangle` and gives its address as an
+  $`\mathsf{i}W`. A poison pointer is immediate UB.
+* $`\mathsf{ptr\_from\_int}_{N,W}` (`ptrFromInt`) turns an
+  $`\mathsf{i}W` back into a pointer of $`\mathsf{ptr}\langle N \rangle`,
+  into a live, exposed allocation that holds the address, or with no
+  provenance. A poison integer gives poison.
+
+The data layout asks that $`W` be the width of memory $`N`'s pointers,
+and that memory $`N` be integral.
+
 *Conversions to integers* give a float's number truncated toward zero as
 an integer (ADR-2026-11-09-1549; the human's ruling of 2026-11-12 on #354).
 
@@ -428,29 +448,13 @@ call \mathsf{call}~f : t^* \to r^*
 *Validation.* The grammar allows ops that no program may hold. Beyond the
 types of each op's operands and results, which every dialect checks, the
 {ref "The-fir-specification--Validation--Core-rules"}[core rules] of
-validation ask:
-
-* $`\mathsf{zext}_{M \to N}` and $`\mathsf{sext}_{M \to N}` strictly
-  widen, with $`M < N`, and $`\mathsf{trunc}_{M \to N}` strictly narrows,
-  with $`N < M`;
-* $`\mathsf{ret}~t^*` returns the result types $`t^*` of its function;
-* $`\mathsf{call}~f : t^* \to r^*` names a symbol $`f` to which the
-  module's symbol table gives the function type $`t^* \to r^*`;
-* $`\mathsf{fpext}_{e,m,e',m'}` converts to another format with
-  $`e \le e'` and $`m \le m'`, and $`\mathsf{fptrunc}_{e,m,e',m'}` to one
-  with $`e' < e` or $`m' < m`;
-* the ops that round, $`\mathsf{fadd}`, $`\mathsf{fsub}`,
-  $`\mathsf{fmul}`, $`\mathsf{fdiv}`, $`\mathsf{sqrt}`, $`\mathsf{fma}`,
-  $`\mathsf{sitofp}`, $`\mathsf{uitofp}` and $`\mathsf{fptrunc}`, carry
-  the rounding mode $`\mathsf{rne}`, and
-  $`\mathsf{fcmp}`, $`\mathit{fbin}`, $`\mathit{funary}` and
-  $`\mathsf{fma}` carry fast-math flags that set neither of the reserved
-  words $`\mathsf{contract}` and $`\mathsf{reassoc}`;
-* $`\mathsf{fieldaddr}_N~s~j` names a layout $`s` of its own table in the
-  memory $`N`, which has a field $`j`, and takes an index only when that
-  field is repeated;
-* $`\mathsf{alloca}`, and $`\mathsf{load}` and $`\mathsf{store}` of an
-  integer, a pointer or a float, have the rules given with them above.
-
-The other ops have no core rule of their own.
+validation ask more of some ops: a width change strictly widens or
+narrows, $`\mathsf{ret}` returns its function's result types,
+$`\mathsf{call}` names a function of its type, a conversion between
+formats goes the way its name says, the ops that round carry the mode
+$`\mathsf{rne}`, the float ops carry no reserved word of their fast-math
+flags, and $`\mathsf{fieldaddr}` names a layout of its memory with the
+field it asks. $`\mathsf{alloca}`, the loads and the stores have the
+rules given with them above, and the other ops have no core rule of their
+own.
 :::

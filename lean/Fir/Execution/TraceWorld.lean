@@ -58,9 +58,10 @@ structure TraceState (Mem : Type) (unit : Mem → Nat) where
   mem : Memories Mem unit
   escaped : List (Mem × AllocId)
 
-/-- The traced state before anything runs: empty memories, outside every
-call, and nothing escaped. -/
-def TraceState.init : TraceState Mem unit := ⟨Memories.empty, []⟩
+/-- The traced state before anything runs: the memories `S` a run starts
+with, which hold its starting allocations outside every call, and nothing
+escaped. -/
+def TraceState.init (S : Memories Mem unit) : TraceState Mem unit := ⟨S, []⟩
 
 /-! # The lift -/
 

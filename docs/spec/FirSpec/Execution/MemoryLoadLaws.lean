@@ -17,7 +17,7 @@ fails when the Lean changes under it.
 :::moduleDocs (fingerprint := "4607958562880319941")
 :::
 
-:::readable Fir.load_apply Fir.load_keeps (pin := Fir.instMonadMemoryStateT) (pin := Fir.Memory.Memories.load) (fingerprint := "18420834841701571019")
+:::readable Fir.load_apply Fir.load_keeps (pin := Fir.instMonadMemoryStateT) (pin := Fir.Memory.Memories.load) (fingerprint := "13751845134896825593")
 *Theorems: how a load ends.* In the
 {ref "The-fir-specification--Memory--The-state-layer"}[state layer] over
 the set monad, the
@@ -37,14 +37,14 @@ and at most one that ends, so it has
 {ref "The-fir-specification--Memory--Ops-of-finitely-many-outcomes"}[finitely many].
 :::
 
-:::readable Fir.load_writesNot Fir.load_allocatesNot (pin := Fir.WritesNot) (pin := Fir.AllocatesNot) (fingerprint := "2640054746864991937")
+:::readable Fir.load_writesNot Fir.load_allocatesNot (pin := Fir.WritesNot) (pin := Fir.AllocatesNot) (fingerprint := "14179290802542113336")
 *Theorems: a load changes no memory.* For every memory $`y`, a load meets
 the {ref "The-fir-specification--Memory--Memory-obligations"}[obligations]
 that it writes no unit of $`y`, and neither allocates nor frees in $`y`:
 a path that ends keeps the memories.
 :::
 
-:::readable Fir.load_readsNot (pin := Fir.ReadsNot) (pin := Fir.ReadsNot.Match) (fingerprint := "14918265554758701461")
+:::readable Fir.load_readsNot (pin := Fir.ReadsNot) (pin := Fir.ReadsNot.Match) (fingerprint := "14706166147409869318")
 *Theorem: a load reads only its own memory.* For every memory $`y \ne x`,
 a load of $`x` meets the
 {ref "The-fir-specification--Memory--Memory-obligations"}[obligation]
@@ -55,7 +55,7 @@ $`x` is the same; each run ends with the memories it started from, which
 agree off $`y`, and whose units of $`y` are those each run had.
 :::
 
-:::readable Fir.load_refines (pin := Fir.StateRefinedBy) (pin := Fir.Memory.Memories.IsRefinedBy) (fingerprint := "16922641767448538274")
+:::readable Fir.load_refines (pin := Fir.StateRefinedBy) (pin := Fir.Memory.Memories.IsRefinedBy) (fingerprint := "2745685152072682073")
 *Theorem: a load is monotone.* From memories $`S'` that
 {ref "The-fir-specification--Memory--Refining-memories"}[refine] $`S`, a
 load faults for the same reason as from $`S`, or loads units that refine

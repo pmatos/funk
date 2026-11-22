@@ -56,7 +56,7 @@ theorem Memory.unitAt_alloc_ge {M M' : Memory u} (hl : M.blocks.length = M'.bloc
 
 /-- An allocation adds the new block's shape to the allocations. -/
 theorem Memory.allocs_alloc (M : Memory u) (k : AllocKind) (n al : Nat) :
-    (M.alloc k n al).2.allocs = M.allocs ++ [(k, al, n, true)] := by
+    (M.alloc k n al).2.allocs = M.allocs ++ [(k, al, n, true, false)] := by
   simp [Memory.allocs, Memory.alloc, Block.shape]
 
 /-- Memories of the same allocations have as many blocks. -/

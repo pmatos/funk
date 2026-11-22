@@ -6,7 +6,7 @@ The validation check needs a dialect's types to be comparable for equality,
 and its two rules to be decidable. The core dialect's types can be
 compared, the rule of its types is decided where it is stated, and the
 rule of its ops is decided below, case by case. With them, the check
-covers every one of the 50 core ops: the general rules check each op's
+covers every one of the 52 core ops: the general rules check each op's
 operand and result types, its place in its block, its successors and its
 uses against its signature, and the core rules add the rules of `ret`,
 `call`, `zext`, `sext`, `trunc`, `fpext`, `fptrunc`, `sitofp`, `uitofp`,
@@ -28,6 +28,7 @@ instance : DecidableDialectValidation CoreDialect where
   decValidTy t := inferInstanceAs (Decidable (Core.Ty.Valid t))
   decValidOp ctx o := inferInstanceAs (Decidable (Core.Op.Valid ctx o))
   decValidFunc _ _ _ := inferInstanceAs (Decidable True)
+  decValidSigAttrs t as := inferInstanceAs (Decidable (Core.Ty.sigAttrsAllowed t as = true))
 
 end Fir
 

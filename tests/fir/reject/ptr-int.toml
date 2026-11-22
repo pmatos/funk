@@ -1,0 +1,118 @@
+# Must-reject texts of ptr_expose and ptr_from_int (#232,
+# ADR-2026-11-09-1542). Each takes no attributes: ptr_expose takes a pointer
+# and defines an integer, and ptr_from_int takes an integer and defines a
+# pointer, of any width. Any other shape does not decode. The data layout
+# rejects an integer that is not as wide as the memory's pointers (the
+# human's ruling of 2026-11-18 on #232, Q2) and a memory that it marks
+# nonintegral (the human's ruling of 2026-11-11 on #231).
+
+[[reject]]
+verdict = "validation-error"
+rule = "ptr_expose of a non-integral memory is rejected by the data layout"
+text = '''
+layout memory(1, unit(8), pointer(32), little, nonintegral)
+
+func @f(%p: ptr(1)) -> i32 {
+^e:
+  %a: i32 = ptr_expose %p @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "ptr_from_int into a non-integral memory is rejected by the data layout"
+text = '''
+layout memory(1, unit(8), pointer(32), little, nonintegral)
+
+func @f(%a: i32) -> ptr(1) {
+^e:
+  %q: ptr(1) = ptr_from_int %a @0
+  ret %q @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "ptr_expose gives an integer as wide as the memory's pointers: an i32 of a 64-bit ptr is rejected"
+text = '''
+func @f(%p: ptr) -> i32 {
+^e:
+  %a: i32 = ptr_expose %p @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "ptr_from_int takes an integer as wide as the memory's pointers: an i64 into a 32-bit ptr(1) is rejected"
+text = '''
+layout memory(1, unit(8), pointer(32), little)
+
+func @f(%a: i64) -> ptr(1) {
+^e:
+  %q: ptr(1) = ptr_from_int %a @0
+  ret %q @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "ptr_expose takes no attributes"
+text = '''
+func @f(%p: ptr) -> i64 {
+^e:
+  %a: i64 = ptr_expose nonatomic %p @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "ptr_expose defines an integer, not a pointer"
+text = '''
+func @f(%p: ptr) -> ptr {
+^e:
+  %a: ptr = ptr_expose %p @0
+  ret %a @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "ptr_from_int takes an integer, not a pointer"
+text = '''
+func @f(%p: ptr) -> ptr {
+^e:
+  %q: ptr = ptr_from_int %p @0
+  ret %q @0
+}
+
+locs {
+  @0 = unknown
+}
+'''

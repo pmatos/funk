@@ -1,6 +1,7 @@
 import FirSpec.Syntax.Dialect
 import FirSpec.Syntax.Location
 import FirSpec.Syntax.Module
+import FirSpec.Syntax.FuncAttrs
 import FirSpec.Syntax.Layout
 import FirSpec.Syntax.Global
 import FirSpec.Core.Types
@@ -11,6 +12,8 @@ import FirSpec.Core.Signature
 import FirSpec.Core.Poison
 import FirSpec.Core.OpEffects
 import FirSpec.Core.EffectLaws
+import FirSpec.Core.EffectUnlawful
+import FirSpec.Core.AddressLaws
 import FirSpec.Core.Unlawful
 import FirSpec.Core.Values
 import FirSpec.Execution.Behaviour
@@ -20,6 +23,7 @@ import FirSpec.Execution.Fuel
 import FirSpec.Execution.Propagation
 import FirSpec.Execution.OpEffects
 import FirSpec.Execution.EffectLaws
+import FirSpec.Execution.AddressObligations
 import FirSpec.Execution.Summary
 import FirSpec.Execution.SummaryLaws
 import FirSpec.Execution.SummaryFixpoint
@@ -39,6 +43,8 @@ import FirSpec.Validation.Dominance
 import FirSpec.Validation.Layout
 import FirSpec.Validation.Global
 import FirSpec.Validation.LocTable
+import FirSpec.Validation.AllBlocks
+import FirSpec.Validation.Signature
 import FirSpec.Validation.Rules
 import FirSpec.Core.Validation
 import FirSpec.Core.Rejects
@@ -58,6 +64,7 @@ import FirSpec.Core.ValidRuns
 import FirSpec.Text.Tree
 import FirSpec.Text.ReadAttrs
 import FirSpec.Text.ReadDefs
+import FirSpec.Text.ReadParams
 import FirSpec.Text.ReadOps
 import FirSpec.Text.ReadBlocks
 import FirSpec.Text.ReadFunc
@@ -139,9 +146,11 @@ import FirSpec.Core.StoreTextLaws
 import FirSpec.Core.MemCopyText
 import FirSpec.Core.MemCopyTextLaws
 import FirSpec.Core.MemSetText
+import FirSpec.Core.PtrIntText
 import FirSpec.Core.MemSetTextLaws
 import FirSpec.Core.TextSamples
 import FirSpec.Text.Print
+import FirSpec.Text.SigAttrs
 import FirSpec.Text.RoundTrip
 import FirSpec.Core.TypeTextLaws
 import FirSpec.Core.FloatOpTextLaws
@@ -162,6 +171,8 @@ import FirSpec.Text.LexStrings
 import FirSpec.Text.LexFloats
 import FirSpec.Text.LexLayout
 import FirSpec.Text.LexPrint
+import FirSpec.Text.LexWritable
+import FirSpec.Text.LexFunc
 import FirSpec.Text.LexModule
 import FirSpec.Text.LexWellFormed
 import FirSpec.Text.LexAccepted
@@ -189,6 +200,7 @@ import FirSpec.Execution.StatePaths
 import FirSpec.Execution.MemoryMonotone
 import FirSpec.Execution.MemoryObligations
 import FirSpec.Execution.RunItems
+import FirSpec.Execution.RunStart
 import FirSpec.Execution.MemoryObligationLaws
 import FirSpec.Execution.MemoryTotal
 import FirSpec.Execution.MemoryAllocLaws
@@ -197,6 +209,7 @@ import FirSpec.Execution.MemoryStoreLaws
 import FirSpec.Execution.MemoryBindLaws
 import FirSpec.Execution.MemoryCopyLaws
 import FirSpec.Execution.MemoryExposeLaws
+import FirSpec.Execution.MemoryFromAddrLaws
 import FirSpec.Execution.MemoryPolicyRuns
 import FirSpec.Execution.MemoryChoiceLaws
 import FirSpec.Core.Alloca
@@ -220,8 +233,10 @@ import FirSpec.Core.MemCopy
 import FirSpec.Core.MemCopyLaws
 import FirSpec.Core.MemCopyPoison
 import FirSpec.Core.MemSet
+import FirSpec.Core.PtrInt
 import FirSpec.Core.MemSetLaws
 import FirSpec.Core.MemSetPoison
+import FirSpec.Core.PtrIntLaws
 import FirSpec.Memory.Ordering
 import FirSpec.Execution.MemoryCallSteps
 import FirSpec.Execution.MemoryProgress
@@ -233,6 +248,8 @@ import FirSpec.Memory.CanonicalLaws
 import FirSpec.Memory.ExposeLaws
 import FirSpec.Memory.Policy
 import FirSpec.Memory.PolicyLaws
+import FirSpec.Memory.Resolver
+import FirSpec.Memory.ResolverLaws
 import FirSpec.Execution.MemoryOpRefine
 import FirSpec.Execution.MemoryPoison
 import FirSpec.Execution.MemoryStepPaths
@@ -304,6 +321,7 @@ import FirSpec.Sum.Dialect
 import FirSpec.Sum.TextLaws
 import FirSpec.Sum.PoisonLaws
 import FirSpec.Sum.EffectLaws
+import FirSpec.Sum.AddressLaws
 import FirSpec.Sum.Inclusion
 import FirSpec.Sum.Lift
 import FirSpec.Sum.LiftTextLaws
@@ -320,6 +338,7 @@ import FirSpec.Gpu.TextLaws
 import FirSpec.Gpu.Semantics
 import FirSpec.Gpu.WorkGroup
 import FirSpec.Gpu.Runs
+import FirSpec.Gpu.AddressLaws
 import FirSpec.Gpu.Modes
 import FirSpec.Gpu.Trace
 import FirSpec.Gpu.EndModes

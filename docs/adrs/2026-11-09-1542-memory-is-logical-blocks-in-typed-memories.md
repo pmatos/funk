@@ -13,10 +13,14 @@ Tier: direction; area: semantics
   the human's ruling of 2026-11-11 on #231). An access is aligned when it is
   aligned at every address its block may be given (the human's ruling of
   2026-11-14 on #388).
-- **Explicit exposure.** `ptr.expose` turns a pointer into an integer and
-  marks its allocation exposed. `ptr.from_int` turns an integer back into a
-  pointer, with the provenance of an exposed allocation that contains the
-  address. No other op converts between pointers and integers.
+- **Explicit exposure.** `ptr_expose` turns a pointer into an integer and
+  marks its allocation exposed; it counts as allocating in its memory, as a
+  declared effect. `ptr_from_int` turns an integer back into a pointer,
+  with the provenance of a live, exposed allocation that contains the
+  address, its end included, picked angelically by a resolver per call
+  (the human's rulings of 2026-11-18 and 2026-11-20 on #232: Q1 spells the
+  ops as ADR-2026-11-09-1543 does, Q3, and questions A and B). No other op
+  converts between pointers and integers.
 - **Typed memories.** A pointer type names its memory: the core `ptr` is
   memory 0, and a dialect gives a declared memory its meaning, as the GPU
   dialect's op that allocates there makes a memory of the data layout its

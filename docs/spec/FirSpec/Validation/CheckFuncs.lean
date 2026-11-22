@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Checking functions: readable blocks" =>
 
-:::moduleDocs (fingerprint := "7833285749816261905")
+:::moduleDocs (fingerprint := "1908175635621064778")
 :::
 
 :::readable Fir.Func.problem Fir.Func.blockProblem (fingerprint := "495569798519738376")
@@ -49,7 +49,27 @@ names the function and its entry block, and has the location reference of
 that block's first op. A function with no blocks has only its symbol.
 :::
 
-:::readable Fir.Func.problemsIn Fir.Func.problems (fingerprint := "10792903182063663247")
+:::readable Fir.Func.sigProblems Fir.Func.sigProblems_eq_nil (fingerprint := "6247233004325079565")
+*Definition and theorem: the check of a signature.* The check of the
+signature of a function $`f` gives, in this order:
+
+* "the function's parameters end in ...: a fir function is not variadic,
+  only an external declaration is" when $`f` is variadic;
+* "the function holds the attributes of its parameters or results in
+  another form than the text reads" when it holds more lists than places,
+  or a list of attributes for parameters or results that ends in an empty
+  one;
+* "the attributes of parameter `%x` are not ones its type allows" for each
+  parameter whose dialect does not allow its attributes;
+* "the attributes of a result of the function are not ones its type
+  allows" for each such result.
+
+It gives no problem exactly when the
+{ref "The-fir-specification--Validation--A-function___s-signature"}[signature of $`f`]
+is valid.
+:::
+
+:::readable Fir.Func.problemsIn Fir.Func.problems (fingerprint := "4706065624343365171")
 *Definition: the check of a function.* Given a
 {ref "The-fir-specification--Validation--The-validation-check"}[lookup] and
 a list of the function's blocks at any depth, the check of the function
@@ -78,13 +98,14 @@ gives, in this order:
 * the problems of the ops inside the regions of each op of each block of
   the list, in order;
 * "the function breaks a rule of its dialect" when the function breaks its
-  dialect's own rule over a whole function, at its entry block.
+  dialect's own rule over a whole function, at its entry block;
+* the problems of its signature.
 
 The check of $`f` in its module, $`\mathrm{problems}(f)`, runs this with
 the list $`\mathrm{allblocks}(f)`.
 :::
 
-:::readable Fir.Func.valid_iff Fir.Func.reached_all Fir.Func.ops_all Fir.Func.inner_all Fir.Func.types_all (fingerprint := "7584199573976597098")
+:::readable Fir.Func.valid_iff Fir.Func.reached_all Fir.Func.ops_all Fir.Func.inner_all Fir.Func.types_all (fingerprint := "7644569623900340503")
 *Theorems: the rule of a valid function, taken apart.* For every function
 $`f`, module context $`C` and lookup:
 

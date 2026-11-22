@@ -6,7 +6,9 @@
 //! unique, every name and label is one or more name characters, every type
 //! it states is valid, every block holds an op, every op is valid, every op
 //! inside a region of an op obeys the general rules, and the function obeys
-//! each registered dialect's rule over a whole function. Names and labels
+//! each registered dialect's rule over a whole function, and its signature
+//! is not variadic and carries only the attributes that the dialect of each
+//! parameter's and result's type allows. Names and labels
 //! are checked at any depth, in the blocks of ops' regions too; the rule of
 //! a region's kind checks the rest of a region (ADR-2026-11-10-1941).
 
@@ -17,7 +19,7 @@ use super::Diagnostic;
 use super::cfg::Cfg;
 use super::ops;
 use crate::ir::names::is_name;
-use crate::ir::{Block, Func, LocRef, Part, Region, SymbolTable, Type};
+use crate::ir::{Block, Func, LocRef, Part, Region, SymbolTable, Type, attrs_trimmed};
 use crate::registry::{FuncContext, Registry, TypeCheck};
 
 /// What a function is checked against: its module's symbols and location
@@ -184,6 +186,51 @@ pub(super) fn check(f: &Func, cx: &Context<'_>, out: &mut Vec<Diagnostic>) {
     for rule in cx.reg.func_rules() {
         if let Err(why) = rule.check(&func_cx, f) {
             out.push(at(f, blocks.first(), why));
+        }
+    }
+    check_signature(f, cx.reg, out);
+}
+
+/// The rules of a function's signature (`Func.SigValid`): its parameters do
+/// not end in `...`, it holds their attributes and its results' as the text
+/// reads them, and the dialect of each parameter's or result's type allows
+/// its attributes.
+fn check_signature(f: &Func, reg: &Registry, out: &mut Vec<Diagnostic>) {
+    if f.variadic {
+        out.push(at(
+            f,
+            None,
+            "the function's parameters end in ...: a fir function is not variadic, only an external declaration is".into(),
+        ));
+    }
+    if !attrs_trimmed(&f.param_attrs, f.params.len())
+        || !attrs_trimmed(&f.result_attrs, f.results.len())
+    {
+        out.push(at(
+            f,
+            None,
+            "the function holds the attributes of its parameters or results in another form than the text reads".into(),
+        ));
+    }
+    for (i, p) in f.params.iter().enumerate() {
+        if !reg.sig_attrs(&p.ty, f.param_attrs_of(i)) {
+            out.push(at(
+                f,
+                None,
+                format!(
+                    "the attributes of parameter %{} are not ones its type allows",
+                    p.name
+                ),
+            ));
+        }
+    }
+    for (i, t) in f.results.iter().enumerate() {
+        if !reg.sig_attrs(t, f.result_attrs_of(i)) {
+            out.push(at(
+                f,
+                None,
+                "the attributes of a result of the function are not ones its type allows".into(),
+            ));
         }
     }
 }

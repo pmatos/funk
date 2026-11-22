@@ -7,8 +7,9 @@ One grammar covers every item and every op of every dialect
 (ADR-2026-10-29-2016). It has no production for any particular op: an op is
 always its results, its name, its attributes, its operands, its successors,
 its regions and its location reference, in that order. An item is always
-its kind, its symbol, its parameters, its results, its attributes and its
-body. Types and attributes are written as generic terms. So a new dialect
+its kind, its symbol, its parameters, each followed by its attributes and
+maybe ending in `...`, its results, each followed by its attributes, its
+attributes and its body. Types and attributes are written as generic terms. So a new dialect
 adds words, and needs no change to this grammar or to the parser, and so
 does a kind of item that a dialect registers (ADR-2026-11-09-1543). A
 float is an attribute already, written as a float literal token. A nested
@@ -19,8 +20,12 @@ section.
   `aggregate`, an aggregate's layout (below), and `global`, a global
   (`Fir.Text.GlobalText`), so a function is written
   as `func @sum(%n: i32) -> i32 { ... }` and a nested module as
-  `module @dev() { ... }`. A `func` has no
-  attributes, and its body is its blocks. A `module` has no parameters,
+  `module @dev() { ... }`. A `func`'s parameters and results may carry
+  attributes, such as the core's extension markers in
+  `func @f(%c: i8 sext) -> i8 zext`, its parameters may end in `...`, and
+  the attributes after its last result are that result's; its body is its
+  blocks (ADR-2026-11-21-1307). Only a `func` writes attributes after a
+  parameter, `...`, or attributes after a result that a comma follows. A `module` has no parameters,
   results or attributes, and its body is its items, which may start with
   its own dialect set (ADR-2026-11-10-1510). Any other kind is a word of a
   dialect, such as `toy.cell`, which that dialect registers: its item is
@@ -188,9 +193,11 @@ encoding produces, so each op instance and each type has exactly one
 spelling. Every valid type can be read back; a type that is not valid, such
 as a width beyond the text's limit, may not be.
 
-Three more laws say that what the dialect writes fits the grammar: each op
-name is a word, each op's attributes can be written, and each valid type is
-written as a type. With them, every valid module of the dialect is well
+Four more laws say that what the dialect writes fits the grammar: each op
+name is a word, each op's attributes can be written, each valid type is
+written as a type, and the attributes that the dialect allows after a
+parameter's or a result's type can be written, which holds of a dialect
+that allows none by default. With them, every valid module of the dialect is well
 formed (see the round-trip section). The round-trip theorem,
 `printThenParse`, rests on these laws, for every dialect.
 -/
@@ -205,6 +212,8 @@ class LawfulDialectText (d : Dialect) [DialectSignature d] [DialectValidation d]
   opName_isWord : ∀ op : d.Op, isWord (opName op)
   opAttrs_writable : ∀ op : d.Op, Attr.AllWritable (opAttrs op)
   tyAttr_isType : ∀ t : d.Ty, validTy t → (tyAttr t).IsType
+  sigAttrs_writable : ∀ (t : d.Ty) (as : List Attr), validSigAttrs t as → Attr.AllWritable as := by
+    intro _ _ h; cases h; trivial
 
 /-!
 # Aggregates' layouts in text

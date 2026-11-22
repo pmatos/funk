@@ -27,7 +27,7 @@ can be written, which is what the reader of an op's attributes gives, so
 that it fits the condition on an op.
 :::
 
-:::readable Fir.Text.readBlocks_writable (pin := Fir.Text.readBlocks) (pin := Fir.Text.readOps) (pin := Fir.Text.readOpWithResults) (pin := Fir.Text.readOpBody) (pin := Fir.Text.readRegions) (pin := Fir.Text.ReadsWritable) (pin := Fir.Text.SOp.Writable) (pin := Fir.Text.SBlock.WritableList) (fingerprint := "2555473043152512899")
+:::readable Fir.Text.readBlocks_writable (pin := Fir.Text.readBlocks) (pin := Fir.Text.readOps) (pin := Fir.Text.readOpWithResults) (pin := Fir.Text.readOpBody) (pin := Fir.Text.readRegions) (pin := Fir.Text.ReadsWritable) (pin := Fir.Text.SOp.Writable) (pin := Fir.Text.SBlock.WritableList) (fingerprint := "4859388893477397754")
 *Theorem: blocks as read can be written, at any depth.* For every list
 of tokens $`\mathit{ts}`, the
 {ref "The-fir-specification--Text-format--Reading-the-grammar"}[reader of blocks]

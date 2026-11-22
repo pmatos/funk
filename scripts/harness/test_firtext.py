@@ -96,6 +96,18 @@ class Tests(unittest.TestCase):
         self.assertEqual(t.callees(), {"@sum", '@"two words"'})
         self.assertEqual(t.ops[4], Op("ret", (), ("i8", "i64"), (), ()))
 
+    def test_a_signature_keeps_its_types_and_skips_its_markers(self):
+        f = read(
+            "func @f(%c: i8 sext, %n: i32) -> i8 zext, i1 {\n^e:\n  ret %c @0\n}\n\n"
+            "func @g(...) {\n^e:\n  ret @0\n}\n\nlocs {\n}\n"
+        )
+        self.assertEqual(
+            (f["@f"].params, f["@f"].results), (("i8", "i32"), ("i8", "i1"))
+        )
+        self.assertEqual(f["@f"].ops, (Op("ret", (), ("i8",), (), ()),))
+        self.assertEqual(f["@g"].params, ())
+        self.assertEqual([t.kind for t in tokens("(%a: i8, ...)")][-2:], ["...", ")"])
+
     def test_a_module_without_functions(self):
         self.assertEqual(read("locs {\n}\n"), {})
 

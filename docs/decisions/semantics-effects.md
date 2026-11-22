@@ -33,6 +33,9 @@ pointer, and `store`, which writes it and reads no memory
 (ADR-2026-11-14-2316). `memcpy` and `memmove` read and write the memory of
 their pointers and may be UB, and `memset` writes the memory of its pointer
 and may be UB, as `store` does (ADR-2026-11-09-1551, ADR-2026-11-18-2131).
+`ptr_expose` and `ptr_from_int` read the memory of their pointer and
+allocate in it, and `ptr_expose` may be UB (#232; see "Addresses and the
+declared allocation" in semantics-m1-addresses.md).
 
 An external call, an indirect call to an unknown function and inline assembly
 without a narrower declaration carry every effect on every memory that can have
@@ -104,6 +107,10 @@ as it checks `Core.Op.poisonClass` (ADR-2026-11-03-0600). The sets
   `storeFloat`, and the fill `memSet`, through a pointer of `ptr<N>`.
 - Reads and writes memory `N`, and may-UB: `memCopy`, a copy or a move,
   over pointers of `ptr<N>`.
+- Reads and allocates in memory `N`, and may-UB: `ptrExpose`, which exposes
+  a pointer of `ptr<N>`.
+- Reads and allocates in memory `N`: `ptrFromInt`, which turns an integer
+  back into a pointer of `ptr<N>`.
 - Control: `br`, `cond_br`, `ret` and `unreachable`.
 
 ## Soundness
@@ -217,14 +224,16 @@ rules, whose laws files are in `lean/Fir/Core/`. Those are
 the ops that touch memory: `alloca` (`AllocaLaws.lean`), `load` and `store`
 (`LoadLaws.lean`, `StoreLaws.lean`), `loadPtr` and `storePtr`
 (`LoadPtrLaws.lean`, `StorePtrLaws.lean`), `loadFloat` and `storeFloat`
-(`LoadFloatLaws.lean`, `StoreFloatLaws.lean`), and `memCopy` and `memSet`
+(`LoadFloatLaws.lean`, `StoreFloatLaws.lean`), `memCopy` and `memSet`
 (`MemCopyLaws.lean`, `MemCopyPoison.lean`, `MemSetLaws.lean`,
-`MemSetPoison.lean`). With them is `fieldAddr` (`FieldAddrLaws.lean`), which
+`MemSetPoison.lean`), and `ptrExpose` and `ptrFromInt` (`PtrIntLaws.lean`). With them is `fieldAddr` (`FieldAddrLaws.lean`), which
 touches no memory but reads items: its rule reads the layout it names from
 the run's items, which the set monad does not have.
-`Core.memDenoteIn_mapsDenote` asks the morphism to keep loads and stores as
-well, which `MonadMorphism.state_load` and `MonadMorphism.state_store` give
-for the state layer.
+`Core.memDenoteIn_mapsDenote` asks the morphism to keep loads, stores,
+exposing and turning integers back into pointers as well, which
+`MonadMorphism.state_load`, `MonadMorphism.state_store`,
+`MonadMorphism.state_expose` and `MonadMorphism.state_fromAddr` give for
+the state layer.
 No theorem asks that the whole core dialect lift the set monad: `Core.liftsSetM`
 went in stage 4b-3 of #231, with its last users. The core's theorems on runs,
 fuel monotonicity, progress, no stuck path and refined arguments, are stated
@@ -296,3 +305,7 @@ Lean. A summary is a set, so Rust keeps its memories sorted.
 its modules, nested ones included; `lean/FirTest/SummaryCases.lean` and
 `crates/funk-ir/tests/summaries.rs` read it, so Rust's summaries equal
 `SymbolTable.summary` (ADR-2026-11-09-1541).
+
+The effect obligations do not see addresses. `LawfulDialectAddresses` states
+the allocation that exposing declares beside them
+([semantics-m1-addresses.md](semantics-m1-addresses.md#addresses-and-the-declared-allocation)).

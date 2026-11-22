@@ -14,7 +14,7 @@ fails when the Lean changes under it.
 
 #doc (Manual) "Exhaustive runs that try a few NaNs: readable blocks" =>
 
-:::moduleDocs (fingerprint := "15531209826142243359")
+:::moduleDocs (fingerprint := "12466895454639907215")
 :::
 
 :::readable Fir.ChoiceTree.isNaNBits Fir.ChoiceTree.nanTries Fir.ChoiceTree.bitsFor Fir.ChoiceTree.tryAt (fingerprint := "15738451443851095608")
@@ -69,7 +69,7 @@ some leaf below it a NaN choice, since every subtree lists a leaf, so the
 walk tried every value of every choice it met.
 :::
 
-:::readable Fir.Func.memExploreNaN_outcomes Fir.Func.memExploreNaN_stuck Fir.Func.memExploreNaN_exact (pin := Fir.Func.memTree) (pin := Fir.Run.outcomes) (pin := Fir.Run.IsStuck) (pin := Fir.ChoiceTree.Leaf.pathEnd) (fingerprint := "2075764145177132623")
+:::readable Fir.Func.memExploreNaN_outcomes Fir.Func.memExploreNaN_stuck Fir.Func.memExploreNaN_exact (pin := Fir.Func.memTree) (pin := Fir.Run.outcomes) (pin := Fir.Run.IsStuck) (pin := Fir.ChoiceTree.Leaf.pathEnd) (fingerprint := "16347417481536343142")
 *Theorems: the walk of a run with memory.* When the dialect's semantics in
 the tree denotes its semantics with memory, each outcome that the walk
 lists on the tree of a run with memory, and each stuck path, is one of the

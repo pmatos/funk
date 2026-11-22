@@ -14,10 +14,10 @@ when the Lean changes under it.
 
 #doc (Manual) "The validation check: readable blocks" =>
 
-:::moduleDocs (fingerprint := "8739635121821435710")
+:::moduleDocs (fingerprint := "1780650294258298201")
 :::
 
-:::readable Fir.DecidableDialectValidation (fingerprint := "17156767418374196496")
+:::readable Fir.DecidableDialectValidation (fingerprint := "320295170492242867")
 *Definition: a dialect whose own rules can be decided.* A dialect $`d` is
 _decidable_ when there is an algorithm that tells, for every type $`t` of
 $`d`, whether $`\vdash_d t~\text{valid}`, another that tells, for every
@@ -28,12 +28,15 @@ $`C, v \vdash_d f~\text{valid}`, and a fourth that tells, for every view
 $`v`, kind $`k`, function context $`C`, function $`f` and region $`r`,
 whether $`C, v, f \vdash_d r : k~\text{valid}`, and a fifth that tells,
 for every view $`v`, function context $`C` and item $`i` of a dialect's
-kind, whether $`C, v \vdash_d i~\text{valid}`. These are the dialect's
+kind, whether $`C, v \vdash_d i~\text{valid}`, and a sixth that tells,
+for every type $`t` and list of attributes $`a^*`, whether
+$`\vdash_d t~a^*~\text{valid}`. These are the dialect's
 {ref "The-fir-specification--Validation--Scope-and-symbols"}[own rules]; the
-check runs the five algorithms wherever the rules ask them. A dialect that
+check runs the six algorithms wherever the rules ask them. A dialect that
 registers no region kind decides the fourth by default: no region of a kind
 of its own is valid. A dialect that registers no kind of item decides the
-fifth in the same way.
+fifth in the same way, and a dialect that keeps the default rule for a
+signature's attributes decides the sixth by whether $`a^*` is empty.
 
 A function that breaks its dialect's rule over a whole function has no
 place of its own to report, so the check reports the rule at its entry block,

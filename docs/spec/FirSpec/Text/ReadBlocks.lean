@@ -26,7 +26,7 @@ the first token of the tokens of $`b^*` followed by $`v`, if there is one.
 The proofs use it to show that the token after a block's ops ends them.
 :::
 
-:::readable Fir.readBlocks_nil_reads Fir.readBlocks_cons_reads (pin := Fir.Text.readBlocks) (pin := Fir.Block.tokensList) (fingerprint := "16817399894461190237")
+:::readable Fir.readBlocks_nil_reads Fir.readBlocks_cons_reads (pin := Fir.Text.readBlocks) (pin := Fir.Block.tokensList) (fingerprint := "2307696633146279892")
 *Theorems: blocks read back, one at a time.* For every dialect with a text
 format, the reader of blocks
 {ref "The-fir-specification--Text-format--The-grammar-step"}[reads] tokens
@@ -47,7 +47,7 @@ parentheses when it has any, then `:`, then its ops. Its ops end at the
 label of the next block, or at the `}` after the last.
 :::
 
-:::readable Fir.readKind_reads Fir.readRegions_nil_reads Fir.readRegions_cons_reads (pin := Fir.Text.readRegions) (pin := Fir.Region.tokensList) (fingerprint := "14865573566648407871")
+:::readable Fir.readKind_reads Fir.readRegions_nil_reads Fir.readRegions_cons_reads (pin := Fir.Text.readRegions) (pin := Fir.Region.tokensList) (fingerprint := "6809874273361770534")
 *Theorems: regions read back, one at a time.* For every dialect with a text
 format, the reader of regions reads tokens of regions as their trees before
 any location reference, up to positions:

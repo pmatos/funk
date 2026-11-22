@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "The tree that the grammar reads: readable blocks" =>
 
-:::moduleDocs (fingerprint := "16059066986460172420")
+:::moduleDocs (fingerprint := "7867237137998446161")
 :::
 
 :::readable Fir.TextPos.zero (pin := Fir.TextPos) (fingerprint := "10810081565763310123")
@@ -49,12 +49,14 @@ list is erased element by element. The four definitions call one another,
 as an op may hold regions.
 :::
 
-:::readable Fir.Text.SItem.erase Fir.Text.SBody.erase Fir.Text.SItem.eraseList (pin := Fir.Text.SItem) (pin := Fir.Text.SBody) (fingerprint := "8128450334827956346")
+:::readable Fir.Text.SItem.erase Fir.Text.SBody.erase Fir.Text.SItem.eraseList (pin := Fir.Text.SItem) (pin := Fir.Text.SBody) (fingerprint := "15831747457449799339")
 *Definitions: items and their bodies without positions, at any depth.*
 $`\mathrm{erase}` of an
 {ref "The-fir-specification--Text-format--Reading-the-grammar"}[item as written]
 keeps its kind and its symbol, puts its kind at $`p_0`, erases its
-parameters, and puts each result type and each attribute at $`p_0`. A body
+parameters, puts each result type and each attribute, its own or a
+parameter's or a result's, at $`p_0`, and the `...` that ends its
+parameters, if any, at $`p_0` too. A body
 of blocks erases its blocks, and a body of items keeps its dialect set and
 erases its items.
 :::
@@ -101,20 +103,30 @@ holds its label, the trees of its arguments and the trees of its ops. The
 tree of a list is the tree of each element.
 :::
 
-:::readable Fir.Func.tree Fir.moduleBody Fir.DialectItem.tree Fir.Item.tree Fir.Item.treeList Fir.Item.treeList_eq_map (pin := Fir.Func) (pin := Fir.Item) (pin := Fir.DialectText) (fingerprint := "2997591865839543169")
+:::readable Fir.attrsTree (fingerprint := "6719486589932342025")
+*Definition: the tree of attributes.* The tree of a list of attributes puts
+each at $`p_0`.
+:::
+
+:::readable Fir.Func.tree Fir.moduleBody Fir.DialectItem.tree Fir.Item.tree Fir.Item.treeList Fir.Item.treeList_eq_map (pin := Fir.Func) (pin := Fir.Item) (pin := Fir.DialectText) (fingerprint := "8754359967277851201")
 *Definitions: the tree of a function, and of an item.* The tree of a
 function $`f` is the item of kind `func`, at $`p_0`, with:
 
-* the symbol of $`f` and the trees of its parameters;
-* each result type $`t` as $`\mathrm{tyattr}(t)` at $`p_0`;
-* no attributes;
+* the symbol of $`f`, the trees of its parameters, the tree of the
+  attributes of each parameter, and a `...` at $`p_0` when $`f` is
+  variadic;
+* each result type $`t` as $`\mathrm{tyattr}(t)` at $`p_0`, and the tree
+  of the attributes of each result but the last;
+* the tree of the attributes of its last result as its attributes, or none
+  when it has no results: the grammar reads them as the item's;
 * as its body, the trees of the blocks of $`f`: a body of blocks, even
   when $`f` has none.
 
 The tree of an item $`i` of a dialect's kind is the item of the kind of
 $`i`, at $`p_0`, with the symbol of $`i`, the trees of its parameters, each
-result type $`t` as $`\mathrm{tyattr}(t)` at $`p_0`, each attribute of
-$`i` at $`p_0`, and an empty body of blocks.
+with no attributes, no `...`, each result type $`t` as
+$`\mathrm{tyattr}(t)` at $`p_0`, each but the last with no attributes,
+each attribute of $`i` at $`p_0`, and an empty body of blocks.
 
 The tree of an item that is a function is the tree of its function, the
 tree of an item of a dialect's kind is the tree of that item, and the tree
@@ -196,16 +208,20 @@ a text format:
 The decoding step goes down a tree with them, one element at a time.
 :::
 
-:::readable Fir.SItem.erase_eq_funcTree (fingerprint := "11907866414717876360")
+:::readable Fir.SItem.erase_eq_funcTree (fingerprint := "13422778374220066438")
 *Theorem: what an item that erases to a function's tree holds.* For every
 dialect with a text format, if an item as written $`s` erases to the tree
 of a function $`f`, then:
 
 * the kind of $`s` is `func`, and its symbol is that of $`f`;
-* its parameters erase to the trees of the parameters of $`f`;
+* its parameters erase to the trees of the parameters of $`f`, and their
+  attributes, without positions, are those of each parameter of $`f`;
+* its parameters end in `...` exactly when $`f` is variadic;
 * its result types, without their positions, are $`\mathrm{tyattr}(t)`
-  for each result type $`t` of $`f`;
-* it has no attributes;
+  for each result type $`t` of $`f`, and the attributes of each result but
+  the last are those of each result of $`f` but the last;
+* its attributes are those of the last result of $`f`, or none when $`f`
+  has no results;
 * its body is a body of blocks, which erase to the trees of the blocks of
   $`f`.
 :::

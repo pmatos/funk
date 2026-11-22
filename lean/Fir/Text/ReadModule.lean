@@ -166,7 +166,7 @@ theorem Item.reads : ∀ i : Item d, i.TypesWritable → ∀ p,
     rw [readItem.eq_1]
     simp only [expect_cons, ok_bind]
     -- No parameters, since `)` follows the `(`.
-    refine bind_reads (fun v => v.1 = [] ∧ v.2.1.map (·.tok) = .rparen :: .lbrace ::
+    refine bind_reads (fun v => v.1 = ([], none) ∧ v.2.1.map (·.tok) = .rparen :: .lbrace ::
       (dialectsTokens ds ++ (Item.tokensList is ++ .rbrace :: rest))) ?_ ?_
     · split
       case h_1 => exact ⟨_, rfl, rfl, h⟩

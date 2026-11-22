@@ -105,6 +105,8 @@ functions, blocks and ops.
 
 {includeReadable "." Fir.Syntax.Module "Modules, functions, blocks and ops" FirSpec.Syntax.Module (level := 2)}
 
+{includeReadable "." Fir.Syntax.FuncAttrs "A signature's attributes" FirSpec.Syntax.FuncAttrs (level := 2)}
+
 {includeReadable "." Fir.Syntax.Layout "Data layouts" FirSpec.Syntax.Layout (level := 2)}
 
 {includeReadable "." Fir.Syntax.Global "Globals" FirSpec.Syntax.Global (level := 2)}
@@ -130,6 +132,10 @@ functions, blocks and ops.
 {includeReadable "." Fir.Validation.Global "A global's rules" FirSpec.Validation.Global (level := 2)}
 
 {includeReadable "." Fir.Validation.LocTable "The location table's rule" FirSpec.Validation.LocTable (level := 2)}
+
+{includeReadable "." Fir.Validation.AllBlocks "Where a block sits" FirSpec.Validation.AllBlocks (level := 2)}
+
+{includeReadable "." Fir.Validation.Signature "A function's signature" FirSpec.Validation.Signature (level := 2)}
 
 {includeReadable "." Fir.Validation.Rules "The general rules" FirSpec.Validation.Rules (level := 2)}
 
@@ -187,6 +193,8 @@ functions, blocks and ops.
 
 {includeReadable "." Fir.Core.MemSetText "Fills in text" FirSpec.Core.MemSetText (level := 2)}
 
+{includeReadable "." Fir.Core.PtrIntText "Pointers as integers in text" FirSpec.Core.PtrIntText (level := 2)}
+
 {includeReadable "." Fir.Core.FieldAddrText "Field addresses in text" FirSpec.Core.FieldAddrText (level := 2)}
 
 {includeReadable "." Fir.Core.TextSamples "The core dialect's text, checked" FirSpec.Core.TextSamples (level := 2)}
@@ -198,6 +206,8 @@ functions, blocks and ops.
 {includeReadable "." Fir.Core.FloatOpText "Float arithmetic in text" FirSpec.Core.FloatOpText (level := 2)}
 
 {includeReadable "." Fir.Text.Print "The canonical printer" FirSpec.Text.Print (level := 2)}
+
+{includeReadable "." Fir.Text.SigAttrs "The attributes of a signature" FirSpec.Text.SigAttrs (level := 2)}
 
 {includeReadable "." Fir.Text.RoundTrip "Round trips" FirSpec.Text.RoundTrip (level := 2)}
 
@@ -243,6 +253,10 @@ functions, blocks and ops.
 
 {includeReadable "." Fir.Text.LexPrint "Attributes, locations and names" FirSpec.Text.LexPrint (level := 2)}
 
+{includeReadable "." Fir.Text.LexWritable "Tokens that can be written" FirSpec.Text.LexWritable (level := 2)}
+
+{includeReadable "." Fir.Text.LexFunc "A function's signature lexed" FirSpec.Text.LexFunc (level := 2)}
+
 {includeReadable "." Fir.Text.LexModule "Ops, functions and the module" FirSpec.Text.LexModule (level := 2)}
 
 {includeReadable "." Fir.Text.LexWellFormed "Writable tokens" FirSpec.Text.LexWellFormed (level := 2)}
@@ -252,6 +266,8 @@ functions, blocks and ops.
 {includeReadable "." Fir.Text.ReadAttrs "The grammar step" FirSpec.Text.ReadAttrs (level := 2)}
 
 {includeReadable "." Fir.Text.ReadDefs "Definitions and successors read back" FirSpec.Text.ReadDefs (level := 2)}
+
+{includeReadable "." Fir.Text.ReadParams "Parameters and results read back" FirSpec.Text.ReadParams (level := 2)}
 
 {includeReadable "." Fir.Text.ReadOps "Ops read back" FirSpec.Text.ReadOps (level := 2)}
 
@@ -314,6 +330,8 @@ extensions written apart combine in one sum.
 {includeReadable "." Fir.Sum.PoisonLaws "A sum's poison obligations" FirSpec.Sum.PoisonLaws (level := 2)}
 
 {includeReadable "." Fir.Sum.EffectLaws "A sum's effect obligations" FirSpec.Sum.EffectLaws (level := 2)}
+
+{includeReadable "." Fir.Sum.AddressLaws "A sum's address obligations" FirSpec.Sum.AddressLaws (level := 2)}
 
 {includeReadable "." Fir.Sum.Inclusion "Inclusions of types" FirSpec.Sum.Inclusion (level := 2)}
 

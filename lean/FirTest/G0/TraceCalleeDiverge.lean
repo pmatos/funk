@@ -14,9 +14,9 @@ show events, divergence included (stage 3c-2 of #233), under the human's
 ruling of 2026-11-20 that each op has finitely many outcomes given the world's
 answers: the traced runs of a function refine across modules whose calls are
 refined, and replacing a callee's body by one that refines it refines every
-function, from given traced states and from the empty memories. For a
-dialect whose ops show no event, the bridge from runs with memory to traced
-runs from a traced state is restated too (stage 3c-2b).
+function, from given traced states and from the memories a run starts
+with. For a dialect whose ops show no event, the bridge from runs with
+memory to traced runs from a traced state is restated too (stage 3c-2b).
 -/
 
 namespace FirTest.G0

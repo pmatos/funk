@@ -28,7 +28,8 @@ the sum, by routing each op and each type to the side it belongs to:
 * the memories of `e` over the base are the base's and `e`'s own, as its
   types are. The sum's memories are `e`'s, and an op of the base names a
   memory by the name `e` gives it, so that each memory has one name in the
-  sum, whichever side names it;
+  sum, whichever side names it. The memories that a data layout numbers
+  are the base's, by those names;
 * reading an op or a type sends its name to a side by its prefix: a name
   whose dialect is `e`'s name goes to `e`, and every other name to the
   base. So the base never sees a word of `e`, and `e` sees its own words.
@@ -308,10 +309,16 @@ instance instDialectValidation [DialectValidation base] [DialectValidation (base
   opUnits
     | .inl o => opUnits o
     | .inr o => opUnits (d := base.over e) o
+  opAddrs
+    | .inl o => opAddrs o
+    | .inr o => opAddrs (d := base.over e) o
   validItem := ValidItem
   fieldShape lay n
     | .inl t => fieldShape lay n t
     | .inr t => fieldShape (d := base.over e) lay n (.inr t)
+  validSigAttrs
+    | .inl t => validSigAttrs t
+    | .inr t => validSigAttrs (d := base.over e) (.inr t)
 
 /-- The sum's rules can be decided when each side's can. -/
 instance instDecidableDialectValidation [DialectValidation base] [DialectValidation (base.over e)]
@@ -331,11 +338,15 @@ instance instDecidableDialectValidation [DialectValidation base] [DialectValidat
   decValidItem v ctx i := by
     show Decidable (ValidItem v ctx i)
     unfold ValidItem; infer_instance
+  decValidSigAttrs
+    | .inl t, as => inferInstanceAs (Decidable (validSigAttrs t as))
+    | .inr t, as => DecidableDialectValidation.decValidSigAttrs (d := base.over e) (.inr t) as
 
 /-- The memories of the sum are `e`'s, which hold the base's: so a memory
 has one name in the sum, whichever side names it. An op of the sum has its
 side's poison class and its side's effects, an op of the base on the names
-that `e` gives the base's memories. -/
+that `e` gives the base's memories. The sum's numbered memories are the
+base's, by those names. -/
 instance instDialectEffects [DialectEffects base] [h₂ : DialectEffects (base.over e)]
     [DialectMemOver base e] : DialectEffects (base ⊞ e) where
   Mem := h₂.Mem
@@ -345,6 +356,7 @@ instance instDialectEffects [DialectEffects base] [h₂ : DialectEffects (base.o
   effects
     | .inl o => (effects o).map DialectMemOver.ofBase
     | .inr o => effects (d := base.over e) o
+  numbered n := (DialectEffects.numbered (d := base) n).map DialectMemOver.ofBase
 
 /-- An op of the sum calls the function that it calls on its side. -/
 instance instDialectCall [DialectCall base] [DialectCall (base.over e)] :

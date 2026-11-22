@@ -11,7 +11,8 @@ branches and calls, the float constants, comparisons, arithmetic, bit
 casts, conversions from integers, conversions between formats and
 conversions to integers, pointer offsets, field addresses, stack
 allocation, loads and stores, of integers, pointers and floats,
-copies and moves of units, and fills of units.
+copies and moves of units, fills of units, and the exposure of pointers
+as integers and back.
 Each op below is an op instance: it carries its
 attributes and the widths it is used at, so that its operand and result
 types follow from it.
@@ -282,6 +283,25 @@ Fills of units (#234; ADR-2026-11-09-1551 and the human's rulings of
   memory `N` and may be UB. M1's validation accepts only the ordering
   `nonatomic`.
 
+Pointers as integers (#232; ADR-2026-11-09-1542 and the human's
+rulings of 2026-11-18 and 2026-11-20 on #232):
+
+* `ptrExpose n w`: exposes a pointer of `ptr<N>`, `N = n`, and gives its
+  address as an `iW`, `W = w`, the width of the memory's pointers: its
+  allocation's address plus its offset. An allocation with no address is
+  given one under the run's address policy; when none may be given, it is
+  immediate UB. A poison pointer is immediate UB, so its poison class is
+  an exception. It reads and allocates in the memory `N`, as exposing
+  counts as allocating, and may be UB.
+* `ptrFromInt n w`: turns an `iW` back into a pointer of `ptr<N>`, of a
+  live, exposed allocation that holds its address, the end included,
+  under the run's address resolver, or with no provenance when none does.
+  It is never UB, and a poison operand gives poison. It reads and
+  allocates in the memory `N`.
+
+The module's data layout asks that `W` be the width of memory `N`'s
+pointers and that memory `N` be integral.
+
 Conversions from a float to an integer, by Lean's float model
 (ADR-2026-11-09-1549; the human's ruling of 2026-11-12 on #354):
 
@@ -365,6 +385,8 @@ inductive Op where
   | storeFloat (o : Memory.Ordering) (e m : Nat) (a : Option Nat) (n : Nat)
   | memCopy (k : CopyKind) (o : Memory.Ordering) (w n : Nat)
   | memSet (o : Memory.Ordering) (v w n : Nat)
+  | ptrExpose (n w : Nat)
+  | ptrFromInt (n w : Nat)
   | fptosi (e m n : Nat)
   | fptoui (e m n : Nat)
   | freeze (w : Nat)

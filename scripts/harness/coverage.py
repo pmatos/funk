@@ -23,6 +23,7 @@ from typing import NamedTuple
 import cells
 import corpus
 import firtext
+from address_cells import ADDRESS_INTERPRETER
 from cells import Cell
 from pointer_cells import MEMORY_FLOAT_DIFFERENTIAL, MEMORY_FLOAT_INTERPRETER
 
@@ -36,8 +37,9 @@ class Side(NamedTuple):
     formats and widths of a pointer op's integer that it has cells at,
     whether it has the cells of the `gpu` dialect, the float formats of
     its loads, stores and allocations, the widths of `fieldaddr`'s index
-    that it has cells at, and whether it has the cells of `memcpy`,
-    `memmove` and `memset`."""
+    that it has cells at, whether it has the cells of `memcpy`,
+    `memmove` and `memset`, and the widths of the integers of `ptr_expose`
+    and `ptr_from_int` that it has cells at."""
 
     name: str
     title: str
@@ -48,6 +50,7 @@ class Side(NamedTuple):
     memory: tuple[str, ...] = ()
     fields: tuple[int, ...] = ()
     copies: bool = False
+    addresses: tuple[int, ...] = ()
 
     def taxonomy(self) -> dict:
         """The side's arguments of `cells.catalog` and `cells.cells`."""
@@ -59,6 +62,7 @@ class Side(NamedTuple):
             "memory": self.memory,
             "fields": self.fields,
             "copies": self.copies,
+            "addresses": self.addresses,
         }
 
     def catalog(self) -> tuple[cells.Table, ...]:
@@ -89,6 +93,7 @@ SIDES = (
         memory=MEMORY_FLOAT_INTERPRETER,
         fields=cells.FIELD_INTERPRETER,
         copies=True,
+        addresses=ADDRESS_INTERPRETER,
     ),
 )
 
@@ -192,6 +197,11 @@ SECTIONS = {
     "fields": ("Field addresses, with no index or by an index", ("op",), "by "),
     "values": ("Passed and returned values", ("op", "what"), ""),
     "copies": ("Copies, moves and fills, by the width of their length", ("op",), ""),
+    "addresses": (
+        "Pointers as integers, by the width of the integer",
+        ("op",),
+        "",
+    ),
     "gpu": ("Ops of the gpu dialect in a dimension", ("op", "dimension"), ""),
     "gpu_memory": (
         "Work-group allocation of the gpu dialect, of one, of a float or of a pointer",
@@ -254,7 +264,7 @@ def catalog_row(counts: Counter, kind: str, row: cells.Row) -> list[str]:
     """Format a row's labels and cell counts, retaining applicability blanks."""
     if kind == "float_conversions":
         shown = [code(row.key)]
-    elif kind in ("pointers", "fields", "gpu_memory", "copies"):
+    elif kind in ("pointers", "fields", "gpu_memory", "copies", "addresses"):
         shown = [code(row.op)]
     elif kind == "values":
         shown = [code(row.op), WHAT[row.op][row.key]]

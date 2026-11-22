@@ -63,7 +63,7 @@ abbrev A := Act Nat (Nat × List WorldAct)
 
 /-- A traced state whose memory 0 holds one live allocation, a byte that
 holds 5, of which nothing escaped. -/
-def s0 : TraceState Nat w := ⟨Memories.empty.set 0 ⟨[⟨.global, 1, [.bits 5], true, none⟩]⟩, []⟩
+def s0 : TraceState Nat w := ⟨Memories.empty.set 0 ⟨[⟨.global, 1, [.bits 5], true, none, false⟩]⟩, []⟩
 
 /-- A computation that lets the allocation escape, then asks the world with
 the event `3`, as an external call would. -/
@@ -77,7 +77,7 @@ def script : WorldScript (Nat × List WorldAct) := [(9, [.store 0 0 [.bits 7]])]
 
 /-- The traced state after the script's answer: the byte holds 7, and the
 allocation escaped with the handle 0. -/
-def s1 : TraceState Nat w := ⟨Memories.empty.set 0 ⟨[⟨.global, 1, [.bits 7], true, none⟩]⟩, [(0, 0)]⟩
+def s1 : TraceState Nat w := ⟨Memories.empty.set 0 ⟨[⟨.global, 1, [.bits 7], true, none, false⟩]⟩, [(0, 0)]⟩
 
 /-- The world's action on `s0` after the escape is the write that leaves
 `s1`. -/

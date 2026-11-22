@@ -17,7 +17,7 @@ fails when the Lean changes under it.
 :::moduleDocs (fingerprint := "13834909300499829018")
 :::
 
-:::readable Fir.Text.WritableDef (pin := Fir.DialectText) (pin := Fir.Func.WellFormed) (fingerprint := "1272652400646387885")
+:::readable Fir.Text.WritableDef (pin := Fir.DialectText) (pin := Fir.Func.WellFormed) (fingerprint := "15597899823721650846")
 *Definition: a definition that can be written and read back.* Let $`d` be
 a dialect with a {ref "The-fir-specification--Text-format--Grammar"}[text].
 A value $`x` with its type $`t` _can be written and read back_ when $`x`
@@ -91,7 +91,7 @@ the regions that names a kind names it by a word and it accepts each block
 of the regions, at any depth.
 :::
 
-:::readable Fir.Text.decodeType_writable (pin := Fir.Text.decodeType) (pin := Fir.LawfulDialectText) (fingerprint := "44712334757911696")
+:::readable Fir.Text.decodeType_writable (pin := Fir.Text.decodeType) (pin := Fir.LawfulDialectText) (fingerprint := "5945372114442051296")
 *Theorem: a type as read decodes back to itself.* Let $`d` be a dialect
 with a signature, validation rules and a text, whose text is
 {ref "The-fir-specification--Text-format--Grammar"}[lawful]. For every
@@ -130,7 +130,7 @@ everything that $`\mathrm{decode}` gives from $`a`:
 $$`\begin{aligned} & W(a) \implies \forall x.\ \mathrm{decode}(a) = \mathsf{ok}(x) \\ & \quad \implies P(x) \end{aligned}`
 :::
 
-:::readable Fir.Text.decodes_blocks_nil Fir.Text.decodes_blocks_cons Fir.Text.decodes_ops_nil Fir.Text.decodes_ops_cons Fir.Text.decodes_regions_nil Fir.Text.decodes_regions_cons (pin := Fir.Text.decodeBlocks) (pin := Fir.Text.decodeOps) (pin := Fir.Text.decodeRegions) (pin := Fir.LawfulDialectText) (pin := Fir.Text.SOp.Writable) (pin := Fir.DialectText) (fingerprint := "13154344622687404827")
+:::readable Fir.Text.decodes_blocks_nil Fir.Text.decodes_blocks_cons Fir.Text.decodes_ops_nil Fir.Text.decodes_ops_cons Fir.Text.decodes_regions_nil Fir.Text.decodes_regions_cons (pin := Fir.Text.decodeBlocks) (pin := Fir.Text.decodeOps) (pin := Fir.Text.decodeRegions) (pin := Fir.LawfulDialectText) (pin := Fir.Text.SOp.Writable) (pin := Fir.DialectText) (fingerprint := "7369181899755884107")
 *Theorems: the second pass, part by part.* Let $`d` be a dialect with a
 signature and a text, $`\mathit{sc}` a scope and $`g` a function's
 symbol. Each pass below decodes in $`\mathit{sc}`, for $`g`. The passes

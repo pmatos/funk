@@ -34,7 +34,7 @@ attribute grammar for every dialect, and ruled: integer elements until float
 and pointer loads and stores land; `A` bounded as the layout line bounds its
 own alignments, the count unbounded; and the G0 check's exemption of `align`
 kept. Pointer elements came with their loads and stores, in stage 4d-2b
-(semantics-m1-memory.md). On 2026-11-15 (#397) the human ruled that float
+(semantics-m1-stack.md). On 2026-11-15 (#397) the human ruled that float
 elements come with float loads and stores (#264), at the natural alignment
 of the float's size.
 

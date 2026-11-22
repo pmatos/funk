@@ -59,6 +59,72 @@ theorem readLayout_writable (ts : List Token) :
   · cases h
     exact ⟨by simp, hw⟩
 
+/-- A parameter of an item as read can be written: its definition and its
+attributes. -/
+theorem readParam_writable (ts : List Token) :
+    ReadsWritable readParam (fun x => x.1.Writable ∧ ∀ a ∈ x.2, a.1.Writable) ts := by
+  intro hw x r h
+  unfold readParam at h
+  bind_step h with ⟨⟨y, a⟩, e₁, h⟩
+  bind_step h with ⟨⟨as, b⟩, e₂, h⟩
+  cases h
+  obtain ⟨k₁, w₁⟩ := readDef_writable _ hw _ _ e₁
+  obtain ⟨k₂, w₂⟩ := readAttrs_writable _ w₁ _ _ e₂
+  exact ⟨⟨k₁, k₂⟩, w₂⟩
+
+/-- The parameters of an item after its first, as read, can be written. -/
+theorem readMoreParams_writable : ∀ ts, ReadsWritable readMoreParams
+    (fun ps => ∀ x ∈ ps.1, x.1.Writable ∧ ∀ a ∈ x.2, a.1.Writable) ts := by
+  intro ts
+  induction ts using readMoreParams.induct with
+  | case1 _ _ rest =>
+    intro hw xs r h
+    rw [readMoreParams.eq_1] at h
+    cases h
+    exact ⟨by simp, hw.tail.tail⟩
+  | case2 _ rest hne ih =>
+    intro hw xs r h
+    rw [readMoreParams.eq_2 _ _ hne] at h
+    bind_step h with ⟨⟨x, r₁, hr₁⟩, e₁, h⟩
+    bind_step h with ⟨⟨⟨xs', v⟩, r₂, hr₂⟩, e₂, h⟩
+    cases h
+    obtain ⟨k₁, w₁⟩ := readParam_writable _ hw.tail x _ e₁
+    obtain ⟨k₂, w₂⟩ := ih r₁ hr₁ w₁ _ _ e₂
+    exact ⟨fun y hy => (List.mem_cons.mp hy).elim (· ▸ k₁) (k₂ y), w₂⟩
+  | case3 ts h₁ h₂ =>
+    intro hw xs r h
+    rw [readMoreParams.eq_3 _ h₁ h₂] at h
+    cases h
+    exact ⟨by simp, hw⟩
+
+/-- The parameters of an item as read can be written. -/
+theorem readParams_writable (ts : List Token) : ReadsWritable readParams
+    (fun ps => ∀ x ∈ ps.1, x.1.Writable ∧ ∀ a ∈ x.2, a.1.Writable) ts := by
+  intro hw xs r h
+  unfold readParams at h
+  split at h
+  · cases h
+    exact ⟨by simp, hw.tail⟩
+  · bind_step h with ⟨⟨x, a⟩, e₁, h⟩
+    bind_step h with ⟨⟨⟨xs', v⟩, b⟩, e₂, h⟩
+    cases h
+    obtain ⟨k₁, w₁⟩ := readParam_writable _ hw _ _ e₁
+    obtain ⟨k₂, w₂⟩ := readMoreParams_writable _ w₁ _ _ e₂
+    exact ⟨fun y hy => (List.mem_cons.mp hy).elim (· ▸ k₁) (k₂ y), w₂⟩
+
+/-- A result of an item as read can be written: its type and its
+attributes. -/
+theorem readResult_writable (ts : List Token) :
+    ReadsWritable readResult (fun x => x.1.1.IsType ∧ ∀ a ∈ x.2, a.1.Writable) ts := by
+  intro hw x r h
+  unfold readResult at h
+  bind_step h with ⟨⟨y, a⟩, e₁, h⟩
+  bind_step h with ⟨⟨as, b⟩, e₂, h⟩
+  cases h
+  obtain ⟨k₁, w₁⟩ := readType_writable _ hw _ _ e₁
+  obtain ⟨k₂, w₂⟩ := readAttrs_writable _ w₁ _ _ e₂
+  exact ⟨⟨k₁, k₂⟩, w₂⟩
+
 /-- On tokens that can be written, the readers of items give items that can
 be written. -/
 theorem readItems_writable :
@@ -91,21 +157,21 @@ theorem readItems_writable :
     bind_step h with ⟨⟨_, r₁, h₁⟩, e₁, h⟩
     have w₁ := (expect_writable _ _ _ hw.tail _ _ e₁).2
     bind_step h with ⟨⟨params, r₂, h₂⟩, e₂, h⟩
-    have k₂ : (∀ x ∈ params, x.Writable) ∧ TokensWritable r₂ := by
+    have k₂ : (∀ x ∈ params.1, x.1.Writable ∧ ∀ a ∈ x.2, a.1.Writable) ∧ TokensWritable r₂ := by
       split at e₂
       · cases e₂
         exact ⟨by simp, w₁⟩
-      · exact readDefs_writable _ w₁ _ _ e₂
+      · exact readParams_writable _ w₁ _ _ e₂
     bind_step h with ⟨⟨_, r₃, h₃⟩, e₃, h⟩
     have w₃ := (expect_writable _ _ _ k₂.2 _ _ e₃).2
     bind_step h with ⟨⟨results, r₄, h₄⟩, e₄, h⟩
-    have k₄ : (∀ x ∈ results, x.1.IsType) ∧ TokensWritable r₄ := by
+    have k₄ : (∀ x ∈ results, x.1.1.IsType ∧ ∀ a ∈ x.2, a.1.Writable) ∧ TokensWritable r₄ := by
       split at e₄
       · bind_step e₄ with ⟨⟨t, a⟩, f₁, e₄⟩
         bind_step e₄ with ⟨⟨more, b⟩, f₂, e₄⟩
         cases e₄
-        obtain ⟨j₁, v₁⟩ := readType_writable _ w₃.tail _ _ f₁
-        obtain ⟨j₂, v₂⟩ := readMore_writable readType_writable _ v₁ _ _ f₂
+        obtain ⟨j₁, v₁⟩ := readResult_writable _ w₃.tail _ _ f₁
+        obtain ⟨j₂, v₂⟩ := readMore_writable readResult_writable _ v₁ _ _ f₂
         exact ⟨fun y hy => (List.mem_cons.mp hy).elim (· ▸ j₁) (j₂ y), v₂⟩
       · cases e₄
         exact ⟨by simp, w₃⟩
@@ -128,8 +194,21 @@ theorem readItems_writable :
         exact readBlocks_writable _ w₆ _ _ f₁
     bind_step h with ⟨⟨_, r₈, h₈⟩, e₈, h⟩
     cases h
-    exact ⟨(SItem.writable_iff _).mpr ⟨k₂.1, k₄.1, k₅.1, k₇.1⟩,
+    refine ⟨(SItem.writable_iff _).mpr ⟨?_, ?_, ?_, k₇.1, ?_, ?_, by simp, by simp⟩,
       (expect_writable _ _ _ k₇.2 _ _ e₈).2⟩
+    · simpa using fun x as hx => (k₂.1 (x, as) hx).1
+    · simpa using fun a b as hx => (k₄.1 ((a, b), as) hx).1
+    · intro a ha
+      rcases List.mem_append.mp ha with ha | ha
+      · rcases hl : results.getLast? with _ | l
+        · simp [hl] at ha
+        · simp only [hl, Option.map_some, Option.getD_some] at ha
+          exact (k₄.1 _ (List.mem_of_getLast? hl)).2 _ ha
+      · exact k₅.1 _ ha
+    · simpa using fun x _ hx => (k₂.1 _ hx).2
+    · simp only [List.mem_map]
+      rintro _ ⟨x, hx, rfl⟩
+      exact (k₄.1 _ (List.dropLast_subset _ hx)).2
   | case5 kind p ts hne => -- `readItem`: no symbol
     intro hw i r h
     rw [readItem.eq_2 _ _ _ hne] at h

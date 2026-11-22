@@ -29,7 +29,8 @@ second for a callee that reaches no memory:
 * with memory, for a callee that reaches no memory in the module where it
   runs, nor in the new one: no function that its run may reach declares a
   memory effect. Its runs then do not depend on the memories, so refinement
-  with memory, from the empty memories, is refinement from given memories,
+  with memory, from the memories a run starts with, is refinement from given
+  memories,
   and the form from given memories applies. Like it, this form asks nothing
   of the parameter types of `@g`, pointers included (#214). Before #214 it
   asked that `@g` have no pointer parameter, as the human's ruling on #373
@@ -64,18 +65,20 @@ namespace Fir.Core
 
 /-- A core op that touches no memory, every core op but `alloca`, the
 loads and stores, `load`, `store`, `loadPtr`, `storePtr`, `loadFloat` and
-`storeFloat`, `memCopy` and `memSet`, declares no memory effect. -/
+`storeFloat`, `memCopy`, `memSet`, `ptrExpose` and `ptrFromInt`, declares
+no memory effect. -/
 theorem Op.effects_touchesNoMemory (op : Op) (hm : op.touchesMemory = false) :
     (Fir.effects (d := CoreDialect) op).TouchesNoMemory := fun _ => by
   cases op with
-  | alloca | load | store | loadPtr | storePtr | loadFloat | storeFloat | memCopy | memSet =>
-    cases hm
+  | alloca | load | store | loadPtr | storePtr | loadFloat | storeFloat | memCopy | memSet
+  | ptrExpose | ptrFromInt => cases hm
   | _ => exact ⟨nofun, nofun, nofun⟩
 
 /-- A core op that declares no memory effect touches no memory: `alloca`
 declares that it allocates in the memory of its result, each load that it
 reads the memory of its pointer, each store that it writes it, and
-`memCopy` that it reads it, and `memSet` that it writes it. -/
+`memCopy` that it reads it, `memSet` that it writes it, and `ptrExpose`
+and `ptrFromInt` that they read it. -/
 theorem Op.touchesMemory_false {op : Op} (h : (Fir.effects (d := CoreDialect) op).TouchesNoMemory) :
     op.touchesMemory = false := by
   cases op with
@@ -83,7 +86,7 @@ theorem Op.touchesMemory_false {op : Op} (h : (Fir.effects (d := CoreDialect) op
   | load _ _ _ n => exact ((h n).1 (List.mem_singleton_self n)).elim
   | store _ _ _ n | storePtr _ _ _ n | storeFloat _ _ _ _ n | memSet _ _ _ n =>
     exact ((h n).2.1 (List.mem_singleton_self n)).elim
-  | loadPtr _ _ _ n | loadFloat _ _ _ _ n | memCopy _ _ _ n =>
+  | loadPtr _ _ _ n | loadFloat _ _ _ _ n | memCopy _ _ _ n | ptrExpose n _ | ptrFromInt n _ =>
     exact ((h n).1 (List.mem_singleton_self n)).elim
   | _ => rfl
 
@@ -126,8 +129,8 @@ memory, at every layout and naming. An op that touches no memory and reads
 no item of the run runs by its rule in the set monad and keeps the
 memories, and its rule in the set monad is the set of its rule in the tree
 of choices, whose choices of bits have finitely many options. `alloca`, the
-loads and stores, `fieldAddr`, `memCopy` and `memSet` have finitely many by
-their own rules. -/
+loads and stores, `fieldAddr`, `memCopy`, `memSet`, `ptrExpose` and
+`ptrFromInt` have finitely many by their own rules. -/
 theorem opsFinite :
     letI := DialectMemDenote.denoteAt (d := CoreDialect) lay ρ L
     OpsFinite CoreDialect N (unitsOf lay) := fun op _ args => by
@@ -143,6 +146,8 @@ theorem opsFinite :
     · exact ⟨fun _ => storeFloat_finitelyMany _ _ _ _ _ lay ρ L args, fun h => nomatch h⟩
     · exact ⟨fun _ => memCopy_finitelyMany _ _ _ _ lay ρ L args, fun h => nomatch h⟩
     · exact ⟨fun _ => memSet_finitelyMany _ _ _ _ lay ρ L args, fun h => nomatch h⟩
+    · exact ⟨fun _ => ptrExpose_finitelyMany _ _ lay ρ L args, fun h => nomatch h⟩
+    · exact ⟨fun _ => ptrFromInt_finitelyMany _ _ lay ρ L args, fun h => nomatch h⟩
   | false => ?_
   cases hi : op.readsItems with
   | true =>

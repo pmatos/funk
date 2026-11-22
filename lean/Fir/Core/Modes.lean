@@ -5,8 +5,9 @@ import Fir.Core.TreeRules
 
 The modes run the core dialect with memory (the section on modes with
 memory): its rules with memory in the state layer over the tree of choices
-(the section on the core dialect in the tree of choices), from the empty
-memories. A mode runs a module with its own layout: each memory of the run
+(the section on the core dialect in the tree of choices), from the
+memories that hold the globals of the module's own table (the section on
+the memories a run starts with). A mode runs a module with its own layout: each memory of the run
 has its entry in the module's data layout, which gives its unit, its byte
 order and the width of its pointers, the run names the core's memories
 by themselves, by their numbers, and it gives each op the items of the
@@ -35,18 +36,20 @@ namespace Fir.Core
 open Memory
 
 /-- The tree of a run with memory of the core function `f` of the module
-`M`, on `args` with `fuel` steps, that the modes walk: from the empty
-memories, each memory with its entry in `M`'s data layout, and the core's
-memories named by themselves, by their numbers. -/
+`M`, on `args` with `fuel` steps, that the modes walk: from the memories
+that hold the globals of `M`'s own table, each memory with its entry in
+`M`'s data layout, and the core's memories named by themselves, by their
+numbers. -/
 def modeTree (M : Module CoreDialect) (f : Func CoreDialect)
     (args : HVector toType (f.params.map (·.2))) (fuel : Nat) :
     ChoiceTree Op (Except Stuck (Result Obs)) :=
   letI := memTreeDenote M.layout.entry id M.runItems
-  f.memTree (unitsOf M.layout.entry) M args fuel
+  f.memTree (unitsOf M.layout.entry) (RunItems.start CoreDialect M.layout.entry id M.runItems) M
+    args fuel
 
 /-- Exhaustive mode on the core function `f` of the module `M`: every path
-of its run with memory on `args` with `fuel` steps, from the empty memories,
-each with its entry in `M`'s data layout, when no path chooses more than
+of its run with memory on `args` with `fuel` steps, from the memories that
+hold `M`'s globals, each with its entry in `M`'s data layout, when no path chooses more than
 `budget` bits in all. -/
 def exhaustive (M : Module CoreDialect) (f : Func CoreDialect)
     (args : HVector toType (f.params.map (·.2))) (fuel budget : Nat) :
@@ -54,8 +57,8 @@ def exhaustive (M : Module CoreDialect) (f : Func CoreDialect)
   (modeTree M f args fuel).explore budget
 
 /-- Scripted mode on the core function `f` of the module `M`: the path of
-its run with memory on `args` with `fuel` steps, from the empty memories,
-that the choice sequence `cs` names, each value read by `read`, or why `cs`
+its run with memory on `args` with `fuel` steps, from the memories that
+hold `M`'s globals, that the choice sequence `cs` names, each value read by `read`, or why `cs`
 does not fit the run. -/
 def scripted {σ : Type} (read : (w : Nat) → σ → Option (BitVec w)) (M : Module CoreDialect)
     (f : Func CoreDialect)
@@ -64,8 +67,8 @@ def scripted {σ : Type} (read : (w : Nat) → σ → Option (BitVec w)) (M : Mo
   (modeTree M f args fuel).script read cs 0
 
 /-- Sampled mode on the core function `f` of the module `M`: the path of
-its run with memory on `args` with `fuel` steps, from the empty memories, on
-which `draw` gives each choice, from the generator `g`, and the values
+its run with memory on `args` with `fuel` steps, from the memories that
+hold `M`'s globals, on which `draw` gives each choice, from the generator `g`, and the values
 chosen on it. -/
 def sampled {γ : Type} (draw : (w : Nat) → γ → BitVec w × γ) (M : Module CoreDialect)
     (f : Func CoreDialect)
@@ -90,7 +93,7 @@ theorem exhaustive_memOutcomes (M : Module CoreDialect) (f : Func CoreDialect)
       ∃ p ∈ ls, p.1.pathEnd = .outcome o := by
   -- Elaborated apart from the goal: checked against it, the run unfolds.
   have h := (letI := memTreeDenote M.layout.entry id M.runItems
-    Func.memExplore_outcomes M.layout.entry id M.runItems (memMapsDenote M.layout.entry id
+    Func.memExplore_outcomes (d := CoreDialect) M.layout.entry id M.runItems (memMapsDenote M.layout.entry id
         M.runItems) M f args fuel
       budget hx o)
   exact h
@@ -105,7 +108,7 @@ theorem exhaustive_memStuck (M : Module CoreDialect) (f : Func CoreDialect)
       ∃ p ∈ ls, ∃ st, p.1.pathEnd = .stuck st := by
   -- Elaborated apart from the goal: checked against it, the run unfolds.
   have h := (letI := memTreeDenote M.layout.entry id M.runItems
-    Func.memExplore_stuck M.layout.entry id M.runItems (memMapsDenote M.layout.entry id M.runItems)
+    Func.memExplore_stuck (d := CoreDialect) M.layout.entry id M.runItems (memMapsDenote M.layout.entry id M.runItems)
         M f args fuel budget
       hx)
   exact h
@@ -120,7 +123,7 @@ theorem scripted_memOutcomes {σ : Type} (read : (w : Nat) → σ → Option (Bi
         fuel) o := by
   -- Elaborated apart from the goal: checked against it, the run unfolds.
   have h := (letI := memTreeDenote M.layout.entry id M.runItems
-    Func.memScript_outcomes M.layout.entry id M.runItems (memMapsDenote M.layout.entry id
+    Func.memScript_outcomes (d := CoreDialect) M.layout.entry id M.runItems (memMapsDenote M.layout.entry id
         M.runItems) read M f args fuel
       cs hs ho)
   exact h
@@ -135,7 +138,7 @@ theorem scripted_memStuck {σ : Type} (read : (w : Nat) → σ → Option (BitVe
         fuel) := by
   -- Elaborated apart from the goal: checked against it, the run unfolds.
   have h := (letI := memTreeDenote M.layout.entry id M.runItems
-    Func.memScript_stuck M.layout.entry id M.runItems (memMapsDenote M.layout.entry id M.runItems)
+    Func.memScript_stuck (d := CoreDialect) M.layout.entry id M.runItems (memMapsDenote M.layout.entry id M.runItems)
         read M f args fuel cs
       hs hst)
   exact h

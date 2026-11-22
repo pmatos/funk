@@ -158,14 +158,15 @@ bits have 2 to the power _w_ options. The ops that have their own rules with mem
 `Core.Op.memCases` names (semantics-effects.md#soundness), count by them:
 `alloca` and `fieldAddr` have one outcome, the loads `load`, `loadPtr` and
 `loadFloat` and the stores `store`, `storePtr` and `storeFloat` at most one
-that ends, and `memCopy` and `memSet` at most one that ends for each
-length, of which a poison length chooses one of finitely many
+that ends, `memCopy` and `memSet` at most one that ends for each
+length, of which a poison length chooses one of finitely many, and
+`ptrExpose` and `ptrFromInt` at most one that ends
 (`Core.alloca_finitelyMany` and its siblings in each op's laws file). So
 `Core.replaceBody_isRefinedBy_of_from` holds for every core callee,
 pointers and memory included, and `Core.replaceBody_isRefinedBy` for every
 core callee that reaches no memory, pointers included: one with no op
-that touches memory in its reach, no `alloca`, load, store, `memCopy` or
-`memSet` (`Core.reachesNoMemory`).
+that touches memory in its reach, no `alloca`, load, store, `memCopy`,
+`memSet`, `ptrExpose` or `ptrFromInt` (`Core.reachesNoMemory`).
 Nothing asks that every core function reach no memory. The hypothesis is passed to the theorems, as
 `OpsIgnoreMemory` is, not added to a lawful class, so no dialect's
 obligations change. Refined arguments need no finiteness, since they
@@ -203,7 +204,8 @@ alignment is not covered yet, as with the other limits of this proof device
 below.
 No access reaches a freed block, so its units are not compared, and a store to
 a block that is then freed may be dropped. Refined memories have the same
-frames and allocations, each memory refined block by block
+frames, allocations and counts of integers turned back into pointers
+(`semantics-m1-addresses.md`), each memory refined block by block
 (`lean/Fir/Memory/Refine.lean`). Entering and leaving a call, allocating,
 freeing, loading and storing keep it. The human ruled on #231 on 2026-11-11
 that a punned load gives poison and that a pointer's fragments keep its
@@ -225,7 +227,7 @@ since a callee runs from its caller's memories (`Func.memRunsFrom`). Refined
 arguments and memories need nothing more
 (`Func.memRunsFrom_args_isRefinedBy`), and congruence is
 `Func.memRunsFrom_replaceBody_isRefinedBy`. The runs with memory refine when
-these runs from the empty memories do. Congruence assumes that the new callee
+these runs from the memories a run starts with do. Congruence assumes that the new callee
 refines the old from every memories, and either one fuel bound for it in
 place of finitely many argument vectors
 (`Func.memRunsFrom_replaceBody_isRefinedBy`), or that the dialect's ops have
@@ -260,8 +262,8 @@ pointer-parameter condition, through
 that reaches no memory before and after, refinement with memory is
 refinement from given memories (`Func.memRunsFrom_isRefinedBy_of_memRuns`),
 and congruence with ops of finitely many outcomes applies. The ops that
-touch memory, `alloca`, the loads and stores, `memCopy` and `memSet`,
-declare memory effects, so a core function reaches no memory only when
+touch memory, `alloca`, the loads and stores, `memCopy`, `memSet`,
+`ptrExpose` and `ptrFromInt`, declare memory effects, so a core function reaches no memory only when
 none is in its reach (`Core.reachesNoMemory`), and these two
 theorems cover such a `@g`; for the whole core,
 `Core.replaceBody_isRefinedBy_of_from` asks nothing of it
@@ -284,8 +286,8 @@ before stage 4d, which would have held every memory op back for it.
 These proofs stand beside those in the set
 monad, step by step, and each change to `Func.runOps` is proved again in the
 memory refinement files until the refactor that semantics-interpreter.md names.
-Rejected: refining runs with memory only from the empty memories, since a black
-box stated so says nothing of a call.
+Rejected: refining runs with memory only from the memories a run starts with,
+since a black box stated so says nothing of a call.
 
 The relation on end memories is a proof device for composing calls, not an
 observation. It is stricter than the observation of ADR-2026-11-09-1540: the

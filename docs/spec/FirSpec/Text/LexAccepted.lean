@@ -57,7 +57,7 @@ every float literal that it reads can be written, and so can every number
 it reads from a first digit, an integer or a float literal.
 :::
 
-:::readable Fir.Text.lexInt_writable Fir.Text.lexAt_writable Fir.Text.lexToken_writable (pin := Fir.Text.lexInt) (pin := Fir.Text.lexAt) (pin := Fir.Text.lexToken) (pin := Fir.Text.Tok.Writable) (pin := Fir.Location.limit) (pin := Fir.isWordStart) (fingerprint := "16138967027656414257")
+:::readable Fir.Text.lexInt_writable Fir.Text.lexAt_writable Fir.Text.lexToken_writable (pin := Fir.Text.lexInt) (pin := Fir.Text.lexAt) (pin := Fir.Text.lexToken) (pin := Fir.Text.Tok.Writable) (pin := Fir.Location.limit) (pin := Fir.isWordStart) (fingerprint := "13275475494103265676")
 *Theorems: every token that the lexer reads can be written.* For every
 character $`c`, the characters after it, and position in the text, from
 which the reader counts where the next token starts and which its error

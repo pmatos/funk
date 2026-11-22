@@ -31,7 +31,7 @@ def one : Mems := (Memories.empty.alloc () .heap 1 1).2
 
 /-- A memory of the same allocations as `one`'s, whose unit holds the bits
 `1`. -/
-def oneBits : Memory 8 := ⟨[⟨.heap, 1, [.bits 1], true, none⟩]⟩
+def oneBits : Memory 8 := ⟨[⟨.heap, 1, [.bits 1], true, none, false⟩]⟩
 
 /-- The pointer to the unit of `one`'s allocation. -/
 def p : Pointer := ⟨some 0, 0⟩
@@ -93,11 +93,11 @@ theorem alloc_writesNot (k : AllocKind) (n al : Nat) :
 
 /-- A memory with one live heap allocation of two units, both the bits
 `0`. -/
-def zeros : Memory 8 := ⟨[⟨.heap, 1, [.bits 0, .bits 0], true, none⟩]⟩
+def zeros : Memory 8 := ⟨[⟨.heap, 1, [.bits 0, .bits 0], true, none, false⟩]⟩
 
 /-- A memory of the same allocations as `zeros`, whose first unit holds the
 bits `1`. -/
-def oneZero : Memory 8 := ⟨[⟨.heap, 1, [.bits 1, .bits 0], true, none⟩]⟩
+def oneZero : Memory 8 := ⟨[⟨.heap, 1, [.bits 1, .bits 0], true, none, false⟩]⟩
 
 /-- The memories whose one memory is `zeros`. -/
 def two : Mems := (Memories.empty : Mems).set () zeros

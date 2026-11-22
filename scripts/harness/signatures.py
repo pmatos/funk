@@ -17,7 +17,8 @@ def result_types(text: str) -> dict[str, list[str]]:
         if close is None:
             continue
         tail = rest[close + 1 :]
-        found[rest[:end]] = split_types(tail[4:]) if tail.startswith(" -> ") else []
+        results = split_types(tail[4:]) if tail.startswith(" -> ") else []
+        found[rest[:end]] = [unmarked(t) for t in results]
     return found
 
 
@@ -36,7 +37,7 @@ def param_types(text: str) -> dict[str, list[str]]:
             continue
         inside = rest[end + 1 : close]
         params = split_types(inside) if inside else []
-        found[rest[:end]] = [p.partition(": ")[2] for p in params]
+        found[rest[:end]] = [unmarked(p.partition(": ")[2]) for p in params]
     return found
 
 
@@ -60,6 +61,18 @@ def closing_paren(s: str, start: int) -> int | None:
         if depth == 0:
             return i
     return None
+
+
+def unmarked(s: str) -> str:
+    """A type, without the attributes that may follow it in a signature,
+    such as the extension marker in `i8 sext` (ADR-2026-11-21-1307): the
+    text up to the first space outside parentheses."""
+    depth = 0
+    for i, ch in enumerate(s):
+        depth += {"(": 1, ")": -1}.get(ch, 0)
+        if ch == " " and depth == 0:
+            return s[:i]
+    return s
 
 
 def split_types(s: str) -> list[str]:

@@ -23,6 +23,7 @@ pub use layout::{ByteOrder, MemLayout};
 pub use location::{LocRef, LocTable, Location};
 pub use module::{
     Block, Def, DialectItem, Func, FuncType, Item, Module, Op, Region, Succ, SymbolTable,
+    attrs_trimmed, trim_attrs,
 };
 pub use nested::NestedModule;
 pub(crate) use nested::Table;

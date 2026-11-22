@@ -48,7 +48,7 @@ instance : DialectEffects CallDialect :=
   ⟨Empty, fun _ => .exception, fun
     | .br | .ret => { control := true }
     | .ub => { mayUB := true }
-    | _ => {}⟩
+    | _ => {}, fun _ => none⟩
 
 /-- The call dialect's events are numbers, answered by numbers: `emit` shows
 `0`. -/
@@ -70,6 +70,10 @@ instance : DialectTrace CallDialect where
 
 /-- The traced state of a run of the call dialect, with no memory of its own. -/
 abbrev St : Type := TraceState Unit (unitsOf lay)
+
+/-- The traced state a run of the call dialect starts with: its items list no
+global. -/
+abbrev s₀ : St := TraceState.init (RunItems.start CallDialect lay Empty.elim RunItems.empty)
 
 /-- The traced semantics of the call dialect. -/
 abbrev sem := DialectTrace.traceAt (d := CallDialect) lay Empty.elim RunItems.empty

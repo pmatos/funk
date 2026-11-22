@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Modes of the core and gpu: readable blocks" =>
 
-:::moduleDocs (fingerprint := "14821745427766169431")
+:::moduleDocs (fingerprint := "8818943503202945511")
 :::
 
 :::readable Fir.Gpu.memName (fingerprint := "15817030782446627946")
@@ -43,13 +43,14 @@ its rules with memory, at every layout and naming of the sum's memories
 and every record of items.
 :::
 
-:::readable Fir.Gpu.modeTree Fir.Gpu.Leaf Fir.Gpu.exhaustive Fir.Gpu.scripted Fir.Gpu.sampled (pin := Fir.ChoiceTree.explore) (pin := Fir.ChoiceTree.script) (pin := Fir.ChoiceTree.sample) (pin := Fir.Func.memTree) (fingerprint := "11010595482372388197")
+:::readable Fir.Gpu.modeTree Fir.Gpu.Leaf Fir.Gpu.exhaustive Fir.Gpu.scripted Fir.Gpu.sampled (pin := Fir.ChoiceTree.explore) (pin := Fir.ChoiceTree.script) (pin := Fir.ChoiceTree.sample) (pin := Fir.Func.memTree) (fingerprint := "15012274531061140136")
 *Definition: the modes on a function of the sum.* At a work-item, for a
 function $`f` of a module $`M` of the sum, arguments $`\vec{v}` and fuel
 $`k`, the tree of $`f`'s run is its run with memory in the tree of choices,
-from the empty memories, where each memory has its entry in $`M`'s data
-layout, the run names the sum's memories by their numbers, and it gives
-each op the items of $`M`'s own table. A leaf of the
+from the memories that hold the globals of $`M`'s own table, where each
+memory has its entry in $`M`'s data layout, the run names the sum's
+memories by their numbers, and it gives each op the items of $`M`'s own
+table. A leaf of the
 tree is how a path ends. Exhaustive, scripted and sampled mode walk the
 tree as they walk the core's. `fir-ref run` computes these three, and the
 walk that tries a few NaNs below, on a function of the module or a kernel

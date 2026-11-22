@@ -11,15 +11,16 @@ section says when the memories of one run refine those of another:
 * a unit is refined by itself, and a poison unit by any unit. A unit of bits
   or a fragment of a pointer is refined by nothing else, so that a fragment
   keeps its pointer's provenance;
-* a block is refined by a block of the same kind, alignment, liveness and
-  size, with the same address or, in both, none. While it is live, the other's units refine its units one by one. No
+* a block is refined by a block of the same kind, alignment, liveness,
+  size and constness, with the same address or, in both, none. While it is live, the other's units refine its units one by one. No
   access reaches a freed block, so the units of a freed block are not
   compared, and a store to a block that is then freed may be dropped;
 * a memory is refined by a memory whose blocks refine its own, one by one,
   in the order they were made. So both have the same allocations, each with
-  its kind, alignment, size, liveness and address;
+  its kind, alignment, size, liveness, address and constness;
 * the memories of a run are refined by memories with the same frames, in
-  which each memory refines the memory of the same name.
+  which each memory refines the memory of the same name, and which have
+  turned as many integers back into pointers of each memory.
 
 Refinement of memories is reflexive and transitive. What a run does to its
 memories keeps it:
@@ -36,8 +37,8 @@ memories keeps it:
   reason in both, or loads units of which those from the second refine
   those from the first;
 * a store of units that refine others, through the same pointer, aligned or
-  not, faults for the same reason in both, or gives memories that refine
-  each other.
+  not, faults for the same reason in both, a constant block included, or
+  gives memories that refine each other.
 -/
 
 namespace Fir
@@ -57,14 +58,15 @@ def MemUnit.IsRefinedBy : MemUnit u → MemUnit u → Prop
 instance : HRefinement (MemUnit u) (MemUnit u) := ⟨MemUnit.IsRefinedBy⟩
 
 /-- A block is refined by a block of the same kind, alignment, liveness,
-size and address whose units, while it is live, refine its units one by
-one. No access reaches a freed block, so its units are not compared: a
+size, address and constness whose units, while it is live, refine its
+units one by one. No access reaches a freed block, so its units are not compared: a
 store to it before it is freed may be dropped. The address is compared
 whether or not the block is live, as the address that an exposed block
 was given is part of what a run has done (#232). -/
 def Block.IsRefinedBy (b b' : Block u) : Prop :=
   b.kind = b'.kind ∧ b.align = b'.align ∧ b.live = b'.live ∧
-    b.units.length = b'.units.length ∧ b.addr = b'.addr ∧ (b.live → b.units ⊑ b'.units)
+    b.units.length = b'.units.length ∧ b.addr = b'.addr ∧ b.const = b'.const ∧
+      (b.live → b.units ⊑ b'.units)
 
 instance : HRefinement (Block u) (Block u) := ⟨Block.IsRefinedBy⟩
 
@@ -86,14 +88,15 @@ theorem MemUnit.isRefinedBy_trans : ∀ {a b c : MemUnit u}, a ⊑ b → b ⊑ c
 
 /-- Refinement of blocks is reflexive. -/
 theorem Block.isRefinedBy_refl (b : Block u) : b ⊑ b :=
-  ⟨rfl, rfl, rfl, rfl, rfl, fun _ => List.isRefinedBy_refl MemUnit.isRefinedBy_refl _⟩
+  ⟨rfl, rfl, rfl, rfl, rfl, rfl, fun _ => List.isRefinedBy_refl MemUnit.isRefinedBy_refl _⟩
 
 /-- Refinement of blocks is transitive. -/
 theorem Block.isRefinedBy_trans {a b c : Block u} (h₁ : a ⊑ b) (h₂ : b ⊑ c) : a ⊑ c :=
   ⟨h₁.1.trans h₂.1, h₁.2.1.trans h₂.2.1, h₁.2.2.1.trans h₂.2.2.1,
     h₁.2.2.2.1.trans h₂.2.2.2.1, h₁.2.2.2.2.1.trans h₂.2.2.2.2.1,
+    h₁.2.2.2.2.2.1.trans h₂.2.2.2.2.2.1,
     fun hl => List.isRefinedBy_trans MemUnit.isRefinedBy_trans
-      (h₁.2.2.2.2.2 hl) (h₂.2.2.2.2.2 (h₁.2.2.1 ▸ hl))⟩
+      (h₁.2.2.2.2.2.2 hl) (h₂.2.2.2.2.2.2 (h₁.2.2.1 ▸ hl))⟩
 
 /-- Refinement of memories is reflexive. -/
 theorem Memory.isRefinedBy_refl (M : Memory u) : M ⊑ M :=
@@ -107,7 +110,7 @@ theorem Memory.isRefinedBy_trans {M₁ M₂ M₃ : Memory u} (h₁ : M₁ ⊑ M�
 
 /-- Freeing a block keeps refinement. -/
 theorem Block.IsRefinedBy.kill {b b' : Block u} (h : b ⊑ b') : b.kill ⊑ b'.kill :=
-  ⟨h.1, h.2.1, rfl, h.2.2.2.1, h.2.2.2.2.1, fun hl => Bool.noConfusion hl⟩
+  ⟨h.1, h.2.1, rfl, h.2.2.2.1, h.2.2.2.2.1, h.2.2.2.2.2.1, fun hl => Bool.noConfusion hl⟩
 
 /-- Freeing an allocation keeps refinement. -/
 theorem Memory.IsRefinedBy.free {M M' : Memory u} (h : M ⊑ M') (a : AllocId) :
@@ -154,7 +157,8 @@ theorem Memory.IsRefinedBy.load {M M' : Memory u} (h : M ⊑ M') (p : Pointer) (
   · rw [h₁, h₂]
     exact .inl ⟨f, rfl, rfl⟩
   · rw [h₁, h₂]
-    exact .inr ⟨_, _, rfl, rfl, List.IsRefinedBy.take n (List.IsRefinedBy.drop o (hb.2.2.2.2.2 hl))⟩
+    exact .inr ⟨_, _, rfl, rfl, List.IsRefinedBy.take n
+      (List.IsRefinedBy.drop o (hb.2.2.2.2.2.2 hl))⟩
 
 /-- A store, through the same pointer, of units that refine others, to
 memories that refine each other, faults for the same reason in both, or
@@ -168,15 +172,18 @@ theorem Memory.IsRefinedBy.store {M M' : Memory u} (h : M ⊑ M') (p : Pointer)
   rcases h.locate p us.length with ⟨f, h₁, h₂⟩ | ⟨a, b, b', o, h₁, h₂, hl, hb⟩
   · rw [h₁, h₂]
     exact .inl ⟨f, rfl, rfl⟩
-  · rw [h₁, h₂]
-    have hu' : b.units.take o ++ us ++ b.units.drop (o + us.length) ⊑
-        b'.units.take o ++ us' ++ b'.units.drop (o + us'.length) := by
-      rw [← List.IsRefinedBy.length_eq hu]
-      exact List.IsRefinedBy.append
-        (List.IsRefinedBy.append (List.IsRefinedBy.take o (hb.2.2.2.2.2 hl)) hu)
-        (List.IsRefinedBy.drop _ (hb.2.2.2.2.2 hl))
-    exact .inr ⟨_, _, rfl, rfl, List.IsRefinedBy.set h a
-      ⟨hb.1, hb.2.1, hb.2.2.1, List.IsRefinedBy.length_eq hu', hb.2.2.2.2.1, fun _ => hu'⟩⟩
+  · simp only [h₁, h₂, bind, Except.bind, ← hb.2.2.2.2.2.1]
+    cases b.const
+    · have hu' : b.units.take o ++ us ++ b.units.drop (o + us.length) ⊑
+          b'.units.take o ++ us' ++ b'.units.drop (o + us'.length) := by
+        rw [← List.IsRefinedBy.length_eq hu]
+        exact List.IsRefinedBy.append
+          (List.IsRefinedBy.append (List.IsRefinedBy.take o (hb.2.2.2.2.2.2 hl)) hu)
+          (List.IsRefinedBy.drop _ (hb.2.2.2.2.2.2 hl))
+      exact .inr ⟨_, _, rfl, rfl, List.IsRefinedBy.set h a
+        ⟨hb.1, hb.2.1, hb.2.2.1, List.IsRefinedBy.length_eq hu', hb.2.2.2.2.1, hb.2.2.2.2.2.1,
+          fun _ => hu'⟩⟩
+    · exact .inl ⟨_, rfl, rfl⟩
 
 /-- Memories that refine each other agree on whether an access is aligned:
 their blocks have the same alignments. -/
@@ -228,9 +235,10 @@ theorem Memory.IsRefinedBy.storeAligned {M M' : Memory u} (h : M ⊑ M') (p : Po
 variable {Mem : Type} {unit : Mem → Nat} [DecidableEq Mem]
 
 /-- The memories of a run are refined by memories with the same frames, in
-which each memory refines the memory of the same name. -/
+which each memory refines the memory of the same name, and with the same
+count of integers turned back into pointers of each memory. -/
 def Memories.IsRefinedBy (S S' : Memories Mem unit) : Prop :=
-  S.frames = S'.frames ∧ ∀ x, S.mem x ⊑ S'.mem x
+  S.frames = S'.frames ∧ (∀ x, S.mem x ⊑ S'.mem x) ∧ S.rebuilds = S'.rebuilds
 
 instance : HRefinement (Memories Mem unit) (Memories Mem unit) := ⟨Memories.IsRefinedBy⟩
 
@@ -238,12 +246,12 @@ namespace Memories
 
 /-- Refinement of the memories of a run is reflexive. -/
 theorem isRefinedBy_refl (S : Memories Mem unit) : S ⊑ S :=
-  ⟨rfl, fun x => Memory.isRefinedBy_refl (S.mem x)⟩
+  ⟨rfl, fun x => Memory.isRefinedBy_refl (S.mem x), rfl⟩
 
 /-- Refinement of the memories of a run is transitive. -/
 theorem isRefinedBy_trans {S₁ S₂ S₃ : Memories Mem unit} (h₁ : S₁ ⊑ S₂) (h₂ : S₂ ⊑ S₃) :
     S₁ ⊑ S₃ :=
-  ⟨h₁.1.trans h₂.1, fun x => Memory.isRefinedBy_trans (h₁.2 x) (h₂.2 x)⟩
+  ⟨h₁.1.trans h₂.1, fun x => Memory.isRefinedBy_trans (h₁.2.1 x) (h₂.2.1 x), h₁.2.2.trans h₂.2.2⟩
 
 /-- Entering a call keeps refinement. -/
 theorem IsRefinedBy.enter {S S' : Memories Mem unit} (h : S ⊑ S') : S.enter ⊑ S'.enter :=
@@ -252,16 +260,16 @@ theorem IsRefinedBy.enter {S S' : Memories Mem unit} (h : S ⊑ S') : S.enter �
 /-- Replacing a memory by one that refines another's keeps refinement. -/
 theorem IsRefinedBy.set {S S' : Memories Mem unit} (h : S ⊑ S') (x : Mem)
     {m m' : Memory (unit x)} (hm : m ⊑ m') : S.set x m ⊑ S'.set x m' := by
-  refine ⟨h.1, fun y => ?_⟩
+  refine ⟨h.1, fun y => ?_, h.2.2⟩
   by_cases hxy : x = y
   · subst hxy
     simpa only [Memories.set_mem_self] using hm
-  · simpa only [Memories.set_mem_ne _ _ hxy] using h.2 y
+  · simpa only [Memories.set_mem_ne _ _ hxy] using h.2.1 y
 
 /-- Freeing an allocation keeps refinement. -/
 theorem IsRefinedBy.free {S S' : Memories Mem unit} (h : S ⊑ S') (x : Mem) (a : AllocId) :
     S.free x a ⊑ S'.free x a :=
-  h.set x ((h.2 x).free a)
+  h.set x ((h.2.1 x).free a)
 
 /-- Freeing each allocation of a list keeps refinement. -/
 theorem IsRefinedBy.freeAll : ∀ {S S' : Memories Mem unit}, S ⊑ S' → ∀ l : List (Mem × AllocId),
@@ -297,10 +305,10 @@ theorem IsRefinedBy.alloc {S S' : Memories Mem unit} (h : S ⊑ S') (x : Mem) (k
     (n al : Nat) :
     (S.alloc x k n al).1 = (S'.alloc x k n al).1 ∧
       (S.alloc x k n al).2 ⊑ (S'.alloc x k n al).2 := by
-  obtain ⟨hp, hm⟩ := (h.2 x).alloc k n al
+  obtain ⟨hp, hm⟩ := (h.2.1 x).alloc k n al
   refine ⟨hp, ?_⟩
   have hs := h.set x hm
-  have hl : (S.mem x).blocks.length = (S'.mem x).blocks.length := List.IsRefinedBy.length_eq (h.2 x)
+  have hl : (S.mem x).blocks.length = (S'.mem x).blocks.length := List.IsRefinedBy.length_eq (h.2.1 x)
   simp only [Memories.alloc, hl]
   split
   · exact hs.record x _
@@ -312,7 +320,7 @@ refine the first's. -/
 theorem IsRefinedBy.load {S S' : Memories Mem unit} (h : S ⊑ S') (x : Mem) (p : Pointer)
     (n al : Nat) : (∃ f, S.load x p n al = .error f ∧ S'.load x p n al = .error f) ∨
       ∃ us us', S.load x p n al = .ok us ∧ S'.load x p n al = .ok us' ∧ us ⊑ us' :=
-  (h.2 x).loadAligned p n al
+  (h.2.1 x).loadAligned p n al
 
 /-- A store, through the same pointer, of units that refine others, to
 memories that refine each other, faults for the same reason in both, or
@@ -322,7 +330,7 @@ theorem IsRefinedBy.store {S S' : Memories Mem unit} (h : S ⊑ S') (x : Mem) (p
     (∃ f, S.store x p us al = .error f ∧ S'.store x p us' al = .error f) ∨
       ∃ T T', S.store x p us al = .ok T ∧ S'.store x p us' al = .ok T' ∧ T ⊑ T' := by
   unfold Memories.store
-  rcases (h.2 x).storeAligned p hu al with ⟨f, h₁, h₂⟩ | ⟨N, N', h₁, h₂, hN⟩
+  rcases (h.2.1 x).storeAligned p hu al with ⟨f, h₁, h₂⟩ | ⟨N, N', h₁, h₂, hN⟩
   · rw [h₁, h₂]
     exact .inl ⟨f, rfl, rfl⟩
   · rw [h₁, h₂]

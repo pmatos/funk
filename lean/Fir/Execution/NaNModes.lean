@@ -185,7 +185,7 @@ the run with memory at the fuel budget it runs with. -/
 theorem Func.memExploreNaN_outcomes (h : MemMapsDenote (d := d) lay (ε := ε) ρ L) (M : Module d)
     (f : Func d) (args : HVector toType (f.params.map (·.2))) (fuel budget : Nat) (nans : List Nat)
     {ls : List (ChoiceTree.Leaf ε (Except Stuck (Result (List (DVal d)))) × Nat × Nat)}
-    (hx : (f.memTree (unitsOf lay) M args fuel).exploreNaN nans budget = some ls)
+    (hx : (f.memTree (unitsOf lay) (RunItems.start d lay ρ L) M args fuel).exploreNaN nans budget = some ls)
     {p : ChoiceTree.Leaf ε (Except Stuck (Result (List (DVal d)))) × Nat × Nat} (hp : p ∈ ls)
     {o : Outcome (List (DVal d))} (ho : p.1.pathEnd = .outcome o) :
     Run.outcomes (f.memRuns lay ρ L M args fuel) o := by
@@ -197,7 +197,7 @@ memory. -/
 theorem Func.memExploreNaN_stuck (h : MemMapsDenote (d := d) lay (ε := ε) ρ L) (M : Module d)
     (f : Func d) (args : HVector toType (f.params.map (·.2))) (fuel budget : Nat) (nans : List Nat)
     {ls : List (ChoiceTree.Leaf ε (Except Stuck (Result (List (DVal d)))) × Nat × Nat)}
-    (hx : (f.memTree (unitsOf lay) M args fuel).exploreNaN nans budget = some ls)
+    (hx : (f.memTree (unitsOf lay) (RunItems.start d lay ρ L) M args fuel).exploreNaN nans budget = some ls)
     {p : ChoiceTree.Leaf ε (Except Stuck (Result (List (DVal d)))) × Nat × Nat} (hp : p ∈ ls)
     {st : Stuck} (hst : p.1.pathEnd = .stuck st) :
     Run.IsStuck (f.memRuns lay ρ L M args fuel) := by
@@ -209,7 +209,7 @@ outcomes of the run with memory, as exhaustive mode does. -/
 theorem Func.memExploreNaN_exact (h : MemMapsDenote (d := d) lay (ε := ε) ρ L) (M : Module d)
     (f : Func d) (args : HVector toType (f.params.map (·.2))) (fuel budget : Nat) (nans : List Nat)
     {ls : List (ChoiceTree.Leaf ε (Except Stuck (Result (List (DVal d)))) × Nat × Nat)}
-    (hx : (f.memTree (unitsOf lay) M args fuel).exploreNaN nans budget = some ls)
+    (hx : (f.memTree (unitsOf lay) (RunItems.start d lay ρ L) M args fuel).exploreNaN nans budget = some ls)
     (h0 : ∀ p ∈ ls, p.2.2 = 0) (o : Outcome (List (DVal d))) :
     Run.outcomes (f.memRuns lay ρ L M args fuel) o ↔ ∃ p ∈ ls, p.1.pathEnd = .outcome o := by
   rw [Run.outcomes_iff, ← Func.memTree_toSet lay ρ L h, ChoiceTree.exploreNaN_toSet hx h0]

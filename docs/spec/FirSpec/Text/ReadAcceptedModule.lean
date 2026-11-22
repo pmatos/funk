@@ -17,7 +17,7 @@ fails when the Lean changes under it.
 :::moduleDocs (fingerprint := "6064928561908290930")
 :::
 
-:::readable Fir.Text.readNat_writable Fir.Text.readLocRef_writable (pin := Fir.Text.readNat) (pin := Fir.Text.readLocRef) (pin := Fir.Location.limit) (fingerprint := "6211963768719486149")
+:::readable Fir.Text.readNat_writable Fir.Text.readLocRef_writable (pin := Fir.Text.readNat) (pin := Fir.Text.readLocRef) (pin := Fir.Location.limit) (fingerprint := "7347375219809915431")
 *Theorems: a line, a column and a reference as read are below
 $`2^{32}`.* For every list of tokens:
 
@@ -33,7 +33,7 @@ $`2^{32}`.* For every list of tokens:
   which the lexer bounds.
 :::
 
-:::readable Fir.Text.readRange_writable Fir.Text.readLocArgs_writable Fir.Text.readLocation_writable (pin := Fir.Text.readRange) (pin := Fir.Text.readLocArgs) (pin := Fir.Text.readLocation) (pin := Fir.Location.InLimits) (pin := Fir.Location.numbers) (pin := Fir.Location.refs) (fingerprint := "5494656959512709509")
+:::readable Fir.Text.readRange_writable Fir.Text.readLocArgs_writable Fir.Text.readLocation_writable (pin := Fir.Text.readRange) (pin := Fir.Text.readLocArgs) (pin := Fir.Text.readLocation) (pin := Fir.Location.InLimits) (pin := Fir.Location.numbers) (pin := Fir.Location.refs) (fingerprint := "4113259402621785404")
 *Theorems: a location as read is within the limits.* For every list of
 tokens:
 
@@ -52,7 +52,7 @@ tokens:
   gives that it is within the limits; $`\mathsf{unknown}` holds no number.
 :::
 
-:::readable Fir.Text.readLocEntries_writable Fir.Text.readLocs_writable (pin := Fir.Text.readLocEntries) (pin := Fir.Text.readLocs) (pin := Fir.LocTable.InLimits) (fingerprint := "6862362982077620353")
+:::readable Fir.Text.readLocEntries_writable Fir.Text.readLocs_writable (pin := Fir.Text.readLocEntries) (pin := Fir.Text.readLocs) (pin := Fir.LocTable.InLimits) (fingerprint := "770985538519115908")
 *Theorems: the location table as read is within the limits.* For every
 list of tokens, the reader of the entries of the location table, and the
 reader of the whole table, `locs` `{` and its entries `}`, give that the
@@ -61,7 +61,7 @@ location reference token, and its location is within the limits. So every
 number of the table is below $`2^{32}`.
 :::
 
-:::readable Fir.Text.readModule_writable (pin := Fir.Text.readModule) (pin := Fir.Text.SModule.Writable) (pin := Fir.Text.TokensWritable) (fingerprint := "7157445351210229105")
+:::readable Fir.Text.readModule_writable (pin := Fir.Text.readModule) (pin := Fir.Text.SModule.Writable) (pin := Fir.Text.TokensWritable) (fingerprint := "9656691594638800700")
 *Theorem: the grammar step.* For every list of tokens $`\mathit{ts}` that
 {ref "The-fir-specification--Text-format--What-the-lexer-accepts"}[can be written],
 and every module $`s` as read: when the

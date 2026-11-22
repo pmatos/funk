@@ -14,10 +14,10 @@ build fails when the Lean changes under it.
 
 #doc (Manual) "The core dialect's poison obligations: readable blocks" =>
 
-:::moduleDocs (fingerprint := "11746787569716277188")
+:::moduleDocs (fingerprint := "12272031291712801041")
 :::
 
-:::readable Fir.Core.Op.propagates_all Fir.Core.load_propagatesPoison Fir.Core.store_propagatesPoison Fir.Core.loadPtr_propagatesPoison Fir.Core.storePtr_propagatesPoison Fir.Core.loadFloat_propagatesPoison Fir.Core.storeFloat_propagatesPoison Fir.Core.memCopy_propagatesPoison Fir.Core.memSet_propagatesPoison Fir.Core.fieldAddr_propagatesPoison (pin := Fir.Core.Op.poisonClass) (pin := Fir.PropagatesPoison) (pin := Fir.PoisonOut) (pin := Fir.UBByOwnRules) (pin := Fir.HVector.IsFilledBy) (fingerprint := "18156769555710649521")
+:::readable Fir.Core.Op.propagates_all Fir.Core.load_propagatesPoison Fir.Core.store_propagatesPoison Fir.Core.loadPtr_propagatesPoison Fir.Core.storePtr_propagatesPoison Fir.Core.loadFloat_propagatesPoison Fir.Core.storeFloat_propagatesPoison Fir.Core.memCopy_propagatesPoison Fir.Core.memSet_propagatesPoison Fir.Core.ptrFromInt_propagatesPoison Fir.Core.fieldAddr_propagatesPoison (pin := Fir.Core.Op.poisonClass) (pin := Fir.PropagatesPoison) (pin := Fir.PoisonOut) (pin := Fir.UBByOwnRules) (pin := Fir.HVector.IsFilledBy) (fingerprint := "5135832213618389918")
 *Theorem: each core op that propagates poison does.* For every
 {ref "The-fir-specification--Abstract-syntax--Core-ops"}[core op] $`o`
 whose
@@ -28,11 +28,12 @@ on operands of which one is poison, every result it returns is poison,
 and it may hit UB only if it may hit UB on some operands that put a
 defined value in place of each poison.
 
-These are 43 ops: $`\mathsf{const}` at an integer type and at a float
+These are 44 ops: $`\mathsf{const}` at an integer type and at a float
 type, $`\mathsf{poison}`, $`\mathsf{alloca}`, $`\mathsf{load}` and
 $`\mathsf{store}` of an integer, of a pointer and of a float,
 $`\mathsf{memcpy}` and $`\mathsf{memmove}` (`memCopy` in the Lean),
-$`\mathsf{memset}` (`memSet`), $`\mathsf{add}`,
+$`\mathsf{memset}` (`memSet`), $`\mathsf{ptr\_from\_int}`
+(`ptrFromInt`), $`\mathsf{add}`,
 $`\mathsf{sub}`, $`\mathsf{mul}`, the four divisions $`\mathsf{sdiv}`,
 $`\mathsf{udiv}`, $`\mathsf{srem}` and $`\mathsf{urem}`, the bitwise ops
 $`\mathsf{and}`, $`\mathsf{or}` and $`\mathsf{xor}`, the shifts

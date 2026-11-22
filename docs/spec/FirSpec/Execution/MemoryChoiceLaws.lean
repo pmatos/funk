@@ -40,7 +40,7 @@ when $`f(b)` has one for every $`b`, and it has
 when each $`f(b)` has: $`w` bits take $`2^w` values.
 :::
 
-:::readable Fir.WritesNot.chooseBind Fir.AllocatesNot.chooseBind Fir.ReadsNot.chooseBind (pin := Fir.WritesNot) (pin := Fir.AllocatesNot) (pin := Fir.ReadsNot) (fingerprint := "10386338095518392322")
+:::readable Fir.WritesNot.chooseBind Fir.AllocatesNot.chooseBind Fir.ReadsNot.chooseBind (pin := Fir.WritesNot) (pin := Fir.AllocatesNot) (pin := Fir.ReadsNot) (fingerprint := "13783706019537522864")
 *Theorems: a choice touches no memory.* For every memory $`x`, a choice
 then $`g` meets each
 {ref "The-fir-specification--Memory--Memory-obligations"}[obligation]

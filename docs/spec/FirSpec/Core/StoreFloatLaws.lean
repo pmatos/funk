@@ -30,7 +30,7 @@ result. So what it runs by its own rule has a property when its rule has
 it on every value and pointer.
 :::
 
-:::readable Fir.Core.storeFloat_writesNot Fir.Core.storeFloat_readsNot Fir.Core.storeFloat_allocatesNot (pin := Fir.WritesNot) (pin := Fir.ReadsNot) (pin := Fir.AllocatesNot) (fingerprint := "2158650973243288808")
+:::readable Fir.Core.storeFloat_writesNot Fir.Core.storeFloat_readsNot Fir.Core.storeFloat_allocatesNot (pin := Fir.WritesNot) (pin := Fir.ReadsNot) (pin := Fir.AllocatesNot) (fingerprint := "6213249960870838730")
 *Theorems: the store of a float touches memory only by writing where it
 declares.* At every layout $`\ell` and naming $`\rho`, it writes no memory
 but $`\rho(N)`, the one its

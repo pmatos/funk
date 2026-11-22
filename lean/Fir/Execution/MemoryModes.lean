@@ -6,11 +6,11 @@ import Fir.Execution.MemoryRuns
 
 `fir-ref`'s modes walk a tree of choices (the section on exhaustive,
 scripted and sampled runs). A run with memory is a run in the state layer
-over the set monad, from the empty memories (the section on runs with
-memory). So a mode that walks a run with memory walks the run in the state
-layer over the tree of choices: its tree is the tree of the run from the
-empty memories, and each path of it ends with the memories as they are at
-its end. The tree here drops the memories at the end of each path, and
+over the set monad, from the memories that hold its starting allocations
+(the section on runs with memory). So a mode that walks a run with memory
+walks the run in the state layer over the tree of choices: its tree is the
+tree of the run from those memories, and each path of it ends with the
+memories as they are at its end. The tree here drops the memories at the end of each path, and
 sees a return as its values; the modes that see each return at its end,
 with the memory an observer reaches, walk the tree of
 `Fir.Execution.MemoryEndModes`, which keeps them.
@@ -36,13 +36,13 @@ variable {d : Dialect} [TyDenote d.Ty] [DecidableEq d.Ty] [DialectSignature d] [
 
 /-- The tree of a run with memory of the function `f` of the module `M`, on
 `args` with `fuel` steps: its run in the state layer over the tree of
-choices, from the empty memories, with the memories dropped at the end of
-each path. It is the tree that the modes walk. -/
-def Func.memTree [DialectDenote d (StateT (Memories N unit) (ChoiceTree ε))] (M : Module d)
-    (f : Func d) (args : HVector toType (f.params.map (·.2))) (fuel : Nat) :
+choices, from the memories `S`, with the memories dropped at the end of
+each path. From the memories a run starts with, it is the tree that the
+modes walk. -/
+def Func.memTree [DialectDenote d (StateT (Memories N unit) (ChoiceTree ε))] (S : Memories N unit)
+    (M : Module d) (f : Func d) (args : HVector toType (f.params.map (·.2))) (fuel : Nat) :
     ChoiceTree ε (Except Stuck (Result (List (DVal d)))) :=
-  Prod.fst <$> (f.run M (m := StateT (Memories N unit) (ChoiceTree ε)) args fuel).run.run
-    Memories.empty
+  Prod.fst <$> (f.run M (m := StateT (Memories N unit) (ChoiceTree ε)) args fuel).run.run S
 
 variable [DialectEffects d] [DialectMemDenote d] (lay : N → MemLayout)
   (ρ : DialectEffects.Mem d → N) (L : RunItems) [DialectDenote d (StateT (Memories N (unitsOf lay))
@@ -61,11 +61,12 @@ the semantics in the layer over the tree denotes the semantics with
 memory. -/
 theorem Func.memTree_toSet (h : MemMapsDenote (d := d) lay (ε := ε) ρ L) (M : Module d) (f : Func d)
     (args : HVector toType (f.params.map (·.2))) (fuel : Nat) :
-    (f.memTree (unitsOf lay) (ε := ε) M args fuel).toSet = f.memRuns lay ρ L M args fuel := by
+    (f.memTree (unitsOf lay) (ε := ε) (RunItems.start d lay ρ L) M args fuel).toSet =
+      f.memRuns lay ρ L M args fuel := by
   letI := DialectMemDenote.denoteAt (d := d) lay ρ L
   show ChoiceTree.toSet (Prod.fst <$> _) =
     Prod.fst <$> (f.run M (m := StateT (Memories N (unitsOf lay)) SetM) args fuel).run.run
-        Memories.empty
+        (RunItems.start d lay ρ L)
   rw [← Func.run_toSetState h M f args fuel]
   exact ChoiceTree.toSetMorphism.map_map Prod.fst _
 
@@ -74,8 +75,8 @@ the run with memory at the fuel budget it runs with. -/
 theorem Func.memExplore_outcomes (h : MemMapsDenote (d := d) lay (ε := ε) ρ L) (M : Module d)
     (f : Func d) (args : HVector toType (f.params.map (·.2))) (fuel budget : Nat)
     {ls : List (ChoiceTree.Leaf ε (Except Stuck (Result (List (DVal d)))) × Nat)}
-    (hx : (f.memTree (unitsOf lay) M args fuel).explore budget = some ls) (o : Outcome (List (DVal
-        d))) :
+    (hx : (f.memTree (unitsOf lay) (RunItems.start d lay ρ L) M args fuel).explore budget = some ls)
+    (o : Outcome (List (DVal d))) :
     Run.outcomes (f.memRuns lay ρ L M args fuel) o ↔ ∃ p ∈ ls, p.1.pathEnd = .outcome o := by
   rw [Run.outcomes_iff, ← Func.memTree_toSet lay ρ L h, ChoiceTree.explore_toSet hx]
   simp only [ChoiceTree.Leaf.ev?_eq_outcome]
@@ -85,7 +86,7 @@ when the run with memory has one. -/
 theorem Func.memExplore_stuck (h : MemMapsDenote (d := d) lay (ε := ε) ρ L) (M : Module d)
     (f : Func d) (args : HVector toType (f.params.map (·.2))) (fuel budget : Nat)
     {ls : List (ChoiceTree.Leaf ε (Except Stuck (Result (List (DVal d)))) × Nat)}
-    (hx : (f.memTree (unitsOf lay) M args fuel).explore budget = some ls) :
+    (hx : (f.memTree (unitsOf lay) (RunItems.start d lay ρ L) M args fuel).explore budget = some ls) :
     Run.IsStuck (f.memRuns lay ρ L M args fuel) ↔ ∃ p ∈ ls, ∃ st, p.1.pathEnd = .stuck st := by
   simp only [Run.IsStuck, ← Func.memTree_toSet lay ρ L h, ChoiceTree.explore_toSet hx]
   constructor
@@ -101,7 +102,7 @@ theorem Func.memScript_outcomes (h : MemMapsDenote (d := d) lay (ε := ε) ρ L)
     (read : (w : Nat) → σ → Option (BitVec w)) (M : Module d) (f : Func d)
     (args : HVector toType (f.params.map (·.2))) (fuel : Nat) (cs : List σ)
     {l : ChoiceTree.Leaf ε (Except Stuck (Result (List (DVal d))))} {c : Nat}
-    (hs : (f.memTree (unitsOf lay) M args fuel).script read cs 0 = .ok (l, c))
+    (hs : (f.memTree (unitsOf lay) (RunItems.start d lay ρ L) M args fuel).script read cs 0 = .ok (l, c))
     {o : Outcome (List (DVal d))} (ho : l.pathEnd = .outcome o) :
     Run.outcomes (f.memRuns lay ρ L M args fuel) o := by
   rw [Run.outcomes_iff, ← Func.memTree_toSet lay ρ L h]
@@ -113,7 +114,7 @@ theorem Func.memScript_stuck (h : MemMapsDenote (d := d) lay (ε := ε) ρ L) {�
     (read : (w : Nat) → σ → Option (BitVec w)) (M : Module d) (f : Func d)
     (args : HVector toType (f.params.map (·.2))) (fuel : Nat) (cs : List σ)
     {l : ChoiceTree.Leaf ε (Except Stuck (Result (List (DVal d))))} {c : Nat}
-    (hs : (f.memTree (unitsOf lay) M args fuel).script read cs 0 = .ok (l, c))
+    (hs : (f.memTree (unitsOf lay) (RunItems.start d lay ρ L) M args fuel).script read cs 0 = .ok (l, c))
     {st : Stuck} (hst : l.pathEnd = .stuck st) :
     Run.IsStuck (f.memRuns lay ρ L M args fuel) := by
   obtain ⟨st', he⟩ := (ChoiceTree.Leaf.ev?_eq_stuck l).2 ⟨st, hst⟩

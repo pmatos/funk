@@ -14,7 +14,7 @@ changes under it.
 
 #doc (Manual) "The sum of dialects: readable blocks" =>
 
-:::moduleDocs (fingerprint := "18411049357600090274")
+:::moduleDocs (fingerprint := "14908437782333029107")
 :::
 
 :::readable Fir.Dialect.over Fir.Dialect.sum (fingerprint := "6781788953757055949")
@@ -126,7 +126,7 @@ As for region kinds, the laws of names send each kind of item to the
 dialect that registers it.
 :::
 
-:::readable Fir.Dialect.sum.instDialectSignature Fir.Dialect.sum.instDialectValidation Fir.Dialect.sum.instDecidableDialectValidation (fingerprint := "607128572586276050")
+:::readable Fir.Dialect.sum.instDialectSignature Fir.Dialect.sum.instDialectValidation Fir.Dialect.sum.instDecidableDialectValidation (fingerprint := "17372027105841838897")
 *Definition: the signature and the rules of a sum.* An op of the sum has
 the signature of its side. A base op's types are the base's, tagged
 $`\mathsf{inl}`:
@@ -136,9 +136,11 @@ $$`\mathrm{sig}(\mathsf{inl}\ p) = (\mathsf{inl}\ t)^* \text{ where } \mathrm{si
 and the same for its result types, whether it ends a block, its number
 of successors and the kinds of its regions. A type of the sum is valid as
 its side says, names the memory that its side says, takes the units and
-alignment as a field that its side says, an op refers
+alignment as a field that its side says, allows after it in a signature
+the attributes that its side says, an op refers
 to the symbols that its side says, carries the types that its side says,
-tagged as its side's, asks the unit widths that its side says, and obeys
+tagged as its side's, asks the unit widths and the pointer widths that
+its side says, and obeys
 its side's rule as above. A
 function of the sum obeys the function rule of each side, each through its
 own view:
@@ -162,7 +164,7 @@ $`e` names the base's memory $`x` as
 $`\mathrm{ofBase}(x) = \mathrm{join}(\mathsf{inl}\ x)`.
 :::
 
-:::readable Fir.Dialect.sum.instDialectEffects Fir.Dialect.sum.instDialectCall Fir.Dialect.sum.instDialectDenote (pin := Fir.Effects.map) (fingerprint := "9226136869691848303")
+:::readable Fir.Dialect.sum.instDialectEffects Fir.Dialect.sum.instDialectCall Fir.Dialect.sum.instDialectDenote (pin := Fir.Effects.map) (fingerprint := "12241663174281592057")
 *Definition: how an op of a sum runs.* The memories of the sum are
 $`e`'s, $`M_e`, which name the base's: so a memory has one name in the
 sum, whichever side names it (ADR-2026-11-09-2306). An op of the sum has
@@ -171,6 +173,9 @@ its side's
 a base op's with its memories renamed by $`\mathrm{ofBase}`:
 
 $$`\mathrm{eff}(\mathsf{inl}\ p) = \mathrm{ofBase}(\mathrm{eff}_b(p)) \qquad \mathrm{eff}(\mathsf{inr}\ q) = \mathrm{eff}_{b.\mathrm{over}(e)}(q)`
+
+The sum's numbered memories are the base's, by those names:
+$`\mathrm{num}(n) = \mathrm{ofBase}(\mathrm{num}_b(n))`.
 
 It calls the function that it calls on its side. It runs by its side's
 rule: a base op takes its operands moved down to the base's types, and its

@@ -14,43 +14,44 @@ build fails when the Lean changes under it.
 
 #doc (Manual) "Modes that see the end of a return: readable blocks" =>
 
-:::moduleDocs (fingerprint := "18357958049201045590")
+:::moduleDocs (fingerprint := "7257076266500617677")
 :::
 
-:::readable Fir.Func.memEndTree (pin := Fir.TraceState.endOf) (pin := Fir.Memory.Memories.empty) (fingerprint := "16427919938113091154")
+:::readable Fir.Func.memEndTree (pin := Fir.TraceState.endOf) (fingerprint := "6884592148776013371")
 *Definition: the tree of a run with memory that sees each return at its
 end.* Where the units of the memory $`x` are $`u(x)` bits wide, the memory
 numbered $`n` is $`\mu(n)` and addresses are compared by the rule
 $`\rho_a`, the tree of the function $`f` of the module $`M` on
 $`\vec{v}` with $`k` steps is its run in the state layer over the tree of
-choices, from the empty memories, each path that returns the values
+choices, from the memories $`S_0`, each path that returns the values
 $`\vec{w}` with the memories $`S` at its end seen as the end
 $`\langle \vec{w}, S, [] \rangle`, with nothing escaped:
 
-$$`\mathrm{tree}^{\mathrm{end}}_{M,f}(\vec{v}, k) = \mathrm{map}_{(r, S) \mapsto \mathrm{end}_S(r)}(\mathrm{run}_{M,f}(\vec{v}, k)(\emptyset))`
+$$`\mathrm{tree}^{\mathrm{end}}_{M,f}(S_0, \vec{v}, k) = \mathrm{map}_{(r, S) \mapsto \mathrm{end}_S(r)}(\mathrm{run}_{M,f}(\vec{v}, k)(S_0))`
 
 where $`\mathrm{end}_S` sees a return of $`\vec{w}` as $`\mathsf{ret}~\langle \vec{w}, S, [] \rangle`
 and keeps every other way a path ends. The memories $`S` are those at the
 end of the path, after the function's frame has been left.
 :::
 
-:::readable Fir.Func.memEndTree_toSet (pin := Fir.Func.memEndRuns) (fingerprint := "9675734803915694836")
+:::readable Fir.Func.memEndTree_toSet (pin := Fir.Func.memEndRuns) (fingerprint := "14595564592886382751")
 *Theorem: the tree has the run with memory, seen at its ends, as its set.*
 When the dialect's semantics in the tree denotes its semantics with memory
 at the naming $`\rho` with layout entries $`\ell`, for every module
 $`M`, function $`f`, arguments $`\vec{v}` and fuel $`k`, the set of
-$`\mathrm{tree}^{\mathrm{end}}_{M,f}(\vec{v}, k)` is the run with memory of
+$`\mathrm{tree}^{\mathrm{end}}_{M,f}(\mathrm{start}(L), \vec{v}, k)`, from
+the memories the run starts with, is the run with memory of
 $`f` at $`\rho` on $`\vec{v}` at fuel $`k`, each return seen at its end.
 The proof is the interpreter's morphism theorem through the layer, at the
-empty memories, and the set of a tree keeps mapping a function over its
-results.
+memories the run starts with, and the set of a tree keeps mapping a
+function over its results.
 :::
 
-:::readable Fir.Func.memEndExplore_outcomes Fir.Func.memEndScript_outcomes Fir.Func.memEndExploreNaN_outcomes (pin := Fir.Run.outcomes) (pin := Fir.ChoiceTree.Leaf.pathEnd) (fingerprint := "12181074373516238390")
+:::readable Fir.Func.memEndExplore_outcomes Fir.Func.memEndScript_outcomes Fir.Func.memEndExploreNaN_outcomes (pin := Fir.Run.outcomes) (pin := Fir.ChoiceTree.Leaf.pathEnd) (fingerprint := "11918626476919232919")
 *Theorems: the modes give the outcomes of the run with memory, seen at
 their ends.* With the same hypotheses, let $`R_k` be the run with memory
 of $`f` on $`\vec{v}` at fuel $`k`, each return seen at its end. If
-exhaustive mode on $`\mathrm{tree}^{\mathrm{end}}_{M,f}(\vec{v}, k)`
+exhaustive mode on $`\mathrm{tree}^{\mathrm{end}}_{M,f}(\mathrm{start}(L), \vec{v}, k)`
 with budget $`B` gives the list $`L`, then for every outcome $`o`,
 
 $$`o \in \mathrm{out}(R_k) \iff \exists (\ell, c) \in L.\ \mathrm{path\_end}(\ell) = \mathsf{outcome}~o`

@@ -35,7 +35,7 @@ access through both pointers, so a copy of no units still faults through
 a pointer with no provenance, or into a freed allocation.
 :::
 
-:::readable Fir.copyUnits_load Fir.copyUnits_apply (pin := Fir.instMonadMemoryStateT) (fingerprint := "2140836428681036247")
+:::readable Fir.copyUnits_load Fir.copyUnits_apply (pin := Fir.instMonadMemoryStateT) (fingerprint := "3365472589419949885")
 *Theorems: how a copy of units ends.* In the
 {ref "The-fir-specification--Memory--The-state-layer"}[state layer] over
 the set monad, a copy of units ends from the memories $`S` as the store of
@@ -53,7 +53,7 @@ and at most one that ends, so it has
 {ref "The-fir-specification--Memory--Ops-of-finitely-many-outcomes"}[finitely many].
 :::
 
-:::readable Fir.copyUnits_writesNot Fir.copyUnits_allocatesNot (pin := Fir.WritesNot) (pin := Fir.AllocatesNot) (fingerprint := "6269409950966512556")
+:::readable Fir.copyUnits_writesNot Fir.copyUnits_allocatesNot (pin := Fir.WritesNot) (pin := Fir.AllocatesNot) (fingerprint := "10534258331264215629")
 *Theorems: a copy of units writes only its own memory.* For every memory
 $`y \ne x`, a copy of units in $`x` meets the
 {ref "The-fir-specification--Memory--Memory-obligations"}[obligation]
@@ -63,7 +63,7 @@ the load's and the store's, by the laws of
 {ref "The-fir-specification--Memory--Sequences-in-the-state-layer"}[sequences].
 :::
 
-:::readable Fir.copyUnits_readsNot (pin := Fir.ReadsNot) (pin := Fir.ReadsNot.Match) (fingerprint := "12242602204479750081")
+:::readable Fir.copyUnits_readsNot (pin := Fir.ReadsNot) (pin := Fir.ReadsNot.Match) (fingerprint := "1178067632342334258")
 *Theorem: a copy of units reads only its own memory.* For every memory
 $`y \ne x`, a copy of units in $`x` meets the
 {ref "The-fir-specification--Memory--Memory-obligations"}[obligation]

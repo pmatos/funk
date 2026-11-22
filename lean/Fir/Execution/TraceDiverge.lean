@@ -40,17 +40,17 @@ variable {d : Dialect} [TyDenote d.Ty] [DecidableEq d.Ty] [DialectSignature d] [
   {f : Func d}
 
 /-- A path of a function's traced runs that runs out of fuel is a path of its
-entry block's ops in a frame, from the empty memories with nothing escaped,
-that runs out of fuel after the same marked trace; and each such path is
-one. -/
+entry block's ops in a frame, from the memories the run starts with and
+nothing escaped, that runs out of fuel after the same marked trace; and each
+such path is one. -/
 theorem Func.traceRuns_exhausted_iff {a : HVector toType (f.params.map (·.2))} {n : Nat}
     {mt : List (Step (DialectTrace.Acts d))} :
     f.traceRuns lay ρ L μ ar M a n (.ok (.ok .fuelExhausted, mt)) ↔
       letI := DialectTrace.stepAt (d := d) lay ρ L
       ∃ body env s₁, f.enter a.toDVals = .ok (body, env) ∧
         Func.traceOps (Step (DialectTrace.Acts d)) M n f env body
-          ({ (TraceState.init : TraceState N (unitsOf lay)) with mem := Memories.empty.enter } :
-            TraceState N (unitsOf lay))
+          ({ (TraceState.init (RunItems.start d lay ρ L) : TraceState N (unitsOf lay)) with
+              mem := (RunItems.start d lay ρ L).enter } : TraceState N (unitsOf lay))
           (.ok (.ok .fuelExhausted, mt, s₁)) := by
   letI := DialectTrace.stepAt (d := d) lay ρ L
   constructor
@@ -76,12 +76,13 @@ theorem Func.traceRuns_exhausted_iff {a : HVector toType (f.params.map (·.2))} 
       ⟨body, env, hen, _, (TraceM.run_inFrame _ _ _).2 ⟨_, h, rfl⟩, rfl⟩, rfl⟩
 
 /-- A path of a function's traced runs that runs out of fuel is a path of its
-traced runs from the empty memories with nothing escaped that runs out of
-fuel after the same marked trace; and each such path is one. -/
+traced runs from the memories the run starts with and nothing escaped that
+runs out of fuel after the same marked trace; and each such path is one. -/
 theorem Func.traceRuns_exhausted_iff_from {a : HVector toType (f.params.map (·.2))} {n : Nat}
     {mt : List (Step (DialectTrace.Acts d))} :
     f.traceRuns lay ρ L μ ar M a n (.ok (.ok .fuelExhausted, mt)) ↔
-      f.traceRunsFrom lay ρ L M (a, TraceState.init) n (.ok (.ok .fuelExhausted, mt)) := by
+      f.traceRunsFrom lay ρ L M (a, TraceState.init (RunItems.start d lay ρ L)) n
+        (.ok (.ok .fuelExhausted, mt)) := by
   constructor
   · rintro ⟨e, he, ho⟩
     match e, he, ho with
@@ -98,26 +99,28 @@ theorem Func.traceRuns_exhausted_iff_from {a : HVector toType (f.params.map (·.
 
 /-- The traced runs of a function truncate, with at most `W` steps of fuel
 between two steps of a path, for any `W` that exceeds the length of every
-chain of calls of the module by at least one: its traced runs from the empty
-memories do. -/
+chain of calls of the module by at least one: its traced runs from the
+memories the run starts with do. -/
 theorem Func.traceRuns_truncates {W : Nat} (hW : ∀ os c, M.CallChain os c → c + 1 ≤ W)
     (hpos : 0 < W) (a : HVector toType (f.params.map (·.2))) :
     TRun.Truncates W (f.traceRuns lay ρ L μ ar M a) := by
   refine ⟨hpos, fun hle hx => ?_⟩
   obtain ⟨mt, h, hp, ht, hup⟩ := (Func.traceRunsFrom_truncates lay ρ L hW hpos
-    (a, TraceState.init)).cut hle ((Func.traceRuns_exhausted_iff_from lay ρ L μ ar).1 hx)
+    (a, TraceState.init (RunItems.start d lay ρ L))).cut hle
+    ((Func.traceRuns_exhausted_iff_from lay ρ L μ ar).1 hx)
   exact ⟨mt, (Func.traceRuns_exhausted_iff_from lay ρ L μ ar).2 h, hp, ht, hup⟩
 
 /-- The traced runs of a function have finitely many traces at each budget,
 given the world's answers, when every op that runs by its own rule has
 finitely many outcomes in the traced layer, given the world's answers: its
-traced runs from the empty memories do. -/
+traced runs from the memories the run starts with do. -/
 theorem Func.traceRuns_finitelyMany
     (hfin : letI := DialectTrace.traceAt (d := d) lay ρ L
       OpsTraceFinite d (DialectTrace.Event d) (DialectTrace.Answer d) (TraceState N (unitsOf lay)))
     (a : HVector toType (f.params.map (·.2))) :
     TRun.FinitelyMany (f.traceRuns lay ρ L μ ar M a) := fun n ans => by
-  obtain ⟨C, hC⟩ := Func.traceRunsFrom_finitelyMany lay ρ L hfin (a, TraceState.init) n ans
+  obtain ⟨C, hC⟩ :=
+    Func.traceRunsFrom_finitelyMany lay ρ L hfin (a, TraceState.init (RunItems.start d lay ρ L)) n ans
   exact ⟨C, fun mt hx hag => hC mt ((Func.traceRuns_exhausted_iff_from lay ρ L μ ar).1 hx) hag⟩
 
 variable [TyRefinement d.Ty] [TyPointers d.Ty] {a a' : HVector toType (f.params.map (·.2))}

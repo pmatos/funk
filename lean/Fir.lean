@@ -3,6 +3,7 @@ import Fir.Syntax.Location
 import Fir.Syntax.Layout
 import Fir.Syntax.Global
 import Fir.Syntax.Module
+import Fir.Syntax.FuncAttrs
 import Fir.Core.Types
 import Fir.Core.Rounding
 import Fir.Core.OpAttrs
@@ -13,6 +14,8 @@ import Fir.Validation.Dominance
 import Fir.Validation.Layout
 import Fir.Validation.Global
 import Fir.Validation.LocTable
+import Fir.Validation.Signature
+import Fir.Validation.AllBlocks
 import Fir.Validation.Rules
 import Fir.Core.Validation
 import Fir.Core.Rejects
@@ -117,6 +120,7 @@ import Fir.Execution.StatePaths
 import Fir.Execution.MemoryMonotone
 import Fir.Execution.MemoryObligations
 import Fir.Execution.RunItems
+import Fir.Execution.RunStart
 import Fir.Execution.MemoryObligationLaws
 import Fir.Execution.MemoryTotal
 import Fir.Execution.MemoryCallSteps
@@ -144,6 +148,7 @@ import Fir.Execution.MemoryStoreLaws
 import Fir.Execution.MemoryBindLaws
 import Fir.Execution.MemoryCopyLaws
 import Fir.Execution.MemoryExposeLaws
+import Fir.Execution.MemoryFromAddrLaws
 import Fir.Execution.MemoryPolicyRuns
 import Fir.Execution.MemoryChoiceLaws
 import Fir.Core.AllocaLaws
@@ -161,8 +166,14 @@ import Fir.Core.MemCopyPoison
 import Fir.Core.MemSet
 import Fir.Core.MemSetLaws
 import Fir.Core.MemSetPoison
+import Fir.Core.PtrIntText
+import Fir.Core.PtrInt
+import Fir.Core.PtrIntLaws
 import Fir.Core.FieldAddrLaws
 import Fir.Core.EffectLaws
+import Fir.Core.EffectUnlawful
+import Fir.Core.AddressLaws
+import Fir.Execution.AddressObligations
 import Fir.Core.MemoryRuns
 import Fir.Core.MemoryCallRefine
 import Fir.Core.TreeRules
@@ -235,6 +246,8 @@ import Fir.Memory.CanonicalLaws
 import Fir.Memory.ExposeLaws
 import Fir.Memory.Policy
 import Fir.Memory.PolicyLaws
+import Fir.Memory.Resolver
+import Fir.Memory.ResolverLaws
 import Fir.Core.Encode
 import Fir.Text.Lexical
 import Fir.Text.Grammar
@@ -242,6 +255,7 @@ import Fir.Text.LayoutLaws
 import Fir.Text.GlobalText
 import Fir.Text.GlobalLaws
 import Fir.Text.Print
+import Fir.Text.SigAttrs
 import Fir.Text.RoundTrip
 import Fir.Text.Lex
 import Fir.Text.Read
@@ -272,13 +286,16 @@ import Fir.Text.LexTokens
 import Fir.Text.LexStrings
 import Fir.Text.LexLayout
 import Fir.Text.LexPrint
+import Fir.Text.LexFunc
 import Fir.Text.LexModule
+import Fir.Text.LexWritable
 import Fir.Text.LexWellFormed
 import Fir.Text.Tree
 import Fir.Text.ReadAttrs
 import Fir.Text.ReadDefs
 import Fir.Text.ReadOps
 import Fir.Text.ReadBlocks
+import Fir.Text.ReadParams
 import Fir.Text.ReadFunc
 import Fir.Text.ReadTable
 import Fir.Text.ReadModule
@@ -300,6 +317,7 @@ import Fir.Sum.Dialect
 import Fir.Sum.TextLaws
 import Fir.Sum.PoisonLaws
 import Fir.Sum.EffectLaws
+import Fir.Sum.AddressLaws
 import Fir.Sum.Inclusion
 import Fir.Sum.Lift
 import Fir.Sum.LiftTextLaws
@@ -321,6 +339,7 @@ import Fir.Validation.Nest
 import Fir.Gpu.Semantics
 import Fir.Gpu.WorkGroup
 import Fir.Gpu.Runs
+import Fir.Gpu.AddressLaws
 import Fir.Gpu.Modes
 import Fir.Gpu.Trace
 import Fir.Gpu.EndModes

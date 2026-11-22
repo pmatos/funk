@@ -7,6 +7,7 @@ import unittest
 from pathlib import Path
 
 import cells
+from address_cells import ADDRESS_OPS
 from cells import Cell, CellError, of_op, results
 from copy_cells import MEM_OPS
 from firtext import Op
@@ -86,7 +87,8 @@ def decoded_attrs(text: str, floats: str) -> dict[str, tuple[str, ...]]:
     field that `decodeFieldAddr` reads for `fieldaddr`: its cell is the
     width of its index. Nor is the ordering that `decodeMemCopy` and
     `decodeMemSet` read: a copy's, a move's and a fill's cell is the width
-    of its length. Any other arm is not known."""
+    of its length. `decodePtrExpose` and `decodePtrFromInt` read no
+    attributes. Any other arm is not known."""
     body = definition(text, "Op.decode")
     arms = dict(re.findall(r'\n  \| "(\w+)" =>(.*?)(?=\n  \| |\Z)', body, re.DOTALL))
     for name in re.findall(r'\("(\w+)", \.\w+\)', definition(text, "plainBinOps")):
@@ -112,6 +114,8 @@ def decoded_attrs(text: str, floats: str) -> dict[str, tuple[str, ...]]:
         "decodeMemCopy": ("",),
         "decodeMemSet": ("",),
         "decodeFieldAddr": ("",),
+        "decodePtrExpose": ("",),
+        "decodePtrFromInt": ("",),
     }
     by_ctor = {
         "decodeFBin": op_attrs(floats, "FBin"),
@@ -164,7 +168,7 @@ class Tests(unittest.TestCase):
             r'=> "(\w+)"',
             definition(MEM_COPY_TEXT.read_text(encoding="utf-8"), "CopyKind.name"),
         )
-        self.assertEqual(sorted(names), sorted((*cells.OPS, *MEM_OPS)))
+        self.assertEqual(sorted(names), sorted((*cells.OPS, *MEM_OPS, *ADDRESS_OPS)))
         preds = re.findall(r"\.(\w+)", definition(text, "Pred.all").split(":=")[1])
         self.assertEqual(tuple(preds), cells.PREDS)
         fpreds = re.findall(r"\.(\w+)", definition(text, "FPred.all").split(":=")[1])
@@ -184,7 +188,7 @@ class Tests(unittest.TestCase):
                 else cells.FLOAT_CONVERSIONS.get(
                     op, cells.AT_WIDTH.get(op, cells.AT_FORMAT.get(op, ("",)))
                 )
-                for op in (*cells.OPS, *MEM_OPS)
+                for op in (*cells.OPS, *MEM_OPS, *ADDRESS_OPS)
             },
         )
         flagged = flagged_ops(text)

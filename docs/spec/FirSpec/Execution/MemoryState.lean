@@ -14,10 +14,10 @@ when the Lean changes under it.
 
 #doc (Manual) "The state layer: readable blocks" =>
 
-:::moduleDocs (fingerprint := "1224818815667396876")
+:::moduleDocs (fingerprint := "3879998764841435175")
 :::
 
-:::readable Fir.instMonadChoiceStateT Fir.instMonadUBStateT Fir.instMonadFrameStateT Fir.instMonadMemoryStateT Fir.MonadMorphism.state (fingerprint := "16474419904620766245")
+:::readable Fir.instMonadChoiceStateT Fir.instMonadUBStateT Fir.instMonadFrameStateT Fir.instMonadMemoryStateT Fir.MonadMorphism.state (fingerprint := "8937651886765150919")
 *Definition: the state layer.* Over a monad $`m`, a computation of the
 state layer takes the memories $`S` before it, and is a computation of
 $`m` whose results are pairs $`(a, S')` of a result and the memories
@@ -35,7 +35,10 @@ after it. Its effects are:
   included, is $`m`'s UB with the fault's reason. Exposing gives what
   {ref "The-fir-specification--Memory--Address-policies"}[exposing a pointer]
   gives, and is $`m`'s UB, for the reason that no address fits, when it
-  gives none.
+  gives none. Turning an integer back into a pointer gives the pointer and
+  memories that
+  {ref "The-fir-specification--Memory--Address-resolvers"}[turning it back]
+  gives, and never fails.
 
 *Definition: a translation through the layer.* A monad morphism
 $`\varphi` from $`m` to $`n` gives one from the state layer over $`m` to
@@ -56,9 +59,10 @@ layer.* When $`\varphi` keeps choice and UB, so does its translation
 through the layer, by the two theorems above.
 :::
 
-:::readable Fir.MonadMorphism.state_alloc Fir.MonadMorphism.state_free Fir.MonadMorphism.state_load Fir.MonadMorphism.state_store Fir.MonadMorphism.state_expose (fingerprint := "6399442451803048916")
+:::readable Fir.MonadMorphism.state_alloc Fir.MonadMorphism.state_fromAddr Fir.MonadMorphism.state_free Fir.MonadMorphism.state_load Fir.MonadMorphism.state_store Fir.MonadMorphism.state_expose (fingerprint := "5880945281157506357")
 *Theorem: a translation through the layer keeps the memory effect.* It
-keeps allocating and freeing, which end at once with a value. It keeps
+keeps allocating, turning an integer back into a pointer and freeing,
+which end at once with a value. It keeps
 loads, stores and exposures when $`\varphi` keeps UB, since each either
 ends at once with a value or is UB.
 :::

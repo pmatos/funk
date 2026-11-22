@@ -13,10 +13,13 @@ the rule that a float op that rounds rounds with the mode `rne`
 (ADR-2026-11-11-1801), the rules of `alloca` (ADR-2026-11-14-0915), the
 rules of the loads and stores (ADR-2026-11-14-2316), the rule of a copy
 or a move, `memCopy`, and of a fill, `memSet` (ADR-2026-11-18-2131), the
-width that a fill asks of its memory's units, the rule of `fieldAddr`,
-which reads the layouts of the op's table (#236), and the
+width that a fill asks of its memory's units, the width and the integral
+memory that `ptrExpose` and `ptrFromInt` ask of their memory's pointers
+(#232), the rule of `fieldAddr`,
+which reads the layouts of the op's table (#236), the
 units and alignment of a field of an aggregate's layout
-(ADR-2026-11-16-1546).
+(ADR-2026-11-16-1546), and the extension markers that a parameter or a
+result may carry (ADR-2026-11-09-1547).
 The general rules of the previous sections already
 check every op's operand and result types against its signature, so these
 are all the rules of the core dialect. It has no rule over a whole function.
@@ -136,6 +139,16 @@ def Op.unitWidths : Op → List (Nat × Nat)
   | .memSet _ v _ n => [(n, v)]
   | _ => []
 
+/-- The memories whose pointers an op turns into integers or back, each
+with the width of the integer: `ptrExpose` and `ptrFromInt` ask that it be
+the width of their memory's pointers (the human's ruling of 2026-11-18 on
+#232, Q2), and that the memory be integral (the human's ruling of
+2026-11-11 on #231). The module's data layout checks both. No other core
+op turns a pointer into an integer. -/
+def Op.addrWidths : Op → List (Nat × Nat)
+  | .ptrExpose n w | .ptrFromInt n w => [(n, w)]
+  | _ => []
+
 /-- `call` refers to its callee's symbol, which names a function; no other
 core op refers to a function. `fieldAddr` names a layout, which its own
 rule checks. -/
@@ -231,6 +244,11 @@ The core rules of an op beyond its signature.
   length are values of the function, which validation checks as it checks
   every type, and the module's data layout checks that the value is as
   wide as a unit of the pointer's memory (`Op.unitWidths`).
+* `ptrExpose` and `ptrFromInt` have no rule beyond their signatures. The
+  module's data layout checks that the integer is as wide as the pointers
+  of the pointer's memory, and that the memory is not non-integral
+  (`Op.addrWidths`): no pointer of a non-integral memory becomes an
+  integer, as in LLVM.
 
 Every other op has no rule beyond its signature.
 -/
@@ -255,6 +273,18 @@ def Op.Valid (ctx : OpContext CoreDialect) : Op → Prop
   | .fieldAddr s i n w => (ctx.layouts s).map (·.admits i n w.isSome) = some true
   | _ => True
 
+/--
+Whether a parameter or a result of a core type may carry the attributes
+`as` after its type: none, or one extension marker, `sext` or `zext`, on an
+integer narrower than 32 bits (ADR-2026-11-09-1547). A marked parameter is
+extended by the caller and a marked result by the callee, to 32 bits, by
+its sign with `sext` and with zeros with `zext`.
+-/
+def Ty.sigAttrsAllowed : Ty → List Attr → Bool
+  | _, [] => true
+  | .int w, [.word m] => decide (w < 32) && (m == "sext" || m == "zext")
+  | _, _ => false
+
 end Fir.Core
 
 namespace Fir
@@ -267,6 +297,8 @@ instance : DialectValidation CoreDialect where
   tyMemory := Core.Ty.memory
   opTypes := Core.Op.attrTypes
   opUnits := Core.Op.unitWidths
+  opAddrs := Core.Op.addrWidths
   fieldShape := Core.Ty.fieldShape
+  validSigAttrs t as := Core.Ty.sigAttrsAllowed t as = true
 
 end Fir

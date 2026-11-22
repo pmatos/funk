@@ -294,5 +294,18 @@ The texts of aggregates' layouts and the field address `fieldaddr`
 The texts of the copies, moves and sets `memcpy`, `memmove` and `memset`
 (#234) are listed in [texts-memops.md](texts-memops.md).
 
+The texts of the ops that turn pointers into integers and back,
+`ptr_expose` and `ptr_from_int` (#232), are listed in
+[texts-addresses.md](texts-addresses.md).
+
 The texts of the gpu dialect (#212) are listed in
 [texts-gpu.md](texts-gpu.md).
+
+The texts of #239's first stage test a function's signature: the
+extension markers `sext` and `zext` after a parameter's or a result's
+type, and `...` at the end of the parameters. `signatures` runs functions
+whose narrow integer parameters and results carry markers, and a call
+between them, since a marker changes no run. `reject/signatures.toml`
+holds a marker on `i32`, `i64`, `f32` and `ptr`, a marker that is not
+`sext` or `zext`, two markers, a variadic function, and the parse errors of
+attributes or `...` where only a func's signature may hold them.

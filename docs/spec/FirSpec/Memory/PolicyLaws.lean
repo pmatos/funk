@@ -36,7 +36,7 @@ address given may be given; none is given exactly when no address may be;
 and an address that may be given is the one given when it is proposed.
 :::
 
-:::readable Fir.Memory.Memory.IsRefinedBy.places Fir.Memory.Memory.IsRefinedBy.admits Fir.Memory.Memory.IsRefinedBy.choose (pin := Fir.Memory.Memory.places) (fingerprint := "1028767000893087861")
+:::readable Fir.Memory.Memory.IsRefinedBy.places Fir.Memory.Memory.IsRefinedBy.admits Fir.Memory.Memory.IsRefinedBy.choose (pin := Fir.Memory.Memory.places) (fingerprint := "3364662152324875263")
 *Theorems: refinement keeps the places.* Memories that refine each other
 have the same places, so a policy proposes the same address in both, the
 same addresses may be given in both, and the same address is given on the

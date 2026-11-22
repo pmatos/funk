@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Refined arguments over traced runs: returns, UB and each budget: readable blocks" =>
 
-:::moduleDocs (fingerprint := "15199897234921488607")
+:::moduleDocs (fingerprint := "656955984661709252")
 :::
 
 :::readable Fir.Result.Finished Fir.Result.finishEnd Fir.TraceEnd.Allows.finishEnd (fingerprint := "12436577599928051256")
@@ -40,7 +40,7 @@ run of $`f` on $`\vec{v}'` from $`s'` that is not stuck is allowed by a
 path of its run on $`\vec{v}` from $`s` at the same budget.
 :::
 
-:::readable Fir.List.IsRefinedPrefix.getElem? Fir.List.isRefinedPrefix_of_getElem? Fir.Func.traceRuns_path_allowed (fingerprint := "1470237507736381649")
+:::readable Fir.List.IsRefinedPrefix.getElem? Fir.List.isRefinedPrefix_of_getElem? Fir.Func.traceRuns_path_allowed (fingerprint := "12677472985277159966")
 *Theorems: a refined prefix, place by place.* A refined prefix of $`l'` is
 refined, at each of its places, by the element of $`l'` there; and a list
 so refined at each of its places is a refined prefix of $`l'`.
@@ -50,7 +50,7 @@ ops are monotone by its rules in the traced layer, at $`\ell`, $`\rho` and
 $`L`, each path of a function's traced runs on $`\vec{v}'` that is not
 stuck comes from a path of its run in the traced layer of marked traces
 that a path of its run on $`\vec{v}`, at the same budget, allows, from the
-empty memories with nothing escaped.
+memories that hold $`L`'s starting allocations, with nothing escaped.
 :::
 
 :::readable Fir.Func.traceRuns_exhausted_allowed Fir.Func.traceRuns_ub_allowed Fir.Func.traceRuns_ret_allowed (fingerprint := "14754067560585736861")

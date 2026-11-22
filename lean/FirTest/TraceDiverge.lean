@@ -104,7 +104,7 @@ instance : DialectCall OutDialect := ⟨fun _ => none⟩
 instance : DialectEffects OutDialect :=
   ⟨Empty, fun _ => .exception, fun
     | .out => {}
-    | .ret => { control := true }⟩
+    | .ret => { control := true }, fun _ => none⟩
 
 /-- An `i8` value of the core. -/
 abbrev I8 : Type := ⟦(Core.Ty.int 8 : Core.Ty)⟧

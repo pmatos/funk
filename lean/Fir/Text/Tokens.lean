@@ -1,9 +1,10 @@
 import Fir.Text.Lex
+import Fir.Syntax.FuncAttrs
 
 /-!
 # The tokens of a printed module
 
-These nine sections, from this one to the one on writable tokens, prove
+These eleven sections, from this one to the one on writable tokens, prove
 that the lexer reads back what the printer writes: for every module whose
 tokens can all be written, lexing its printed text gives exactly its
 tokens, then the end of the text. This is the first step of the
@@ -12,7 +13,7 @@ the parser's three steps. With it, the rest of that proof deals with a list
 of tokens, never with characters, spaces or line feeds: the grammar step
 reads that list, and only it, into a syntax tree.
 
-They go in nine steps, one section each:
+They go in eleven steps, one section each:
 
 * this section gives the one spelling of each token, which tokens can be
   written, and the tokens of every construct, in the order that the printer
@@ -30,6 +31,11 @@ They go in nine steps, one section each:
   reads a list element by element;
 * attributes, locations and names: each of these, printed, is read back as
   its tokens;
+* tokens that can be written: the tokens of attributes, of lists written
+  with commas, and of a function's signature can be written when their
+  parts can;
+* a function's signature lexed: a function's parameters and results, each
+  with its attributes, and `...`, printed, are read back as their tokens;
 * ops, functions and the module: so is each larger construct, and so the
   whole module, which is the result;
 * writable tokens: every token of a well-formed module, and so of every
@@ -53,7 +59,7 @@ def Tok.spell : Tok → String
   | .str s => quote s
   | .float l => l.print
   | .lparen => "(" | .rparen => ")" | .lbrace => "{" | .rbrace => "}"
-  | .comma => "," | .colon => ":" | .eq => "=" | .arrow => "->"
+  | .comma => "," | .colon => ":" | .eq => "=" | .arrow => "->" | .ellipsis => "..."
   | .eof => ""
 
 /-- A token that can be written: a value name or a label is a name, a word
@@ -147,12 +153,23 @@ def Operation.tokensList : List (Operation d) → List Tok
   | o :: os => o.tokens ++ Operation.tokensList os
 end
 
+/-- The tokens of a function's parameters, each with its attributes, then
+`...` when they end in it. -/
+def Func.paramsTokens (f : Func d) : List Tok :=
+  [Tok.comma].intercalate ((f.params.zip f.paramAttrsAll).map fun (x, as) =>
+      defTokens x ++ as.flatMap Attr.tokens) ++
+    if f.variadic then (if f.params.isEmpty then [.ellipsis] else [.comma, .ellipsis]) else []
+
+/-- The tokens of a function's results, each with its attributes, after
+`->`: none when it returns nothing. -/
+def Func.resultsTokens (f : Func d) : List Tok :=
+  if f.results.isEmpty then []
+  else .arrow :: [Tok.comma].intercalate ((f.results.zip f.resultAttrsAll).map fun (t, as) =>
+    (tyAttr t).tokens ++ as.flatMap Attr.tokens)
+
 /-- The tokens of a function. -/
 def Func.tokens (f : Func d) : List Tok :=
-  let results :=
-    if f.results.isEmpty then []
-    else .arrow :: [Tok.comma].intercalate (f.results.map (tyAttr · |>.tokens))
-  .word "func" :: .sym f.name :: .lparen :: defsTokens f.params ++ .rparen :: results ++
+  .word "func" :: .sym f.name :: .lparen :: f.paramsTokens ++ .rparen :: f.resultsTokens ++
     .lbrace :: Block.tokensList f.body.blocks ++ [.rbrace]
 
 /-- The tokens of a dialect set: none when it names no dialect. -/

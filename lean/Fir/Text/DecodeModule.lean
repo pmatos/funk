@@ -1,5 +1,6 @@
 import Fir.Text.DecodeBlocks
 import Fir.Text.GlobalLaws
+import Fir.Text.SigAttrs
 
 /-!
 # Decoding the tree of a module
@@ -59,13 +60,13 @@ theorem mapM_decodeType {g : Attr × TextPos → Except ParseError d.Ty}
 
 variable [DialectSignature d] [DialectValidation d] [LawfulDialectText d]
 
-/-- A function decodes back from its tree, at any positions, when it is
-well formed. -/
+/-- A function's symbol, parameters, results and body decode back from its
+tree, at any positions, when it is well formed. -/
 theorem Func.WellFormed.decodeFunc_eq {f : Func d} (hf : f.WellFormed) {sps : List SDef}
     {srs : List (Attr × TextPos)} {sbs : List SBlock}
     (hp : sps.map SDef.erase = f.params.map defTree) (hr : srs.map (·.1) = f.results.map tyAttr)
     (hb : SBlock.eraseList sbs = Block.treeList f.body.blocks) :
-    Text.decodeFunc f.name sps srs sbs = .ok f := by
+    Text.decodeFunc f.name sps srs sbs = .ok ⟨f.name, f.params, f.results, f.body, [], [], false⟩ := by
   obtain ⟨sc₁, sc, e₁, e₂, hsc⟩ := hf.scope hp hb
   have hps : sps.mapM decodeDef = .ok f.params :=
     mapM_decodeDef hp fun y hy => hf.decodeTy_def (List.mem_append_left _ hy)
@@ -76,21 +77,81 @@ theorem Func.WellFormed.decodeFunc_eq {f : Func d} (hf : f.WellFormed) {sps : Li
       (hf.types t (List.mem_append_left _ ht)).2
   · have hk := hf.bodyKind
     simp only [e₁, ok_bind, e₂, hps, hbs]
-    obtain ⟨_, _, _, ⟨_, _⟩⟩ := f
+    obtain ⟨_, _, _, ⟨_, _⟩, _, _, _⟩ := f
     simp only at hk
     subst hk
+    rfl
+
+omit [DialectValidation d] [LawfulDialectText d] in
+/-- The attributes of a function's results decode back from its tree, at
+any positions, when it is well formed. -/
+theorem Func.WellFormed.funcResultAttrs_eq {f : Func d} (hf : f.WellFormed)
+    {results : List (Attr × TextPos)} {resultAttrs : List (List (Attr × TextPos))}
+    {attrs : List (Attr × TextPos)} (hr : results.map (·.1) = f.results.map tyAttr)
+    (hra : resultAttrs.map (·.map (·.1)) = f.resultAttrsAll.dropLast)
+    (ha : attrs.map (·.1) = f.resultAttrsAll.getLast?.getD []) :
+    funcResultAttrs results resultAttrs attrs = .ok f.resultAttrs := by
+  rcases hfr : f.results with _ | ⟨t, ts⟩
+  · have h0 : f.resultAttrs = [] := by
+      have := hf.resultAttrs.1
+      rw [hfr] at this
+      exact List.eq_nil_of_length_eq_zero (Nat.le_zero.mp this)
+    simp only [Func.resultAttrsAll, hfr, List.length_nil, padAttrs, List.range_zero,
+      List.map_nil, List.dropLast_nil, List.getLast?_nil, Option.getD_none] at hra ha
+    rw [hfr, List.map_nil, List.map_eq_nil_iff] at hr
+    obtain rfl := hr
+    obtain rfl := List.map_eq_nil_iff.mp hra
+    obtain rfl := List.map_eq_nil_iff.mp ha
+    rw [h0]
+    rfl
+  · obtain ⟨r, rs, rfl⟩ : ∃ r rs, results = r :: rs := by
+      rcases results with _ | ⟨r, rs⟩
+      · rw [hfr] at hr; simp at hr
+      · exact ⟨r, rs, rfl⟩
+    have hne : f.resultAttrsAll ≠ [] := by
+      rw [← List.length_pos_iff, Func.resultAttrsAll, length_padAttrs, hfr]; simp
+    have hall : (resultAttrs ++ [attrs]).map (·.map (·.1)) = f.resultAttrsAll := by
+      rw [List.map_append, hra, List.map_singleton, ha, dropLast_append_getLast hne]
+    unfold funcResultAttrs
+    rw [hall, Func.resultAttrsAll, trimAttrs_padAttrs hf.resultAttrs]
     rfl
 
 /-- A function's item decodes back from a tree that erases to its tree, when
 the function is well formed. -/
 theorem Func.WellFormed.decodeItem_eq {f : Func d} (hf : f.WellFormed) {si : SItem}
     (h : si.erase = f.tree) : Text.decodeItem si = .ok (.func f) := by
-  obtain ⟨hk, hn, hp, hr, ha, bs, hb, hbs⟩ := SItem.erase_eq_funcTree h
-  obtain ⟨kind, kindPos, name, params, results, attrs, body⟩ := si
-  dsimp only at hk hn hp hr ha hb
-  subst hk hn ha hb
+  obtain ⟨hk, hn, hp, hpa, hv, hr, hra, ha, bs, hb, hbs⟩ := SItem.erase_eq_funcTree h
+  obtain ⟨kind, kindPos, name, params, paramAttrs, variadic, results, resultAttrs, attrs, body⟩ :=
+    si
+  dsimp only at hk hn hp hpa hv hr hra ha hb
+  subst hk hn hb
   rw [Text.decodeItem.eq_def]
-  simp only [↓reduceIte, decodeFuncItem, hf.decodeFunc_eq hp hr hbs]
+  simp only [↓reduceIte, decodeFuncItem, hf.funcResultAttrs_eq hr hra ha, funcBlocks,
+    ok_bind, pure_bind, hf.decodeFunc_eq hp hr hbs]
+  rw [hpa, Func.paramAttrsAll, trimAttrs_padAttrs hf.paramAttrs, hv]
+  rfl
+
+omit [DialectText d] [DialectSignature d] [DialectValidation d] [LawfulDialectText d] in
+/-- Lists of attributes that erase to empty lists are empty. -/
+theorem nil_of_map_erase {α : Type} {pas : List (List (Attr × TextPos))} {ys : List α}
+    (h : pas.map (·.map eraseAt) = ys.map fun _ => []) : ∀ as ∈ pas, as = [] := by
+  intro as has
+  have hm : as.map eraseAt ∈ ys.map (fun _ => ([] : List (Attr × TextPos))) :=
+    h ▸ List.mem_map_of_mem has
+  obtain ⟨_, -, he⟩ := List.mem_map.mp hm
+  exact List.map_eq_nil_iff.mp he.symm
+
+omit [DialectText d] [DialectSignature d] [DialectValidation d] [LawfulDialectText d] in
+/-- The header of an item other than a `func` passes when no parameter or
+result carries attributes and the parameters do not end in `...`. -/
+theorem plainHeader_eq {pas ras : List (List (Attr × TextPos))} {v : Option TextPos}
+    (hp : ∀ as ∈ pas, as = []) (hv : v.map (fun _ => TextPos.zero) = none)
+    (hr : ∀ as ∈ ras, as = []) : plainHeader pas v ras = .ok () := by
+  have h₁ : pas.flatten = [] := List.flatten_eq_nil_iff.mpr hp
+  have h₂ : ras.flatten = [] := List.flatten_eq_nil_iff.mpr hr
+  obtain rfl : v = none := Option.map_eq_none_iff.mp hv
+  unfold plainHeader
+  rw [h₁, h₂]
   rfl
 
 /-- A word of a dialect is not the kind `func`, `module`, `aggregate` or `global`. -/
@@ -104,9 +165,11 @@ omit [DialectSignature d] [DialectValidation d] [LawfulDialectText d] in
 tree, at any positions, when it is well formed. -/
 theorem DialectItem.WellFormed.decodeItem_eq {i : DialectItem d} (hi : i.WellFormed)
     {si : SItem} (h : si.erase = i.tree) : Text.decodeItem si = .ok (.dialect i) := by
-  obtain ⟨kind, kindPos, name, params, results, attrs, body⟩ := si
+  obtain ⟨kind, kindPos, name, params, paramAttrs, variadic, results, resultAttrs, attrs, body⟩ :=
+    si
   simp only [SItem.erase, DialectItem.tree, SItem.mk.injEq] at h
-  obtain ⟨rfl, -, rfl, hp, hr, ha, hb⟩ := h
+  obtain ⟨rfl, -, rfl, hp, hpa, hv, hr, hra, ha, hb⟩ := h
+  have hph := plainHeader_eq (nil_of_map_erase hpa) hv (nil_of_map_erase hra)
   obtain rfl : body = .blocks [] := by
     cases body with
     | blocks bs =>
@@ -125,7 +188,7 @@ theorem DialectItem.WellFormed.decodeItem_eq {i : DialectItem d} (hi : i.WellFor
     hty y.2 (List.mem_append_left _ (List.mem_map_of_mem hy))
   obtain ⟨hf, hm, hg, hgl⟩ := isDialectWord_ne hi.kind
   rw [Text.decodeItem.eq_def]
-  simp only [hf, hm, hg, hgl, hi.kind, ↓reduceIte, decodeDialectItem, hres, hps, ok_bind, ha']
+  simp only [hf, hm, hg, hgl, hi.kind, ↓reduceIte, hph, ok_bind, decodeDialectItem, hres, hps, ha']
   rfl
 
 omit [DialectSignature d] [DialectValidation d] [LawfulDialectText d] in
@@ -154,9 +217,11 @@ omit [DialectSignature d] [DialectValidation d] [LawfulDialectText d] in
 at any positions, when it is well formed. -/
 theorem Aggregate.WellFormed.decodeItem_eq {a : Aggregate d} (ha : a.WellFormed)
     {si : SItem} (h : si.erase = a.item.tree) : Text.decodeItem si = .ok (.aggregate a) := by
-  obtain ⟨kind, kindPos, name, params, results, attrs, body⟩ := si
+  obtain ⟨kind, kindPos, name, params, paramAttrs, variadic, results, resultAttrs, attrs, body⟩ :=
+    si
   simp only [SItem.erase, DialectItem.tree, Aggregate.item, SItem.mk.injEq] at h
-  obtain ⟨rfl, -, rfl, hp, hr, hA, hb⟩ := h
+  obtain ⟨rfl, -, rfl, hp, hpa, hv, hr, hra, hA, hb⟩ := h
+  have hph := plainHeader_eq (nil_of_map_erase hpa) hv (nil_of_map_erase hra)
   obtain rfl : params = [] := List.map_eq_nil_iff.mp hp
   obtain rfl : results = [] := List.map_eq_nil_iff.mp hr
   obtain rfl : body = .blocks [] := by
@@ -177,7 +242,8 @@ theorem Aggregate.WellFormed.decodeItem_eq {a : Aggregate d} (ha : a.WellFormed)
     simp only [Aggregate.attrs, List.map_cons, List.cons.injEq] at hA'
     obtain ⟨rfl, rfl, rfl, hF⟩ := hA'
     rw [Text.decodeItem.eq_def]
-    simp only [String.reduceEq, ↓reduceIte, decodeAggregate, Aggregate.decodeNumber_app _ hm,
+    simp only [String.reduceEq, ↓reduceIte, hph, ok_bind, decodeAggregate,
+      Aggregate.decodeNumber_app _ hm,
       Aggregate.decodeNumber_app _ hs, Aggregate.decodeNumber_app _ hal, decodeFields_eq hfs hF,
       ok_bind]
     rfl
@@ -187,9 +253,11 @@ omit [DialectSignature d] [DialectValidation d] [LawfulDialectText d] in
 positions, when its numbers are within the limit. -/
 theorem Global.decodeItem_eq {g : Global} (hg : g.InLimits) {si : SItem}
     (h : si.erase = (g.item (d := d)).tree) : Text.decodeItem (d := d) si = .ok (.global g) := by
-  obtain ⟨kind, kindPos, name, params, results, attrs, body⟩ := si
+  obtain ⟨kind, kindPos, name, params, paramAttrs, variadic, results, resultAttrs, attrs, body⟩ :=
+    si
   simp only [SItem.erase, DialectItem.tree, Global.item, SItem.mk.injEq] at h
-  obtain ⟨rfl, -, rfl, hp, hr, hA, hb⟩ := h
+  obtain ⟨rfl, -, rfl, hp, hpa, hv, hr, hra, hA, hb⟩ := h
+  have hph := plainHeader_eq (nil_of_map_erase hpa) hv (nil_of_map_erase hra)
   obtain rfl : params = [] := List.map_eq_nil_iff.mp hp
   obtain rfl : results = [] := List.map_eq_nil_iff.mp hr
   obtain rfl : body = .blocks [] := by
@@ -202,7 +270,8 @@ theorem Global.decodeItem_eq {g : Global} (hg : g.InLimits) {si : SItem}
   have hA' : attrs.map (·.1) = g.attrs := by
     simpa [List.map_map, Function.comp_def, eraseAt] using congrArg (List.map Prod.fst) hA
   rw [Text.decodeItem.eq_def]
-  simp only [String.reduceEq, ↓reduceIte, decodeGlobal, hA', Global.decodeAttrs_attrs hg]
+  simp only [String.reduceEq, ↓reduceIte, hph, ok_bind, decodeGlobal, hA',
+    Global.decodeAttrs_attrs hg]
   rfl
 
 -- The two theorems recurse together, so both take the dialect's lawful
@@ -217,14 +286,18 @@ theorem Item.WellFormed.decodeItem_eq : ∀ {i : Item d}, i.WellFormed → ∀ {
   | .dialect _, hi, _, h => DialectItem.WellFormed.decodeItem_eq hi h
   | .aggregate _, ha, _, h => Aggregate.WellFormed.decodeItem_eq ha h
   | .global _, hg, _, h => Global.decodeItem_eq hg h
-  | .module name ds is, hm, ⟨kind, kindPos, sname, params, results, attrs, body⟩, h => by
+  | .module name ds is, hm,
+      ⟨kind, kindPos, sname, params, paramAttrs, variadic, results, resultAttrs, attrs, body⟩, h => by
     simp only [SItem.erase, Item.tree, SItem.mk.injEq] at h
-    obtain ⟨rfl, -, rfl, hp, hr, ha, hb⟩ := h
+    obtain ⟨rfl, -, rfl, hp, hpa, hv, hr, hra, ha, hb⟩ := h
+    obtain rfl : paramAttrs = [] := List.map_eq_nil_iff.mp hpa
+    obtain rfl : variadic = none := Option.map_eq_none_iff.mp hv
+    obtain rfl : resultAttrs = [] := List.map_eq_nil_iff.mp hra
     obtain rfl : params = [] := List.map_eq_nil_iff.mp hp
     obtain rfl : results = [] := List.map_eq_nil_iff.mp hr
     obtain rfl : attrs = [] := List.map_eq_nil_iff.mp ha
     rw [Text.decodeItem.eq_def]
-    simp only [String.reduceEq, ↓reduceIte, moduleHeader]
+    simp only [String.reduceEq, ↓reduceIte, plainHeader, List.flatten_nil, moduleHeader]
     by_cases he : ds.isEmpty = true ∧ (Item.treeList is).isEmpty = true
     · simp only [moduleBody, he, and_self, ite_true] at hb
       obtain ⟨hd, hi⟩ := he

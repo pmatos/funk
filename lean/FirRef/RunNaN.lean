@@ -50,7 +50,7 @@ variable {d : Dialect} [TyDenote d.Ty] [DialectSignature d] [DecidableEq d.Ty] [
 
 local notation "Mems" => Memories N unit
 
-variable {R : Type} (fin : List (DVal d) → Memories N unit → R)
+variable (S₀ : Memories N unit) {R : Type} (fin : List (DVal d) → Memories N unit → R)
 
 /-- Each leaf of a path that has made `made` choices more, `nan` of them
 NaN choices, with both counted. -/
@@ -214,38 +214,38 @@ def exhaustiveNaNWith (f : Func d) (args : HVector toType (f.params.map (·.2)))
   match f.enter args.toDVals with
   | .error e => some [(.ok (.error e), 0, 0)]
   | .ok (body, env) =>
-    exploreNaNFrom M fin nans [.state (start (N := N) (unit := unit) f fuel body env) budget 0 0] []
+    exploreNaNFrom M fin nans [.state (start S₀ f fuel body env) budget 0 0] []
 
 /-- The walk by the machine is the spec's `ChoiceTree.exploreNaN` on the
 tree of the run with memory. -/
 theorem exhaustiveNaNWith_eq (f : Func d) (args : HVector toType (f.params.map (·.2)))
     (fuel budget : Nat) (nans : List Nat) :
-    exhaustiveNaNWith M fin f args fuel budget nans =
-      (endTree (ε := ε) M fin f args fuel).exploreNaN nans budget := by
+    exhaustiveNaNWith M S₀ fin f args fuel budget nans =
+      (endTree (ε := ε) M S₀ fin f args fuel).exploreNaN nans budget := by
   unfold exhaustiveNaNWith
-  rw [run_tree M fin f args fuel]
+  rw [run_tree M S₀ fin f args fuel]
   cases f.enter args.toDVals with
   | error e => rfl
   | ok p =>
-    show exploreNaNFrom M fin nans [.state (start f fuel p.1 p.2) budget 0 0] [] =
-      (tree M fin (start (ε := ε) (N := N) (unit := unit) f fuel p.1 p.2).1 []).exploreNaN nans
+    show exploreNaNFrom M fin nans [.state (start S₀ f fuel p.1 p.2) budget 0 0] [] =
+      (tree M fin (start (ε := ε) S₀ f fuel p.1 p.2).1 []).exploreNaN nans
         budget
     rw [exploreNaNFrom_eq M fin, ChoiceTree.collect]
     simp only [nanExplored, nanState]
-    cases (tree M fin (start (ε := ε) (N := N) (unit := unit) f fuel p.1 p.2).1 []).exploreNaN
+    cases (tree M fin (start (ε := ε) S₀ f fuel p.1 p.2).1 []).exploreNaN
       nans budget <;> simp [ChoiceTree.collect, map_shiftNaN_zero]
 
 /-- The walk that tries a few NaNs on the run with memory of the function
 `f`, by the machine, each return seen as its values. -/
 def exhaustiveNaN (f : Func d) (args : HVector toType (f.params.map (·.2))) (fuel budget : Nat)
     (nans : List Nat) : Option (List (Leaf d ε × Nat × Nat)) :=
-  exhaustiveNaNWith (ε := ε) (unit := unit) M (fun vs _ => vs) f args fuel budget nans
+  exhaustiveNaNWith (ε := ε) (unit := unit) M S₀ (fun vs _ => vs) f args fuel budget nans
 
 theorem exhaustiveNaN_eq (f : Func d) (args : HVector toType (f.params.map (·.2)))
     (fuel budget : Nat) (nans : List Nat) :
-    exhaustiveNaN (ε := ε) (unit := unit) M f args fuel budget nans =
-      (f.memTree unit M args fuel).exploreNaN nans budget := by
-  rw [memTree_eq]; exact exhaustiveNaNWith_eq M _ f args fuel budget nans
+    exhaustiveNaN (ε := ε) (unit := unit) M S₀ f args fuel budget nans =
+      (f.memTree unit S₀ M args fuel).exploreNaN nans budget := by
+  rw [memTree_eq]; exact exhaustiveNaNWith_eq M S₀ _ f args fuel budget nans
 
 end Machine
 

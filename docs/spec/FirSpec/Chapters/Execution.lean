@@ -37,6 +37,8 @@ Each section renders one module of `lean/Fir`.
 
 {includeReadable "." Fir.Execution.EffectLaws "Effect obligations" FirSpec.Execution.EffectLaws (level := 1)}
 
+{includeReadable "." Fir.Execution.AddressObligations "Addresses and the declared allocation" FirSpec.Execution.AddressObligations (level := 1)}
+
 {includeReadable "." Fir.Core.Values "Core values" FirSpec.Core.Values (level := 1)}
 
 {includeReadable "." Fir.Core.OpEffects "Core effects" FirSpec.Core.OpEffects (level := 1)}
@@ -174,6 +176,10 @@ Each section renders one module of `lean/Fir`.
 {includeReadable "." Fir.Core.Lawful "The core dialect's poison obligations" FirSpec.Core.Lawful (level := 1)}
 
 {includeReadable "." Fir.Core.EffectLaws "The core dialect's effect obligations" FirSpec.Core.EffectLaws (level := 1)}
+
+{includeReadable "." Fir.Core.EffectUnlawful "A declaration that the obligations reject" FirSpec.Core.EffectUnlawful (level := 1)}
+
+{includeReadable "." Fir.Core.AddressLaws "The core dialect's addresses and declared allocations" FirSpec.Core.AddressLaws (level := 1)}
 
 {includeReadable "." Fir.Execution.Summary "Function summaries" FirSpec.Execution.Summary (level := 1)}
 

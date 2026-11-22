@@ -77,7 +77,7 @@ instance : DialectValidation ProbeDialect where
 at `i0`, which validation rejects, it gives poison for a value. The probe
 dialect has no memory of its own: its memories are the core's. -/
 instance : DialectEffects ProbeDialect :=
-  ⟨DialectEffects.Mem CoreDialect ⊕ Empty, fun _ => .exception, fun _ => .all⟩
+  ⟨DialectEffects.Mem CoreDialect ⊕ Empty, fun _ => .exception, fun _ => .all, fun _ => none⟩
 
 /-- The probe dialect's memories are the core's, and none of its own. -/
 instance : DialectMemOver CoreDialect (Ext Op) := ⟨Empty, id, id, fun _ => rfl, fun _ => rfl⟩
@@ -243,8 +243,8 @@ theorem mem_argVectors : ∀ {ts : List CoreProbe.Ty} (h : ∀ t ∈ ts, Finite 
 
 /-- A core op of the sum that declares no memory effect touches no memory:
 `alloca` declares that it allocates, each load that it reads, each store
-that it writes, `memCopy` that it reads and writes, and `memSet` that it
-writes. -/
+that it writes, `memCopy` that it reads and writes, `memSet` that it writes, and
+`ptrExpose` and `ptrFromInt` that they read. -/
 theorem core_touchesMemory_false {o : Core.Op}
     (h : (effects (d := CoreProbe) (.inl o)).TouchesNoMemory) : o.touchesMemory = false := by
   cases o with
@@ -252,7 +252,7 @@ theorem core_touchesMemory_false {o : Core.Op}
   | load _ _ _ n => exact ((h (.inl n)).1 (List.mem_singleton_self _)).elim
   | store _ _ _ n | storePtr _ _ _ n | storeFloat _ _ _ _ n | memSet _ _ _ n =>
     exact ((h (.inl n)).2.1 (List.mem_singleton_self _)).elim
-  | loadPtr _ _ _ n | loadFloat _ _ _ _ n | memCopy _ _ _ n =>
+  | loadPtr _ _ _ n | loadFloat _ _ _ _ n | memCopy _ _ _ n | ptrExpose n _ | ptrFromInt n _ =>
     exact ((h (.inl n)).1 (List.mem_singleton_self _)).elim
   | _ => rfl
 

@@ -14,7 +14,7 @@ pins their fingerprint; the build fails when the Lean changes under it.
 
 #doc (Manual) "Congruence in the callee over traced runs: returns and UB: readable blocks" =>
 
-:::moduleDocs (fingerprint := "1529712643889921593")
+:::moduleDocs (fingerprint := "14157379922291510600")
 :::
 
 :::readable Fir.Func.traceRunsFrom_tAllowed Fir.Func.traceRunsFrom_ret_allowed Fir.Func.traceRunsFrom_ub_allowed (fingerprint := "16364180563286379087")
@@ -33,10 +33,10 @@ $`s_1 \sqsubseteq s_1'`; and each $`\mathsf{ub}~t'~r'` by UB after a
 refined prefix of $`t'`.
 :::
 
-:::readable Fir.Func.traceRuns_ret_iff_from Fir.Func.traceRuns_ub_iff_from (fingerprint := "6178383804477993262")
-*Theorems: from the empty memories.* A return of a function's traced runs,
-seen at its end, is a return of its traced runs from the empty memories
-with nothing escaped, its values and the memories and escaped allocations of
+:::readable Fir.Func.traceRuns_ret_iff_from Fir.Func.traceRuns_ub_iff_from (fingerprint := "10279653960785745419")
+*Theorems: from the memories a run starts with.* A return of a function's
+traced runs, seen at its end, is a return of its traced runs from the
+memories that hold $`L`'s starting allocations, with nothing escaped, its values and the memories and escaped allocations of
 the traced state it ends in; UB is UB after the same marked trace.
 :::
 

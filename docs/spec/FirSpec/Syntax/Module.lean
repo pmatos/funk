@@ -17,10 +17,10 @@ the Lean changes under it.
 
 #doc (Manual) "Modules, functions, blocks and ops: readable blocks" =>
 
-:::moduleDocs (fingerprint := "18306853583458659816")
+:::moduleDocs (fingerprint := "4775088094305326777")
 :::
 
-:::readable Fir.Name (pin := Fir.Func.Valid) (fingerprint := "11509972817217138124")
+:::readable Fir.Name (pin := Fir.Func.Valid) (fingerprint := "6921361288629920975")
 *Definition: the strings that refer to values, labels and symbols.* In
 the syntax trees of a program, a value, a block label and a symbol are each
 referred to by a string, stored without its sigil: the value `%x`, the label
@@ -33,7 +33,7 @@ Validation restricts the strings of values and labels to the names defined
 next; a symbol may be any string.
 :::
 
-:::readable Fir.isLetter Fir.isWordStart Fir.isNameChar Fir.isName Fir.isWord (pin := Fir.Func.Valid) (pin := Fir.Text.printSymbol) (fingerprint := "15465900342649847224")
+:::readable Fir.isLetter Fir.isWordStart Fir.isNameChar Fir.isName Fir.isWord (pin := Fir.Func.Valid) (pin := Fir.Text.printSymbol) (fingerprint := "13725407344537923831")
 *Definition: names and words.* A _name_ is one or more name characters,
 and a _word_ is a name that starts with a letter or an underscore:
 
@@ -158,7 +158,7 @@ block, the first block of the function, and to pass one value of the right
 type for each of that block's arguments.
 :::
 
-:::readable Fir.Operation Fir.Block Fir.Region (pin := Fir.Func.OpValid) (pin := Fir.Func.Valid) (fingerprint := "11265272785410075814")
+:::readable Fir.Operation Fir.Block Fir.Region (pin := Fir.Func.OpValid) (pin := Fir.Func.Valid) (fingerprint := "15628451146648919381")
 *Definition: operations, blocks and regions.* An _operation_ is one use of
 an op in a block: it names the op's results, gives its op instance, names
 its operands, and holds its successors, regions and location reference. A
@@ -220,13 +220,14 @@ among other rules, every block holds at least one op, and its last op, and
 only that one, is a terminator.
 :::
 
-:::readable Fir.Func (pin := Fir.Func.Valid) (pin := Fir.Func.print) (fingerprint := "15157222208701719689")
+:::readable Fir.Func (pin := Fir.Func.Valid) (pin := Fir.Func.print) (fingerprint := "16945633708298546071")
 *Definition: a function.* A function is a symbol, typed parameters, the
-types of its results, and a region, its body:
+types of its results, a region, its body, the attributes of its parameters
+and results, and whether its parameters end in `...`:
 
 ```grammar Fir.Func
 \mathit{func}
-name,params,results,body \begin{array}{l} \{\mathsf{name}~s, \\ \enspace \mathsf{params}~(x : t)^*, \\ \enspace \mathsf{results}~t^*, \\ \enspace \mathsf{body}~\mathit{region}\,\} \end{array}
+name,params,results,body,paramAttrs,resultAttrs,variadic \begin{array}{l} \{\mathsf{name}~s, \\ \enspace \mathsf{params}~(x : t)^*, \\ \enspace \mathsf{results}~t^*, \\ \enspace \mathsf{body}~\mathit{region}, \\ \enspace \mathsf{paramAttrs}~(\mathit{attr}^*)^*, \\ \enspace \mathsf{resultAttrs}~(\mathit{attr}^*)^*, \\ \enspace \mathsf{variadic}~b\,\} \end{array}
 ```
 
 $`s` is the function's symbol, any string. $`\mathsf{params}` are its

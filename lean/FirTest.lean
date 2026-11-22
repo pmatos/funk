@@ -40,6 +40,7 @@ import FirTest.ValidateNested
 import FirTest.Layout
 import FirTest.Aggregate
 import FirTest.Global
+import FirTest.GlobalStart
 import FirTest.LocTable
 import FirTest.Dominance
 import FirTest.OverCore
@@ -86,12 +87,14 @@ import FirTest.MemoryRefine
 import FirTest.MemoryEncode
 import FirTest.Address
 import FirTest.Expose
+import FirTest.FromAddr
 import FirTest.Alloca
 import FirTest.Load
 import FirTest.Store
 import FirTest.MemoryCopy
 import FirTest.MemCopy
 import FirTest.MemSet
+import FirTest.PtrInt
 import FirTest.PointerAccess
 import FirTest.FloatAccess
 import FirTest.FieldAddr

@@ -14,7 +14,7 @@ changes under it.
 
 #doc (Manual) "The canonical printer: readable blocks" =>
 
-:::moduleDocs (fingerprint := "2090149123835374223")
+:::moduleDocs (fingerprint := "17888077499313168849")
 :::
 
 :::readable Fir.Attr.print (pin := Fir.Text.quote) (pin := Fir.Text.printInt) (pin := Fir.Text.printSymbol) (fingerprint := "4746284299703548192")
@@ -103,20 +103,29 @@ So `toy.cell @c() -> toy.flag 1 {`, then `}` on the next line, is an item
 of the kind `toy.cell` (ADR-2026-11-09-1543).
 :::
 
-:::readable Fir.Func.print Fir.printDialects Fir.Item.print Fir.Item.printList (pin := Fir.Text.printSymbol) (fingerprint := "8688855538144420502")
+:::readable Fir.printAttrs Fir.Func.printParams Fir.Func.printResults (pin := Fir.Func.paramAttrsAll) (pin := Fir.Func.resultAttrsAll) (fingerprint := "5025029288552693315")
+*Definition: a function's signature in text.* Attributes are written each
+after a space. A function's parameters are written each as its definition
+followed by its attributes, separated by a comma and a space, then `...`
+when the function is variadic, after `, ` when a parameter comes before:
+`%c: i8 sext, %n: i32, ...`. Its results are written as nothing when it
+returns nothing, and otherwise as ` -> ` and each result type followed by
+its attributes, separated by a comma and a space: ` -> i8 zext, i32`.
+:::
+
+:::readable Fir.Func.print Fir.printDialects Fir.Item.print Fir.Item.printList (pin := Fir.Text.printSymbol) (fingerprint := "14931832616595257134")
 *Definition: a function, a dialect set, and items, in text.* A function at
-the indentation $`n`, with the symbol $`s`, the parameters $`p^*`, the
-result types $`t_1, \dots, t_m` and the body $`b^*`, is written:
+the indentation $`n`, with the symbol $`s` and the body $`b^*`, is written:
 
 * $`n` spaces, `func`, a space, $`\mathrm{printsym}(s)`, then its
-  parameters' definitions in parentheses, with no space before them:
+  parameters in parentheses, with no space before them:
   `func @sum(%n: i32)`;
-* when $`m > 0`, ` -> ` and the result types, separated by a comma and a
-  space;
+* its results;
 * ` {`, a line feed, its blocks at the indentation $`n`, then $`n` spaces,
   `}` and a line feed.
 
-A `func` has no attributes, so none are printed. A dialect set
+A `func` writes the attributes of its parameters and results with them,
+and no attributes of its own. A dialect set
 $`x_1, \dots, x_k` at the indentation $`n` is written as $`n` spaces,
 `dialects x₁, …, xₖ`, a line feed and an empty line, and as nothing when
 $`k = 0`.

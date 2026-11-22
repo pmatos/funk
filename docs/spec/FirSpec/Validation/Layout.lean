@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "The data layout's rules: readable blocks" =>
 
-:::moduleDocs (fingerprint := "6605146163763198259")
+:::moduleDocs (fingerprint := "9783523461112804708")
 :::
 
 :::readable Fir.isPowerOfTwo (fingerprint := "18023849196204137947")
@@ -76,7 +76,7 @@ $`\mathrm{memory}(t)`, or when $`t` names no memory. Whether it does can be
 decided.
 :::
 
-:::readable Fir.Func.attrTypes Fir.Func.unitWidths Fir.DataLayout.HasUnits Fir.DataLayout.decidableHasUnits Fir.SymbolTable.MemoriesIn Fir.Module.MemoriesDeclared (pin := Fir.DataLayout.entry) (fingerprint := "9035789675453374340")
+:::readable Fir.Func.attrTypes Fir.Func.unitWidths Fir.DataLayout.HasUnits Fir.DataLayout.decidableHasUnits Fir.Func.addrWidths Fir.DataLayout.HasAddrs Fir.DataLayout.decidableHasAddrs Fir.SymbolTable.MemoriesIn Fir.Module.MemoriesDeclared (pin := Fir.DataLayout.entry) (fingerprint := "18086405835544314927")
 *Definition: the memories that a module's types name.* The memories of the
 symbol table $`T` are in the layout $`L` when $`L` has the memory of each
 type that each function of $`T` states, its results, its parameters and
@@ -86,7 +86,11 @@ type that each item of a dialect's kind of $`T` states; and when, for each
 pair $`(N, V)` that an op of each function of $`T` asks,
 $`\mathrm{opunits}`, op by op, the entry of memory $`N` in $`L` has units
 of $`V` bits, as a $`\mathsf{memset}` of an $`\mathsf{i}V` into memory
-$`N` asks. The layout of the module $`M` declares the
+$`N` asks; and when, for each pair $`(N, W)` that an op of each function
+of $`T` asks, $`\mathrm{opaddrs}`, op by op, the entry of memory $`N` in
+$`L` has pointers of $`W` bits and is not non-integral, as a
+$`\mathsf{ptr\_expose}` of a $`\mathsf{ptr}\langle N\rangle` into an
+$`\mathsf{i}W` asks. The layout of the module $`M` declares the
 memories of $`M` when the memories of each of its symbol tables, its own and
 each nested module's at any depth, are in it. A nested module has no layout
 of its own, so its types name the memories of the module that holds it.

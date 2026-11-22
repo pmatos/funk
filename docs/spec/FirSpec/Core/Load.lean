@@ -31,7 +31,7 @@ two that is at least its units. In memory 0, an $`\mathsf{i32}` takes 4
 units aligned to 4, and an $`\mathsf{i1}` one unit aligned to 1.
 :::
 
-:::readable Fir.Core.poisonPointer Fir.Core.loadResult Fir.Core.loadRule (pin := Fir.MonadMemory) (pin := Fir.MonadUB) (pin := Fir.Memory.decodeInt) (pin := Fir.Core.Op) (fingerprint := "117740464611893028")
+:::readable Fir.Core.poisonPointer Fir.Core.loadResult Fir.Core.loadRule (pin := Fir.MonadMemory) (pin := Fir.MonadUB) (pin := Fir.Memory.decodeInt) (pin := Fir.Core.Op) (fingerprint := "10328156707992255329")
 *Definition: the rule of $`\mathsf{load}`.* Let a run's memories have the
 layout entries $`\ell`, and let the run name the core's memory $`x` as
 $`\rho(x)`. For $`\mathsf{load}_N~o~W~a` on the pointer operand $`p`, let

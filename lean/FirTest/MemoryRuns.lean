@@ -151,7 +151,7 @@ allocates in it, and `ret` that it is a terminator. -/
 instance : DialectEffects AllocDialect :=
   ⟨Unit, fun _ => .exception, fun
     | .alloc => { allocates := .these [()] }
-    | .ret => { control := true }⟩
+    | .ret => { control := true }, fun _ => none⟩
 
 /-- Wherever a run names the memory `()` as `ρ ()`, `alloc` allocates one
 unit on its stack, and `ret` returns. -/
@@ -165,13 +165,15 @@ instance : DialectMemDenote AllocDialect where
         | .ret, _ => pure .ret }
 
 /-- A run with memory of the alloc dialect runs its semantics with memory at
-the naming it is given. -/
+the naming it is given, from the memories its items start, which for a
+dialect with no numbered memory are the empty ones. -/
 example {N : Type} [DecidableEq N] (lay : N → MemLayout) (ρ : Unit → N) (L : RunItems) (M : Module
     AllocDialect)
     (f : Func AllocDialect) (args : HVector toType (f.params.map (·.2))) (n : Nat) :
     letI := DialectMemDenote.denoteAt (d := AllocDialect) lay ρ L
     f.memRuns lay ρ L M args n = Functor.map (f := SetM) Prod.fst
-      ((f.run M (m := StateT (Memories N (unitsOf lay)) SetM) args n).run Memories.empty) :=
+      ((f.run M (m := StateT (Memories N (unitsOf lay)) SetM) args n).run Memories.empty) := by
+  rw [← RunItems.start_unnumbered AllocDialect lay ρ L fun _ => rfl]
   rfl
 
 /-- The runs with memory of the alloc dialect, whose op allocates, are
@@ -273,6 +275,7 @@ theorem allocMain_valid : allocMain.Valid allocModule.context where
         by decide⟩
   inner := Func.inner_of_noRegions (by decide +kernel)
   dialect := trivial
+  signature := (Func.sigProblems_eq_nil _).1 rfl
 
 /-- The module is valid. -/
 theorem allocModule_valid : allocModule.Valid := Module.valid_of_flat

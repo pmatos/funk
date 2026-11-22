@@ -14,7 +14,7 @@ changes under it.
 
 #doc (Manual) "The memory model: readable blocks" =>
 
-:::moduleDocs (fingerprint := "13318954097277568896")
+:::moduleDocs (fingerprint := "2571809499204133603")
 :::
 
 :::readable Fir.Memory.AllocId (fingerprint := "11401156343561318334")
@@ -78,25 +78,31 @@ stack,global,heap   \mathsf{stack} \mid \mathsf{global} \mid \mathsf{heap}
 Managed memory can be added as another kind.
 :::
 
-:::readable Fir.Memory.Block (fingerprint := "9612083655881060158")
+:::readable Fir.Memory.Block (fingerprint := "5919742926676485830")
 *Definition: an allocation's block.* A block is a tuple
-$`(k, \alpha, \vec{x}, \ell, y^?)`: its kind $`k`, its alignment
+$`(k, \alpha, \vec{x}, \ell, y^?, c)`: its kind $`k`, its alignment
 $`\alpha \in \mathbb{N}`, its units $`\vec{x}`, whether it is live,
-$`\ell \in \{\mathsf{true}, \mathsf{false}\}`, and its address
-$`y^?`, a number given once it is exposed, or $`\bot`. Its size is $`|\vec{x}|`. The alignment
+$`\ell \in \{\mathsf{true}, \mathsf{false}\}`, its address
+$`y^?`, a number given once it is exposed, or $`\bot`, and whether it is
+constant, $`c \in \{\mathsf{true}, \mathsf{false}\}`. Its size is $`|\vec{x}|`. The alignment
 counts units: it is what every address the block may be given is a
 multiple of, so that an op that accesses memory can check an access
 against it (#231). The ops that allocate give a power of two, as the human
 ruled on 2026-11-11, and validation rejects any other. A freed block keeps
 its units, but no access may reach them. A block has no address until it
 is exposed, and then keeps the one it was given (#232;
-{ref "The-fir-specification--Memory--Addresses"}[addresses]). Below, a
-block whose address does not matter is written $`(k, \alpha, \vec{x}, \ell)`.
+{ref "The-fir-specification--Memory--Addresses"}[addresses]). A constant
+block may be read and not written: a run starts with a constant global's
+block so (ADR-2026-11-09-1546), and a store to it faults, so writing a
+constant global is UB when the write runs (the human's ruling of
+2026-11-20 on #237, Q2). No op allocates a constant block. Below, a block
+whose address and constness do not matter is written $`(k, \alpha, \vec{x}, \ell)`.
 :::
 
-:::readable Fir.Memory.Block.shape (fingerprint := "2876835036810472392")
+:::readable Fir.Memory.Block.shape (fingerprint := "15915424377461907999")
 *Definition: a block's shape.* The shape of a block is everything but what
-its units hold: $`\mathrm{shape}(k, \alpha, \vec{x}, \ell) = (k, \alpha, |\vec{x}|, \ell)`.
+its units hold and its address:
+$`\mathrm{shape}(k, \alpha, \vec{x}, \ell, y^?, c) = (k, \alpha, |\vec{x}|, \ell, c)`.
 Two memories with the same shapes, block by block, have the same
 allocations: an access lands or faults in the same way in both.
 :::
@@ -108,10 +114,11 @@ $`M[a]`. Each memory of a module is one such list, with its own
 allocations and its own unit width $`u`.
 :::
 
-:::readable Fir.Memory.Fault Fir.Memory.Fault.reason (fingerprint := "3802553443931824070")
+:::readable Fir.Memory.Fault Fir.Memory.Fault.reason (fingerprint := "18388678182929345986")
 *Definition: a fault.* An access that fails is immediate UB, for one of
-four reasons (ADR-2026-11-09-1542; the human's ruling of 2026-11-11 on
-#231 for the last):
+five reasons (ADR-2026-11-09-1542; the human's rulings of 2026-11-11 on
+#231 for $`\mathsf{misaligned}` and of 2026-11-20 on #237 for
+$`\mathsf{constant}`):
 
 ```grammar Fir.Memory.Fault
 \mathit{fault}
@@ -119,6 +126,7 @@ noProvenance   \mathsf{noProvenance}
 freed          \mathsf{freed}
 outOfBounds    \mathsf{outOfBounds}
 misaligned     \mathsf{misaligned}
+constant       \mathsf{constant}
 ```
 
 * $`\mathsf{noProvenance}`: the pointer has no provenance for an
@@ -128,11 +136,12 @@ misaligned     \mathsf{misaligned}
   allocation.
 * $`\mathsf{misaligned}`: the access is not aligned at every address its
   allocation may be given.
+* $`\mathsf{constant}`: the access is a store to a constant allocation.
 
 Each has a reason in words, which a run that faults gives for its UB.
 :::
 
-:::readable Fir.Memory.Block.read Fir.Memory.Block.write (fingerprint := "984041178118119597")
+:::readable Fir.Memory.Block.read Fir.Memory.Block.write (fingerprint := "4380596442681309824")
 *Definition: reading and writing a block.* Reading $`n` units of a block
 from offset $`o` gives $`\vec{x}[o \,..\, o + n]`, its units from $`o` on,
 at most $`n` of them. Writing the units $`\vec{y}` at offset $`o` puts
@@ -140,15 +149,16 @@ them in place of the units from $`o` on:
 
 $$`(k, \alpha, \vec{x}, \ell)[o := \vec{y}] = (k,~ \alpha,~ \vec{x}[0 \,..\, o]~\vec{y}~\vec{x}[o + |\vec{y}| \,..\,],~ \ell)`
 
-The kind, the alignment, the liveness and the address stay as they were, and so does the size when
+The kind, the alignment, the liveness, the address and the constness stay
+as they were, and so does the size when
 the units fit, $`o + |\vec{y}| \le |\vec{x}|`. A store writes only units
 that fit, as its access checks.
 :::
 
-:::readable Fir.Memory.Block.kill (fingerprint := "14697358830222883315")
+:::readable Fir.Memory.Block.kill (fingerprint := "15182547589668359642")
 *Definition: a freed block.* $`\mathrm{kill}(k, \alpha, \vec{x}, \ell) = (k, \alpha, \vec{x}, \mathsf{false})`:
-the block, no longer live, with its kind, its alignment, its units and
-its address.
+the block, no longer live, with its kind, its alignment, its units, its
+address and its constness.
 :::
 
 :::readable Fir.Memory.Memory.empty (fingerprint := "4566367693092568579")
@@ -156,15 +166,15 @@ its address.
 no blocks: $`M = \epsilon`.
 :::
 
-:::readable Fir.Memory.Memory.alloc (fingerprint := "2647283885771249727")
+:::readable Fir.Memory.Memory.alloc (fingerprint := "2050193437329174558")
 *Definition: allocating.* Allocating $`n` units of kind $`k`, aligned to
 $`\alpha` units, in $`M` adds one live block of $`n` poisons at the end,
 and gives the pointer to its first unit:
 
-$$`\mathrm{alloc}_k(M, n, \alpha) = \big((|M|, 0),~ M~(k, \alpha, \mathsf{poison}^n, \mathsf{true}, \bot)\big)`
+$$`\mathrm{alloc}_k(M, n, \alpha) = \big((|M|, 0),~ M~(k, \alpha, \mathsf{poison}^n, \mathsf{true}, \bot, \mathsf{false})\big)`
 
-The new allocation's id is $`|M|`, which no allocation had before, and it
-has no address, $`\bot`.
+The new allocation's id is $`|M|`, which no allocation had before, it
+has no address, $`\bot`, and it is not constant.
 Provenance comes only from allocations: a pointer has provenance for an
 allocation because the allocation gave it, or because it was computed from
 one that did. A pointer that names an id not yet allocated has none, and
@@ -198,11 +208,13 @@ units of its allocation's block from its offset on, $`\vec{x}[o \,..\, o + n]`,
 or the fault of its access.
 :::
 
-:::readable Fir.Memory.Memory.store (fingerprint := "5030741408177305603")
-*Definition: storing.* Storing the units $`\vec{y}` through $`p` writes
-them into its allocation's block at its offset, $`M[a] := M[a][o := \vec{y}]`,
-or gives the fault of its access, an access of $`|\vec{y}|` units. No other
-unit and no other allocation changes.
+:::readable Fir.Memory.Memory.store (fingerprint := "16910544642550588426")
+*Definition: storing.* Storing the units $`\vec{y}` through $`p` gives the
+fault of its access, an access of $`|\vec{y}|` units, when it faults;
+otherwise it faults with $`\mathsf{constant}` when its allocation's block
+is constant, and writes the units into the block at its offset,
+$`M[a] := M[a][o := \vec{y}]`, when it is not. No other unit and no other
+allocation changes.
 :::
 
 :::readable Fir.Memory.Memory.aligned (fingerprint := "2489683034287928732")

@@ -19,7 +19,7 @@ changes under it.
 :::moduleDocs (fingerprint := "10448107439760543493")
 :::
 
-:::readable Fir.Text.hex Fir.Text.formatChars Fir.Text.isEscaped Fir.Text.allowedOutsideStrings (pin := Fir.Text.lexFrom) (pin := Fir.Text.lexToken) (fingerprint := "8805575641140735826")
+:::readable Fir.Text.hex Fir.Text.formatChars Fir.Text.isEscaped Fir.Text.allowedOutsideStrings (pin := Fir.Text.lexFrom) (pin := Fir.Text.lexToken) (fingerprint := "2565124994512559505")
 *Definition: the characters that a string escapes, and the characters that
 a text may hold outside strings.* A character $`c` is _escaped_ when it is
 one of these:
@@ -88,7 +88,7 @@ errors, and each string has exactly one spelling, as the canonical text
 needs.
 :::
 
-:::readable Fir.Text.printInt Fir.Text.printSymbol (pin := Fir.isName) (pin := Fir.isWord) (pin := Fir.isNameChar) (pin := Fir.isWordStart) (pin := Fir.isLetter) (pin := Fir.Location.limit) (pin := Fir.Text.lexAt) (pin := Fir.Text.lexDigits) (pin := Fir.Text.readNat) (fingerprint := "14685496510928662919")
+:::readable Fir.Text.printInt Fir.Text.printSymbol (pin := Fir.isName) (pin := Fir.isWord) (pin := Fir.isNameChar) (pin := Fir.isWordStart) (pin := Fir.isLetter) (pin := Fir.Location.limit) (pin := Fir.Text.lexAt) (pin := Fir.Text.lexDigits) (pin := Fir.Text.readNat) (fingerprint := "14299520896088486068")
 *Definition: the tokens, and the one spelling of an integer and of a
 symbol.* The tokens of a text are these:
 

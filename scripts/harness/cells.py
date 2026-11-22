@@ -64,8 +64,12 @@ has neither operands nor attributes, is a cell at each width of its result
 - `memcpy`, `memmove` and `memset` are a cell for each width of their
   length, at the side's pointer widths, on both sides, since the backend
   lowers them to funk's own runtime routines (`copy_cells.py`, #234).
+- `ptr_expose` and `ptr_from_int` are a cell for each width of their
+  integer, at the side's address widths, on the interpreter side only
+  until the backend lowers them (`address_cells.py`, #232).
 """
 
+from address_cells import ADDRESS_OPS, address_cell, addresses_table
 from cell_types import Cell, CellError, Row, Table
 from conversion_cells import (
     CONVERSIONS,
@@ -221,6 +225,7 @@ def catalog(
     memory: tuple[str, ...] = (),
     fields: tuple[int, ...] = (),
     copies: bool = False,
+    addresses: tuple[int, ...] = (),
 ) -> tuple[Table, ...]:
     """One side's taxonomy, expanded once for enumeration and display.
 
@@ -368,6 +373,8 @@ def catalog(
         tables.append(field_table(tuple(map(ty, fields))))
     if copies:
         tables.append(copies_table(tuple(map(ty, offsets))))
+    if addresses:
+        tables.append(addresses_table(tuple(map(ty, addresses))))
     return tuple(tables)
 
 
@@ -379,11 +386,14 @@ def cells(
     memory: tuple[str, ...] = (),
     fields: tuple[int, ...] = (),
     copies: bool = False,
+    addresses: tuple[int, ...] = (),
 ) -> list[Cell]:
     """Every actual cell of one side, in catalog order."""
     return [
         cell
-        for table in catalog(widths, formats, offsets, gpu, memory, fields, copies)
+        for table in catalog(
+            widths, formats, offsets, gpu, memory, fields, copies, addresses
+        )
         for row in table.rows
         for cell in row.entries
         if cell is not None
@@ -444,6 +454,8 @@ def of_op(op: Op) -> set[Cell]:
         return {field_address(op)}
     if op.name in MEM_OPS:
         return {copy_cell(op)}
+    if op.name in ADDRESS_OPS:
+        return {address_cell(op)}
     if op.name in GPU_OPS:
         return {gpu_cell(op)}
     if op.name == WORK_GROUP_ALLOCA:

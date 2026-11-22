@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "The core's rules with memory: readable blocks" =>
 
-:::moduleDocs (fingerprint := "2774716517731707122")
+:::moduleDocs (fingerprint := "4710412262870911210")
 :::
 
 :::readable Fir.Core.freezeValue_map Fir.Core.ruleOfEv_map Fir.Core.exitOfEv_map (pin := Fir.MonadMorphism.KeepsChoiceUB) (pin := Fir.Core.freezeValue) (pin := Fir.Core.ruleOfEv) (pin := Fir.Core.exitOfEv) (fingerprint := "15500528643255840448")
@@ -52,7 +52,7 @@ keeps UB; and an op with no rule, as $`\mathsf{call}`, maps by the
 hypothesis on $`z_m` and $`z_n`.
 :::
 
-:::readable Fir.Core.Op.memDenote? Fir.Core.Op.memExit? Fir.Core.memDenoteIn (pin := Fir.Core.denoteWith) (pin := Fir.MonadMemory) (pin := Fir.Core.allocaRule) (fingerprint := "1218300276586282714")
+:::readable Fir.Core.Op.memDenote? Fir.Core.Op.memExit? Fir.Core.memDenoteIn (pin := Fir.Core.denoteWith) (pin := Fir.MonadMemory) (pin := Fir.Core.allocaRule) (fingerprint := "8259210959358496252")
 *Definition: the core's rules with memory.* Let $`m` be a monad with
 choice, UB and the
 {ref "The-fir-specification--Memory--The-memory-effect"}[memory effect] on
@@ -80,8 +80,11 @@ that of $`\mathsf{memcpy}` and $`\mathsf{memmove}` their
 {ref "The-fir-specification--Memory--Copy-and-move-rules"}[copy and move rule],
 which reads and writes the memory $`\rho(N)` of its pointers, and that of
 $`\mathsf{memset}` its {ref "The-fir-specification--Memory--Fill-rules"}[fill rule],
-which writes the memory $`\rho(N)` of its pointer;
-these are the core ops
+which writes the memory $`\rho(N)` of its pointer, and those of
+$`\mathsf{ptr\_expose}` and $`\mathsf{ptr\_from\_int}` their
+{ref "The-fir-specification--Memory--Rules-of-pointers-as-integers"}[rules],
+which expose a pointer of the memory $`\rho(N)` or turn an integer back
+into one; these are the core ops
 that touch memory, and none has a rule without memory. The rule with
 memory of $`\mathsf{fieldaddr}~s~j` is its
 {ref "The-fir-specification--Memory--Field-address-rules"}[result] in the
@@ -97,17 +100,17 @@ with no rule, gives each op its rule with memory, and $`z(p)` to an op
 $`p` that has none.
 :::
 
-:::readable Fir.Core.memCopyRule_map Fir.Core.memDenoteIn_mapsDenote (pin := Fir.Core.memCopyRule) (fingerprint := "710039391943419071")
+:::readable Fir.Core.memCopyRule_map Fir.Core.memDenoteIn_mapsDenote (pin := Fir.Core.memCopyRule) (fingerprint := "12713930000773128625")
 *Theorem: the core's rules with memory mean the same in both monads.* For
 monads $`m` and $`n` with choice, UB and the memory effect, a morphism
-$`\varphi` from $`m` to $`n` that keeps choice, UB, allocation, loads and
-stores
-maps the core's semantics with memory in $`m` at $`\ell`, $`\rho` and
+$`\varphi` from $`m` to $`n` that keeps choice, UB, allocation, loads,
+stores, exposing and turning integers back into pointers maps the core's semantics with memory in $`m` at $`\ell`, $`\rho` and
 $`L` to its semantics with memory in $`n`, op by op, when it maps what an
 op with no rule does. $`\mathsf{fieldaddr}` maps because its rule gives
 its result at once, and $`\varphi(\mathsf{pure}~r) = \mathsf{pure}~r`.
 Every other op but $`\mathsf{alloca}`, the loads, the stores, the
-copies and moves and the fills follows from the theorem above; $`\mathsf{alloca}` maps because
+copies and moves, the fills, $`\mathsf{ptr\_expose}` and
+$`\mathsf{ptr\_from\_int}` follows from the theorem above; $`\mathsf{alloca}` maps because
 $`\varphi` maps its allocation to the same allocation in $`n`, and
 mapping the pointer to the result comes after it in both.
 $`\mathsf{load}` maps because $`\varphi` maps the UB of a poison pointer
@@ -119,9 +122,14 @@ returning no result to the same, UB to UB for the same reason, its load
 and its store to the same load and store, and its choice of a poison
 length's bits to the same choice; a fill maps in the same way, by its
 store and with no load
-({ref "The-fir-specification--Memory--Fill-rules"}[the fill rules]). The
+({ref "The-fir-specification--Memory--Fill-rules"}[the fill rules]).
+$`\mathsf{ptr\_expose}` maps because $`\varphi` maps the UB of a poison
+pointer to the same UB and an exposure to the same exposure, and
+$`\mathsf{ptr\_from\_int}` because it maps turning an integer back into a
+pointer to the same. The
 {ref "The-fir-specification--Memory--The-state-layer"}[translation through the layer]
-keeps allocation, loads and stores.
+keeps allocation, loads, stores, exposing and turning integers back into
+pointers.
 :::
 
 :::readable Fir.Core.memDenoteAt Fir.Core.instDialectMemDenote (pin := Fir.DialectMemDenote) (fingerprint := "6916432413964910533")

@@ -6,9 +6,9 @@ import Fir.Core.OpEffects
 /-!
 # The poison classes of the core ops
 
-Every one of the 50 core ops has a class (ADR-2026-10-29-2006).
+Every one of the 52 core ops has a class (ADR-2026-10-29-2006).
 
-Forty-three ops propagate poison: `const`, the float constant `fconst`,
+Forty-four ops propagate poison: `const`, the float constant `fconst`,
 `poison`, `add`, `sub`, `mul`, `sdiv`, `udiv`, `srem`, `urem`, `and`, `or`,
 `xor`, `shl`, `lshr`, `ashr`, `icmp`, `fcmp`, `zext`, `sext`, `trunc`, the
 three ops of float arithmetic: `fbin` (`fadd`, `fsub`, `fmul`, `fdiv`,
@@ -29,7 +29,9 @@ poison pointer, as a pointer with no provenance in its place faults, and
 a poison length runs as some length, chosen, so it is UB only where some
 length is. The fill of units `memSet` is as `memCopy` in its pointer and
 its length, and writes the poison units of a poison value, as `store`
-does.
+does. `ptrFromInt` gives a poison pointer for a poison integer, and
+counts the call as a defined integer does, so memories that refine others
+keep counting as many calls.
 `const`, `fconst`, `poison` and `alloca` have no operands, so they
 propagate poison whatever their semantics. `poison` meets the
 obligation of a result on defined operands too: its one operand vector,
@@ -42,8 +44,14 @@ divisor, and propagate a poison dividend, but for one case: `sdiv` and
 allows both kinds of UB, because a defined value in place of the poison
 would be UB too: a zero divisor, or a dividend that is the signed minimum.
 
-Seven ops are exceptions, each with its own rule:
+Eight ops are exceptions, each with its own rule:
 
+* `ptrExpose`: a poison pointer is immediate UB. It cannot propagate
+  poison: exposing a defined pointer may give its allocation an address,
+  and refinement of memories compares addresses, so a poison result with
+  the memories as they were would not be refined by the run on a pointer
+  in its place. And the UB is not that of some pointer in its place, since
+  exposing a pointer with no provenance is never UB.
 * `select`: a poison condition gives poison; the operand not chosen does not
   matter, and the one chosen is given as it is.
 * `freeze`: poison gives an arbitrary but fixed value.
@@ -96,8 +104,8 @@ def Op.poisonClass : Op → PoisonClass
   | .fbin .. | .funary .. | .fma .. | .zext .. | .sext .. | .trunc .. | .poison _
   | .toBits .. | .ofBits .. | .sitofp .. | .uitofp .. | .fpext .. | .fptrunc .. | .ptradd ..
   | .fieldAddr .. | .fptosi .. | .fptoui .. | .alloca .. | .load .. | .store .. | .loadPtr .. | .storePtr ..
-  | .loadFloat .. | .storeFloat .. | .memCopy .. | .memSet .. => .propagates
-  | .select _ | .freeze _ | .br | .condBr | .ret _ | .unreachable | .call .. => .exception
+  | .loadFloat .. | .storeFloat .. | .memCopy .. | .memSet .. | .ptrFromInt .. => .propagates
+  | .ptrExpose .. | .select _ | .freeze _ | .br | .condBr | .ret _ | .unreachable | .call .. => .exception
 
 /-- A core value is poison when it is the poison of its type: `iN`, a
 float type or a pointer type. -/
@@ -111,14 +119,16 @@ end Fir.Core
 namespace Fir
 
 /-- The core dialect's effect class: each op's poison class, and its
-effects from the section on the effects of the core ops. -/
-instance : DialectEffects CoreDialect := ⟨Core.Mem, Core.Op.poisonClass, Core.Op.effects⟩
+effects from the section on the effects of the core ops. Its memories are
+named by their numbers in the data layout. -/
+instance : DialectEffects CoreDialect := ⟨Core.Mem, Core.Op.poisonClass, Core.Op.effects, some⟩
 
 instance : TyPoison Core.Ty := ⟨Core.Ty.IsPoison⟩
 
 -- The exceptions among one instance of every core op.
 #guard (Core.samples.filter (Core.Op.poisonClass · == .exception)).map Core.Op.name ==
-  ["select", "freeze", "br", "cond_br", "ret", "ret", "unreachable", "call"]
+  ["select", "freeze", "br", "cond_br", "ret", "ret", "unreachable", "call", "ptr_expose", "ptr_expose",
+  "ptr_expose"]
 
 /-- A poison core value is refined by every value of its type. -/
 theorem Core.Ty.poison_isRefinedBy :

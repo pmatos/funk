@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Addresses: readable blocks" =>
 
-:::moduleDocs (fingerprint := "77473957639626523")
+:::moduleDocs (fingerprint := "8870463966010300475")
 :::
 
 :::readable Fir.Memory.alignUp (fingerprint := "5903328988636615743")
@@ -43,11 +43,12 @@ address with another, as zero-sized objects may in LLVM and Rust; no op
 of M1 makes one.
 :::
 
-:::readable Fir.Memory.Block.giveAddr (fingerprint := "15790123385326876867")
+:::readable Fir.Memory.Block.giveAddr (fingerprint := "7905469697570646947")
 *Definition: giving a block an address.* A block with no address gets
-$`z`; a block that has one keeps it:
+$`z`; a block that has one keeps it. Either way it keeps its constness
+$`c`:
 
-$$`\mathrm{give}_z(k, \alpha, \vec{x}, \ell, \bot) = (k, \alpha, \vec{x}, \ell, z) \qquad \mathrm{give}_z(k, \alpha, \vec{x}, \ell, y) = (k, \alpha, \vec{x}, \ell, y)`
+$$`\mathrm{give}_z(k, \alpha, \vec{x}, \ell, \bot, c) = (k, \alpha, \vec{x}, \ell, z, c) \qquad \mathrm{give}_z(k, \alpha, \vec{x}, \ell, y, c) = (k, \alpha, \vec{x}, \ell, y, c)`
 :::
 
 :::readable Fir.Memory.Memory.addrOf (fingerprint := "1378434035811052063")

@@ -4,7 +4,7 @@
 
 use super::Rng;
 
-const TOKENS: [&str; 61] = [
+const TOKENS: [&str; 64] = [
     "func",
     "@f",
     "@\"x y\"",
@@ -60,6 +60,9 @@ const TOKENS: [&str; 61] = [
     ":",
     ",",
     "->",
+    "...",
+    "sext",
+    "zext",
     "locs",
     "unknown",
     "\"s\"",

@@ -14,10 +14,10 @@ fails when the Lean changes under it.
 
 #doc (Manual) "Allocation in the state layer: readable blocks" =>
 
-:::moduleDocs (fingerprint := "16258933277607196906")
+:::moduleDocs (fingerprint := "8316499171392448086")
 :::
 
-:::readable Fir.Memory.Memory.unitAt_alloc_lt Fir.Memory.Memory.unitAt_alloc_ge Fir.Memory.Memory.allocs_alloc Fir.Memory.Memory.length_of_allocs (pin := Fir.Memory.Memory.alloc) (pin := Fir.Memory.Memory.unitAt) (pin := Fir.Memory.Memory.allocs) (fingerprint := "15589818588162062018")
+:::readable Fir.Memory.Memory.unitAt_alloc_lt Fir.Memory.Memory.unitAt_alloc_ge Fir.Memory.Memory.allocs_alloc Fir.Memory.Memory.length_of_allocs (pin := Fir.Memory.Memory.alloc) (pin := Fir.Memory.Memory.unitAt) (pin := Fir.Memory.Memory.allocs) (fingerprint := "15884002896489029091")
 *Theorems: an allocation adds a block after the others.* Let $`M` be a
 {ref "The-fir-specification--Memory--The-memory-model"}[memory], and
 $`M'` the memory after an allocation of $`n` units, of kind $`k` and
@@ -27,9 +27,9 @@ alignment $`a`, in $`M`.
 * A unit of an allocation past those of $`M` depends only on how many
   allocations $`M` has: two memories with as many allocations give it the
   same value after the same allocation.
-* The allocations of $`M'`, each with its kind, alignment, units and
-  liveness, are those of $`M` followed by the new one: kind $`k`,
-  alignment $`a`, $`n` units, live.
+* The allocations of $`M'`, each with its kind, alignment, units,
+  liveness and constness, are those of $`M` followed by the new one: kind
+  $`k`, alignment $`a`, $`n` units, live, not constant.
 * Two memories with the same allocations have as many blocks.
 :::
 
@@ -59,7 +59,7 @@ follow those of the allocations that were there, and every other memory
 is unchanged.
 :::
 
-:::readable Fir.framesOf_alloc_ne Fir.alloc_allocatesNot (pin := Fir.AllocatesNot) (pin := Fir.Memory.Memories.framesOf) (fingerprint := "14430351169111757673")
+:::readable Fir.framesOf_alloc_ne Fir.alloc_allocatesNot (pin := Fir.AllocatesNot) (pin := Fir.Memory.Memories.framesOf) (fingerprint := "15873124674779903796")
 *Theorems: an allocation in $`x` allocates in no other memory.* For every
 memory $`y \ne x`, after an allocation in $`x`, the frames list the same
 stack allocations of $`y`: a stack allocation records its block of $`x`
@@ -70,7 +70,7 @@ that it allocates in no memory $`y \ne x`: $`y` keeps its allocations and
 the frames its stack allocations.
 :::
 
-:::readable Fir.alloc_readsNot (pin := Fir.ReadsNot) (pin := Fir.ReadsNot.Match) (fingerprint := "6716092797336909426")
+:::readable Fir.alloc_readsNot (pin := Fir.ReadsNot) (pin := Fir.ReadsNot.Match) (fingerprint := "4782131002409410305")
 *Theorem: an allocation reads no memory.* For every memory $`y`, an
 allocation meets the
 {ref "The-fir-specification--Memory--Memory-obligations"}[obligation]

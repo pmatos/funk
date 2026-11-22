@@ -28,7 +28,7 @@ So what it runs by its own rule has a property when its rule has it on
 every value and pointer.
 :::
 
-:::readable Fir.Core.storePtr_writesNot Fir.Core.storePtr_readsNot Fir.Core.storePtr_allocatesNot (pin := Fir.WritesNot) (pin := Fir.ReadsNot) (pin := Fir.AllocatesNot) (fingerprint := "16397300765104006661")
+:::readable Fir.Core.storePtr_writesNot Fir.Core.storePtr_readsNot Fir.Core.storePtr_allocatesNot (pin := Fir.WritesNot) (pin := Fir.ReadsNot) (pin := Fir.AllocatesNot) (fingerprint := "14032424143985594303")
 *Theorems: the store of a pointer touches memory only by writing where it
 declares.* At every layout $`\ell` and naming $`\rho`, it writes no memory
 but $`\rho(N)`, the one its

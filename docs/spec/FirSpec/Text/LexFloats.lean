@@ -80,7 +80,7 @@ bits $`\mathit{ds}`, and leaves $`c`; and its reader of float literals
 reads `0`, `x`, $`\mathit{ds}` and $`c` the same way.
 :::
 
-:::readable Fir.Text.readsToken_dec Fir.Text.readsToken_negDec Fir.Text.readsToken_hex (pin := Fir.Text.ReadsToken) (pin := Fir.Text.lexToken) (pin := Fir.Text.lexNumber) (fingerprint := "4485639647220631250")
+:::readable Fir.Text.readsToken_dec Fir.Text.readsToken_negDec Fir.Text.readsToken_hex (pin := Fir.Text.ReadsToken) (pin := Fir.Text.lexToken) (pin := Fir.Text.lexNumber) (fingerprint := "2645602232590092205")
 *Theorems: each printed float literal is one token.* Followed by
 characters $`c` at the end of a token, the lexer reads as one token, and
 leaves $`c`:

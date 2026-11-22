@@ -1,4 +1,5 @@
 import Fir.Text.LexModule
+import Fir.Text.LexWritable
 import Fir.Text.GlobalLaws
 
 /-!
@@ -19,73 +20,12 @@ namespace Fir
 
 open Text
 
-/-- Every token of a list written with separators can be written when the
-separator's and each element's can. -/
-theorem forall_mem_intercalate_of {P : Tok → Prop} {sep : List Tok} (hs : ∀ t ∈ sep, P t) :
-    ∀ {tss : List (List Tok)}, (∀ ts ∈ tss, ∀ t ∈ ts, P t) → ∀ t ∈ sep.intercalate tss, P t
-  | [], _ => by simp
-  | [ts], h => by simpa using h ts (.head _)
-  | ts :: ts' :: tss, h => by
-    rw [List.intercalate_cons_cons]
-    intro t ht
-    rcases List.mem_append.mp ht with ht | ht
-    · rcases List.mem_append.mp ht with ht | ht
-      · exact h ts (.head _) t ht
-      · exact hs t ht
-    · exact forall_mem_intercalate_of hs (fun us hus => h us (.tail _ hus)) t ht
-
-theorem comma_writable : ∀ t ∈ [Tok.comma], t.Writable := by simp [Tok.Writable]
-
 /-- Splits a goal that every token of a list can be written into a goal for
 each part of the list that is not punctuation. -/
 local macro "split_writable" : tactic => `(tactic| (
   try simp only [List.forall_mem_cons, List.forall_mem_append, List.forall_mem_flatMap,
     List.not_mem_nil, false_implies, forall_const, Tok.Writable, and_true, true_and]
   try and_intros))
-
-mutual
-/-- The tokens of an attribute that can be written can be written. -/
-theorem Attr.Writable.tokens : ∀ {a : Attr}, a.Writable → ∀ t ∈ a.tokens, t.Writable
-  | .word _, h => fun t ht => by
-    simp only [Attr.tokens, List.mem_singleton] at ht
-    subst ht
-    exact h
-  | .int _, _ => by simp [Attr.tokens, Tok.Writable]
-  | .str _, _ => by simp [Attr.tokens, Tok.Writable]
-  | .sym _, _ => by simp [Attr.tokens, Tok.Writable]
-  | .float _, h => by simpa [Attr.tokens, Tok.Writable, Attr.Writable] using h
-  | .app _ args, h => by
-    have hargs := Attr.AllWritable.tokens (as := args) h.2
-    simp only [Attr.tokens]
-    split_writable
-    · exact h.1
-    · exact forall_mem_intercalate_of comma_writable hargs
-
-/-- The tokens of attributes that can be written can be written. -/
-theorem Attr.AllWritable.tokens : ∀ {as : List Attr}, Attr.AllWritable as →
-    ∀ ts ∈ Attr.tokens.tokensList as, ∀ t ∈ ts, t.Writable
-  | [], _ => by simp [Attr.tokens.tokensList]
-  | _ :: _, h => by
-    simp only [Attr.tokens.tokensList, List.forall_mem_cons]
-    exact ⟨Attr.Writable.tokens h.1, Attr.AllWritable.tokens h.2⟩
-end
-
-/-- Each attribute of a list that can be written can be written. -/
-theorem Attr.AllWritable.mem : ∀ {as : List Attr}, Attr.AllWritable as → ∀ a ∈ as, a.Writable
-  | [], _, _, ha => by simp at ha
-  | _ :: _, h, a, ha => by
-    rcases List.mem_cons.mp ha with rfl | ha
-    · exact h.1
-    · exact Attr.AllWritable.mem h.2 a ha
-
-/-- A list whose attributes can each be written can be written. -/
-theorem Attr.AllWritable.of_mem : ∀ {as : List Attr}, (∀ a ∈ as, a.Writable) → Attr.AllWritable as
-  | [], _ => trivial
-  | _ :: _, h => ⟨h _ (.head _), Attr.AllWritable.of_mem fun a ha => h a (.tail _ ha)⟩
-
-/-- A type is an attribute that can be written. -/
-theorem Attr.IsType.writable : ∀ {a : Attr}, a.IsType → a.Writable
-  | .word _, h | .app .., h => h
 
 /-- The tokens of a location in a table within the limits can be written. -/
 theorem Location.tokens_writable (l : Location) (h : ∀ n ∈ l.numbers, n < Location.limit) :
@@ -283,19 +223,18 @@ end
 /-- Every token of a well-formed function can be written. -/
 theorem tokens (hf : f.WellFormed) : ∀ t ∈ f.tokens, t.Writable := by
   have hblocks := hf.blocks_tokens f.body.blocks fun b hb => hb
-  have hres : ∀ t ∈ (if f.results.isEmpty = true then []
-      else Tok.arrow :: [Tok.comma].intercalate (f.results.map (tyAttr · |>.tokens))), t.Writable := by
-    split
-    · simp
-    · split_writable
-      refine forall_mem_intercalate_of comma_writable fun ts hts => ?_
-      obtain ⟨ty, hty, rfl⟩ := List.mem_map.mp hts
-      exact Attr.Writable.tokens (hf.types ty (List.mem_append_left _ hty)).1.writable
+  have hattrs : ∀ {n : Nat} {as : List (List Attr)}, (∀ a ∈ as, a ∈ f.paramAttrs ++ f.resultAttrs) →
+      ∀ a ∈ padAttrs n as, Attr.AllWritable a := fun hs a ha => by
+    rcases mem_padAttrs ha with ha | rfl
+    · exact hf.attrs a (hs a ha)
+    · trivial
   simp only [Func.tokens]
   split_writable
   · decide
-  · exact hf.defs_tokens fun x hx => List.mem_append_left _ hx
-  · exact hres
+  · exact f.paramsTokens_writable (fun x hx => hf.def_tokens (List.mem_append_left _ hx))
+      (hattrs fun a ha => List.mem_append_left _ ha)
+  · exact f.resultsTokens_writable (fun t ht => (hf.types t (List.mem_append_left _ ht)).1)
+      (hattrs fun a ha => List.mem_append_right _ ha)
   · exact hblocks
 
 end Func.WellFormed

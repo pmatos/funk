@@ -22,7 +22,9 @@
 //! stack allocation `alloca`, the load `load` and the store `store`, and
 //! #264 loads, stores and allocations of floats. #236 adds the field
 //! address `fieldaddr`. #234 adds the copy `memcpy`, the move `memmove`
-//! and the fill `memset`. A later family adds a file and a line here.
+//! and the fill `memset`, and #232 `ptr_expose` and `ptr_from_int`, which
+//! turn pointers into integers and back. A later family adds a file and a
+//! line here.
 
 mod access;
 mod align;
@@ -48,6 +50,7 @@ mod load;
 mod memcopy;
 mod memset;
 mod pointer;
+mod ptr_int;
 mod rounding;
 mod store;
 mod types;
@@ -71,8 +74,8 @@ pub use float_to_int::FLOAT_TO_INT_OPS;
 pub use int_to_float::INT_TO_FLOAT_OPS;
 pub use rounding::ROUNDING_MODES;
 pub use types::{
-    CoreType, FLOAT_ALIASES, MAX_MEMORY, MAX_WIDTH, core_type, float_format, float_type, int_type,
-    int_width, ptr_type,
+    CoreType, EXT_MARKERS, FLOAT_ALIASES, MAX_MEMORY, MAX_WIDTH, core_type, float_format,
+    float_type, int_type, int_width, ptr_type,
 };
 pub use width::WIDTH_CHANGES;
 
@@ -125,6 +128,8 @@ pub fn dialect() -> Dialect {
         .op(memcopy::MEMCPY)
         .op(memcopy::MEMMOVE)
         .op(memset::MemSet)
+        .op(ptr_int::PtrInt::Expose)
+        .op(ptr_int::PtrInt::FromInt)
         .op(float_to_int::FloatToInt("fptosi"))
         .op(float_to_int::FloatToInt("fptoui"));
     float_arith::FloatArith::all().fold(core, Dialect::op)

@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Core rules: readable blocks" =>
 
-:::moduleDocs (fingerprint := "14153341544230733349")
+:::moduleDocs (fingerprint := "9610630603061620573")
 :::
 
 :::readable Fir.Core.Ty.Valid Fir.Core.Ty.memory (pin := Fir.Core.maxWidth) (pin := Fir.Core.floatWidth) (fingerprint := "1308968798942516744")
@@ -50,7 +50,7 @@ in every module, and $`\mathsf{ptr}\langle N \rangle` with $`N \ge 1` is in
 a module whose layout declares memory $`N` (ADR-2026-11-12-1821).
 :::
 
-:::readable Fir.Core.Op.symbolRefs (fingerprint := "206206975138930432")
+:::readable Fir.Core.Op.symbolRefs (fingerprint := "13432593609227310850")
 *Definition: the symbols a core op refers to.* $`\mathsf{call}~f : t^* \to r^*`
 refers to the symbol $`f` of its callee: its list of symbols is the
 one-element sequence $`(f)`. No other core op refers to a function:
@@ -63,7 +63,7 @@ $$`\mathrm{refs}(\mathit{op}) = \epsilon \ \text{ for every other op}`
 The general rules check that $`f` names a function of the module.
 :::
 
-:::readable Fir.Core.Op.attrTypes (fingerprint := "13465611089469671914")
+:::readable Fir.Core.Op.attrTypes (fingerprint := "18385418986181652308")
 *Definition: the types a core op carries.* $`\mathsf{alloca}_N~k~t~c~a`
 carries the type $`t` that it allocates values of in its attributes, when
 $`t` is valid:
@@ -79,7 +79,22 @@ core op carries a type of its own: $`\mathsf{call}`'s are its callee's, and
 $`\mathsf{ret}`'s the function's results.
 :::
 
-:::readable Fir.Core.Op.unitWidths (fingerprint := "5340763466587710267")
+:::readable Fir.Core.Op.addrWidths (fingerprint := "527999314795326464")
+*Definition: the pointer widths a core op asks.*
+$`\mathsf{ptr\_expose}_N~W` and $`\mathsf{ptr\_from\_int}_N~W` turn
+pointers of memory $`N` into integers of $`\mathsf{i}W`, or back, so each
+asks that memory $`N`'s pointers be $`W` bits wide (the human's ruling of
+2026-11-18 on #232, Q2) and that memory $`N` be integral (the human's
+ruling of 2026-11-11 on #231):
+
+$$`\mathrm{opaddrs}(\mathsf{ptr\_expose}_N~W) = \mathrm{opaddrs}(\mathsf{ptr\_from\_int}_N~W) = ((N, W)) \qquad \mathrm{opaddrs}(\mathit{op}) = \epsilon \ \text{ for every other op}`
+
+The data layout's rules check both: a $`\mathsf{ptr\_expose}` of a
+$`\mathsf{ptr}` into an $`\mathsf{i32}` is not valid where memory 0 has
+64-bit pointers, and neither is one of a non-integral memory.
+:::
+
+:::readable Fir.Core.Op.unitWidths (fingerprint := "8293331497595500196")
 *Definition: the unit widths a core op asks.* $`\mathsf{memset}_N~o~V~W`
 writes values of $`\mathsf{i}V` in the units of memory $`N`, so it asks
 that they be $`V` bits wide (the human's ruling on #251: a fill writes
@@ -118,7 +133,7 @@ So every core type may be a field (#236). These are the units and the
 alignment that $`\mathsf{alloca}` gives one value of a field's type.
 :::
 
-:::readable Fir.Core.FBin.mode Fir.Core.FUnary.mode Fir.LayoutRef.admits Fir.Core.Op.Valid (pin := Fir.isPowerOfTwo) (pin := Fir.MemLayout.limit) (pin := Fir.MemLayout.ValidAlign) (fingerprint := "14596572156755049592")
+:::readable Fir.Core.FBin.mode Fir.Core.FUnary.mode Fir.LayoutRef.admits Fir.Core.Op.Valid (pin := Fir.isPowerOfTwo) (pin := Fir.MemLayout.limit) (pin := Fir.MemLayout.ValidAlign) (fingerprint := "13129292095033933057")
 *Definition: the core rules of an op.* Beyond its signature, which the
 {ref "The-fir-specification--Validation--The-general-rules"}[general rules]
 check, a core op obeys these rules in its op context $`C`:
@@ -268,4 +283,16 @@ as its memory and whether each of its fields is repeated.
 Every other op has no rule beyond its signature. These definitions
 are what the core dialect
 {ref "The-fir-specification--Validation--Scope-and-symbols"}[adds to validation].
+:::
+
+:::readable Fir.Core.Ty.sigAttrsAllowed (fingerprint := "1995343573980004862")
+*Definition: the attributes a core type allows in a signature.* A
+parameter or a result of a core type $`t` may carry the attributes $`a^*`
+after its type when $`a^*` is empty, or when $`t` is
+$`\mathsf{i}N` with $`N < 32` and $`a^*` is one word, `sext` or `zext`
+(ADR-2026-11-09-1547). The word is an extension marker: a marked
+parameter is extended by the caller, and a marked result by the callee,
+by its sign with `sext` and with zeros with `zext`, and the other side may
+rely on it. No other type carries an attribute. This is the core's rule
+$`\vdash t~a^*~\text{valid}`.
 :::

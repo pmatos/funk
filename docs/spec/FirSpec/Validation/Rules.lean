@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "The general rules: readable blocks" =>
 
-:::moduleDocs (fingerprint := "1520439675253638213")
+:::moduleDocs (fingerprint := "13807149481206071995")
 :::
 
 :::readable Fir.ModuleContext (fingerprint := "6320046082962391219")
@@ -49,7 +49,7 @@ target (ADR-2026-10-29-2010). No branch may go to the entry block: it has
 no predecessors, and its arguments are the function's parameters.
 :::
 
-:::readable Fir.Func.RegionsValid (pin := Fir.DialectValidation) (fingerprint := "9072438620760934377")
+:::readable Fir.Func.RegionsValid (pin := Fir.DialectValidation) (fingerprint := "5308546481441313303")
 *Definition: the valid regions of an op.* Let $`o` be an op of the
 function $`f`, checked in the module context $`C`, let $`p` be its op
 instance, and let $`d` be the dialect. The regions of $`o` are valid when:
@@ -135,27 +135,17 @@ the regions of an op, $`\mathrm{inner}(o)`, are the ops of each block of
 each of its regions, and not deeper.
 :::
 
-:::readable Fir.Block.InRegionOf Fir.Block.InRegionOf.mono Fir.Block.mem_allBlocks Fir.Region.mem_allBlocks_cases Fir.Block.mem_allBlocks_cases Fir.Operation.mem_regionBlocks_cases Fir.Func.mem_allBlocks_cases (pin := Fir.Func.allBlocks) (fingerprint := "12115075447680226974")
-*Theorems: where a block of a function sits.* A block $`b` is _in a region
-of_ a list of blocks $`L` when some op of some block of $`L` owns a region
-that holds $`b`. Every block of a list is among its blocks at any depth.
-And every block of $`\mathrm{allblocks}(f)` is a block of the body of $`f`,
-or a block in a region of $`\mathrm{allblocks}(f)`. So every op of a
-function at any depth is an op of its body, or an op inside a region of an
-op of the function, and the rules below cover each op once.
-:::
-
 :::readable Fir.Func.inner_of_noRegions (fingerprint := "14527961165736990592")
 *Theorem: no region, no op inside one.* When no op of $`f` owns a region,
 at any depth, every op inside a region of $`f` is valid: there is none.
 :::
 
-:::readable Fir.Func.Valid (pin := Fir.isName) (pin := Fir.isNameChar) (pin := Fir.isWordStart) (pin := Fir.isLetter) (pin := Fir.Func.types) (fingerprint := "15276493308517073629")
+:::readable Fir.Func.Valid (pin := Fir.isName) (pin := Fir.isNameChar) (pin := Fir.isWordStart) (pin := Fir.isLetter) (pin := Fir.Func.types) (fingerprint := "1299030503173385690")
 *Definition: a valid function.* The function $`f` is valid in the module
 context $`C` when every premise of this rule holds, where
 $`B = \mathrm{blocks}(f)` and $`d` is the dialect of $`f`:
 
-$$`\dfrac{\begin{array}{c} \mathrm{kind}(\mathrm{body}(f)) = \epsilon \\ B = e~b^* \qquad \mathrm{args}(e) = \epsilon \\ \mathrm{reachable}_f(\mathrm{label}(b)) \ \text{ for each } b \in B \\ \text{the labels of } B \text{ are distinct} \\ \text{the names of } \mathrm{defs}(f) \text{ are distinct} \\ \mathrm{isname}(x) \ \text{ for each value name } x \\ \text{in } \mathrm{defs}(f) \text{ and each label } x \\ \text{of a block in } \mathrm{allblocks}(f) \\ \vdash_d t~\text{valid} \ \text{ for each } t \in \mathrm{types}(f) \\ \mathrm{body}(b) \neq \epsilon \ \text{ for each } b \in B \\ C, f, b, i \vdash o~\text{valid for each } b \in B \\ \text{and each op } o \text{ at an index } i \text{ of } b \\ C, f \vdash o'~\text{valid inside for each } o' \in \mathrm{inner}(o) \\ \text{and each op } o \text{ of a block of } \mathrm{allblocks}(f) \\ (\mathrm{symtab}_C), \mathrm{id} \vdash_d f~\text{valid} \end{array}}{C \vdash f~\text{valid}}`
+$$`\dfrac{\begin{array}{c} \mathrm{kind}(\mathrm{body}(f)) = \epsilon \\ B = e~b^* \qquad \mathrm{args}(e) = \epsilon \\ \mathrm{reachable}_f(\mathrm{label}(b)) \ \text{ for each } b \in B \\ \text{the labels of } B \text{ are distinct} \\ \text{the names of } \mathrm{defs}(f) \text{ are distinct} \\ \mathrm{isname}(x) \ \text{ for each value name } x \\ \text{in } \mathrm{defs}(f) \text{ and each label } x \\ \text{of a block in } \mathrm{allblocks}(f) \\ \vdash_d t~\text{valid} \ \text{ for each } t \in \mathrm{types}(f) \\ \mathrm{body}(b) \neq \epsilon \ \text{ for each } b \in B \\ C, f, b, i \vdash o~\text{valid for each } b \in B \\ \text{and each op } o \text{ at an index } i \text{ of } b \\ C, f \vdash o'~\text{valid inside for each } o' \in \mathrm{inner}(o) \\ \text{and each op } o \text{ of a block of } \mathrm{allblocks}(f) \\ (\mathrm{symtab}_C), \mathrm{id} \vdash_d f~\text{valid} \\ \text{the signature of } f \text{ is valid} \end{array}}{C \vdash f~\text{valid}}`
 
 In words:
 
@@ -181,6 +171,9 @@ In words:
 * The function obeys its dialect's
   {ref "The-fir-specification--Validation--Scope-and-symbols"}[own rule over a whole function],
   in the context of the module's symbol table and through the identity view.
+* Its {ref "The-fir-specification--Validation--A-function___s-signature"}[signature]
+  is valid: it is not variadic, and the dialect of each parameter's and
+  result's type allows the attributes after it.
 
 A function's symbol may be any string: the text quotes it when it is not a
 word.
@@ -259,17 +252,18 @@ chapters on the text and on execution read a valid module through these,
 and look only at its own functions.
 :::
 
-:::readable Fir.Module.dialectItems_of_flat Fir.Module.valid_of_flat (fingerprint := "11399174543087843600")
+:::readable Fir.Module.dialectItems_of_flat Fir.Module.valid_of_flat (fingerprint := "6283653760050759271")
 *Theorem: a module with no nested module.* A module $`M` whose items are
 all functions has one table, its own. So $`M` is valid when the symbols of
 its items are distinct, its location table is valid, each of its functions
 is valid in $`\mathrm{ctx}(M)`, the names of $`\mathrm{dialects}(M)`
 are distinct words, its layout is valid, and the layout declares the
 memory of each type that its functions state and that their ops carry in
-their attributes, and gives units as wide as the values that their ops
-write into them ($`\mathrm{opunits}`). Such a module has no item of a
-dialect's kind, no aggregate's layout and no global. The last
-four conditions are checked by computation when they are not given, so
+their attributes, gives units as wide as the values that their ops write
+into them ($`\mathrm{opunits}`), and integral memories pointers as wide
+as their ops' integers ($`\mathrm{opaddrs}`).
+Such a module has no item of a dialect's kind, no aggregate's layout and
+no global. The last five conditions are checked by computation when they are not given, so
 the tests prove their modules valid this way with the first five.
 :::
 

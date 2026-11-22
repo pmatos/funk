@@ -17,7 +17,7 @@ when the Lean changes under it.
 :::moduleDocs (fingerprint := "3066211476097927592")
 :::
 
-:::readable Fir.Core.Rejects.deadBlock_problems (pin := Fir.Core.Ty.Valid) (pin := Fir.Core.maxWidth) (pin := Fir.Core.Op.Valid) (fingerprint := "17801812815736893318")
+:::readable Fir.Core.Rejects.deadBlock_problems (pin := Fir.Core.Ty.Valid) (pin := Fir.Core.maxWidth) (pin := Fir.Core.Op.Valid) (fingerprint := "8795264161517993667")
 *Theorem: the check finds a problem in the rejected function, in every
 module.* For every module context $`C` and every lookup that agrees with
 $`C`, the check of the function `@f` of the section on
@@ -48,7 +48,7 @@ dialect is a
 {ref "The-fir-specification--Validation--The-validation-check"}[decidable dialect].
 :::
 
-:::readable Fir.Core.Rejects.deadModule (pin := Fir.Core.Rejects.deadBlock) (fingerprint := "16048080443308313161")
+:::readable Fir.Core.Rejects.deadModule (pin := Fir.Core.Rejects.deadBlock) (fingerprint := "12688694913204946916")
 *Definition: the rejected function, alone in a module.* The module holds
 the function `@f` and nothing else, its data layout is empty, and its
 location table has the one

@@ -17,7 +17,8 @@ line (`docs/decisions/fir-ref-command-line.md#fir-ref-run`).
 
 `freeze` of poison makes a choice, so a run may end in many ways.
 `fir-ref` runs the interpreter in the state layer over the spec's tree of
-choices, from the empty memories, with the rules of the core and `gpu`, and
+choices, from the memories that hold the globals of the function's table,
+with the rules of the core and `gpu`, and
 walks the tree in one of the modes below, the spec's `Gpu.scripted`,
 `Gpu.exhaustive`, `Gpu.exhaustiveNaN` and `Gpu.sampled`, which Lean proves
 sound for the runs with memory (`Gpu.scripted_memOutcomes`,
@@ -105,7 +106,7 @@ theorem setLenFast_eq (v n len : Nat) (p : PoisonOr Pointer) (x : PoisonOr (BitV
       · rename_i f hf
         have hs : S.store (ρ n) q (setUnits (lay (ρ n)) len x) 1 = .error f := by
           simp only [Memories.store, Memory.storeAligned]
-          rw [Memory.store_eq_error.2 (by simpa [setUnits] using hf)]
+          rw [Memory.store_of_locate_error (by simpa [setUnits] using hf)]
           rfl
         simp only [setLenRule, hlen, ↓reduceIte]
         show _ = StateT.map _ (MonadMemory.store (m := TM) (ρ n) q (setUnits (lay (ρ n)) len x) 1) S
@@ -170,6 +171,12 @@ live in `fir-ref`'s command line, not in `FirRef.RunModes` (G0,
 ADR-2026-11-03-0600).
 -/
 
+/-- The memories that a run of a function of `M`'s own table starts with,
+each memory with its entry in `M`'s data layout, named by its number: the
+core's, and the core's and `gpu`'s. -/
+abbrev coreStart (M : Module CoreDialect) := RunItems.start CoreDialect M.layout.entry id M.runItems
+abbrev gpuStart (M : Module CoreGpu) := RunItems.start CoreGpu M.layout.entry Gpu.memName M.runItems
+
 /-- `Core.scripted`, by the machine, with the core's semantics in the layer
 over the tree that the modes run: each memory with its entry in `M`'s data
 layout, named by its number. -/
@@ -177,36 +184,36 @@ def runScripted {σ : Type} (read : (w : Nat) → σ → Option (BitVec w)) (M :
     (f : Func CoreDialect) (args : HVector toType (f.params.map (·.2))) (fuel : Nat)
     (cs : List σ) : Except (ChoiceTree.Misfit σ) (RunLeaf × Nat) :=
   letI := Core.memTreeDenote M.layout.entry id M.runItems
-  Machine.scripted (unit := unitsOf M.layout.entry) M read f args fuel cs
+  Machine.scripted (unit := unitsOf M.layout.entry) M (coreStart M) read f args fuel cs
 
 @[csimp] theorem scripted_eq_runScripted : @Core.scripted = @runScripted := by
   funext σ read M f args fuel cs
   letI := Core.memTreeDenote M.layout.entry id M.runItems
-  exact (Machine.scripted_eq M read f args fuel cs).symm
+  exact (Machine.scripted_eq M _ read f args fuel cs).symm
 
 /-- `Core.exhaustive`, by the machine. -/
 def runExhaustive (M : Module CoreDialect) (f : Func CoreDialect)
     (args : HVector toType (f.params.map (·.2))) (fuel budget : Nat) :
     Option (List (RunLeaf × Nat)) :=
   letI := Core.memTreeDenote M.layout.entry id M.runItems
-  Machine.exhaustive (unit := unitsOf M.layout.entry) M f args fuel budget
+  Machine.exhaustive (unit := unitsOf M.layout.entry) M (coreStart M) f args fuel budget
 
 @[csimp] theorem exhaustive_eq_runExhaustive : @Core.exhaustive = @runExhaustive := by
   funext M f args fuel budget
   letI := Core.memTreeDenote M.layout.entry id M.runItems
-  exact (Machine.exhaustive_eq M f args fuel budget).symm
+  exact (Machine.exhaustive_eq M _ f args fuel budget).symm
 
 /-- `Core.sampled`, by the machine. -/
 def runSampled {γ : Type} (draw : (w : Nat) → γ → BitVec w × γ) (M : Module CoreDialect)
     (f : Func CoreDialect) (args : HVector toType (f.params.map (·.2))) (fuel : Nat) (g : γ) :
     RunLeaf × List ChoiceTree.Chosen :=
   letI := Core.memTreeDenote M.layout.entry id M.runItems
-  Machine.sampled (unit := unitsOf M.layout.entry) M draw f args fuel g
+  Machine.sampled (unit := unitsOf M.layout.entry) M (coreStart M) draw f args fuel g
 
 @[csimp] theorem sampled_eq_runSampled : @Core.sampled = @runSampled := by
   funext γ draw M f args fuel g
   letI := Core.memTreeDenote M.layout.entry id M.runItems
-  exact (Machine.sampled_eq M draw f args fuel g).symm
+  exact (Machine.sampled_eq M _ draw f args fuel g).symm
 
 /-- `Gpu.memTreeDenote`, with the sum's rules from `sumDenote`, whose moves of
 vectors take no stack per value (#405). -/
@@ -229,49 +236,49 @@ def runGpuScripted [Gpu.WorkItem] {σ : Type} (read : (w : Nat) → σ → Optio
     (M : Module CoreGpu) (f : Func CoreGpu) (args : HVector toType (f.params.map (·.2)))
     (fuel : Nat) (cs : List σ) : Except (ChoiceTree.Misfit σ) (Gpu.Leaf × Nat) :=
   letI := gpuTreeDenote M.layout.entry Gpu.memName M.runItems
-  Machine.scripted (unit := unitsOf M.layout.entry) M read f args fuel cs
+  Machine.scripted (unit := unitsOf M.layout.entry) M (gpuStart M) read f args fuel cs
 
 @[csimp] theorem gpuScripted_eq_runGpuScripted : @Gpu.scripted = @runGpuScripted := by
   funext w σ read M f args fuel cs
   letI := Gpu.memTreeDenote M.layout.entry Gpu.memName M.runItems
-  exact (Machine.scripted_eq M read f args fuel cs).symm
+  exact (Machine.scripted_eq M _ read f args fuel cs).symm
 
 /-- `Gpu.exhaustive`, by the machine. -/
 def runGpuExhaustive [Gpu.WorkItem] (M : Module CoreGpu) (f : Func CoreGpu)
     (args : HVector toType (f.params.map (·.2))) (fuel budget : Nat) :
     Option (List (Gpu.Leaf × Nat)) :=
   letI := gpuTreeDenote M.layout.entry Gpu.memName M.runItems
-  Machine.exhaustive (unit := unitsOf M.layout.entry) M f args fuel budget
+  Machine.exhaustive (unit := unitsOf M.layout.entry) M (gpuStart M) f args fuel budget
 
 @[csimp] theorem gpuExhaustive_eq_runGpuExhaustive : @Gpu.exhaustive = @runGpuExhaustive := by
   funext w M f args fuel budget
   letI := Gpu.memTreeDenote M.layout.entry Gpu.memName M.runItems
-  exact (Machine.exhaustive_eq M f args fuel budget).symm
+  exact (Machine.exhaustive_eq M _ f args fuel budget).symm
 
 /-- `Gpu.sampled`, by the machine. -/
 def runGpuSampled [Gpu.WorkItem] {γ : Type} (draw : (w : Nat) → γ → BitVec w × γ)
     (M : Module CoreGpu) (f : Func CoreGpu) (args : HVector toType (f.params.map (·.2)))
     (fuel : Nat) (g : γ) : Gpu.Leaf × List ChoiceTree.Chosen :=
   letI := gpuTreeDenote M.layout.entry Gpu.memName M.runItems
-  Machine.sampled (unit := unitsOf M.layout.entry) M draw f args fuel g
+  Machine.sampled (unit := unitsOf M.layout.entry) M (gpuStart M) draw f args fuel g
 
 @[csimp] theorem gpuSampled_eq_runGpuSampled : @Gpu.sampled = @runGpuSampled := by
   funext w γ draw M f args fuel g
   letI := Gpu.memTreeDenote M.layout.entry Gpu.memName M.runItems
-  exact (Machine.sampled_eq M draw f args fuel g).symm
+  exact (Machine.sampled_eq M _ draw f args fuel g).symm
 
 /-- `Gpu.exhaustiveNaN`, by the machine. -/
 def runGpuExhaustiveNaN [Gpu.WorkItem] (M : Module CoreGpu) (f : Func CoreGpu)
     (args : HVector toType (f.params.map (·.2))) (fuel budget : Nat) (nans : List Nat) :
     Option (List (Gpu.Leaf × Nat × Nat)) :=
   letI := gpuTreeDenote M.layout.entry Gpu.memName M.runItems
-  Machine.exhaustiveNaN (unit := unitsOf M.layout.entry) M f args fuel budget nans
+  Machine.exhaustiveNaN (unit := unitsOf M.layout.entry) M (gpuStart M) f args fuel budget nans
 
 @[csimp] theorem gpuExhaustiveNaN_eq_runGpuExhaustiveNaN :
     @Gpu.exhaustiveNaN = @runGpuExhaustiveNaN := by
   funext w M f args fuel budget nans
   letI := Gpu.memTreeDenote M.layout.entry Gpu.memName M.runItems
-  exact (Machine.exhaustiveNaN_eq M f args fuel budget nans).symm
+  exact (Machine.exhaustiveNaN_eq M _ f args fuel budget nans).symm
 
 /-- How `fir-ref run` walks a run: scripted mode, with a choice sequence,
 exhaustive mode, with a choice budget in bits, and, when it tries a few
@@ -308,7 +315,7 @@ theorem endTree_eq [Gpu.WorkItem] (M : Module CoreGpu) (f : Func CoreGpu)
     (args : HVector toType (f.params.map (·.2))) (fuel : Nat) :
     Gpu.endTree M f args fuel =
       letI := gpuTreeDenote M.layout.entry Gpu.memName M.runItems
-      Machine.endTree (ε := Core.Op) (unit := unitsOf M.layout.entry) M (endOfRet M) f args fuel := by
+      Machine.endTree (ε := Core.Op) (unit := unitsOf M.layout.entry) M (gpuStart M) (endOfRet M) f args fuel := by
   show _ <$> _ = Machine.endWith _ <$> _
   congr 1
   funext p
@@ -319,55 +326,55 @@ def runGpuScriptedEnd [Gpu.WorkItem] {σ : Type} (read : (w : Nat) → σ → Op
     (f : Func CoreGpu) (args : HVector toType (f.params.map (·.2))) (fuel : Nat) (cs : List σ) :
     Except (ChoiceTree.Misfit σ) (Gpu.EndLeaf M × Nat) :=
   letI := gpuTreeDenote M.layout.entry Gpu.memName M.runItems
-  Machine.scriptedWith (unit := unitsOf M.layout.entry) M (endOfRet M) read f args fuel cs
+  Machine.scriptedWith (unit := unitsOf M.layout.entry) M (gpuStart M) (endOfRet M) read f args fuel cs
 
 @[csimp] theorem gpuScriptedEnd_eq : @Gpu.scriptedEnd = @runGpuScriptedEnd := by
   funext w σ read M f args fuel cs
   letI := gpuTreeDenote M.layout.entry Gpu.memName M.runItems
   show (Gpu.endTree M f args fuel).script read cs 0 = _
   rw [endTree_eq]
-  exact (Machine.scriptedWith_eq M _ read f args fuel cs).symm
+  exact (Machine.scriptedWith_eq M _ _ read f args fuel cs).symm
 
 /-- `Gpu.exhaustiveEnd`, by the machine. -/
 def runGpuExhaustiveEnd [Gpu.WorkItem] (M : Module CoreGpu) (f : Func CoreGpu)
     (args : HVector toType (f.params.map (·.2))) (fuel budget : Nat) :
     Option (List (Gpu.EndLeaf M × Nat)) :=
   letI := gpuTreeDenote M.layout.entry Gpu.memName M.runItems
-  Machine.exhaustiveWith (unit := unitsOf M.layout.entry) M (endOfRet M) f args fuel budget
+  Machine.exhaustiveWith (unit := unitsOf M.layout.entry) M (gpuStart M) (endOfRet M) f args fuel budget
 
 @[csimp] theorem gpuExhaustiveEnd_eq : @Gpu.exhaustiveEnd = @runGpuExhaustiveEnd := by
   funext w M f args fuel budget
   letI := gpuTreeDenote M.layout.entry Gpu.memName M.runItems
   show (Gpu.endTree M f args fuel).explore budget = _
   rw [endTree_eq]
-  exact (Machine.exhaustiveWith_eq M _ f args fuel budget).symm
+  exact (Machine.exhaustiveWith_eq M _ _ f args fuel budget).symm
 
 /-- `Gpu.exhaustiveNaNEnd`, by the machine. -/
 def runGpuExhaustiveNaNEnd [Gpu.WorkItem] (M : Module CoreGpu) (f : Func CoreGpu)
     (args : HVector toType (f.params.map (·.2))) (fuel budget : Nat) (nans : List Nat) :
     Option (List (Gpu.EndLeaf M × Nat × Nat)) :=
   letI := gpuTreeDenote M.layout.entry Gpu.memName M.runItems
-  Machine.exhaustiveNaNWith (unit := unitsOf M.layout.entry) M (endOfRet M) f args fuel budget nans
+  Machine.exhaustiveNaNWith (unit := unitsOf M.layout.entry) M (gpuStart M) (endOfRet M) f args fuel budget nans
 
 @[csimp] theorem gpuExhaustiveNaNEnd_eq : @Gpu.exhaustiveNaNEnd = @runGpuExhaustiveNaNEnd := by
   funext w M f args fuel budget nans
   letI := gpuTreeDenote M.layout.entry Gpu.memName M.runItems
   show (Gpu.endTree M f args fuel).exploreNaN nans budget = _
   rw [endTree_eq]
-  exact (Machine.exhaustiveNaNWith_eq M _ f args fuel budget nans).symm
+  exact (Machine.exhaustiveNaNWith_eq M _ _ f args fuel budget nans).symm
 
 /-- `Gpu.sampledEnd`, by the machine. -/
 def runGpuSampledEnd [Gpu.WorkItem] {γ : Type} (draw : (w : Nat) → γ → BitVec w × γ) (M : Module CoreGpu)
     (f : Func CoreGpu) (args : HVector toType (f.params.map (·.2))) (fuel : Nat) (g : γ) :
     Gpu.EndLeaf M × List ChoiceTree.Chosen :=
   letI := gpuTreeDenote M.layout.entry Gpu.memName M.runItems
-  Machine.sampledWith (unit := unitsOf M.layout.entry) M (endOfRet M) draw f args fuel g
+  Machine.sampledWith (unit := unitsOf M.layout.entry) M (gpuStart M) (endOfRet M) draw f args fuel g
 
 @[csimp] theorem gpuSampledEnd_eq : @Gpu.sampledEnd = @runGpuSampledEnd := by
   funext w γ draw M f args fuel g
   letI := gpuTreeDenote M.layout.entry Gpu.memName M.runItems
   show (Gpu.endTree M f args fuel).sample draw g = _
   rw [endTree_eq]
-  exact (Machine.sampledWith_eq M _ draw f args fuel g).symm
+  exact (Machine.sampledWith_eq M _ _ draw f args fuel g).symm
 
 end FirRef

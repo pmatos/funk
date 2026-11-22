@@ -14,7 +14,7 @@ changes under it.
 
 #doc (Manual) "Lifting an extension: readable blocks" =>
 
-:::moduleDocs (fingerprint := "12315766853888660297")
+:::moduleDocs (fingerprint := "6563313203471539571")
 :::
 
 :::readable Fir.Dialect.lift Fir.Dialect.lift.instDialectName Fir.Dialect.lift.instTyDenote Fir.Dialect.lift.instTyPoison Fir.Dialect.lift.instTyRefinement Fir.Dialect.lift.instDecidableEqOp Fir.Dialect.lift.instDecidableEqTy (fingerprint := "3765934098038364283")
@@ -60,7 +60,7 @@ This is the rule for a base op in a sum (ADR-2026-11-09-2353), with $`e` in
 place of the base. It can be decided when $`e`'s rule can.
 :::
 
-:::readable Fir.Dialect.lift.instDialectSignature Fir.Dialect.lift.instDialectValidation Fir.Dialect.lift.instDecidableDialectValidation (fingerprint := "3677138112444615344")
+:::readable Fir.Dialect.lift.instDialectSignature Fir.Dialect.lift.instDialectValidation Fir.Dialect.lift.instDecidableDialectValidation (fingerprint := "5708286197265090577")
 *Definition: the signature and the rules of the lift.* An op of the lift
 has $`e`'s signature, with its types included by $`\hat\iota`:
 
@@ -68,17 +68,17 @@ $$`\mathrm{sig}(q) = \hat\iota(t)^* \text{ where } \mathrm{sig}_{d.\mathrm{over}
 
 and the same for its result types; it ends a block, has successors and
 owns regions of kinds as in $`e`. A type of $`B` is valid, names a
-memory and takes its units as a field, as $`B` says, and an own type of
-$`e` as $`e` says. An op refers to the symbols that $`e`
+memory, takes its units as a field and allows attributes after it in a
+signature, as $`B` says, and an own type of $`e` as $`e` says. An op refers to the symbols that $`e`
 says, carries the types that $`e` says, included by $`\hat\iota`, asks
-the unit widths that $`e` says, and obeys its rule as above. A function obeys $`e`'s function rule
+the unit widths and the pointer widths that $`e` says, and obeys its rule as above. A function obeys $`e`'s function rule
 through the lift's view. The lift registers $`e`'s region kinds, and a
 region of one of them obeys $`e`'s rule for it through the lift's view;
 so do $`e`'s kinds of item and an item of one of them.
 Each rule can be decided when $`B`'s and $`e`'s can.
 :::
 
-:::readable Fir.Dialect.lift.liftMem Fir.Dialect.lift.liftMem_ofBase Fir.Dialect.lift.instDialectEffects Fir.Dialect.lift.instDialectMemOver (fingerprint := "247984695390487372")
+:::readable Fir.Dialect.lift.liftMem Fir.Dialect.lift.liftMem_ofBase Fir.Dialect.lift.instDialectEffects Fir.Dialect.lift.instDialectMemOver (fingerprint := "7540773015420613275")
 *Definition: the memories of the lift.* The memories of the lift over
 $`B` are $`B`'s and $`e`'s own, $`M_B + O_e`. The lift's memory map sends
 $`e`'s name for a memory $`x` of $`d` to $`\mu(x)`, and keeps $`e`'s own:
@@ -90,7 +90,8 @@ each memory of $`d` as $`B` does, and the memory has one name in
 $`B \boxplus e{\uparrow}_\iota` (ADR-2026-11-09-2306). An op of the lift has
 $`e`'s
 {ref "The-fir-specification--Execution--Effect-sets"}[poison class and effects],
-with its memories renamed by $`\hat\mu`.
+with its memories renamed by $`\hat\mu`. Its numbered memories are
+$`B`'s.
 :::
 
 :::readable Fir.Dialect.lift.instDialectCall Fir.Dialect.lift.instDialectDenote (fingerprint := "14255937332289603584")

@@ -14,25 +14,29 @@ fails when the Lean changes under it.
 
 #doc (Manual) "Stack allocation obligations: readable blocks" =>
 
-:::moduleDocs (fingerprint := "7065700237780127663")
+:::moduleDocs (fingerprint := "9652021669507390123")
 :::
 
-:::readable Fir.Core.Op.memCases Fir.Core.Op.touchesMemory_false_of_denote Fir.Core.Op.readsItems_false_of_denote (pin := Fir.Core.Op.touchesMemory) (pin := Fir.Core.Op.readsItems) (fingerprint := "14773400678134126880")
+:::readable Fir.Core.Op.memCases Fir.Core.Op.touchesMemory_false_of_denote Fir.Core.Op.readsItems_false_of_denote (pin := Fir.Core.Op.touchesMemory) (pin := Fir.Core.Op.readsItems) (fingerprint := "6114135272076717574")
 *Theorems: the core ops, split by memory.* A property holds of every core
 op when it holds of each op that touches no memory and reads no item of
 the run, of every $`\mathsf{alloca}`, of every $`\mathsf{load}` and every
 $`\mathsf{store}` of an integer, of a pointer or of a float, of every
 $`\mathsf{memcpy}` and $`\mathsf{memmove}` (`memCopy` in the Lean), and
-of every $`\mathsf{memset}` (`memSet`), the core ops that touch memory, and of every $`\mathsf{fieldaddr}`, the core
-op that reads an item.
+of every $`\mathsf{memset}` (`memSet`), and of every
+$`\mathsf{ptr\_expose}` and $`\mathsf{ptr\_from\_int}` (`ptrExpose` and
+`ptrFromInt`), the core ops that touch memory, and of every
+$`\mathsf{fieldaddr}`, the core op that reads an item.
 So the core dialect meets an obligation with memory op by op: an op that
 touches no memory and reads no item by its
 {ref "The-fir-specification--Memory--The-core___s-rules-with-memory"}[tie]
 to the set monad, and $`\mathsf{alloca}`, each load and store,
-$`\mathsf{fieldaddr}`, each copy and move and each fill by its own rule. A core op
-with an outcome in the set monad touches no memory and reads no item,
-since $`\mathsf{alloca}`, the loads and stores, $`\mathsf{fieldaddr}`,
-the copies and moves and the fills have none there.
+$`\mathsf{fieldaddr}`, each copy and move, each fill and each turn of a
+pointer into an integer or back by its own rule. A core op with an outcome
+in the set monad touches no memory and reads no item, since
+$`\mathsf{alloca}`, the loads and stores, $`\mathsf{fieldaddr}`, the
+copies and moves, the fills, $`\mathsf{ptr\_expose}` and
+$`\mathsf{ptr\_from\_int}` have none there.
 :::
 
 :::readable Fir.Core.allocaResult Fir.Core.allocaAlloc Fir.Core.alloca_denote (pin := Fir.Core.allocaRule) (pin := Fir.Core.memDenoteAt) (fingerprint := "16272084187325246097")
@@ -56,7 +60,7 @@ with memory: it never ends in UB, from any memories, since
 never does, and its result, a pointer, is never poison.
 :::
 
-:::readable Fir.Core.alloca_writesNot Fir.Core.alloca_readsNot Fir.Core.alloca_allocatesNot (pin := Fir.OwnRuleHas) (pin := Fir.WritesNot) (pin := Fir.ReadsNot) (pin := Fir.AllocatesNot) (fingerprint := "3517418981541783496")
+:::readable Fir.Core.alloca_writesNot Fir.Core.alloca_readsNot Fir.Core.alloca_allocatesNot (pin := Fir.OwnRuleHas) (pin := Fir.WritesNot) (pin := Fir.ReadsNot) (pin := Fir.AllocatesNot) (fingerprint := "18063477742767487594")
 *Theorems: $`\mathsf{alloca}` touches memory only by allocating where it
 declares.* At every layout $`\ell` and naming $`\rho`, and for every memory
 $`y` of the run, $`\mathsf{alloca}_N` by its own rule writes no unit of

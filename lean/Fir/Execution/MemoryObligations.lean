@@ -15,12 +15,13 @@ memory `x` of the run:
 * _No write to x_: on each path that ends, every allocation of `x` that was
   there before holds the units it held. New allocations may follow them.
 * _No allocation in x_: on each path that ends, `x` has the allocations it
-  had, each with its kind, its alignment, its size and its liveness, and
-  the frames list the same stack allocations of `x`. So the op neither
+  had, each with its kind, its alignment, its size, its liveness and its
+  constness, and the frames list the same stack allocations of `x`. So the op neither
   allocates nor frees in `x`.
 * _No read of x_: the op does not depend on the units of `x`. Run it from
   the memories `S`, and from `S` with `x` replaced by any memory of the
-  same allocations, each with its kind, alignment, size and liveness. Each
+  same allocations, each with its kind, alignment, size, liveness and
+  constness. Each
   way the first run may end, the second may end too: in UB for the same
   reason, or with the same results and memories that differ only in `x`.
   There, each unit is the same in both, or is in each the unit it was
@@ -67,8 +68,8 @@ namespace Memory
 variable {u : Nat}
 
 /-- The allocations of a memory: the shape of each block, its kind,
-alignment, size and liveness, in the order they were made. -/
-def Memory.allocs (M : Memory u) : List (AllocKind × Nat × Nat × Bool) :=
+alignment, size, liveness and constness, in the order they were made. -/
+def Memory.allocs (M : Memory u) : List (AllocKind × Nat × Nat × Bool × Bool) :=
   M.blocks.map Block.shape
 
 /-- The units of each block of a memory, in the order they were made. -/

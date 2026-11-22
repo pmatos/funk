@@ -29,7 +29,8 @@ any memories, and refinement with memory, which refines memories unit by
 unit and asks each op to be monotone from memories that refine others.
 Between the model and the effect, it says which addresses an exposed
 allocation may be given and which one `fir-ref` gives, how a run's address
-policy picks one, and how a value of
+policy picks one, how a run's resolver picks the allocation that an integer
+turned back into a pointer points into, and how a value of
 an integer, a float or a pointer type becomes units of a memory, and units
 a value again, at every byte order. It ends with traces: the events that a
 run shows to the world outside it, the layer in which a run shows them, and
@@ -64,6 +65,10 @@ event.
 
 {includeReadable "." Fir.Memory.PolicyLaws "Address policy laws" FirSpec.Memory.PolicyLaws (level := 1)}
 
+{includeReadable "." Fir.Memory.Resolver "Address resolvers" FirSpec.Memory.Resolver (level := 1)}
+
+{includeReadable "." Fir.Memory.ResolverLaws "Address resolver laws" FirSpec.Memory.ResolverLaws (level := 1)}
+
 {includeReadable "." Fir.Memory.Encode "Values in units" FirSpec.Memory.Encode (level := 1)}
 
 {includeReadable "." Fir.Memory.EncodeLaws "Laws of values in units" FirSpec.Memory.EncodeLaws (level := 1)}
@@ -81,6 +86,8 @@ event.
 {includeReadable "." Fir.Execution.MemoryMonotone "Runs with memory at every budget" FirSpec.Execution.MemoryMonotone (level := 1)}
 
 {includeReadable "." Fir.Execution.RunItems "The items a run gives each op" FirSpec.Execution.RunItems (level := 1)}
+
+{includeReadable "." Fir.Execution.RunStart "The memories a run starts with" FirSpec.Execution.RunStart (level := 1)}
 
 {includeReadable "." Fir.Execution.MemoryObligations "Memory obligations" FirSpec.Execution.MemoryObligations (level := 1)}
 
@@ -140,6 +147,8 @@ event.
 
 {includeReadable "." Fir.Execution.MemoryExposeLaws "Exposing in the state layer" FirSpec.Execution.MemoryExposeLaws (level := 1)}
 
+{includeReadable "." Fir.Execution.MemoryFromAddrLaws "Turning integers into pointers in the state layer" FirSpec.Execution.MemoryFromAddrLaws (level := 1)}
+
 {includeReadable "." Fir.Execution.MemoryPolicyRuns "Runs under every address policy" FirSpec.Execution.MemoryPolicyRuns (level := 1)}
 
 {includeReadable "." Fir.Execution.MemoryChoiceLaws "Choices in the state layer" FirSpec.Execution.MemoryChoiceLaws (level := 1)}
@@ -157,6 +166,8 @@ event.
 {includeReadable "." Fir.Core.MemCopy "Copy and move rules" FirSpec.Core.MemCopy (level := 1)}
 
 {includeReadable "." Fir.Core.MemSet "Fill rules" FirSpec.Core.MemSet (level := 1)}
+
+{includeReadable "." Fir.Core.PtrInt "Rules of pointers as integers" FirSpec.Core.PtrInt (level := 1)}
 
 {includeReadable "." Fir.Core.FieldAddr "Field address rules" FirSpec.Core.FieldAddr (level := 1)}
 
@@ -187,6 +198,8 @@ event.
 {includeReadable "." Fir.Core.MemSetLaws "Fill obligations" FirSpec.Core.MemSetLaws (level := 1)}
 
 {includeReadable "." Fir.Core.MemSetPoison "Fill poison obligations" FirSpec.Core.MemSetPoison (level := 1)}
+
+{includeReadable "." Fir.Core.PtrIntLaws "Pointers as integers obligations" FirSpec.Core.PtrIntLaws (level := 1)}
 
 {includeReadable "." Fir.Core.FieldAddrLaws "Field address obligations" FirSpec.Core.FieldAddrLaws (level := 1)}
 

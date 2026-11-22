@@ -100,6 +100,24 @@ pub trait OpSpec: Send + Sync {
         false
     }
 
+    /// The memories whose pointers the op instance used at `op`, which
+    /// decodes, turns into integers or back, each with the width of the
+    /// integer, such as `ptr_expose` (`DialectValidation.opAddrs`). The
+    /// verifier checks that the data layout gives each memory pointers of
+    /// that width and does not mark it non-integral. An op that turns no
+    /// pointer into an integer gives none, the default.
+    fn addr_widths(&self, _op: &OpTypes<'_>) -> Vec<(u32, u32)> {
+        Vec::new()
+    }
+
+    /// Whether [`OpSpec::addr_widths`] may give a pair for some instance, so
+    /// that the verifier types the operands of this op's instances to ask
+    /// it. An op that turns no pointer into an integer gives `false`, the
+    /// default, and the verifier skips it.
+    fn asks_addr_widths(&self) -> bool {
+        false
+    }
+
     /// The symbol of the function that the op instance used at `op` calls,
     /// or `None` for an op that calls none (`callee?`, `DialectCall`). The
     /// interpreter runs the callee of an op that is not a terminator, and
@@ -137,6 +155,14 @@ pub trait TypeSpec: Send + Sync {
     /// names none.
     fn memory(&self, _ty: &Type) -> Option<u32> {
         None
+    }
+
+    /// Whether a parameter or result of type `ty`, one of the dialect's
+    /// types, may carry the attributes `attrs` after its type in a
+    /// function's signature (`DialectValidation.validSigAttrs`). By default
+    /// it carries none.
+    fn sig_attrs(&self, _ty: &Type, attrs: &[Attr]) -> bool {
+        attrs.is_empty()
     }
 
     /// The units that a value of `ty` takes as a field of an aggregate's

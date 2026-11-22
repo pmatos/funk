@@ -14,17 +14,17 @@ changes under it.
 
 #doc (Manual) "The memories of a run: readable blocks" =>
 
-:::moduleDocs (fingerprint := "1983017639651626554")
+:::moduleDocs (fingerprint := "15852211188585987574")
 :::
 
-:::readable Fir.Memory.Memories (fingerprint := "11688577113277533231")
+:::readable Fir.Memory.Memories (fingerprint := "16888250131718672919")
 *Definition: the memories of a run.* For memories named by $`X`, where the
-memory $`x` has units of $`u(x)` bits, the memories of a run are a pair
-$`(T, \mathit{fr}^*)`:
+memory $`x` has units of $`u(x)` bits, the memories of a run are a triple
+$`(T, \mathit{fr}^*, c)`:
 
 ```grammar Fir.Memory.Memories
 \mathit{mems}
-table,frames   (T, \mathit{fr}^*)
+table,frames,rebuilds   (T, \mathit{fr}^*, c)
 ```
 
 * $`T` is the table of the memories: a list of pairs $`(x, m)`, the name
@@ -34,7 +34,11 @@ table,frames   (T, \mathit{fr}^*)
   the empty memory when the table has none;
 * $`\mathit{fr}^*` is a stack of frames, the innermost first, one for each
   call that has not returned. A frame is a list of pairs $`(x, a)`: the
-  stack allocation $`a` of the memory $`x`, made by its call.
+  stack allocation $`a` of the memory $`x`, made by its call;
+* $`c` counts, for each memory $`x`, the integers the run has turned back
+  into pointers of $`x`, $`c(x)`, which the
+  {ref "The-fir-specification--Memory--Address-resolvers"}[resolver] of
+  $`x` sees at each call.
 
 No width is fixed here: the module's data layout gives each memory its
 unit, and the memories are written for any. The table holds each name at
@@ -42,14 +46,15 @@ most once, so finding a memory looks at no more entries than the run has
 memories, however many updates came before.
 :::
 
-:::readable Fir.Memory.Memories.empty (fingerprint := "10913081583095296761")
+:::readable Fir.Memory.Memories.empty (fingerprint := "13971899226138868642")
 *Definition: no memory yet.* Before a run starts, the table is empty, so
-every memory is empty, and there is no frame: $`(\epsilon, \epsilon)`.
+every memory is empty, there is no frame, and no integer has been turned
+back into a pointer: $`(\epsilon, \epsilon, x \mapsto 0)`.
 :::
 
-:::readable Fir.Memory.Memories.enter (fingerprint := "890583241385760010")
+:::readable Fir.Memory.Memories.enter (fingerprint := "6877764141344344430")
 *Definition: entering a call.* Entering a call pushes an empty frame:
-$`\mathrm{enter}(T, \mathit{fr}^*) = (T, \epsilon~\mathit{fr}^*)`.
+$`\mathrm{enter}(T, \mathit{fr}^*, c) = (T, \epsilon~\mathit{fr}^*, c)`.
 :::
 
 :::readable Fir.Memory.Memories.lookup Fir.Memory.Memories.mem (fingerprint := "13526315122793642062")
@@ -58,7 +63,7 @@ memory of its first pair named $`x`, and the empty memory when no pair is:
 
 $$`\mathrm{lookup}_x(\epsilon) = \emptyset \qquad \mathrm{lookup}_x((y, m)~T) = \begin{cases} m & \text{if } y = x \\ \mathrm{lookup}_x(T) & \text{otherwise} \end{cases}`
 
-The memory $`x` of the memories $`(T, \mathit{fr}^*)` of a run,
+The memory $`x` of the memories $`(T, \mathit{fr}^*, c)` of a run,
 $`\mathit{mem}(x)`, is $`\mathrm{lookup}_x(T)`.
 :::
 
@@ -71,16 +76,16 @@ $`n` units through $`p` in $`\mathit{mem}(x)`: the units, or the fault
 that makes the load UB.
 :::
 
-:::readable Fir.Memory.Memories.set (fingerprint := "16196087832232445707")
+:::readable Fir.Memory.Memories.set (fingerprint := "7061823943516504143")
 *Definition: replacing one memory.* $`S[x := m]` is $`S` with the memory
-$`x` replaced by $`m`, every other memory and the frames as they were. The
-pair $`(x, m)` goes first in the table, and every older pair named $`x`
-is dropped from it:
-$`(T, \mathit{fr}^*)[x := m] = ((x, m)~T', \mathit{fr}^*)`, where $`T'`
+$`x` replaced by $`m`, every other memory, the frames and the count as
+they were. The pair $`(x, m)` goes first in the table, and every older
+pair named $`x` is dropped from it:
+$`(T, \mathit{fr}^*, c)[x := m] = ((x, m)~T', \mathit{fr}^*, c)`, where $`T'`
 is $`T` without its pairs named $`x`.
 :::
 
-:::readable Fir.Memory.Memories.record (fingerprint := "14826426362293154698")
+:::readable Fir.Memory.Memories.record (fingerprint := "13605680622301485857")
 *Definition: recording a stack allocation.* Recording the allocation $`a`
 of the memory $`x` adds $`(x, a)` to the innermost frame. Outside every
 call there is no frame, and nothing is recorded.
@@ -114,11 +119,11 @@ $`(x_1, a_1) \dots (x_n, a_n)` frees $`a_1` of $`x_1`, then the others in
 order.
 :::
 
-:::readable Fir.Memory.Memories.exit (fingerprint := "6743777282639966630")
+:::readable Fir.Memory.Memories.exit (fingerprint := "12035581706300799354")
 *Definition: leaving a call.* Leaving a call frees every allocation of the
 innermost frame and pops it:
 
-$$`\mathrm{exit}(T, \mathit{fr}~\mathit{fr}^*) = \mathrm{freeAll}((T, \mathit{fr}^*), \mathit{fr})`
+$$`\mathrm{exit}(T, \mathit{fr}~\mathit{fr}^*, c) = \mathrm{freeAll}((T, \mathit{fr}^*, c), \mathit{fr})`
 
 Outside every call there is no frame, and leaving changes nothing.
 Freeing never faults, so neither does leaving a call.
