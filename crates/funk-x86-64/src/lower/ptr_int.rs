@@ -19,28 +19,15 @@
 //! gives a pointer through which every access is UB, so whatever native
 //! code then reaches refines the spec.
 
-use funk_ir::Op;
-
-use super::{Cx, Lower, Unlowered};
-use crate::asm::Reg;
-
-pub(super) fn lowering(name: &str) -> Option<Lower> {
-    match name {
-        "ptr_expose" | "ptr_from_int" => Some(ptr_int),
-        _ => None,
-    }
-}
+use super::{Lower, bitcast};
 
 /// `%a: i64 = ptr_expose %p` and `%q: ptr<N> = ptr_from_int %a`: the
-/// operand's slot, copied to the result's.
-fn ptr_int(cx: &mut Cx<'_>, op: &Op) -> Result<(), Unlowered> {
-    let ([x], [r]) = (op.operands.as_slice(), op.results.as_slice()) else {
-        return Err(format!("{} takes one operand and defines one value", op.name).into());
-    };
-    cx.width(x)?;
-    cx.width(&r.name)?;
-    cx.load(Reg::Rax, x)?;
-    cx.store(&r.name, Reg::Rax)
+/// operand's slot, copied to the result's, as a bit cast copies it.
+pub(super) fn lowering(name: &str) -> Option<Lower> {
+    match name {
+        "ptr_expose" | "ptr_from_int" => Some(bitcast::copy),
+        _ => None,
+    }
 }
 
 #[cfg(test)]
