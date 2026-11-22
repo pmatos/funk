@@ -3,7 +3,7 @@
 import unittest
 
 import tools
-from ends import ADDRESS, NOTHING, Alloc, End, pointer_memory, refined
+from ends import ADDRESS, NOTHING, Alloc, End, pointer_memory, refined, unjudged
 from refine import FAILED, INVALID, PASSED, RETURN, Outcome, refines
 from sets import member
 
@@ -95,10 +95,9 @@ class Comparison(unittest.TestCase):
         self.assertIn("lets 2 allocations escape", refined(s, (), NOTHING, (), ()))
 
     def test_a_trace_or_an_unwalked_memory_is_not_judged(self):
-        self.assertIn("1 event and", refined(End(("e",)), (), NOTHING, (), ()))
-        self.assertIn(
-            "ran out of steps", refined(End(memory=None), (), NOTHING, (), ())
-        )
+        self.assertIn("1 event and", unjudged(End(("e",)), NOTHING))
+        self.assertIn("ran out of steps", unjudged(End(memory=None), NOTHING))
+        self.assertIsNone(unjudged(SOURCE, NOTHING))
 
     def test_a_pointer_with_no_provenance_is_refined_by_itself(self):
         want = ("ptr(none, 8)",)

@@ -25,10 +25,10 @@ STUCK = "stuck"
 RETURN = "return"
 
 PASSED = "passed"
-# How a failure of the end of a return, not of its values, begins.
-END = "the end of the return: "
 FAILED = "failed"
 INVALID = "invalid"
+# How a failure of the end of a return, not of its values, begins.
+END = "the end of the return: "
 
 DECIMAL = re.compile(r"-?(0|[1-9][0-9]*)")
 INT_TYPE = re.compile(r"i([1-9][0-9]*)")

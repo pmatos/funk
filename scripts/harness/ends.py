@@ -155,8 +155,6 @@ class _Renaming:
                 )
         if not a.live:
             return None
-        if len(a.units) != len(b.units):
-            return f"{name} lists {len(a.units)} units, and the target's {len(b.units)}"
         for i, (want, got) in enumerate(zip(a.units, b.units)):
             why = self.unit(want, got, f"unit {i} of {name}")
             if why is not None:
@@ -186,10 +184,7 @@ def refined(source: End, want, target: End, got, types) -> str | None:
     """Why the target's end, with the returned values `got`, does not refine
     the source's, with `want`, or None when it does. `types` are the result
     types. Only pointer values are compared here: `refine.refines` compares
-    the others."""
-    why = unjudged(source, target)
-    if why is not None:
-        return why
+    the others. The harness can judge both ends (`unjudged`)."""
     if len(source.escaped) != len(target.escaped):
         return (
             f"fir-ref's run lets {_count(source.escaped, 'allocation')} escape"
@@ -197,7 +192,7 @@ def refined(source: End, want, target: End, got, types) -> str | None:
         )
     r = _Renaming(source, target)
     for s, t in zip(source.escaped, target.escaped):
-        why = r.match(tuple(s), tuple(t))
+        why = r.match(s, t)
         if why is not None:
             return why
     for i, (w, g, ty) in enumerate(zip(want, got, types), 1):
