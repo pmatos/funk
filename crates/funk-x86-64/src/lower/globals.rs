@@ -23,6 +23,7 @@
 //! and data within 2 GiB, so the globals, each with its alignment's
 //! padding, take at most 2^30 bytes, and the global past that is reported.
 
+use funk_ir::text::print_symbol;
 use funk_ir::{Attr, Diagnostic, Global, InitPiece, Linkage, Module, Op};
 
 use super::{Cx, Lower, Unlowered, memory};
@@ -72,7 +73,7 @@ pub fn data(m: &Module, asm: &mut Asm, out: &mut Vec<Diagnostic>) {
             {
                 why.get_or_insert(format!(
                     "addr({}) holds a pointer of memory {}: {e}",
-                    print(t),
+                    print_symbol(t),
                     target.memory
                 ));
             }
@@ -88,9 +89,11 @@ pub fn data(m: &Module, asm: &mut Asm, out: &mut Vec<Diagnostic>) {
                 g,
                 format!(
                     "the x86-64 backend places at most 2^30 bytes of globals, their \
-                     alignment's padding included, and {} takes {} more",
-                    print(&g.name),
-                    g.size
+                     alignment's padding included, and {} takes {} more and up to {} of \
+                     padding, past the {total} already placed",
+                    print_symbol(&g.name),
+                    g.size,
+                    g.align.saturating_sub(1)
                 ),
             )),
             (Some(t), None) => {
@@ -99,11 +102,6 @@ pub fn data(m: &Module, asm: &mut Asm, out: &mut Vec<Diagnostic>) {
             }
         }
     }
-}
-
-/// The text of the symbol `name`.
-fn print(name: &str) -> String {
-    funk_ir::text::print_symbol(name)
 }
 
 fn at(g: &Global, why: String) -> Diagnostic {
@@ -128,7 +126,7 @@ fn all_zero(g: &Global) -> bool {
 /// The data of `g`, which the backend can place.
 fn global(asm: &mut Asm, g: &Global) {
     let sym = symbol(&g.name);
-    asm.comment(format_args!("global {}", print(&g.name)));
+    asm.comment(format_args!("global {}", print_symbol(&g.name)));
     let zero = all_zero(g);
     if g.constant {
         asm.directive(format_args!(".section\t.rodata"));
