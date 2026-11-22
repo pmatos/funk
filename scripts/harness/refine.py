@@ -158,6 +158,9 @@ def refines(ref: Outcome, native, types) -> Judgement:
         )
     if ref.kind == STUCK:
         return Judgement(FAILED, "no run of a valid module is stuck")
+    why = ends.unjudged(ref.end, ends.NOTHING)
+    if why is not None:
+        return Judgement(INVALID, f"{why}, so the test proves nothing")
     if isinstance(native, OutOfStack):
         return native.judgement()
     if isinstance(native, str):
@@ -183,9 +186,6 @@ def refines(ref: Outcome, native, types) -> Judgement:
         elif got != want:
             return Judgement(FAILED, f"value {i} is {got}, not {want}")
         seen.append(got)
-    why = ends.unjudged(ref.end, ends.NOTHING)
-    if why is not None:
-        return Judgement(INVALID, f"{why}, so the test proves nothing")
     why = ends.refined(ref.end, ref.values, ends.NOTHING, seen, types)
     return Judgement(FAILED, END + why) if why else Judgement(PASSED)
 

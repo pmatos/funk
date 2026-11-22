@@ -5,7 +5,7 @@ import unittest
 import tools
 from ends import ADDRESS, NOTHING, Alloc, End, pointer_memory, refined, unjudged
 from refine import FAILED, INVALID, PASSED, RETURN, Outcome, refines
-from sets import member
+from sets import member, problem
 
 
 def block(alloc, *units, memory=0, kind="global", align=1, live=True):
@@ -159,11 +159,17 @@ class NativeEnds(unittest.TestCase):
             self.assertEqual(j.status, INVALID)
             self.assertIn("so the test proves nothing", j.why)
 
+    def test_an_end_the_harness_cannot_judge_makes_a_set_invalid(self):
+        traced = Outcome(RETURN, ("7",), end=End(("e",)))
+        j = problem((Outcome(RETURN, ("7",)), traced))
+        self.assertEqual(j.status, INVALID)
+        self.assertIn("judges no event yet", j.why)
+
     def test_an_end_that_fails_among_outcomes_says_why(self):
         live = Outcome(RETURN, VALUES, end=SOURCE)
         j = member((live, Outcome(RETURN, ("poison",)), live), ("4096",), TYPES)
         self.assertEqual(j.status, PASSED)
-        j = member((Outcome(RETURN, ("poison",), end=End(("e",))), live), ("1",), TYPES)
+        j = member((live, live), ("1",), TYPES)
         self.assertIn("where the values match, the end of the return:", j.why)
 
     def test_an_escape_fails(self):

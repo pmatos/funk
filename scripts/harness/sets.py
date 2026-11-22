@@ -18,6 +18,7 @@ when its result refines one declared result.
 
 from dataclasses import dataclass
 
+import ends
 from refine import (
     END,
     FAILED,
@@ -96,7 +97,8 @@ class Declared:
 
 def problem(outcomes) -> Judgement | None:
     """Why a set of outcomes judges the test by itself: a stuck path fails
-    it, even beside UB, and UB or fuel exhausted in it makes it invalid."""
+    it, even beside UB, and UB, fuel exhausted or an end that the harness
+    cannot judge (`ends.unjudged`) in it makes it invalid."""
     if any(o.kind == STUCK for o in outcomes):
         return Judgement(FAILED, "no run of a valid module is stuck")
     for o in outcomes:
@@ -113,6 +115,10 @@ def problem(outcomes) -> Judgement | None:
                 "a path runs out of fuel, so the result depends on the fuel"
                 " budget: raise the test's budget",
             )
+    for o in outcomes:
+        why = ends.unjudged(o.end, ends.NOTHING)
+        if why is not None:
+            return Judgement(INVALID, f"{why}, so the test proves nothing")
     return None
 
 
