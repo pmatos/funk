@@ -2,6 +2,7 @@ import Fir.Syntax.Dialect
 import Fir.Syntax.Location
 import Fir.Syntax.Layout
 import Fir.Syntax.Global
+import Fir.Syntax.Aggregate
 import Fir.Syntax.Module
 import Fir.Syntax.FuncAttrs
 import Fir.Core.Types
@@ -25,6 +26,7 @@ import Fir.Validation.Graph
 import Fir.Validation.Check
 import Fir.Validation.CheckOps
 import Fir.Validation.CheckFuncs
+import Fir.Validation.CheckExtern
 import Fir.Validation.CheckLayout
 import Fir.Validation.CheckGlobal
 import Fir.Validation.CheckModule
@@ -295,6 +297,7 @@ import Fir.Text.ReadTable
 import Fir.Text.ReadModule
 import Fir.Text.DecodeScope
 import Fir.Text.DecodeBlocks
+import Fir.Text.DecodeFuncItem
 import Fir.Text.DecodeModule
 import Fir.Text.PrintParse
 import Fir.Text.LexAccepted
@@ -304,6 +307,7 @@ import Fir.Text.ReadAcceptedItems
 import Fir.Text.ReadAcceptedModule
 import Fir.Text.DecodeAcceptedScope
 import Fir.Text.DecodeAccepted
+import Fir.Text.DecodeAcceptedFunc
 import Fir.Text.DecodeAcceptedModule
 import Fir.Text.ParseWellFormed
 import Fir.Sum.Names

@@ -103,14 +103,16 @@ structure Aggregate.WellFormed (a : Aggregate d) : Prop where
 mutual
 /-- An item can be written and read back: a function that can, a nested
 module whose dialect set names each dialect by a word and whose items can,
-an item of a dialect's kind that can, an aggregate's layout that can, or a
-global whose numbers are within the limit. -/
+an item of a dialect's kind that can, an aggregate's layout that can, a
+global whose numbers are within the limit, or an external declaration whose
+header, a function's with no blocks, can. -/
 def Item.WellFormed : Item d → Prop
   | .func f => f.WellFormed
   | .module _ ds is => (∀ x ∈ ds, isWord x) ∧ Item.WellFormedList is
   | .dialect i => i.WellFormed
   | .aggregate a => a.WellFormed
   | .global g => g.InLimits
+  | .extern e => e.func.WellFormed
 
 /-- Each of these items can be written and read back. -/
 def Item.WellFormedList : List (Item d) → Prop
@@ -141,7 +143,7 @@ theorem Module.WellFormed.funcs {m : Module d} (h : m.WellFormed) : ∀ f ∈ m.
   | func g =>
     cases he
     exact h.items _ hi
-  | module | dialect | aggregate | global => cases he
+  | module | dialect | aggregate | global | extern => cases he
 
 /-- A position in a text: a line and a column, counted as in locations.
 Lines count from 1, and columns count UTF-8 bytes from 1. -/
@@ -250,6 +252,36 @@ theorem Func.Valid.wellFormed {locs : LocTable} {syms : Name → Option (FuncTyp
     · obtain ⟨x, hx⟩ := mem_zip_padAttrs hf.signature.resultAttrs.1 has
       exact LawfulDialectText.sigAttrs_writable _ _ (hf.signature.results _ hx)
 
+omit [DialectSignature d] [DialectText d] [DialectValidation d] [LawfulDialectText d] in
+/-- The function whose header an external declaration writes has no
+blocks, and defines its parameters alone. -/
+theorem Extern.func_allBlocks (e : Extern d) : e.func.allBlocks = [] := by
+  simp [Func.allBlocks, Func.blocks, Extern.func, Block.allBlocks]
+
+omit [DialectSignature d] [DialectText d] [DialectValidation d] [LawfulDialectText d] in
+theorem Extern.func_defs (e : Extern d) : e.func.defs = e.params := by
+  rw [Func.defs, e.func_allBlocks, List.flatMap_nil, List.append_nil]
+  rfl
+
+/-- A valid external declaration's header, a function's with no blocks,
+can be written and read back. -/
+theorem Extern.Valid.wellFormed {e : Extern d} (h : e.Valid) : e.func.WellFormed := by
+  have hty : ∀ t ∈ e.func.types, validTy t := fun t ht => h.types t (by
+    simp only [Func.types, e.func_defs, List.mem_append] at ht
+    simp only [Extern.types, List.mem_append]
+    exact ht.symm)
+  refine ⟨by rw [e.func_defs]; exact h.namesUnique, by rw [e.func_defs]; exact h.names,
+    fun b hb => by simp [e.func_allBlocks] at hb, fun t ht => ⟨LawfulDialectText.tyAttr_isType t
+      (hty t ht), LawfulDialectText.decodeTy_encode t (hty t ht)⟩,
+    fun o ho => by simp [Func.allOps, e.func_allBlocks] at ho, rfl,
+    fun o ho => by simp [Func.allOps, e.func_allBlocks] at ho, h.paramAttrs, h.resultAttrs,
+    fun as has => ?_⟩
+  rcases List.mem_append.mp has with has | has
+  · obtain ⟨x, hx⟩ := mem_zip_padAttrs h.paramAttrs.1 has
+    exact LawfulDialectText.sigAttrs_writable _ _ (h.params _ hx)
+  · obtain ⟨x, hx⟩ := mem_zip_padAttrs h.resultAttrs.1 has
+    exact LawfulDialectText.sigAttrs_writable _ _ (h.results _ hx)
+
 /-- The items of a valid symbol table are well formed when the tables
 nested in them are valid too, the aggregates' layouts of all of them are
 valid in a data layout, and their globals' numbers are within the limit, in
@@ -273,6 +305,7 @@ theorem SymbolTable.Valid.itemsWellFormed {locs : LocTable} (hl : LocTable.Valid
       exact ⟨hv.limits, fun t h => ⟨LawfulDialectText.tyAttr_isType t (hv.types t h),
         LawfulDialectText.decodeTy_encode t (hv.types t h)⟩⟩
     | global g => exact hG _ (List.mem_cons_self ..) g (List.mem_filterMap.mpr ⟨_, hi, rfl⟩)
+    | extern e => exact (ht.externs e (List.mem_filterMap.mpr ⟨_, hi, rfl⟩)).wellFormed
     | module n ds' js =>
       have hsub := Item.mem_tablesIn hi
       have hv := hn _ (hsub _ (List.mem_cons_self ..))

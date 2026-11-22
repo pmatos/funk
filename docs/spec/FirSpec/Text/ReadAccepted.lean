@@ -71,7 +71,7 @@ the definitions of its function, whose names are names, and rejects one
 that is not there.
 :::
 
-:::readable Fir.Text.SItem.Writable Fir.Text.SBody.Writable Fir.Text.SItem.WritableList Fir.Text.SItem.writable_iff Fir.Text.SItem.writableList_iff Fir.Text.SModule.Writable (pin := Fir.LocTable.InLimits) (pin := Fir.Location.limit) (pin := Fir.Text.decodeItem) (fingerprint := "9773024147645802721")
+:::readable Fir.Text.SItem.Writable Fir.Text.SBody.Writable Fir.Text.SItem.WritableList Fir.Text.SItem.writable_iff Fir.Text.SItem.writableList_iff Fir.Text.SModule.Writable (pin := Fir.LocTable.InLimits) (pin := Fir.Location.limit) (pin := Fir.Text.decodeItem) (fingerprint := "12420793173328578771")
 *Definition: items and modules as read that can be written.* An item as
 read can be written when each of its parameters can be written, each of its
 result types is written as a type, each of its attributes, its own and
@@ -87,8 +87,8 @@ and every number of its
 each key and each number of each location, is below $`2^{32}`.
 
 Nothing is asked of an item's kind or symbol: decoding accepts only a
-`func`, a `module` without attributes, an `aggregate`, a `global` item,
-and an item of a dialect's kind, whatever their symbol.
+`func`, a `module` without attributes, an `aggregate`, a `global`, an
+`extern` item, and an item of a dialect's kind, whatever their symbol.
 :::
 
 :::readable Fir.Text.TokensWritable.tail Fir.Text.TokensWritable.value Fir.Text.TokensWritable.label Fir.Text.TokensWritable.word Fir.Text.TokensWritable.locRef Fir.Text.TokensWritable.float (pin := Fir.Text.TokensWritable) (pin := Fir.Text.Tok.Writable) (pin := Fir.Location.limit) (fingerprint := "16600743715677319285")

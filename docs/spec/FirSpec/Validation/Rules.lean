@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "The general rules: readable blocks" =>
 
-:::moduleDocs (fingerprint := "12567358176027740069")
+:::moduleDocs (fingerprint := "3935421356940331190")
 :::
 
 :::readable Fir.ModuleContext (fingerprint := "6320046082962391219")
@@ -197,7 +197,7 @@ reads its kinds by name, so a sum of dialects sends the item to the
 dialect that registers its kind.
 :::
 
-:::readable Fir.Module.context Fir.SymbolTable.context Fir.SymbolTable.Valid Fir.Module.Valid (fingerprint := "10613287663737650127")
+:::readable Fir.Module.context Fir.SymbolTable.context Fir.SymbolTable.Valid Fir.Module.Valid (fingerprint := "3180822863195772124")
 *Definition: a valid symbol table and a valid module.* The context of the
 module $`M`, $`\mathrm{ctx}(M)`, is its symbol table $`\mathrm{symtab}_M`,
 the references of its location table and the layouts of its own table. A module holds a
@@ -209,7 +209,7 @@ table of the functions of $`T`, $`\mathrm{symtab}_T`, $`K`, and the
 layouts of $`T`, so an op names only the layouts of its own table. The table
 $`T` is valid in $`K` when:
 
-$$`\dfrac{\begin{array}{c} \text{the symbols of } \mathrm{items}(T) \text{ are distinct} \\ \mathrm{ctx}_K(T) \vdash f~\text{valid} \\ \text{for each } f \in \mathrm{funcs}(T) \\ (\mathrm{symtab}_T) \vdash i~\text{valid} \\ \text{for each } i \in \mathrm{ditems}(T) \\ \text{the names of } \mathrm{dialects}(T) \text{ are distinct words} \end{array}}{K \vdash T~\text{valid}}`
+$$`\dfrac{\begin{array}{c} \text{the symbols of } \mathrm{items}(T) \text{ are distinct} \\ \mathrm{ctx}_K(T) \vdash f~\text{valid} \\ \text{for each } f \in \mathrm{funcs}(T) \\ (\mathrm{symtab}_T) \vdash i~\text{valid} \\ \text{for each } i \in \mathrm{ditems}(T) \\ e~\text{valid} \\ \text{for each } e \in \mathrm{externs}(T) \\ \text{the names of } \mathrm{dialects}(T) \text{ are distinct words} \end{array}}{K \vdash T~\text{valid}}`
 
 and $`M` is valid when its location table is, each of its tables is, its
 {ref "The-fir-specification--Validation--The-data-layout___s-rules"}[data layout]
@@ -220,18 +220,20 @@ table is valid in the layout as an item of that table:
 $$`\dfrac{\begin{array}{c} \mathrm{locs}(M) \text{ is a valid table} \\ \mathrm{keys}(M) \vdash T~\text{valid} \\ \text{for each } T \in \mathrm{tables}(M) \\ \mathrm{layout}(M) \text{ is a valid layout} \\ \mathrm{layout}(M) \text{ declares the memories of } M \\ \mathrm{layout}(M) \vdash A~\text{valid} \\ \text{for each } A \in \mathrm{aggregates}(T),~T \in \mathrm{tables}(M) \\ \mathrm{layout}(M), \mathrm{globals}(T) \vdash G~\text{valid} \\ \text{for each } G \in \mathrm{globals}(T),~T \in \mathrm{tables}(M) \end{array}}{\vdash M~\text{valid}}`
 
 Here $`\mathrm{items}(T)` is the items of $`T`, functions, nested modules,
-items of a dialect's kind, aggregates' layouts and globals,
-$`\mathrm{funcs}(T)` its functions, $`\mathrm{globals}(T)` its globals,
-$`\mathrm{ditems}(T)` its items of a dialect's kind, each checked in the
-function context of the symbols of $`T`, and $`\mathrm{dialects}(T)` its
-dialect set, all in order; $`\mathrm{locs}(M)` is the location table of
+items of a dialect's kind, aggregates' layouts, globals and external
+declarations, $`\mathrm{funcs}(T)` its functions, $`\mathrm{globals}(T)`
+its globals, $`\mathrm{ditems}(T)` its items of a dialect's kind, each
+checked in the function context of the symbols of $`T`,
+$`\mathrm{externs}(T)` its
+{ref "The-fir-specification--Validation--A-function___s-signature"}[external declarations],
+and $`\mathrm{dialects}(T)` its dialect set, all in order; $`\mathrm{locs}(M)` is the location table of
 $`M`, $`\mathrm{keys}(M)` its references, $`\mathrm{tables}(M)` the
 tables of $`M`, its own first, and $`\mathrm{layout}(M)` its data layout.
 One location table and one layout serve every table.
 
 A symbol names one item of its table, of whatever kind, so a function, a
-module, an item of a dialect's kind, an aggregate's layout and a global
-never share a symbol of one table; a nested module
+module, an item of a dialect's kind, an aggregate's layout, a global and
+an external declaration never share a symbol of one table; a nested module
 may reuse a symbol of its parent's table, since it is a table of its own.
 Each function is checked against the symbols of its own table, so a call
 names a function of its own table: never one of a nested module, of its
@@ -261,7 +263,8 @@ are distinct words, its layout is valid, and the layout declares the
 memory of each type that its functions state and that their ops carry in
 their attributes, and gives units as wide as the values that their ops
 write into them ($`\mathrm{opunits}`). Such a module has no item of a
-dialect's kind, no aggregate's layout and no global. The last
+dialect's kind, no aggregate's layout, no global and no external
+declaration. The last
 four conditions are checked by computation when they are not given, so
 the tests prove their modules valid this way with the first five.
 :::

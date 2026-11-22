@@ -14,7 +14,7 @@ changes under it.
 
 #doc (Manual) "A function read back: readable blocks" =>
 
-:::moduleDocs (fingerprint := "3909124670650736376")
+:::moduleDocs (fingerprint := "17697587987197129415")
 :::
 
 :::readable Fir.bind_reads (fingerprint := "11770048284880457070")
@@ -34,17 +34,20 @@ attributes, ending in `...` when $`f` is variadic, as the reader of
 parameters writes them.
 :::
 
-:::readable Fir.Func.reads (pin := Fir.Text.readItem) (pin := Fir.Func.tokens) (pin := Fir.Func.types) (pin := Fir.Func.defs) (pin := Fir.Func.allBlocks) (fingerprint := "4180999548138574170")
-*Theorem: a function reads back.* For every dialect with a
+:::readable Fir.Func.readsAs Fir.Func.reads (pin := Fir.Text.readItem) (pin := Fir.Func.tokens) (pin := Fir.Func.types) (pin := Fir.Func.defs) (pin := Fir.Func.allBlocks) (fingerprint := "3479545298563000921")
+*Theorems: a function reads back.* For every dialect with a
 {ref "The-fir-specification--Text-format--Grammar"}[text format], every
 function $`f` such that $`\mathrm{tyattr}(t)` is written as a type for
-each type $`t` of $`\mathrm{types}(f)`, and every position $`p`, the reader
-of an item of kind `func` at $`p`
+each type $`t` of $`\mathrm{types}(f)`, every word $`k` and every position
+$`p`, the reader of an item of kind $`k` at $`p`
 {ref "The-fir-specification--Text-format--The-grammar-step"}[reads] the
 {ref "The-fir-specification--Text-format--Lexing-printed-text"}[tokens of $`f`]
 after its first, the word `func`, as the
 {ref "The-fir-specification--Text-format--The-tree-that-the-grammar-reads"}[tree of $`f`]
-before any token, up to positions.
+with the kind $`k`, before any token, up to positions. With $`k` = `func`
+it reads them as the tree of $`f`; with $`k` = `extern` it reads the
+tokens of an external declaration after its kind, the header of a function
+with no blocks, as the declaration's tree.
 
 Here $`\mathrm{types}(f)` is every type that the text of $`f` states: its
 result types, and the type of each value it defines, at any depth. The

@@ -112,19 +112,19 @@ fn only_a_funcs_signature_carries_attributes_or_ends_in_an_ellipsis() {
             "module @m(%a: i8 sext) {\n}\n",
             1,
             18,
-            "only a func's parameters carry attributes",
+            "only a func's or an extern's parameters carry attributes",
         ),
         (
             "module @m(...) {\n}\n",
             1,
             11,
-            "only a func's parameters end in ...",
+            "only a func's or an extern's parameters end in ...",
         ),
         (
             "toy.c @c() -> i8 sext, i8 {\n}\n",
             1,
             18,
-            "only a func's results carry attributes",
+            "only a func's or an extern's results carry attributes",
         ),
         ("func @f(..., %a: i8) {\n}\n", 1, 12, "expected ), found ,"),
     ] {

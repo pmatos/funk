@@ -17,7 +17,7 @@ the Lean changes under it.
 
 #doc (Manual) "Modules, functions, blocks and ops: readable blocks" =>
 
-:::moduleDocs (fingerprint := "2280697634564774999")
+:::moduleDocs (fingerprint := "13727472850907257682")
 :::
 
 :::readable Fir.Name (pin := Fir.Func.Valid) (fingerprint := "6921361288629920975")
@@ -267,48 +267,31 @@ line. $`\mathrm{types}(i)` is the types it states: its parameters' types,
 then its results.
 :::
 
-:::readable Fir.Field Fir.Aggregate Fir.Aggregate.types Fir.Aggregate.limit Fir.Aggregate.InLimits (fingerprint := "14843076151940009161")
-*Definition: an aggregate's layout.* In M1 an aggregate is a layout over
-memory, not a value (ADR-2026-11-09-1550). A layout is an item of the
-core's kind `aggregate` (ADR-2026-11-16-1546): the memory it describes, by
-its number, a size and an alignment, and a list of fields, all counted in
-the units of that memory:
+:::readable Fir.Extern Fir.Extern.types (pin := Fir.Extern.print) (fingerprint := "11067211433627258398")
+*Definition: an external declaration.* A module names a function that funk
+did not compile by an external declaration (ADR-2026-11-09-1547): a symbol
+and a signature, with no body. It holds what a function's header holds:
 
-```grammar Fir.Field
-\mathit{field}
-offset,ty,count \{\mathsf{offset}~o,~\mathsf{ty}~t,~\mathsf{count}~c^?\,\}
+```grammar Fir.Extern
+\mathit{extern}
+name,params,results,paramAttrs,resultAttrs,variadic \begin{array}{l} \{\mathsf{name}~s, \\ \enspace \mathsf{params}~(x : t)^*, \\ \enspace \mathsf{results}~t^*, \\ \enspace \mathsf{paramAttrs}~(\mathit{attr}^*)^*, \\ \enspace \mathsf{resultAttrs}~(\mathit{attr}^*)^*, \\ \enspace \mathsf{variadic}~b\,\} \end{array}
 ```
 
-```grammar Fir.Aggregate
-\mathit{aggregate}
-name,mem,size,align,fields \begin{array}{l} \{\mathsf{name}~s,~\mathsf{mem}~n, \\ \enspace \mathsf{size}~z,~\mathsf{align}~a, \\ \enspace \mathsf{fields}~\mathit{field}^*\,\} \end{array}
-```
-
-A field is one value of the scalar type $`t` at the offset $`o`, or, when it
-has a count $`c`, a repeated field: an array of $`c` elements of $`t`. Each
-element is rounded up to the alignment of $`t` (the human's ruling of
-2026-11-16 on #236), so four `i24` in memory 0 take 16 units, not 12. In
-text a layout is written `aggregate @s() memory(n) size(z) align(a)`, then
-`field(o, t)` or `field(o, t, c)` for each field, then `{` and `}` on the
-next line. $`\mathrm{types}(A)` is the types it states, one for each field.
-Every number of a layout is at most $`2^{64} - 1`, its limit; a layout
-whose numbers are all within it is within its limits, and only such a
-layout can be written.
+Its fields mean what a function's do: its parameters' attributes, such as
+the core's markers `sext` and `zext`, are held the same way, and its
+parameters may end in `...`, since code that funk did not compile may be
+variadic. In text it is an item of the core's kind `extern`, written as a
+function's header with an empty body: `extern @printf(%fmt: ptr, ...) -> i32 {`,
+then `}` on the next line. $`\mathrm{types}(e)` is the types it states: its
+parameters' types, then its results.
 :::
 
-:::readable Fir.InitPiece.InLimits Fir.Global.InLimits (fingerprint := "13179149203291508932")
-*Definition: a global within its limits.* The numbers of a
-{ref "The-fir-specification--Abstract-syntax--Globals"}[global] are within
-its limits when its memory, size and alignment, each count of zeros and
-each offset of an address are at most $`2^{64} - 1`, an aggregate's limit.
-A unit has no limit here: validation bounds it by its memory's unit width.
-:::
-
-:::readable Fir.Item Fir.Item.name Fir.Item.func? Fir.Item.func?_func Fir.Item.func?_module Fir.Item.func?_dialect Fir.Item.func?_aggregate Fir.Item.func?_global Fir.Item.dialect? Fir.Item.aggregate? Fir.Item.global? (fingerprint := "3806920177862569462")
+:::readable Fir.Item Fir.Item.name Fir.Item.func? Fir.Item.func?_func Fir.Item.func?_module Fir.Item.func?_dialect Fir.Item.func?_aggregate Fir.Item.func?_global Fir.Item.func?_extern Fir.Item.dialect? Fir.Item.aggregate? Fir.Item.global? Fir.Item.extern? (fingerprint := "9656437546458500936")
 *Definition: an item.* An item is one entry of a module: a function, a
 module nested in it (ADR-2026-11-10-1510), an item of a kind that a
 dialect registers (ADR-2026-11-09-1543), an aggregate's layout
-(ADR-2026-11-16-1546), or a global (ADR-2026-11-09-1546):
+(ADR-2026-11-16-1546), a global (ADR-2026-11-09-1546), or an external
+declaration (ADR-2026-11-09-1547):
 
 ```grammar Fir.Item
 \mathit{item}
@@ -317,6 +300,7 @@ module \mathsf{module}~s~\mathit{name}^*~\mathit{item}^*
 dialect \mathsf{dialect}~\mathit{ditem}
 aggregate \mathsf{aggregate}~\mathit{aggregate}
 global \mathsf{global}~\mathit{global}
+extern \mathsf{extern}~\mathit{extern}
 ```
 
 A module is a table of symbols, and fir lets such tables nest, as a device
@@ -328,13 +312,14 @@ table. In text it is written `module @s() { … }`, with its dialect set and
 its items between the braces.
 
 The symbol of an item, $`\mathrm{sym}(i)`, is the symbol of its function,
-of its module, of its item of a dialect's kind, of its layout or of its
-global. $`\mathrm{func?}(i)` is the function $`f` when $`i` is
+of its module, of its item of a dialect's kind, of its layout, of its
+global or of its declaration. $`\mathrm{func?}(i)` is the function $`f` when $`i` is
 $`\mathsf{func}~f`, and none otherwise; $`\mathrm{dialect?}(i)` is the
 item $`d` when $`i` is $`\mathsf{dialect}~d`, $`\mathrm{aggregate?}(i)`
 the layout $`A` when $`i` is $`\mathsf{aggregate}~A`, and
 $`\mathrm{global?}(i)` the global $`G` when $`i` is $`\mathsf{global}~G`,
-each none otherwise.
+and $`\mathrm{extern?}(i)` the declaration $`e` when $`i` is
+$`\mathsf{extern}~e`, each none otherwise.
 :::
 
 :::readable Fir.Module Fir.Module.funcs (pin := Fir.Module.Valid) (pin := Fir.Module.print) (pin := Fir.LocTable.print) (fingerprint := "15819456145575854113")

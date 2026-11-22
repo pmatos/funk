@@ -189,6 +189,10 @@ def DialectItem.tokens (i : DialectItem d) : List Tok :=
   .word i.kind :: .sym i.name :: .lparen :: defsTokens i.params ++ .rparen :: results ++
     i.attrs.flatMap Attr.tokens ++ [.lbrace, .rbrace]
 
+/-- The tokens of an external declaration: the kind `extern`, then those
+of a function's header, and an empty body. -/
+def Extern.tokens (e : Extern d) : List Tok := .word "extern" :: e.func.tokens.tail
+
 mutual
 /-- The tokens of an item. -/
 def Item.tokens : Item d → List Tok
@@ -199,6 +203,7 @@ def Item.tokens : Item d → List Tok
   | .dialect i => i.tokens
   | .aggregate a => a.item.tokens
   | .global g => (g.item (d := d)).tokens
+  | .extern e => e.tokens
 
 /-- The tokens of items. -/
 def Item.tokensList : List (Item d) → List Tok

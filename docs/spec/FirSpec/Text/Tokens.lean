@@ -14,7 +14,7 @@ changes under it.
 
 #doc (Manual) "Lexing printed text: readable blocks" =>
 
-:::moduleDocs (fingerprint := "8462843573538272048")
+:::moduleDocs (fingerprint := "6326066712124720789")
 :::
 
 :::readable Fir.Text.Tok.spell (pin := Fir.Text.printSymbol) (pin := Fir.printLocRef) (pin := Fir.Text.printInt) (pin := Fir.Text.quote) (pin := Nat.toDigits) (fingerprint := "15219706586904829649")
@@ -168,7 +168,7 @@ $`\texttt{->}` followed by the tokens of $`\mathrm{attr}(T_j)` and those
 of each attribute of $`B_j`, for each result, separated by $`\texttt{,}`.
 :::
 
-:::readable Fir.Func.tokens Fir.Item.tokens Fir.Item.tokensList Fir.Item.tokensList_eq_flatMap (pin := Fir.dialectsTokens) (fingerprint := "16430881615479891062")
+:::readable Fir.Func.tokens Fir.Extern.tokens Fir.Item.tokens Fir.Item.tokensList Fir.Item.tokensList_eq_flatMap (pin := Fir.dialectsTokens) (fingerprint := "13061794565861892519")
 *Definition: the tokens of a function and of an item.* For every dialect
 with a text format, a function with symbol $`f`, parameters, results and
 blocks has the tokens:
@@ -179,7 +179,10 @@ where $`\mathit{params}` and $`\mathit{res}` are the tokens of its
 parameters and of its results, above. An item that is a function has the tokens of
 its function, an item of a dialect's kind those of that item, and an
 aggregate's layout those of the item of kind `aggregate` that writes it,
-and a global those of the item of kind `global` that writes it. A nested
+and a global those of the item of kind `global` that writes it. An
+external declaration has the tokens of the function whose header it
+writes, with no blocks, with $`\mathsf{word}~\mathtt{extern}` in place of
+$`\mathsf{word}~\mathtt{func}`. A nested
 module with the symbol $`s`, the dialect set $`x^*`
 and the items $`i^*` has the tokens:
 

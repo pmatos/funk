@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "The module read back: readable blocks" =>
 
-:::moduleDocs (fingerprint := "14901324028528581880")
+:::moduleDocs (fingerprint := "5395759351114034884")
 :::
 
 :::readable Fir.readDialectName_reads Fir.readDialects_reads (pin := Fir.Text.readDialectName) (pin := Fir.Text.readDialects) (pin := Fir.dialectsTokens) (fingerprint := "16642658802201699821")
@@ -38,14 +38,15 @@ until no comma follows. An entry writes a type, so the reader of types
 reads it back.
 :::
 
-:::readable Fir.Item.kind Fir.Item.tokens_eq Fir.head_items Fir.isDialectWord_not_reserved Fir.Item.TypesWritable Fir.Item.TypesWritableList Fir.Item.typesWritableList_iff Fir.itemsEnd (pin := Fir.Item.tokens) (pin := Fir.Func.types) (pin := Fir.DialectItem.types) (fingerprint := "13743465840238432287")
+:::readable Fir.Item.kind Fir.Item.tokens_eq Fir.head_items Fir.isDialectWord_not_reserved Fir.Item.TypesWritable Fir.Item.TypesWritableList Fir.Item.typesWritableList_iff Fir.itemsEnd (pin := Fir.Item.tokens) (pin := Fir.Func.types) (pin := Fir.DialectItem.types) (fingerprint := "17799474300708766056")
 *Definitions: an item's kind, and the types it writes.* The kind of an
 item is `func` for a function, `module` for a nested module, `aggregate`
-for an aggregate's layout, `global` for a global, and its own kind for an item of a dialect's
-kind, and the tokens of an item start with $`\mathsf{word}` of its kind.
+for an aggregate's layout, `global` for a global, `extern` for an external
+declaration, and its own kind for an item of a dialect's kind, and the
+tokens of an item start with $`\mathsf{word}` of its kind.
 So the tokens of a list of items, then more tokens, start with the word
-`func`, the word `module`, the word `aggregate`, the word `global` or a word
-of a dialect, or,
+`func`, the word `module`, the word `aggregate`, the word `global`, the word
+`extern` or a word of a dialect, or,
 when the list is empty, as the tokens after it do. An item
 writes its types as types when, for a function $`f`, $`\mathrm{tyattr}(t)`
 is written as a type for each type $`t` of $`\mathrm{types}(f)`, every type
@@ -54,13 +55,15 @@ does, at any depth; and, for an item $`i` of a dialect's kind, when its
 kind is a word of a dialect and $`\mathrm{tyattr}(t)` is written as a type
 for each $`t` of $`\mathrm{types}(i)`; an aggregate's layout always does,
 since its types are written inside its attributes, and so does a global,
-which writes no type. A word of a dialect holds a `.`, so
+which writes no type; and an external declaration $`e` does when
+$`\mathrm{tyattr}(t)` is written as a type for each type $`t` that the
+function whose header it writes states. A word of a dialect holds a `.`, so
 it is neither `dialects`, `locs` nor `layout`, and an item of a dialect's
 kind is never read as a dialect set, a data layout or the location table. A list of items ends at the word `locs` at the top of a
 module, and at `}` in the body of an item.
 :::
 
-:::readable Fir.Item.reads Fir.Item.readsList (pin := Fir.Text.readItems) (pin := Fir.Text.readItem) (pin := Fir.Item.tree) (fingerprint := "488852197569161195")
+:::readable Fir.Item.reads Fir.Item.readsList (pin := Fir.Text.readItems) (pin := Fir.Text.readItem) (pin := Fir.Item.tree) (fingerprint := "12480843582690277549")
 *Theorems: an item, and a list of items, read back.* For every dialect
 with a {ref "The-fir-specification--Text-format--Grammar"}[text format]:
 
@@ -74,7 +77,9 @@ with a {ref "The-fir-specification--Text-format--Grammar"}[text format]:
 
 A function, and an item of a dialect's kind, read back by the theorems of
 the previous section, and so do an aggregate's layout and a global, as
-the items of kind `aggregate` and `global` that write them. A nested
+the items of kind `aggregate` and `global` that write them, and an
+external declaration, as the header of the function with no blocks that
+it writes, read after the kind `extern`. A nested
 module reads back as its symbol, `(`, no parameters since `)` follows, `)`,
 no results and no attributes since `{` follows, `{`, then its body: no
 blocks when `}` follows, which is the tree of a module with no dialect set
@@ -84,7 +89,7 @@ a word, read by the reader of a dialect set and the reader of items; then
 induction on the items.
 :::
 
-:::readable Fir.readModule_tokens (pin := Fir.Text.readModule) (pin := Fir.Module.tokens) (pin := Fir.Item.TypesWritable) (pin := Fir.LocTable.InLimits) (fingerprint := "5791803826457485221")
+:::readable Fir.readModule_tokens (pin := Fir.Text.readModule) (pin := Fir.Module.tokens) (pin := Fir.Item.TypesWritable) (pin := Fir.LocTable.InLimits) (fingerprint := "8044277720831021083")
 *Theorem: the grammar step reads a module's tokens as its tree.* For every
 dialect with a text format and every
 module $`m` such that:
@@ -104,8 +109,8 @@ $$`\begin{aligned} & \mathrm{toks}(\mathit{ts}) = \mathrm{tokens}(m)~\mathsf{eof
 
 Here $`\mathrm{readmodule}` is the reader of a module. This is the second
 step of the round trip. The reader reads the dialect set first, which the
-word `layout`, an item's kind, `func`, `module`, `aggregate`, `global` or a
-word of a dialect, or
+word `layout`, an item's kind, `func`, `module`, `aggregate`, `global`,
+`extern` or a word of a dialect, or
 the table's `locs` ends,
 then the data layout, which an item's kind or `locs` ends. Of all the readers,
 only the readers of types and of lines and columns reject a token of the
@@ -113,14 +118,15 @@ right kind, and the two conditions cover them. Being within limits also
 bounds the location references, which no reader checks.
 :::
 
-:::readable Fir.Item.WellFormed.typesWritable Fir.Item.WellFormed.typesWritableList Fir.Module.WellFormed.readModule_tokens (pin := Fir.Module.WellFormed) (pin := Fir.Func.WellFormed) (pin := Fir.Item.WellFormed) (fingerprint := "11938990485456663503")
+:::readable Fir.Item.WellFormed.typesWritable Fir.Item.WellFormed.typesWritableList Fir.Module.WellFormed.readModule_tokens (pin := Fir.Module.WellFormed) (pin := Fir.Func.WellFormed) (pin := Fir.Item.WellFormed) (fingerprint := "7811362228626538064")
 *Theorem: the grammar step for a well-formed module.* For every dialect
 with signatures and a text format, every
 {ref "The-fir-specification--Text-format--Round-trips"}[well-formed]
 module $`m` and all tokens $`\mathit{ts}` that hold the tokens of $`m` and
 then $`\mathsf{eof}`, at any positions, the reader of a module gives a tree
 that erases to the tree of $`m`. A well-formed item, and so each item of a
-list of well-formed items, writes each type as a type, and the location
+list of well-formed items, writes each type as a type, an external
+declaration since the function whose header it writes is well formed, and the location
 table of a well-formed module is
 {ref "The-fir-specification--Abstract-syntax--Locations"}[within limits].
 :::

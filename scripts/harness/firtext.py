@@ -184,7 +184,8 @@ class Reader:
         (ADR-2026-11-10-1510), so they are named by their path. The layout
         says nothing that the matrix counts, so its entries are skipped
         (ADR-2026-11-12-1821), and so are aggregates' layouts
-        (ADR-2026-11-16-1546) and globals (ADR-2026-11-09-1546)."""
+        (ADR-2026-11-16-1546), globals (ADR-2026-11-09-1546) and external
+        declarations (ADR-2026-11-09-1547), which no call names yet."""
         if self.at("word") and self.peek().text == "dialects":
             self.take("word")
             self.take("word")
@@ -203,6 +204,8 @@ class Reader:
                 found += self.nested(scope)
             elif self.peek().text in ("aggregate", "global"):
                 self.empty_item()
+            elif self.peek().text == "extern":
+                self.declaration()
             else:
                 found.append(self.item(scope))
         return found
@@ -228,6 +231,22 @@ class Reader:
         self.take(")")
         while not self.at("{"):
             self.attr()
+        self.take("{")
+        self.take("}")
+
+    def declaration(self) -> None:
+        """Skips an external declaration: a function's header, its
+        parameters and results with their markers and maybe `...`, then its
+        empty body."""
+        self.take("word")
+        self.take("symbol")
+        self.take("(")
+        if not self.at(")"):
+            self.params()
+        self.take(")")
+        if self.at("->"):
+            self.take("->")
+            self.results()
         self.take("{")
         self.take("}")
 

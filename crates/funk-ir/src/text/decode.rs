@@ -19,8 +19,8 @@ use super::{ParseError, TextPos};
 use crate::ir::names::is_dialect_word;
 use crate::ir::tree::Nest;
 use crate::ir::{
-    Aggregate, AggregateFault, Attr, Def, DialectItem, Func, Global, GlobalFault, Item, MemLayout,
-    Module, NestedModule, Op, Part, Region, Type, trim_attrs,
+    Aggregate, AggregateFault, Attr, Def, DialectItem, Extern, Func, Global, GlobalFault, Item,
+    MemLayout, Module, NestedModule, Op, Part, Region, Type, trim_attrs,
 };
 use crate::registry::{OpTypes, Registry, TypeCheck};
 
@@ -88,7 +88,8 @@ enum Decoded {
 }
 
 /// A `func` has blocks in its body, and attributes only after a result,
-/// which are that result's (ADR-2026-11-21-1307). A `module` has no
+/// which are that result's (ADR-2026-11-21-1307). An `extern` has a func's
+/// header and an empty body (ADR-2026-11-09-1547). A `module` has no
 /// parameters, results or attributes, and its dialect set and items in its
 /// body (ADR-2026-11-10-1510). An empty body is no blocks, so it is a
 /// function with no blocks or a module with no items. An item whose kind is
@@ -98,6 +99,9 @@ enum Decoded {
 fn item(mut s: SItem, reg: &Registry) -> Result<Decoded, ParseError> {
     if s.kind == "func" {
         return func_item(s, reg).map(Decoded::Item);
+    }
+    if s.kind == "extern" {
+        return extern_item(s, reg).map(Decoded::Item);
     }
     plain_header(&s)?;
     match s.kind.as_str() {
@@ -131,25 +135,32 @@ fn item(mut s: SItem, reg: &Registry) -> Result<Decoded, ParseError> {
         _ => err(
             s.kind_pos,
             format!(
-                "unknown item kind {}: the kinds are func, module, aggregate, global and the words of dialects",
+                "unknown item kind {}: the kinds are func, module, aggregate, global, extern and the words of dialects",
                 s.kind
             ),
         ),
     }
 }
 
-/// The header of an item other than a `func` (`plainHeader`): no parameter
+/// The header of an item other than a `func` or an `extern`
+/// (`plainHeader`): no parameter
 /// carries attributes, the parameters do not end in `...`, and no result
 /// that a comma follows carries attributes.
 fn plain_header(s: &SItem) -> Result<(), ParseError> {
     if let Some((_, pos)) = s.param_attrs.iter().flatten().next() {
-        return err(*pos, "only a func's parameters carry attributes");
+        return err(
+            *pos,
+            "only a func's or an extern's parameters carry attributes",
+        );
     }
     if let Some(pos) = s.variadic {
-        return err(pos, "only a func's parameters end in ...");
+        return err(pos, "only a func's or an extern's parameters end in ...");
     }
     if let Some((_, pos)) = s.result_attrs.iter().flatten().next() {
-        return err(*pos, "only a func's results carry attributes");
+        return err(
+            *pos,
+            "only a func's or an extern's results carry attributes",
+        );
     }
     Ok(())
 }
@@ -322,7 +333,41 @@ fn func_item(mut s: SItem, reg: &Registry) -> Result<Item, ParseError> {
         result_attrs: sig_attrs(result_attrs),
         variadic: s.variadic.is_some(),
     };
-    func(f, s.params, s.results, &at, reg)
+    func(f, s.params, s.results, &at, reg).map(Item::Func)
+}
+
+/// An external declaration (`decodeExternItem`, ADR-2026-11-09-1547): its
+/// body is empty, the attributes after its last result are that result's,
+/// and its signature decodes as a function's with no blocks.
+fn extern_item(mut s: SItem, reg: &Registry) -> Result<Item, ParseError> {
+    if !matches!(&s.body, SBody::Blocks(blocks, _) if blocks.is_empty()) {
+        return err(s.kind_pos, "an extern has an empty body");
+    }
+    if s.results.is_empty()
+        && let Some((_, pos)) = s.attrs.first()
+    {
+        return err(*pos, "an extern with no results has no attributes");
+    }
+    let mut result_attrs = std::mem::take(&mut s.result_attrs);
+    result_attrs.push(std::mem::take(&mut s.attrs));
+    let f = Func {
+        name: s.name,
+        params: Vec::new(),
+        results: Vec::new(),
+        body: Region::new(Vec::new()),
+        param_attrs: sig_attrs(std::mem::take(&mut s.param_attrs)),
+        result_attrs: sig_attrs(result_attrs),
+        variadic: s.variadic.is_some(),
+    };
+    let f = func(f, s.params, s.results, &BodyPos::default(), reg)?;
+    Ok(Item::Extern(Extern {
+        name: f.name,
+        params: f.params,
+        results: f.results,
+        param_attrs: f.param_attrs,
+        result_attrs: f.result_attrs,
+        variadic: f.variadic,
+    }))
 }
 
 /// Decodes a function whose body the grammar read: `f` with these
@@ -333,7 +378,7 @@ fn func(
     results: Vec<(Type, TextPos)>,
     at: &BodyPos,
     reg: &Registry,
-) -> Result<Item, ParseError> {
+) -> Result<Func, ParseError> {
     let mut scope = Scope {
         types: HashMap::new(),
         reg,
@@ -366,7 +411,7 @@ fn func(
     }
     f.params = params.into_iter().map(|(d, _)| d).collect();
     f.results = results.into_iter().map(|(t, _)| t).collect();
-    Ok(Item::Func(f))
+    Ok(f)
 }
 
 /// The values a function defines, at any depth, with their types.

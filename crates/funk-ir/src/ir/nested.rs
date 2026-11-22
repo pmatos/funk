@@ -14,6 +14,7 @@ use std::hash::{Hash, Hasher};
 
 use super::aggregate::Aggregate;
 use super::debug::{Bracket, DebugTree};
+use super::extern_decl::Extern;
 use super::global::Global;
 use super::module::{DialectItem, Func, Item, Module};
 use super::tree::{self, Nest, Node, Step, walk};
@@ -81,6 +82,11 @@ impl<'a> Table<'a> {
     pub fn globals(self) -> impl Iterator<Item = &'a Global> {
         self.items.iter().filter_map(Item::as_global)
     }
+
+    /// The table's external declarations, in order (`SymbolTable.externs`).
+    pub fn externs(self) -> impl Iterator<Item = &'a Extern> {
+        self.items.iter().filter_map(Item::as_extern)
+    }
 }
 
 impl Module {
@@ -99,19 +105,28 @@ impl Module {
     pub(crate) fn tables(&self) -> Vec<Table<'_>> {
         let nested = self.items.iter().flat_map(|i| match i {
             Item::Module(n) => Some(walk(Entry::Module(n)).filter_map(Step::entered)),
-            Item::Func(_) | Item::Dialect(_) | Item::Aggregate(_) | Item::Global(_) => None,
+            Item::Func(_)
+            | Item::Dialect(_)
+            | Item::Aggregate(_)
+            | Item::Global(_)
+            | Item::Extern(_) => None,
         });
         std::iter::once(self.table())
             .chain(nested.flatten().filter_map(|e| match e {
                 Entry::Module(m) => Some(Table::of(m)),
-                Entry::Func(_) | Entry::Dialect(_) | Entry::Aggregate(_) | Entry::Global(_) => None,
+                Entry::Func(_)
+                | Entry::Dialect(_)
+                | Entry::Aggregate(_)
+                | Entry::Global(_)
+                | Entry::Extern(_) => None,
             }))
             .collect()
     }
 }
 
 /// A nested module, a function, an item of a dialect's kind, an
-/// aggregate's layout or a global: a node of a walk over nested modules.
+/// aggregate's layout, a global or an external declaration: a node of a walk
+/// over nested modules.
 #[derive(Clone, Copy)]
 pub(crate) enum Entry<'a> {
     Module(&'a NestedModule),
@@ -119,6 +134,7 @@ pub(crate) enum Entry<'a> {
     Dialect(&'a DialectItem),
     Aggregate(&'a Aggregate),
     Global(&'a Global),
+    Extern(&'a Extern),
 }
 
 /// The items of a nested module, as entries.
@@ -134,6 +150,7 @@ impl<'a> Iterator for Entries<'a> {
             Item::Dialect(i) => Entry::Dialect(i),
             Item::Aggregate(a) => Entry::Aggregate(a),
             Item::Global(g) => Entry::Global(g),
+            Item::Extern(e) => Entry::Extern(e),
         })
     }
 }
@@ -144,16 +161,22 @@ impl<'a> Node for Entry<'a> {
     fn children(self) -> Entries<'a> {
         match self {
             Entry::Module(m) => Entries(m.items.iter()),
-            Entry::Func(_) | Entry::Dialect(_) | Entry::Aggregate(_) | Entry::Global(_) => {
-                Entries([].iter())
-            }
+            Entry::Func(_)
+            | Entry::Dialect(_)
+            | Entry::Aggregate(_)
+            | Entry::Global(_)
+            | Entry::Extern(_) => Entries([].iter()),
         }
     }
 
     fn is_leaf(self) -> bool {
         match self {
             Entry::Module(m) => m.items.is_empty(),
-            Entry::Func(_) | Entry::Dialect(_) | Entry::Aggregate(_) | Entry::Global(_) => true,
+            Entry::Func(_)
+            | Entry::Dialect(_)
+            | Entry::Aggregate(_)
+            | Entry::Global(_)
+            | Entry::Extern(_) => true,
         }
     }
 }
@@ -194,6 +217,7 @@ impl Clone for NestedModule {
                 Step::Enter(Entry::Dialect(i)) => items.push(Item::Dialect(i.clone())),
                 Step::Enter(Entry::Aggregate(a)) => items.push(Item::Aggregate(a.clone())),
                 Step::Enter(Entry::Global(g)) => items.push(Item::Global(g.clone())),
+                Step::Enter(Entry::Extern(e)) => items.push(Item::Extern(e.clone())),
                 Step::Enter(Entry::Module(m)) => {
                     items.push(Item::Module(module_head(m)));
                     items.open(m.items.len());
@@ -202,7 +226,11 @@ impl Clone for NestedModule {
                     items.close_module();
                 }
                 Step::Leave(
-                    Entry::Func(_) | Entry::Dialect(_) | Entry::Aggregate(_) | Entry::Global(_),
+                    Entry::Func(_)
+                    | Entry::Dialect(_)
+                    | Entry::Aggregate(_)
+                    | Entry::Global(_)
+                    | Entry::Extern(_),
                 ) => {}
             }
         }
@@ -223,6 +251,7 @@ impl PartialEq for NestedModule {
                 (Entry::Dialect(x), Entry::Dialect(y)) => x == y,
                 (Entry::Aggregate(x), Entry::Aggregate(y)) => x == y,
                 (Entry::Global(x), Entry::Global(y)) => x == y,
+                (Entry::Extern(x), Entry::Extern(y)) => x == y,
                 _ => false,
             }
         })
@@ -253,6 +282,10 @@ impl Hash for NestedModule {
             Entry::Global(g) => {
                 state.write_u8(4);
                 g.hash(state);
+            }
+            Entry::Extern(e) => {
+                state.write_u8(5);
+                e.hash(state);
             }
         });
     }
@@ -285,6 +318,11 @@ impl fmt::Debug for NestedModule {
                     out.value(None, g)?;
                     out.close()?;
                 }
+                Step::Enter(Entry::Extern(e)) => {
+                    out.open(None, "Extern", Bracket::Tuple)?;
+                    out.value(None, e)?;
+                    out.close()?;
+                }
                 Step::Enter(Entry::Module(m)) => {
                     if !root {
                         out.open(None, "Module", Bracket::Tuple)?;
@@ -302,7 +340,11 @@ impl fmt::Debug for NestedModule {
                     }
                 }
                 Step::Leave(
-                    Entry::Func(_) | Entry::Dialect(_) | Entry::Aggregate(_) | Entry::Global(_),
+                    Entry::Func(_)
+                    | Entry::Dialect(_)
+                    | Entry::Aggregate(_)
+                    | Entry::Global(_)
+                    | Entry::Extern(_),
                 ) => {}
             }
         }

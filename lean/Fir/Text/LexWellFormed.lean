@@ -337,6 +337,12 @@ theorem Item.WellFormed.tokens : ∀ {i : Item d}, i.WellFormed → ∀ t ∈ i.
   | .dialect _, h => DialectItem.WellFormed.tokens h
   | .aggregate _, h => Aggregate.WellFormed.tokens h
   | .global g, _ => Global.tokens_writable g
+  | .extern _, h => fun t ht => by
+    simp only [Item.tokens, Extern.tokens, List.mem_cons] at ht
+    rcases ht with rfl | ht
+    · show isWord "extern" = true
+      decide
+    · exact Func.WellFormed.tokens h t (List.mem_of_mem_tail ht)
   | .module _ _ is, h => by
     have his := Item.WellFormed.tokensList (is := is) h.2
     simp only [Item.tokens]

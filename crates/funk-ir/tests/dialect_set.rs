@@ -104,8 +104,8 @@ fn read(file: &'static str) -> Vec<Case> {
 #[test]
 fn the_shared_cases_are_all_read() {
     let cases = cases();
-    assert_eq!(cases.len(), 13);
-    assert_eq!(cases.iter().filter(|c| c.accept).count(), 6);
+    assert_eq!(cases.len(), 15);
+    assert_eq!(cases.iter().filter(|c| c.accept).count(), 7);
 }
 
 #[test]

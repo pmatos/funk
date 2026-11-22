@@ -105,6 +105,11 @@ pub(super) fn check_memories(
             out.push(problem(&i.name, n));
         }
     }
+    for e in t.externs() {
+        if let Some(n) = e.types().find_map(missing) {
+            out.push(problem(&e.name, n));
+        }
+    }
     for f in asking {
         if let Some((n, w)) = first_unit_width(f, layout, reg) {
             let unit = memory(layout, n).unwrap_or(MemLayout::DEFAULT).unit;

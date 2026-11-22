@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Ops, functions and the module: readable blocks" =>
 
-:::moduleDocs (fingerprint := "11002072048922252901")
+:::moduleDocs (fingerprint := "2885670740274900287")
 :::
 
 :::readable Fir.spells_lhs (pin := Fir.printDefs) (fingerprint := "7259325238878645560")
@@ -75,7 +75,7 @@ characters. The four are proved together, since ops hold regions, which
 hold blocks of ops.
 :::
 
-:::readable Fir.Func.spells Fir.Item.spells Fir.Item.spellsList (pin := Fir.Func.print) (pin := Fir.Item.print) (pin := Fir.Item.printList) (fingerprint := "16517739686563005803")
+:::readable Fir.Func.spells Fir.Extern.spells Fir.Item.spells Fir.Item.spellsList (pin := Fir.Func.print) (pin := Fir.Extern.print) (pin := Fir.Item.print) (pin := Fir.Item.printList) (fingerprint := "11377461039412023387")
 *Theorems: a printed function, an item, and items, spell their tokens
 before any characters.* For every dialect with a text format and every
 indentation $`n`:
@@ -87,10 +87,15 @@ indentation $`n`:
   attributes, after ` -> ` and with `, ` between them, when it has
   results, ` {`, a line feed, its blocks, $`n` spaces, `}` and a line
   feed;
-* so does every item whose tokens can all be written: a function as
-  above, an item of a dialect's kind by the theorem for such items, an
-  aggregate's layout and a global by that theorem for the item of kind
-  `aggregate` or `global` that writes it, and a nested module, printed as $`n` spaces, `module`, a space, its symbol, `()`, ` {`, a line
+* every external declaration whose tokens can all be written spells its
+  tokens before any characters, printed as $`n` spaces, `extern`, a space,
+  its symbol, then its parameters and results as a function's are printed,
+  ` {`, a line feed, $`n` spaces, `}` and a line feed;
+* so does every item whose tokens can all be written: a function and an
+  external declaration as above, an item of a dialect's kind by the
+  theorem for such items, an aggregate's layout and a global by that
+  theorem for the item of kind `aggregate` or `global` that writes it, and
+  a nested module, printed as $`n` spaces, `module`, a space, its symbol, `()`, ` {`, a line
   feed, its dialect set and its items two spaces deeper, $`n` spaces, `}`
   and a line feed;
 * every list of items whose tokens can all be written, each printed then

@@ -14,7 +14,7 @@ fails when the Lean changes under it.
 
 #doc (Manual) "A function's signature: readable blocks" =>
 
-:::moduleDocs (fingerprint := "9109870626370042610")
+:::moduleDocs (fingerprint := "14651156459289033403")
 :::
 
 :::readable Fir.Func.SigValid (pin := Fir.AttrsTrimmed) (pin := Fir.Func.paramAttrsAll) (pin := Fir.Func.resultAttrsAll) (fingerprint := "17308138750463034735")
@@ -33,4 +33,21 @@ the signature of a function $`f` is valid when:
 
 A dialect allows no attribute by default. The core allows one word, `sext`
 or `zext`, after an integer type narrower than 32 bits.
+:::
+
+:::readable Fir.Extern.Valid (pin := Fir.Extern.func) (pin := Fir.Extern.types) (fingerprint := "16353006410598732236")
+*Definition: a valid external declaration.* For every dialect with
+validation rules, an external declaration $`e` is valid when:
+
+* the name of each of its parameters is a name, and no two are the same;
+* each type that $`e` states, its parameters' and its results', is valid;
+* $`e` holds the attributes of its parameters, and of its results, in the
+  short form that decoding the text gives;
+* for each parameter $`x : t` with attributes $`A`, and each result $`t`
+  with attributes $`A`, the dialect allows $`A` after $`t`:
+  $`\mathrm{validSigAttrs}(t, A)`.
+
+Its parameters may end in `...` (ADR-2026-11-09-1547): code that funk did
+not compile may be variadic. That its symbol names no other item of its
+table is the rule of a symbol table.
 :::

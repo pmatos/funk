@@ -133,7 +133,7 @@ written, its result types are written as types, and its attributes can be
 written.
 :::
 
-:::readable Fir.dialectsTokens_writable Fir.layoutTokens_writable Fir.Item.WellFormed.tokens Fir.Item.WellFormed.tokensList Fir.Global.tokens_writable Fir.Module.WellFormed.tokens_writable (pin := Fir.Module.WellFormed) (pin := Fir.Item.WellFormed) (fingerprint := "15326786092719108757")
+:::readable Fir.dialectsTokens_writable Fir.layoutTokens_writable Fir.Item.WellFormed.tokens Fir.Item.WellFormed.tokensList Fir.Global.tokens_writable Fir.Module.WellFormed.tokens_writable (pin := Fir.Module.WellFormed) (pin := Fir.Item.WellFormed) (fingerprint := "8500291044175195370")
 *Theorems: well-formed items and modules have tokens that can be written.*
 For every dialect with signatures and a text format:
 
@@ -143,8 +143,11 @@ For every dialect with signatures and a text format:
 * every token of a well-formed item can be written, and so can every token
   of a list of well-formed items: a function, an item of a dialect's kind
   and an aggregate's layout by the theorems above, a global since every
-  attribute it writes can be written and `global` is a word, and a nested module since its dialect set names words and its items are well
-  formed, at any depth;
+  attribute it writes can be written and `global` is a word, an external
+  declaration since `extern` is a word and the rest of its tokens are those
+  of a well-formed function's header with no blocks, and a nested module
+  since its dialect set names words and its items are well formed, at any
+  depth;
 * every token of every well-formed module can be written. A well-formed
   module names its dialects by words, has a data layout whose tokens can
   always be written, has well-formed items, and has a location table within

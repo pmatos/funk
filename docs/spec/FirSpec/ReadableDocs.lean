@@ -4,6 +4,7 @@ import FirSpec.Syntax.Module
 import FirSpec.Syntax.FuncAttrs
 import FirSpec.Syntax.Layout
 import FirSpec.Syntax.Global
+import FirSpec.Syntax.Aggregate
 import FirSpec.Core.Types
 import FirSpec.Core.Rounding
 import FirSpec.Core.OpAttrs
@@ -51,6 +52,7 @@ import FirSpec.Validation.Search
 import FirSpec.Validation.Graph
 import FirSpec.Validation.CheckOps
 import FirSpec.Validation.CheckFuncs
+import FirSpec.Validation.CheckExtern
 import FirSpec.Validation.CheckLayout
 import FirSpec.Validation.CheckGlobal
 import FirSpec.Validation.CheckModule
@@ -69,6 +71,7 @@ import FirSpec.Text.ReadTable
 import FirSpec.Text.ReadModule
 import FirSpec.Text.DecodeScope
 import FirSpec.Text.DecodeBlocks
+import FirSpec.Text.DecodeFuncItem
 import FirSpec.Text.DecodeModule
 import FirSpec.Text.PrintParse
 import FirSpec.Execution.Interpreter
@@ -178,6 +181,7 @@ import FirSpec.Text.ReadAcceptedItems
 import FirSpec.Text.ReadAcceptedModule
 import FirSpec.Text.DecodeAcceptedScope
 import FirSpec.Text.DecodeAccepted
+import FirSpec.Text.DecodeAcceptedFunc
 import FirSpec.Text.DecodeAcceptedModule
 import FirSpec.Text.ParseWellFormed
 import FirSpec.Memory.Model

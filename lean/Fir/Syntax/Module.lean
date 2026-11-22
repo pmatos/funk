@@ -2,12 +2,12 @@ import Fir.Syntax.Dialect
 import Fir.Syntax.Location
 import Fir.Syntax.Layout
 import Fir.Syntax.Global
+import Fir.Syntax.Aggregate
 
 /-!
 A module holds items: functions, modules nested in it, items of the
-kinds that its dialects register, aggregates' layouts and globals. A
-function is a
-control-flow graph of blocks (ADR-2026-10-29-2005). A block declares typed arguments and holds a list of
+kinds that its dialects register, aggregates' layouts, globals and
+external declarations. A function is a control-flow graph of blocks (ADR-2026-10-29-2005). A block declares typed arguments and holds a list of
 ops that ends with a terminator. Every op has the same shape, whatever its
 dialect, so that a new dialect needs no new syntax (ADR-2026-10-29-2016):
 results, an op instance of its dialect, operands, successors, regions and a
@@ -21,8 +21,8 @@ validation says which terms are valid.
 
 This section gives names first, then float literals and attributes, then
 the terms from the inside out: a successor, an op with blocks and regions, a
-function, an item of a dialect's kind, an aggregate's layout, a global, an
-item and a module.
+function, an item of a dialect's kind, an external declaration, an item
+and a module.
 -/
 
 namespace Fir
@@ -265,63 +265,31 @@ types, then its results. -/
 def DialectItem.types (i : DialectItem d) : List d.Ty := i.params.map (·.2) ++ i.results
 
 /--
-A field of an aggregate's layout (ADR-2026-11-09-1550): its offset, in
-units of the layout's memory, and its type, a scalar. A repeated field,
-`count = some c`, is an array of `c` elements of the type, each element
-rounded up to the type's alignment (the human's ruling of 2026-11-16 on
-#236); a field with `count = none` is one value of the type, and has no
-elements.
+An external declaration (ADR-2026-11-09-1547): a function that funk did not
+compile, which the module names by a symbol and a signature, with no body.
+It is an item of the core's kind `extern`, written as a function's header
+with an empty body, `extern @printf(%fmt: ptr, ...) -> i32 {` and `}`. Its
+parameters and results carry attributes as a function's do, held the same
+way, and its parameters may end in `...`, since code that funk did not
+compile may be variadic.
 -/
-structure Field (d : Dialect) where
-  offset : Nat
-  ty : d.Ty
-  count : Option Nat := none
-
-/--
-The layout of an aggregate (ADR-2026-11-09-1550, ADR-2026-11-16-1546): an
-item that names a size, an alignment and a list of fields, each at an
-offset, all counted in the units of the memory `mem` that the layout
-describes. A layout is not a type: no value has it, and an op reads it by
-its symbol.
--/
-structure Aggregate (d : Dialect) where
+structure Extern (d : Dialect) where
   name : Name
-  mem : Nat
-  size : Nat
-  align : Nat
-  fields : List (Field d)
+  params : List (Name × d.Ty)
+  results : List d.Ty
+  paramAttrs : List (List Attr) := []
+  resultAttrs : List (List Attr) := []
+  variadic : Bool := false
 
-/-- Every type that an aggregate's layout states: the type of each field. -/
-def Aggregate.types (a : Aggregate d) : List d.Ty := a.fields.map (·.ty)
-
-/-- The largest number that an aggregate's layout may hold, `2^64 - 1`: its
-memory, size, alignment, and each field's offset and count. -/
-def Aggregate.limit : Nat := 2 ^ 64 - 1
-
-/-- The numbers of an aggregate's layout are within the limit. -/
-def Aggregate.InLimits (a : Aggregate d) : Prop :=
-  a.mem ≤ Aggregate.limit ∧ a.size ≤ Aggregate.limit ∧ a.align ≤ Aggregate.limit ∧
-    ∀ f ∈ a.fields, f.offset ≤ Aggregate.limit ∧ ∀ c ∈ f.count, c ≤ Aggregate.limit
-
-/-- A piece of an initializer is within the limit of the numbers of an
-aggregate's layout, `2^64 - 1`: its count of zeros and its offset. A unit
-has no limit here: validation bounds it by its memory's unit width. -/
-def InitPiece.InLimits : InitPiece → Prop
-  | .units _ => True
-  | .zeros n => n ≤ Aggregate.limit
-  | .addr _ k => k ≤ Aggregate.limit
-
-/-- The numbers of a global are within the limit: its memory, size and
-alignment, and each piece of its initializer. -/
-def Global.InLimits (g : Global) : Prop :=
-  g.mem ≤ Aggregate.limit ∧ g.size ≤ Aggregate.limit ∧ g.align ≤ Aggregate.limit ∧
-    ∀ p ∈ g.init, p.InLimits
+/-- Every type that an external declaration states: its parameters' types,
+then its results. -/
+def Extern.types (e : Extern d) : List d.Ty := e.params.map (·.2) ++ e.results
 
 /--
 An item of a module: a function, a nested module (ADR-2026-11-10-1510),
 an item of a kind that a dialect registers (ADR-2026-11-09-1543), the
-layout of an aggregate (ADR-2026-11-16-1546), or a global
-(ADR-2026-11-09-1546).
+layout of an aggregate (ADR-2026-11-16-1546), a global
+(ADR-2026-11-09-1546), or an external declaration (ADR-2026-11-09-1547).
 
 A module is a symbol table, and G0 requires that symbol tables can nest, for
 example a device module inside a host module. A `module` item is such a
@@ -330,8 +298,8 @@ not its parent's, and its symbols are its own: an op refers by symbol only
 to an item of its own table. The text format writes every item with one
 generic production (N2), so a nested module needs no new production, only
 the dialect set that may start its body. An item of a dialect's kind is
-written with the same production too, and so are an aggregate's layout
-and a global, kinds of item of the core.
+written with the same production too, and so are an aggregate's layout,
+a global and an external declaration, kinds of item of the core.
 -/
 inductive Item (d : Dialect) where
   | func (f : Func d)
@@ -339,6 +307,7 @@ inductive Item (d : Dialect) where
   | dialect (i : DialectItem d)
   | aggregate (a : Aggregate d)
   | global (g : Global)
+  | extern (e : Extern d)
 
 /--
 A module: its dialect set, its data layout, its items, then its location
@@ -367,6 +336,7 @@ def Item.name : Item d → Name
   | .dialect i => i.name
   | .aggregate a => a.name
   | .global g => g.name
+  | .extern e => e.name
 
 /-- The function that an item is, if it is one. -/
 def Item.func? : Item d → Option (Func d)
@@ -379,6 +349,7 @@ def Item.func? : Item d → Option (Func d)
 @[simp] theorem Item.func?_dialect (i : DialectItem d) : (Item.dialect i).func? = none := rfl
 @[simp] theorem Item.func?_aggregate (a : Aggregate d) : (Item.aggregate a).func? = none := rfl
 @[simp] theorem Item.func?_global (g : Global) : (Item.global (d := d) g).func? = none := rfl
+@[simp] theorem Item.func?_extern (e : Extern d) : (Item.extern e).func? = none := rfl
 
 /-- The item of a dialect's kind that an item is, if it is one. -/
 def Item.dialect? : Item d → Option (DialectItem d)
@@ -393,6 +364,11 @@ def Item.aggregate? : Item d → Option (Aggregate d)
 /-- The global that an item is, if it is one. -/
 def Item.global? : Item d → Option Global
   | .global g => some g
+  | _ => none
+
+/-- The external declaration that an item is, if it is one. -/
+def Item.extern? : Item d → Option (Extern d)
+  | .extern e => some e
   | _ => none
 
 /-- The functions of a module's own table, in order. The functions of a

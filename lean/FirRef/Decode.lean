@@ -6,8 +6,8 @@ import FirRef.Decode.Tree
 `decodeFunc` with its two passes replaced by the loops `defineFrames` and
 `decodeFrames`, which take no stack per level of regions and none per block
 or op, and with the copies of `decodeType`, `decodeDef` and `define`
-compiled after `print_eq_printAttr`. `decodeFuncItem` is the
-spec's, calling `decodeFunc`, and `decodeDialectItem` is the spec's, with
+compiled after `print_eq_printAttr`. `decodeFuncItem` and
+`decodeExternItem` are the spec's, calling `decodeFunc`, and `decodeDialectItem` is the spec's, with
 those copies, and an aggregate's layout and a global are decoded by the
 spec's `decodeAggregate` and `decodeGlobal`, which print no attribute. `decodeLoop` decodes items with an explicit
 stack of frames, so it takes no stack per level of nested modules, and
@@ -56,6 +56,24 @@ def decodeFuncItem (kindPos : TextPos) (name : String) (params : List SDef)
 theorem decodeFuncItem_eq : @decodeFuncItem = @Text.decodeFuncItem := by
   funext d _ kindPos name params paramAttrs variadic results resultAttrs attrs body
   simp only [decodeFuncItem, Text.decodeFuncItem, decodeFunc_eq]
+
+/-- `Text.decodeExternItem`, with `decodeFunc`. -/
+def decodeExternItem (kindPos : TextPos) (name : String) (params : List SDef)
+    (paramAttrs : List (List (Attr × TextPos))) (variadic : Option TextPos)
+    (results : List (Attr × TextPos)) (resultAttrs : List (List (Attr × TextPos)))
+    (attrs : List (Attr × TextPos)) : SBody → Except ParseError (Item d)
+  | .blocks [] => do
+    let ras ← externResultAttrs results resultAttrs attrs
+    let f ← decodeFunc (d := d) name params results []
+    pure (.extern ⟨f.name, f.params, f.results,
+      trimAttrs (paramAttrs.map fun as => as.map (·.1)), ras, variadic.isSome⟩)
+  | _ => errorAt kindPos "an extern has an empty body"
+
+theorem decodeExternItem_eq : @decodeExternItem = @Text.decodeExternItem := by
+  funext d _ kindPos name params paramAttrs variadic results resultAttrs attrs body
+  cases body with
+  | blocks bs => cases bs <;> simp [decodeExternItem, Text.decodeExternItem, decodeFunc_eq]
+  | items => rfl
 
 /-- `Text.decodeDialectItem`, with the copies of `decodeType` and
 `decodeDef`. -/
@@ -118,6 +136,11 @@ def decodeLoop : List (DFrame d) → Except ParseError (List (Item d))
       match decodeFuncItem kindPos name params paramAttrs variadic results resultAttrs attrs body with
       | .ok i => decodeLoop (.items (i :: done) sis :: fs)
       | .error e => .error e
+    else if kind = "extern" then
+      match decodeExternItem kindPos name params paramAttrs variadic results resultAttrs attrs body
+        with
+      | .ok i => decodeLoop (.items (i :: done) sis :: fs)
+      | .error e => .error e
     else match plainHeader paramAttrs variadic resultAttrs with
     | .error e => .error e
     | .ok () =>
@@ -142,7 +165,7 @@ def decodeLoop : List (DFrame d) → Except ParseError (List (Item d))
       | .ok i => decodeLoop (.items (i :: done) sis :: fs)
       | .error e => .error e
     else errorAt kindPos ("unknown item kind " ++ kind ++
-      ": the kinds are func, module, aggregate, global and the words of dialects")
+      ": the kinds are func, module, aggregate, global, extern and the words of dialects")
   | _ => .ok []
 termination_by fs => dWeight fs
 decreasing_by
@@ -181,6 +204,8 @@ theorem decodeItem_mk (kind : String) (kindPos : TextPos) (name : String) (param
         ⟨kind, kindPos, name, params, paramAttrs, variadic, results, resultAttrs, attrs, body⟩ =
       if kind = "func" then
         Text.decodeFuncItem kindPos name params paramAttrs variadic results resultAttrs attrs body
+      else if kind = "extern" then
+        Text.decodeExternItem kindPos name params paramAttrs variadic results resultAttrs attrs body
       else plainHeader paramAttrs variadic resultAttrs >>= fun () =>
       if kind = "module" then do
         moduleHeader params results attrs
@@ -193,7 +218,7 @@ theorem decodeItem_mk (kind : String) (kindPos : TextPos) (name : String) (param
       else if isDialectWord kind then
         Text.decodeDialectItem kind kindPos name params results attrs body
       else errorAt kindPos ("unknown item kind " ++ kind ++
-        ": the kinds are func, module, aggregate, global and the words of dialects") := by
+        ": the kinds are func, module, aggregate, global, extern and the words of dialects") := by
   rw [Text.decodeItem.eq_def]
   rfl
 
@@ -203,7 +228,7 @@ theorem error_bind' {ε α β : Type} (e : ε) (k : α → Except ε β) :
 theorem decodeLoop_eq (fs : List (DFrame d)) : decodeLoop fs = dRun fs := by
   fun_induction decodeLoop fs <;>
     simp_all [dRun, dFinish, decodeItems_nil, decodeItems_cons, decodeItem_mk, decodeFuncItem_eq,
-      decodeDialectItem_eq, ok_bind, error_bind', errorAt]
+      decodeExternItem_eq, decodeDialectItem_eq, ok_bind, error_bind', errorAt]
   -- The stacks that `decodeLoop` does not take apart give no items on both sides.
   rename_i fs h₁ h₂ h₃
   match fs, h₁, h₂, h₃ with

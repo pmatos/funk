@@ -12,7 +12,7 @@ A module has the memories that its layout declares, and memory 0 in any
 case. Every pointer type that the module states names one of them: a
 function's parameters, results, block arguments and op results, the types
 that its ops carry in their attributes, and the parameters and results of
-an item of a dialect's kind, at any depth. An op that writes values into the
+an item of a dialect's kind or of an external declaration, at any depth. An op that writes values into the
 units of a memory, such as the core's `memSet`, asks that the layout give
 that memory units as wide as those values (`opUnits`). A
 nested module has no layout of its own, so its types name the memories of
@@ -108,12 +108,14 @@ instance DataLayout.decidableHasUnits (l : DataLayout) (q : Nat × Nat) :
 
 /-- The memories that the types of a symbol table name are in the layout:
 each type that each of its functions states, each that each of its items
-of a dialect's kind states, and each that an op of each of its functions
-carries in its attributes. And the layout gives each memory whose units an
+of a dialect's kind states, each that each of its external declarations
+states, and each that an op of each of its functions carries in its
+attributes. And the layout gives each memory whose units an
 op of its functions writes values of units as wide as those values. -/
 structure SymbolTable.MemoriesIn (l : DataLayout) (t : SymbolTable d) : Prop where
   funcs : ∀ f ∈ t.funcs, ∀ ty ∈ f.types, l.HasMemoryOf ty
   dialectItems : ∀ i ∈ t.dialectItems, ∀ ty ∈ i.types, l.HasMemoryOf ty
+  externs : ∀ e ∈ t.externs, ∀ ty ∈ e.types, l.HasMemoryOf ty
   attrs : ∀ f ∈ t.funcs, ∀ ty ∈ f.attrTypes, l.HasMemoryOf ty
   units : ∀ f ∈ t.funcs, ∀ q ∈ f.unitWidths, l.HasUnits q
 

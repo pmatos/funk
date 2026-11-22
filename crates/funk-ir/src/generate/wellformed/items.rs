@@ -6,7 +6,7 @@ use super::super::{Rng, Widths, symbol, width};
 use super::attr::attr;
 use super::{ITEM_KINDS, Shaper, aggregate, field_addr, global};
 use crate::dialects::core::int_type;
-use crate::ir::{Def, DialectItem, Item, NestedModule};
+use crate::ir::{Attr, Def, DialectItem, Extern, Item, NestedModule, trim_attrs};
 
 /// An item of a kind from [`ITEM_KINDS`], with up to two parameters, two
 /// results of core types and three attributes.
@@ -22,6 +22,38 @@ pub(super) fn dialect_item(rng: &mut Rng) -> Item {
         .collect();
     i.attrs = (0..rng.below(4)).map(|_| attr(rng, 0)).collect();
     Item::Dialect(i)
+}
+
+/// An external declaration with up to three parameters and two results of
+/// core types, each with up to two attributes that may or may not be the
+/// core's markers, ending in `...` or not (ADR-2026-11-09-1547).
+pub(super) fn extern_decl(rng: &mut Rng) -> Item {
+    let mut e = Extern::new(symbol(rng));
+    let mut taken = Vec::new();
+    let marks = |rng: &mut Rng| -> Vec<Attr> {
+        (0..rng.below(3))
+            .map(|_| match rng.below(3) {
+                0 => Attr::word("sext"),
+                1 => Attr::word("zext"),
+                _ => attr(rng, 0),
+            })
+            .collect()
+    };
+    let mut param_attrs = Vec::new();
+    for _ in 0..rng.below(4) {
+        let t = int_type(width(rng, Widths::Any));
+        e.params.push(Def::new(Shaper::fresh(rng, &mut taken), t));
+        param_attrs.push(marks(rng));
+    }
+    let mut result_attrs = Vec::new();
+    for _ in 0..rng.below(3) {
+        e.results.push(int_type(width(rng, Widths::Any)));
+        result_attrs.push(marks(rng));
+    }
+    e.param_attrs = trim_attrs(param_attrs);
+    e.result_attrs = trim_attrs(result_attrs);
+    e.variadic = rng.one_in(2);
+    Item::Extern(e)
 }
 
 /// Names one to three dialects, drawn with repeats, in one draw of four.
@@ -51,6 +83,9 @@ pub(super) fn nested(rng: &mut Rng, depth: u32) -> NestedModule {
     field_addr::add_to_items(rng, &mut n.items);
     if depth > 1 && rng.one_in(3) {
         n.items.push(Item::Module(nested(rng, depth - 1)));
+    }
+    if rng.one_in(3) {
+        n.items.push(extern_decl(rng));
     }
     n
 }

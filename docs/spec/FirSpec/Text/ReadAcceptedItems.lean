@@ -43,7 +43,7 @@ as a type and attributes that can each be written. Each leaves tokens that
 can be written.
 :::
 
-:::readable Fir.Text.readItems_writable (pin := Fir.Text.readItems) (pin := Fir.Text.readItem) (pin := Fir.Text.ReadsWritable) (pin := Fir.Text.SItem.Writable) (pin := Fir.Text.SBody.Writable) (pin := Fir.Text.decodeItem) (fingerprint := "8162748087415441339")
+:::readable Fir.Text.readItems_writable (pin := Fir.Text.readItems) (pin := Fir.Text.readItem) (pin := Fir.Text.ReadsWritable) (pin := Fir.Text.SItem.Writable) (pin := Fir.Text.SBody.Writable) (pin := Fir.Text.decodeItem) (fingerprint := "1648990028897086969")
 *Theorem: items as read can be written.* For every list of tokens
 $`\mathit{ts}`, at the top of the module or inside the body of an item,
 the {ref "The-fir-specification--Text-format--Reading-the-grammar"}[reader of items]
@@ -76,8 +76,8 @@ induction that follows their own recursion, as for blocks. Case by case:
 * an item without its symbol is an error.
 
 Nothing is asked of an item's kind or its symbol: decoding accepts only a
-`func`, a `module`, an `aggregate`, a `global` item and an item of a
-dialect's kind, whatever their symbol. An item of a dialect's kind keeps
+`func`, a `module`, an `aggregate`, a `global`, an `extern` item and an
+item of a dialect's kind, whatever their symbol. An item of a dialect's kind keeps
 its attributes, and an aggregate's layout and a global are decoded from
 their own, so they are asked to be written.
 :::

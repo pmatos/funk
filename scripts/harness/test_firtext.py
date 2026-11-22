@@ -158,6 +158,15 @@ class Tests(unittest.TestCase):
         )
         self.assertEqual(list(read(text)), ["@f"])
 
+    def test_an_external_declaration_is_skipped(self):
+        text = (
+            "extern @printf(%fmt: ptr, %c: i8 sext, ...) -> i32 zext {\n}\n\n"
+            "extern @va(...) {\n}\n\n"
+            "module @dev() {\n  extern @g() -> i1, i8 sext {\n  }\n\n}\n\n"
+            "func @f(%p: ptr) {\n^e:\n  ret @0\n}\n\nlocs {\n  @0 = unknown\n}\n"
+        )
+        self.assertEqual(list(read(text)), ["@f"])
+
     def test_a_global_sits_beside_the_core_words_it_shares(self):
         # `alloca`'s kind `global` and the op `const` are words of a
         # function's ops, not items (#237 Q4).
@@ -178,6 +187,7 @@ class Tests(unittest.TestCase):
             ("module @m() {\n  func @f() {\n", "the end: expected }"),
             ("module @m() {\n", "the end: expected }"),
             ("aggregate @a() memory(0) size(1) align(1) {\n", "the end: expected }"),
+            ("extern @g(%a: i8 sext) {\n", "the end: expected }"),
             ("layout memory(1, unit(8)", "an entry of the data layout does not end"),
             ("func @f() {\n^e:\n  ret @0\n}\n", "expected word"),
             ("locs {\n}\nfunc", "text after the location table"),
