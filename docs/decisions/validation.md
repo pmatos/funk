@@ -43,13 +43,21 @@ one item of the table, of any kind; each function is valid against the
 table's own symbols; each item of a dialect's kind is valid
 (`DialectItem.Valid`: a kind that a dialect registers, distinct parameter
 names, valid types, attributes that can be written and the dialect's rule
-for the kind, ADR-2026-11-09-1543); and the set names each dialect once, by
-a word. `Module.Valid` asks a valid location table and a valid table at each
-level. One location table serves every table (ADR-2026-11-10-1510).
+for the kind, ADR-2026-11-09-1543); each external declaration is valid
+(`Extern.Valid`: distinct parameter names, valid types, and markers that
+each type allows, as in a function's signature; it may end in `...`,
+ADR-2026-11-09-1547); and the set names each dialect once, by a word. A
+declaration's types name memories that the data layout declares, and its
+words keep to its table's dialect set. `Module.Valid` asks a valid location
+table and a valid table at each level. One location table serves every table (ADR-2026-11-10-1510).
 
 So a function and a module never share a symbol of one table, while a
 nested module may reuse a symbol of its parent's. A call names a function of
-its own table: never one of a nested module, of its parent, or a module.
+its own table: never one of a nested module, of its parent, or a module. A
+call that names an external declaration does not validate yet, since the
+run has no rule for one: the symbols a call reads are the functions'
+(`SymbolTable.symbols`), and the human's ruling of 2026-11-21 on #239 gives
+the external-call rule in a later stage.
 The rule of the dialect set, `Module.InDialectSet`, holds for each table
 against its own set (ADR-2026-11-10-1510).
 

@@ -19,11 +19,14 @@ Tier: direction; area: text-format
   `TypeSpec::sig_attrs` in `funk-ir`. The core allows one word, `sext` or
   `zext`, on an integer narrower than 32 bits (ADR-2026-11-09-1547). A
   `func` whose parameters end in `...` is not valid (ADR-2026-11-09-1548).
-- **Only a func.** Another item whose parameter carries an attribute, whose
-  parameters end in `...`, or whose result before a comma carries one does
-  not decode. The attributes after the last result are that result's in a
-  `func`, and the item's own in any other item, as before. A `func` with no
-  results has no attributes.
+- **Only a func or an extern.** An external declaration is an item of the
+  core's kind `extern`, written as a function's header with an empty body:
+  `extern @printf(%fmt: ptr, ...) -> i32 {` and `}` (#239). Another item
+  whose parameter carries an attribute, whose parameters end in `...`, or
+  whose result before a comma carries one does not decode. The attributes
+  after the last result are that result's in a `func` or an `extern`, and
+  the item's own in any other item, as before. A `func` or an `extern` with
+  no results has no attributes.
 
 ## Why
 
@@ -38,6 +41,9 @@ same signature (#239).
 
 - **Markers as keywords of the grammar.** The generic parser would write core
   words, against G0, and every dialect would share the core's two markers.
+- **A declaration as a `func` with no blocks.** A function with no blocks
+  and a declaration would then be one text, and every rule over functions
+  would need to tell them apart.
 - **Markers before the type, `%c: sext i8`.** An attribute after the type
   reads like an op's attributes after its name, and leaves the type where a
   reader of the text, such as the harness, expects it.

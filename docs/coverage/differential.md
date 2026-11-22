@@ -8,7 +8,7 @@ says how to read it.
 | op | flags or predicate | `i1` | `i8` | `i16` | `i32` | `i64` | `i128` |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | `const` |  | 519 | 789 | 450 | 810 | 870 | 639 |
-| `add` |  | 205 | 364 | 316 | 304 | 441 | 534 |
+| `add` |  | 205 | 367 | 316 | 304 | 441 | 534 |
 | `add` | `nuw` | 8 | 29 | 29 | 31 | 29 | 35 |
 | `add` | `nsw` | 211 | 225 | 206 | 218 | 205 | 107 |
 | `add` | `nuw nsw` | 8 | 31 | 29 | 29 | 29 | 35 |
@@ -192,14 +192,14 @@ says how to read it.
 | `cond_br` | a successor passes nothing | 863 |  |  |  |  |  |  |  |  |
 | `cond_br` | a successor passes values |  | 58 | 140 | 132 | 162 | 136 | 153 | 9 | 7 |
 | `ret` | returns no value | 74 |  |  |  |  |  |  |  |  |
-| `ret` | returns one value |  | 2949 | 1628 | 1280 | 1722 | 1645 | 2490 | 546 | 473 |
+| `ret` | returns one value |  | 2949 | 1631 | 1280 | 1722 | 1645 | 2490 | 546 | 473 |
 | `ret` | returns several values |  | 283 | 437 | 271 | 259 | 400 | 539 | 12 | 12 |
 | `unreachable` | ends a block | 38 |  |  |  |  |  |  |  |  |
 | `call` | gives no result | 36 |  |  |  |  |  |  |  |  |
 | `call` | gives one result |  | 89 | 87 | 80 | 87 | 93 | 130 | 2 | 2 |
 | `call` | gives several results |  | 171 | 222 | 128 | 113 | 191 | 279 | 3 | 4 |
 | `func` | returns no value | 41 |  |  |  |  |  |  |  |  |
-| `func` | returns one value |  | 2949 | 1628 | 1280 | 1722 | 1645 | 2490 | 544 | 471 |
+| `func` | returns one value |  | 2949 | 1631 | 1280 | 1722 | 1645 | 2490 | 544 | 471 |
 | `func` | returns several values |  | 283 | 435 | 269 | 248 | 400 | 503 | 12 | 12 |
 
 ## Field addresses, with no index or by an index

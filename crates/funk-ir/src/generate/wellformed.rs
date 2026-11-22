@@ -56,7 +56,7 @@ use crate::effects::Effects;
 use crate::ir::{Attr, Block, Def, Func, Item, LocRef, Module, Op, Region, Succ, Type};
 use crate::registry::{Dialect, OpShape, OpSpec, OpTypes};
 use attr::attr;
-use items::{add_dialects, dialect_item, nested};
+use items::{add_dialects, dialect_item, extern_decl, nested};
 
 mod aggregate;
 mod attr;
@@ -168,6 +168,10 @@ pub fn module(rng: &mut Rng, dialects: Dialects) -> Module {
     }
     if rng.one_in(4) {
         m.items.push(Item::Module(nested(rng, 3)));
+    }
+    if rng.one_in(3) {
+        let at = rng.below(m.items.len() as u64 + 1) as usize;
+        m.items.insert(at, extern_decl(rng));
     }
     m
 }

@@ -151,6 +151,7 @@ def tableProblems (held : Std.HashSet LocRef) (t : SymbolTable d) : List Problem
     { message := "the symbol " ++ Text.printSymbol s ++ " names more than one item", func := s }) ++
   t.funcs.flatMap (·.problems lk) ++
   t.dialectItems.flatMap (·.problems ⟨lk.symbols⟩) ++
+  t.externs.flatMap Extern.problems ++
   t.dialects.filterMap (fun x => if isWord x then none else
     some { message := "the dialect set names " ++ Text.quote x ++ ", which is not a word" }) ++
   (repeats t.dialects).map fun x => { message := "the dialect set names " ++ x ++ " more than once" }
@@ -192,6 +193,7 @@ def funcAddrWidths (f : Func d) : List (Nat × Nat) :=
 def tableMemoryProblems (l : DataLayout) (t : SymbolTable d) : List Problem :=
   t.funcs.filterMap (fun f => memoryProblem f.name (l.missing (f.types ++ f.attrTypes))) ++
   t.dialectItems.filterMap (fun i => memoryProblem i.name (l.missing i.types)) ++
+  t.externs.filterMap (fun e => memoryProblem e.name (l.missing e.types)) ++
   t.funcs.filterMap (fun f => unitsProblem l f.name f.unitWidths) ++
   t.funcs.filterMap (fun f => addrsProblem l f.name f.addrWidths)
 
@@ -268,7 +270,8 @@ def tableSetProblems (t : SymbolTable d) : List Problem :=
     some { message := "the dialect set names " ++ x ++ ", which is not a known dialect" }) ++
   t.funcs.flatMap (Func.setProblems t.dialects) ++
   t.dialectItems.flatMap (DialectItem.setProblems t.dialects) ++
-  t.aggregates.flatMap (Aggregate.setProblems t.dialects)
+  t.aggregates.flatMap (Aggregate.setProblems t.dialects) ++
+  t.externs.flatMap (Extern.setProblems t.dialects)
 
 @[csimp] theorem setProblems_eq_tableSetProblems :
     @SymbolTable.setProblems = @tableSetProblems := rfl

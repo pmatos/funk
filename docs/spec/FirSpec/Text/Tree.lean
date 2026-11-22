@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "The tree that the grammar reads: readable blocks" =>
 
-:::moduleDocs (fingerprint := "7867237137998446161")
+:::moduleDocs (fingerprint := "8853946982853785683")
 :::
 
 :::readable Fir.TextPos.zero (pin := Fir.TextPos) (fingerprint := "10810081565763310123")
@@ -108,7 +108,7 @@ tree of a list is the tree of each element.
 each at $`p_0`.
 :::
 
-:::readable Fir.Func.tree Fir.moduleBody Fir.DialectItem.tree Fir.Item.tree Fir.Item.treeList Fir.Item.treeList_eq_map (pin := Fir.Func) (pin := Fir.Item) (pin := Fir.DialectText) (fingerprint := "8754359967277851201")
+:::readable Fir.Func.tree Fir.moduleBody Fir.DialectItem.tree Fir.Extern.tree Fir.Item.tree Fir.Item.treeList Fir.Item.treeList_eq_map (pin := Fir.Func) (pin := Fir.Item) (pin := Fir.DialectText) (fingerprint := "4872178879586863776")
 *Definitions: the tree of a function, and of an item.* The tree of a
 function $`f` is the item of kind `func`, at $`p_0`, with:
 
@@ -133,7 +133,9 @@ tree of an item of a dialect's kind is the tree of that item, and the tree
 of an aggregate's layout is the tree of the item that writes it: of kind
 `aggregate`, with its symbol, no parameters or results, its attributes and
 an empty body; the tree of a global is likewise the tree of the item of
-kind `global` that writes it. The
+kind `global` that writes it. The tree of an external declaration is the
+tree of the function whose header it writes, with no blocks, of kind
+`extern`: its body is no blocks. The
 tree of a nested module with the symbol $`s`, the dialect set $`x^*` and
 the items $`i^*` is the item of kind `module`, at $`p_0`, with the symbol
 $`s`, no parameters, results or attributes, and as its body the dialect set

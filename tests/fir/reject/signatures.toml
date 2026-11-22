@@ -192,7 +192,7 @@ locs {
 
 [[reject]]
 verdict = "parse-error"
-rule = "only a func's parameters carry attributes: not a module's"
+rule = "only a func's or an extern's parameters carry attributes: not a module's"
 text = '''
 module @m(%a: i8 sext) {
 }
@@ -204,7 +204,7 @@ locs {
 
 [[reject]]
 verdict = "parse-error"
-rule = "only a func's parameters end in ...: not a module's"
+rule = "only a func's or an extern's parameters end in ...: not a module's"
 text = '''
 module @m(...) {
 }
@@ -216,7 +216,7 @@ locs {
 
 [[reject]]
 verdict = "parse-error"
-rule = "only a func's results carry attributes: not a result of a dialect's item that a comma follows"
+rule = "only a func's or an extern's results carry attributes: not a result of a dialect's item that a comma follows"
 text = '''
 toy.cell @c() -> i8 sext, i8 {
 }
@@ -228,7 +228,7 @@ locs {
 
 [[reject]]
 verdict = "parse-error"
-rule = "only a func's parameters carry attributes: not those of an item of an unknown kind"
+rule = "only a func's or an extern's parameters carry attributes: not those of an item of an unknown kind"
 text = '''
 thing @t(%a: i8 sext) {
 }

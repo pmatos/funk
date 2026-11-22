@@ -151,8 +151,8 @@ def Case.holds (c : Case) : Bool :=
   | .ok m => m.print == c.text && (m.allProblems.isEmpty == c.accept)
   | .error _ => false
 
-#guard cases.length == 13
-#guard (cases.filter (·.accept)).length == 6
+#guard cases.length == 15
+#guard (cases.filter (·.accept)).length == 7
 #guard (cases.filter (!·.holds)).map (·.name) == []
 #guard nested.length == 8
 #guard (nested.filter (·.accept)).length == 3
@@ -178,6 +178,9 @@ def setProblems (name : String) : List Problem :=
 #guard setProblems "nested-does-not-inherit-the-set" ==
   [{ message := "the function writes a word of the dialect toy, " ++
       "which the module's dialect set does not name", func := some "f" }]
+#guard setProblems "extern-type-outside-the-set" ==
+  [{ message := "the declaration writes a word of the dialect toy, " ++
+      "which the module's dialect set does not name", func := some "g" }]
 #guard setProblems "unknown-dialect" ==
   [{ message := "the dialect set names gpu, which is not a known dialect" }]
 

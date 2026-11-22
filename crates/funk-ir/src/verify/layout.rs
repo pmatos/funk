@@ -111,6 +111,11 @@ pub(super) fn check_memories(
             out.push(problem(&i.name, n));
         }
     }
+    for e in t.externs() {
+        if let Some(n) = e.types().find_map(missing) {
+            out.push(problem(&e.name, n));
+        }
+    }
     let entry = |n| memory(layout, n).unwrap_or(MemLayout::DEFAULT);
     for f in asking {
         let unit_ops =

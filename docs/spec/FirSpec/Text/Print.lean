@@ -14,7 +14,7 @@ changes under it.
 
 #doc (Manual) "The canonical printer: readable blocks" =>
 
-:::moduleDocs (fingerprint := "17888077499313168849")
+:::moduleDocs (fingerprint := "6134392515276226519")
 :::
 
 :::readable Fir.Attr.print (pin := Fir.Text.quote) (pin := Fir.Text.printInt) (pin := Fir.Text.printSymbol) (fingerprint := "4746284299703548192")
@@ -113,7 +113,7 @@ returns nothing, and otherwise as ` -> ` and each result type followed by
 its attributes, separated by a comma and a space: ` -> i8 zext, i32`.
 :::
 
-:::readable Fir.Func.print Fir.printDialects Fir.Item.print Fir.Item.printList (pin := Fir.Text.printSymbol) (fingerprint := "14931832616595257134")
+:::readable Fir.Func.print Fir.printDialects Fir.Extern.print Fir.Item.print Fir.Item.printList (pin := Fir.Text.printSymbol) (fingerprint := "15748245307214643216")
 *Definition: a function, a dialect set, and items, in text.* A function at
 the indentation $`n`, with the symbol $`s` and the body $`b^*`, is written:
 
@@ -134,7 +134,11 @@ An item that is a function is written as that function, an item of a
 dialect's kind as that item, and an aggregate's layout as the item of kind
 `aggregate` that writes it, with no parameters or results and its
 attributes, and a global as the item of kind `global` that writes it, in the
-same way. A nested module
+same way. An external declaration at the indentation $`n` is written as a
+function's header is, with `extern` in place of `func`: $`n` spaces,
+`extern`, a space, its symbol, its parameters and its results, then ` {`, a
+line feed, $`n` spaces, `}` and a line feed, as
+`extern @printf(%fmt: ptr, ...) -> i32 {` and `}`. A nested module
 with the symbol $`s`, the dialect set $`x^*` and the items $`i^*`, at the
 indentation $`n`, is written as $`n` spaces, `module `,
 $`\mathrm{printsym}(s)`, `() {` and a line feed; then its dialect set and

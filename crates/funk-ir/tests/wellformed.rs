@@ -168,6 +168,8 @@ struct Shapes {
     global_addrs: usize,
     global_addrs_of_globals: usize,
     nested_global_addrs: usize,
+    externs: usize,
+    nested_externs: usize,
     rejected: usize,
 }
 
@@ -348,6 +350,14 @@ fn shapes(dialects: Dialects) -> Shapes {
                 _ => false,
             }),
         );
+        has(
+            &mut n.externs,
+            m.items.iter().any(|i| matches!(i, Item::Extern(_))),
+        );
+        has(
+            &mut n.nested_externs,
+            modules().any(|n| n.items.iter().any(|i| matches!(i, Item::Extern(_)))),
+        );
         has(&mut n.rejected, !verify(&m, &reg).is_empty());
     }
     n
@@ -388,8 +398,10 @@ fn the_generator_covers_what_validation_rejects() {
             n.global_addrs,
             n.global_addrs_of_globals,
             n.nested_global_addrs,
+            n.externs,
         ];
         assert!(n.modules_in_modules > 0, "{dialects:?}: {n:?}");
+        assert!(n.nested_externs > 0, "{dialects:?}: {n:?}");
         assert!(common.iter().all(|&k| k >= tenth), "{dialects:?}: {n:?}");
         let toy_only = [n.toy_regions, n.strings, n.applied, n.applied_to_none];
         if toy {

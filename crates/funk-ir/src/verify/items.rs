@@ -67,7 +67,7 @@ pub(super) fn check(
 
 /// A value as the text writes it, as `valueRef` does: `%x`, or `%"x y"`
 /// when its name is not a name.
-fn value_ref(x: &str) -> String {
+pub(super) fn value_ref(x: &str) -> String {
     if is_name(x) {
         format!("%{x}")
     } else {

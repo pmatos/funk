@@ -39,6 +39,7 @@ import FirTest.Validate
 import FirTest.ValidateNested
 import FirTest.Layout
 import FirTest.Aggregate
+import FirTest.Extern
 import FirTest.Global
 import FirTest.GlobalStart
 import FirTest.LocTable

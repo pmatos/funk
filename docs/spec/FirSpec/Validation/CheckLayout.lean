@@ -14,7 +14,7 @@ fails when the Lean changes under it.
 
 #doc (Manual) "Checking the data layout: readable blocks" =>
 
-:::moduleDocs (fingerprint := "17910230523680249700")
+:::moduleDocs (fingerprint := "16844176525728961699")
 :::
 
 :::readable Fir.need Fir.need_eq_nil (fingerprint := "7722159485140472772")
@@ -47,11 +47,11 @@ the types name and $`L` does not declare. There are none exactly when $`L`
 has the memory of each type.
 :::
 
-:::readable Fir.memoryProblem Fir.memoryProblem_eq_none Fir.unitsProblem Fir.unitsProblem_eq_none Fir.addrsProblem Fir.addrsProblem_eq_none Fir.SymbolTable.memoryProblems Fir.SymbolTable.memoryProblems_eq_nil (fingerprint := "16366982723540609657")
+:::readable Fir.memoryProblem Fir.memoryProblem_eq_none Fir.unitsProblem Fir.unitsProblem_eq_none Fir.addrsProblem Fir.addrsProblem_eq_none Fir.SymbolTable.memoryProblems Fir.SymbolTable.memoryProblems_eq_nil (fingerprint := "17688363045942892722")
 *Definition: the check of a table's memories.* The check of the memories of
 the symbol table $`T` in the layout $`L` gives one problem for each function
-of $`T`, and then for each item of a dialect's kind, whose types name a
-memory that $`L` misses. A function's types are those it states, then
+of $`T`, then for each item of a dialect's kind, and then for each
+external declaration, whose types name a memory that $`L` misses. A function's types are those it states, then
 those its ops carry in their attributes. The problem names the item's symbol and the first
 memory it misses: "a type names memory $`n`, which the data layout does not
 declare". Then it gives one problem for each function of $`T` whose ops
@@ -67,7 +67,7 @@ $`P` bits". The check gives no problem exactly when the memories of $`T`
 are in $`L`.
 :::
 
-:::readable Fir.Aggregate.decidableInLimits Fir.Aggregate.problem Fir.Field.problems Fir.Field.problems_eq_nil (fingerprint := "9724529221475010545")
+:::readable Fir.Aggregate.decidableInLimits Fir.Aggregate.problem Fir.Field.problems Fir.Field.problems_eq_nil (fingerprint := "15762076230656824341")
 *Definition: the check of a field.* Whether a layout is within its limits
 can be decided. A problem about the layout $`A` names its symbol. The
 problems of a field $`F` at the offset $`o` of $`A` are one, "the field at

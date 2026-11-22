@@ -68,6 +68,7 @@ def itemWeight : Item d → Nat
   | .dialect _ => 2
   | .aggregate _ => 2
   | .global _ => 2
+  | .extern _ => 2
 
 /-- A measure of items. -/
 def itemsWeight : List (Item d) → Nat
@@ -174,6 +175,8 @@ def printFrames (acc : String) : List (Frame d) → String
     printFrames (acc ++ dialectItemText n a.item) (.str "\n" :: .items n is :: fs)
   | .items n (.global g :: is) :: fs =>
     printFrames (acc ++ dialectItemText n (g.item (d := d))) (.str "\n" :: .items n is :: fs)
+  | .items n (.extern e :: is) :: fs =>
+    printFrames (acc ++ e.print n) (.str "\n" :: .items n is :: fs)
 termination_by fs => framesWeight fs
 decreasing_by
   all_goals
@@ -227,7 +230,7 @@ theorem printFrames_eq (acc : String) (fs : List (Frame d)) :
     simp only [Frame.text, Item.printList, Item.print, DialectItem.print, dialectItemText,
       defsText_eq, List.map_cons, String.join_cons, String.append_assoc]
   | _ => rename_i ih; rw [ih]; simp [Frame.text, Operation.printList, Block.printList,
-      Region.printList, Item.printList, String.append_assoc]
+      Region.printList, Item.printList, Item.print, String.append_assoc]
 
 /-- `printModule` prints as the spec's printer does, so `fir-ref` runs it in
 place of `Module.print`. -/

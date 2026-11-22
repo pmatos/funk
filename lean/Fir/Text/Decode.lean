@@ -15,13 +15,16 @@ second decodes each op in that scope.
 A text that follows the grammar but does not decode is rejected, with the
 position of the part that does not decode (ADR-2026-10-29-2014):
 
-* an item whose kind is neither `func`, `module`, `aggregate`, `global`
-  nor a word of a dialect, at its kind. An item of a dialect's kind decodes whichever
+* an item whose kind is neither `func`, `module`, `aggregate`, `global`,
+  `extern` nor a word of a dialect, at its kind. An item of a dialect's kind decodes whichever
   dialect registers it: that is validation's question (ADR-2026-11-09-1543);
 * a `func` with no results and attributes, at its first attribute; a `func`
   whose body holds a dialect set, at its kind; and one whose body holds
   items, at the first;
-* an item other than a `func` whose parameter carries attributes, whose
+* an external declaration whose body is not empty, at its kind, and one
+  with no results and attributes, at its first attribute
+  (ADR-2026-11-09-1547);
+* an item other than a `func` or an `extern` whose parameter carries attributes, whose
   parameters end in `...`, or whose result before a comma carries
   attributes, at the first such attribute or at the `...`;
 * a `module` with parameters, results or attributes, at the first of them,
@@ -189,15 +192,53 @@ def decodeFuncItem (kindPos : TextPos) (name : String) (params : List SDef)
   pure (.func ⟨f.name, f.params, f.results, f.body,
     trimAttrs (paramAttrs.map fun as => as.map (·.1)), ras, variadic.isSome⟩)
 
-/-- Checks the header of an item other than a `func`: no parameter carries
+/-- The attributes of an external declaration's results, as a func's:
+those after each result that a comma follows, then those after the last.
+One with no results has no attributes. -/
+def externResultAttrs (results : List (Attr × TextPos))
+    (resultAttrs : List (List (Attr × TextPos))) (attrs : List (Attr × TextPos)) :
+    Except ParseError (List (List Attr)) :=
+  match results, attrs with
+  | [], (_, p) :: _ => errorAt p "an extern with no results has no attributes"
+  | _, _ => pure (trimAttrs ((resultAttrs ++ [attrs]).map (·.map (·.1))))
+
+/-- An external declaration's result attributes decode exactly when a
+func's do, to the same lists. -/
+theorem externResultAttrs_eq_ok {results : List (Attr × TextPos)}
+    {resultAttrs : List (List (Attr × TextPos))} {attrs : List (Attr × TextPos)}
+    {x : List (List Attr)} :
+    externResultAttrs results resultAttrs attrs = .ok x ↔
+      funcResultAttrs results resultAttrs attrs = .ok x := by
+  match results, attrs with
+  | [], _ :: _ => simp [externResultAttrs, funcResultAttrs, errorAt]
+  | [], [] => exact Iff.rfl
+  | _ :: _, _ => exact Iff.rfl
+
+/-- Decodes an external declaration, an item of kind `extern`, at `kindPos`
+(ADR-2026-11-09-1547): its header as a func's, whose parameters and
+results keep their attributes and whose parameters may end in `...`, and
+an empty body. Its signature decodes as a function's with no blocks: its
+result types, then its parameters, each named once. -/
+def decodeExternItem (kindPos : TextPos) (name : String) (params : List SDef)
+    (paramAttrs : List (List (Attr × TextPos))) (variadic : Option TextPos)
+    (results : List (Attr × TextPos)) (resultAttrs : List (List (Attr × TextPos)))
+    (attrs : List (Attr × TextPos)) : SBody → Except ParseError (Item d)
+  | .blocks [] => do
+    let ras ← externResultAttrs results resultAttrs attrs
+    let f ← decodeFunc (d := d) name params results []
+    pure (.extern ⟨f.name, f.params, f.results,
+      trimAttrs (paramAttrs.map fun as => as.map (·.1)), ras, variadic.isSome⟩)
+  | _ => errorAt kindPos "an extern has an empty body"
+
+/-- Checks the header of an item other than a `func` or an `extern`: no parameter carries
 attributes, the parameters do not end in `...`, and no result that a comma
 follows carries attributes. -/
 def plainHeader (paramAttrs : List (List (Attr × TextPos))) (variadic : Option TextPos)
     (resultAttrs : List (List (Attr × TextPos))) : Except ParseError Unit :=
   match paramAttrs.flatten, variadic, resultAttrs.flatten with
-  | (_, p) :: _, _, _ => errorAt p "only a func's parameters carry attributes"
-  | [], some p, _ => errorAt p "only a func's parameters end in ..."
-  | [], none, (_, p) :: _ => errorAt p "only a func's results carry attributes"
+  | (_, p) :: _, _, _ => errorAt p "only a func's or an extern's parameters carry attributes"
+  | [], some p, _ => errorAt p "only a func's or an extern's parameters end in ..."
+  | [], none, (_, p) :: _ => errorAt p "only a func's or an extern's results carry attributes"
   | [], none, [] => pure ()
 
 /-- Checks the header of an item of kind `module`: it has no parameters,
@@ -267,6 +308,8 @@ def decodeItem : SItem → Except ParseError (Item d)
   | ⟨kind, kindPos, name, params, paramAttrs, variadic, results, resultAttrs, attrs, body⟩ =>
     if kind = "func" then
       decodeFuncItem kindPos name params paramAttrs variadic results resultAttrs attrs body
+    else if kind = "extern" then
+      decodeExternItem kindPos name params paramAttrs variadic results resultAttrs attrs body
     else plainHeader paramAttrs variadic resultAttrs >>= fun () =>
     if kind = "module" then do
       moduleHeader params results attrs
@@ -278,7 +321,7 @@ def decodeItem : SItem → Except ParseError (Item d)
     else if kind = "global" then decodeGlobal kindPos name params results attrs body
     else if isDialectWord kind then decodeDialectItem kind kindPos name params results attrs body
     else errorAt kindPos ("unknown item kind " ++ kind ++
-      ": the kinds are func, module, aggregate, global and the words of dialects")
+      ": the kinds are func, module, aggregate, global, extern and the words of dialects")
 
 /-- Decodes items, in order. -/
 def decodeItems : List SItem → Except ParseError (List (Item d))

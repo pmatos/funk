@@ -1,0 +1,13 @@
+# Tests of externs.fir: external declarations (#239), functions that
+# funk did not compile, named by a symbol and a signature with an empty
+# body (ADR-2026-11-09-1547). A declaration may end in `...`, and its
+# narrow integers may carry sext or zext. No function calls one yet, so a
+# declaration changes no run: twice doubles its i8 beside them. The round
+# trip checks each declaration, the one in a nested module included.
+# Each test without expect is differential: fir-ref and native code run
+# it, and the native result must refine fir-ref's.
+tests = [
+  { func = "@twice", args = ["3"] },
+  { func = "@twice", args = ["-128"] },
+  { func = "@twice", args = ["127"] },
+]

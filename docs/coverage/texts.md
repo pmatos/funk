@@ -309,3 +309,14 @@ between them, since a marker changes no run. `reject/signatures.toml`
 holds a marker on `i32`, `i64`, `f32` and `ptr`, a marker that is not
 `sext` or `zext`, two markers, a variadic function, and the parse errors of
 attributes or `...` where only a func's signature may hold them.
+
+The texts of #239's second stage test external declarations, the
+functions that funk did not compile: an item of kind `extern` whose header
+is a function's and whose body is empty. `externs` declares functions with
+and without results, with markers and with `...`, one in a nested module,
+beside a function that runs, since a declaration changes no run.
+`reject/extern.toml` holds a body that is not empty, attributes after a
+`)` with no results, a parameter named twice, a type that does not
+decode, a marker that the core does not allow, an invalid type, a memory
+that the layout does not declare, a symbol named twice, and a call to a
+declaration, which waits for #239's third stage.

@@ -33,7 +33,9 @@ is:
   with the kind `aggregate`, no parameters or results, and its memory,
   size, alignment and fields as attributes (ADR-2026-11-16-1546), and a
   global with the kind `global`, its attributes as `Global.attrs` writes
-  them (ADR-2026-11-09-1546);
+  them (ADR-2026-11-09-1546), and an external declaration as a function's
+  header with the kind `extern`, then ` {` and, on the next line, its
+  closing `}` (ADR-2026-11-09-1547);
 * one empty line after each item, then the location table, its entries
   indented by two spaces, in the order they are stored;
 * a line feed at the end of every line, the last included, and no trailing
@@ -168,6 +170,13 @@ def DialectItem.print (n : Nat) (i : DialectItem d) : String :=
   indent n ++ i.kind ++ " " ++ printSymbol i.name ++ "(" ++ printDefs i.params ++ ")" ++ results ++
     String.join (i.attrs.map (" " ++ ·.print)) ++ " {\n" ++ indent n ++ "}\n"
 
+/-- An external declaration at indentation `n`, with its line feed: an item
+of kind `extern`, whose header is written as a function's, then its empty
+body, whose `}` is on the next line, at `n`. -/
+def Extern.print (n : Nat) (e : Extern d) : String :=
+  indent n ++ "extern " ++ printSymbol e.name ++ "(" ++ e.func.printParams ++ ")" ++
+    e.func.printResults ++ " {\n" ++ indent n ++ "}\n"
+
 mutual
 /-- An item at indentation `n`, with its line feed. A nested module is an
 item of kind `module`, with no parameters, results or attributes: its body,
@@ -180,6 +189,7 @@ def Item.print (n : Nat) : Item d → String
   | .dialect i => i.print n
   | .aggregate a => a.item.print n
   | .global g => (g.item (d := d)).print n
+  | .extern e => e.print n
 
 /-- Items at indentation `n`, each followed by an empty line. -/
 def Item.printList (n : Nat) : List (Item d) → String

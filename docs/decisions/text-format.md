@@ -25,8 +25,9 @@ Lean parses and reprints it. The bytes must match (ADR-2026-10-29-2014).
 Every op of every dialect uses one grammar, so a new dialect needs no parser
 change (ADR-2026-10-29-2014). The same holds for items: a dialect
 registers kinds of item through the one grammar, so a new kind needs no
-parser change (ADR-2026-11-09-1543). The core's kinds are `func` and
-`module` (ADR-2026-11-10-1510). Any other kind is a word of a dialect, such
+parser change (ADR-2026-11-09-1543). The core's kinds are `func`,
+`module` (ADR-2026-11-10-1510), `aggregate` (ADR-2026-11-16-1546),
+`global` (ADR-2026-11-09-1546) and `extern`, below. Any other kind is a word of a dialect, such
 as `toy.cell`, written `kind @sym(params) -> results attrs {` and then `}`
 on the next line: its body is empty. Every reader decodes such an item,
 whichever dialects it holds; a body that is not empty does not decode, and
@@ -193,11 +194,26 @@ result's type says which it allows (`validSigAttrs`): the core allows one
 marker, `sext` or `zext`, on an integer narrower than 32 bits
 ([semantics-m1-design.md](semantics-m1-design.md#external-declarations)). A
 `func` whose parameters end in `...` does not validate: only an external
-declaration may be variadic. Another item whose parameter carries an
-attribute, whose parameters end in `...`, or whose result before a comma
-carries one does not decode, and a `func` with no results has no attributes
-(ADR-2026-11-21-1307). Rejected: markers as keywords of the grammar, which
-would put the core's words in generic code, against G0.
+declaration may be variadic. An item other than a `func` or an `extern`
+whose parameter carries an attribute, whose parameters end in `...`, or
+whose result before a comma carries one does not decode, and a `func` or
+an `extern` with no results has no attributes (ADR-2026-11-21-1307).
+Rejected: markers as keywords of the grammar, which would put the core's
+words in generic code, against G0.
+
+## External declarations
+
+An external declaration is an item of the core's kind `extern`: a
+function's header, with its markers and `...`, and an empty body,
+`extern @printf(%fmt: ptr, ...) -> i32 {` and `}` on the next line
+(ADR-2026-11-21-1307, ADR-2026-11-09-1547). Its parameters are named, as
+every item's are, and each is named once, which decoding checks as it does
+a function's. An `extern` whose body is not empty does not decode. It is
+valid when its types are, each marker is one its type allows, and its
+types name memories that the data layout declares; it may end in `...`.
+A `call` that names one does not validate until the run has a rule for an
+external call (#239). Rejected: a body of no blocks on a `func`, which
+would make a declaration and a function with no blocks one text.
 
 ## The round trip
 

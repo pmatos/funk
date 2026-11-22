@@ -119,6 +119,22 @@ func @f() {
 locs {
   @0 = unknown
 }
+=== accept extern-type-in-the-set
+dialects toy
+
+extern @g(%f: toy.flag, ...) -> i8 sext {
+}
+
+locs {
+  @0 = unknown
+}
+=== reject extern-type-outside-the-set
+extern @g(%f: toy.flag) {
+}
+
+locs {
+  @0 = unknown
+}
 === reject unknown-dialect
 dialects gpu
 

@@ -1,4 +1,5 @@
 import Fir.Validation.CheckFuncs
+import Fir.Validation.CheckExtern
 import Fir.Validation.CheckLayout
 import Fir.Validation.CheckGlobal
 
@@ -6,7 +7,8 @@ import Fir.Validation.CheckGlobal
 The check of a module follows the rule of a valid module: its location
 table, then each of its symbol tables, its own and that of each nested
 module: the symbols of its items, each function, in the context of the
-table, each item of a dialect's kind, then its dialect set; then its data
+table, each item of a dialect's kind, each external declaration, then its
+dialect set; then its data
 layout, the memories that each table's types name, each table's
 aggregates' layouts, and each table's globals. It builds the
 set of the module's location references once, and each table's symbols,
@@ -216,6 +218,7 @@ def SymbolTable.problems (held : Std.HashSet LocRef) (t : SymbolTable d) : List 
     { message := "the symbol " ++ Text.printSymbol s ++ " names more than one item", func := s }) ++
   t.funcs.flatMap (·.problems lk) ++
   t.dialectItems.flatMap (·.problems ⟨lk.symbols⟩) ++
+  t.externs.flatMap Extern.problems ++
   t.dialects.filterMap (fun x => if isWord x then none else
     some { message := "the dialect set names " ++ Text.quote x ++ ", which is not a word" }) ++
   (repeats t.dialects).map fun x => { message := "the dialect set names " ++ x ++ " more than once" }
@@ -225,10 +228,10 @@ theorem SymbolTable.problems_eq_nil_iff (keys : List LocRef) (t : SymbolTable d)
     t.problems (Std.HashSet.ofList keys) = [] ↔ t.Valid keys := by
   simp only [SymbolTable.problems, List.append_eq_nil_iff, List.map_eq_nil_iff, repeats_eq_nil,
     List.flatMap_eq_nil_iff, Func.problems_eq_nil (t.lookup_agrees keys),
-    DialectItem.problems_eq_nil_iff, (t.lookup_agrees keys).symbols,
+    DialectItem.problems_eq_nil_iff, (t.lookup_agrees keys).symbols, Extern.problems_eq_nil_iff,
     List.filterMap_eq_nil_iff, ite_none_eq_none]
-  exact ⟨fun ⟨⟨⟨⟨a, b⟩, i⟩, c⟩, e⟩ => ⟨a, b, i, c, e⟩,
-    fun ⟨a, b, i, c, e⟩ => ⟨⟨⟨⟨a, b⟩, i⟩, c⟩, e⟩⟩
+  exact ⟨fun ⟨⟨⟨⟨⟨a, b⟩, i⟩, x⟩, c⟩, e⟩ => ⟨a, b, i, x, c, e⟩,
+    fun ⟨a, b, i, x, c, e⟩ => ⟨⟨⟨⟨⟨a, b⟩, i⟩, x⟩, c⟩, e⟩⟩
 
 /-- The problems of a module: those of its location table, then those of
 each of its symbol tables, in order, then those of its data layout, then

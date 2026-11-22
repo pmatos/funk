@@ -56,10 +56,13 @@ theorem Func.paramsTokens_eq (f : Func d) :
   simp only [Func.paramsTokens, paramsToks, ellipsisToks, hl]
   rfl
 
-/-- `readItem` reads the tokens of a function after its kind, `func`, as the
-function's tree, when each type it writes is written as a type. -/
-theorem Func.reads (f : Func d) (ht : ∀ t ∈ f.types, (tyAttr t).IsType) (p : TextPos) :
-    Reads (readItem "func" p) SItem.erase f.tree f.tokens.tail (fun _ => True) := by
+/-- `readItem` reads the tokens of a function after its kind as the
+function's tree, of whatever kind the word before them names, when each
+type it writes is written as a type. An external declaration writes the
+header of a function with no blocks after its kind `extern`. -/
+theorem Func.readsAs (k : String) (f : Func d) (ht : ∀ t ∈ f.types, (tyAttr t).IsType)
+    (p : TextPos) :
+    Reads (readItem k p) SItem.erase { f.tree with kind := k } f.tokens.tail (fun _ => True) := by
   have hres : ∀ t ∈ f.results, (tyAttr t).IsType := fun t h => ht t (List.mem_append_left _ h)
   have hpar : ∀ x ∈ f.params, (tyAttr x.2).IsType := fun x hx =>
     ht x.2 (List.mem_append_right _ (List.mem_map_of_mem (List.mem_append_left _ hx)))
@@ -196,6 +199,12 @@ theorem Func.reads (f : Func d) (ht : ∀ t ∈ f.types, (tyAttr t).IsType) (p :
   · rw [hR₁, hRS₁]
   · rw [hR₂, hRS₂]
   · rw [hR₃, hRS₂]
+
+/-- `readItem` reads the tokens of a function after its kind, `func`, as the
+function's tree, when each type it writes is written as a type. -/
+theorem Func.reads (f : Func d) (ht : ∀ t ∈ f.types, (tyAttr t).IsType) (p : TextPos) :
+    Reads (readItem "func" p) SItem.erase f.tree f.tokens.tail (fun _ => True) :=
+  Func.readsAs "func" f ht p
 
 /-- The tokens of attributes, then `{`, start with a token that starts an
 attribute, or with the `{`. -/

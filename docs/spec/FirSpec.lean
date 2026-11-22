@@ -111,6 +111,8 @@ functions, blocks and ops.
 
 {includeReadable "." Fir.Syntax.Global "Globals" FirSpec.Syntax.Global (level := 2)}
 
+{includeReadable "." Fir.Syntax.Aggregate "Aggregates' layouts" FirSpec.Syntax.Aggregate (level := 2)}
+
 {includeReadable "." Fir.Core.Types "Core types" FirSpec.Core.Types (level := 2)}
 
 {includeReadable "." Fir.Core.Rounding "Rounding modes" FirSpec.Core.Rounding (level := 2)}
@@ -154,6 +156,8 @@ functions, blocks and ops.
 {includeReadable "." Fir.Validation.CheckOps "Checking ops" FirSpec.Validation.CheckOps (level := 2)}
 
 {includeReadable "." Fir.Validation.CheckFuncs "Checking functions" FirSpec.Validation.CheckFuncs (level := 2)}
+
+{includeReadable "." Fir.Validation.CheckExtern "Checking external declarations" FirSpec.Validation.CheckExtern (level := 2)}
 
 {includeReadable "." Fir.Validation.CheckLayout "Checking the data layout" FirSpec.Validation.CheckLayout (level := 2)}
 
@@ -285,6 +289,8 @@ functions, blocks and ops.
 
 {includeReadable "." Fir.Text.DecodeBlocks "Blocks and ops decoded back" FirSpec.Text.DecodeBlocks (level := 2)}
 
+{includeReadable "." Fir.Text.DecodeFuncItem "A function's item and an external declaration decoded back" FirSpec.Text.DecodeFuncItem (level := 2)}
+
 {includeReadable "." Fir.Text.DecodeModule "The module decoded back" FirSpec.Text.DecodeModule (level := 2)}
 
 {includeReadable "." Fir.Text.PrintParse "The round trip, proved" FirSpec.Text.PrintParse (level := 2)}
@@ -302,6 +308,8 @@ functions, blocks and ops.
 {includeReadable "." Fir.Text.DecodeAcceptedScope "What the first pass accepts" FirSpec.Text.DecodeAcceptedScope (level := 2)}
 
 {includeReadable "." Fir.Text.DecodeAccepted "What the second pass accepts" FirSpec.Text.DecodeAccepted (level := 2)}
+
+{includeReadable "." Fir.Text.DecodeAcceptedFunc "A function and an external declaration as decoded" FirSpec.Text.DecodeAcceptedFunc (level := 2)}
 
 {includeReadable "." Fir.Text.DecodeAcceptedModule "What decoding accepts" FirSpec.Text.DecodeAcceptedModule (level := 2)}
 

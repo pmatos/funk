@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "The data layout's rules: readable blocks" =>
 
-:::moduleDocs (fingerprint := "9783523461112804708")
+:::moduleDocs (fingerprint := "13381967439596208766")
 :::
 
 :::readable Fir.isPowerOfTwo (fingerprint := "18023849196204137947")
@@ -76,13 +76,14 @@ $`\mathrm{memory}(t)`, or when $`t` names no memory. Whether it does can be
 decided.
 :::
 
-:::readable Fir.Func.attrTypes Fir.Func.unitWidths Fir.DataLayout.HasUnits Fir.DataLayout.decidableHasUnits Fir.Func.addrWidths Fir.DataLayout.HasAddrs Fir.DataLayout.decidableHasAddrs Fir.SymbolTable.MemoriesIn Fir.Module.MemoriesDeclared (pin := Fir.DataLayout.entry) (fingerprint := "18086405835544314927")
+:::readable Fir.Func.attrTypes Fir.Func.unitWidths Fir.DataLayout.HasUnits Fir.DataLayout.decidableHasUnits Fir.Func.addrWidths Fir.DataLayout.HasAddrs Fir.DataLayout.decidableHasAddrs Fir.SymbolTable.MemoriesIn Fir.Module.MemoriesDeclared (pin := Fir.DataLayout.entry) (fingerprint := "5379755713663171397")
 *Definition: the memories that a module's types name.* The memories of the
 symbol table $`T` are in the layout $`L` when $`L` has the memory of each
 type that each function of $`T` states, its results, its parameters and
 the values its blocks define, of each type that an op of each function of
-$`T` carries in its attributes, $`\mathrm{optypes}`, op by op, and of each
-type that each item of a dialect's kind of $`T` states; and when, for each
+$`T` carries in its attributes, $`\mathrm{optypes}`, op by op, of each
+type that each item of a dialect's kind of $`T` states, and of each type
+that each external declaration of $`T` states; and when, for each
 pair $`(N, V)` that an op of each function of $`T` asks,
 $`\mathrm{opunits}`, op by op, the entry of memory $`N` in $`L` has units
 of $`V` bits, as a $`\mathsf{memset}` of an $`\mathsf{i}V` into memory
