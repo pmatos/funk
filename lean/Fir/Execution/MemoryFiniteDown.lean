@@ -219,7 +219,7 @@ theorem Func.memOps_notExhausted_of_finite {M M' : Module d}
               (fun ⟨_, _, h⟩ => callUB (p := (p'.1, genv)) hg hen (Func.memCall_ub_of_memOps h))
               (fun h => callExh (p := (p'.1, genv)) hg hen (Func.memCall_exhausted_iff.2 h))
             exact ⟨n₁, fun h => h₁ (Func.memCall_exhausted_iff.1 h)⟩
-          rcases hcalls s with h | ⟨g, g', hg, hg'', bb⟩
+          rcases hcalls.1 s with h | ⟨g, g', hg, hg'', bb⟩
           · exact absurd h hsame
           rw [hg''] at hg'
           cases hg'

@@ -14,17 +14,19 @@ when the Lean changes under it.
 
 #doc (Manual) "The core's traced runs: readable blocks" =>
 
-:::moduleDocs (fingerprint := "13662823649430197855")
+:::moduleDocs (fingerprint := "7434962166205281528")
 :::
 
-:::readable Fir.Core.instDialectTrace Fir.Core.liftsMem Fir.Core.instInhabitedAnswer (fingerprint := "9308984198974203001")
+:::readable Fir.Core.instDialectTrace Fir.Core.liftsMem Fir.Core.instInhabitedAnswer (fingerprint := "12075076144742745011")
 *Definition: the core's traced semantics.* The core's events are its
 external calls, which the world answers with a reply and its actions on
 escaped memory; the default answer has no results and no actions. Each op
 runs by its rule with memory, lifted onto the memories of the traced
-state, and shows no event: an external call is not an op's rule. So, until
-a run can make an external call, the core's traced semantics lifts its
-semantics with memory.
+state, and shows no event: an external call is not an op's rule. The
+core's external-call rule is, for now, its rule with memory, UB, lifted
+too, so the core's traced semantics lifts its semantics with memory; the
+next stage of #239 gives an external call its event and the world's
+answer.
 :::
 
 :::readable Fir.Core.trace_args_isRefinedBy Fir.Core.trace_args_isRefinedBy_world (fingerprint := "16027320472332802630")
@@ -55,7 +57,7 @@ memories gives the traced one from every traced state. So it is at every
 world.
 :::
 
-:::readable Fir.Core.opLiftsMem Fir.Core.traceOpsMonotone Fir.Core.opsTraceFinite (fingerprint := "15847308182329661481")
+:::readable Fir.Core.opLiftsMem Fir.Core.traceOpsMonotone Fir.Core.opsTraceFinite (fingerprint := "14056248587155485240")
 *Theorem: each core op lifts its rule.* In the core's traced semantics,
 each core op runs by its rule with memory, lifted onto the memories of the
 traced state, by definition.
@@ -64,10 +66,10 @@ traced state, by definition.
 ops that run by their own rule are monotone in the core's traced
 semantics, wherever a run names the core's memories: each lifts its rule
 with memory and is monotone with memory, and the lift onto the traced
-state keeps it.
+state keeps it. Its external-call rule, UB, is monotone.
 
 *Theorem: the core meets the hypothesis of divergence.* Every core op
 that runs by its own rule has finitely many outcomes in the core's traced
 semantics, given the world's answers: it has finitely many with memory,
-and the lift keeps it.
+and the lift keeps it. An external call has one, UB.
 :::

@@ -14,10 +14,10 @@ build fails when the Lean changes under it.
 
 #doc (Manual) "Modes that see the end of a return: readable blocks" =>
 
-:::moduleDocs (fingerprint := "7257076266500617677")
+:::moduleDocs (fingerprint := "561718991368008307")
 :::
 
-:::readable Fir.Func.memEndTree (pin := Fir.TraceState.endOf) (fingerprint := "6884592148776013371")
+:::readable Fir.Func.memEndTree (pin := Fir.TraceState.endOf) (fingerprint := "11778940897766041117")
 *Definition: the tree of a run with memory that sees each return at its
 end.* Where the units of the memory $`x` are $`u(x)` bits wide, the memory
 numbered $`n` is $`\mu(n)` and addresses are compared by the rule
@@ -34,7 +34,7 @@ and keeps every other way a path ends. The memories $`S` are those at the
 end of the path, after the function's frame has been left.
 :::
 
-:::readable Fir.Func.memEndTree_toSet (pin := Fir.Func.memEndRuns) (fingerprint := "14595564592886382751")
+:::readable Fir.Func.memEndTree_toSet (pin := Fir.Func.memEndRuns) (fingerprint := "5983702291598760581")
 *Theorem: the tree has the run with memory, seen at its ends, as its set.*
 When the dialect's semantics in the tree denotes its semantics with memory
 at the naming $`\rho` with layout entries $`\ell`, for every module

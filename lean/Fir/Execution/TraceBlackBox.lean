@@ -58,6 +58,7 @@ variable {Mem : Type} {unit : Mem → Nat} [DecidableEq Mem]
 
 variable {d : Dialect} [TyDenote d.Ty] [DecidableEq d.Ty] [DialectSignature d] [DialectCall d]
   [DialectDenote d (TraceM (Step A) (TraceState Mem unit))]
+  [DialectExtCall d (TraceM (Step A) (TraceState Mem unit))]
 
 /-- The traced runs of the function `f` of the module `M` from given traced
 states: on each argument vector and from each traced state, its run in the
@@ -211,7 +212,8 @@ section
 
 variable [HRefinement A A] {Mem : Type} {unit : Mem → Nat} [DecidableEq Mem]
   {d : Dialect} [TyDenote d.Ty] [DecidableEq d.Ty] [DialectSignature d] [DialectCall d]
-  [DialectDenote d (TraceM (Step A) (TraceState Mem unit))] [TyRefinement d.Ty]
+  [DialectDenote d (TraceM (Step A) (TraceState Mem unit))]
+  [DialectExtCall d (TraceM (Step A) (TraceState Mem unit))] [TyRefinement d.Ty]
 
 /-- A path of a callee in the target's frame, done, is allowed by the
 source's callee in its frame, from traced states of which the target's
@@ -257,11 +259,19 @@ structure TraceBlackBox (M M' : Module d) (g g' : Func d) : Prop where
 variable (A Mem unit) in
 /-- The target module `M'` runs each call in the traced layer as the source
 `M` does: each symbol names the same function in both, or a traced black
-box. -/
+box, and the two declare the same external declarations. -/
 def TraceCallsRefined (M M' : Module d) : Prop :=
-  ∀ s, M'.func? s = M.func? s ∨
+  (∀ s, M'.func? s = M.func? s ∨
     ∃ g g', M.func? s = some g ∧ M'.func? s = some g' ∧
-      TraceBlackBox (A := A) (Mem := Mem) (unit := unit) M M' g g'
+      TraceBlackBox (A := A) (Mem := Mem) (unit := unit) M M' g g') ∧
+  ∀ s ts rs, M'.declares s ts rs = M.declares s ts rs
+
+/-- A symbol that the target module calls as an external declaration, the
+source calls as one too. -/
+theorem TraceCallsRefined.ext {M M' : Module d} (hc : TraceCallsRefined A Mem unit M M')
+    {s : Name} {ts rs : List d.Ty} (hg : M'.func? s = none) (hd : M'.declares s ts rs = true) :
+    M.func? s = none ∧ M.declares s ts rs = true :=
+  ⟨Module.func?_none_of_calls hc.1 hg, (hc.2 s ts rs).symm.trans hd⟩
 
 /-- A call that enters a black box's target passes arguments of the
 parameter types of the black box's source. -/

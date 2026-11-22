@@ -14,7 +14,7 @@ build fails when the Lean changes under it.
 
 #doc (Manual) "Exhaustive, scripted and sampled modes: readable blocks" =>
 
-:::moduleDocs (fingerprint := "4859899031298329233")
+:::moduleDocs (fingerprint := "12670308621814485322")
 :::
 
 :::readable Fir.ChoiceTree.Leaf Fir.ChoiceTree.Leaf.ev? (fingerprint := "17707828040967081440")
@@ -228,7 +228,7 @@ $`\mathsf{stuck}~s`, for some $`s`, exactly when its path end is
 $`\mathsf{stuck}~s` for some $`s`.
 :::
 
-:::readable Fir.Func.run_toSet (fingerprint := "218765301515875500")
+:::readable Fir.Func.run_toSet (fingerprint := "6885964670727289733")
 *Theorem: a run in the tree of choices has the run in the set monad as
 its set.* Take any dialect, with what the
 {ref "The-fir-specification--Execution--The-interpreter"}[interpreter]
@@ -240,12 +240,14 @@ $`f` in trees is the run of $`f` in the set monad:
 
 $$`\mathrm{set}(\mathrm{run}^{\mathrm{tree}}_{M,f}(\vec{v}, k)) = \mathrm{run}^{\mathrm{set}}_{M,f}(\vec{v}, k)`
 
+An external call is UB in both, so the set keeps it too.
+
 This is the theorem of the
 {ref "The-fir-specification--Execution--Monad-morphisms"}[section on monad morphisms]
 for the morphism from trees to sets.
 :::
 
-:::readable Fir.Func.explore_outcomes Fir.Func.explore_stuck (pin := Fir.Run.outcomes) (pin := Fir.Run.IsStuck) (fingerprint := "17124679010909583959")
+:::readable Fir.Func.explore_outcomes Fir.Func.explore_stuck (pin := Fir.Run.outcomes) (pin := Fir.Run.IsStuck) (fingerprint := "12176285536238415636")
 *Theorem: exhaustive mode gives exactly the outcomes of a run.* With the
 dialect and the hypothesis of the previous theorem, let $`R_k` be the run
 of $`f` in the set monad at fuel $`k`, and let exhaustive mode on the run's
@@ -264,7 +266,7 @@ speak of the run at one fuel budget, as the section on
 explains.
 :::
 
-:::readable Fir.Func.script_outcomes Fir.Func.script_stuck (pin := Fir.Run.outcomes) (pin := Fir.Run.IsStuck) (fingerprint := "13508516131780551102")
+:::readable Fir.Func.script_outcomes Fir.Func.script_stuck (pin := Fir.Run.outcomes) (pin := Fir.Run.IsStuck) (fingerprint := "18440880160306584803")
 *Theorem: on a sequence that fits, scripted mode gives an outcome of a
 run.* With the dialect and the hypothesis of the theorems above, let
 scripted mode on the run's tree, with any $`\mathrm{read}` and choice

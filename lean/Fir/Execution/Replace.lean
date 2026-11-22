@@ -147,7 +147,7 @@ theorem Func.runs_replaceBody_isRefinedBy {M : Module d}
         (Func.runs_args_isRefinedBy M hmono g (hmono g hg) ha) (h a')
       bounded := hbound }
   have hcalls : CallsRefined M (M.replaceBody g.name b) bound := by
-    intro x
+    refine ⟨fun x => ?_, fun _ _ _ => Module.declares_replaceBody _ _ _ _ _ _⟩
     by_cases hx : x = g.name
     · subst hx
       exact .inr ⟨g, _, Module.func?_of_mem hnd hg, Module.func?_replaceBody_self hnd hg b, bb⟩

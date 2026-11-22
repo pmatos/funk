@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Progress with jumps and loops: readable blocks" =>
 
-:::moduleDocs (fingerprint := "15565638748605099005")
+:::moduleDocs (fingerprint := "15817450649882277567")
 :::
 
 :::readable Fir.Env.mapM_value_ok (pin := Fir.Env.value) (pin := Fir.Env.Holds) (fingerprint := "10280855962566332597")
@@ -32,7 +32,7 @@ there is none. A jump looks up the values that its successor passes this
 way.
 :::
 
-:::readable Fir.Func.op_ready_of_scoped (pin := Fir.Func.runOps) (fingerprint := "14419884633184971887")
+:::readable Fir.Func.op_ready_of_scoped (pin := Fir.Func.runOps) (fingerprint := "9992182308860581260")
 *Theorem: what a run needs of an op, from the values in scope.* Let $`f`
 be {ref "The-fir-specification--Validation--The-general-rules"}[valid] in
 a module context, $`b` a block of $`\mathrm{blocks}(f)`, and $`o` the op
@@ -141,7 +141,7 @@ place to go $`x`, then $`\mathrm{exit}_o(v^*)` may end with $`x`. It turns a
 step of the run back into a fact about the op's exit.
 :::
 
-:::readable Fir.Func.local_noStuck Fir.Func.local_hasPath (pin := Fir.NoStuck) (pin := Fir.HasPath) (fingerprint := "7760751601942526528")
+:::readable Fir.Func.local_noStuck Fir.Func.local_hasPath (pin := Fir.NoStuck) (pin := Fir.HasPath) (fingerprint := "14039450910192833122")
 *Theorem: from any op of any block on, the run of a function that runs
 within itself has no stuck path, and has a path when its ops are total.*
 Let $`f` be valid in a module context and run within itself, and take any

@@ -21,8 +21,8 @@ runs go in step (`Func.traceRun_allowed` starts from any traced states that
 refine each other). Each return and UB of the target's is allowed by one of the
 source's; at each budget, each path of the target's that runs out of fuel is
 allowed by one of the source's. The source's traced runs from a traced state
-truncate, and have finitely many traces at each budget when every op has
-finitely many outcomes given the world's answers, so König's lemma
+truncate, and have finitely many traces at each budget when every op and
+every external call has finitely many outcomes given the world's answers, so König's lemma
 (`Fir.Execution.TraceKonig`) gives divergence, silent and with acts forever.
 -/
 

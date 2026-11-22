@@ -47,6 +47,8 @@ Each section renders one module of `lean/Fir`.
 
 {includeReadable "." Fir.Core.Unlawful "Semantics the obligations reject" FirSpec.Core.Unlawful (level := 1)}
 
+{includeReadable "." Fir.Execution.ExtCall "The external-call rule" FirSpec.Execution.ExtCall (level := 1)}
+
 {includeReadable "." Fir.Execution.Interpreter "The interpreter" FirSpec.Execution.Interpreter (level := 1)}
 
 {includeReadable "." Fir.Core.Arith "Arithmetic rules" FirSpec.Core.Arith (level := 1)}

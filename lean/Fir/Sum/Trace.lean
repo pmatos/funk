@@ -11,14 +11,18 @@ runs by its side's traced rule, as it runs by its side's rule with memory
 (the section on the sum's memory): an op of the base takes its operands at
 the base's types, where the run names each memory of the base as the sum
 does, and its results become values of the sum's types. Each act that an
-op of a side shows is the act of the sum on that side.
+op of a side shows is the act of the sum on that side. An external call
+goes to the base's external-call rule when its arguments and results are
+all of the base's types, and to `e`'s otherwise.
 
 An op that runs, on its side, by its rule with memory, lifted onto the
 memories of the traced state (`OpLiftsMem`), does so in the sum too: the
 lift shows no act, so taking its acts to the sum's changes nothing, and
 mapping the results to the sum's types commutes with the lift. So a sum of
 two dialects whose traced semantics lift their semantics with memory lifts
-its own (`Dialect.sum.liftsMem`).
+its own (`Dialect.sum.liftsMem`). Its external-call rule lifts too: each
+side's is its rule with memory, UB, lifted, and UB with its acts mapped,
+or its results, is the same UB.
 -/
 
 namespace Fir
@@ -50,6 +54,20 @@ theorem TraceM.mapActs_liftMem {Mem : Type} {unit : Mem → Nat} {A B α : Type}
 
 namespace Dialect.sum
 
+section
+
+variable {base e : Dialect} [TyDenote base.Ty] [TyDenote e.Ty]
+
+/-- A value of the sum of the base's type, as a value of the base. -/
+def DVal.ofSum? : DVal (base ⊞ e) → Option (DVal base)
+  | ⟨.inl t, v⟩ => some ⟨t, v⟩
+  | ⟨.inr _, _⟩ => none
+
+/-- A value of the base, as a value of the sum. -/
+def DVal.toSum (v : DVal base) : DVal (base ⊞ e) := ⟨.inl v.1, v.2⟩
+
+end
+
 variable {base e : Dialect} [TyDenote base.Ty] [TyDenote e.Ty]
   [DialectSignature base] [DialectSignature (base.over e)]
   [DialectEffects base] [DialectEffects (base.over e)] [DialectMemOver base e]
@@ -76,7 +94,12 @@ instance instDialectTrace : DialectTrace (base ⊞ e) where
         | .inl o, args => TraceM.mapActs (fun a => [Act.inl a])
             (DialectDenote.exit o (HVector.ofSum args))
         | .inr o, args => TraceM.mapActs (fun a => [Act.inr a])
-            (DialectDenote.exit (d := base.over e) o args) }
+            (DialectDenote.exit (d := base.over e) o args)
+      extCall g args rs := match args.mapM DVal.ofSum?, rs.mapM Sum.getLeft? with
+        | some args₀, some rs₀ => TraceM.mapActs (fun a => [Act.inl a])
+            (List.map (DVal.toSum (e := e)) <$> DialectExtCall.extCall (d := base) g args₀ rs₀)
+        | _, _ => TraceM.mapActs (fun a => [Act.inr a])
+            (DialectExtCall.extCall (d := base.over e) g args rs) }
 
 /-- Refinement of the sum's events is reflexive when each side's is. -/
 theorem event_isRefinedBy_refl (h₁ : ∀ a : DialectTrace.Event base, a ⊑ a)
@@ -148,7 +171,24 @@ theorem liftsMem [DecidableEq base.Ty] [DecidableEq e.Ty] [DialectCall base]
     letI := DialectTrace.traceAt (d := base ⊞ e) lay ρ L
     have h := opLiftsMem lay ρ L (LiftsMem.opLiftsMem lay (ρ ∘ DialectMemOver.ofBase) L)
       (LiftsMem.opLiftsMem (d := base.over e) lay ρ L)
-    exact ⟨fun op args => (h op args).1, fun op args => (h op args).2⟩⟩
+    exact ⟨fun op args => (h op args).1, fun op args => (h op args).2⟩,
+   fun lay ρ L g args rs => by
+    letI := DialectTrace.traceAt (d := base) lay (ρ ∘ DialectMemOver.ofBase) L
+    letI := DialectTrace.traceAt (d := base.over e) lay ρ L
+    show TraceM.liftMem _ = _
+    rw [TraceM.liftMem_extCall]
+    show _ = match args.mapM DVal.ofSum?, rs.mapM Sum.getLeft? with
+      | some args₀, some rs₀ => TraceM.mapActs (fun a => [Act.inl a])
+          (List.map (DVal.toSum (e := e)) <$> DialectExtCall.extCall (d := base) g args₀ rs₀)
+      | _, _ => TraceM.mapActs (fun a => [Act.inr a])
+          (DialectExtCall.extCall (d := base.over e) g args rs)
+    split
+    · rw [← LiftsMem.liftsExt (d := base) lay (ρ ∘ DialectMemOver.ofBase) L,
+        show (MonadMorphism.traceMem _ (unitsOf lay) (DialectTrace.Acts base)).map _ = _ from
+          TraceM.liftMem_extCall _ _ _, TraceM.map_ub, TraceM.mapActs_ub]
+    · exact (TraceM.mapActs_ub _ _).symm.trans (congrArg (TraceM.mapActs _)
+        ((TraceM.liftMem_extCall (d := base.over e) g args rs).symm.trans
+          (LiftsMem.liftsExt (d := base.over e) lay ρ L g args rs)))⟩
 
 end Dialect.sum
 

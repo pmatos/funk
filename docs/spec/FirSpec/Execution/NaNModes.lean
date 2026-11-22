@@ -69,7 +69,7 @@ some leaf below it a NaN choice, since every subtree lists a leaf, so the
 walk tried every value of every choice it met.
 :::
 
-:::readable Fir.Func.memExploreNaN_outcomes Fir.Func.memExploreNaN_stuck Fir.Func.memExploreNaN_exact (pin := Fir.Func.memTree) (pin := Fir.Run.outcomes) (pin := Fir.Run.IsStuck) (pin := Fir.ChoiceTree.Leaf.pathEnd) (fingerprint := "16347417481536343142")
+:::readable Fir.Func.memExploreNaN_outcomes Fir.Func.memExploreNaN_stuck Fir.Func.memExploreNaN_exact (pin := Fir.Func.memTree) (pin := Fir.Run.outcomes) (pin := Fir.Run.IsStuck) (pin := Fir.ChoiceTree.Leaf.pathEnd) (fingerprint := "3830058501934613809")
 *Theorems: the walk of a run with memory.* When the dialect's semantics in
 the tree denotes its semantics with memory, each outcome that the walk
 lists on the tree of a run with memory, and each stuck path, is one of the

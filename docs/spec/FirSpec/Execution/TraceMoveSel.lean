@@ -14,12 +14,13 @@ changes under it.
 
 #doc (Manual) "The pigeonhole step: readable blocks" =>
 
-:::moduleDocs (fingerprint := "12966726397713737793")
+:::moduleDocs (fingerprint := "4591464512892131575")
 :::
 
-:::readable Fir.TGood.move (fingerprint := "12966726397713737793")
-*Theorem: the pigeonhole step.* Let every path of every op show exactly one
-step, and every op that runs by its own rule have finitely many outcomes,
+:::readable Fir.TGood.move (fingerprint := "4591464512892131575")
+*Theorem: the pigeonhole step.* Let every path of every op and of every
+external call show exactly one step, and every op that runs by its own rule, and every external call,
+have finitely many outcomes,
 given the world's answers. A configuration $`c` whose run shows $`T` with
 $`K` at unboundedly many budgets goes on by a move of the marked trace $`t`
 to a configuration whose run shows $`T` after $`t`'s acts, with the

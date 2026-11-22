@@ -55,6 +55,13 @@ rewrite rule proved op by op, would hold for every rewrite of a call.
 Such statements leave out the ops that call a function, as the
 obligations do, and so will the rewrite rules of later milestones.
 
+A call whose symbol names an external declaration, not a function, is
+handed to the external-call rule, in the section on it (#239). In the
+layers with no world that rule is UB, a stand-in of the kind above, so
+the warning applies to it: a statement of those layers that reads it as a
+source says nothing about external calls. Validation still asks that `@g`
+is a function, so a valid core module calls no declaration yet.
+
 The facts about calls are stated about the runs of functions instead, for
 every function of every valid core module, calls and recursion included:
 fuel monotonicity, progress and no stuck path, in the section on core

@@ -14,10 +14,10 @@ pins their fingerprint; the build fails when the Lean changes under it.
 
 #doc (Manual) "The runs of a function, and fuel monotonicity: readable blocks" =>
 
-:::moduleDocs (fingerprint := "2336321776384904827")
+:::moduleDocs (fingerprint := "17148604348567604050")
 :::
 
-:::readable Fir.Func.runs (pin := Fir.Func.run) (fingerprint := "13624729831154651567")
+:::readable Fir.Func.runs (pin := Fir.Func.run) (fingerprint := "17733330379828056474")
 *Definition: the runs of a function.* Let $`f` be a function and $`M` a
 module, of a dialect that the interpreter can run in the set monad: its
 types have values and a test of equality, and its ops have a
@@ -76,7 +76,7 @@ These are the pieces from which the interpreter builds a run of ops, so
 the bound can be followed through a run step by step.
 :::
 
-:::readable Fir.Func.runOps_left_le (pin := Fir.Func.runOps) (fingerprint := "9639434590555732762")
+:::readable Fir.Func.runOps_left_le (pin := Fir.Func.runOps) (fingerprint := "8096342770755385714")
 *Theorem: a run gives back at most the fuel it was given.* For every module
 $`M`, budget $`n`, function $`f`, environment $`E` and list of ops
 $`o^*`, the run $`\mathrm{run}_M(n, f, E, o^*)` leaves at most $`n` steps.
@@ -86,7 +86,8 @@ monad, of the ops $`o^*` of a block of $`f`, then of the blocks that
 control goes to, in the environment $`E`, with $`n` steps of fuel. Each op
 takes one step; a return leaves the steps that remain; a call runs its
 callee with the steps that remain, and goes on with the smaller of the
-callee's leftover $`k` and those steps.
+callee's leftover $`k` and those steps; a call to a declaration goes on
+with the steps that remain.
 
 It holds whatever the ops do, by induction on $`n`: a callee runs with
 fewer steps than its caller had, so it gives back at most those. So the
@@ -148,7 +149,7 @@ callee out of fuel ends its caller so, and a return that leaves $`j` more
 steps lets the caller go on with $`j` more.
 :::
 
-:::readable Fir.Func.runOps_ahead (pin := Fir.Func.runOps) (fingerprint := "13335089334149100764")
+:::readable Fir.Func.runOps_ahead (pin := Fir.Func.runOps) (fingerprint := "14360912489030509587")
 *Theorem: a run with $`j` more steps of fuel is ahead by $`j` steps.* For
 every module $`M`, budget $`n`, number $`j`, function $`f`, environment
 $`E` and list of ops $`o^*`, the run $`\mathrm{run}_M(n + j, f, E, o^*)`
@@ -160,7 +161,7 @@ steps its callee leaves.
 It holds for every function, calls included, whatever the ops do, by
 induction on $`n`. With no fuel, the smaller run runs out of fuel, and
 everything is ahead of that. Otherwise both runs take the same step: an
-op never sees the fuel. A callee run with $`j` more steps gives back
+op, and the external-call rule, never see the fuel. A callee run with $`j` more steps gives back
 $`j` more, so its caller goes on with $`j` more.
 :::
 
@@ -176,7 +177,7 @@ $$`\mathrm{drop}(\mathsf{ok}~(\mathsf{ret}~(a, k))) = \mathsf{ok}~(\mathsf{ret}~
 The steps left matter only to a caller.
 :::
 
-:::readable Fir.Func.run_run (pin := Fir.Func.enter) (fingerprint := "7647835325060373608")
+:::readable Fir.Func.run_run (pin := Fir.Func.enter) (fingerprint := "1340258152310140982")
 *Theorem: a function's run ends as its entry block's ops end, or stuck
 where it cannot start.* For every module $`M`, function $`f`, vector
 $`v^*` of values of its parameter types, budget $`n` and end $`e`,
@@ -200,7 +201,7 @@ do not have its parameter types. With this theorem, what is proved of
 runs of ops carries over to runs of functions.
 :::
 
-:::readable Fir.Func.run_up Fir.Func.run_down (fingerprint := "7091037276741261556")
+:::readable Fir.Func.run_up Fir.Func.run_down (fingerprint := "13503000368708499281")
 *Theorem: with more fuel, a function's run keeps each return and UB, and
 gains none unless the smaller run may run out of fuel.* For every module
 $`M`, function $`f`, vector $`v^*` of values of its parameter types,

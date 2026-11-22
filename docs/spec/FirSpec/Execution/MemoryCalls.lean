@@ -14,7 +14,7 @@ fails when the Lean changes under it.
 
 #doc (Manual) "Runs from given memories: readable blocks" =>
 
-:::moduleDocs (fingerprint := "13186059818529548110")
+:::moduleDocs (fingerprint := "2462119633693803949")
 :::
 
 :::readable Fir.Result.withMem Fir.Result.finish_id_run (pin := Fir.Result.finish) (pin := Fir.Ev.dropLeft) (fingerprint := "1605931466970577491")
@@ -35,7 +35,7 @@ $`j` more steps runs out of fuel with fewer, from the same memories: it
 takes the same path, and runs out sooner.
 :::
 
-:::readable Fir.Func.memRunsFrom Fir.Func.memRunsFrom_enter Fir.Func.memRunsFrom_run (pin := Fir.Func.run) (fingerprint := "3121704730413535282")
+:::readable Fir.Func.memRunsFrom Fir.Func.memRunsFrom_enter Fir.Func.memRunsFrom_run (pin := Fir.Func.run) (fingerprint := "5731622026921729733")
 *Definition and theorems: the runs of a function from given memories.* The
 runs of $`f` of $`M` from given memories are its runs with memory, on each
 argument vector $`\vec{v}` and from each memories $`S`, at each budget, each
@@ -57,7 +57,7 @@ are ({ref "The-fir-specification--Memory--Runs-with-memory-at-every-budget"}[run
 and one that runs out of fuel runs out of fuel with fewer steps.
 :::
 
-:::readable Fir.Func.memRuns_eq_fromState Fir.Func.memRuns_ret_iff Fir.Func.memRuns_ub_iff Fir.Func.memRuns_exhausted_iff (pin := Fir.Func.memRuns) (fingerprint := "1617679516695806541")
+:::readable Fir.Func.memRuns_eq_fromState Fir.Func.memRuns_ret_iff Fir.Func.memRuns_ub_iff Fir.Func.memRuns_exhausted_iff (pin := Fir.Func.memRuns) (fingerprint := "1090026110844795812")
 *Theorems: runs with memory are the runs from the memories a run starts
 with.* The
 {ref "The-fir-specification--Memory--Runs-with-memory"}[runs with memory]
@@ -69,7 +69,7 @@ $`(\vec{w}, T)` for some memories $`T`, and hits UB, or runs out of fuel,
 exactly when the run from $`\mathrm{start}(L)` does.
 :::
 
-:::readable Fir.Func.memRuns_isRefinedBy_of_from (pin := Fir.Func.memRuns) (fingerprint := "1578247425883488269")
+:::readable Fir.Func.memRuns_isRefinedBy_of_from (pin := Fir.Func.memRuns) (fingerprint := "7578710949210843456")
 *Theorem: runs with memory refine when runs from the memories a run starts
 with do.*
 The {ref "The-fir-specification--Memory--Runs-with-memory"}[runs with memory]

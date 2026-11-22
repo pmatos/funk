@@ -14,10 +14,10 @@ changes under it.
 
 #doc (Manual) "The source follows the target: readable blocks" =>
 
-:::moduleDocs (fingerprint := "18126709599339852174")
+:::moduleDocs (fingerprint := "9512925811631929278")
 :::
 
-:::readable Fir.TCfg.Allows Fir.TCfg.Follows (fingerprint := "5256647327540650826")
+:::readable Fir.TCfg.Allows Fir.TCfg.Follows (fingerprint := "16299104901507399098")
 *Definition: the source allows a stream.* A source configuration $`c` in
 $`M` allows the stream $`T` when it hits UB at some budget after acts refined
 by the first acts of $`T`, or shows at every budget some stream $`S` refined
@@ -27,7 +27,7 @@ by $`T`.
 configuration $`c'` when both run the same ops of the same function, $`c`'s
 environment and traced state are refined by $`c'`'s, and the function and the
 ops still to run are monotone in the traced layer where they run by their
-own rule.
+own rule, and the external-call rule is where they call a symbol.
 :::
 
 :::readable Fir.Stream.ShowsRefined.of_prefix Fir.Stream.cat_nil Fir.TShows.congr (fingerprint := "11844157433157971723")
@@ -36,8 +36,9 @@ of $`l' \cdot T`, for every $`T`. No acts, then $`T`, is $`T`. A run shows a
 stream when another with the same paths does.
 :::
 
-:::readable Fir.TCfg.Allows.lift Fir.TCfg.exh_iff_traceFrom (fingerprint := "4129631493278157171")
-*Theorems.* When every path of every op shows exactly one step, a source that
+:::readable Fir.TCfg.Allows.lift Fir.TCfg.exh_iff_traceFrom (fingerprint := "15487807226208992763")
+*Theorems.* When every path of every op and
+of every external call shows exactly one step, a source that
 allows $`T_1` after a move of the marked trace $`t` allows
 $`\mathrm{acts}(t') \cdot T_1` before it, when
 $`\mathrm{acts}(t) \sqsubseteq \mathrm{acts}(t')`. The paths that run out of

@@ -14,28 +14,32 @@ when the Lean changes under it.
 
 #doc (Manual) "A dialect's traced runs: readable blocks" =>
 
-:::moduleDocs (fingerprint := "11601410767093888604")
+:::moduleDocs (fingerprint := "11815790170535495271")
 :::
 
-:::readable Fir.DialectTrace Fir.DialectTrace.Acts (pin := Fir.instHRefinementEvent) (fingerprint := "16873117125355051426")
+:::readable Fir.DialectTrace Fir.DialectTrace.Acts (pin := Fir.instHRefinementEvent) (fingerprint := "3265168171521043987")
 *Definition: a dialect's events.* A dialect says what its events and the
 world's answers are, how one event refines another, and gives each op a
 semantics in the traced layer, on the
 {ref "The-fir-specification--Memory--The-world-and-escaped-memory"}[traced state],
 wherever a run names its memories and whatever items it gives each op, as
-its semantics with memory does in the state layer. Its acts are its events
+its semantics with memory does in the state layer. It gives there its
+{ref "The-fir-specification--Execution--The-external-call-rule"}[external-call rule]
+too, by which a call to a declaration runs, and the world answers it. Its acts are its events
 with their answers.
 :::
 
-:::readable Fir.TraceM.tick Fir.DialectTrace.stepAt (fingerprint := "14624120199274421574")
+:::readable Fir.TraceM.tick Fir.DialectTrace.stepAt (fingerprint := "7724076856212914474")
 *Definition: marking the steps.* A step shows $`[\mathsf{tick}]` and
 changes nothing else. In the traced layer of marked traces, each op that
 runs by the dialect's rule, a terminator among them, shows a step, then
-runs by that rule, each act of its traces an act of the marked trace. A
-call shows no step of its own: the ops of its callee show theirs.
+runs by that rule, each act of its traces an act of the marked trace; so
+does a call to a declaration, by the dialect's external-call rule. A call
+to a function shows no step of its own: the ops of its callee show
+theirs.
 :::
 
-:::readable Fir.TraceState.endOf Fir.Func.traceRuns Fir.Func.observedRuns Fir.Func.run_eraseSteps (pin := Fir.TraceState.init) (fingerprint := "16283772764567053589")
+:::readable Fir.TraceState.endOf Fir.Func.traceRuns Fir.Func.observedRuns Fir.Func.run_eraseSteps (pin := Fir.TraceState.init) (fingerprint := "4918620126525168936")
 *Definition: the traced runs of a function.* Where a run names the
 dialect's memory $`x` as $`\rho(x)`, whose layout entry is
 $`\ell(\rho(x))`, and gives each op the items $`L`, the traced run of the
@@ -64,12 +68,13 @@ the dialect's rules alone, by the interpreter's morphism theorem: the image
 of a step followed by an op's rule is the rule.
 :::
 
-:::readable Fir.LiftsMem Fir.Func.memEndRuns Fir.Func.traceRuns_noActs Fir.Func.traceObservable_traceRuns (fingerprint := "4912331140305194747")
+:::readable Fir.LiftsMem Fir.Func.memEndRuns Fir.Func.traceRuns_noActs Fir.Func.traceObservable_traceRuns (fingerprint := "8904195705138729272")
 *Definition: a dialect whose ops show no event.* A dialect's semantics in
 the traced layer lifts its semantics with memory when, at every naming of
 its memories and all items a run gives each op, the lift onto the memories
 of the traced state maps each op's semantics with memory to its semantics
-in the traced layer. The runs with memory of a function, each return seen
+in the traced layer, and its external-call rule with memory, UB, to its
+external-call rule there. The runs with memory of a function, each return seen
 at its end, are its
 {ref "The-fir-specification--Memory--Runs-with-memory"}[runs with memory]
 whose returns of $`\vec{v}` with the memories $`S` are seen as

@@ -14,10 +14,10 @@ when the Lean changes under it.
 
 #doc (Manual) "Modes with memory: readable blocks" =>
 
-:::moduleDocs (fingerprint := "14111065850397319781")
+:::moduleDocs (fingerprint := "14522361038645087986")
 :::
 
-:::readable Fir.Func.memTree (fingerprint := "12387326292422220645")
+:::readable Fir.Func.memTree (fingerprint := "2814585210230585310")
 *Definition: the tree of a run with memory.* Where the units of the memory
 $`x` are $`u(x)` bits wide, the tree of a run with memory of the function
 $`f` of the module $`M` on $`\vec{v}` with $`k` steps is its run in the
@@ -35,7 +35,7 @@ that the {ref "The-fir-specification--Execution--Exhaustive___-scripted-and-samp
 walk.
 :::
 
-:::readable Fir.MemMapsDenote Fir.Func.memTree_toSet (pin := Fir.Func.memRuns) (fingerprint := "5442553114842380985")
+:::readable Fir.MemMapsDenote Fir.Func.memTree_toSet (pin := Fir.Func.memRuns) (fingerprint := "10246640549148015932")
 *Definition: the semantics in the tree denotes the semantics with memory.*
 At a naming $`\rho` of the dialect's memories, with layout entries
 $`\ell`, its semantics in the layer

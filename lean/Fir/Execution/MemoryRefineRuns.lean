@@ -94,6 +94,7 @@ theorem Func.memOps_allowedBelow {M M' : Module d}
       | exitUB _ _ _ _ _ => exact absurd rfl (hnub _)
       | denoteUB _ _ _ _ _ => exact absurd rfl (hnub _)
       | callUB _ _ _ _ _ _ _ => exact absurd rfl (hnub _)
+      | extUB _ _ _ _ _ _ => exact absurd rfl (hnub _)
       | ret hreg hargs' hT hos hx hs =>
         obtain ⟨args, hargs, hr⟩ := henv.operands hargs'
         obtain ⟨e₀, he₀, hle⟩ := (hmo (.inl hT) args _ hr).2 hT S S' hS _ hx
@@ -264,7 +265,7 @@ theorem Func.memRunsFrom_args_isRefinedBy (M : Module d)
     {a a' : HVector toType (f.params.map (·.2))} (ha : a.Forall₂ TyRefinement.IsRefinedBy a')
     {S S' : Memories Mem unit} (hS : S ⊑ S') :
     observable (f.memRunsFrom M (a, S)) ⊑ observable (f.memRunsFrom M (a', S')) :=
-  Func.memRunsFrom_isRefinedBy_of_calls hmono (bound := 0) (fun _ => .inl rfl)
+  Func.memRunsFrom_isRefinedBy_of_calls hmono (bound := 0) ⟨fun _ => .inl rfl, fun _ _ _ => rfl⟩
     (fun _ _ _ h => absurd rfl h) f hf ha hS
 
 

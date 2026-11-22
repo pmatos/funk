@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Monotonicity in the traced layer: readable blocks" =>
 
-:::moduleDocs (fingerprint := "5780248936545969967")
+:::moduleDocs (fingerprint := "18370044396405246494")
 :::
 
 :::readable Fir.Step.IsRefinedBy (pin := Fir.instHRefinementStep) (fingerprint := "12649089963462645072")
@@ -82,15 +82,34 @@ each way that $`c'` may end from $`s'` is allowed by a way that $`c` may
 end from $`s`.
 :::
 
-:::readable Fir.OpTraceMonotone Fir.TraceMonotoneOps Fir.Func.TraceOpsMonotone Fir.Func.TraceOpsMonotone.enter Fir.Func.TraceOpsMonotone.jump (fingerprint := "5633577407960804927")
+:::readable Fir.ExtTraceMonotone Fir.ExtTraceMonotone.of_ub (pin := Fir.DialectExtCall) (fingerprint := "1972893532678965549")
+*Definition: an external-call rule monotone in the traced layer.* In the
+traced layer, the external-call rule is monotone at the symbol $`g`, the
+operand types $`\vec{t}` and the result types $`\vec{r}` when, on
+arguments $`\vec{v} \sqsubseteq \vec{v}'` of the types $`\vec{t}`, what
+$`\mathrm{ext}(g, \vec{v}', \vec{r})` runs refines what
+$`\mathrm{ext}(g, \vec{v}, \vec{r})` runs, by refinement of its results.
+
+*Theorem.* An external-call rule that is UB, with the same reason at every
+symbol, is monotone: UB that shows no act allows every way of ending.
+:::
+
+:::readable Fir.OpTraceMonotone Fir.TraceMonotoneOps Fir.Func.TraceOpsMonotone Fir.Func.TraceOpsMonotone.enter Fir.Func.TraceOpsMonotone.jump (fingerprint := "2856987854840736224")
 *Definition: an op monotone in the traced layer.* In a semantics in the
 traced layer, an op is monotone when, on operands
 $`\vec{v} \sqsubseteq \vec{v}'`, what it runs by its own rule on
 $`\vec{v}'` refines what it runs on $`\vec{v}`: an op that is not a
 terminator, by refinement of its results; a terminator, by going to the
-same place. The ops of a list, or of a function's blocks, are monotone
-when each that runs by its own rule, a terminator or an op with no callee,
-is.
+same place. The external-call rule is monotone at a symbol $`g` and the
+types $`\vec{t}` of the operands and $`\vec{r}` of the results of a call
+when, on arguments $`\vec{v} \sqsubseteq \vec{v}'` of the types
+$`\vec{t}`, what it runs on $`\vec{v}'` refines what it runs on
+$`\vec{v}`, by refinement of its results. A rule that is UB is monotone,
+since UB that shows no act allows every way of ending. The ops of a list,
+or of a function's blocks, are monotone when each that runs by its own
+rule, a terminator or an op with no callee, is, and the external-call rule
+is monotone at the symbol and types of each other op that calls a
+symbol, which goes to that rule when no function has the symbol.
 
 *Theorems.* A run of such a function starts, and jumps, to the ops of one
 of its blocks, all monotone.

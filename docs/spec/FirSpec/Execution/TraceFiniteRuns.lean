@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Finitely many traces at one budget: readable blocks" =>
 
-:::moduleDocs (fingerprint := "1522982593365390845")
+:::moduleDocs (fingerprint := "1516888021290487806")
 :::
 
 :::readable Fir.ExceptStepFinite Fir.ExceptStepFinite.pure Fir.ExceptStepFinite.liftExcept Fir.ExceptStepFinite.lift Fir.ExceptStepFinite.bind Fir.ExceptStepFinite.inFrame (fingerprint := "12872737153588007309")
@@ -30,8 +30,9 @@ rest of the stream after the first's acts. A run in a call's frame has its
 ops' outcomes, its frame left.
 :::
 
-:::readable Fir.Func.traceOps_finite (fingerprint := "3034181259275600543")
-*Theorem.* When every op that runs by its own rule has finitely many
+:::readable Fir.Func.traceOps_finite (fingerprint := "1397781481586829212")
+*Theorem.* When every op that runs by its own rule, and every external call,
+has finitely many
 outcomes in the traced layer of marked traces, given the world's answers,
 a traced run of ops at one budget has finitely many, from any environment
 and traced state, calls and recursion included.

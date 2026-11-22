@@ -263,9 +263,14 @@ traced layer their tests keep their results.
 
 The human ruled on 2026-11-21, on #239, how an external call runs. The
 spec states the core's events and its traced semantics op by op
-(`lean/Fir/Core/Event.lean`, `lean/Fir/Core/Trace.lean`); the rest of
-these rules comes with #239's next stage, which makes calls to
-declarations run.
+(`lean/Fir/Core/Event.lean`, `lean/Fir/Core/Trace.lean`), and the run
+hands a call to a declaration to the external-call rule
+(`lean/Fir/Execution/ExtCall.lean`), UB in the layers with no world. Until
+#239's next stage, the core's traced external-call rule is still its rule
+with memory, lifted, so UB too, and validation still rejects a call to a
+declaration, so no valid module reaches it. That stage gives the core's
+traced rule its event and the world's answer, states the conditions of
+poison handed to the world below, and lets validation accept the call.
 
 - **One `call` op.** When `call` names an external declaration, the run
   hands the call to a new external-call rule of the dialect, given the
@@ -291,6 +296,12 @@ declarations run.
   out, which gives a call infinitely many outcomes; and handing poison to
   the world is UB, which an uninitialised buffer or struct padding passed
   to C would hit.
+- **Poison handed to the world, in the callee.** Congruence in the callee
+  over traced runs gains the condition that refined arguments gains: the
+  new module may not let escape what the old one did not. The human ruled
+  this on 2026-11-22, on #239 (Q5). Rejected: keep the theorem
+  unconditional, and ask that the new callee hold no pointer wherever the
+  old one returned or left poison.
 
 ## Scripts and native runs
 

@@ -17,7 +17,7 @@ pins their fingerprint; the build fails when the Lean changes under it.
 :::moduleDocs (fingerprint := "334346420242660595")
 :::
 
-:::readable Fir.Func.memRunsFrom_ret_iff Fir.Func.memRunsFrom_ub_iff Fir.Func.memRunsFrom_exhausted_iff_memRuns (pin := Fir.Func.memRuns) (fingerprint := "8023368753040260423")
+:::readable Fir.Func.memRunsFrom_ret_iff Fir.Func.memRunsFrom_ub_iff Fir.Func.memRunsFrom_exhausted_iff_memRuns (pin := Fir.Func.memRuns) (fingerprint := "6589594993919801242")
 *Theorems: runs from given memories are runs with memory.* Let the ops of
 the dialect ignore the memories where they touch none, at a layout and
 naming of its memories, and let $`f` reach no memory. Then

@@ -28,7 +28,7 @@ theorem emit_traceFinite :
     letI := DialectTrace.traceAt (d := EmitDialect) lay Empty.elim RunItems.empty
     OpsTraceFinite EmitDialect Nat Nat (TraceState Unit (unitsOf lay)) := by
   letI := DialectTrace.traceAt (d := EmitDialect) lay Empty.elim RunItems.empty
-  intro op _ args
+  refine ⟨fun op _ args => ?_, fun _ _ _ => TraceFinitelyMany.ub _⟩
   cases op with
   | emit =>
     refine ⟨fun _ s ans => ⟨(ans 0).toList.map fun n => (.nil, [⟨(0 : Nat), n⟩], s),
@@ -125,7 +125,8 @@ instance : DialectTrace OutDialect where
         | .ret, _ => MonadUB.ub "ret is a terminator"
       exit := fun
         | .out, _ => MonadUB.ub "out is not a terminator"
-        | .ret, _ => pure .ret }
+        | .ret, _ => pure .ret
+      extCall := fun _ _ _ => MonadUB.ub extCallUB }
 
 /-- In its traced semantics, `out` shows its operand with any answer, and
 keeps the traced state. -/
@@ -182,7 +183,7 @@ theorem out_traceFinite :
     letI := DialectTrace.traceAt (d := OutDialect) lay Empty.elim RunItems.empty
     OpsTraceFinite OutDialect I8 Nat (TraceState Unit (unitsOf lay)) := by
   letI := DialectTrace.traceAt (d := OutDialect) lay Empty.elim RunItems.empty
-  intro op _ args
+  refine ⟨fun op _ args => ?_, fun _ _ _ => TraceFinitelyMany.ub _⟩
   cases op with
   | out =>
     refine ⟨fun _ s ans => ⟨(ans 0).toList.map fun n => (.nil, [⟨outArg args, n⟩], s),
@@ -215,6 +216,15 @@ abbrev outRuns : FuncTraceRuns (HVector toType ([.int 8] : List Core.Ty))
     (DialectTrace.Acts OutDialect) (ObservedEnd (unitsOf lay) (fun _ => ()) (List (DVal OutDialect))) :=
   outMain.observedRuns lay Empty.elim RunItems.empty (fun _ => ()) outModule
 
+/-- Every function of the out dialect has its ops monotone in the traced
+layer, and its external-call rule, UB, too. -/
+theorem out_traceOpsMonotone (g : Func OutDialect) :
+    letI := DialectTrace.traceAt (d := OutDialect) lay Empty.elim RunItems.empty
+    g.TraceOpsMonotone (DialectTrace.Acts OutDialect) (TraceState Unit (unitsOf lay)) :=
+  letI := DialectTrace.traceAt (d := OutDialect) lay Empty.elim RunItems.empty
+  fun _ _ o _ => ⟨fun _ => out_monotone o.op,
+    fun _ _ _ => ExtTraceMonotone.of_ub (fun _ _ _ => rfl) _ _ _⟩
+
 /-- Refined operands: `outMain` run on poison is refined by `outMain` run on
 the value `5`, at every outcome, divergence included. The source shows the
 event poison where the target shows `5`, and gets the same answer. -/
@@ -223,7 +233,7 @@ theorem outMain_poison_isRefinedBy :
       traceObservable (outRuns (.cons (.value 5) .nil)) :=
   Func.traceRuns_isRefinedBy_of_args (M := outModule) (f := outMain) lay Empty.elim
     RunItems.empty (fun _ => ()) AddrRule.ignore Core.Ty.isRefinedBy_trans out_traceFinite
-    (fun _ _ _ _ o _ _ => out_monotone o.op) (fun _ _ o _ _ => out_monotone o.op) ⟨trivial, trivial⟩
+    (fun _ _ => out_traceOpsMonotone _) (out_traceOpsMonotone _) ⟨trivial, trivial⟩
 
 /-! # Axioms -/
 

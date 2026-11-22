@@ -161,6 +161,8 @@ theorem Module.memOps_ignoresMemory
     obtain ⟨h1, h2⟩ := ih _ (Nat.lt_succ_of_le (Nat.min_le_right _ _)) s f _ os _ T e hf hs htail
       hne hrun
     exact ⟨h1, (Func.memStepPath_iff hneT).2 (.callRet hreg hargs hT hc hg hen hx' hty hlen h2)⟩
+  | extUB hreg hargs hT hc hg hd =>
+    exact ⟨rfl, (Func.memStepPath_iff hneT).2 (.extUB hreg hargs hT hc hg hd)⟩
 
 /-- Every run from given memories of a function of `M` that reaches no
 memory ignores the memories: each way it ends from `S`, it ends from `T`

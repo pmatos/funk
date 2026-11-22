@@ -110,17 +110,24 @@ theorem advance_tree {R : Type} (fin : List (DVal d) → Memories N unit → R)
       endWith fin <$> kont M st (runAt (Func.runOps M (n + 1) f env.toEnv (o :: os)) S)
     rw [runOps_denote (Bool.of_not_eq_true h) (args_ok ha).1 (Bool.of_not_eq_true hT) hc,
       runAt_lift_bind, afterDenote_same (args_ok ha).2]
-  | case8 n f env o os S st h args env' ha hT s hc hg =>
+  | case8 n f env o os S st h args env' ha hT s hc hg hd =>
     show _ = endWith fin <$> kont M st (runAt (Func.runOps M (n + 1) f env.toEnv (o :: os)) S)
-    rw [runOps_noFunc (Bool.of_not_eq_true h) (args_ok ha).1 (Bool.of_not_eq_true hT) hc hg]
+    rw [runOps_ext (Bool.of_not_eq_true h) (args_ok ha).1 (Bool.of_not_eq_true hT) hc hg hd,
+      runAt_lift_bind]
+    show _ = endWith fin <$> kont M st (.ub extCallUB)
+    rw [kont_ub]; rfl
+  | case9 n f env o os S st h args env' ha hT s hc hg hd =>
+    show _ = endWith fin <$> kont M st (runAt (Func.runOps M (n + 1) f env.toEnv (o :: os)) S)
+    rw [runOps_noFunc (Bool.of_not_eq_true h) (args_ok ha).1 (Bool.of_not_eq_true hT) hc hg
+      (Bool.of_not_eq_true hd)]
     exact (kont_error M fin st _ S).symm
-  | case9 n f env o os S st h args env' ha hT s hc g hg e he =>
+  | case10 n f env o os S st h args env' ha hT s hc g hg e he =>
     show _ = endWith fin <$> kont M st (runAt (Func.runOps M (n + 1) f env.toEnv (o :: os)) S)
     have hf := enter_fits g args
     rw [he] at hf
     rw [runOps_enter (Bool.of_not_eq_true h) (args_ok ha).1 (Bool.of_not_eq_true hT) hc hg hf.error]
     exact (kont_error M fin st _ S).symm
-  | case10 n f env o os S st h args env' ha hT s hc g hg body genv he ih =>
+  | case11 n f env o os S st h args env' ha hT s hc g hg body genv he ih =>
     rw [ih]
     have hf := enter_fits g args
     rw [he] at hf
@@ -132,33 +139,33 @@ theorem advance_tree {R : Type} (fin : List (DVal d) → Memories N unit → R)
       runAt_bind, runAt_inFrame, ChoiceTree.bind_assoc, runOps_congr n g _ _ body (same_toEnv hag)]
     rw [← afterCall_same (args_ok ha).2]
     rfl
-  | case11 n f env o os st rs S env' hb ih =>
+  | case12 n f env o os st rs S env' hb ih =>
     rw [ih]
     obtain ⟨hE, hag⟩ := bindResults_ok (agrees_toEnv env) hb
     show endWith fin <$> kont M st (runAt (Func.runOps M n f env'.toEnv os) S) =
       endWith fin <$> kont M st (runAt (afterDenote M n f env.toEnv o os rs) S)
     rw [afterDenote, hE, liftExcept_ok_bind, runOps_congr n f _ _ os (same_toEnv hag)]
-  | case12 n f env o os st rs S e hb =>
+  | case13 n f env o os st rs S e hb =>
     show _ = endWith fin <$> kont M st (runAt (afterDenote M n f env.toEnv o os rs) S)
     rw [afterDenote, bindResults_error hb, liftExcept_error_bind]
     exact (kont_error M fin st _ S).symm
-  | case13 n f env o os st r =>
+  | case14 n f env o os st r =>
     show _ = endWith fin <$> kont M st (.ub r)
     rw [kont_ub]; rfl
-  | case14 n f env o os st e =>
+  | case15 n f env o os st e =>
     show _ = endWith fin <$> kont M st (.noOutcome e)
     rw [kont_noOutcome]; rfl
-  | case15 n f env o os st w c k =>
+  | case16 n f env o os st w c k =>
     show _ = endWith fin <$> kont M st (.choose w c fun b => _)
     rw [kont_choose]; rfl
-  | case16 n f env o args st S h ih =>
+  | case17 n f env o args st S h ih =>
     rw [ih]
     show _ = endWith fin <$> kont M st (runAt (afterExit M n f env.toEnv o args .ret) S)
     rw [afterExit, ite_eq_left h]; rfl
-  | case17 n f env o args st S h =>
+  | case18 n f env o args st S h =>
     show _ = endWith fin <$> kont M st (runAt (afterExit M n f env.toEnv o args .ret) S)
     rw [afterExit, ite_eq_right h]; exact (kont_error M fin st _ S).symm
-  | case18 n f env o args st i S b env' hj ih =>
+  | case19 n f env o args st i S b env' hj ih =>
     rw [ih]
     have hf := jump_fits (agrees_toEnv env) f o.succs i
     rw [hj] at hf
@@ -166,22 +173,22 @@ theorem advance_tree {R : Type} (fin : List (DVal d) → Memories N unit → R)
     show endWith fin <$> kont M st (runAt (Func.runOps M n f env'.toEnv b.body) S) =
       endWith fin <$> kont M st (runAt (afterExit M n f env.toEnv o args (.goto i)) S)
     rw [afterExit, hE, liftExcept_ok_bind, runOps_congr n f _ _ b.body (same_toEnv hag)]
-  | case19 n f env o args st i S e hj =>
+  | case20 n f env o args st i S e hj =>
     have hf := jump_fits (agrees_toEnv env) f o.succs i
     rw [hj] at hf
     show _ = endWith fin <$> kont M st (runAt (afterExit M n f env.toEnv o args (.goto i)) S)
     rw [afterExit, hf.error, liftExcept_error_bind]; exact (kont_error M fin st _ S).symm
-  | case20 n f env o args st r =>
+  | case21 n f env o args st r =>
     show _ = endWith fin <$> kont M st (.ub r)
     rw [kont_ub]; rfl
-  | case21 n f env o args st e =>
+  | case22 n f env o args st e =>
     show _ = endWith fin <$> kont M st (.noOutcome e)
     rw [kont_noOutcome]; rfl
-  | case22 n f env o args st w c k =>
+  | case23 n f env o args st w c k =>
     show _ = endWith fin <$> kont M st (.choose w c fun b => _)
     rw [kont_choose]; rfl
-  | case23 vs k S => rfl
-  | case24 vs k S fr st h env' hb ih =>
+  | case24 vs k S => rfl
+  | case25 vs k S fr st h env' hb ih =>
     rw [ih]
     obtain ⟨hE, hag⟩ := bind_ok (agrees_toEnv fr.env) hb
     show endWith fin <$> kont M st (runAt (Func.runOps M (min k fr.n) fr.f env'.toEnv fr.os) S.exit) =
@@ -189,12 +196,12 @@ theorem advance_tree {R : Type} (fin : List (DVal d) → Memories N unit → R)
         (.ret (vs, k))) S.exit)
     rw [afterCall, ite_eq_left h, hE, liftExcept_ok_bind,
       runOps_congr _ fr.f _ _ fr.os (same_toEnv hag)]
-  | case25 vs k S fr st h e hb =>
+  | case26 vs k S fr st h e hb =>
     show _ = endWith fin <$> kont M st (runAt (afterCall M fr.n fr.f fr.env.toEnv fr.o fr.os fr.s
       (.ret (vs, k))) S.exit)
     rw [afterCall, ite_eq_left h, bind_error hb, liftExcept_error_bind]
     exact (kont_error M fin st _ _).symm
-  | case26 vs k S fr st h =>
+  | case27 vs k S fr st h =>
     show _ = endWith fin <$> kont M st (runAt (afterCall M fr.n fr.f fr.env.toEnv fr.o fr.os fr.s
       (.ret (vs, k))) S.exit)
     rw [afterCall, ite_eq_right h]; exact (kont_error M fin st _ _).symm

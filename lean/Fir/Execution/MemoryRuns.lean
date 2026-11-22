@@ -132,6 +132,12 @@ theorem DialectDenote.liftState_mapsDenote (σ : Type) [DialectDenote d m] :
     (MonadMorphism.liftState m σ).MapsDenote (d := d) (n := StateT σ m) :=
   ⟨fun _ _ => rfl, fun _ _ => rfl⟩
 
+omit [DialectSignature d] in
+/-- Lifting into the layer maps the external-call rule to its lift. -/
+theorem MonadMorphism.liftState_mapsExtCall (σ : Type) [DialectExtCall d m] :
+    (MonadMorphism.liftState m σ).MapsExtCall (d := d) (n := StateT σ m) :=
+  fun _ _ _ => rfl
+
 omit [Monad m] [LawfulMonad m] in
 /-- Two semantics of a dialect in one monad are the same when each op means
 the same in both, and each terminator goes to the same places. -/
@@ -199,6 +205,7 @@ theorem Func.memRun_eq [DialectDenote d SetM] (M : Module d) (f : Func d)
     (f.run M (m := StateT (Memories N unit) SetM) args fuel).run S =
       (fun r => (r, S)) <$> (f.run M (m := SetM) args fuel).run := by
   rw [← Func.run_map (DialectDenote.liftState_mapsDenote (Memories N unit))
+    (MonadMorphism.liftState_mapsExtCall (Memories N unit))
     (MonadMorphism.liftState_mapsFrame (fun _ => rfl)) M f args fuel]
   simp [MonadMorphism.except, MonadMorphism.liftState, StateT.lift, ExceptT.run, ExceptT.mk]
 

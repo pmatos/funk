@@ -78,7 +78,7 @@ theorem Module.replaceBody_memCallsRefined {M : Module d}
     { params := rfl
       refines := fun a a' S S' ha hS => Behaviour.isRefinedBy_trans hobs
         (Func.memRunsFrom_args_isRefinedBy M hmono g (hmono g hg) ha hS) (h (a', S')) }
-  intro x
+  refine ⟨fun x => ?_, fun _ _ _ => Module.declares_replaceBody _ _ _ _ _ _⟩
   by_cases hx : x = g.name
   · subst hx
     exact .inr ⟨g, _, Module.func?_of_mem hnd hg, Module.func?_replaceBody_self hnd hg b, bb⟩

@@ -110,7 +110,8 @@ theorem Module.not_callChain_of_seq {d : Dialect} [TyDenote d.Ty] [DialectSignat
 
 variable {E Ans : Type} {Mem : Type} {unit : Mem → Nat} [DecidableEq Mem]
   {d : Dialect} [TyDenote d.Ty] [DecidableEq d.Ty] [DialectSignature d] [DialectCall d]
-  [DialectDenote d (TraceM (Step (Act E Ans)) (TraceState Mem unit))] {M : Module d}
+  [DialectDenote d (TraceM (Step (Act E Ans)) (TraceState Mem unit))]
+  [DialectExtCall d (TraceM (Step (Act E Ans)) (TraceState Mem unit))] {M : Module d}
 
 /-- A branch of the target: configurations `c`, each going on by the move of
 the marked trace `t i` and the fuel `F i` to the next, each showing the stream

@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Truncating a traced run: readable blocks" =>
 
-:::moduleDocs (fingerprint := "2126016372777906657")
+:::moduleDocs (fingerprint := "13273725330195052366")
 :::
 
 :::readable Fir.TraceEnd.Truncated Fir.TraceEnd.Cut (fingerprint := "703612785105317921")
@@ -40,8 +40,9 @@ is a cut one step of fuel later.
 *Theorem.* A cut is not stuck.
 :::
 
-:::readable Fir.Func.traceOps_cut (fingerprint := "7555984899333044991")
-*Theorem: truncation.* When every path of every op shows exactly one step,
+:::readable Fir.Func.traceOps_cut (fingerprint := "9151832986990566632")
+*Theorem: truncation.* When every path of every op and
+of every external call shows exactly one step,
 and $`W > 0` exceeds the length of every chain of calls of the module by at
 least one, each path of a traced run of ops with $`n + j` steps of fuel
 that is not stuck has a cut among the paths of the run with $`n`, from the

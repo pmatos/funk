@@ -134,6 +134,26 @@ it (ADR-2026-10-29-2009). Rejected: a call effect as a class on the monad, like
 `MonadChoice`, since the set monad has no module and `denote` cannot see the
 budget.
 
+A call whose symbol names no function of the module, but an external
+declaration whose signature accepts the call's operand and result types
+(`Module.declares`), runs by the external-call rule
+(`lean/Fir/Execution/ExtCall.lean`): it takes one step, as an op that runs
+by its own rule does, and binds the values the rule gives, which must have
+the call's result types. The rule is a part of the semantics of its own,
+`DialectExtCall`, given the symbol, the arguments and the result types, so
+that an indirect call (#235) whose pointer names a declaration can reuse it
+with the symbol it picks when it runs. A symbol that names neither leaves
+the path stuck. In the layers with no world, the set monad, the tree of
+choices and the layer with memory over them, the rule is UB, for every
+dialect, as a stand-in; in the traced layer each dialect gives it
+(`DialectTrace.traceAt`). Each generic theorem over runs treats the rule
+as a step: its obligations ask the rule in the traced layer to be monotone
+(`ExtTraceMonotone`), to have finitely many outcomes and to show one step,
+beside each op's (ADR-2026-10-29-2009). The human ruled this on 2026-11-21,
+on #239 (Q1 and Q2). Rejected: a separate op, `call_extern`, valid only on a
+declaration, which an indirect call through a pointer to a declaration
+could not use.
+
 `call` has no entry in `Core.Op.denote?`, so its `denote` has no outcome in the
 set monad. The interpreter never reaches it. Where the spec counts which ops
 have rules, an op with a callee has them. A statement proved op by op must leave

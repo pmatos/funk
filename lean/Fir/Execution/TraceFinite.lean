@@ -31,6 +31,11 @@ recorded on `docs/decisions/semantics-m1-trace-refinement.md`. The toy `emit` of
 `FirTest.TraceDialect`, which shows one event and takes any answer, meets
 it: the stream fixes the answer.
 
+A call to an external declaration runs by the dialect's external-call rule
+(`Fir.Execution.ExtCall`), so the hypothesis asks the same of it: every
+external call has finitely many outcomes, given the world's answers. A rule
+that is UB has one.
+
 Two ways of building an op's semantics keep the hypothesis:
 
 * _The step before an op._ In the traced layer of marked traces, an op runs
@@ -156,37 +161,53 @@ theorem FinitelyMany.liftMem {Mem : Type} {unit : Mem → Nat}
     exact List.mem_map.2 ⟨(a, S'), hL _ hc, rfl⟩
   · cases he
 
+omit [HRefinement E E] in
+/-- UB has finitely many outcomes: none that is a result. -/
+theorem TraceFinitelyMany.ub (r : String) :
+    TraceFinitelyMany (E := E) (Ans := Ans) (MonadUB.ub r : TraceM (Act E Ans) σ α) :=
+  fun _ _ => ⟨[], fun _ _ _ h _ => nomatch h⟩
+
 /-! # Ops of finitely many outcomes -/
 
 /-- Every op of `d` that runs by its own rule, a terminator or an op with no
 callee, has finitely many outcomes in the traced layer, given the world's
 answers, from each operands, as an op that is not a terminator and as a
-terminator. -/
+terminator; and so has the external-call rule, from each arguments. -/
 def OpsTraceFinite (d : Dialect) [TyDenote d.Ty] [DialectSignature d] [DialectCall d]
-    (E Ans σ : Type) [DialectDenote d (TraceM (Act E Ans) σ)] : Prop :=
-  ∀ op : d.Op, isTerminator op = true ∨ callee? op = none → ∀ args : HVector toType (sig op),
+    (E Ans σ : Type) [DialectDenote d (TraceM (Act E Ans) σ)]
+    [DialectExtCall d (TraceM (Act E Ans) σ)] : Prop :=
+  (∀ op : d.Op, isTerminator op = true ∨ callee? op = none → ∀ args : HVector toType (sig op),
     (isTerminator op = false →
       TraceFinitelyMany (DialectDenote.denote (m := TraceM (Act E Ans) σ) op args)) ∧
     (isTerminator op = true →
-      TraceFinitelyMany (DialectDenote.exit (m := TraceM (Act E Ans) σ) op args))
+      TraceFinitelyMany (DialectDenote.exit (m := TraceM (Act E Ans) σ) op args))) ∧
+  ∀ (g : Name) (args : List (DVal d)) (rs : List d.Ty),
+    TraceFinitelyMany (DialectExtCall.extCall (m := TraceM (Act E Ans) σ) g args rs)
 
-/-- Every op of `d` that runs by its own rule has finitely many outcomes in
-the traced layer of marked traces, given the world's answers. -/
+/-- Every op of `d` that runs by its own rule, and the external-call rule,
+has finitely many outcomes in the traced layer of marked traces, given the
+world's answers. -/
 def OpsStepFinite (d : Dialect) [TyDenote d.Ty] [DialectSignature d] [DialectCall d]
-    (E Ans σ : Type) [DialectDenote d (TraceM (Step (Act E Ans)) σ)] : Prop :=
-  ∀ op : d.Op, isTerminator op = true ∨ callee? op = none → ∀ args : HVector toType (sig op),
+    (E Ans σ : Type) [DialectDenote d (TraceM (Step (Act E Ans)) σ)]
+    [DialectExtCall d (TraceM (Step (Act E Ans)) σ)] : Prop :=
+  (∀ op : d.Op, isTerminator op = true ∨ callee? op = none → ∀ args : HVector toType (sig op),
     (isTerminator op = false →
       StepFinitelyMany (DialectDenote.denote (m := TraceM (Step (Act E Ans)) σ) op args)) ∧
     (isTerminator op = true →
-      StepFinitelyMany (DialectDenote.exit (m := TraceM (Step (Act E Ans)) σ) op args))
+      StepFinitelyMany (DialectDenote.exit (m := TraceM (Step (Act E Ans)) σ) op args))) ∧
+  ∀ (g : Name) (args : List (DVal d)) (rs : List d.Ty),
+    StepFinitelyMany (DialectExtCall.extCall (m := TraceM (Step (Act E Ans)) σ) g args rs)
 
 /-- Every path of every op of `d` shows exactly one step, from every traced
-state, as an op that is not a terminator and as a terminator. -/
+state, as an op that is not a terminator and as a terminator; and so does
+every path of the external-call rule. -/
 def OpsOneStep (d : Dialect) [TyDenote d.Ty] [DialectSignature d] (A σ : Type)
-    [DialectDenote d (TraceM (Step A) σ)] : Prop :=
-  ∀ (op : d.Op) (args : HVector toType (sig op)) (s : σ),
+    [DialectDenote d (TraceM (Step A) σ)] [DialectExtCall d (TraceM (Step A) σ)] : Prop :=
+  (∀ (op : d.Op) (args : HVector toType (sig op)) (s : σ),
     (∀ e, DialectDenote.denote (m := TraceM (Step A) σ) op args s e → Step.ticks e.trace = 1) ∧
-    (∀ e, DialectDenote.exit (m := TraceM (Step A) σ) op args s e → Step.ticks e.trace = 1)
+    (∀ e, DialectDenote.exit (m := TraceM (Step A) σ) op args s e → Step.ticks e.trace = 1)) ∧
+  ∀ (g : Name) (args : List (DVal d)) (rs : List d.Ty) (s : σ) e,
+    DialectExtCall.extCall (m := TraceM (Step A) σ) g args rs s e → Step.ticks e.trace = 1
 
 /-- After a step, each act of its traces an act of the marked trace, every
 path of a computation shows exactly one step. -/
@@ -215,7 +236,8 @@ exactly one step, the one before the op. -/
 theorem DialectTrace.stepAt_oneStep [DialectTrace d] :
     letI := DialectTrace.stepAt (d := d) lay ρ L
     OpsOneStep d (DialectTrace.Acts d) (TraceState N (unitsOf lay)) :=
-  fun _ _ _ => ⟨fun _ h => TraceM.step_ticks h, fun _ h => TraceM.step_ticks h⟩
+  ⟨fun _ _ _ => ⟨fun _ h => TraceM.step_ticks h, fun _ h => TraceM.step_ticks h⟩,
+    fun _ _ _ _ _ h => TraceM.step_ticks h⟩
 
 variable [DialectCall d]
 
@@ -227,25 +249,30 @@ theorem OpsTraceFinite.stepAt [DialectTrace d]
       OpsTraceFinite d (DialectTrace.Event d) (DialectTrace.Answer d) (TraceState N (unitsOf lay))) :
     letI := DialectTrace.stepAt (d := d) lay ρ L
     OpsStepFinite d (DialectTrace.Event d) (DialectTrace.Answer d) (TraceState N (unitsOf lay)) :=
-  fun op hop args => ⟨fun hT => ((h op hop args).1 hT).step, fun hT => ((h op hop args).2 hT).step⟩
+  ⟨fun op hop args => ⟨fun hT => ((h.1 op hop args).1 hT).step,
+    fun hT => ((h.1 op hop args).2 hT).step⟩, fun g args rs => (h.2 g args rs).step⟩
 
 /-- In a dialect's traced semantics where each op lifts its rule with
 memory, ops of finitely many outcomes with memory have finitely many in the
 traced layer, given the world's answers. -/
 theorem OpsTraceFinite.ofLift [DialectMemDenote d] [DialectTrace d]
     (hl : ∀ op : d.Op, OpLiftsMem lay ρ L op)
+    (hlx : letI := DialectTrace.traceAt (d := d) lay ρ L
+      (MonadMorphism.traceMem N (unitsOf lay) (DialectTrace.Acts d)).MapsExtCall (d := d))
     (h : letI := DialectMemDenote.denoteAt (d := d) lay ρ L
       OpsFinite d N (unitsOf lay)) :
     letI := DialectTrace.traceAt (d := d) lay ρ L
     OpsTraceFinite d (DialectTrace.Event d) (DialectTrace.Answer d) (TraceState N (unitsOf lay)) := by
   letI := DialectMemDenote.denoteAt (d := d) lay ρ L
   letI := DialectTrace.traceAt (d := d) lay ρ L
-  intro op hop args
-  refine ⟨fun hT => ?_, fun hT => ?_⟩
+  refine ⟨fun op hop args => ⟨fun hT => ?_, fun hT => ?_⟩, fun g args rs => ?_⟩
   · rw [← (hl op args).1]
     exact FinitelyMany.liftMem ((h op hop args).1 hT)
   · rw [← (hl op args).2]
     exact FinitelyMany.liftMem ((h op hop args).2 hT)
+  · rw [← hlx g args rs]
+    refine FinitelyMany.liftMem (fun _ => ⟨[], fun _ hx => ?_⟩)
+    cases (extCall_stateT_setM _ _ _ _ _).1 hx
 
 /-- In the traced semantics of a dialect whose ops show no event, ops of
 finitely many outcomes with memory have finitely many in the traced layer,
@@ -257,7 +284,7 @@ theorem OpsTraceFinite.ofMem [DialectMemDenote d]
     letI := DialectTrace.traceAt (d := d) lay ρ L
     OpsTraceFinite d (DialectTrace.Event d) (DialectTrace.Answer d) (TraceState N (unitsOf lay)) :=
   letI := DialectTrace.ofMem d
-  OpsTraceFinite.ofLift lay ρ L (OpLiftsMem.ofMem lay ρ L) h
+  OpsTraceFinite.ofLift lay ρ L (OpLiftsMem.ofMem lay ρ L) (fun _ _ _ => rfl) h
 
 end
 

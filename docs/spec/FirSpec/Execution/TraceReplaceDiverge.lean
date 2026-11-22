@@ -14,18 +14,20 @@ changes under it.
 
 #doc (Manual) "Congruence in the callee over traced runs, divergence included: readable blocks" =>
 
-:::moduleDocs (fingerprint := "4703184226879061558")
+:::moduleDocs (fingerprint := "17610753270981007049")
 :::
 
 :::readable Fir.Stream.IsRefinedBy.closed (fingerprint := "5280672388205635261")
 *Theorem.* A stream refined by a closed stream is closed.
 :::
 
-:::readable Fir.Func.traceRunsFrom_isRefinedBy_of_calls (fingerprint := "7692588329662481244")
+:::readable Fir.Func.traceRunsFrom_isRefinedBy_of_calls (fingerprint := "3291851347794863516")
 *Theorem: refinement when calls are refined.* For a dialect whose ops show
 events, let $`M'` run each call in the traced layer as $`M` does, every
 terminator and every op with no callee of $`f` and of $`M`'s functions be
-monotone in the traced layer, and every op have finitely many outcomes given
+monotone in the traced layer,
+the external-call rule at each of their calls included, and every op and every
+external call have finitely many outcomes given
 the world's answers. On arguments $`\vec{v} \sqsubseteq \vec{v}'`, a poison by
 any value, and from traced states $`s \sqsubseteq s'`, the traced runs of
 $`f` in $`M'` from $`(\vec{v}', s')` refine those of $`f` in $`M` from
@@ -44,11 +46,13 @@ refine others give traced runs, each return seen at its end,
 that refine theirs.
 :::
 
-:::readable Fir.Func.traceRunsFrom_replaceBody_isRefinedBy Fir.Func.traceRuns_replaceBody_isRefinedBy (fingerprint := "16302206250279641063")
+:::readable Fir.Func.traceRunsFrom_replaceBody_isRefinedBy Fir.Func.traceRuns_replaceBody_isRefinedBy (fingerprint := "3136690538283535608")
 *Theorems: congruence in the callee, divergence included.* For a dialect
 whose ops show events, let the symbols of $`M` be unique, every terminator
 and every op with no callee of its functions be monotone in the traced
-layer, every op have finitely many outcomes given the world's answers, and
+layer,
+the external-call rule at each of their calls included, every op and every
+external call have finitely many outcomes given the world's answers, and
 refinement of values be reflexive and transitive and refinement of events
 transitive. Replace the
 body of its function $`g` by $`b`, so that $`g`, run in the new module $`M'`

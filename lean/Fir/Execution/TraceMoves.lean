@@ -15,6 +15,8 @@ A configuration goes on to another by a _move_ (`TCfg.Move`):
 
 * an op that runs by its own rule, a terminator that jumps among them, with
   one of its outcomes: its marked trace, of one step, and one step of fuel;
+* a call of an external declaration, with one of the external-call rule's
+  outcomes: its marked trace, of one step, and one step of fuel;
 * a call that enters its callee: no marked trace of its own, and one step of
   fuel;
 * a call whose callee returns at the budget `U`: the callee's marked trace,
@@ -46,7 +48,8 @@ structure TCfg (d : Dialect) [TyDenote d.Ty] [DialectSignature d] (Mem : Type) (
 
 variable {A : Type} {Mem : Type} {unit : Mem → Nat} [DecidableEq Mem]
   {d : Dialect} [TyDenote d.Ty] [DecidableEq d.Ty] [DialectSignature d] [DialectCall d]
-  [DialectDenote d (TraceM (Step A) (TraceState Mem unit))] {M : Module d}
+  [DialectDenote d (TraceM (Step A) (TraceState Mem unit))]
+  [DialectExtCall d (TraceM (Step A) (TraceState Mem unit))] {M : Module d}
 
 variable (A) in
 /-- The marked traces of the paths of a configuration's run in the module `M`
@@ -74,6 +77,16 @@ inductive TCfg.Move (M : Module d) : TCfg d Mem unit → TCfg d Mem unit → Lis
       DialectDenote.denote (m := TraceM (Step A) (TraceState Mem unit)) o.op args s (.ok (rs, t, s₁)) →
       (o.results.map (·.1)).length = rs.toDVals.length →
       TCfg.Move M ⟨f, env, o :: os, s⟩ ⟨f, (o.results.map (·.1)).zip rs.toDVals ++ env, os, s₁⟩ t 1
+  | ext {f : Func d} {env : Env d} {o : Operation d} {os : List (Operation d)}
+      {s s₁ : TraceState Mem unit} {args : HVector toType (sig o.op)} {sym : Name}
+      {vs : List (DVal d)} {t : List (Step A)} :
+      o.ownsCoreRegion = false → env.operands (sig o.op) o.operands = .ok args →
+      isTerminator o.op = false → callee? o.op = some sym → M.func? sym = none →
+      M.declares sym (sig o.op) (returnTypes o.op) = true →
+      DialectExtCall.extCall (m := TraceM (Step A) (TraceState Mem unit)) sym args.toDVals
+        (returnTypes o.op) s (.ok (vs, t, s₁)) →
+      vs.map (·.1) = returnTypes o.op → (o.results.map (·.1)).length = vs.length →
+      TCfg.Move M ⟨f, env, o :: os, s⟩ ⟨f, (o.results.map (·.1)).zip vs ++ env, os, s₁⟩ t 1
   | goto {f : Func d} {env env₁ : Env d} {o : Operation d} {os : List (Operation d)}
       {s s₁ : TraceState Mem unit} {args : HVector toType (sig o.op)} {i : Nat} {t : List (Step A)}
       {b : Block d} :
@@ -186,13 +199,19 @@ theorem TCfg.Move.tStep (hone : OpsOneStep d A (TraceState Mem unit)) {c c₁ : 
   | denote hreg hargs hT hc hx hlen =>
     refine one (fun n₁ mt₁ ⟨s₂, h₁⟩ => ⟨s₂, (Func.tStepPath_iff (TraceEnd.notStuck_ok _ _ _)).2
       (.denote hreg hargs hT hc hx hlen h₁)⟩) ?_
-    have := (hone _ _ _).1 _ hx
+    have := (hone.1 _ _ _).1 _ hx
+    simp only [TraceEnd.trace] at this
+    omega
+  | ext hreg hargs hT hc hg hd hx hty hlen =>
+    refine one (fun n₁ mt₁ ⟨s₂, h₁⟩ => ⟨s₂, (Func.tStepPath_iff (TraceEnd.notStuck_ok _ _ _)).2
+      (.ext hreg hargs hT hc hg hd hx hty hlen h₁)⟩) ?_
+    have := hone.2 _ _ _ _ _ hx
     simp only [TraceEnd.trace] at this
     omega
   | goto hreg hargs hT hos hx hj =>
     refine one (fun n₁ mt₁ ⟨s₂, h₁⟩ => ⟨s₂, (Func.tStepPath_iff (TraceEnd.notStuck_ok _ _ _)).2
       (.goto hreg hargs hT hos hx hj h₁)⟩) ?_
-    have := (hone _ _ _).2 _ hx
+    have := (hone.1 _ _ _).2 _ hx
     simp only [TraceEnd.trace] at this
     omega
   | enter hreg hargs hT hc hg hen =>
@@ -235,6 +254,8 @@ theorem TCfg.Move.ub {c c₁ : TCfg d Mem unit} {t : List (Step A)} {F : Nat}
     fun hp => (Func.tStepPath_iff (TraceEnd.notStuck_error _ _)).2 hp
   cases h with
   | denote hreg hargs hT hc hx hlen => exact ⟨_, mk (.denote hreg hargs hT hc hx hlen h₁)⟩
+  | ext hreg hargs hT hc hg hd hx hty hlen =>
+    exact ⟨_, mk (.ext hreg hargs hT hc hg hd hx hty hlen h₁)⟩
   | goto hreg hargs hT hos hx hj => exact ⟨_, mk (.goto hreg hargs hT hos hx hj h₁)⟩
   | enter hreg hargs hT hc hg hen =>
     exact ⟨_, mk (.callUB hreg hargs hT hc hg hen ((TraceM.run_inFrame _ _ _).2 ⟨_, h₁, rfl⟩))⟩
@@ -251,11 +272,15 @@ theorem TCfg.Move.callHead (hone : OpsOneStep d A (TraceState Mem unit)) {c c₁
     M.callHead? c.os = some c₁.os := by
   cases h with
   | denote _ _ _ _ hx =>
-    have := (hone _ _ _).1 _ hx
+    have := (hone.1 _ _ _).1 _ hx
+    simp only [TraceEnd.trace] at this
+    omega
+  | ext _ _ _ _ _ _ hx =>
+    have := hone.2 _ _ _ _ _ hx
     simp only [TraceEnd.trace] at this
     omega
   | goto _ _ _ _ hx =>
-    have := (hone _ _ _).2 _ hx
+    have := (hone.1 _ _ _).2 _ hx
     simp only [TraceEnd.trace] at this
     omega
   | enter _ _ hT hc hg hen => exact Module.callHead?_call _ hT hc hg hen

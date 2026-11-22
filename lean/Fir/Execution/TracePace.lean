@@ -4,8 +4,8 @@ import Fir.Execution.TraceFinite
 /-!
 # The fuel of a return
 
-In the traced layer of marked traces, let every path of every op show exactly
-one step, as it does when each op runs after a step
+In the traced layer of marked traces, let every path of every op and of
+every external call show exactly one step, as it does when each op runs after a step
 (`DialectTrace.stepAt_oneStep`), and let `W` exceed the length of every
 chain of calls of the module by at least one (`Module.exists_callBound`).
 Then a return of a run of ops spends fuel in proportion to its steps: a run
@@ -19,8 +19,8 @@ trace of `m` steps, has
   `n - k ≤ W (m - 1) + c + 1`.
 
 The proof follows the ways a step goes on, by strong induction on the
-budget. An op that runs by its own rule shows one step and spends one step
-of fuel, and the run goes on from ops whose chain is shorter than `W`. A
+budget. An op that runs by its own rule, or a call of an external
+declaration, shows one step and spends one step of fuel, and the run goes on from ops whose chain is shorter than `W`. A
 call spends one step of fuel and starts the chain of its callee's entry
 block, one call longer; its callee returns, and the caller goes on.
 -/
@@ -31,7 +31,8 @@ open Memory
 
 variable {d : Dialect} [TyDenote d.Ty] [DecidableEq d.Ty] [DialectSignature d] [DialectCall d]
   {Mem : Type} {unit : Mem → Nat} [DecidableEq Mem] {A : Type}
-  [DialectDenote d (TraceM (Step A) (TraceState Mem unit))] {M : Module d}
+  [DialectDenote d (TraceM (Step A) (TraceState Mem unit))]
+  [DialectExtCall d (TraceM (Step A) (TraceState Mem unit))] {M : Module d}
 
 /-- A return of a run of the ops `os` with `n` steps of fuel is paced by `W`:
 it leaves `k` steps after a marked trace of `m` steps, with `k + m ≤ n`,
@@ -43,7 +44,8 @@ def TraceEnd.RetPaced (M : Module d) (W n : Nat) (os : List (Operation d)) :
       ∃ c, M.CallChain os c ∧ n + W ≤ k + W * Step.ticks mt + c + 1
   | _ => True
 
-omit [DecidableEq d.Ty] [DecidableEq Mem] [DialectDenote d (TraceM (Step A) (TraceState Mem unit))] in
+omit [DecidableEq d.Ty] [DecidableEq Mem] [DialectDenote d (TraceM (Step A) (TraceState Mem unit))]
+    [DialectExtCall d (TraceM (Step A) (TraceState Mem unit))] in
 /-- A return paced from the ops `os₁` with `m` steps, after the trace `t` of
 one step, is paced from ops that start no call with `m + 1` steps. -/
 theorem TraceEnd.RetPaced.after_step {W m : Nat} {os₁ os : List (Operation d)}
@@ -78,16 +80,20 @@ theorem Func.traceOps_retPaced (hone : OpsOneStep d A (TraceState Mem unit)) {W 
       cases (Func.tStepPath_iff hne).1 he with
       | exitUB => trivial
       | ret _ _ hT _ hx =>
-        have ht := (hone _ _ _).2 _ hx
+        have ht := (hone.1 _ _ _).2 _ hx
         refine ⟨?_, ?_, 0, .stop (Module.callHead?_terminator os hT), ?_⟩ <;>
           simp only [TraceEnd.trace] at ht <;> simp only [ht] <;> omega
       | goto _ _ hT _ hx _ h =>
         exact (ih n (Nat.lt_succ_self n) _ _ _ _ _ h (TraceEnd.NotStuck.of_after hne)).after_step
-          hW (Module.callHead?_terminator os hT) ((hone _ _ _).2 _ hx)
+          hW (Module.callHead?_terminator os hT) ((hone.1 _ _ _).2 _ hx)
       | denoteUB => trivial
       | denote _ _ _ hc hx _ h =>
         exact (ih n (Nat.lt_succ_self n) _ _ _ _ _ h (TraceEnd.NotStuck.of_after hne)).after_step
-          hW (Module.callHead?_noCallee os hc) ((hone _ _ _).1 _ hx)
+          hW (Module.callHead?_noCallee os hc) ((hone.1 _ _ _).1 _ hx)
+      | extUB => trivial
+      | ext _ _ hT hc hg _ hx _ _ h =>
+        exact (ih n (Nat.lt_succ_self n) _ _ _ _ _ h (TraceEnd.NotStuck.of_after hne)).after_step
+          hW (Module.callHead?_noFunc os hT hc hg) (hone.2 _ _ _ _ _ hx)
       | callUB => trivial
       | callExh => trivial
       | @callRet args sym g body genv vs k₁ tc s₁ e₂ _ _ hT hc hg hen hx _ _ h =>

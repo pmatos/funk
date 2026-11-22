@@ -14,11 +14,13 @@ answers with their results and its actions on escaped memory. Its traced
 semantics runs each op by its rule with memory, lifted onto the memories of
 the traced state: no op shows an event. An external call is not an op's
 rule: the run hands a call to a declaration to the core's external-call
-rule, which shows the event (the human's ruling of 2026-11-21 on #239, Q1),
-and that rule arrives with calls to declarations. Until then the core's
-traced semantics lifts its semantics with memory, and its traced runs show
-no act, let nothing escape, and end as its runs with memory, each return
-seen at its end (`Fir.Execution.TraceLift`).
+rule (`Fir.Execution.ExtCall`), which is to show the event (the human's
+ruling of 2026-11-21 on #239, Q1). Until #239's next stage gives it that
+event and the world's answer, the core's external-call rule is its rule
+with memory, UB, lifted, so the core's traced semantics lifts its semantics
+with memory, and its traced runs show no act, let nothing escape, and end
+as its runs with memory, each return seen at its end
+(`Fir.Execution.TraceLift`).
 
 Two of the core's guarantees hold over its traced runs, the spec's, which
 compare no addresses at the end of a return (`Func.observedRuns`), and at
@@ -37,9 +39,10 @@ every world, with no hypothesis beyond those they have with memory:
 Its ops meet the obligation of the traced layer for a dialect that shows
 events (`Fir.Execution.TraceObligations`): each runs by its rule with
 memory, lifted, and is monotone with memory, and the lift onto the traced
-state keeps it. They also meet the hypothesis of that layer's divergence
-(`Fir.Execution.TraceFinite`): each has finitely many outcomes with memory,
-so finitely many given the world's answers.
+state keeps it; its external-call rule, UB, is monotone too. They also meet
+the hypothesis of that layer's divergence (`Fir.Execution.TraceFinite`):
+each has finitely many outcomes with memory, so finitely many given the
+world's answers, and an external call has one, UB.
 
 So both are proved by the traced layer's own theorems for a dialect that
 shows events: refined arguments by `Fir.Execution.TraceDiverge`, a proof
@@ -68,7 +71,9 @@ instance Core.instDialectTrace : DialectTrace CoreDialect where
   traceAt lay ρ L :=
     letI := DialectMemDenote.denoteAt (d := CoreDialect) lay ρ L
     { denote op args := TraceM.liftMem (DialectDenote.denote op args)
-      exit op args := TraceM.liftMem (DialectDenote.exit op args) }
+      exit op args := TraceM.liftMem (DialectDenote.exit op args)
+      extCall g args rs := TraceM.liftMem
+        (DialectExtCall.extCall (m := StateT (Memory.Memories _ (unitsOf lay)) SetM) g args rs) }
 
 /-- The core's traced semantics lifts its semantics with memory: no op shows
 an event. -/
@@ -76,7 +81,8 @@ instance Core.liftsMem : LiftsMem CoreDialect :=
   ⟨fun lay ρ L => by
     letI := DialectMemDenote.denoteAt (d := CoreDialect) lay ρ L
     letI := DialectTrace.traceAt (d := CoreDialect) lay ρ L
-    exact ⟨fun _ _ => rfl, fun _ _ => rfl⟩⟩
+    exact ⟨fun _ _ => rfl, fun _ _ => rfl⟩,
+   fun _ _ _ => fun _ _ _ => rfl⟩
 
 /-- The world's default answer to a core event: no results and no actions. -/
 instance Core.instInhabitedAnswer : Inhabited (DialectTrace.Answer CoreDialect) := ⟨([], [])⟩
@@ -99,7 +105,7 @@ lift onto the traced state keeps it. -/
 theorem traceOpsMonotone (g : Func CoreDialect) :
     letI := DialectTrace.traceAt (d := CoreDialect) lay ρ L
     g.TraceOpsMonotone (DialectTrace.Acts CoreDialect) (TraceState N (unitsOf lay)) :=
-  Func.TraceOpsMonotone.ofLift lay ρ L (opLiftsMem lay ρ L)
+  Func.TraceOpsMonotone.ofLift lay ρ L (opLiftsMem lay ρ L) (fun _ _ _ => rfl)
     fun _ _ o _ hc => Op.memMonotone_all o.op hc lay ρ L
 
 /-- Every core op that runs by its own rule has finitely many outcomes in
@@ -111,7 +117,7 @@ theorem opsTraceFinite :
     letI := DialectTrace.traceAt (d := CoreDialect) lay ρ L
     OpsTraceFinite CoreDialect (DialectTrace.Event CoreDialect) (DialectTrace.Answer CoreDialect)
       (TraceState N (unitsOf lay)) :=
-  OpsTraceFinite.ofLift lay ρ L (opLiftsMem lay ρ L) (opsFinite lay ρ L)
+  OpsTraceFinite.ofLift lay ρ L (opLiftsMem lay ρ L) (fun _ _ _ => rfl) (opsFinite lay ρ L)
 
 /-- Refined arguments over traced runs: on arguments that refine others, a
 poison by any value, the spec's traced runs of every function of every core

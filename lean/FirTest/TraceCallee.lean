@@ -33,7 +33,7 @@ example (s : TraceState Unit (unitsOf lay)) :
     traceObservable (outMain.traceRunsFrom lay Empty.elim RunItems.empty outModule
       (.cons (.value 5) .nil, s)) :=
   Func.traceRunsFrom_isRefinedBy_of_args lay Empty.elim RunItems.empty out_traceFinite
-    (fun _ _ _ _ o _ _ => out_monotone o.op) (fun _ _ o _ _ => out_monotone o.op)
+    (fun _ _ => out_traceOpsMonotone _) (out_traceOpsMonotone _)
     ⟨trivial, trivial⟩ (TraceState.isRefinedBy_refl s)
 
 /-- `emitMain` with its own body, in `emitModule` with that body, refines

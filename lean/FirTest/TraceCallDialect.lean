@@ -66,7 +66,8 @@ instance : DialectTrace CallDialect where
       exit := fun
         | .br, _ => pure (.goto 0)
         | .ret, _ => pure .ret
-        | _, _ => MonadUB.ub "not a terminator" }
+        | _, _ => MonadUB.ub "not a terminator"
+      extCall := fun _ _ _ => MonadUB.ub extCallUB }
 
 /-- The traced state of a run of the call dialect, with no memory of its own. -/
 abbrev St : Type := TraceState Unit (unitsOf lay)
@@ -141,7 +142,9 @@ layer. -/
 theorem traceOpsMonotone (g : Func CallDialect) :
     letI := sem
     g.TraceOpsMonotone (DialectTrace.Acts CallDialect) St :=
-  fun _ _ o _ _ => call_monotone o.op
+  letI := sem
+  fun _ _ o _ => ⟨fun _ => call_monotone o.op,
+    fun _ _ _ => ExtTraceMonotone.of_ub (fun _ _ _ => rfl) _ _ _⟩
 
 /-- The call dialect's ops have finitely many outcomes, given the world's
 answers: the stream fixes the answer to `emit`. -/
@@ -149,7 +152,7 @@ theorem call_traceFinite :
     letI := sem
     OpsTraceFinite CallDialect Nat Nat St := by
   letI := sem
-  intro op _ args
+  refine ⟨fun op _ args => ?_, fun _ _ _ => TraceFinitelyMany.ub _⟩
   have one : ∀ {α : Type} (a : α), TraceFinitelyMany (E := Nat) (Ans := Nat)
       (pure a : TraceM (DialectTrace.Acts CallDialect) St α) := fun a s _ =>
     ⟨[(a, [], s)], fun a' t s' h _ => by

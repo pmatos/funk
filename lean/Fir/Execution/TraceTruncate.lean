@@ -39,7 +39,8 @@ open Memory
 
 variable {d : Dialect} [TyDenote d.Ty] [DecidableEq d.Ty] [DialectSignature d] [DialectCall d]
   {Mem : Type} {unit : Mem → Nat} [DecidableEq Mem] {A : Type}
-  [DialectDenote d (TraceM (Step A) (TraceState Mem unit))] {M : Module d} {W : Nat}
+  [DialectDenote d (TraceM (Step A) (TraceState Mem unit))]
+  [DialectExtCall d (TraceM (Step A) (TraceState Mem unit))] {M : Module d} {W : Nat}
 
 /-- A way of ending of the traced layer of marked traces. -/
 local notation "End" => TraceEnd (Step A) (TraceState Mem unit) (Except Stuck (Result (List (DVal d) × Nat)))
@@ -64,7 +65,8 @@ def TraceEnd.Cut (M : Module d) (W j n : Nat) (os : List (Operation d)) (e : End
   | .error (r, t) => e = .error (r, t) ∨ e.Truncated M W n os t
   | .ok (.error _, _, _) => False
 
-omit [DecidableEq d.Ty] [DecidableEq Mem] [DialectDenote d (TraceM (Step A) (TraceState Mem unit))] in
+omit [DecidableEq d.Ty] [DecidableEq Mem] [DialectDenote d (TraceM (Step A) (TraceState Mem unit))]
+    [DialectExtCall d (TraceM (Step A) (TraceState Mem unit))] in
 /-- A truncated path, after the trace `t`, is truncated after `t` too, with a
 budget and ops whose chain `c'` bound the fuel that `t` took: at most
 `ticks t + m` steps, and `n' ≤ W (ticks t) + W x + c'` whenever the rest's
@@ -83,7 +85,8 @@ theorem TraceEnd.Truncated.after {m n' c' : Nat} {os₁ os : List (Operation d)}
     · have := hW _ _ hc₁
       exact .inr ⟨c', hc, by rw [Step.ticks_append, Nat.mul_add]; exact hbud _ (by omega)⟩
 
-omit [DecidableEq d.Ty] [DialectDenote d (TraceM (Step A) (TraceState Mem unit))] in
+omit [DecidableEq d.Ty] [DialectDenote d (TraceM (Step A) (TraceState Mem unit))]
+    [DialectExtCall d (TraceM (Step A) (TraceState Mem unit))] in
 /-- A path of a callee truncated, its frame left, is a path of the call
 truncated, one step of fuel later, for any trace that the callee's starts,
 when either the trace is the callee's or its fuel was spent on its steps. -/
@@ -101,7 +104,8 @@ theorem TraceEnd.Truncated.call {n : Nat} {os body : List (Operation d)} {e : En
     · exact .inr ⟨c + 1, .call hs hc, by omega⟩
   · exact .inr ⟨c + 1, .call hs hc, by omega⟩
 
-omit [DecidableEq d.Ty] [DecidableEq Mem] [DialectDenote d (TraceM (Step A) (TraceState Mem unit))] in
+omit [DecidableEq d.Ty] [DecidableEq Mem] [DialectDenote d (TraceM (Step A) (TraceState Mem unit))]
+    [DialectExtCall d (TraceM (Step A) (TraceState Mem unit))] in
 /-- A cut of a path that goes on after an op of one step, from ops that start
 no call, is a cut one step of fuel later. -/
 theorem TraceEnd.Cut.after_step {j m : Nat} {os₁ os : List (Operation d)}
@@ -117,7 +121,8 @@ theorem TraceEnd.Cut.after_step {j m : Nat} {os₁ os : List (Operation d)}
   | .error _, .inr h => .inr (h.after hW (by omega) (fun _ _ => by rw [ht]; omega) (.stop hos))
   | .ok (.error _, _, _), h => h.elim
 
-omit [DecidableEq d.Ty] [DecidableEq Mem] [DialectDenote d (TraceM (Step A) (TraceState Mem unit))] in
+omit [DecidableEq d.Ty] [DecidableEq Mem] [DialectDenote d (TraceM (Step A) (TraceState Mem unit))]
+    [DialectExtCall d (TraceM (Step A) (TraceState Mem unit))] in
 /-- A cut is not stuck. -/
 theorem TraceEnd.Cut.notStuck {j n : Nat} {os : List (Operation d)} {e : End} :
     ∀ {e' : End}, e.Cut M W j n os e' → TraceEnd.NotStuck e
@@ -178,13 +183,19 @@ theorem Func.traceOps_cut (hone : OpsOneStep d A (TraceState Mem unit))
       | goto hreg hargs hT hos hx hj h =>
         obtain ⟨e₁, h₁, hcut⟩ := ihn j _ _ _ _ _ h (TraceEnd.NotStuck.of_after hne)
         exact ⟨_, mk hcut.notStuck.after (.goto hreg hargs hT hos hx hj h₁),
-          hcut.after_step hW (Module.callHead?_terminator os hT) ((hone _ _ _).2 _ hx)⟩
+          hcut.after_step hW (Module.callHead?_terminator os hT) ((hone.1 _ _ _).2 _ hx)⟩
       | denoteUB hreg hargs hT hc hx =>
         exact ⟨_, mk (TraceEnd.notStuck_error _ _) (.denoteUB hreg hargs hT hc hx), .inl rfl⟩
       | denote hreg hargs hT hc hx hlen h =>
         obtain ⟨e₁, h₁, hcut⟩ := ihn j _ _ _ _ _ h (TraceEnd.NotStuck.of_after hne)
         exact ⟨_, mk hcut.notStuck.after (.denote hreg hargs hT hc hx hlen h₁),
-          hcut.after_step hW (Module.callHead?_noCallee os hc) ((hone _ _ _).1 _ hx)⟩
+          hcut.after_step hW (Module.callHead?_noCallee os hc) ((hone.1 _ _ _).1 _ hx)⟩
+      | extUB hreg hargs hT hc hg hd hx =>
+        exact ⟨_, mk (TraceEnd.notStuck_error _ _) (.extUB hreg hargs hT hc hg hd hx), .inl rfl⟩
+      | ext hreg hargs hT hc hg hd hx hty hlen h =>
+        obtain ⟨e₁, h₁, hcut⟩ := ihn j _ _ _ _ _ h (TraceEnd.NotStuck.of_after hne)
+        exact ⟨_, mk hcut.notStuck.after (.ext hreg hargs hT hc hg hd hx hty hlen h₁),
+          hcut.after_step hW (Module.callHead?_noFunc os hT hc hg) (hone.2 _ _ _ _ _ hx)⟩
       | callUB hreg hargs hT hc hg hen hx =>
         obtain ⟨e₁', h₁', he₁'⟩ := (TraceM.run_inFrame _ _ _).1 hx
         rcases e₁' with ⟨r₁, t₁⟩ | ⟨_, _, _⟩

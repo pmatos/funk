@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Returns and UB, followed back: readable blocks" =>
 
-:::moduleDocs (fingerprint := "4866961907919883239")
+:::moduleDocs (fingerprint := "2628800625013436451")
 :::
 
 :::readable Fir.MonotoneOps Fir.Func.OpsMonotone (pin := Fir.OpMonotone) (fingerprint := "11196719689786516999")
@@ -66,7 +66,7 @@ one step longer, or longer by a callee's budget too, which leaves $`k`
 more steps.
 :::
 
-:::readable Fir.CallsRefined.callee_allowed (pin := Fir.CallsRefined) (fingerprint := "7611471134138605084")
+:::readable Fir.CallsRefined.callee_allowed (pin := Fir.CallsRefined) (fingerprint := "246227518842727464")
 *Theorem: the source's callee allows what the target's callee does.* Let
 the target module $`M'` run each call as the source $`M` does, with the
 bound $`\beta`: each symbol names the same function in both, or a
@@ -94,7 +94,7 @@ covers. When $`s` names a black box, the
 what its target does.
 :::
 
-:::readable Fir.Func.runOps_allowed (pin := Fir.Allowed) (pin := Fir.CallsRefined) (pin := Fir.MonotoneOps) (pin := Fir.Func.OpsMonotone) (fingerprint := "16738430195099835913")
+:::readable Fir.Func.runOps_allowed (pin := Fir.Allowed) (pin := Fir.CallsRefined) (pin := Fir.MonotoneOps) (pin := Fir.Func.OpsMonotone) (fingerprint := "16174123346051547593")
 *Theorem: every return and every UB of the target is allowed by the
 source.* Let the target module $`M'` run each call as the source $`M`
 does, with some bound $`\beta`: each symbol names the same function in
@@ -117,7 +117,7 @@ calls: the returns and UB of the target. Divergence is the
 
 The proof is by strong induction on the target's budget, for every
 function at once, and follows the target's path by the
-{ref "The-fir-specification--Execution--The-ways-a-step-goes-on"}[eight ways]
+{ref "The-fir-specification--Execution--The-ways-a-step-goes-on"}[nine ways]
 a step goes on:
 
 * The op's operands are found in the source's environment too,
@@ -129,6 +129,9 @@ a step goes on:
   covers the rest, with one step less.
 * A call is allowed by the source's callee, by the previous theorem, with
   the induction for a callee that is the same function.
+* A call to a declaration is UB in the target, and in the source too: a
+  symbol that names no function of $`M'` names none of $`M`, and both
+  modules declare the same symbols.
 * When the source's callee returns at the budget $`N_1` values that the
   target's refine, and the source's rest is allowed at the budget
   $`N_2`, the source's run at $`N_1 + N_2 + 1` is allowed:

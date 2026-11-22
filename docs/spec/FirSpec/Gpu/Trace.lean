@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "The traced runs of the core and gpu: readable blocks" =>
 
-:::moduleDocs (fingerprint := "37887890792157356")
+:::moduleDocs (fingerprint := "17740985229926213929")
 :::
 
 :::readable Fir.Gpu.gpu_instDialectTrace Fir.Gpu.gpu_liftsMem Fir.Gpu.coreGpu_instDialectTrace Fir.Gpu.coreGpu_liftsMem Fir.Gpu.coreGpu_instInhabitedAnswer Fir.Gpu.event_isRefinedBy_refl Fir.Gpu.event_isRefinedBy_trans (fingerprint := "4284088936033759670")
@@ -49,7 +49,7 @@ that shows events proves it, the hypothesis from given memories taken to
 the traced one by the lift. So it is at every world.
 :::
 
-:::readable Fir.Gpu.opLiftsMem Fir.Gpu.traceOpsMonotone Fir.Gpu.opsTraceFinite (fingerprint := "3513069387254649198")
+:::readable Fir.Gpu.opLiftsMem Fir.Gpu.traceOpsMonotone Fir.Gpu.opsTraceFinite (fingerprint := "8311720800967718951")
 *Theorem: each op of the sum lifts its rule.* Each core op lifts its rule
 with memory in the core, and each op of `gpu` in `gpu`, so each op of the
 sum does in the sum.
@@ -58,9 +58,10 @@ sum does in the sum.
 has its ops that run by their own rule monotone in the sum's traced
 semantics, wherever a run names the sum's memories: each lifts its rule
 with memory and is monotone with memory, and the lift onto the traced
-state keeps it.
+state keeps it; and so is its external-call rule, the lift of its rule with
+memory, UB.
 
 *Theorem: the sum meets the hypothesis of divergence.* Every op of the sum
-that runs by its own rule has finitely many outcomes in its traced
-semantics, given the world's answers.
+that runs by its own rule, and every external call, has finitely many
+outcomes in its traced semantics, given the world's answers.
 :::

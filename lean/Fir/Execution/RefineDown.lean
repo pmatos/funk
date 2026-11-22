@@ -192,7 +192,7 @@ theorem CallsRefined.callee_allowedBelow {M M' : Module d} {bound : Nat}
     (hne : Ev.NotStuck e') (hub : ∀ r, e' ≠ .ub r) :
     ∃ g p, M.func? s = some g ∧ g.enter args.toDVals = .ok p ∧
       AllowedBelow (bound + 1) (fun N => Func.runOps (m := SetM) M N g p.2 p.1) N₀ e' := by
-  rcases hc s with hsame | ⟨g, g', hg, hg'', bb⟩
+  rcases hc.1 s with hsame | ⟨g, g', hg, hg'', bb⟩
   · obtain ⟨genv, hen, hgenv⟩ := Func.enter_isRefinedBy (HVector.toDVals_isRefinedBy hr) hen'
     have hg : M.func? s = some g₀ := hsame ▸ hg'
     have hf := hmono g₀ (List.mem_of_find?_eq_some hg)
@@ -248,6 +248,7 @@ theorem Func.runOps_allowedBelow {M M' : Module d} (hmono : ∀ g ∈ M.funcs, g
       | exitUB _ _ _ _ _ => exact absurd rfl (hnub _)
       | denoteUB _ _ _ _ _ => exact absurd rfl (hnub _)
       | callUB _ _ _ _ _ _ _ => exact absurd rfl (hnub _)
+      | extUB _ _ _ _ _ _ => exact absurd rfl (hnub _)
       | ret hreg hargs' hT hos hx hs =>
         obtain ⟨args, hargs, hr⟩ := henv.operands hargs'
         obtain ⟨e₀, he₀, hle⟩ := (hmo (.inl hT) args _ hr).2 hT _ hx

@@ -23,6 +23,10 @@ keeps the effects of the monad below it, and adds two:
   call's stack allocations are freed when it returns
   (ADR-2026-11-09-1548).
 
+The external-call rule of the layer is the rule of the monad below, lifted:
+it keeps the memories. Over the set monad and the tree of choices it is UB,
+so the layer with memory has no world either (`Fir.Execution.ExtCall`).
+
 The interpreter's computations are `ExceptT Stuck` over the op monad, so in
 the state layer a stuck path keeps the memories it reached, and the outcome
 of a run ignores them, as it ignores every stuck path.
@@ -47,6 +51,32 @@ instance instMonadChoiceStateT [Monad m] [MonadChoice m] : MonadChoice (StateT �
 
 /-- UB in the state layer is the UB of the monad below: it ends the path. -/
 instance instMonadUBStateT [MonadUB m] : MonadUB (StateT σ m) := ⟨fun r _ => MonadUB.ub r⟩
+
+/-- The layer with memory over a monad has its external-call rule, so UB
+in the layers with no world. -/
+instance instDialectExtCallStateT {d : Dialect} [TyDenote d.Ty] [Monad m] [DialectExtCall d m] :
+    DialectExtCall d (StateT σ m) :=
+  ⟨fun g args rs => StateT.lift (DialectExtCall.extCall g args rs)⟩
+
+/-- In the layer with memory over the set monad, an external call is UB,
+from every state. -/
+theorem extCall_stateT_setM {d : Dialect} [TyDenote d.Ty] (g : Name) (args : List (DVal d))
+    (rs : List d.Ty) (S : σ) (e : Ev (List (DVal d) × σ)) :
+    DialectExtCall.extCall (m := StateT σ SetM) g args rs S e ↔ e = .ub extCallUB := by
+  show ((∃ a, Ev.ok a = .ub extCallUB ∧ _) ∨ ∃ r, Ev.ub r = .ub extCallUB ∧ e = .ub r) ↔ _
+  constructor
+  · rintro (⟨_, h, _⟩ | ⟨_, h, rfl⟩) <;> cases h
+    rfl
+  · rintro rfl
+    exact .inr ⟨_, rfl, rfl⟩
+
+/-- In the layer with memory over the set monad, an external call is the
+layer's UB. -/
+theorem extCall_stateT_setM_eq {d : Dialect} [TyDenote d.Ty] (g : Name) (args : List (DVal d))
+    (rs : List d.Ty) :
+    DialectExtCall.extCall (m := StateT σ SetM) g args rs = MonadUB.ub extCallUB := by
+  funext S e
+  exact propext (extCall_stateT_setM g args rs S e)
 
 variable {Mem : Type} {unit : Mem → Nat} [DecidableEq Mem]
 
@@ -221,6 +251,13 @@ def ChoiceTree.toSetState (ε σ : Type) : MonadMorphism (StateT σ (ChoiceTree 
 theorem ChoiceTree.toSetState_keeps (ε σ : Type) : (ChoiceTree.toSetState ε σ).KeepsChoiceUB :=
   ChoiceTree.toSetMorphism.state_keeps ChoiceTree.toSet_keeps
 
+/-- `toSet` through the layer maps the external-call rule to the rule: UB
+in both. -/
+theorem ChoiceTree.toSetState_mapsExtCall {d : Dialect} [TyDenote d.Ty] (ε σ : Type) :
+    (ChoiceTree.toSetState ε σ).MapsExtCall (d := d) := fun g args rs => by
+  rw [extCall_stateT_setM_eq]
+  exact (ChoiceTree.toSetState_keeps ε σ).ub extCallUB
+
 variable {d : Dialect} [TyDenote d.Ty] [DecidableEq d.Ty] [DialectSignature d] [DialectCall d]
   {ε : Type} [DialectDenote d (StateT (Memories Mem unit) (ChoiceTree ε))]
   [DialectDenote d (StateT (Memories Mem unit) SetM)]
@@ -234,6 +271,7 @@ theorem Func.run_toSetState
     ((ChoiceTree.toSetState ε (Memories Mem unit)).except Stuck).map
         (f.run M (m := StateT (Memories Mem unit) (ChoiceTree ε)) args fuel) =
       f.run M (m := StateT (Memories Mem unit) SetM) args fuel :=
-  Func.run_map h (ChoiceTree.toSetMorphism.state_mapsFrame) M f args fuel
+  Func.run_map h (ChoiceTree.toSetState_mapsExtCall ε _) (ChoiceTree.toSetMorphism.state_mapsFrame)
+    M f args fuel
 
 end Fir

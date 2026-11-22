@@ -128,7 +128,9 @@ def advance (M : Module d) (fin : List (DVal d) → Memories N unit → R) :
         | none =>
           advance M fin (.den n f env o os ((DialectDenote.denote (m := SM) o.op args).run S)) st
         | some s => match M.func? s with
-          | none => .leaf (.ok (stuck s!"@{s} is not a function of the module"))
+          | none =>
+            if M.declares s (sig o.op) (returnTypes o.op) then .leaf (.ub extCallUB)
+            else .leaf (.ok (stuck s!"@{s} is not a function or a declaration of the call's types"))
           | some g => match Bindings.enter g args with
             | .error e => .leaf (.ok (.error e))
             | .ok (body, genv) =>

@@ -88,7 +88,8 @@ theorem TraceEnd.Done.of_exit :
   | .ok (.ok .fuelExhausted, _, _), h | .ok (.error _, _, _), h => h.elim
 
 variable {d : Dialect} [TyDenote d.Ty] [DecidableEq d.Ty] [DialectSignature d] [DialectCall d]
-  [DialectDenote d (TraceM B (TraceState Mem unit))] {M : Module d}
+  [DialectDenote d (TraceM B (TraceState Mem unit))]
+  [DialectExtCall d (TraceM B (TraceState Mem unit))] {M : Module d}
 
 /-- Each return of a traced run of ops is a return of the run with `j` more
 steps of fuel, from the same environment and traced state, that leaves `j`
@@ -146,6 +147,13 @@ theorem Func.traceOps_up (j n : Nat) :
         rw [← Nat.add_min_add_right] at h₁
         exact mk ((hd.of_after.addLeft j).notStuck.after)
           (.callRet hreg hargs hT hc hg hen (call hx trivial) hty hlen h₁)
+      | extUB hreg hargs hT hc hg hdc hx =>
+        exact mk (TraceEnd.notStuck_error _ _) (.extUB hreg hargs hT hc hg hdc hx)
+      | ext hreg hargs hT hc hg hdc hx hty hlen h =>
+        rw [TraceEnd.addLeft_after]
+        have h₁ := ihn _ _ _ _ _ h hd.of_after
+        exact mk ((hd.of_after.addLeft j).notStuck.after)
+          (.ext hreg hargs hT hc hg hdc hx hty hlen h₁)
 
 /-- Each return of a callee's ops in a call's frame is a return of its ops
 with `j` more steps of fuel, leaving `j` more; each UB is UB there too. -/

@@ -6,8 +6,9 @@ import Fir.Execution.MemoryCalls
 # Traced runs of a dialect with no event
 
 A dialect whose ops show no event has a traced semantics of its own: its
-semantics with memory, lifted onto the memories of the traced state. It has
-no event, and the world's one answer is never asked for. Such a dialect
+semantics with memory, lifted onto the memories of the traced state, and
+its external-call rule with memory, UB, lifted too. It has no event, and
+the world's one answer is never asked for. Such a dialect
 lifts its semantics with memory (`LiftsMem`) by construction, so its traced
 runs show no act, nothing escapes, and they end as its runs with memory,
 each return seen at its end (`Fir.Execution.TraceDialect`).
@@ -32,6 +33,49 @@ namespace Fir
 
 open Memory
 
+/-! # UB in the traced layer -/
+
+section
+
+variable {A B Mem α β : Type} {unit : Mem → Nat}
+
+/-- The external-call rule with memory, lifted onto the memories of the
+traced state, is UB: an external call has no meaning without a world. -/
+theorem TraceM.liftMem_extCall {d : Dialect} [TyDenote d.Ty] (g : Name) (args : List (DVal d))
+    (rs : List d.Ty) :
+    TraceM.liftMem (A := A)
+        (DialectExtCall.extCall (m := StateT (Memories Mem unit) SetM) g args rs) =
+      MonadUB.ub extCallUB := by
+  rw [extCall_stateT_setM_eq]
+  funext s e
+  apply propext
+  constructor
+  · rintro (⟨_, _, h, _⟩ | ⟨_, h, rfl⟩) <;> cases (h : _ = _)
+    rfl
+  · rintro rfl
+    exact .inr ⟨_, rfl, rfl⟩
+
+/-- Mapping the acts of UB gives UB. -/
+theorem TraceM.mapActs_ub {σ : Type} (g : A → List B) (r : String) :
+    TraceM.mapActs (σ := σ) (α := α) g (MonadUB.ub r) = MonadUB.ub r := by
+  funext s e
+  exact propext ⟨fun ⟨_, h, he⟩ => by cases (h : _ = _); exact he, fun h => ⟨_, rfl, h⟩⟩
+
+/-- Mapping the result of UB gives UB. -/
+theorem TraceM.map_ub {σ : Type} (f : α → β) (r : String) :
+    f <$> (MonadUB.ub r : TraceM A σ α) = MonadUB.ub r := by
+  rw [← bind_pure_comp]
+  funext s e
+  apply propext
+  rw [TraceM.bind_apply]
+  constructor
+  · rintro (⟨_, _, _, _, h, _, _⟩ | ⟨_, _, h, rfl⟩) <;> cases (h : _ = _)
+    rfl
+  · rintro rfl
+    exact .inr ⟨_, _, rfl, rfl⟩
+
+end
+
 /-! # The lifted traced semantics -/
 
 section
@@ -41,7 +85,7 @@ variable (d : Dialect) [TyDenote d.Ty] [DialectSignature d] [DialectEffects d] [
 /-- The traced semantics of a dialect whose ops show no event: no event, one
 answer, and each op's semantics with memory, lifted onto the memories of
 the traced state, wherever a run names the dialect's memories and whatever
-items it gives each op. -/
+items it gives each op; an external call is UB, as with memory. -/
 @[instance_reducible] def DialectTrace.ofMem : DialectTrace d where
   Event := Empty
   Answer := Unit
@@ -49,7 +93,10 @@ items it gives each op. -/
   traceAt := fun lay ρ L =>
     letI := DialectMemDenote.denoteAt (d := d) lay ρ L
     { denote op args := TraceM.liftMem (DialectDenote.denote op args)
-      exit op args := TraceM.liftMem (DialectDenote.exit op args) }
+      exit op args := TraceM.liftMem (DialectDenote.exit op args)
+      extCall g args rs :=
+        TraceM.liftMem
+          (DialectExtCall.extCall (m := StateT (Memories _ (unitsOf lay)) SetM) g args rs) }
 
 /-- A dialect whose traced semantics is its semantics with memory, lifted,
 lifts its semantics with memory. -/
@@ -59,7 +106,8 @@ theorem DialectTrace.ofMem_liftsMem [DecidableEq d.Ty] [DialectCall d] :
   ⟨fun lay ρ L => by
     letI := DialectMemDenote.denoteAt (d := d) lay ρ L
     letI := DialectTrace.traceAt (d := d) lay ρ L
-    exact ⟨fun _ _ => rfl, fun _ _ => rfl⟩⟩
+    exact ⟨fun _ _ => rfl, fun _ _ => rfl⟩,
+   fun _ _ _ => fun _ _ _ => rfl⟩
 
 end
 

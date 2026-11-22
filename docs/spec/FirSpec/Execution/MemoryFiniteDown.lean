@@ -17,7 +17,7 @@ pins their fingerprint; the build fails when the Lean changes under it.
 :::moduleDocs (fingerprint := "8732878515543511956")
 :::
 
-:::readable Fir.Func.memOps_notExhausted_of_finite (pin := Fir.OpsFinite) (pin := Fir.MemCallsRefined) (pin := Fir.SomeUB) (pin := Fir.MemMonotoneOps) (pin := Fir.Func.MemOpsMonotone) (fingerprint := "9542362405041666030")
+:::readable Fir.Func.memOps_notExhausted_of_finite (pin := Fir.OpsFinite) (pin := Fir.MemCallsRefined) (pin := Fir.SomeUB) (pin := Fir.MemMonotoneOps) (pin := Fir.Func.MemOpsMonotone) (fingerprint := "17565477840637503012")
 *Theorem: a source that does not run out of fuel bounds its target.* Let
 the target module $`M'` run each call with memory as the source $`M` does,
 the ops of the dialect have finitely many outcomes, and every op of

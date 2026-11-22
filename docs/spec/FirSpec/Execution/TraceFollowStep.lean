@@ -14,11 +14,12 @@ changes under it.
 
 #doc (Manual) "One move of the source: readable blocks" =>
 
-:::moduleDocs (fingerprint := "15019129398272818335")
+:::moduleDocs (fingerprint := "15097248164369186375")
 :::
 
-:::readable Fir.TCfg.Follows.step (fingerprint := "15019129398272818335")
-*Theorem: the source follows a move.* Let every path of every op show exactly
+:::readable Fir.TCfg.Follows.step (fingerprint := "15097248164369186375")
+*Theorem: the source follows a move.* Let every path of every op and
+of every external call show exactly
 one step, the target $`M'` run each call as the source $`M` does, by the same
 function or a traced black box, and the ops of $`M`'s functions that run by
 their own rule be monotone. Let the source configuration $`c` follow the
@@ -28,8 +29,9 @@ allows $`\mathrm{acts}(t') \cdot T_1`, or goes on by a move of its own, of a
 marked trace $`t` with $`\mathrm{acts}(t) \sqsubseteq \mathrm{acts}(t')`, to a
 configuration that follows the target's.
 
-By the target's move: an op by its own rule is matched by the same op, by
-monotonicity, or allowed by UB; a jump by the same jump; entering a callee
+By the target's move: an op by its own rule, or a call to a declaration by
+the external-call rule, is matched by the same op, by monotonicity, or
+allowed by UB; a jump by the same jump; entering a callee
 named by the same function in both by entering it; its return by the
 source's return, allowed at some budget. When the callee is a traced black
 box, the source cannot enter the same body. A return of the target's callee

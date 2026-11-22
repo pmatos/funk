@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "The traced semantics of a sum: readable blocks" =>
 
-:::moduleDocs (fingerprint := "2884701534724172316")
+:::moduleDocs (fingerprint := "10119587815397272044")
 :::
 
 :::readable Fir.Act.inl Fir.Act.inr Fir.TraceM.mapActs_liftMem (fingerprint := "2600471622454697333")
@@ -26,7 +26,15 @@ and one of the right side $`\langle \mathsf{inr}~e, \mathsf{inr}~a\rangle`.
 state layer, lifted onto the memories of the traced state, changes nothing.
 :::
 
-:::readable Fir.Dialect.sum.instDialectTrace Fir.Dialect.sum.event_isRefinedBy_refl Fir.Dialect.sum.event_isRefinedBy_trans (fingerprint := "12236054867807811533")
+:::readable Fir.Dialect.sum.DVal.ofSum? Fir.Dialect.sum.DVal.toSum (fingerprint := "1910056289437756262")
+*Definitions: typed values of the base, within the sum.* A typed value of
+$`\mathit{base} \boxplus e` whose type is of the base is a typed value of
+the base, and every typed value of the base is one of the sum, at the
+base's type seen in the sum; a value of a type of $`e` is none of the
+base's.
+:::
+
+:::readable Fir.Dialect.sum.instDialectTrace Fir.Dialect.sum.event_isRefinedBy_refl Fir.Dialect.sum.event_isRefinedBy_trans (fingerprint := "13410313127962479420")
 *Definition: the sum's traced semantics.* The events of $`\mathit{base} \boxplus e`
 are $`\mathrm{Event}(\mathit{base}) \oplus \mathrm{Event}(e)`, and the
 world's answers $`\mathrm{Answer}(\mathit{base}) \oplus \mathrm{Answer}(e)`;
@@ -34,7 +42,9 @@ one event refines another when both are of the same side and refine there.
 An op of $`e` runs by $`e`'s traced rule, and an op of the base by the
 base's, where the run names each memory of the base as the sum does, its
 results seen at the sum's types; each act of a side is the sum's act on
-that side. Refinement of the sum's events is reflexive, and transitive,
+that side. An external call whose arguments and result types are all of
+the base runs by the base's external-call rule, its results seen at the
+sum's types; any other runs by $`e`'s, which sees the sum's types. Refinement of the sum's events is reflexive, and transitive,
 when each side's is.
 :::
 

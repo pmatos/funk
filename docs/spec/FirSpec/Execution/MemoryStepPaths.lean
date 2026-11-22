@@ -14,7 +14,7 @@ build fails when the Lean changes under it.
 
 #doc (Manual) "The ways a step with memory goes on: readable blocks" =>
 
-:::moduleDocs (fingerprint := "11001519427309581654")
+:::moduleDocs (fingerprint := "5865480727178399607")
 :::
 
 :::readable Fir.runFrom_liftExcept_bind Fir.runFrom_lift_bind Fir.runFrom_bindRun (pin := Fir.runFrom) (pin := Fir.Ev.NotStuck) (fingerprint := "10455669558575755810")
@@ -38,7 +38,7 @@ $`(a, k)` and the memories $`T`; it runs out of fuel exactly when it ends
 so with some memories; and it hits UB exactly when it does.
 :::
 
-:::readable Fir.Func.memOps Fir.Func.memCall (fingerprint := "4857219975976549756")
+:::readable Fir.Func.memOps Fir.Func.memCall (fingerprint := "4751644000688978410")
 *Definitions: a run of ops with memory, and a callee's run in its frame.*
 $`\mathrm{ops}_M(n, f, E, o^*) \mathbin{@} S` is the interpreter's run of
 the ops $`o^*` of $`f` in the state layer, with $`n` steps, in the
@@ -48,7 +48,7 @@ $`\mathrm{call}_M(n, g, E, o^*) \mathbin{@} S` is the same run in a call's
 frame: from $`\mathrm{enter}(S)`, and each return leaves the frame.
 :::
 
-:::readable Fir.Func.MemStepPath Fir.Func.memStepPath_iff (pin := Fir.Func.runOps) (pin := Fir.Ev.NotStuck) (fingerprint := "12443453545733788048")
+:::readable Fir.Func.MemStepPath Fir.Func.memStepPath_iff (pin := Fir.Func.runOps) (pin := Fir.Ev.NotStuck) (fingerprint := "1405929748240082376")
 *Definition and theorem: the ways a step with memory goes on.* A path of
 $`\mathrm{ops}_M(n + 1, f, E, o~o^*) \mathbin{@} S` that is not stuck is
 exactly a path that the op $`o` goes on by, from $`S`. In each, $`o` owns
@@ -68,7 +68,10 @@ $`E`. Then:
   $`\mathrm{call}_M(n, g, E_g, b^*) \mathbin{@} S` hits UB or runs out of
   fuel, which the path does; or returns $`((\vec{w}, T), k)`, of the
   call's result types, which bind, and the path goes on from $`T` with
-  $`\min(k, n)` steps.
+  $`\min(k, n)` steps;
+* $`o` calls a symbol that names no function of $`M` and that $`M`
+  declares for the types of $`o`, and the external-call rule, UB with
+  memory, ends the path in UB.
 
 This mirrors
 {ref "The-fir-specification--Execution--The-ways-a-step-goes-on"}[the ways a step goes on]
@@ -76,7 +79,7 @@ in the set monad, each step from the memories that the step before it
 ended with.
 :::
 
-:::readable Fir.Func.run_memOps_zero Fir.Func.run_memOps_nil (pin := Fir.Func.runOps) (pin := Fir.Ev.NotStuck) (fingerprint := "3715773739385881351")
+:::readable Fir.Func.run_memOps_zero Fir.Func.run_memOps_nil (pin := Fir.Func.runOps) (pin := Fir.Ev.NotStuck) (fingerprint := "17242999755143286832")
 *Theorems: no fuel, and no op left.* From any memories, a run with no
 fuel runs out of fuel, and only so; a block with no op left is stuck.
 :::

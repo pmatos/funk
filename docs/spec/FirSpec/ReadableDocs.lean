@@ -77,6 +77,7 @@ import FirSpec.Text.DecodeBlocks
 import FirSpec.Text.DecodeFuncItem
 import FirSpec.Text.DecodeModule
 import FirSpec.Text.PrintParse
+import FirSpec.Execution.ExtCall
 import FirSpec.Execution.Interpreter
 import FirSpec.Core.Arith
 import FirSpec.Core.Wrap

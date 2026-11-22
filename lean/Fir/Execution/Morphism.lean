@@ -10,8 +10,8 @@ section ties the two. A _monad morphism_ maps the computations of one monad
 to those of another, and keeps the steps that runs are built from: ending
 at once with a value, running one computation then another, and applying
 a function to a result. When it maps each op's computation in the first
-monad to the op's computation in the second, and each call's frame to a
-frame, it maps the interpreter's run in the first to its run in the
+monad to the op's computation in the second, the external-call rule in the
+first to the rule in the second, and each call's frame to a frame, it maps the interpreter's run in the first to its run in the
 second. The interpreter is written against
 an abstract monad, so it cannot tell the two apart: this is the last
 theorem below.
@@ -102,7 +102,7 @@ theorem MonadMorphism.except_inFrame (hf : φ.MapsFrame) {ε α : Type} (x : Exc
   exact hf _
 
 variable {d : Dialect} [TyDenote d.Ty] [DecidableEq d.Ty] [DialectSignature d] [DialectCall d]
-  [DialectDenote d m] [DialectDenote d n]
+  [DialectDenote d m] [DialectDenote d n] [DialectExtCall d m] [DialectExtCall d n]
 
 /-- The morphism maps each op's semantics in `m` to its semantics in `n`:
 both what an op that is not a terminator gives and where a terminator
@@ -113,11 +113,17 @@ structure MonadMorphism.MapsDenote : Prop where
   exit : ∀ (op : d.Op) (args : HVector toType (sig op)),
     φ.map (DialectDenote.exit (m := m) op args) = DialectDenote.exit (m := n) op args
 
+/-- The morphism maps the external-call rule in `m` to the rule in `n`. -/
+def MonadMorphism.MapsExtCall : Prop :=
+  ∀ (g : Name) (args : List (DVal d)) (rs : List d.Ty),
+    φ.map (DialectExtCall.extCall (m := m) g args rs) = DialectExtCall.extCall (m := n) g args rs
+
 variable {φ}
 
 /-- Running ops maps to running them in the other monad, calls included,
 when the morphism maps frames to frames. -/
-theorem Func.runOps_map (h : φ.MapsDenote (d := d)) (hf : φ.MapsFrame) (M : Module d) (fuel : Nat) :
+theorem Func.runOps_map (h : φ.MapsDenote (d := d)) (hx : φ.MapsExtCall (d := d))
+    (hf : φ.MapsFrame) (M : Module d) (fuel : Nat) :
     ∀ (f : Func d) (env : Env d) (os : List (Operation d)),
       (φ.except Stuck).map (Func.runOps (m := m) M fuel f env os) =
         Func.runOps (m := n) M fuel f env os := by
@@ -128,6 +134,9 @@ theorem Func.runOps_map (h : φ.MapsDenote (d := d)) (hf : φ.MapsFrame) (M : Mo
     | 0, _ => simp [Func.runOps, (φ.except Stuck).map_pure]
     | _ + 1, [] => simp [Func.runOps, φ.except_liftExcept]
     | k + 1, o :: os =>
+      have hx' : ∀ (g : Name) (args : List (DVal d)) (rs : List d.Ty),
+          φ.map (DialectExtCall.extCall (m := m) g args rs) =
+            DialectExtCall.extCall (m := n) g args rs := hx
       have ih₀ := ih k (Nat.lt_succ_self k)
       have ih₁ : ∀ j, _ := fun j => ih (min j k) (Nat.lt_succ_of_le (Nat.min_le_right j k))
       simp only [Func.runOps]
@@ -135,12 +144,14 @@ theorem Func.runOps_map (h : φ.MapsDenote (d := d)) (hf : φ.MapsFrame) (M : Mo
         | (apply bind_congr; intro _)
         | split
         | simp only [(φ.except Stuck).map_bind, (φ.except Stuck).map_pure, φ.except_liftExcept,
-            φ.except_lift, φ.except_inFrame hf, h.denote, h.exit, ih₀, ih₁])
+            φ.except_lift, φ.except_inFrame hf, h.denote, h.exit, hx', ih₀, ih₁])
 
 /-- The interpreter cannot tell monads apart: a morphism that maps each
-op's semantics in `m` to its semantics in `n`, and frames to frames, maps a
+op's semantics in `m` to its semantics in `n`, the external-call rule to
+the rule, and frames to frames, maps a
 function's run in `m` to its run in `n`. -/
-theorem Func.run_map (h : φ.MapsDenote (d := d)) (hf : φ.MapsFrame) (M : Module d) (f : Func d)
+theorem Func.run_map (h : φ.MapsDenote (d := d)) (hx : φ.MapsExtCall (d := d)) (hf : φ.MapsFrame)
+    (M : Module d) (f : Func d)
     (args : HVector toType (f.params.map (·.2))) (fuel : Nat) :
     (φ.except Stuck).map (f.run M (m := m) args fuel) = f.run M (m := n) args fuel := by
   simp only [Func.run]
@@ -148,6 +159,6 @@ theorem Func.run_map (h : φ.MapsDenote (d := d)) (hf : φ.MapsFrame) (M : Modul
     | (apply bind_congr; intro _)
     | split
     | simp only [(φ.except Stuck).map_bind, (φ.except Stuck).map_pure, φ.except_liftExcept,
-        φ.except_inFrame hf, Func.runOps_map h hf])
+        φ.except_inFrame hf, Func.runOps_map h hx hf])
 
 end Fir

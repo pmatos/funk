@@ -4,9 +4,11 @@ import Fir.Execution.TraceBlackBox
 # Every return and UB of the target, allowed, call by call
 
 Let every call name the same function in both modules or a traced black
-box. Let every op that runs by its own rule, a terminator or an op with no
-callee, be monotone in the traced layer of marked traces, among the ops of
-the source module's functions and of the function that runs. Then every
+box, and both modules declare the same symbols. Let every op that runs by
+its own rule, a terminator or an op with no callee, be monotone in the
+traced layer of marked traces, and the external-call rule at each other
+call, among the ops of the source module's functions and of the function
+that runs. Then every
 return and every UB of the target's traced run of ops, from an environment
 and a traced state that refine the source's, is allowed by the source's run
 of the same ops at some budget, comparing acts. Calls, black boxes and
@@ -27,7 +29,8 @@ function at once and from every traced state:
   traced states with a frame entered; the induction covers the callee, and
   leaving a frame keeps refinement. A call of a black box is allowed by the
   black box's behaviours, which speak of the traced states the call starts
-  and ends in.
+  and ends in. A call to an external declaration in the target is one in
+  the source, which runs the same monotone rule.
 * When the source's callee returns at one budget, and the rest of the
   source's run is allowed at another, the source's run is allowed at their
   sum plus one: with more fuel the callee returns with more steps left
@@ -40,7 +43,8 @@ open Memory
 
 variable {A : Type} [HRefinement A A] {Mem : Type} {unit : Mem → Nat} [DecidableEq Mem]
   {d : Dialect} [TyDenote d.Ty] [DecidableEq d.Ty] [DialectSignature d] [DialectCall d]
-  [DialectDenote d (TraceM (Step A) (TraceState Mem unit))] [TyRefinement d.Ty]
+  [DialectDenote d (TraceM (Step A) (TraceState Mem unit))]
+  [DialectExtCall d (TraceM (Step A) (TraceState Mem unit))] [TyRefinement d.Ty]
 
 /-- A return or UB of a call's callee in the target, in its frame, is
 allowed by the source's callee in its frame: the same function, by the
@@ -63,7 +67,7 @@ theorem TraceCallsRefined.callee_allowed {M M' : Module d}
     (he' : Func.traceCall (Step A) M' n g₀ p'.2 p'.1 s' e') (hd : e'.Done) :
     ∃ g p, M.func? sym = some g ∧ g.enter args.toDVals = .ok p ∧
       TAllowed (fun N => Func.traceCall (Step A) M N g p.2 p.1 s) e' := by
-  rcases hc sym with hsame | ⟨g, g', hg, hg'', bb⟩
+  rcases hc.1 sym with hsame | ⟨g, g', hg, hg'', bb⟩
   · obtain ⟨genv, hen, hgenv⟩ := Func.enter_isRefinedBy (HVector.toDVals_isRefinedBy hr) hen'
     have hg : M.func? sym = some g₀ := hsame ▸ hg'
     have hf := hmono g₀ (List.mem_of_find?_eq_some hg)
@@ -109,7 +113,8 @@ theorem Func.traceOps_tAllowed {M M' : Module d}
     | n + 1, [], _, he' => exact absurd he' (Func.traceOps_nil hne)
     | n + 1, o :: os, hops, he' =>
       have ihn := ih n (Nat.lt_succ_self n)
-      have hmo := hops o List.mem_cons_self
+      have hmo := (hops o List.mem_cons_self).1
+      have hext := (hops o List.mem_cons_self).2
       have hops' : TraceMonotoneOps (Step A) (TraceState Mem unit) os :=
         fun o' h => hops o' (List.mem_cons_of_mem _ h)
       -- UB of the first op after a marked trace that the target's path first shows.
@@ -200,5 +205,25 @@ theorem Func.traceOps_tAllowed {M M' : Module d}
           rw [Nat.add_min_add_right, Nat.add_comm]
         exact (Func.tStepPath_iff (hx.addLeft _).notStuck.after).2
           (.callRet hreg hargs hT hc hg hen hcall hty hlen (hmin ▸ hrest))
+      | extUB hreg hargs' hT hc hg' hd' hx =>
+        obtain ⟨args, hargs, hr⟩ := henv.operands hargs'
+        obtain ⟨hg, hd⟩ := hcalls.ext hg' hd'
+        obtain ⟨e₀, he₀, hle⟩ := hext hT _ hc args _ hr s s' hS _ hx
+        rcases e₀ with ⟨r₀, t₀⟩ | ⟨_, _, _⟩
+        · exact early (.extUB hreg hargs hT hc hg hd he₀) hle
+        · exact hle.elim
+      | ext hreg hargs' hT hc hg' hd' hx hty' hlen' he =>
+        obtain ⟨args, hargs, hr⟩ := henv.operands hargs'
+        obtain ⟨hg, hd⟩ := hcalls.ext hg' hd'
+        obtain ⟨e₀, he₀, hle⟩ := hext hT _ hc args _ hr s s' hS _ hx
+        rcases e₀ with ⟨r₀, t₀⟩ | ⟨vs, t₀, s₀⟩
+        · refine early (.extUB hreg hargs hT hc hg hd he₀) ?_
+          rw [TraceEnd.trace_after]
+          exact hle.append_right _
+        · obtain ⟨hvs, ht, hs₀⟩ := hle
+          have hty := (DVals.types_eq_of_isRefinedBy hvs).trans hty'
+          have hlen := hlen'.trans (DVals.length_eq_of_isRefinedBy hvs).symm
+          exact step ht (fun N x _ h => .ext hreg hargs hT hc hg hd he₀ hty hlen h)
+            (ihn _ _ _ _ _ _ hf hops' (henv.zip_append _ hvs) hs₀ _ he)
 
 end Fir

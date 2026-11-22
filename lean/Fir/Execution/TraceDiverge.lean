@@ -23,7 +23,8 @@ With the paths that run out of fuel allowed at each budget
 (`Fir.Execution.TraceArgs`), König's lemma (`Fir.Execution.TraceKonig`)
 gives divergence. So, for a dialect whose ops show events, in a module whose
 terminators and ops with no callee are monotone in the traced layer, and
-whose ops each have finitely many outcomes given the world's answers (the
+its external-call rule at each other call, and whose ops and external calls
+each have finitely many outcomes given the world's answers (the
 hypothesis that the human ruled on 2026-11-20, on #233, in the form by
 position of `Fir.Execution.TraceFinite`), the traced runs of a function on
 arguments that refine others, a poison by any value, refine its traced runs

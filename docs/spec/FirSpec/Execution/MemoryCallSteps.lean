@@ -14,7 +14,7 @@ build fails when the Lean changes under it.
 
 #doc (Manual) "The steps of a call, with memory: readable blocks" =>
 
-:::moduleDocs (fingerprint := "1449801432617495902")
+:::moduleDocs (fingerprint := "283898696705507377")
 :::
 
 :::readable Fir.liftExcept_ok_bind Fir.NoStuck.map Fir.HasPath.map (fingerprint := "59618637625475726")
@@ -41,7 +41,7 @@ each result it ends with from $`S`, with the memories $`S'`, is one that
 $`c(S)` may end with.
 :::
 
-:::readable Fir.MemReturnsTypes Fir.MemReturnsTypes.bind Fir.MemReturnsTypes.of_stuck Fir.MemReturnsTypes.exhausted Fir.MemReturnsTypes.ret Fir.MemReturnsTypes.inFrame Fir.Func.runOps_memReturns (fingerprint := "1137233387060230361")
+:::readable Fir.MemReturnsTypes Fir.MemReturnsTypes.bind Fir.MemReturnsTypes.of_stuck Fir.MemReturnsTypes.exhausted Fir.MemReturnsTypes.ret Fir.MemReturnsTypes.inFrame Fir.Func.runOps_memReturns (fingerprint := "16647130511458363919")
 *Definition and theorems: a function returns values of its result types,
 with memory.* A run of ops $`x` _returns values of the types_ $`t^*` with
 memory when, from any memories, every return of $`x` returns values of the
@@ -87,7 +87,7 @@ them. So, in a dialect that lifts the set monad, where every op is tied,
 every function that runs within its module runs within it with memory.
 :::
 
-:::readable Fir.Func.memRuns_enter (pin := Fir.Func.memRuns) (fingerprint := "16840867426617033123")
+:::readable Fir.Func.memRuns_enter (pin := Fir.Func.memRuns) (fingerprint := "17172988828675489419")
 *Theorem: a run with memory that starts.* When a function $`f` starts on
 its arguments, at its entry block's ops $`o^*` with the environment $`E`,
 its runs with memory at a naming, at the budget $`n`, are

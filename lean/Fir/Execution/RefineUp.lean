@@ -34,7 +34,7 @@ keeps, as it goes to a block of the same function.
   induction covers the callee, on fewer steps. The callee is a function
   of the source module, so its ops are monotone, and it starts at the ops
   of its entry block. A call of a black box is allowed by the black box's
-  behaviours.
+  behaviours. A call to an external declaration is UB in both.
 * When the source's callee returns, at one budget, values that the
   target's refine, and the rest of the source's run is allowed at
   another, the source's run is allowed at their sum plus one: its callee,
@@ -128,7 +128,7 @@ theorem CallsRefined.callee_allowed {M M' : Module d} {bound : Nat} (hc : CallsR
     (hne : Ev.NotStuck e') (hexh : e' ≠ .ok (.ok .fuelExhausted)) :
     ∃ g p, M.func? s = some g ∧ g.enter args.toDVals = .ok p ∧
       Allowed (fun N => Func.runOps (m := SetM) M N g p.2 p.1) e' := by
-  rcases hc s with hsame | ⟨g, g', hg, hg'', bb⟩
+  rcases hc.1 s with hsame | ⟨g, g', hg, hg'', bb⟩
   · obtain ⟨genv, hen, hgenv⟩ := Func.enter_isRefinedBy (HVector.toDVals_isRefinedBy hr) hen'
     have hg : M.func? s = some g₀ := hsame ▸ hg'
     have hf := hmono g₀ (List.mem_of_find?_eq_some hg)
@@ -225,6 +225,10 @@ theorem Func.runOps_allowed {M M' : Module d} (hmono : ∀ g ∈ M.funcs, g.OpsM
         obtain ⟨N, r, hN⟩ := hm
         exact Allowed.of_someUB ⟨N + 1, r, hub (.callUB hreg hargs hT hc hg hen hN)⟩ _
       | callExh _ _ _ _ _ _ _ => exact absurd rfl hexh
+      | extUB hreg hargs' hT hc hg' hd' =>
+        obtain ⟨args, hargs, -⟩ := henv.operands hargs'
+        obtain ⟨hg, hd⟩ := hcalls.ext hg' hd'
+        exact Allowed.of_someUB ⟨1, _, hub (.extUB hreg hargs hT hc hg hd)⟩ _
       | callRet hreg hargs' hT hc hg' hen' hx hty' hlen' he =>
         obtain ⟨args, hargs, hr⟩ := henv.operands hargs'
         obtain ⟨g, p, hg, hen, hm⟩ := hcalls.callee_allowed hmono hg' hr (p' := (_, _)) hen'

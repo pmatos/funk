@@ -20,7 +20,8 @@ open Memory
 
 variable {A : Type} [HRefinement A A] {Mem : Type} {unit : Mem → Nat} [DecidableEq Mem]
   {d : Dialect} [TyDenote d.Ty] [DecidableEq d.Ty] [DialectSignature d] [DialectCall d]
-  [DialectDenote d (TraceM (Step A) (TraceState Mem unit))] [TyRefinement d.Ty] {M M' : Module d}
+  [DialectDenote d (TraceM (Step A) (TraceState Mem unit))]
+  [DialectExtCall d (TraceM (Step A) (TraceState Mem unit))] [TyRefinement d.Ty] {M M' : Module d}
 
 /-- A source configuration that follows a target's, for each move of the
 target, allows the stream that the move puts before a closed stream that the
@@ -51,7 +52,7 @@ theorem TCfg.Follows.step (hone : OpsOneStep d A (TraceState Mem unit))
   | @denote _ _ o os' s' s'₁ args' rs' t' hreg hargs' hT hcn hx' hlen' =>
     subst hf hos
     obtain ⟨args, hargs, hr⟩ := henv.operands hargs'
-    have hmo := hops o List.mem_cons_self (.inr hcn)
+    have hmo := (hops o List.mem_cons_self).1 (.inr hcn)
     obtain ⟨e, he, hle⟩ := ((hmo args args' hr).1 hT) s s' hs _ hx'
     rcases e with ⟨r, t₀⟩ | ⟨rs, t, s₁⟩
     · exact .inl (ubActs (mk (N := 0) rfl (.denoteUB hreg hargs hT hcn he) (TraceEnd.notStuck_error _ _))
@@ -62,10 +63,24 @@ theorem TCfg.Follows.step (hone : OpsOneStep d A (TraceState Mem unit))
         (hlen'.trans (DVals.length_eq_of_isRefinedBy hvs).symm),
         ⟨rfl, rfl, henv.zip_append _ hvs, hs₁, hfm, fun o' h => hops o' (List.mem_cons_of_mem _ h)⟩,
         Step.actsOf_isRefinedBy ht⟩
+  | @ext _ _ o os' s' s'₁ args' sym vs' t' hreg hargs' hT hcs hg' hd' hx' hty' hlen' =>
+    subst hf hos
+    obtain ⟨args, hargs, hr⟩ := henv.operands hargs'
+    obtain ⟨hg, hd⟩ := hcalls.ext hg' hd'
+    obtain ⟨e, he, hle⟩ := (hops o List.mem_cons_self).2 hT sym hcs args args' hr s s' hs _ hx'
+    rcases e with ⟨r, t₀⟩ | ⟨vs, t, s₁⟩
+    · exact .inl (ubActs (mk (N := 0) rfl (.extUB hreg hargs hT hcs hg hd he)
+        (TraceEnd.notStuck_error _ _)) (Step.actsOf_isRefinedPrefix hle))
+    · obtain ⟨hvs, ht, hs₁⟩ := hle
+      exact .inr ⟨_, t, 1, .ext hreg hargs hT hcs hg hd he
+        ((DVals.types_eq_of_isRefinedBy hvs).trans hty')
+        (hlen'.trans (DVals.length_eq_of_isRefinedBy hvs).symm),
+        ⟨rfl, rfl, henv.zip_append _ hvs, hs₁, hfm, fun o' h => hops o' (List.mem_cons_of_mem _ h)⟩,
+        Step.actsOf_isRefinedBy ht⟩
   | @goto _ _ env'₁ o os' s' s'₁ args' i t' b hreg hargs' hT hos' hx' hj' =>
     subst hf hos
     obtain ⟨args, hargs, hr⟩ := henv.operands hargs'
-    have hmo := hops o List.mem_cons_self (.inl hT)
+    have hmo := (hops o List.mem_cons_self).1 (.inl hT)
     obtain ⟨e, he, hle⟩ := ((hmo args args' hr).2 hT) s s' hs _ hx'
     rcases e with ⟨r, t₀⟩ | ⟨x, t, s₁⟩
     · exact .inl (ubActs (mk (N := 0) rfl (.exitUB hreg hargs hT hos' he) (TraceEnd.notStuck_error _ _))
@@ -89,7 +104,7 @@ theorem TCfg.Follows.step (hone : OpsOneStep d A (TraceState Mem unit))
   | @enter _ _ o os' s' args' sym g' body' genv' hreg hargs' hT hcs hg' hen' =>
     subst hf hos
     obtain ⟨args, hargs, hr⟩ := henv.operands hargs'
-    rcases hcalls sym with hsame | ⟨g, g'', hg, hg'', bb⟩
+    rcases hcalls.1 sym with hsame | ⟨g, g'', hg, hg'', bb⟩
     · have hg : M.func? sym = some g' := hsame ▸ hg'
       obtain ⟨genv, hen, hgenv⟩ := Func.enter_isRefinedBy (HVector.toDVals_isRefinedBy hr) hen'
       have hgm := hmono g' (List.mem_of_find?_eq_some hg)

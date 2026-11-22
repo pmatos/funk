@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Runs with memory: readable blocks" =>
 
-:::moduleDocs (fingerprint := "6451966887789372780")
+:::moduleDocs (fingerprint := "17993495430161081642")
 :::
 
 :::readable Fir.MonadMorphism.liftState Fir.MonadMorphism.liftState_mapsFrame (fingerprint := "8015592493867984939")
@@ -48,6 +48,11 @@ each op runs by its rule in $`m` and keeps the memories,
 $`\mathrm{denote}_o(\vec{v}) = \mathrm{lift}(\mathrm{denote}^m_o(\vec{v}))`
 and the same for $`\mathrm{exit}_o`. Lifting keeps this semantics, by its
 definition.
+:::
+
+:::readable Fir.MonadMorphism.liftState_mapsExtCall (fingerprint := "16545080542783392801")
+*Theorem.* Lifting into the state layer keeps the external-call rule: the
+rule in the layer is the rule below it, lifted.
 :::
 
 :::readable Fir.DialectDenote.ext Fir.LiftsSetM (pin := Fir.DialectMemDenote) (fingerprint := "17854582661801022819")
@@ -86,7 +91,7 @@ a dialect that lifts the set monad every op is tied, and a dialect whose
 every op is tied lifts the set monad, since semantics are equal op by op.
 :::
 
-:::readable Fir.Func.memRun_eq (fingerprint := "543011805792552046")
+:::readable Fir.Func.memRun_eq (fingerprint := "9985866326823394103")
 *Theorem: with no memory touched, a run with memory is a run.* For a
 dialect whose semantics in the layer is its semantics in the set monad,
 lifted, the run with memory of every function from any memories $`S` is
@@ -96,10 +101,11 @@ $$`\mathrm{run}^{\mathrm{mem}}_{M,f}(\vec{v}, k)(S) = \mathrm{map}_{r \mapsto (r
 
 The proof is the
 {ref "The-fir-specification--Execution--Monad-morphisms"}[interpreter's morphism theorem]
-for the lift, which keeps each op's semantics and keeps frames.
+for the lift, which keeps each op's semantics, keeps the external-call
+rule, UB in both, and keeps frames.
 :::
 
-:::readable Fir.Func.memRuns (pin := Fir.RunItems.start) (fingerprint := "3669976583252430497")
+:::readable Fir.Func.memRuns (pin := Fir.RunItems.start) (fingerprint := "2068231260444016240")
 *Definition: the runs with memory of a function.* Where a run names the
 dialect's memory $`x` as $`\rho(x)`, whose layout entry is
 $`\ell(\rho(x))`, and gives each op the items $`L`, the run with memory of

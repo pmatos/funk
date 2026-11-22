@@ -8,20 +8,23 @@ import Fir.Execution.MemoryRuns
 
 A dialect says what its events and their answers are, how one event refines
 another, and gives its ops a semantics in the traced layer, wherever a run
-names its memories and whatever items it gives each op. The traced runs of
+names its memories and whatever items it gives each op, and its
+external-call rule there (`Fir.Execution.ExtCall`), by which the world
+answers a call to a declaration. The traced runs of
 a function are the runs of the interpreter in the traced layer of marked
 traces, from the memories that hold the run's starting allocations, with
 nothing escaped,
 where each op that runs by the dialect's rule, a terminator among them,
-first shows a step. A call shows no step of its own: the ops of its callee
-show theirs. Erasing the steps maps the traced runs to the runs by the
+first shows a step, and so does a call to a declaration. A call to a
+function shows no step of its own: the ops of its callee show theirs. Erasing the steps maps the traced runs to the runs by the
 dialect's rules alone. An observer sees the acts of the trace and, at a
 return, the end of the return: the returned values, the memories and what
 escaped (`Fir.Execution.ObserveEnd`). The spec's traced runs compare no
 addresses at the end of a return (`Func.observedRuns`).
 
 A dialect whose ops show no event has, in the traced layer, its semantics
-with memory, lifted onto the memories of the traced state: its traced runs
+with memory, lifted onto the memories of the traced state, and its
+external-call rule with memory, UB, lifted too: its traced runs
 then show no act, nothing escapes, and they end as its runs with memory,
 each return seen at its end. M0's dialects show no event and return no
 pointer. The core and CoreGpu have a traced semantics that lifts their
@@ -45,10 +48,11 @@ class DialectTrace (d : Dialect) [TyDenote d.Ty] [DialectSignature d] [DialectEf
   Answer : Type
   /-- `IsRefinedBy e e'`: the event `e'` refines the event `e`. -/
   IsRefinedBy : Event → Event → Prop
-  /-- The semantics of each op in the traced layer. -/
+  /-- The semantics of each op in the traced layer, and its external-call
+  rule there, where the world answers an external call. -/
   traceAt : {N : Type} → [DecidableEq N] → (lay : N → MemLayout) →
     (ρ : DialectEffects.Mem d → N) → (L : RunItems) →
-    DialectDenote d (TraceM (Act Event Answer) (TraceState N (unitsOf lay)))
+    DialectRun d (TraceM (Act Event Answer) (TraceState N (unitsOf lay)))
 
 variable {d : Dialect} [TyDenote d.Ty] [DialectSignature d] [DialectEffects d] [DialectTrace d]
 
@@ -66,16 +70,18 @@ def TraceM.tick {σ : Type} : TraceM (Step A) σ Unit := fun s e => e = .ok ((),
 variable {N : Type} [DecidableEq N] (lay : N → MemLayout) (ρ : DialectEffects.Mem d → N)
   (L : RunItems)
 
-/-- The dialect's semantics in the traced layer of marked traces: each op
-shows a step, then runs by the dialect's rule, each act of its traces an act
-of the marked trace. -/
+/-- The dialect's semantics in the traced layer of marked traces: each op,
+and each external call, shows a step, then runs by the dialect's rule, each
+act of its traces an act of the marked trace. -/
 @[instance_reducible] def DialectTrace.stepAt :
-    DialectDenote d (TraceM (Step (DialectTrace.Acts d)) (TraceState N (unitsOf lay))) :=
+    DialectRun d (TraceM (Step (DialectTrace.Acts d)) (TraceState N (unitsOf lay))) :=
   letI := DialectTrace.traceAt (d := d) lay ρ L
   { denote op args := TraceM.tick >>= fun _ =>
       TraceM.mapActs (fun a => [.act a]) (DialectDenote.denote op args)
     exit op args := TraceM.tick >>= fun _ =>
-      TraceM.mapActs (fun a => [.act a]) (DialectDenote.exit op args) }
+      TraceM.mapActs (fun a => [.act a]) (DialectDenote.exit op args)
+    extCall g args rs := TraceM.tick >>= fun _ =>
+      TraceM.mapActs (fun a => [.act a]) (DialectExtCall.extCall g args rs) }
 
 variable [DecidableEq d.Ty] [DialectCall d]
 
@@ -143,11 +149,15 @@ theorem Func.run_eraseSteps (M : Module d) (f : Func d)
     constructor <;> intro op args
     · exact hstep (DialectDenote.denote (m := TraceM (DialectTrace.Acts d) _) op args)
     · exact hstep (DialectDenote.exit (m := TraceM (DialectTrace.Acts d) _) op args)
-  exact Func.run_map hmaps (MonadMorphism.mapActs_mapsFrame _) M f args fuel
+  exact Func.run_map hmaps
+    (fun g args rs =>
+      hstep (DialectExtCall.extCall (m := TraceM (DialectTrace.Acts d) _) g args rs))
+    (MonadMorphism.mapActs_mapsFrame _) M f args fuel
 
 /-- A dialect whose ops show no event: wherever a run names its memories,
 whatever items it gives each op, its semantics in the traced layer is its
-semantics with memory, lifted onto the memories of the traced state. -/
+semantics with memory, lifted onto the memories of the traced state, its
+external-call rule included. -/
 class LiftsMem (d : Dialect) [TyDenote d.Ty] [DecidableEq d.Ty] [DialectSignature d]
     [DialectCall d] [DialectEffects d] [DialectMemDenote d] [DialectTrace d] : Prop where
   lifts : ∀ {N : Type} [DecidableEq N] (lay : N → MemLayout) (ρ : DialectEffects.Mem d → N)
@@ -155,6 +165,12 @@ class LiftsMem (d : Dialect) [TyDenote d.Ty] [DecidableEq d.Ty] [DialectSignatur
     letI := DialectMemDenote.denoteAt (d := d) lay ρ L
     letI := DialectTrace.traceAt (d := d) lay ρ L
     (MonadMorphism.traceMem N (unitsOf lay) (DialectTrace.Acts d)).MapsDenote (d := d)
+  /-- Its external-call rule in the traced layer is the rule with memory,
+  lifted: UB, as in every layer with no world. -/
+  liftsExt : ∀ {N : Type} [DecidableEq N] (lay : N → MemLayout) (ρ : DialectEffects.Mem d → N)
+      (L : RunItems),
+    letI := DialectTrace.traceAt (d := d) lay ρ L
+    (MonadMorphism.traceMem N (unitsOf lay) (DialectTrace.Acts d)).MapsExtCall (d := d)
 
 /-- The runs with memory of the function `f`, each return seen at its end:
 the returned values and the memories it ends with, with nothing escaped.
@@ -180,7 +196,7 @@ theorem Func.traceRuns_noActs [DialectMemDenote d] [LiftsMem d] (M : Module d) (
       ((f.run M (m := TraceM (Step (DialectTrace.Acts d)) (TraceState N (unitsOf lay))) args fuel).run) =
       TraceM.liftMem (f.run M (m := StateT (Memories N (unitsOf lay)) SetM) args fuel).run :=
     (congrArg ExceptT.run (Func.run_eraseSteps lay ρ L M f args fuel)).trans
-      (congrArg ExceptT.run (Func.run_map (LiftsMem.lifts lay ρ L)
+      (congrArg ExceptT.run (Func.run_map (LiftsMem.lifts lay ρ L) (LiftsMem.liftsExt lay ρ L)
         MonadMorphism.traceMem_mapsFrame M f args fuel)).symm
   have hfwd : ∀ e', ((f.run M (m := TraceM (Step (DialectTrace.Acts d))
         (TraceState N (unitsOf lay))) args fuel).run (TraceState.init (RunItems.start d lay ρ L)) e') →

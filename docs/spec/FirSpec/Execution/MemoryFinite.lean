@@ -59,7 +59,7 @@ goes with the memories, as a terminator. It is how the assumption of
 that every choice has finitely many options, reads with memory.
 :::
 
-:::readable Fir.Func.memCall_exhausted_iff Fir.Func.memCall_ub_of_memOps Fir.Func.memOps_notExhausted_up Fir.Func.memCall_notExhausted_up (pin := Fir.Func.memCall) (fingerprint := "5589302038012358630")
+:::readable Fir.Func.memCall_exhausted_iff Fir.Func.memCall_ub_of_memOps Fir.Func.memOps_notExhausted_up Fir.Func.memCall_notExhausted_up (pin := Fir.Func.memCall) (fingerprint := "3242435919357147413")
 *Theorems: running out of fuel at a budget.* A callee in its frame from
 $`S` runs out of fuel exactly when its ops do from $`\mathrm{enter}(S)`,
 and UB of its ops is UB of the callee in its frame. A run of ops, or of a
@@ -68,7 +68,7 @@ not at any budget $`m' \ge m`: a path that runs out of fuel at $`m'` runs
 out of fuel at $`m`.
 :::
 
-:::readable Fir.Func.memOps_finitelyManyRets Fir.Func.memCall_finitelyManyRets (pin := Fir.Func.memOps) (fingerprint := "13117006857750135887")
+:::readable Fir.Func.memOps_finitelyManyRets Fir.Func.memCall_finitelyManyRets (pin := Fir.Func.memOps) (fingerprint := "8132443878603099270")
 *Theorems: a run at one budget returns finitely many things.* When the ops
 of the dialect have finitely many outcomes, the run of ops
 $`\mathrm{ops}_M(n, f, E, o^*) \mathbin{@} S` returns finitely many things,

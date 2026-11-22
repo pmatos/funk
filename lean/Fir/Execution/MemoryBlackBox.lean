@@ -16,8 +16,9 @@ Each op runs alike in both, on operands of which the target's refine the
 source's, from memories of which the target's refine the source's: what it
 does on them is allowed by what it does on the source's, since every op that
 runs by its own rule is monotone with memory. A call runs its callee in a
-frame, from the memories that its caller reached. Each symbol names, in
-both, the same function, whose run the engine follows in turn, or a _black
+frame, from the memories that its caller reached; a call to an external
+declaration is UB in both, which declare the same symbols. Each symbol
+names, in both, the same function, whose run the engine follows in turn, or a _black
 box_: a function of the source and a function of the target, of the same
 parameter types, such that
 
@@ -182,11 +183,19 @@ structure MemBlackBox (M M' : Module d) (g g' : Func d) : Prop where
 variable (Mem unit) in
 /-- The target module `M'` runs each call with memory as the source `M`
 does: each symbol names the same function in both, or a black box with
-memory. -/
+memory, and the two declare the same external declarations. -/
 def MemCallsRefined (M M' : Module d) : Prop :=
-  ∀ s, M'.func? s = M.func? s ∨
+  (∀ s, M'.func? s = M.func? s ∨
     ∃ g g', M.func? s = some g ∧ M'.func? s = some g' ∧ MemBlackBox (Mem := Mem) (unit := unit)
-      M M' g g'
+      M M' g g') ∧
+  ∀ s ts rs, M'.declares s ts rs = M.declares s ts rs
+
+/-- A symbol that the target module calls as an external declaration, the
+source calls as one too. -/
+theorem MemCallsRefined.ext {M M' : Module d} (hc : MemCallsRefined Mem unit M M')
+    {s : Name} {ts rs : List d.Ty} (hg : M'.func? s = none) (hd : M'.declares s ts rs = true) :
+    M.func? s = none ∧ M.declares s ts rs = true :=
+  ⟨Module.func?_none_of_calls hc.1 hg, (hc.2 s ts rs).symm.trans hd⟩
 
 variable (Mem unit) in
 /-- The runs from given memories of each function that the target module

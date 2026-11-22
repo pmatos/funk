@@ -29,7 +29,7 @@ UB at some budget and running out of fuel at $`N` allow every path, and
 what the rest of a run allows, the whole allows.
 :::
 
-:::readable Fir.Func.memCall_allowedBelow (pin := Fir.Func.memCall) (fingerprint := "7908962959345562369")
+:::readable Fir.Func.memCall_allowedBelow (pin := Fir.Func.memCall) (fingerprint := "11402732766849412570")
 *Theorem: leaving a frame keeps what is allowed below a budget.* When each
 path of the target callee's ops from $`\mathrm{enter}(S')` that runs out of
 fuel or returns is allowed at $`N_0` by the source's from
@@ -38,7 +38,7 @@ frame from $`S'` by the source's in its frame from $`S`: leaving a frame
 keeps refinement of memories.
 :::
 
-:::readable Fir.MemBlackBox.allowedBelow Fir.MemCallsRefined.callee_allowedBelow (pin := Fir.MemBlackBox) (pin := Fir.MemCallsRefined) (pin := Fir.MemCallsBounded) (fingerprint := "1475509839184587029")
+:::readable Fir.MemBlackBox.allowedBelow Fir.MemCallsRefined.callee_allowedBelow (pin := Fir.MemBlackBox) (pin := Fir.MemCallsRefined) (pin := Fir.MemCallsBounded) (fingerprint := "10507196823025181551")
 *Theorems: a callee's path that runs out of fuel or returns, allowed below a
 budget.* A path of a black box's target in its frame, whose runs are
 bounded by $`\mathit{bound}`, that runs out of fuel
