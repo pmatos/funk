@@ -17,14 +17,14 @@ when the Lean changes under it.
 :::moduleDocs (fingerprint := "15695279757290185778")
 :::
 
-:::readable Fir.Func.runs_isRefinedBy_of_calls (pin := Fir.CallsRefined) (pin := Fir.Func.OpsMonotone) (pin := Fir.Behaviour.IsRefinedBy) (pin := Fir.Outcome.IsRefinedBy) (pin := Fir.observable) (fingerprint := "9143068086721027587")
+:::readable Fir.Func.runs_isRefinedBy_of_calls (pin := Fir.CallsRefined) (pin := Fir.Func.OpsMonotone) (pin := Fir.Behaviour.IsRefinedBy) (pin := Fir.Outcome.IsRefinedBy) (pin := Fir.observable) (fingerprint := "12471720200892304804")
 *Theorem: on refined arguments, a function refines itself in a module
 that runs each call as the source does.* In every dialect, let the target
 module $`M'`
 run each call as the source module $`M` does, with some bound $`\beta`:
 each symbol names the same function in both, or a
 {ref "The-fir-specification--Execution--Calls-as-black-boxes"}[black box],
-and both declare the same symbols. Let every function of $`M` have
+and $`M` declares each symbol that $`M'` declares. Let every function of $`M` have
 {ref "The-fir-specification--Execution--Returns-and-UB___-followed-back"}[monotone ops],
 and let $`f` be a function with monotone ops. Then for all argument
 vectors $`a` and $`a'` of the parameter types of $`f` with

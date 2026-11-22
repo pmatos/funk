@@ -35,7 +35,8 @@ run in its frame.
 *Theorem: refined arguments, in step.* When every terminator and every op
 with no callee of $`f` and of the module's functions is monotone in the
 traced layer,
-the external-call rule at each of their calls included, then on arguments $`\vec{v} \sqsubseteq \vec{v}'`, from
+the external-call rule at each of their calls included, then on arguments
+$`\vec{v} \sqsubseteq \vec{v}'`, from
 traced states $`s \sqsubseteq s'`, at every budget $`n`, each path of the
 run of $`f` on $`\vec{v}'` from $`s'` that is not stuck is allowed by a
 path of its run on $`\vec{v}` from $`s` at the same budget.

@@ -28,7 +28,7 @@ blocks, and a jump goes to the ops of one of its blocks, so they are
 monotone with memory too.
 :::
 
-:::readable Fir.MemCallsRefined.callee_allowed (pin := Fir.MemCallsRefined) (fingerprint := "7962113123780384873")
+:::readable Fir.MemCallsRefined.callee_allowed (pin := Fir.MemCallsRefined) (fingerprint := "15938931866431133684")
 *Theorem: a callee's return or UB, allowed.* In modules whose calls
 refine, a return or UB of a call's callee in the target, in its frame,
 entered on arguments and from memories that refine the source's, is
@@ -37,7 +37,7 @@ induction, which covers its ops from $`\mathrm{enter}(S) \sqsubseteq \mathrm{ent
 or a black box.
 :::
 
-:::readable Fir.Func.memOps_allowed (pin := Fir.MemAllowed) (pin := Fir.MemCallsRefined) (pin := Fir.MemMonotoneOps) (pin := Fir.Func.MemOpsMonotone) (fingerprint := "10599468029050154057")
+:::readable Fir.Func.memOps_allowed (pin := Fir.MemAllowed) (pin := Fir.MemCallsRefined) (pin := Fir.MemMonotoneOps) (pin := Fir.Func.MemOpsMonotone) (fingerprint := "2290115914629987260")
 *Theorem: every return and UB of the target with memory, allowed.* Let
 the target module $`M'` run each call with memory as the source $`M`
 does, and every op of $`M`'s functions, of $`f` and of $`o^*` that runs by

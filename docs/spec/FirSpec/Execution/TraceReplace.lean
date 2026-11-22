@@ -23,7 +23,8 @@ whose ops show events, let the target module $`M'` run each call in the
 traced layer as the source $`M` does, and every terminator and every op
 with no callee of $`f` and of $`M`'s functions be monotone in the traced
 layer,
-the external-call rule at each of their calls included. On arguments $`\vec{v} \sqsubseteq \vec{v}'` and from traced states
+the external-call rule at each of their calls included. On arguments
+$`\vec{v} \sqsubseteq \vec{v}'` and from traced states
 $`s \sqsubseteq s'`, each path of $`f`'s entry block's ops in its frame in
 $`M'` is allowed at some budget by $`f`'s in $`M`. So each
 $`\mathsf{ret}~t'~(\vec{w}', s_1')` of the traced runs of $`f` in $`M'`
@@ -57,7 +58,8 @@ allowed by UB after a refined prefix of $`t'`.
 of $`M` be unique, every terminator and every op with no callee of its
 functions be monotone in the traced layer,
 the external-call rule at each of their calls included, every op and every
-external call have finitely many outcomes given the world's answers, and refinement of values and of events
+external call have finitely many outcomes given the world's answers, and
+refinement of values and of events
 be transitive. Replace the body of its function $`g` by $`b`, so that
 $`g`, run in the new module $`M'` from given traced states, refines $`g`
 in $`M`. Then $`M'` runs each call in the traced layer as $`M` does: $`g`

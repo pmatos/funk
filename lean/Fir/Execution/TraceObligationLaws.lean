@@ -209,12 +209,10 @@ theorem ExtTraceMonotone.ofLift [DialectTrace d]
       (MonadMorphism.traceMem N (unitsOf lay) (DialectTrace.Acts d)).MapsExtCall (d := d))
     (g : Name) (ts rs : List d.Ty) :
     letI := DialectTrace.traceAt (d := d) lay ρ L
-    ExtTraceMonotone (B := DialectTrace.Acts d) (σ := TraceState N (unitsOf lay)) g ts rs := by
+    ExtTraceMonotone (B := DialectTrace.Acts d) (σ := TraceState N (unitsOf lay)) g ts rs :=
   letI := DialectTrace.traceAt (d := d) lay ρ L
-  intro args _ _ s _ _ e' _
-  refine ⟨.error (extCallUB, []), ?_, TraceEnd.Allows.of_ub _ e'⟩
-  rw [← hl g args.toDVals rs]
-  exact .inr ⟨_, (extCall_stateT_setM _ _ _ _ _).2 rfl, rfl⟩
+  ExtTraceMonotone.of_ub
+    (fun g args rs => (hl g args rs).symm.trans (TraceM.liftMem_extCall g args rs)) g ts rs
 
 variable [DialectCall d]
 

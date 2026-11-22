@@ -16,7 +16,8 @@ traces, from the memories that hold the run's starting allocations, with
 nothing escaped,
 where each op that runs by the dialect's rule, a terminator among them,
 first shows a step, and so does a call to a declaration. A call to a
-function shows no step of its own: the ops of its callee show theirs. Erasing the steps maps the traced runs to the runs by the
+function shows no step of its own: the ops of its callee show theirs.
+Erasing the steps maps the traced runs to the runs by the
 dialect's rules alone. An observer sees the acts of the trace and, at a
 return, the end of the return: the returned values, the memories and what
 escaped (`Fir.Execution.ObserveEnd`). The spec's traced runs compare no

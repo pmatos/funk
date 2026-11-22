@@ -8,7 +8,8 @@ prefix; `fir-ref run` on a call to a declaration, which is UB in the layers
 with no world, and stuck when no declaration of the call's types names the
 symbol; and, in the traced layer, a toy dialect whose external-call rule
 shows an event, through which a call to a declaration takes one step and
-the run goes on with the rule's results.
+the run goes on with the rule's results, or is stuck when the rule gives
+values of other types than the call's.
 -/
 
 namespace FirTest.ExtCall
@@ -171,5 +172,78 @@ theorem xMain_ops (a : Nat) (s : TraceState Unit (unitsOf lay)) :
     (Func.TStepPath.ext (o := callPuts) (os := [retOp]) (args := .nil) (vs := [])
       rfl rfl rfl rfl (by decide) (by decide) (extCall_run a s) rfl rfl hret)
   simpa [TraceEnd.after] using h
+
+/-! # A rule that gives values of other types -/
+
+/-- A dialect like the toy one above, whose external-call rule gives a
+value of a type that the call did not ask for. -/
+abbrev YDialect : Dialect := ⟨XOp, Core.Ty⟩
+
+instance : DialectSignature YDialect where
+  sig _ := []
+  returnTypes _ := []
+  isTerminator
+    | .ret => true
+    | _ => false
+  succCount _ := 0
+
+instance : DialectCall YDialect := ⟨fun | .call s => some s | _ => none⟩
+
+/-- The second toy dialect has no memory. -/
+instance : DialectEffects YDialect :=
+  ⟨Empty, fun _ => .exception, fun
+    | .ret => { control := true }
+    | _ => {}, fun _ => none⟩
+
+/-- An external call gives a poison `i8`, whatever the call asked for. -/
+instance : DialectTrace YDialect where
+  Event := Nat
+  Answer := Nat
+  IsRefinedBy := Eq
+  traceAt _ _ _ :=
+    { denote := fun _ _ => MonadUB.ub "no op of the toy dialect runs by its own rule"
+      exit := fun
+        | .ret, _ => pure .ret
+        | _, _ => MonadUB.ub "not a terminator"
+      extCall := fun _ _ _ => pure [⟨.int 8, (.poison : PoisonOr (BitVec 8))⟩] }
+
+/-- The traced semantics of the second toy dialect. -/
+abbrev ysem := DialectTrace.traceAt (d := YDialect) lay Empty.elim RunItems.empty
+
+/-- `call @puts`. -/
+def yCall : Operation YDialect :=
+  { results := [], op := .call "puts", operands := [], succs := [], regions := [], loc := 0 }
+/-- `ret`. -/
+def yRet : Operation YDialect :=
+  { results := [], op := .ret, operands := [], succs := [], regions := [], loc := 0 }
+/-- A function that calls `@puts`, then returns. -/
+def yMain : Func YDialect where
+  name := "main"
+  params := []
+  results := []
+  body := { blocks := [{ label := "entry", params := [], body := [yCall, yRet] }] }
+/-- A module that declares `@puts`, with no function of that symbol. -/
+def yModule : Module YDialect :=
+  { items := [.extern { name := "puts", params := [], results := [] }, .func yMain],
+    locs := [(0, .unknown)] }
+
+/-- The rule gives an `i8` where the call asked for no result, so the
+path is stuck, as the interpreter checks the rule's results. -/
+theorem yMain_stuck (s : TraceState Unit (unitsOf lay)) :
+    letI := ysem
+    Func.traceOps (DialectTrace.Acts YDialect) yModule 1 yMain [] [yCall, yRet] s
+      (.ok (.error ⟨"@puts gives values of types other than its call's result types"⟩, [], s)) := by
+  letI := ysem
+  unfold Func.traceOps Func.runOps
+  simp only [yCall, Operation.ownsCoreRegion, List.any_nil, Bool.false_eq_true, ite_false, sig,
+    isTerminator, callee?]
+  have hf : yModule.func? "puts" = none := rfl
+  have hd : yModule.declares "puts" [] [] = true := by decide
+  refine run_bind (a := HVector.nil) (run_liftExcept _ _) ?_ (TraceEnd.after_nil _).symm
+  simp only [hf, returnTypes, hd, ↓reduceIte]
+  refine run_bind (a := [⟨.int 8, (.poison : PoisonOr (BitVec 8))⟩]) (t := []) (s' := s)
+    (run_lift rfl) ?_ (TraceEnd.after_nil _).symm
+  rw [ite_eq_right (by decide)]
+  rfl
 
 end FirTest.ExtCall

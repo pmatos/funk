@@ -44,7 +44,8 @@ base's, where the run names each memory of the base as the sum does, its
 results seen at the sum's types; each act of a side is the sum's act on
 that side. An external call whose arguments and result types are all of
 the base runs by the base's external-call rule, its results seen at the
-sum's types; any other runs by $`e`'s, which sees the sum's types. Refinement of the sum's events is reflexive, and transitive,
+sum's types; any other runs by $`e`'s, which sees the sum's types.
+Refinement of the sum's events is reflexive, and transitive,
 when each side's is.
 :::
 

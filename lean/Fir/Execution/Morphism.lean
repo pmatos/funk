@@ -11,7 +11,8 @@ to those of another, and keeps the steps that runs are built from: ending
 at once with a value, running one computation then another, and applying
 a function to a result. When it maps each op's computation in the first
 monad to the op's computation in the second, the external-call rule in the
-first to the rule in the second, and each call's frame to a frame, it maps the interpreter's run in the first to its run in the
+first to the rule in the second, and each call's frame to a frame, it maps
+the interpreter's run in the first to its run in the
 second. The interpreter is written against
 an abstract monad, so it cannot tell the two apart: this is the last
 theorem below.

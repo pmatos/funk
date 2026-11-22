@@ -265,7 +265,7 @@ theorem Func.memRunsFrom_args_isRefinedBy (M : Module d)
     {a a' : HVector toType (f.params.map (·.2))} (ha : a.Forall₂ TyRefinement.IsRefinedBy a')
     {S S' : Memories Mem unit} (hS : S ⊑ S') :
     observable (f.memRunsFrom M (a, S)) ⊑ observable (f.memRunsFrom M (a', S')) :=
-  Func.memRunsFrom_isRefinedBy_of_calls hmono (bound := 0) ⟨fun _ => .inl rfl, fun _ _ _ => rfl⟩
+  Func.memRunsFrom_isRefinedBy_of_calls hmono (bound := 0) ⟨fun _ => .inl rfl, fun _ _ _ h => h⟩
     (fun _ _ _ h => absurd rfl h) f hf ha hS
 
 

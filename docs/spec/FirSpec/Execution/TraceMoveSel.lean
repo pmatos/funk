@@ -19,7 +19,8 @@ changes under it.
 
 :::readable Fir.TGood.move (fingerprint := "4591464512892131575")
 *Theorem: the pigeonhole step.* Let every path of every op and of every
-external call show exactly one step, and every op that runs by its own rule, and every external call,
+external call show exactly one step, and every op that runs by its own
+rule, and every external call,
 have finitely many outcomes,
 given the world's answers. A configuration $`c` whose run shows $`T` with
 $`K` at unboundedly many budgets goes on by a move of the marked trace $`t`

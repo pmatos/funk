@@ -20,7 +20,9 @@ counterpart, in a traced layer of marked traces.
   others, from traced states that refine others, the traced observable
   behaviour of the target's function, with the traced state it ends in,
   refines that of the source's. Each symbol names the same function in
-  both modules, or a traced black box (`TraceCallsRefined`).
+  both modules, or a traced black box, and the source declares each symbol
+  that the target declares, so that a call to a declaration in the target
+  is one in the source (`TraceCallsRefined`).
 * _Allowed at some budget._ The two runs do not go in step: a black box's
   two functions may take different numbers of steps. So a path of the
   target is allowed by a path of the source at some budget, comparing acts,
@@ -259,19 +261,20 @@ structure TraceBlackBox (M M' : Module d) (g g' : Func d) : Prop where
 variable (A Mem unit) in
 /-- The target module `M'` runs each call in the traced layer as the source
 `M` does: each symbol names the same function in both, or a traced black
-box, and the two declare the same external declarations. -/
+box, and the source declares each symbol that the target declares, for the
+same types. -/
 def TraceCallsRefined (M M' : Module d) : Prop :=
   (∀ s, M'.func? s = M.func? s ∨
     ∃ g g', M.func? s = some g ∧ M'.func? s = some g' ∧
       TraceBlackBox (A := A) (Mem := Mem) (unit := unit) M M' g g') ∧
-  ∀ s ts rs, M'.declares s ts rs = M.declares s ts rs
+  ∀ s ts rs, M'.declares s ts rs = true → M.declares s ts rs = true
 
 /-- A symbol that the target module calls as an external declaration, the
 source calls as one too. -/
 theorem TraceCallsRefined.ext {M M' : Module d} (hc : TraceCallsRefined A Mem unit M M')
     {s : Name} {ts rs : List d.Ty} (hg : M'.func? s = none) (hd : M'.declares s ts rs = true) :
     M.func? s = none ∧ M.declares s ts rs = true :=
-  ⟨Module.func?_none_of_calls hc.1 hg, (hc.2 s ts rs).symm.trans hd⟩
+  ⟨Module.func?_none_of_calls hc.1 hg, hc.2 s ts rs hd⟩
 
 /-- A call that enters a black box's target passes arguments of the
 parameter types of the black box's source. -/

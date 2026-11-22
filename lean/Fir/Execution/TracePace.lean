@@ -20,7 +20,8 @@ trace of `m` steps, has
 
 The proof follows the ways a step goes on, by strong induction on the
 budget. An op that runs by its own rule, or a call of an external
-declaration, shows one step and spends one step of fuel, and the run goes on from ops whose chain is shorter than `W`. A
+declaration, shows one step and spends one step of fuel, and the run goes
+on from ops whose chain is shorter than `W`. A
 call spends one step of fuel and starts the chain of its callee's entry
 block, one call longer; its callee returns, and the caller goes on.
 -/

@@ -267,7 +267,7 @@ theorem Module.replaceBody_traceCallsRefined
       refines := fun a a' s s' ha hs => TBehaviour.isRefinedBy_trans
         (Act.isRefinedBy_trans htransE) hobs
         (Func.traceRunsFrom_isRefinedBy_of_args lay ρ L hfin hmono (hmono g hg) ha hs) (h (a', s')) }
-  refine ⟨fun x => ?_, fun _ _ _ => Module.declares_replaceBody _ _ _ _ _ _⟩
+  refine ⟨fun x => ?_, fun _ _ _ h => by rwa [Module.declares_replaceBody] at h⟩
   by_cases hx : x = g.name
   · subst hx
     exact .inr ⟨g, _, Module.func?_of_mem hnd hg, Module.func?_replaceBody_self hnd hg b, bb⟩

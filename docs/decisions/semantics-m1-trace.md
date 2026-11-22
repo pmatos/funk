@@ -190,7 +190,13 @@ These are #233's choices of form, within the rules above.
   event that names allocation ids, which the world never sees.
 - **A sum's events.** A sum of dialects shows both sides' events, and its
   world answers each as its side does (`Fir.Sum.Trace`). So CoreGpu shows
-  the core's events, since `gpu` has none.
+  the core's events, since `gpu` has none. An external call goes to the
+  base's external-call rule when its arguments and result types are all
+  the base's, and to the other side's otherwise. This is an agent's
+  choice made in #239's stage 3b, not a ruling. It changes nothing while
+  both rules are UB. Rejected: dispatch by the side that owns the
+  declaration, since a declaration is an item of the module and belongs
+  to no side.
 
 When the source returns no pointer and nothing escaped, the end of its
 return is refined exactly when its returned values are and nothing escaped

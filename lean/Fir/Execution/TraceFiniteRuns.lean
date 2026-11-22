@@ -5,7 +5,8 @@ import Fir.Execution.TraceStepPaths
 # Finitely many traces at one budget
 
 When every op that runs by its own rule, and every external call, has
-finitely many outcomes, given the world's answers (`Fir.Execution.TraceFinite`), a traced run of ops at
+finitely many outcomes, given the world's answers
+(`Fir.Execution.TraceFinite`), a traced run of ops at
 one budget has finitely many outcomes, given the world's answers, calls and
 recursion included: from each traced state and for each answer stream, the
 results it may end with, with marked traces whose acts agree with the

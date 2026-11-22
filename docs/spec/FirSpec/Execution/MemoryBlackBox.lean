@@ -14,7 +14,7 @@ build fails when the Lean changes under it.
 
 #doc (Manual) "Calls as black boxes, with memory: readable blocks" =>
 
-:::moduleDocs (fingerprint := "4231329560502139316")
+:::moduleDocs (fingerprint := "10179189778517068381")
 :::
 
 :::readable Fir.MemAllowed Fir.MemAllowed.of_someUB Fir.MemAllowed.of_not Fir.MemAllowed.of_step (pin := Fir.SomeUB) (pin := Fir.Ev.addLeft) (fingerprint := "7657756953179574042")
@@ -49,7 +49,7 @@ at $`N_1 + N_2 + 1`, leaving $`k` more steps: with more fuel, the callee
 returns the same, with the same memories, and leaves more steps.
 :::
 
-:::readable Fir.FuncRuns.BoundedBy Fir.MemBlackBox Fir.MemCallsRefined Fir.MemCallsBounded (pin := Fir.Func.memRunsFrom) (fingerprint := "14184632459255098512")
+:::readable Fir.FuncRuns.BoundedBy Fir.MemBlackBox Fir.MemCallsRefined Fir.MemCallsBounded (pin := Fir.Func.memRunsFrom) (fingerprint := "9803968526532395029")
 *Definitions: bounded runs, black boxes with memory, and modules whose
 calls refine.* Runs $`f` are _bounded_ by the budget $`B` when, on each
 input, they diverge, or none of them with $`B` steps or more runs out of
@@ -63,7 +63,8 @@ included
 
 The target module _runs each call with memory as the source does_ when each
 symbol names the same function in both, or a black box with memory, and
-both modules declare each symbol for the same types. A
+the source declares each symbol that the target declares, for the same
+types. A
 callee runs from the memories its caller reached, so a black box speaks of
 runs from every memories, not only from the empty ones. Its _calls are
 bounded_ by $`\mathit{bound}` when the runs from given memories of each

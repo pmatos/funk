@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Calls as black boxes: readable blocks" =>
 
-:::moduleDocs (fingerprint := "775056498010303263")
+:::moduleDocs (fingerprint := "6479642496386002928")
 :::
 
 :::readable Fir.HVector.cast Fir.HVector.toDVals_cast Fir.HVector.forall₂_cast (fingerprint := "1918683470415412202")
@@ -75,7 +75,7 @@ bound is what the section on
 needs to relate the two budgets.
 :::
 
-:::readable Fir.CallsRefined (fingerprint := "5114479141722606935")
+:::readable Fir.CallsRefined (fingerprint := "8673431818244253080")
 *Definition: the target runs each call as the source does.* For modules
 $`M` and $`M'` and a bound $`\beta`, every symbol $`s` names the same
 function in both, $`\mathrm{lookup}_{M'}(s) = \mathrm{lookup}_M(s)`, or
@@ -83,8 +83,10 @@ $`M` has a function $`g = \mathrm{lookup}_M(s)` and $`M'` a function
 $`g' = \mathrm{lookup}_{M'}(s)` such that $`(g, g')` is a black box with
 the bound $`\beta`. And $`M'`
 {ref "The-fir-specification--Execution--The-external-call-rule"}[declares]
-each symbol for the same types as $`M` does, so that a call goes to the
-external-call rule in one module exactly when it does in the other. Here
+no symbol for types that $`M` does not declare it for, so that a call
+that goes to the external-call rule in $`M'` goes to it in $`M` too.
+$`M` may declare more: where only $`M` declares a symbol, a call to it is
+stuck in $`M'`, and a stuck path asks nothing. Here
 $`\mathrm{lookup}_M(s)` is the function that a call of $`s` runs in $`M`,
 as the
 {ref "The-fir-specification--Execution--The-interpreter"}[interpreter]

@@ -25,7 +25,8 @@ by the dialect's rule showing a step before it, and return its values with
 the traced state each return ends in.
 
 *Theorems.* They truncate, with any $`W > 0` that exceeds the length of
-every chain of calls of the module by at least one. When every op that runs by its own rule, and every external call,
+every chain of calls of the module by at least one. When every op that
+runs by its own rule, and every external call,
 has finitely many outcomes given the world's answers, they
 have finitely many traces at each budget.
 :::

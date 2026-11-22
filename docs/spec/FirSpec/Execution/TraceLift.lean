@@ -28,7 +28,8 @@ memory, UB, lifted too.
 
 *Theorem: it lifts the semantics with memory.* So the lift onto the
 memories of the traced state maps each op's semantics with memory to its
-traced semantics, and the external-call rule to its rule, by definition, at every naming of its memories and all
+traced semantics, and the external-call rule to its rule, by definition,
+at every naming of its memories and all
 items a run gives each op.
 :::
 

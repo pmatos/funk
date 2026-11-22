@@ -271,8 +271,9 @@ theorem OpsTraceFinite.ofLift [DialectMemDenote d] [DialectTrace d]
   · rw [← (hl op args).2]
     exact FinitelyMany.liftMem ((h op hop args).2 hT)
   · rw [← hlx g args rs]
-    refine FinitelyMany.liftMem (fun _ => ⟨[], fun _ hx => ?_⟩)
-    cases (extCall_stateT_setM _ _ _ _ _).1 hx
+    show TraceFinitelyMany (TraceM.liftMem _)
+    rw [TraceM.liftMem_extCall]
+    exact TraceFinitelyMany.ub _
 
 /-- In the traced semantics of a dialect whose ops show no event, ops of
 finitely many outcomes with memory have finitely many in the traced layer,

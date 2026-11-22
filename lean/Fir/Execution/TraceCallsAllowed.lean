@@ -4,7 +4,8 @@ import Fir.Execution.TraceBlackBox
 # Every return and UB of the target, allowed, call by call
 
 Let every call name the same function in both modules or a traced black
-box, and both modules declare the same symbols. Let every op that runs by
+box, and the source declare each symbol that the target declares. Let
+every op that runs by
 its own rule, a terminator or an op with no callee, be monotone in the
 traced layer of marked traces, and the external-call rule at each other
 call, among the ops of the source module's functions and of the function

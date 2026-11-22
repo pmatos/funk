@@ -69,7 +69,6 @@ makes each of these checks of a valid function:
 * a call names a function of the module, or an external declaration
   whose signature accepts the call's operand and result types, which the
   dialect's own validation rule must ask;
-* the external-call rule gives values of the call's result types;
 * the function has an entry block, which declares no arguments;
 * a call passes one value of the right type for each of its callee's
   parameters, and receives values of its own result types, which the
@@ -85,8 +84,11 @@ makes of them. A terminator's rule may jump only to a successor that the
 terminator has, while validation fixes only how many it has; the branch
 obligations prove it of `br` and `cond_br`. And a terminator may return
 only values of the function's result types, which the dialect's own rule
-must ask, as the core rule for `ret` does. One more condition is no check
-of its own: a terminator that jumps gives no results. The interpreter
+must ask, as the core rule for `ret` does. A third check holds the
+external-call rule: it may give only values of the call's result types.
+No obligation asks that yet, since the rule is UB in every layer for now;
+#239's next stage, which gives the core's rule values, must. One more
+condition is no check of its own: a terminator that jumps gives no results. The interpreter
 binds none for it, while validation puts them in scope in the blocks that
 its block dominates, so a use of one would be stuck. No core terminator
 has results. That condition is the dialect's obligation, not a rule of
@@ -106,9 +108,12 @@ calls and recursion included, so for every function of every valid core module
 
 The interpreter's own steps never drop a path. Each step goes on, ends the
 path with a result, or ends it stuck; only an op's semantics can branch.
-A path is lost only where an op or the external-call rule has no outcome,
-which the totality obligation rules out for every op that the interpreter
-runs by its own rule: a terminator, or an op that calls no function. An op
+A path is lost only where an op or the external-call rule has no outcome.
+The totality obligation rules that out for every op that the interpreter
+runs by its own rule: a terminator, or an op that calls no function. No
+obligation asks it of the external-call rule yet: the rule is UB in every
+layer for now, which is an outcome, and #239's next stage must ask it of
+the rule it gives the core. An op
 that calls a function runs its callee, or the external-call rule, never its
 own semantics.
 

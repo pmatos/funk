@@ -111,9 +111,9 @@ its own symbol, so there the first is the only one.
 other.* Take modules $`M` and $`M'` such that, for each symbol $`s`,
 either $`\mathrm{lookup}_{M'}(s) = \mathrm{lookup}_M(s)`, or both are
 functions, related as some relation asks. Then when
-$`\mathrm{lookup}_{M'}(s)` is none, so is $`\mathrm{lookup}_M(s)`: a
-call that goes to the external-call rule in $`M'` goes to it in $`M`
-too.
+$`\mathrm{lookup}_{M'}(s)` is none, so is $`\mathrm{lookup}_M(s)`. With
+$`M` declaring each symbol that $`M'` declares, a call that goes to the
+external-call rule in $`M'` then goes to it in $`M` too.
 :::
 
 :::readable Fir.Func.enter (pin := Fir.Func.blocks) (fingerprint := "17977239527569811158")
@@ -188,7 +188,8 @@ check that fails makes the path stuck:
    one step, as an op that runs by its own rule does.
 
 Here $`\mathrm{exit}_o`, $`\mathrm{denote}_o`, $`\mathrm{callee}(o)` and
-$`\mathrm{ext}` are what the dialect says of $`o` and of external calls; looking operands up, jumping, looking a
+$`\mathrm{ext}` are what the dialect says of $`o` and of external calls;
+looking operands up, jumping, looking a
 symbol up and entering a function are the blocks above. Running in a frame
 is the way of computing's
 {ref "The-fir-specification--Execution--The-frame-effect"}[frame effect]:
