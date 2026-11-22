@@ -1,4 +1,5 @@
 import Fir.Text.GlobalText
+import Fir.Syntax.FuncAttrs
 
 /-!
 The printer fixes the one spelling of every module: printing what the
@@ -9,6 +10,9 @@ is:
 * single spaces between tokens, a space after each comma and after the colon
   of a definition (`%x: T`), and none inside parentheses, before an item's
   parameters or around the colons of a source range (`"f":2:3 to 2:14`);
+* each attribute of a function's parameter or result after its type and a
+  space, and `...` at the end of a variadic function's parameters, after
+  `, ` when a parameter comes before (ADR-2026-11-21-1307);
 * a function's blocks at the indentation of the function, and its ops two
   spaces deeper. A region of an op opens with ` {` at the end of the op's
   line, then a space and the region's kind when it names one; its blocks
@@ -121,13 +125,27 @@ def Operation.printList (n : Nat) : List (Operation d) → String
   | o :: os => Operation.print n o ++ Operation.printList n os
 end
 
+/-- Each attribute of a list after a space. -/
+def printAttrs (as : List Attr) : String := String.join (as.map (" " ++ ·.print))
+
+/-- A function's parameters, each with its attributes after its type, then
+`...` when they end in it. -/
+def Func.printParams (f : Func d) : String :=
+  ", ".intercalate ((f.params.zip f.paramAttrsAll).map fun (x, as) => printDef x ++ printAttrs as) ++
+    if f.variadic then (if f.params.isEmpty then "..." else ", ...") else ""
+
+/-- A function's results, each with its attributes after its type, after
+` -> `: nothing when it returns nothing. -/
+def Func.printResults (f : Func d) : String :=
+  if f.results.isEmpty then ""
+  else " -> " ++ ", ".intercalate ((f.results.zip f.resultAttrsAll).map fun (t, as) =>
+    (tyAttr t).print ++ printAttrs as)
+
 /-- A function at indentation `n`, with its line feed: an item of kind
-`func`, with no attributes. Its header, its labels and its `}` are at `n`,
-and its ops two spaces deeper. -/
+`func`. Its header, its labels and its `}` are at `n`, and its ops two
+spaces deeper. -/
 def Func.print (n : Nat) (f : Func d) : String :=
-  let results :=
-    if f.results.isEmpty then "" else " -> " ++ ", ".intercalate (f.results.map (tyAttr · |>.print))
-  indent n ++ "func " ++ printSymbol f.name ++ "(" ++ printDefs f.params ++ ")" ++ results ++
+  indent n ++ "func " ++ printSymbol f.name ++ "(" ++ f.printParams ++ ")" ++ f.printResults ++
     " {\n" ++ Block.printList n f.body.blocks ++ indent n ++ "}\n"
 
 /-- A dialect set at indentation `n`, `dialects a, b`, then an empty line,

@@ -1,4 +1,4 @@
-import Fir.Text.LexPrint
+import Fir.Text.LexFunc
 
 /-!
 # Lexing a printed module
@@ -177,29 +177,17 @@ end
 text. -/
 theorem Func.spells (n : Nat) (f : Func d) (hw : ∀ t ∈ f.tokens, t.Writable) :
     SpellsAny (f.print n).toList f.tokens := by
-  have hdefs := spells_defs f.params fun t ht => hw t (by simp [Func.tokens, ht])
+  have hparams := f.spellsParams fun t ht => hw t (by simp [Func.tokens, ht])
+  have hresults := f.spellsResults fun t ht => hw t (by simp [Func.tokens, ht])
   have hblocks := Block.spellsList n f.body.blocks fun t ht => hw t (by simp [Func.tokens, ht])
   intro cs us hl
-  by_cases hr : f.results.isEmpty = true
-  · simp only [Func.print, Func.tokens, hr, ite_true, String.toList_append, String.reduceToList,
-      toList_indent, List.append_assoc, List.cons_append, List.nil_append]
-    exact Lexes.spaces (Lexes.lit "func" ['f', 'u', 'n', 'c'] (boundary_space _) <| Lexes.space <|
-      Lexes.sym _ (boundary_cons (by decide)) <| Lexes.lparen <|
-      hdefs _ _ (boundary_cons (by decide)) <| Lexes.rparen <| Lexes.space <| Lexes.lbrace <|
-      Lexes.lf <| hblocks _ _ <| Lexes.spaces (Lexes.rbrace <| Lexes.lf hl) n) n
-  · simp only [Func.tokens, hr, Bool.false_eq_true, ite_false] at hw
-    have hall := forall_mem_intercalate (sep := [Tok.comma])
-      (tss := f.results.map (tyAttr · |>.tokens)) fun t ht => hw t (by simp [ht])
-    have htypes : SpellsEach (f.results.map (tyAttr · |>.print)) (f.results.map (tyAttr · |>.tokens)) :=
-      SpellsEach.map fun ty hty =>
-        Attr.spells _ (hall _ (List.mem_map_of_mem (f := (tyAttr · |>.tokens)) hty))
-    simp only [Func.print, Func.tokens, hr, Bool.false_eq_true, ite_false, String.toList_append,
-      String.reduceToList, toList_indent, List.append_assoc, List.cons_append, List.nil_append]
-    exact Lexes.spaces (Lexes.lit "func" ['f', 'u', 'n', 'c'] (boundary_space _) <| Lexes.space <|
-      Lexes.sym _ (boundary_cons (by decide)) <| Lexes.lparen <|
-      hdefs _ _ (boundary_cons (by decide)) <| Lexes.rparen <| Lexes.space <| Lexes.arrow <|
-      Lexes.space <| spells_commaSep htypes _ _ (boundary_space _) <| Lexes.space <| Lexes.lbrace <|
-      Lexes.lf <| hblocks _ _ <| Lexes.spaces (Lexes.rbrace <| Lexes.lf hl) n) n
+  simp only [Func.print, Func.tokens, String.toList_append, String.reduceToList, toList_indent,
+    List.append_assoc, List.cons_append, List.nil_append]
+  exact Lexes.spaces (Lexes.lit "func" ['f', 'u', 'n', 'c'] (boundary_space _) <| Lexes.space <|
+    Lexes.sym _ (boundary_cons (by decide)) <| Lexes.lparen <|
+    hparams _ _ (boundary_cons (by decide)) <| Lexes.rparen <|
+    hresults _ _ (boundary_space _) <| Lexes.space <| Lexes.lbrace <|
+    Lexes.lf <| hblocks _ _ <| Lexes.spaces (Lexes.rbrace <| Lexes.lf hl) n) n
 
 /-- A dialect set at indentation `n`, then an empty line, reads back as its
 tokens, before any text. -/

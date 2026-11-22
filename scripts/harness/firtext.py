@@ -20,6 +20,8 @@ from dataclasses import dataclass
 NUMBER = re.compile(r"-?\d*(?:\.\d+e-\d+)?", re.ASCII)
 NAMECHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_."
 PUNCT = "(){},:="
+# The kinds of token that start an attribute.
+ATTR_START = ("word", "int", "string", "symbol")
 
 
 class TextError(Exception):
@@ -91,6 +93,9 @@ def tokens(text: str) -> list[Token]:
         elif text.startswith("->", i):
             out.append(Token("->", "->", line))
             i += 2
+        elif text.startswith("...", i):
+            out.append(Token("...", "...", line))
+            i += 3
         elif c in PUNCT:
             out.append(Token(c, c, line))
             i += 1
@@ -243,12 +248,12 @@ class Reader:
             raise TextError(f"line {kind.line}: an item of kind {kind.text}")
         symbol = scope + self.take("symbol").text
         self.take("(")
-        params = () if self.at(")") else self.defs()
+        params = () if self.at(")") else self.params()
         self.take(")")
         results = ()
         if self.at("->"):
             self.take("->")
-            results = self.types()
+            results = self.results()
         self.take("{")
         defined, ops = list(params), []
         while self.at("label"):
@@ -286,19 +291,41 @@ class Reader:
         self.take(":")
         return name, self.type()
 
-    def types(self) -> tuple[str, ...]:
+    def params(self) -> tuple[tuple[str, str], ...]:
+        """A function's parameters, each with the attributes after its type,
+        such as an extension marker, which it skips, then maybe `...`."""
+        out = []
+        while not self.at("..."):
+            out.append(self.define())
+            self.marks()
+            if not self.at(","):
+                return tuple(out)
+            self.take(",")
+        self.take("...")
+        return tuple(out)
+
+    def results(self) -> tuple[str, ...]:
+        """A function's results, each with the attributes after its type,
+        which it skips."""
         out = [self.type()]
+        self.marks()
         while self.at(","):
             self.take(",")
             out.append(self.type())
+            self.marks()
         return tuple(out)
+
+    def marks(self) -> None:
+        """Skips the attributes after a parameter's or a result's type."""
+        while (t := self.peek()) is not None and t.kind in ATTR_START:
+            self.attr()
 
     def type(self) -> str:
         return self.attr()
 
     def attr(self) -> str:
         t = self.peek()
-        if t is None or t.kind not in ("word", "int", "string", "symbol"):
+        if t is None or t.kind not in ATTR_START:
             raise TextError(f"line {t.line if t else '?'}: expected an attribute")
         self.i += 1
         if t.kind == "word" and self.at("("):
@@ -321,7 +348,7 @@ class Reader:
             self.take("=")
         name = self.take("word").text
         attrs = []
-        while self.peek() and self.peek().kind in ("word", "int", "string", "symbol"):
+        while self.peek() and self.peek().kind in ATTR_START:
             attrs.append(self.attr())
         operands, successors = [], []
         while self.at("value") or self.at("label"):

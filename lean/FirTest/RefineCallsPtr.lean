@@ -55,6 +55,7 @@ theorem pidFn_valid : pidFn.Valid ptrModule.context where
   ops := opValid_of (dom := []) (fun _ h => nomatch h) (by decide +kernel)
   inner := Func.inner_of_noRegions (by decide +kernel)
   dialect := trivial
+  signature := (Func.sigProblems_eq_nil _).1 rfl
 
 /-- `@pcall` is valid in its module: its `call` names `@pid` at its type. -/
 theorem pcallFn_valid : pcallFn.Valid ptrModule.context where
@@ -76,6 +77,7 @@ theorem pcallFn_valid : pcallFn.Valid ptrModule.context where
   ops := opValid_of (dom := []) (fun _ h => nomatch h) (by decide +kernel)
   inner := Func.inner_of_noRegions (by decide +kernel)
   dialect := trivial
+  signature := (Func.sigProblems_eq_nil _).1 rfl
 
 /-- The module of `@pid` and `@pcall` is valid. -/
 theorem ptrModule_valid : ptrModule.Valid := Module.valid_of_flat

@@ -139,6 +139,14 @@ pub trait TypeSpec: Send + Sync {
         None
     }
 
+    /// Whether a parameter or result of type `ty`, one of the dialect's
+    /// types, may carry the attributes `attrs` after its type in a
+    /// function's signature (`DialectValidation.validSigAttrs`). By default
+    /// it carries none.
+    fn sig_attrs(&self, _ty: &Type, attrs: &[Attr]) -> bool {
+        attrs.is_empty()
+    }
+
     /// The units that a value of `ty` takes as a field of an aggregate's
     /// layout in the memory `n`, and its alignment there, in units, where
     /// `entry` gives each memory's layout entry

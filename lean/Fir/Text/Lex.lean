@@ -46,7 +46,7 @@ inductive Tok where
   | word (w : String)
   | int (i : Int)
   | str (s : String)
-  | lparen | rparen | lbrace | rbrace | comma | colon | eq | arrow
+  | lparen | rparen | lbrace | rbrace | comma | colon | eq | arrow | ellipsis
   | eof
   | float (l : FloatLit)
   deriving Repr, DecidableEq, Inhabited
@@ -62,7 +62,7 @@ def Tok.describe : Tok → String
   | .int i => s!"integer {i}"
   | .str s => "string " ++ quote s
   | .lparen => "(" | .rparen => ")" | .lbrace => "{" | .rbrace => "}"
-  | .comma => "," | .colon => ":" | .eq => "=" | .arrow => "->"
+  | .comma => "," | .colon => ":" | .eq => "=" | .arrow => "->" | .ellipsis => "..."
   | .eof => "the end of the text"
   | .float l => "float literal " ++ l.print
 
@@ -372,6 +372,8 @@ def lexToken (c : Char) (cs : List Char) (p : TextPos) : Except ParseError (Tok 
     let w := cs.takeWhile isNameChar
     .ok (.word (String.ofList (c :: w)), ⟨cs.dropWhile isNameChar, length_dropWhile_le _ _⟩,
       p.advance (1 + w.length))
+  else if c = '.' ∧ cs.take 2 = ['.', '.'] then
+    .ok (.ellipsis, ⟨cs.drop 2, by simp⟩, p.advance 3)
   else errorAt p ("unexpected character " ++ codePoint c)
 
 /-- A character other than the line feed, which ends a comment. -/

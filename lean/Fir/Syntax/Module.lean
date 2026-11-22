@@ -226,12 +226,24 @@ symbol (H3, ADR-2026-10-29-2012).
 entry block, the first block of `body`, which declares none of its own.
 `results` are the types the function returns: any number of them, none
 included (ADR-2026-10-29-2008).
+
+A parameter or a result may carry attributes after its type, generic terms
+that its dialect reads, such as the core's extension markers `sext` and
+`zext` (ADR-2026-11-09-1547). `paramAttrs` lists those of each parameter in
+order, and `resultAttrs` those of each result, each list leaving out the
+empty lists at its end, so a function with none holds `[]` (`padAttrs`,
+`trimAttrs`). `variadic` says that the parameters end in `...`: the text
+can write it, and validation rejects it, since defining a variadic function
+stays out of M1 (ADR-2026-11-09-1548).
 -/
 structure Func (d : Dialect) where
   name : Name
   params : List (Name × d.Ty)
   results : List d.Ty
   body : Region d
+  paramAttrs : List (List Attr) := []
+  resultAttrs : List (List Attr) := []
+  variadic : Bool := false
 
 /--
 An item of a kind that a dialect registers (ADR-2026-11-09-1543): what the

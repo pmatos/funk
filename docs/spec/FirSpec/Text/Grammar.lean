@@ -15,7 +15,7 @@ changes under it. The grammar of a module opens the section.
 
 #doc (Manual) "Grammar: readable blocks" =>
 
-:::moduleDocs (fingerprint := "3272646012666460010")
+:::moduleDocs (fingerprint := "4728856668926313518")
 :::
 
 A module is written by the grammar below, in the tokens of the
@@ -107,14 +107,14 @@ operands and results are defined. The parser has no code for any op of any
 dialect beyond these functions.
 :::
 
-:::readable Fir.LawfulDialectText (pin := Fir.DialectSignature) (pin := Fir.DialectValidation) (fingerprint := "9175486634428602045")
+:::readable Fir.LawfulDialectText (pin := Fir.DialectSignature) (pin := Fir.DialectValidation) (fingerprint := "11479510786950619976")
 *Definition: a dialect whose text is lawful.* Let $`d` be a dialect with its
 {ref "The-fir-specification--Abstract-syntax--Dialects"}[signature], which
 gives each op instance $`o` its operand types $`\mathrm{sig}(o)` and its
 result types $`\mathrm{ret}(o)`, its
 {ref "The-fir-specification--Validation--Scope-and-symbols"}[validation rules],
 which say which of its types are valid, and its text. The text of $`d` is
-_lawful_ when seven laws hold, for every op instance $`o`, every type $`t`,
+_lawful_ when eight laws hold, for every op instance $`o`, every type $`t`,
 every name $`n`, every attribute $`a` and all lists $`a^*`, $`t^*` and
 $`r^*`:
 
@@ -132,11 +132,13 @@ $`r^*`:
    $`\mathrm{decodety}(a) = t`, then $`\mathrm{tyattr}(t) = a`;
 5. $`\mathrm{opname}(o)` is a word;
 6. every attribute of $`\mathrm{opattrs}(o)` can be written;
-7. if $`t` is valid, $`\mathrm{tyattr}(t)` is written as a type.
+7. if $`t` is valid, $`\mathrm{tyattr}(t)` is written as a type;
+8. if the dialect allows the attributes $`a^*` after $`t` in a function's
+   signature, every attribute of $`a^*` can be written.
 
 The first four make each op instance and each valid type have exactly one
 spelling. A type that is not valid, such as a core integer type wider
-than 16,777,215, need not read back. The last three say that what the dialect writes
+than 16,777,215, need not read back. The last four say that what the dialect writes
 fits the grammar. With them, every valid module of the dialect is well
 formed, and the round trip, proved in the sections that follow, rests on
 these laws alone, for every dialect.

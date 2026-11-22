@@ -33,6 +33,8 @@ pub(super) enum Tok {
     Colon,
     Eq,
     Arrow,
+    /// `...`, which ends a variadic parameter list.
+    Ellipsis,
     Eof,
 }
 
@@ -56,6 +58,7 @@ impl Tok {
             Tok::Colon => ":".into(),
             Tok::Eq => "=".into(),
             Tok::Arrow => "->".into(),
+            Tok::Ellipsis => "...".into(),
             Tok::Eof => "the end of the text".into(),
         }
     }
@@ -223,6 +226,10 @@ impl Lexer<'_> {
             }
             '-' | '0'..='9' => self.number(pos),
             c if is_word_start(c) => Ok(Tok::Word(self.take_name_chars())),
+            '.' if self.text[self.at..].starts_with("...") => {
+                self.at += 3;
+                Ok(Tok::Ellipsis)
+            }
             c => err(pos, format!("unexpected character {}", code_point(c))),
         }
     }

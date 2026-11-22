@@ -84,7 +84,7 @@ theorem Lexes.token {c : Char} {rest r : List Char} {t : Tok} {us : List Tok}
 
 /-- A punctuation token: it ends where it is. -/
 def Tok.IsPunct : Tok → Prop
-  | .lparen | .rparen | .lbrace | .rbrace | .comma | .colon | .eq | .arrow => True
+  | .lparen | .rparen | .lbrace | .rbrace | .comma | .colon | .eq | .arrow | .ellipsis => True
   | _ => False
 
 /-- Punctuation is read before any characters at all. -/
@@ -96,7 +96,7 @@ theorem Tok.lexes_punct {t : Tok} (ht : t.IsPunct) {cs : List Char} {us : List T
     refine Lexes.token (by decide) (fun p => ?_) h
     unfold lexToken
     simp (config := { decide := true }) only [ite_true, ite_false]
-    exact ⟨_, by simp, rfl⟩
+    exact ⟨_, by simp; try omega, rfl⟩
 
 /-! # Names and words -/
 

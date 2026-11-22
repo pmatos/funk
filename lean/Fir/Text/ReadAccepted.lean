@@ -16,7 +16,8 @@ written, the tree it gives can be written too, part by part:
   reference is below 2³²; a block's label is a name, and its arguments
   and ops can be written;
 * an item's parameters can be written, its result types are written as
-  types, its attributes can be written, and the blocks of its body can be
+  types, its attributes, its own and those of its parameters and results,
+  can be written, and the blocks of its body can be
   written; a module's dialect set
   names words, its items can be written, and each number of its location
   table is below 2³².
@@ -81,11 +82,14 @@ end
 
 mutual
 /-- An item as read can be written: its parameters, its result types, its
-attributes and its body. -/
+attributes, its body, and the attributes of its parameters and results,
+one list for each parameter and for each result but the last. -/
 def SItem.Writable : SItem → Prop
-  | ⟨_, _, _, params, results, attrs, body⟩ =>
+  | ⟨_, _, _, params, paramAttrs, _, results, resultAttrs, attrs, body⟩ =>
     (∀ x ∈ params, x.Writable) ∧ (∀ r ∈ results, r.1.IsType) ∧ (∀ a ∈ attrs, a.1.Writable) ∧
-      SBody.Writable body
+      SBody.Writable body ∧ (∀ as ∈ paramAttrs, ∀ a ∈ as, a.1.Writable) ∧
+      (∀ as ∈ resultAttrs, ∀ a ∈ as, a.1.Writable) ∧ paramAttrs.length = params.length ∧
+      resultAttrs.length = results.length - 1
 
 /-- The body of an item as read can be written: its blocks, or its dialect
 set and its items. -/
@@ -101,7 +105,10 @@ end
 
 theorem SItem.writable_iff (i : SItem) : i.Writable ↔
     (∀ x ∈ i.params, x.Writable) ∧ (∀ r ∈ i.results, r.1.IsType) ∧
-      (∀ a ∈ i.attrs, a.1.Writable) ∧ i.body.Writable := by
+      (∀ a ∈ i.attrs, a.1.Writable) ∧ i.body.Writable ∧
+      (∀ as ∈ i.paramAttrs, ∀ a ∈ as, a.1.Writable) ∧
+      (∀ as ∈ i.resultAttrs, ∀ a ∈ as, a.1.Writable) ∧ i.paramAttrs.length = i.params.length ∧
+      i.resultAttrs.length = i.results.length - 1 := by
   obtain ⟨⟩ := i
   rfl
 

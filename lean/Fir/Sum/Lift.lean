@@ -165,6 +165,9 @@ instance instDialectValidation [DialectValidation big] [DialectValidation (dep.o
   fieldShape lay n
     | .inl t => fieldShape lay n t
     | .inr t => fieldShape (d := dep.over e) lay n (.inr t)
+  validSigAttrs
+    | .inl t => validSigAttrs t
+    | .inr t => validSigAttrs (d := dep.over e) (.inr t)
 
 /-- The lift's rules can be decided when `big`'s and `e`'s can. -/
 instance instDecidableDialectValidation [DialectValidation big] [DialectValidation (dep.over e)]
@@ -179,6 +182,9 @@ instance instDecidableDialectValidation [DialectValidation big] [DialectValidati
     DecidableDialectValidation.decValidRegion (d := dep.over e) (projView v) k ctx f r
   decValidItem v ctx i :=
     DecidableDialectValidation.decValidItem (d := dep.over e) (projView v) ctx i
+  decValidSigAttrs
+    | .inl t, as => inferInstanceAs (Decidable (validSigAttrs t as))
+    | .inr t, as => DecidableDialectValidation.decValidSigAttrs (d := dep.over e) (.inr t) as
 
 section
 variable [DialectEffects dep] [DialectEffects big] [DialectEffects (dep.over e)]

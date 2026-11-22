@@ -190,7 +190,8 @@ def link (i : Nat) (x : Name) (term : Operation CoreDialect) : Block CoreDialect
 def chain (n : Nat) (use : Nat → Name) : Module CoreDialect :=
   moduleOf [⟨"f", [("p", .int 32)], [], ⟨none, (List.range n).map fun i =>
     link i (use i)
-      (if i + 1 = n then op [] (.ret []) [] else op [] .br [] 0 [⟨s!"b{i + 1}", []⟩])⟩⟩]
+      (if i + 1 = n then op [] (.ret []) [] else op [] .br [] 0 [⟨s!"b{i + 1}", []⟩])⟩, [], [],
+    false⟩]
 
 /-- Block `i` uses the value of block `i - 1`; the entry uses the parameter. -/
 def previous (i : Nat) : Name := if i = 0 then "p" else s!"v{i - 1}"
@@ -210,7 +211,7 @@ def ofShape (sh : Shape) (use : Name → Name) : Module CoreDialect :=
       match ss with
       | [] => op [] (.ret []) []
       | [s] => op [] .br [] 0 [⟨s, []⟩]
-      | ss => op [] .condBr ["c"] 0 (ss.map (⟨·, []⟩))]⟩⟩⟩]
+      | ss => op [] .condBr ["c"] 0 (ss.map (⟨·, []⟩))]⟩⟩, [], [], false⟩]
 
 /-- The label of `l`'s letter and the next number, or the number before. -/
 def shift (l : Name) (next : Bool) : Name :=

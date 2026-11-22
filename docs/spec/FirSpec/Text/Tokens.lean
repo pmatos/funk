@@ -14,10 +14,10 @@ changes under it.
 
 #doc (Manual) "Lexing printed text: readable blocks" =>
 
-:::moduleDocs (fingerprint := "5119891359338429179")
+:::moduleDocs (fingerprint := "8462843573538272048")
 :::
 
-:::readable Fir.Text.Tok.spell (pin := Fir.Text.printSymbol) (pin := Fir.printLocRef) (pin := Fir.Text.printInt) (pin := Fir.Text.quote) (pin := Nat.toDigits) (fingerprint := "17911903898172945497")
+:::readable Fir.Text.Tok.spell (pin := Fir.Text.printSymbol) (pin := Fir.printLocRef) (pin := Fir.Text.printInt) (pin := Fir.Text.quote) (pin := Nat.toDigits) (fingerprint := "15219706586904829649")
 *Definition: the spelling of a token.* Every
 {ref "The-fir-specification--Text-format--The-parser"}[token] $`t` has one
 spelling, $`\mathrm{spell}(t)`, the text that the printer writes for it:
@@ -39,7 +39,7 @@ spelling, $`\mathrm{spell}(t)`, the text that the printer writes for it:
   character in the one spelling that the
   {ref "The-fir-specification--Text-format--Tokens"}[token grammar] gives
   it inside a string;
-* each punctuation token is spelled as itself, from `(` to `->`;
+* each punctuation token is spelled as itself, from `(` to `...`;
 * $`\mathsf{eof}` is spelled as the empty text $`\epsilon`: the end of the
   text has no characters.
 
@@ -48,7 +48,7 @@ printed module back compares what it reads with these spellings, so each
 token needs exactly one.
 :::
 
-:::readable Fir.Text.Tok.Writable (pin := Fir.isName) (pin := Fir.isWord) (pin := Fir.Location.limit) (fingerprint := "5287678716215530782")
+:::readable Fir.Text.Tok.Writable (pin := Fir.isName) (pin := Fir.isWord) (pin := Fir.Location.limit) (fingerprint := "11399270471821091337")
 *Definition: a token that can be written.* A token $`t` _can be written_,
 $`\mathrm{writable}(t)`, in these cases:
 
@@ -156,16 +156,27 @@ followed by the tokens of $`\mathrm{attr}(T_1), \dots, \mathrm{attr}(T_n)`,
 separated by $`\texttt{,}`.
 :::
 
-:::readable Fir.Func.tokens Fir.Item.tokens Fir.Item.tokensList Fir.Item.tokensList_eq_flatMap (pin := Fir.dialectsTokens) (fingerprint := "17021870304355484064")
+:::readable Fir.Func.paramsTokens Fir.Func.resultsTokens (pin := Fir.Func.paramAttrsAll) (pin := Fir.Func.resultAttrsAll) (fingerprint := "16781332983096433547")
+*Definition: the tokens of a function's signature.* For every dialect with
+a text format, a function's parameters $`x_1 : t_1, \dots, x_n : t_n`,
+with attributes $`A_1, \dots, A_n`, have the tokens of each definition
+$`x_i : t_i` followed by those of each attribute of $`A_i`, separated by
+$`\texttt{,}`, then $`\texttt{...}` when the function is variadic, after
+$`\texttt{,}` when $`n > 0`. Its results $`T_1, \dots, T_m`, with
+attributes $`B_1, \dots, B_m`, have no tokens when $`m = 0`, and otherwise
+$`\texttt{->}` followed by the tokens of $`\mathrm{attr}(T_j)` and those
+of each attribute of $`B_j`, for each result, separated by $`\texttt{,}`.
+:::
+
+:::readable Fir.Func.tokens Fir.Item.tokens Fir.Item.tokensList Fir.Item.tokensList_eq_flatMap (pin := Fir.dialectsTokens) (fingerprint := "16430881615479891062")
 *Definition: the tokens of a function and of an item.* For every dialect
-with a text format, a function with symbol $`f`, parameters $`p^*`, result
-types $`T_1, \dots, T_n` and blocks has the tokens:
+with a text format, a function with symbol $`f`, parameters, results and
+blocks has the tokens:
 
-$$`\begin{aligned} & \mathsf{word}~\mathtt{func}~\mathsf{sym}~f~\texttt{(}~\mathrm{tokens}(p^*)~\texttt{)} \\ & \quad \mathit{res}~\texttt{\{}~\mathrm{tokens}(\mathit{blocks})~\texttt{\}} \end{aligned}`
+$$`\begin{aligned} & \mathsf{word}~\mathtt{func}~\mathsf{sym}~f~\texttt{(}~\mathit{params}~\texttt{)} \\ & \quad \mathit{res}~\texttt{\{}~\mathrm{tokens}(\mathit{blocks})~\texttt{\}} \end{aligned}`
 
-where $`\mathit{res}` is empty when $`n = 0`, and otherwise
-$`\texttt{->}` followed by the tokens of $`\mathrm{attr}(T_1), \dots, \mathrm{attr}(T_n)`,
-separated by $`\texttt{,}`. An item that is a function has the tokens of
+where $`\mathit{params}` and $`\mathit{res}` are the tokens of its
+parameters and of its results, above. An item that is a function has the tokens of
 its function, an item of a dialect's kind those of that item, and an
 aggregate's layout those of the item of kind `aggregate` that writes it,
 and a global those of the item of kind `global` that writes it. A nested

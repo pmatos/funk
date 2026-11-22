@@ -37,8 +37,9 @@ def tricky : Module CoreDialect where
         op [("big", i 256)] (.const 256 (BitVec.ofInt 256 (-(2 ^ 255)))) [] 2,
         op [("r", i 8)] (.call "1" [i 8] [i 8]) ["m"] 3,
         op [] .br [] 4 [⟨"exit", ["r", "big"]⟩]]⟩,
-      ⟨"exit", [("a", i 8), ("b", i 256)], [op [] (.ret [i 8, i 256]) ["a", "b"] 5]⟩]⟩⟩,
-    .func ⟨"_", [], [], ⟨none, [⟨"e", [], [op [] (.ret []) [] 0]⟩]⟩⟩]
+      ⟨"exit", [("a", i 8), ("b", i 256)], [op [] (.ret [i 8, i 256]) ["a", "b"] 5]⟩]⟩,
+      [[.word "sext"]], [[], [.word "zext"]], true⟩,
+    .func ⟨"_", [], [], ⟨none, [⟨"e", [], [op [] (.ret []) [] 0]⟩]⟩, [], [], true⟩]
   locs := [
     (0, .unknown),
     (1, .name "\u2028\"\\\u007f"),
@@ -56,12 +57,12 @@ def tricky : Module CoreDialect where
 #guard [Tok.value "0", .label "acc.1", .sym "sum", .sym "1", .sym "", .sym "a\nb", .locRef 0,
     .locRef 4294967295, .word "i32", .word "_x.y", .int 0, .int (-1), .int (10 ^ 100),
     .int (-(10 ^ 100)), .str "", .str "\"\\\n\t\x7f\u0085\u200e", .lparen, .rparen, .lbrace,
-    .rbrace, .comma, .colon, .eq, .arrow].all fun t => lexesTo t.spell [t]
+    .rbrace, .comma, .colon, .eq, .arrow, .ellipsis].all fun t => lexesTo t.spell [t]
 
 -- Tokens that cannot be written do not lex back: an empty value name, a
 -- label that is not a name, and a location reference of `2^32`.
 #guard !lexesToTokens (Module.mk (d := CoreDialect) [] []
-  [.func ⟨"f", [], [], ⟨none, [⟨"a b", [], [op [("", i 8)] (.const 8 0) [] 0]⟩]⟩⟩] [])
+  [.func ⟨"f", [], [], ⟨none, [⟨"a b", [], [op [("", i 8)] (.const 8 0) [] 0]⟩]⟩, [], [], false⟩] [])
 #guard !lexesTo (Tok.locRef 4294967296).spell [.locRef 4294967296]
 
 /--

@@ -114,6 +114,7 @@ theorem factFn_valid : factFn.Valid recModule.context where
   ops := opValid_of (dom := []) (fun _ h => nomatch h) (by decide +kernel)
   inner := Func.inner_of_noRegions (by decide +kernel)
   dialect := trivial
+  signature := (Func.sigProblems_eq_nil _).1 rfl
 
 /-- `@even` is valid in its module: its `call` names `@odd` at its type. -/
 theorem evenFn_valid : evenFn.Valid recModule.context where
@@ -136,6 +137,7 @@ theorem evenFn_valid : evenFn.Valid recModule.context where
   ops := opValid_of (dom := []) (fun _ h => nomatch h) (by decide +kernel)
   inner := Func.inner_of_noRegions (by decide +kernel)
   dialect := trivial
+  signature := (Func.sigProblems_eq_nil _).1 rfl
 
 /-- `@odd` is valid in its module: its `call` names `@even` at its type. -/
 theorem oddFn_valid : oddFn.Valid recModule.context where
@@ -158,6 +160,7 @@ theorem oddFn_valid : oddFn.Valid recModule.context where
   ops := opValid_of (dom := []) (fun _ h => nomatch h) (by decide +kernel)
   inner := Func.inner_of_noRegions (by decide +kernel)
   dialect := trivial
+  signature := (Func.sigProblems_eq_nil _).1 rfl
 
 /-- The module of `@fact`, `@even` and `@odd` is valid. -/
 theorem recModule_valid : recModule.Valid := Module.valid_of_flat

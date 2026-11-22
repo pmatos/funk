@@ -441,7 +441,7 @@ namespace Fir
 
 /-! # The laws -/
 
-/-- The core dialect's text meets the seven laws, for all 50 core ops and
+/-- The core dialect's text meets the eight laws, for all 50 core ops and
 every core type. -/
 theorem Core.lawfulDialectText : LawfulDialectText CoreDialect where
   decodeOp_encode := Core.Op.decode_encode
@@ -451,6 +451,14 @@ theorem Core.lawfulDialectText : LawfulDialectText CoreDialect where
   opName_isWord := Core.Op.name_isWord
   opAttrs_writable := Core.Op.attrs_writable
   tyAttr_isType := Core.Ty.attr_isType
+  sigAttrs_writable t as h := by
+    change Core.Ty.sigAttrsAllowed t as = true at h
+    unfold Core.Ty.sigAttrsAllowed at h
+    split at h
+    · trivial
+    · simp only [Bool.and_eq_true, decide_eq_true_eq, Bool.or_eq_true, beq_iff_eq] at h
+      rcases h.2 with rfl | rfl <;> exact ⟨rfl, trivial⟩
+    · cases h
 
 instance : LawfulDialectText CoreDialect := Core.lawfulDialectText
 

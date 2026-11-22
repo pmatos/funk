@@ -14,10 +14,10 @@ when the Lean changes under it.
 
 #doc (Manual) "Replacing a body: readable blocks" =>
 
-:::moduleDocs (fingerprint := "14231632584969205328")
+:::moduleDocs (fingerprint := "16773474564679399448")
 :::
 
-:::readable Fir.Func.replaceBody Fir.Item.replaceBody Fir.Module.replaceBody (fingerprint := "9923372320846237749")
+:::readable Fir.Func.replaceBody Fir.Item.replaceBody Fir.Module.replaceBody (fingerprint := "5567465887179773762")
 *Definition: replacing the body of the function with a symbol.* For a
 symbol $`s` and a region $`b`, $`f[s \leftarrow b]` is the function $`f`
 with the body $`b` when the symbol of $`f` is $`s`, and $`f` unchanged
@@ -36,7 +36,7 @@ every caller at once: it is what an optimizer does when it rewrites one
 function of a module.
 :::
 
-:::readable Fir.Module.funcs_replaceBody Fir.Func.replaceBody_of_ne Fir.Func.replaceBody_of_eq Fir.Module.func?_replaceBody (pin := Fir.Module.func?) (fingerprint := "380502133935660617")
+:::readable Fir.Module.funcs_replaceBody Fir.Func.replaceBody_of_ne Fir.Func.replaceBody_of_eq Fir.Module.func?_replaceBody (pin := Fir.Module.func?) (fingerprint := "17590050467722768872")
 *Theorems: what a replacement changes.* For every module $`M`, symbol
 $`s`, region $`b` and function $`f`:
 
@@ -87,7 +87,7 @@ the body replaced hold the same
 a function holds none, and a nested module is unchanged.
 :::
 
-:::readable Fir.Module.valid_replaceBody (pin := Fir.Module.Valid) (fingerprint := "10161992606486524137")
+:::readable Fir.Module.valid_replaceBody (pin := Fir.Module.Valid) (fingerprint := "15892461874126575411")
 *Theorem: a valid module stays valid when the new function is valid.* For
 every dialect with its validation rules, let $`M` be a
 {ref "The-fir-specification--Validation--The-general-rules"}[valid module],

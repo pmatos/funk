@@ -1,6 +1,7 @@
 import Fir.Text.Print
 import Fir.Text.LayoutLaws
 import Fir.Validation.Rules
+import Fir.Text.SigAttrs
 
 /-!
 Two properties tie the parser to the printer (ADR-2026-10-29-2014):
@@ -61,8 +62,10 @@ A function can be written and read back: its value names are unique and can
 be written; its labels can be written; each type it states is written as a
 type and decodes back to itself; each of its ops can be written and read
 back; its body is a region of the core's kind, which the text of a function
-does not name; and each region of its ops that names a kind names it by a
-word. Its symbol can be any string.
+does not name; each region of its ops that names a kind names it by a
+word; and the attributes of its parameters and results have the form a
+function holds, which leaves out empty lists at the end, and can be
+written. Its symbol can be any string.
 -/
 structure Func.WellFormed (f : Func d) : Prop where
   namesUnique : (f.defs.map (·.1)).Nodup
@@ -72,6 +75,9 @@ structure Func.WellFormed (f : Func d) : Prop where
   ops : ∀ o ∈ f.allOps, f.OpWellFormed o
   bodyKind : f.body.kind = none
   kinds : ∀ o ∈ f.allOps, ∀ r ∈ o.regions, ∀ k ∈ r.kind, isWord k
+  paramAttrs : AttrsTrimmed f.params.length f.paramAttrs
+  resultAttrs : AttrsTrimmed f.results.length f.resultAttrs
+  attrs : ∀ as ∈ f.paramAttrs ++ f.resultAttrs, Attr.AllWritable as
 
 /--
 An item of a dialect's kind can be written and read back: its kind is a
@@ -229,7 +235,7 @@ theorem Func.Valid.wellFormed {locs : LocTable} {syms : Name → Option (FuncTyp
       obtain ⟨t, ht⟩ := Option.isSome_iff_exists.mp ((hsucc s hs).2 a ha)
       exact hdef a t ht
   refine ⟨hf.namesUnique, hf.names, hf.labels, fun t ht => ?_, fun o ho => ?_, hf.bodyKind,
-    fun o ho r hr k hk => ?_⟩
+    fun o ho r hr k hk => ?_, hf.signature.paramAttrs, hf.signature.resultAttrs, fun as has => ?_⟩
   · exact ⟨LawfulDialectText.tyAttr_isType t (hf.types t ht),
       LawfulDialectText.decodeTy_encode t (hf.types t ht)⟩
   · obtain ⟨-, hops, hres, hsucc, hloc⟩ := hgen o ho
@@ -238,6 +244,11 @@ theorem Func.Valid.wellFormed {locs : LocTable} {syms : Name → Option (FuncTyp
     obtain ⟨e, he, hloc⟩ := List.mem_map.mp (show o.loc ∈ locs.map (·.1) from hloc)
     exact hloc ▸ (hl.2.1 e he).1
   · exact ((hgen o ho).1.2 r hr k (Option.mem_def.mp hk)).1
+  · rcases List.mem_append.mp has with has | has
+    · obtain ⟨x, hx⟩ := mem_zip_padAttrs hf.signature.paramAttrs.1 has
+      exact LawfulDialectText.sigAttrs_writable _ _ (hf.signature.params _ hx)
+    · obtain ⟨x, hx⟩ := mem_zip_padAttrs hf.signature.resultAttrs.1 has
+      exact LawfulDialectText.sigAttrs_writable _ _ (hf.signature.results _ hx)
 
 /-- The items of a valid symbol table are well formed when the tables
 nested in them are valid too, the aggregates' layouts of all of them are
