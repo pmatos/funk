@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Checking modules: readable blocks" =>
 
-:::moduleDocs (fingerprint := "11170214508698738692")
+:::moduleDocs (fingerprint := "17604809089706712386")
 :::
 
 :::readable Fir.Location.malformed (pin := Fir.Location.WellFormed) (fingerprint := "2430325542484681324")
@@ -116,7 +116,7 @@ kind, the check gives no problem exactly when $`i` is
 $`C`. So whether it is valid is decidable.
 :::
 
-:::readable Fir.SymbolTable.lookup Fir.SymbolTable.lookup_agrees (fingerprint := "17591592808855092894")
+:::readable Fir.SymbolTable.lookup Fir.SymbolTable.lookup_agrees (fingerprint := "4108281147409423630")
 *Definition and theorem: the lookup of a symbol table.* The
 {ref "The-fir-specification--Validation--The-validation-check"}[lookup] of
 the table $`T`, given a hash set of the references of the module's location
@@ -132,7 +132,7 @@ check of a function apply to every function of $`T`, checked with the
 lookup of $`T`.
 :::
 
-:::readable Fir.SymbolTable.problems (pin := Fir.Text.printSymbol) (pin := Fir.isWord) (fingerprint := "1126699444997919176")
+:::readable Fir.SymbolTable.problems (pin := Fir.Text.printSymbol) (pin := Fir.isWord) (fingerprint := "10318181870892874910")
 *Definition: the check of a symbol table.* The check of the table $`T`,
 given a hash set of the references of the module's location table, builds
 the lookup of $`T` once, and gives, in this order:
@@ -145,6 +145,9 @@ the lookup of $`T` once, and gives, in this order:
   of $`T`, in order, checked with the lookup of $`T`;
 * the problems of each item of a dialect's kind of $`T`, in order, checked
   in the function context of the symbols of $`T`;
+* the
+  {ref "The-fir-specification--Validation--Checking-external-declarations"}[problems of each external declaration]
+  of $`T`, in order;
 * "the dialect set names "$`x`", which is not a word", with $`x` between
   quotes, for each name $`x` of the dialect set of $`T` that is not a word;
 * "the dialect set names $`x` more than once", for each name that repeats

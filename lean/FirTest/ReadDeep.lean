@@ -125,7 +125,7 @@ def lexError (text : String) : Option (Nat × Nat × String) :=
 -- `itemsLoop` and `decodeLoop`: the readers read the modules whole, and the
 -- decoder decodes them whole before it rejects the item after them.
 #guard parseError (deepModulesText 1000000) = some (2000001, 1,
-  "unknown item kind bad: the kinds are func, module, aggregate, global and the words of dialects")
+  "unknown item kind bad: the kinds are func, module, aggregate, global, extern and the words of dialects")
 -- `attrLoop`, `decodeLoop`, `writableLoop`, `dialectsLoop` and `printAttrs`: the
 -- readers read the item's attribute whole, the decoder keeps it, the check
 -- walks it with no stack per level, and the printer writes it back.

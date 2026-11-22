@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "A signature's attributes: readable blocks" =>
 
-:::moduleDocs (fingerprint := "13393546885121283150")
+:::moduleDocs (fingerprint := "11258007099659161380")
 :::
 
 :::readable Fir.padAttrs Fir.trimAttrs Fir.AttrsTrimmed Fir.Func.paramAttrsAll Fir.Func.resultAttrsAll (fingerprint := "9438147280391856958")
@@ -39,4 +39,15 @@ come after a type, as in the core's extension markers in
 `func @f(%c: i8 sext) -> i8 zext`. The dialect of each type says which it
 allows, and a function whose parameters end in `...` is not valid: only an
 external declaration may be variadic.
+:::
+
+:::readable Fir.Extern.func (fingerprint := "17810137597958032041")
+*Definition: the function whose header a declaration writes.* An
+{ref "The-fir-specification--Abstract-syntax--Modules___-functions___-blocks-and-ops"}[external declaration]
+$`e` writes the header of a function: $`\mathrm{func}(e)` has the symbol,
+the parameters, the results, the attributes and the `...` of $`e`, and a
+body of the core's kind with no blocks. The text of $`e`, its tree and its
+round trip are those of $`\mathrm{func}(e)`, with the kind `extern` in
+place of `func`, and the attributes of each of its places are those of
+$`\mathrm{func}(e)`.
 :::

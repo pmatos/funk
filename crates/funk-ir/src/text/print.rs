@@ -18,8 +18,8 @@ use std::fmt::{self, Display, Write};
 use super::chars::{print_symbol, quote};
 use crate::ir::tree::{Step, walk};
 use crate::ir::{
-    Aggregate, Attr, Block, Def, DialectItem, Func, Global, InitPiece, Item, Linkage, LocTable,
-    Location, MemLayout, Module, Op, Part, Succ, Type,
+    Aggregate, Attr, Block, Def, DialectItem, Extern, Func, Global, InitPiece, Item, Linkage,
+    LocTable, Location, MemLayout, Module, Op, Part, Succ, Type,
 };
 
 impl Display for MemLayout {
@@ -210,28 +210,84 @@ fn write_block_head(out: &mut impl Write, n: usize, b: &Block) -> fmt::Result {
 /// the function is variadic. Its header, labels and `}` are at `n`, its ops
 /// two spaces deeper.
 fn write_func(out: &mut impl Write, f: &Func, n: usize) -> fmt::Result {
-    indent(out, n)?;
-    write!(out, "func {}(", print_symbol(&f.name))?;
-    for (i, p) in f.params.iter().enumerate() {
-        if i > 0 {
-            out.write_str(", ")?;
-        }
-        write!(out, "{p}")?;
-        write_attrs(out, f.param_attrs_of(i))?;
-    }
-    if f.variadic {
-        out.write_str(if f.params.is_empty() { "..." } else { ", ..." })?;
-    }
-    out.write_str(")")?;
-    for (i, t) in f.results.iter().enumerate() {
-        out.write_str(if i == 0 { " -> " } else { ", " })?;
-        write!(out, "{t}")?;
-        write_attrs(out, f.result_attrs_of(i))?;
-    }
+    let sig = Signature {
+        params: &f.params,
+        param_attrs: &f.param_attrs,
+        variadic: f.variadic,
+        results: &f.results,
+        result_attrs: &f.result_attrs,
+    };
+    write_signature(out, "func", &f.name, &sig, n)?;
     out.write_str(" {\n")?;
     for b in &f.body.blocks {
         write_part(out, Part::Block(b), n)?;
     }
+    indent(out, n)?;
+    out.write_str("}\n")
+}
+
+/// The parts of a function's header that an external declaration writes
+/// too.
+struct Signature<'a> {
+    params: &'a [Def],
+    param_attrs: &'a [Vec<Attr>],
+    variadic: bool,
+    results: &'a [Type],
+    result_attrs: &'a [Vec<Attr>],
+}
+
+/// The attributes of the place at `i` of `all`: none past those held.
+fn attrs_of(all: &[Vec<Attr>], i: usize) -> &[Attr] {
+    all.get(i).map_or(&[], Vec::as_slice)
+}
+
+/// A function's header at indentation `n`, of kind `kind`, up to its `{`
+/// (`Func.printParams`, `Func.printResults`).
+fn write_signature(
+    out: &mut impl Write,
+    kind: &str,
+    name: &str,
+    sig: &Signature<'_>,
+    n: usize,
+) -> fmt::Result {
+    indent(out, n)?;
+    write!(out, "{kind} {}(", print_symbol(name))?;
+    for (i, p) in sig.params.iter().enumerate() {
+        if i > 0 {
+            out.write_str(", ")?;
+        }
+        write!(out, "{p}")?;
+        write_attrs(out, attrs_of(sig.param_attrs, i))?;
+    }
+    if sig.variadic {
+        out.write_str(if sig.params.is_empty() {
+            "..."
+        } else {
+            ", ..."
+        })?;
+    }
+    out.write_str(")")?;
+    for (i, t) in sig.results.iter().enumerate() {
+        out.write_str(if i == 0 { " -> " } else { ", " })?;
+        write!(out, "{t}")?;
+        write_attrs(out, attrs_of(sig.result_attrs, i))?;
+    }
+    Ok(())
+}
+
+/// An external declaration at indentation `n`, with its line feed
+/// (`Extern.print`): a function's header of kind `extern`, then its empty
+/// body, whose `}` is on the next line, at `n`.
+fn write_extern(out: &mut impl Write, e: &Extern, n: usize) -> fmt::Result {
+    let sig = Signature {
+        params: &e.params,
+        param_attrs: &e.param_attrs,
+        variadic: e.variadic,
+        results: &e.results,
+        result_attrs: &e.result_attrs,
+    };
+    write_signature(out, "extern", &e.name, &sig, n)?;
+    out.write_str(" {\n")?;
     indent(out, n)?;
     out.write_str("}\n")
 }
@@ -368,6 +424,10 @@ fn write_items(out: &mut impl Write, items: &[Item], n: usize) -> fmt::Result {
             }
             Some(Item::Global(g)) => {
                 write_global(out, g, n)?;
+                out.write_char('\n')?;
+            }
+            Some(Item::Extern(e)) => {
+                write_extern(out, e, n)?;
                 out.write_char('\n')?;
             }
             Some(Item::Module(m)) => {

@@ -9,8 +9,9 @@ import Fir.Validation.AllBlocks
 The general rules of validation, for every dialect. A module is valid when
 its location table is well formed and each of its symbol tables, its own
 and that of each nested module, is valid: its symbols are unique, each of
-its functions is valid, each of its items of a dialect's kind is valid, and
-its dialect set names each dialect once, by a word, and its data layout is
+its functions is valid, each of its items of a dialect's kind is valid,
+each of its external declarations is valid (ADR-2026-11-09-1547), and its
+dialect set names each dialect once, by a word, and its data layout is
 valid, declares each memory that a type of the module names, the types
 that its ops carry in their attributes included (ADR-2026-11-12-1821), and
 gives each memory units as wide as the values that its ops write into
@@ -199,8 +200,8 @@ structure DialectItem.Valid (ctx : FuncContext d) (i : DialectItem d) : Prop whe
 A symbol table is valid, in a module whose location table has the
 references `keys`, when each symbol names one item, each of its functions is
 valid in the table's context, each of its items of a dialect's kind is valid
-with the table's symbols, and its dialect set names each dialect once, by a
-word. Which dialects the set may
+with the table's symbols, each of its external declarations is valid, and
+its dialect set names each dialect once, by a word. Which dialects the set may
 name, and that the table's words name only those, is the rule of a
 module's dialect set, in the chapter on sums of dialects: it reads the
 words of the module, which the dialect's text gives.
@@ -209,6 +210,7 @@ structure SymbolTable.Valid (keys : List LocRef) (t : SymbolTable d) : Prop wher
   symbolsUnique : (t.items.map Item.name).Nodup
   funcs : ∀ f ∈ t.funcs, f.Valid (t.context keys)
   dialectItems : ∀ i ∈ t.dialectItems, i.Valid ⟨t.symbols⟩
+  externs : ∀ e ∈ t.externs, e.Valid
   dialectNames : ∀ x ∈ t.dialects, isWord x
   dialectsUnique : t.dialects.Nodup
 
@@ -282,10 +284,18 @@ theorem Module.valid_of_flat {m : Module d} (flat : ∀ i ∈ m.items, i.func?.i
   refine ⟨locs, fun t ht => ?_, layout, fun t ht => ?_, fun t ht => ?_, fun t ht => ?_⟩
   · simp only [Module.tables, Item.tablesIn_eq_nil flat, List.mem_singleton] at ht
     subst ht
-    exact ⟨symbolsUnique, funcs, fun i hi => by simp [hd] at hi, dialectNames, dialectsUnique⟩
+    have he : m.table.externs = [] := List.filterMap_eq_nil_iff.mpr fun j hj => by
+      have := flat j hj
+      cases j <;> simp_all [Item.func?, Item.extern?]
+    exact ⟨symbolsUnique, funcs, fun i hi => by simp [hd] at hi, fun e h => by simp [he] at h,
+      dialectNames, dialectsUnique⟩
   · simp only [Module.tables, Item.tablesIn_eq_nil flat, List.mem_singleton] at ht
     subst ht
-    exact ⟨memories, fun i hi => by simp [hd] at hi, attrMemories, units, addrs⟩
+    have he : m.table.externs = [] := List.filterMap_eq_nil_iff.mpr fun j hj => by
+      have := flat j hj
+      cases j <;> simp_all [Item.func?, Item.extern?]
+    exact ⟨memories, fun i hi => by simp [hd] at hi, fun e h => by simp [he] at h, attrMemories,
+      units, addrs⟩
   · simp only [Module.tables, Item.tablesIn_eq_nil flat, List.mem_singleton] at ht
     subst ht
     exact fun a h => by simp [ha] at h

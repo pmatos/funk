@@ -31,7 +31,7 @@ use crate::dialects::core::{
     BITWISE_OPS, DIVISION_OPS, MAX_WIDTH, PREDICATES, SHIFT_OPS, WRAP_FLAG_SETS, int_type,
     int_width,
 };
-use crate::ir::{Attr, Func, Int, LocRef, LocTable, Location, Module, Nat, Op, Type};
+use crate::ir::{Attr, Extern, Func, Int, Item, LocRef, LocTable, Location, Module, Nat, Op, Type};
 
 mod blocks;
 mod bounded;
@@ -129,7 +129,29 @@ pub fn module_of(rng: &mut Rng, widths: Widths) -> Module {
     for k in 0..funcs.len() {
         m = m.func(func(rng, &funcs, k, &keys, widths));
     }
+    let decl = m.funcs().next().map(|f| declaration(f, &funcs));
+    m.items.extend(decl.map(Item::Extern));
     m
+}
+
+/// An external declaration beside the functions, which draws nothing from
+/// the generator, so the functions are those of the same seed without it:
+/// the signature of the first function `first`, with its markers, under a
+/// symbol that no function has, and variadic when the module has two
+/// functions or more (ADR-2026-11-09-1547). No op calls it: a call to a
+/// declaration waits on the external call rule (#239).
+fn declaration(first: &Func, funcs: &[Callee]) -> Extern {
+    let mut name = format!("{}.ext", first.name);
+    while funcs.iter().any(|f| f.name == name) {
+        name.push('x');
+    }
+    let mut e = Extern::new(name);
+    e.params.clone_from(&first.params);
+    e.param_attrs.clone_from(&first.param_attrs);
+    e.results.clone_from(&first.results);
+    e.result_attrs.clone_from(&first.result_attrs);
+    e.variadic = funcs.len() >= 2;
+    e
 }
 
 /// A table of one to eight entries in increasing order of reference, each

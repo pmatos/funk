@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Round trips: readable blocks" =>
 
-:::moduleDocs (fingerprint := "14705646470480955677")
+:::moduleDocs (fingerprint := "16176944834168535516")
 :::
 
 :::readable Fir.Func.OpWellFormed (pin := Fir.Func.typeOf) (pin := Fir.DialectSignature) (pin := Fir.Location.limit) (fingerprint := "12115051900375411089")
@@ -58,7 +58,7 @@ and each type it states is written as a type and decodes back to itself.
 Its symbol can be any string.
 :::
 
-:::readable Fir.Func.WellFormed Fir.Item.WellFormed Fir.Item.WellFormedList Fir.Item.wellFormedList_iff Fir.Module.WellFormed Fir.Module.WellFormed.funcs (pin := Fir.Func.defs) (pin := Fir.Func.types) (pin := Fir.LocTable.InLimits) (pin := Fir.Location.numbers) (pin := Fir.Location.limit) (pin := Fir.Module.funcs) (fingerprint := "16797536178522952460")
+:::readable Fir.Func.WellFormed Fir.Item.WellFormed Fir.Item.WellFormedList Fir.Item.wellFormedList_iff Fir.Module.WellFormed Fir.Module.WellFormed.funcs (pin := Fir.Func.defs) (pin := Fir.Func.types) (pin := Fir.LocTable.InLimits) (pin := Fir.Location.numbers) (pin := Fir.Location.limit) (pin := Fir.Module.funcs) (fingerprint := "10055553402395914324")
 *Definition: a well-formed function, item and module.* A function
 $`f` is _well formed_ when:
 
@@ -81,8 +81,9 @@ Its symbol may be any string, since a symbol that is not a word is quoted.
 An item is well formed when it is a well-formed function, a nested module
 whose dialect set names each dialect by a word and each of whose items is
 well formed, at any depth, a well-formed item of a dialect's kind, a
-well-formed aggregate's layout, or a global whose numbers are within the
-limit. A module is _well formed_ when each
+well-formed aggregate's layout, a global whose numbers are within the
+limit, or an external declaration whose header, the function with no
+blocks that it writes, is well formed. A module is _well formed_ when each
 dialect of its set is named by a word, each number of its data layout is
 within the {ref "The-fir-specification--Text-format--Grammar"}[limit] of
 an entry, each of its items is well formed, and its
@@ -148,7 +149,19 @@ and two different valid modules never print the same text. The next block
 shows that every dialect whose text is lawful meets it.
 :::
 
-:::readable Fir.Func.Valid.wellFormed Fir.SymbolTable.Valid.itemsWellFormed Fir.MemLayout.Valid.inLimits Fir.validIsWellFormed (pin := Fir.Func.Valid) (pin := Fir.LocTable.Valid) (pin := Fir.Module.Valid) (pin := Fir.SymbolTable.Valid) (pin := Fir.Location.limit) (fingerprint := "3782106221552955658")
+:::readable Fir.Extern.func_allBlocks Fir.Extern.func_defs Fir.Extern.Valid.wellFormed (pin := Fir.Extern.Valid) (pin := Fir.Extern.func) (fingerprint := "6339088301664878937")
+*Theorems: a valid external declaration is well formed.* The function
+whose header an external declaration writes has no blocks, and defines its
+parameters alone. So for every dialect whose text is
+{ref "The-fir-specification--Text-format--Grammar"}[lawful], the header of
+every valid external declaration is a well-formed function: its parameters
+are named once, by names; each type it states is valid, so it is written
+as a type and decodes back; it has no blocks, ops or regions; and its
+attributes have the short form, and can be written since its types allow
+them.
+:::
+
+:::readable Fir.Func.Valid.wellFormed Fir.SymbolTable.Valid.itemsWellFormed Fir.MemLayout.Valid.inLimits Fir.validIsWellFormed (pin := Fir.Func.Valid) (pin := Fir.LocTable.Valid) (pin := Fir.Module.Valid) (pin := Fir.SymbolTable.Valid) (pin := Fir.Location.limit) (fingerprint := "12830487251074968921")
 *Theorems: a valid function is well formed, and so is every valid module.*
 Let $`d` be a dialect with a signature, a text and validation rules, whose
 text is {ref "The-fir-specification--Text-format--Grammar"}[lawful]. Then:
@@ -164,8 +177,9 @@ text is {ref "The-fir-specification--Text-format--Grammar"}[lawful]. Then:
   dialect's kind is, since its kind is a word of a dialect, its parameters
   are named by names, its types are valid and its attributes can be
   written; an aggregate's layout is, since its numbers are within the
-  limit and its types are valid; and a global is, since its numbers are
-  within the limit;
+  limit and its types are valid; a global is, since its numbers are
+  within the limit; and an external declaration is, by the theorem
+  above;
 * the numbers of a valid entry of a data layout are within the limit;
 * every valid module of $`d` is well formed.
 

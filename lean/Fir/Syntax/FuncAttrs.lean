@@ -5,7 +5,9 @@ The attributes of a function's signature. A function holds a list of
 attributes for each of its first parameters, or results, and none for the
 rest, with no empty list at the end, so a function that carries none holds
 an empty list (ADR-2026-11-21-1307). The text writes the attributes of
-every place, and decoding gives back that short form.
+every place, and decoding gives back that short form. An external
+declaration holds them in the same way, and writes the header of a
+function with no blocks.
 -/
 
 namespace Fir
@@ -38,5 +40,10 @@ def Func.paramAttrsAll (f : Func d) : List (List Attr) := padAttrs f.params.leng
 /-- The attributes of each of a function's results. -/
 def Func.resultAttrsAll (f : Func d) : List (List Attr) :=
   padAttrs f.results.length f.resultAttrs
+
+/-- The function whose header an external declaration writes: its symbol
+and its signature, with a body of no blocks. -/
+def Extern.func (e : Extern d) : Func d :=
+  ⟨e.name, e.params, e.results, ⟨none, []⟩, e.paramAttrs, e.resultAttrs, e.variadic⟩
 
 end Fir

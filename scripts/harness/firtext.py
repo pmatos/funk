@@ -184,7 +184,8 @@ class Reader:
         (ADR-2026-11-10-1510), so they are named by their path. The layout
         says nothing that the matrix counts, so its entries are skipped
         (ADR-2026-11-12-1821), and so are aggregates' layouts
-        (ADR-2026-11-16-1546) and globals (ADR-2026-11-09-1546)."""
+        (ADR-2026-11-16-1546), globals (ADR-2026-11-09-1546) and external
+        declarations (ADR-2026-11-09-1547), which no call names yet."""
         if self.at("word") and self.peek().text == "dialects":
             self.take("word")
             self.take("word")
@@ -203,6 +204,8 @@ class Reader:
                 found += self.nested(scope)
             elif self.peek().text in ("aggregate", "global"):
                 self.empty_item()
+            elif self.peek().text == "extern":
+                self.declaration()
             else:
                 found.append(self.item(scope))
         return found
@@ -231,6 +234,30 @@ class Reader:
         self.take("{")
         self.take("}")
 
+    def declaration(self) -> None:
+        """Skips an external declaration: a function's header, its
+        parameters and results with their markers and maybe `...`, then its
+        empty body."""
+        self.take("word")
+        self.header()
+        self.take("{")
+        self.take("}")
+
+    def header(
+        self,
+    ) -> tuple[str, tuple[tuple[str, str], ...], tuple[str, ...]]:
+        """A function's header after its kind: its symbol, its parameters
+        and its results, up to its `{`."""
+        symbol = self.take("symbol").text
+        self.take("(")
+        params = () if self.at(")") else self.params()
+        self.take(")")
+        results = ()
+        if self.at("->"):
+            self.take("->")
+            results = self.results()
+        return symbol, params, results
+
     def nested(self, scope: str) -> list[Function]:
         """The functions of a nested module, in the table `scope`."""
         self.take("word")
@@ -246,14 +273,8 @@ class Reader:
         kind = self.take("word")
         if kind.text != "func":
             raise TextError(f"line {kind.line}: an item of kind {kind.text}")
-        symbol = scope + self.take("symbol").text
-        self.take("(")
-        params = () if self.at(")") else self.params()
-        self.take(")")
-        results = ()
-        if self.at("->"):
-            self.take("->")
-            results = self.results()
+        symbol, params, results = self.header()
+        symbol = scope + symbol
         self.take("{")
         defined, ops = list(params), []
         while self.at("label"):

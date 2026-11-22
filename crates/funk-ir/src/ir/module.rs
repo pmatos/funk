@@ -11,6 +11,7 @@ use std::collections::HashMap;
 
 use super::aggregate::Aggregate;
 use super::attr::{Attr, Type};
+use super::extern_decl::Extern;
 use super::global::Global;
 use super::layout::MemLayout;
 use super::location::{LocRef, LocTable};
@@ -242,9 +243,9 @@ impl DialectItem {
 /// An item of a module. Every item is written
 /// `kind @sym(params) -> results attrs { body }` (N2). The core's kinds are
 /// `func`, `module` (ADR-2026-11-10-1510), `aggregate`
-/// (ADR-2026-11-16-1546) and `global`, a global (ADR-2026-11-19-0124), and a
-/// dialect registers kinds of its own
-/// (ADR-2026-11-09-1543).
+/// (ADR-2026-11-16-1546), `global`, a global (ADR-2026-11-19-0124), and
+/// `extern`, an external declaration (ADR-2026-11-09-1547), and a dialect
+/// registers kinds of its own (ADR-2026-11-09-1543).
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 #[non_exhaustive]
 pub enum Item {
@@ -258,6 +259,8 @@ pub enum Item {
     Aggregate(Aggregate),
     /// A global.
     Global(Global),
+    /// An external declaration.
+    Extern(Extern),
 }
 
 impl Item {
@@ -269,6 +272,7 @@ impl Item {
             Item::Dialect(i) => &i.name,
             Item::Aggregate(a) => &a.name,
             Item::Global(g) => &g.name,
+            Item::Extern(e) => &e.name,
         }
     }
 
@@ -308,6 +312,14 @@ impl Item {
     pub fn as_global(&self) -> Option<&Global> {
         match self {
             Item::Global(g) => Some(g),
+            _ => None,
+        }
+    }
+
+    /// The external declaration that this item is, if it is one.
+    pub fn as_extern(&self) -> Option<&Extern> {
+        match self {
+            Item::Extern(e) => Some(e),
             _ => None,
         }
     }

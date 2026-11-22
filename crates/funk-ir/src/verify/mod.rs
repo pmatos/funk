@@ -12,6 +12,7 @@
 mod aggregate;
 mod cfg;
 mod dialect_set;
+mod extern_decl;
 mod func;
 mod global;
 mod items;
@@ -154,8 +155,8 @@ pub fn verify(m: &Module, reg: &Registry) -> Vec<Diagnostic> {
 
 /// The rules of one symbol table (`SymbolTable.Valid`): each symbol names
 /// one item, each function is valid against the table's own symbols, each
-/// item of a dialect's kind is valid with them, and the dialect set names
-/// each dialect once, by a word.
+/// item of a dialect's kind is valid with them, each external declaration
+/// is valid, and the dialect set names each dialect once, by a word.
 fn check_table(t: Table<'_>, keys: &HashSet<LocRef>, reg: &Registry, out: &mut Vec<Diagnostic>) {
     let mut seen = HashSet::new();
     for item in t.items {
@@ -179,6 +180,9 @@ fn check_table(t: Table<'_>, keys: &HashSet<LocRef>, reg: &Registry, out: &mut V
     }
     for i in t.dialect_items() {
         items::check(i, &symbols, reg, out);
+    }
+    for e in t.externs() {
+        extern_decl::check(e, reg, out);
     }
     dialect_set::check_names(t.dialects, out);
 }

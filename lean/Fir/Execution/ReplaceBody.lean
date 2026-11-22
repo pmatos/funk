@@ -9,8 +9,8 @@ symbol, its parameters and its result types, and every other function
 keeps its body. A caller reaches a callee only by its symbol
 (ADR-2026-10-29-2012), so this replaces the callee `@g` for every caller
 at once. The symbol table, and so the context of validation, stays the
-same, and so do the dialect set, the data layout, the aggregates' layouts
-and the globals: the new module is valid when the old one is and the new
+same, and so do the dialect set, the data layout, the aggregates' layouts,
+the globals and the external declarations: the new module is valid when the old one is and the new
 function is valid in that context, with its types, and the types its ops
 carry in their attributes, naming memories that the layout declares, with
 the values its ops write as wide as their memories' units, and with the
@@ -157,6 +157,15 @@ theorem Module.globals_replaceBody (M : Module d) (s : Name) (b : Region d) :
   funext i
   cases i <;> rfl
 
+/-- Replacing a body keeps the external declarations of the module's own
+table. -/
+theorem Module.externs_replaceBody (M : Module d) (s : Name) (b : Region d) :
+    (M.replaceBody s b).table.externs = M.table.externs := by
+  simp only [SymbolTable.externs, Module.table, Module.replaceBody, List.filterMap_map]
+  congr 1
+  funext i
+  cases i <;> rfl
+
 /-- Replacing a body keeps the tables nested in the module's items: no
 function holds one, and a nested module is unchanged. -/
 theorem Item.tablesIn_replaceBody (s : Name) (b : Region d) :
@@ -189,7 +198,8 @@ theorem Module.valid_replaceBody {M : Module d} (hM : M.Valid) {s : Name} {b : R
   rotate_left
   · simp only [Module.tables, Module.replaceBody, Item.tablesIn_replaceBody, List.mem_cons] at ht
     rcases ht with rfl | ht
-    · refine ⟨fun f hf => ?_, fun i hi => ?_, fun f hf => ?_, fun f hf => ?_, fun f hf => ?_⟩
+    · refine ⟨fun f hf => ?_, fun i hi => ?_, fun e he => ?_, fun f hf => ?_, fun f hf => ?_,
+        fun f hf => ?_⟩
       · have hf' : f ∈ (M.replaceBody s b).funcs := hf
         rw [Module.funcs_replaceBody] at hf'
         obtain ⟨g, hg, rfl⟩ := List.mem_map.1 hf'
@@ -198,7 +208,7 @@ theorem Module.valid_replaceBody {M : Module d} (hM : M.Valid) {s : Name} {b : R
           exact hm g hg hs
         · rw [Func.replaceBody_of_ne hs]
           exact (hM.memories _ (List.mem_cons_self ..)).funcs g hg
-      rotate_left
+      rotate_left 2
       · have hf' : f ∈ (M.replaceBody s b).funcs := hf
         rw [Module.funcs_replaceBody] at hf'
         obtain ⟨g, hg, rfl⟩ := List.mem_map.1 hf'
@@ -226,6 +236,9 @@ theorem Module.valid_replaceBody {M : Module d} (hM : M.Valid) {s : Name} {b : R
       · have hi' : i ∈ (M.replaceBody s b).table.dialectItems := hi
         rw [Module.dialectItems_replaceBody] at hi'
         exact (hM.memories _ (List.mem_cons_self ..)).dialectItems i hi'
+      · have he' : e ∈ (M.replaceBody s b).table.externs := he
+        rw [Module.externs_replaceBody] at he'
+        exact (hM.memories _ (List.mem_cons_self ..)).externs e he'
     · exact hM.memories t (List.mem_cons_of_mem _ ht)
   · simp only [Module.tables, Module.replaceBody, Item.tablesIn_replaceBody, List.mem_cons] at ht
     rcases ht with rfl | ht
@@ -245,7 +258,8 @@ theorem Module.valid_replaceBody {M : Module d} (hM : M.Valid) {s : Name} {b : R
     · exact hM.globals t (List.mem_cons_of_mem _ ht)
   simp only [Module.tables, Module.replaceBody, Item.tablesIn_replaceBody, List.mem_cons] at ht
   rcases ht with rfl | ht
-  · refine ⟨?_, fun f hf => ?_, fun i hi => ?_, hM.dialectNames, hM.dialectsUnique⟩
+  · refine ⟨?_, fun f hf => ?_, fun i hi => ?_, fun e he => ?_, hM.dialectNames,
+      hM.dialectsUnique⟩
     · change ((M.items.map (Item.replaceBody s b)).map Item.name).Nodup
       rw [List.map_map]
       have : Item.name ∘ Item.replaceBody s b = (Item.name : Item d → Name) :=
@@ -268,6 +282,9 @@ theorem Module.valid_replaceBody {M : Module d} (hM : M.Valid) {s : Name} {b : R
       change i.Valid ⟨(M.replaceBody s b).symbols⟩
       rw [Module.symbols_replaceBody]
       exact hM.table.dialectItems i hi'
+    · have he' : e ∈ (M.replaceBody s b).table.externs := he
+      rw [Module.externs_replaceBody] at he'
+      exact hM.table.externs e he'
   · exact hM.tables t (List.mem_cons_of_mem _ ht)
 
 end

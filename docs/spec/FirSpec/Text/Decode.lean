@@ -14,7 +14,7 @@ changes under it.
 
 #doc (Manual) "Decoding: readable blocks" =>
 
-:::moduleDocs (fingerprint := "16566009616525533199")
+:::moduleDocs (fingerprint := "5702380221208244942")
 :::
 
 :::readable Fir.Text.Scope Fir.Text.decodeType Fir.Text.decodeDef Fir.Text.define (pin := Fir.DialectText) (fingerprint := "12760793514210106894")
@@ -71,7 +71,7 @@ the core's kind. The function carries no attributes and is not variadic:
 decoding an item of kind `func` adds them.
 :::
 
-:::readable Fir.Text.funcResultAttrs Fir.Text.funcBlocks Fir.Text.plainHeader (pin := Fir.trimAttrs) (fingerprint := "8751747001982709760")
+:::readable Fir.Text.funcResultAttrs Fir.Text.funcBlocks Fir.Text.externResultAttrs Fir.Text.externResultAttrs_eq_ok Fir.Text.plainHeader (pin := Fir.trimAttrs) (fingerprint := "11734190341452009901")
 *Definitions: the parts of an item's header.*
 
 * The attributes of a `func`'s results are those after each result's type,
@@ -83,17 +83,21 @@ decoding an item of kind `func` adds them.
   body that holds a dialect set is an error at the kind, "a func's body
   holds blocks, not a dialect set", and one that holds items an error at
   the kind of the first of them.
-* An item other than a `func` has a plain header: no parameter carries
+* The attributes of an `extern`'s results are read as a `func`'s, and one
+  with no results and attributes is an error at its first attribute, "an
+  extern with no results has no attributes". So they decode exactly when a
+  `func`'s do, to the same lists.
+* An item other than a `func` or an `extern` has a plain header: no parameter carries
   attributes, the parameters do not end in `...`, and no result that a
   comma follows carries attributes. Otherwise it is an error at the first
   such attribute, or at the `...`.
 :::
 
-:::readable Fir.Text.decodeFuncItem Fir.Text.moduleHeader Fir.Text.decodeDialectItem Fir.Text.decodeItem Fir.Text.decodeGlobal Fir.Text.decodeItems Fir.Text.decodeItems_eq_mapM Fir.Text.decodeMemLayout Fir.Text.decodeModule (fingerprint := "210938233897746318")
+:::readable Fir.Text.decodeFuncItem Fir.Text.decodeExternItem Fir.Text.moduleHeader Fir.Text.decodeDialectItem Fir.Text.decodeItem Fir.Text.decodeGlobal Fir.Text.decodeItems Fir.Text.decodeItems_eq_mapM Fir.Text.decodeMemLayout Fir.Text.decodeModule (fingerprint := "11696663353052414038")
 *Definition: decoding an item and a module.* An item decodes as a function,
-as a nested module (ADR-2026-11-10-1510), as an aggregate's layout
-(ADR-2026-11-16-1546), as a global (ADR-2026-11-09-1546) or as an item of
-a dialect's kind
+as an external declaration (ADR-2026-11-09-1547), as a nested module
+(ADR-2026-11-10-1510), as an aggregate's layout (ADR-2026-11-16-1546), as a
+global (ADR-2026-11-09-1546) or as an item of a dialect's kind
 (ADR-2026-11-09-1543):
 
 * a `func` decodes the attributes of its results, then the blocks of its
@@ -101,6 +105,12 @@ a dialect's kind
   function keeps the attributes of its parameters and results, without
   their positions and without the empty lists at the end, and whether its
   parameters end in `...`;
+* an `extern` whose body is not empty is an error at its kind, "an extern
+  has an empty body"; otherwise it decodes the attributes of its results,
+  then its signature as a function's with no blocks, its result types and
+  then its parameters, each named once, and keeps, as a `func` does, the
+  attributes of its parameters and results and whether its parameters end
+  in `...`;
 * an item of any other kind first checks that its header is plain;
 * a `module` with parameters, results or attributes is an error at the
   first of them;

@@ -5,6 +5,7 @@ mod aggregate;
 mod attr;
 mod build;
 mod debug;
+mod extern_decl;
 mod global;
 mod int;
 pub mod layout;
@@ -17,6 +18,7 @@ pub(crate) mod tree;
 
 pub use aggregate::{Aggregate, AggregateFault, Field};
 pub use attr::{Attr, Type};
+pub use extern_decl::Extern;
 pub use global::{Global, GlobalFault, InitPiece, Linkage};
 pub use int::{Int, Nat};
 pub use layout::{ByteOrder, MemLayout};

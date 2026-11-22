@@ -189,6 +189,21 @@ theorem Func.spells (n : Nat) (f : Func d) (hw : ∀ t ∈ f.tokens, t.Writable)
     hresults _ _ (boundary_space _) <| Lexes.space <| Lexes.lbrace <|
     Lexes.lf <| hblocks _ _ <| Lexes.spaces (Lexes.rbrace <| Lexes.lf hl) n) n
 
+/-- An external declaration at indentation `n` reads back as its tokens,
+before any text. -/
+theorem Extern.spells (n : Nat) (e : Extern d) (hw : ∀ t ∈ e.tokens, t.Writable) :
+    SpellsAny (e.print n).toList e.tokens := by
+  have hparams := e.func.spellsParams fun t ht => hw t (by simp [Extern.tokens, Func.tokens, ht])
+  have hresults := e.func.spellsResults fun t ht => hw t (by simp [Extern.tokens, Func.tokens, ht])
+  intro cs us hl
+  simp only [Extern.print, Extern.tokens, Func.tokens, List.tail_cons, String.toList_append,
+    String.reduceToList, toList_indent, List.append_assoc, List.cons_append, List.nil_append]
+  exact Lexes.spaces (Lexes.lit "extern" ['e', 'x', 't', 'e', 'r', 'n'] (boundary_space _) <|
+    Lexes.space <| Lexes.sym _ (boundary_cons (by decide)) <| Lexes.lparen <|
+    hparams _ _ (boundary_cons (by decide)) <| Lexes.rparen <|
+    hresults _ _ (boundary_space _) <| Lexes.space <| Lexes.lbrace <|
+    Lexes.lf <| Lexes.spaces (Lexes.rbrace <| Lexes.lf hl) n) n
+
 /-- A dialect set at indentation `n`, then an empty line, reads back as its
 tokens, before any text. -/
 theorem spellsDialects (n : Nat) (ns : List Name) (hw : ∀ t ∈ dialectsTokens ns, t.Writable) :
@@ -234,6 +249,7 @@ theorem Item.spells (n : Nat) :
   | .dialect i, hw => DialectItem.spells n i hw
   | .aggregate a, hw => DialectItem.spells n a.item hw
   | .global g, hw => DialectItem.spells n (g.item (d := d)) hw
+  | .extern e, hw => Extern.spells n e hw
   | .module name ds is, hw => by
     have hds := spellsDialects (n + 2) ds fun t ht => hw t (by simp [Item.tokens, ht])
     have his := Item.spellsList (n + 2) is fun t ht => hw t (by simp [Item.tokens, ht])

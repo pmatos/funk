@@ -1,0 +1,202 @@
+# Must-reject texts of external declarations (#239), the functions that
+# funk did not compile (ADR-2026-11-09-1547): a header as a func's, with
+# its markers and `...`, and an empty body. A declaration's markers obey
+# the core's rule as a func's do, and its types name memories that the
+# data layout declares. A call to a declaration does not validate yet: the
+# run has no rule for one, and stage 3 of #239 gives it.
+
+[[reject]]
+verdict = "parse-error"
+rule = "an external declaration has an empty body: not blocks"
+text = '''
+extern @g() {
+^e:
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "an external declaration has an empty body: not items"
+text = '''
+extern @g() {
+  extern @h() {
+  }
+
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "an external declaration with no results has no attributes after its )"
+text = '''
+extern @g(%a: i8) zext {
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "an external declaration names each parameter once"
+text = '''
+extern @g(%a: i32, %a: i32) {
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "an external declaration's types decode: not i16777216"
+text = '''
+extern @g(%a: i16777216) {
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "the kinds of item are the core's and the words of dialects: not externs"
+text = '''
+externs @g() {
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "only an integer narrower than 32 bits carries an extension marker: not i32 in a declaration"
+text = '''
+extern @g(%a: i32 sext) {
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "only an integer narrower than 32 bits carries an extension marker: not ptr in a declaration"
+text = '''
+extern @g(%p: ptr zext) {
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "only an integer narrower than 32 bits carries an extension marker: not a result of f32 in a declaration"
+text = '''
+extern @g() -> f32 sext {
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "a declaration's marker is sext or zext: not signext"
+text = '''
+extern @g(%a: i8 signext) {
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "a declaration's parameter carries one marker: not two"
+text = '''
+extern @g(%a: i8 sext zext) {
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "a declaration's types are valid: not i0"
+text = '''
+extern @g(%a: i0) -> i32 {
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "a declaration's types name memories that the data layout declares"
+text = '''
+extern @g(%p: ptr(1)) {
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "a symbol names one item: not a declaration and a function"
+text = '''
+extern @f() {
+}
+
+func @f() {
+^e:
+  ret @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "a call names a function: not an external declaration, until the run can call one (#239)"
+text = '''
+extern @g(%a: i32) -> i32 {
+}
+
+func @f(%a: i32) -> i32 {
+^e:
+  %r: i32 = call @g %a @0
+  ret %r @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
