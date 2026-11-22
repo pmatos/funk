@@ -58,16 +58,19 @@ variable {Mem : Type} {unit : Mem → Nat} [DecidableEq Mem]
 
 /-! # The world's view -/
 
+/-- The renaming of each escaped allocation of the traced state `s` to its
+handle. -/
+def TraceState.handles (s : TraceState Mem unit) : Renaming Mem :=
+  fun x a => s.escaped.idxOf? (x, a)
+
 /-- The pointer `p` of the memory numbered `n` as the world sees it from the
-traced state `s`, where the memory numbered `n` is `μ n`: itself when it has
-no provenance, the handle of its allocation in place of the allocation's id
-when that allocation escaped and is live, and poison (`none`) otherwise. -/
-def TraceState.worldPtr (μ : Nat → Mem) (s : TraceState Mem unit) (n : Nat) (p : Pointer) :
-    Option Pointer :=
-  match p.prov with
-  | none => some p
-  | some a => if s.mem.freed (μ n) a then none
-    else (s.escaped.idxOf? (μ n, a)).map fun k => { p with prov := some k }
+traced state `s`, where the memory numbered `n` is `μ n`: as an observer
+sees it under the renaming of each escaped allocation to its handle
+(`Renaming.ptr`), so itself when it has no provenance, the handle of its
+allocation in place of the allocation's id when that allocation escaped
+and is not freed, and poison (`none`) otherwise. -/
+def TraceState.worldPtr (μ : Nat → Mem) (s : TraceState Mem unit) : Nat → Pointer → Option Pointer :=
+  Renaming.ptr μ s.mem s.handles
 
 /-- A value as the world sees it from the traced state `s`: each of its
 pointers as the world sees it. -/
@@ -109,7 +112,7 @@ variable {μ : Nat → Mem} {s s' : TraceState Mem unit}
 /-- Traced states that refine each other show each pointer alike. -/
 theorem TraceState.worldPtr_eq (h : s ⊑ s') : s.worldPtr μ = s'.worldPtr μ := by
   funext n p
-  unfold TraceState.worldPtr
+  unfold TraceState.worldPtr TraceState.handles Renaming.ptr
   rw [h.2]
   split
   · rfl

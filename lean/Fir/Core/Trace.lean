@@ -86,6 +86,12 @@ namespace Core
 variable {M : Module CoreDialect} {f : Func CoreDialect} {N : Type} [DecidableEq N]
   (lay : N → MemLayout) (ρ : DialectEffects.Mem CoreDialect → N) (L : RunItems) (μ : Nat → N)
 
+/-- Each core op runs, in the core's traced semantics, by its rule with
+memory, lifted onto the memories of the traced state, wherever a run names
+the core's memories: no op shows an event. -/
+theorem opLiftsMem (op : Op) : OpLiftsMem (d := CoreDialect) lay ρ L op :=
+  fun _ => ⟨rfl, rfl⟩
+
 /-- Every core function's ops that run by their own rule are monotone in the
 core's traced semantics, wherever a run names the core's memories: each
 runs by its rule with memory, lifted, and is monotone with memory, and the
@@ -93,7 +99,7 @@ lift onto the traced state keeps it. -/
 theorem traceOpsMonotone (g : Func CoreDialect) :
     letI := DialectTrace.traceAt (d := CoreDialect) lay ρ L
     g.TraceOpsMonotone (DialectTrace.Acts CoreDialect) (TraceState N (unitsOf lay)) :=
-  Func.TraceOpsMonotone.ofLift lay ρ L (LiftsMem.opLiftsMem lay ρ L)
+  Func.TraceOpsMonotone.ofLift lay ρ L (opLiftsMem lay ρ L)
     fun _ _ o _ hc => Op.memMonotone_all o.op hc lay ρ L
 
 /-- Every core op that runs by its own rule has finitely many outcomes in
@@ -105,7 +111,7 @@ theorem opsTraceFinite :
     letI := DialectTrace.traceAt (d := CoreDialect) lay ρ L
     OpsTraceFinite CoreDialect (DialectTrace.Event CoreDialect) (DialectTrace.Answer CoreDialect)
       (TraceState N (unitsOf lay)) :=
-  OpsTraceFinite.ofLift lay ρ L (LiftsMem.opLiftsMem lay ρ L) (opsFinite lay ρ L)
+  OpsTraceFinite.ofLift lay ρ L (opLiftsMem lay ρ L) (opsFinite lay ρ L)
 
 /-- Refined arguments over traced runs: on arguments that refine others, a
 poison by any value, the spec's traced runs of every function of every core

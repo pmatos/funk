@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "The traced semantics of a sum: readable blocks" =>
 
-:::moduleDocs (fingerprint := "15188153132916142706")
+:::moduleDocs (fingerprint := "2884701534724172316")
 :::
 
 :::readable Fir.Act.inl Fir.Act.inr Fir.TraceM.mapActs_liftMem (fingerprint := "2600471622454697333")
@@ -26,7 +26,7 @@ and one of the right side $`\langle \mathsf{inr}~e, \mathsf{inr}~a\rangle`.
 state layer, lifted onto the memories of the traced state, changes nothing.
 :::
 
-:::readable Fir.Dialect.sum.instDialectTrace Fir.Dialect.sum.event_isRefinedBy_trans (fingerprint := "7690292065802503199")
+:::readable Fir.Dialect.sum.instDialectTrace Fir.Dialect.sum.event_isRefinedBy_refl Fir.Dialect.sum.event_isRefinedBy_trans (fingerprint := "12236054867807811533")
 *Definition: the sum's traced semantics.* The events of $`\mathit{base} \boxplus e`
 are $`\mathrm{Event}(\mathit{base}) \oplus \mathrm{Event}(e)`, and the
 world's answers $`\mathrm{Answer}(\mathit{base}) \oplus \mathrm{Answer}(e)`;
@@ -34,8 +34,8 @@ one event refines another when both are of the same side and refine there.
 An op of $`e` runs by $`e`'s traced rule, and an op of the base by the
 base's, where the run names each memory of the base as the sum does, its
 results seen at the sum's types; each act of a side is the sum's act on
-that side. Refinement of the sum's events is transitive when each side's
-is.
+that side. Refinement of the sum's events is reflexive, and transitive,
+when each side's is.
 :::
 
 :::readable Fir.Dialect.sum.opLiftsMem_inl Fir.Dialect.sum.opLiftsMem_inr Fir.Dialect.sum.opLiftsMem Fir.Dialect.sum.liftsMem (fingerprint := "4830633370830775924")

@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "The core's traced runs: readable blocks" =>
 
-:::moduleDocs (fingerprint := "18069304672062469863")
+:::moduleDocs (fingerprint := "13662823649430197855")
 :::
 
 :::readable Fir.Core.instDialectTrace Fir.Core.liftsMem Fir.Core.instInhabitedAnswer (fingerprint := "9308984198974203001")
@@ -55,7 +55,11 @@ memories gives the traced one from every traced state. So it is at every
 world.
 :::
 
-:::readable Fir.Core.traceOpsMonotone Fir.Core.opsTraceFinite (fingerprint := "16856423220812675737")
+:::readable Fir.Core.opLiftsMem Fir.Core.traceOpsMonotone Fir.Core.opsTraceFinite (fingerprint := "15847308182329661481")
+*Theorem: each core op lifts its rule.* In the core's traced semantics,
+each core op runs by its rule with memory, lifted onto the memories of the
+traced state, by definition.
+
 *Theorem: the core meets the traced obligation.* Every core function's
 ops that run by their own rule are monotone in the core's traced
 semantics, wherever a run names the core's memories: each lifts its rule

@@ -6,8 +6,9 @@ open Verso.Genre Manual
 open FirSpecSite
 
 /-!
-The readable blocks of the section on traced runs from a traced state of a dialect that lifts its semantics with memory, a dialect with no
-event, which renders `Fir.Execution.TraceLiftFrom` (ADR-2026-11-05-2012). Each block
+The readable blocks of the section on traced runs from a traced state of a dialect that
+lifts its semantics with memory, which renders `Fir.Execution.TraceLiftFrom`
+(ADR-2026-11-05-2012). Each block
 explains declarations of that module and pins their fingerprint; the build fails when the
 Lean changes under it.
 -/

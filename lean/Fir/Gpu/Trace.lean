@@ -58,6 +58,10 @@ instance coreGpu_liftsMem : LiftsMem CoreGpu := Dialect.sum.liftsMem
 /-- The world's default answer to an event of the sum: the core's. -/
 instance coreGpu_instInhabitedAnswer : Inhabited (DialectTrace.Answer CoreGpu) := ⟨.inl default⟩
 
+/-- Refinement of the sum's events is reflexive. -/
+theorem event_isRefinedBy_refl : ∀ ev : DialectTrace.Event CoreGpu, ev ⊑ ev :=
+  Dialect.sum.event_isRefinedBy_refl Core.Event.isRefinedBy_refl fun e => (e : Empty).elim
+
 /-- Refinement of the sum's events is transitive. -/
 theorem event_isRefinedBy_trans {e₁ e₂ e₃ : DialectTrace.Event CoreGpu} :
     e₁ ⊑ e₂ → e₂ ⊑ e₃ → e₁ ⊑ e₃ :=
@@ -67,6 +71,14 @@ variable {M : Module CoreGpu} {t : SymbolTable CoreGpu} {f : Func CoreGpu} {N : 
   [DecidableEq N] (lay : N → MemLayout) (ρ : DialectEffects.Mem CoreGpu → N) (L : RunItems)
   (μ : Nat → N)
 
+/-- Each op of the sum runs, in its traced semantics, by its rule with memory,
+lifted onto the memories of the traced state, wherever a run names the
+sum's memories: each core op does in the core, and each op of `gpu` in
+`gpu`. -/
+theorem opLiftsMem : ∀ op, OpLiftsMem (d := CoreGpu) lay ρ L op :=
+  Dialect.sum.opLiftsMem lay ρ L (fun o => Core.opLiftsMem lay _ L o)
+    (OpLiftsMem.ofMem (d := GpuDialect) lay ρ L)
+
 /-- Every function of the sum has its ops that run by their own rule
 monotone in the sum's traced semantics, wherever a run names the sum's
 memories: each runs by its rule with memory, lifted, and is monotone with
@@ -74,7 +86,7 @@ memory, and the lift onto the traced state keeps it. -/
 theorem traceOpsMonotone (g : Func CoreGpu) :
     letI := DialectTrace.traceAt (d := CoreGpu) lay ρ L
     g.TraceOpsMonotone (DialectTrace.Acts CoreGpu) (TraceState N (unitsOf lay)) :=
-  Func.TraceOpsMonotone.ofLift lay ρ L (LiftsMem.opLiftsMem lay ρ L) (memOpsMonotone lay ρ L g)
+  Func.TraceOpsMonotone.ofLift lay ρ L (opLiftsMem lay ρ L) (memOpsMonotone lay ρ L g)
 
 /-- Every op of the sum that runs by its own rule has finitely many outcomes
 in the sum's traced semantics, given the world's answers, wherever a run
@@ -85,7 +97,7 @@ theorem opsTraceFinite :
     letI := DialectTrace.traceAt (d := CoreGpu) lay ρ L
     OpsTraceFinite CoreGpu (DialectTrace.Event CoreGpu) (DialectTrace.Answer CoreGpu)
       (TraceState N (unitsOf lay)) :=
-  OpsTraceFinite.ofLift lay ρ L (LiftsMem.opLiftsMem lay ρ L) (opsFinite lay ρ L)
+  OpsTraceFinite.ofLift lay ρ L (opLiftsMem lay ρ L) (opsFinite lay ρ L)
 
 /-- Refined arguments over traced runs: on arguments that refine others, the
 spec's traced runs of every function of every module of the sum, a module

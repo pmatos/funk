@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "What the world sees: readable blocks" =>
 
-:::moduleDocs (fingerprint := "10639735501676741076")
+:::moduleDocs (fingerprint := "15362740429529953075")
 :::
 
 :::readable Fir.WUnit.IsRefinedBy Fir.WUnit.isRefinedBy_refl Fir.WUnit.isRefinedBy_trans (fingerprint := "2726711973618413313")
@@ -26,14 +26,17 @@ $$`\mathsf{poison} \sqsubseteq u \qquad u \sqsubseteq u`
 Refinement of units the world sees is reflexive and transitive.
 :::
 
-:::readable Fir.TraceState.worldPtr Fir.TraceState.worldVal Fir.TraceState.worldUnit Fir.TraceState.seen (fingerprint := "15040221980059866473")
+:::readable Fir.TraceState.handles Fir.TraceState.worldPtr Fir.TraceState.worldVal Fir.TraceState.worldUnit Fir.TraceState.seen (fingerprint := "15011685363136314882")
 *Definition: the world's view.* From the traced state $`s`, where the
 memory numbered $`n` is $`\mu(n)`, the world sees the pointer $`p` of the
 memory numbered $`n` as:
 
 $$`\mathrm{world}_s(n, p) = \begin{cases} p & p.\mathrm{prov} = \mathsf{none} \\ p[\mathrm{prov} := k] & p.\mathrm{prov} = a,\ (\mu(n), a) \text{ live, at handle } k \text{ of } s.\mathrm{escaped} \\ \mathsf{poison} & \text{otherwise} \end{cases}`
 
-A value is seen with each of its pointers seen so. A unit is seen as its
+This is how an observer sees a pointer under a renaming, here the renaming
+$`\mathrm{handles}(s)` of each escaped allocation to its handle, so a
+freed allocation is poison too. A value is seen with each of its pointers
+seen so. A unit is seen as its
 bits, as $`\mathsf{poison}`, or as the fragment of a pointer seen so, which
 is $`\mathsf{poison}` when the pointer is. $`\mathrm{seen}(s)` lists, in the
 order of their handles, the units of each escaped allocation that is live,

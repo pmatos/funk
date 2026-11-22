@@ -78,6 +78,13 @@ instance instDialectTrace : DialectTrace (base ⊞ e) where
         | .inr o, args => TraceM.mapActs (fun a => [Act.inr a])
             (DialectDenote.exit (d := base.over e) o args) }
 
+/-- Refinement of the sum's events is reflexive when each side's is. -/
+theorem event_isRefinedBy_refl (h₁ : ∀ a : DialectTrace.Event base, a ⊑ a)
+    (h₂ : ∀ a : DialectTrace.Event (base.over e), a ⊑ a) :
+    ∀ a : DialectTrace.Event (base ⊞ e), a ⊑ a
+  | .inl a => .inl (h₁ a)
+  | .inr a => .inr (h₂ a)
+
 /-- Refinement of the sum's events is transitive when each side's is. -/
 theorem event_isRefinedBy_trans
     (h₁ : ∀ {a b c : DialectTrace.Event base}, a ⊑ b → b ⊑ c → a ⊑ c)

@@ -14,10 +14,10 @@ when the Lean changes under it.
 
 #doc (Manual) "The traced runs of the core and gpu: readable blocks" =>
 
-:::moduleDocs (fingerprint := "10769285702214994558")
+:::moduleDocs (fingerprint := "37887890792157356")
 :::
 
-:::readable Fir.Gpu.gpu_instDialectTrace Fir.Gpu.gpu_liftsMem Fir.Gpu.coreGpu_instDialectTrace Fir.Gpu.coreGpu_liftsMem Fir.Gpu.coreGpu_instInhabitedAnswer Fir.Gpu.event_isRefinedBy_trans (fingerprint := "6560627094160518420")
+:::readable Fir.Gpu.gpu_instDialectTrace Fir.Gpu.gpu_liftsMem Fir.Gpu.coreGpu_instDialectTrace Fir.Gpu.coreGpu_liftsMem Fir.Gpu.coreGpu_instInhabitedAnswer Fir.Gpu.event_isRefinedBy_refl Fir.Gpu.event_isRefinedBy_trans (fingerprint := "4284088936033759670")
 *Definition: the sum's traced semantics.* `gpu` shows no event, so its
 traced semantics over the core is its semantics with memory, lifted onto
 the memories of the traced state. At every work-item the traced semantics
@@ -25,7 +25,7 @@ of the sum is the sum of the core's and `gpu`'s: it shows the core's
 events, the external calls, with the core's default answer, and each op
 runs by its side's rule, which lifts its rule with memory, so the sum's
 traced semantics lifts its semantics with memory. Refinement of its events
-is transitive.
+is reflexive and transitive.
 :::
 
 :::readable Fir.Gpu.trace_args_isRefinedBy Fir.Gpu.trace_args_isRefinedBy_world (fingerprint := "14681190668605144073")
@@ -49,7 +49,11 @@ that shows events proves it, the hypothesis from given memories taken to
 the traced one by the lift. So it is at every world.
 :::
 
-:::readable Fir.Gpu.traceOpsMonotone Fir.Gpu.opsTraceFinite (fingerprint := "7865552718645386286")
+:::readable Fir.Gpu.opLiftsMem Fir.Gpu.traceOpsMonotone Fir.Gpu.opsTraceFinite (fingerprint := "3513069387254649198")
+*Theorem: each op of the sum lifts its rule.* Each core op lifts its rule
+with memory in the core, and each op of `gpu` in `gpu`, so each op of the
+sum does in the sum.
+
 *Theorem: the sum meets the traced obligation.* Every function of the sum
 has its ops that run by their own rule monotone in the sum's traced
 semantics, wherever a run names the sum's memories: each lifts its rule

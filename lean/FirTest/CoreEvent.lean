@@ -14,13 +14,15 @@ open Fir Fir.Memory Fir.Core
 abbrev w : Nat → Nat := fun _ => 8
 
 /-- A traced state whose memory 0 holds three allocations: the first, which
-holds the byte 5 and a fragment of a pointer into the second, escaped with
-the handle 0; the second, live, which has not escaped; and the third,
-freed, which escaped with the handle 1. -/
+holds the byte 5, a fragment of a pointer into itself and one into the
+second, escaped with the handle 1; the second, live, which has not escaped;
+and the third, freed, which escaped first, with the handle 0. So the
+allocation `0` has the handle `1`. -/
 def s : TraceState Nat w :=
-  ⟨Memories.empty.set 0 ⟨[⟨.global, 1, [.bits 5, .frag 0 ⟨some 1, 0⟩ 0], true, none, false⟩,
+  ⟨Memories.empty.set 0 ⟨[⟨.global, 1, [.bits 5, .frag 0 ⟨some 0, 2⟩ 0, .frag 0 ⟨some 1, 0⟩ 0],
+      true, none, false⟩,
     ⟨.global, 1, [.bits 6], true, none, false⟩,
-    ⟨.heap, 1, [.bits 7], false, none, false⟩]⟩, [(0, 0), (0, 2)]⟩
+    ⟨.heap, 1, [.bits 7], false, none, false⟩]⟩, [(0, 2), (0, 0)]⟩
 
 /-! # What the world sees -/
 
@@ -28,17 +30,19 @@ def s : TraceState Nat w :=
 -- names it by its handle; one into the allocation that has not escaped, or
 -- into the freed one, is poison.
 #guard s.worldPtr id 0 ⟨none, 3⟩ == some ⟨none, 3⟩
-#guard s.worldPtr id 0 ⟨some 0, 1⟩ == some ⟨some 0, 1⟩
+#guard s.worldPtr id 0 ⟨some 0, 1⟩ == some ⟨some 1, 1⟩
 #guard s.worldPtr id 0 ⟨some 1, 0⟩ == none
 #guard s.worldPtr id 0 ⟨some 2, 0⟩ == none
 
--- The world sees the units of the escaped live allocation, the fragment of a
--- pointer it cannot name as poison, and none of the freed allocation.
-#guard s.seen id == [[.bits 5, .poison], []]
+-- The world sees no units of the freed allocation, and the units of the
+-- escaped live one, a fragment of a pointer into it by its handle and one
+-- into an allocation it cannot name as poison.
+#guard s.seen id == [[], [.bits 5, .frag 0 (some 1) 2 0, .poison]]
 
-/-- A pointer argument into the escaped allocation is seen with its handle. -/
+/-- A pointer argument into the escaped allocation is seen with its handle,
+not its id. -/
 example : s.worldVal id ([⟨.ptr 0, .value ⟨some 0, 1⟩⟩] : List (DVal CoreDialect)) =
-    [⟨.ptr 0, .value ⟨some 0, 1⟩⟩] := rfl
+    [⟨.ptr 0, .value ⟨some 1, 1⟩⟩] := rfl
 
 /-- A pointer argument into the allocation that has not escaped is seen as
 poison. -/
@@ -63,7 +67,7 @@ example : ¬ Event.call "g" [⟨.int 8, .value 5⟩] [] ⊑ Event.call "g" [⟨.
 /-- The event of an external call from `s` on a pointer into the escaped
 allocation. -/
 example : Event.ofCall id s "g" [⟨.ptr 0, .value ⟨some 0, 1⟩⟩] =
-    .call "g" [⟨.ptr 0, .value ⟨some 0, 1⟩⟩] [[.bits 5, .poison], []] := by
+    .call "g" [⟨.ptr 0, .value ⟨some 1, 1⟩⟩] [[], [.bits 5, .frag 0 (some 1) 2 0, .poison]] := by
   simp only [Event.ofCall]
   exact congrArg _ (by decide)
 
@@ -75,6 +79,10 @@ variable [Gpu.WorkItem]
 
 /-- The sum shows the core's events, since `gpu` shows none. -/
 example : DialectTrace.Event CoreGpu = (Core.Event ⊕ Empty) := rfl
+
+/-- An event of the sum refines itself. -/
+example : ∀ ev : DialectTrace.Event CoreGpu, ev ⊑ ev :=
+  Gpu.event_isRefinedBy_refl
 
 /-- And the world answers them as it answers the core's. -/
 example : DialectTrace.Answer CoreGpu = ((Core.Reply × List WorldAct) ⊕ Unit) := rfl
