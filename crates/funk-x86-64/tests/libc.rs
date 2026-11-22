@@ -115,6 +115,54 @@ fn a_function_that_calls_printf_runs_and_its_output_comes_first() {
     );
 }
 
+/// The table of globals is a weak reference of the entry file, which a
+/// dynamically linked program without globals resolves to none.
+#[test]
+fn a_program_linked_with_the_c_library_reports_its_memory() {
+    let exe = greet_in_c("memory", GREET_IN_C);
+    let out = Command::new(&exe)
+        .args(["--memory", "@greet", "41"])
+        .output()
+        .unwrap();
+    assert_eq!(
+        report(&out),
+        (
+            Some(0),
+            "C got 41\n{\"values\":[\"42\"],\"memory\":[]}\n".to_string(),
+            String::new()
+        )
+    );
+}
+
+/// With globals, the table that the module defines resolves the entry
+/// file's weak reference in a dynamically linked program too.
+#[test]
+fn a_program_linked_with_the_c_library_reports_its_globals() {
+    let text = "global @g() size(2) align(2) units(7, 9) {\n}\n\n\
+                func @f() -> i32 {\n^entry:\n  %c: i32 = const 3 @0\n  ret %c @0\n}\n\n\
+                locs {\n  @0 = unknown\n}\n";
+    let mut program = compile(&module(text)).unwrap();
+    program
+        .module
+        .push_str("\t.text\nfunk_test_calls_c:\n\tjmp\tputs\n");
+    let exe = fresh("memory-globals");
+    build_program(&program, &exe).unwrap();
+    assert!(holds(&exe, LOADER));
+    let out = Command::new(&exe)
+        .args(["--memory", "@f"])
+        .output()
+        .unwrap();
+    let (status, stdout, stderr) = report(&out);
+    assert_eq!((status, stderr.as_str()), (Some(0), ""), "{stdout}");
+    let entry = stdout
+        .strip_prefix(
+            "{\"values\":[\"3\"],\"memory\":[{\"global\":\"@g\",\"memory\":0,\"address\":\"",
+        )
+        .and_then(|t| t.strip_suffix("\",\"units\":\"0709\"}]}\n"))
+        .unwrap_or_else(|| panic!("{stdout}"));
+    assert!(entry.parse::<u64>().unwrap() % 2 == 0, "{stdout}");
+}
+
 #[test]
 fn a_bad_command_line_still_exits_with_2() {
     let exe = greet_in_c("usage", GREET_IN_C);

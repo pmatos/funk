@@ -268,3 +268,94 @@ fn a_nested_module_s_globals_are_left_out() {
     let asm = compile(&module(&text)).unwrap().module;
     assert!(!asm.contains("cell"), "{asm}");
 }
+
+/// What `exe` prints for `args`: its exit status and standard output.
+fn output(exe: &Path, args: &[&str]) -> (Option<i32>, String) {
+    let out = Command::new(exe).args(args).output().unwrap();
+    assert!(out.stderr.is_empty(), "{args:?}: {out:?}");
+    (out.status.code(), String::from_utf8(out.stdout).unwrap())
+}
+
+/// `--memory` adds every global, its address and its units, after the
+/// values; without it, the line is as it always was
+/// (`docs/decisions/x86-64-backend-executable.md#reporting-memory`).
+#[test]
+fn memory_reports_every_global_after_the_values() {
+    let exe = fresh("memory");
+    build(&module(GLOBALS), &exe).unwrap();
+    assert_eq!(
+        output(&exe, &["@bump", "5"]),
+        (Some(0), "{\"values\":[\"5\"]}\n".to_string())
+    );
+    let (status, text) = output(&exe, &["--memory", "@bump", "5"]);
+    assert_eq!(status, Some(0));
+    let rest = text
+        .strip_prefix("{\"values\":[\"5\"],\"memory\":[")
+        .and_then(|t| t.strip_suffix("]}\n"))
+        .unwrap_or_else(|| panic!("{text}"));
+    let mut addresses = Vec::new();
+    let mut units = Vec::new();
+    for (i, entry) in rest.split("},").enumerate() {
+        let name = ["@msg", "@table", "@counter", "@page"][i];
+        let entry = entry
+            .strip_prefix(&format!(
+                "{{\"global\":\"{name}\",\"memory\":0,\"address\":\""
+            ))
+            .unwrap_or_else(|| panic!("{entry}"));
+        let (address, tail) = entry.split_once("\",\"units\":\"").unwrap();
+        addresses.push(address.parse::<u64>().unwrap());
+        units.push(tail.trim_end_matches('}').trim_end_matches('"').to_string());
+    }
+    let (msg, table, counter, page) = (addresses[0], addresses[1], addresses[2], addresses[3]);
+    assert_eq!(page % 4096, 0);
+    let le = |a: u64| {
+        a.to_le_bytes()
+            .iter()
+            .map(|b| format!("{b:02x}"))
+            .collect::<String>()
+    };
+    let want = [
+        "6869000000000000".to_string(),
+        format!("{}{}{}{}", le(msg), le(msg + 1), le(counter), le(0)),
+        "05000000".to_string(),
+        "01000000020000000000000000000000".to_string(),
+    ];
+    assert_eq!(units, want);
+    assert!(table % 8 == 0 && counter % 4 == 0);
+}
+
+#[test]
+fn a_run_of_sixteen_zeros_or_more_is_written_as_zeros() {
+    let text = with_locs(
+        "global @\"a \\\"b\\\\\"() size(40) align(1) units(1) zeros(15) units(2) {\n}\n\n\
+         func @f() -> i8 {\n^entry:\n  %c: i8 = const 1 @0\n  ret %c @0\n}",
+    );
+    let exe = fresh("zeros");
+    build(&module(&text), &exe).unwrap();
+    let (_, out) = output(&exe, &["--memory", "@f"]);
+    let units = format!("01{}02zeros(23)", "00".repeat(15));
+    assert!(
+        out.starts_with(
+            "{\"values\":[\"1\"],\"memory\":[{\"global\":\"@\\\"a \\\\\\\"b\\\\\\\\\\\"\","
+        ),
+        "{out}"
+    );
+    assert!(
+        out.ends_with(&format!("\"units\":\"{units}\"}}]}}\n")),
+        "{out}"
+    );
+}
+
+#[test]
+fn a_module_without_globals_reports_none() {
+    let text = with_locs("func @f() -> i8 {\n^entry:\n  %c: i8 = const 1 @0\n  ret %c @0\n}");
+    let exe = fresh("none");
+    build(&module(&text), &exe).unwrap();
+    assert_eq!(
+        output(&exe, &["--memory", "@f"]),
+        (Some(0), "{\"values\":[\"1\"],\"memory\":[]}\n".to_string())
+    );
+    let out = Command::new(&exe).arg("--memory").output().unwrap();
+    assert_eq!(out.status.code(), Some(2));
+    assert!(out.stdout.is_empty());
+}

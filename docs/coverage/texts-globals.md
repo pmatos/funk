@@ -26,8 +26,9 @@ name no global of the op's table or a global of another memory.
 
 #237's third stage places globals in native code
 ([x86-64-backend-lowering-memory.md](../decisions/x86-64-backend-lowering-memory.md#globals)),
-so each test of `globaladdr` that returns no address and whose run is not
-UB runs as native code too. `globals-programs` runs programs on both: a
+so each test of `globaladdr` whose run is not UB runs as native code too,
+`@addresses`, which returns three globals' addresses, among them (#213
+stage 2). `globals-programs` runs programs on both: a
 constant, exported table of pointers at offsets into an array, a list of
 nodes linked by `addr` pieces and walked in a loop, a counter that a called
 function bumps on each pass of a loop, a copy of a constant global into an

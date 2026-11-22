@@ -37,7 +37,7 @@ class Stand(unittest.TestCase):
         return str(path)
 
     def funk_script(
-        self, verify=None, native='print(\'{"values":["2"]}\')', build=True
+        self, verify=None, native='print(\'{"values":["2"],"memory":[]}\')', build=True
     ):
         verify = verify or accepted()
         reply = {
@@ -163,7 +163,7 @@ class CompareTest(Stand):
         self.assertEqual(got["native"][0]["result"], {"values": ["2"]})
 
     def test_a_planted_wrong_native_result_does_not_refine(self):
-        self.funk_script(native='print(\'{"values":["9"]}\')')
+        self.funk_script(native='print(\'{"values":["9"],"memory":[]}\')')
         got = toolchain(self).compare(TEXT, CALL)
         self.assertEqual(got["status"], "failed")
         self.assertIn("9", got["detail"])

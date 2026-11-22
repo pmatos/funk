@@ -1,7 +1,9 @@
 # The runtime of an executable that `funk build` links
 # (docs/decisions/x86-64-backend-executable.md#running-one-function).
 #
-# The executable runs one function of the module: `PROGRAM @FUNCTION ARG...`.
+# The executable runs one function of the module: `PROGRAM @FUNCTION ARG...`,
+# or `PROGRAM --memory @FUNCTION ARG...`, whose values line also reports
+# the module's globals (memory.s).
 # The runtime finds the function in the table `__funk_functions`, which the
 # entry generator writes after this file, and checks the argument count. It
 # reserves the stack that the table gives for the function, which covers
@@ -74,7 +76,18 @@ __funk_rt_main:
 1:	movq	%rax, __funk_rt_program(%rip)
 	cmpq	$2, %rdi
 	jb	.Lusage
-	leaq	-2(%rdi), %r12
+	movq	%rdi, %r12
+	movq	%rsi, %r13
+	movq	8(%rsi), %rdi		# --memory, before the function
+	leaq	.Lopt_memory(%rip), %rsi
+	movl	$(.Lopt_memory_end - .Lopt_memory), %edx
+	call	__funk_rt_equal
+	movq	%rax, __funk_rt_report(%rip)
+	subq	%rax, %r12
+	leaq	(%r13,%rax,8), %rsi
+	cmpq	$2, %r12
+	jb	.Lusage
+	subq	$2, %r12
 	movq	8(%rsi), %r13
 	leaq	16(%rsi), %rax
 	movq	%rax, __funk_rt_args(%rip)
@@ -143,7 +156,13 @@ __funk_rt_main:
 	call	*24(%rbx)
 	leaq	-32(%rbp), %rsp		# back on the process's stack
 	leaq	.Lclose(%rip), %rdi
-	movl	$(.Lclose_end - .Lclose), %esi
+	movl	$1, %esi
+	call	__funk_rt_out
+	cmpq	$0, __funk_rt_report(%rip)
+	je	1f
+	call	__funk_rt_globals	# memory.s
+1:	leaq	.Lend(%rip), %rdi
+	movl	$(.Lend_end - .Lend), %esi
 	call	__funk_rt_out
 	call	__funk_rt_flush
 	xorl	%edi, %edi
@@ -502,8 +521,9 @@ __funk_rt_err_num:
 .Lhex:	.ascii	"0123456789abcdef"
 .Lopen:	.ascii	"{\"values\":["
 .Lopen_end:
-.Lclose:	.ascii	"]}\n"
-.Lclose_end:
+.Lclose:	.ascii	"]"
+.Lend:	.ascii	"}\n"
+.Lend_end:
 .Lprogram_default:	.asciz	"program"
 .Lmsg_usage:	.asciz	"usage: "
 .Lmsg_usage_args:	.asciz	" @FUNCTION ARG...\n"
@@ -528,5 +548,6 @@ __funk_rt_args:	.skip	8
 __funk_rt_guard:	.skip	8	# the guard page below the run's stack
 __funk_rt_stack:	.skip	8	# the bytes of the run's stack
 __funk_rt_function:	.skip	8	# the function's name, as typed
+__funk_rt_report:	.skip	8	# 1 when --memory was given
 	.p2align	4
 __funk_rt_alt_stack:	.skip	65536	# the stack of the SIGSEGV handler

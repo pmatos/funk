@@ -17,6 +17,7 @@ from dataclasses import dataclass
 
 import ends
 import float_text
+import native_ends
 
 POISON = ends.POISON
 UB = "ub"
@@ -30,7 +31,7 @@ INVALID = "invalid"
 # How a failure of the end of a return, not of its values, begins.
 END = "the end of the return: "
 
-DECIMAL = re.compile(r"-?(0|[1-9][0-9]*)")
+DECIMAL = ends.DECIMAL
 INT_TYPE = re.compile(r"i([1-9][0-9]*)")
 FLOAT_TYPE = re.compile(r"float\(([0-9]+), ([0-9]+)\)")
 # The float formats with an alias, as `(e, m)` (ADR-2026-11-11-0951).
@@ -111,6 +112,22 @@ class OutOfStack:
         )
 
 
+class Returned(tuple):
+    """The values that native code returned and, as it reports them with
+    `--memory`, each global of the module (`native_ends.Global`). A plain
+    tuple of values reports no global."""
+
+    memory: tuple = ()
+
+    def __new__(cls, values=(), memory=()):
+        r = super().__new__(cls, values)
+        r.memory = tuple(memory)
+        return r
+
+    def with_values(self, values) -> "Returned":
+        return Returned(values, self.memory)
+
+
 def show_values(values) -> str:
     return "[" + ", ".join(f'"{v}"' for v in values) + "]"
 
@@ -142,13 +159,11 @@ def refines(ref: Outcome, native, types) -> Judgement:
     `native` is the list of values that native code returns, or a string
     saying how it failed. `types` are the function's result types.
 
-    Native code's end is its values, with no event, nothing escaped and no
-    live allocation: a module that `funk build` builds calls nothing
-    outside it, the spec's end does not count its `export` globals among
-    an observer's roots yet (#237 stage 4), and a function's stack
-    allocations are freed when it returns. A pointer result is an
-    address, which refines only a poison or dangling pointer of fir-ref's
-    (`ends.refined`).
+    Native code's end is its values and the globals it reports, with no
+    event and nothing escaped: a module that `funk build` builds calls
+    nothing outside it, and a function's stack allocations are freed when
+    it returns. A pointer result is an address, which `native_ends`
+    relates to a global through fir-ref's offset.
     """
     if ref.kind == UB:
         return Judgement(INVALID, "UB allows any result, so the test proves nothing")
@@ -181,15 +196,18 @@ def refines(ref: Outcome, native, types) -> Judgement:
         if ends.pointer_memory(ty) is not None:
             if not is_value(got, "i64"):
                 return Judgement(FAILED, f"value {i}, {got}, is not an address")
-            got = ends.ADDRESS
         elif want == POISON:
             if not is_value(got, ty):
                 return Judgement(FAILED, f"value {i}, {got}, is not a value of {ty}")
         elif got != want:
             return Judgement(FAILED, f"value {i} is {got}, not {want}")
         seen.append(got)
-    why = ends.refined(ref.end, ref.values, ends.NOTHING, seen, types)
-    return Judgement(FAILED, END + why) if why else Judgement(PASSED)
+    memory = native.memory if isinstance(native, Returned) else ()
+    found = native_ends.refined(ref.end, ref.values, memory, seen, types)
+    if found is None:
+        return Judgement(PASSED)
+    why, invalid = found
+    return Judgement(INVALID, why) if invalid else Judgement(FAILED, END + why)
 
 
 def expected(ref: Outcome, expect) -> Judgement:

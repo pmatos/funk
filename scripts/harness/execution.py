@@ -3,7 +3,9 @@
 Timeouts, native-only resource limits and JSON checks remain in `tools`.
 This adapter owns command spelling, file/function selection and fuel.
 Every run of fir-ref is at the empty scripted world, so that it reports
-the end of each return (docs/decisions/fir-ref-run-end.md).
+the end of each return (docs/decisions/fir-ref-run-end.md), and every
+native run is given `--memory`, so that it reports the module's globals
+(docs/decisions/x86-64-backend-executable.md#reporting-memory).
 """
 
 import os
@@ -63,6 +65,5 @@ class ProcessRuns(Runs):
         return tools.path(self._reference(args, "--seed", str(seed)), world=True)
 
     def native(self, args: tuple[str, ...]):
-        return tools.native_values(
-            tools.run_native([str(self.exe), self.test.func, *args])
-        )
+        ran = tools.run_native([str(self.exe), "--memory", self.test.func, *args])
+        return tools.native_values(ran, memory=True)

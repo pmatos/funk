@@ -212,7 +212,7 @@ says how to read it.
 
 | op | tests |
 | --- | --- |
-| `globaladdr` | 22 |
+| `globaladdr` | 23 |
 
 ## Copies, moves and fills, by the width of their length
 
