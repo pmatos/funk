@@ -37,10 +37,11 @@ Two ways of building an op's semantics keep the hypothesis:
   by its dialect's rule after a step (`DialectTrace.stepAt`): its outcomes
   are its rule's, each after a step, and agree with a stream as its rule's
   acts do. Every path of such an op shows exactly one step.
-* _The lift of the semantics with memory._ A dialect whose ops show no event
-  runs each op by its rule with memory, on the memories of the traced state
-  (`DialectTrace.ofMem`). An op with finitely many outcomes with memory
-  (`OpsFinite`) has finitely many in the traced layer: the lift shows
+* _The lift of the semantics with memory._ An op may run by its rule with
+  memory, on the memories of the traced state (`OpLiftsMem`), as every op
+  of a dialect whose ops show no event does (`DialectTrace.ofMem`), and
+  every op of the core does. An op with finitely many outcomes with memory
+  (`OpsFinite`) then has finitely many in the traced layer: the lift shows
   nothing and keeps what escaped.
 -/
 
@@ -228,6 +229,24 @@ theorem OpsTraceFinite.stepAt [DialectTrace d]
     OpsStepFinite d (DialectTrace.Event d) (DialectTrace.Answer d) (TraceState N (unitsOf lay)) :=
   fun op hop args => ⟨fun hT => ((h op hop args).1 hT).step, fun hT => ((h op hop args).2 hT).step⟩
 
+/-- In a dialect's traced semantics where each op lifts its rule with
+memory, ops of finitely many outcomes with memory have finitely many in the
+traced layer, given the world's answers. -/
+theorem OpsTraceFinite.ofLift [DialectMemDenote d] [DialectTrace d]
+    (hl : ∀ op : d.Op, OpLiftsMem lay ρ L op)
+    (h : letI := DialectMemDenote.denoteAt (d := d) lay ρ L
+      OpsFinite d N (unitsOf lay)) :
+    letI := DialectTrace.traceAt (d := d) lay ρ L
+    OpsTraceFinite d (DialectTrace.Event d) (DialectTrace.Answer d) (TraceState N (unitsOf lay)) := by
+  letI := DialectMemDenote.denoteAt (d := d) lay ρ L
+  letI := DialectTrace.traceAt (d := d) lay ρ L
+  intro op hop args
+  refine ⟨fun hT => ?_, fun hT => ?_⟩
+  · rw [← (hl op args).1]
+    exact FinitelyMany.liftMem ((h op hop args).1 hT)
+  · rw [← (hl op args).2]
+    exact FinitelyMany.liftMem ((h op hop args).2 hT)
+
 /-- In the traced semantics of a dialect whose ops show no event, ops of
 finitely many outcomes with memory have finitely many in the traced layer,
 given the world's answers. -/
@@ -237,8 +256,8 @@ theorem OpsTraceFinite.ofMem [DialectMemDenote d]
     letI := DialectTrace.ofMem d
     letI := DialectTrace.traceAt (d := d) lay ρ L
     OpsTraceFinite d (DialectTrace.Event d) (DialectTrace.Answer d) (TraceState N (unitsOf lay)) :=
-  fun op hop args => ⟨fun hT => FinitelyMany.liftMem ((h op hop args).1 hT),
-    fun hT => FinitelyMany.liftMem ((h op hop args).2 hT)⟩
+  letI := DialectTrace.ofMem d
+  OpsTraceFinite.ofLift lay ρ L (OpLiftsMem.ofMem lay ρ L) h
 
 end
 

@@ -363,6 +363,8 @@ extensions written apart combine in one sum.
 
 {includeReadable "." Fir.Sum.Pointers "The pointers of a sum's values" FirSpec.Sum.Pointers (level := 2)}
 
+{includeReadable "." Fir.Sum.Trace "The traced semantics of a sum" FirSpec.Sum.Trace (level := 2)}
+
 {include 1 FirSpec.Chapters.Gpu}
 
 # Architecture decision records
