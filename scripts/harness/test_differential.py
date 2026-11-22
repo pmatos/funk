@@ -7,6 +7,7 @@ from dataclasses import replace
 from corpus import Test
 from differential import Runs, evaluate, evaluate_generated
 from ends import Alloc, End
+from native_ends import Global
 from refine import (
     FAILED,
     FUEL_EXHAUSTED,
@@ -17,6 +18,7 @@ from refine import (
     UB,
     Outcome,
     OutOfStack,
+    Returned,
 )
 from sets import SEEDS, BudgetExceeded, Declared, Outcomes, Path
 
@@ -92,13 +94,18 @@ class Differential(unittest.TestCase):
         )
 
     def test_memory_an_observer_reaches_is_judged(self):
-        # fir-ref's return points into a live allocation, which native code,
-        # with no global and no external call, cannot hold.
+        # fir-ref's return points into a live global, which native code
+        # must report with the same units.
         end = End(memory=(Alloc(0, 0, "global", 1, 1, True, ("0x07",)),))
         ref = Outcomes(0, (Outcome(RETURN, ("ptr(0, 0)",), end=end),))
         result = self.judge(RecordedRuns(ref, ("4096",)), types=("ptr",))
         self.assertEqual(result.judgement.status, FAILED)
         self.assertIn("allocation 0 of memory 0, which an observer", result.detail)
+        for units, status in ((b"\x07", PASSED), (b"\x08", FAILED)):
+            native = Returned(("4096",), (Global("@g", 0, 4096, units),))
+            result = self.judge(RecordedRuns(ref, native), types=("ptr",))
+            self.assertEqual(result.judgement.status, status, units)
+        self.assertIn("is 0x08 in the target's @g, not 0x07", result.detail)
 
     def test_a_declared_result_is_judged_with_its_witness_s_end(self):
         alloc = Alloc(0, 0, "global", 1, 1, True, ("0x07",))

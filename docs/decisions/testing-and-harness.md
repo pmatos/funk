@@ -90,20 +90,42 @@ allocation is dangling. No id and no address is compared. A path that shows
 an event, which the harness judges from #213's stage 3, or whose memory
 `fir-ref` could not walk, makes the test invalid.
 
-Native code's end is its values, with no event, nothing escaped and no live
-allocation: `funk build` calls nothing outside the module, the spec's end
-does not count `export` globals among an observer's roots yet, which #237's
-stage 4 checks, and a function's stack allocations are freed when it
-returns. So
-values alone judge a test only where `fir-ref`'s end observes nothing, and
-a native pointer result, an address, refines only a poison or dangling
-pointer. Native runs report memory once they can hold it (#213, stage 2).
 A declared result names values only, so native code is judged against the
 outcomes that give it, from its witness, the set and the seeded runs, ends
 included.
 
 Rejected: judging values alone, which passes a wrong store to memory that
 an observer sees.
+
+### Native runs report memory
+
+Every native run is given `--memory`, so it reports every global of the
+module with its address and units after its values
+([x86-64-backend-executable.md](x86-64-backend-executable.md#reporting-memory)),
+and a line without that field fails (ADR-2026-11-22-1336). Native code's
+end is its values and those globals, with no event and nothing escaped:
+`funk build` calls nothing outside the module, and a function's stack
+allocations are freed when it returns. `native_ends.py` judges it by the
+renaming of `ends.py`, its globals the target's allocations. A pointer of
+`fir-ref`'s into an allocation it lists, at offset `O`, is related to the
+global whose native address plus `O` is the native pointer's: a returned
+pointer by its value, as the human ruled on 2026-11-22 (#213, Q2 A), and
+a stored one by its eight units, little endian. The global must have the
+source's kind, size and liveness, an address that is a multiple of its
+alignment, and units that refine the source's, each byte equal to a unit
+of bits. No native address is compared with `fir-ref`'s (#232). A pointer
+with no provenance, returned or stored, whose offset is `fir-ref`'s
+address, a stored part of a pointer that nothing relates, and an id that
+`fir-ref`'s memory never made cannot be related, and make the test invalid
+unless native code refines another outcome of the set. Rejected: comparing the addresses
+themselves, which the spec need not give as native code does.
+
+The spec's end does not count `export` globals among an observer's roots
+yet: #237's stage 4 adds them, with the native report already in place.
+`fir-ref`'s report names no global, so a root that no pointer reaches is
+related to the native global of its name once that stage names it; until
+then the tests of `globals-programs.fir` that write an `export` global are
+judged on their values.
 
 ### Poison arguments
 

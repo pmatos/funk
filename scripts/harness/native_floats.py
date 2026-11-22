@@ -17,7 +17,7 @@ comparing spellings compares bits.
 import float_text
 import standins
 from float_ref import Format
-from refine import DECIMAL, FLOAT_ALIASES, INT_TYPE, POISON, float_format
+from refine import DECIMAL, FLOAT_ALIASES, INT_TYPE, POISON, Returned, float_format
 
 
 def to_native(args: tuple[str, ...], params) -> tuple[str, ...]:
@@ -49,7 +49,7 @@ def from_native(values, types):
             continue
         width = 1 + fmt[0] + fmt[1]
         out.append(float_text.spell(*fmt, int(v) & ((1 << width) - 1)))
-    return tuple(out)
+    return values.with_values(out) if isinstance(values, Returned) else tuple(out)
 
 
 def nans(values, types) -> tuple[str, ...]:

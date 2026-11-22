@@ -65,7 +65,10 @@ the object file. It may end with the backend's own routines, such as the
 `i128` division helper
 ([x86-64-backend-lowering.md](x86-64-backend-lowering.md#division-at-i128)),
 and then with the module's globals as data
-([x86-64-backend-lowering-memory.md](x86-64-backend-lowering-memory.md#globals)).
+([x86-64-backend-lowering-memory.md](x86-64-backend-lowering-memory.md#globals))
+and, when it has globals, the table `__funk_globals` from which the runtime
+reports them
+([x86-64-backend-executable.md](x86-64-backend-executable.md#reporting-memory)).
 The other holds the executable's entry point and runtime. Both end with
 `.note.GNU-stack`, so the stack is not executable.
 

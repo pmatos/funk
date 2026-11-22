@@ -27,13 +27,20 @@ command line points at nothing that the run made. The harness
 passes no address in place of a poison pointer, so a test with a poison
 pointer argument is interpreter-only. A pointer result is the address, which
 says nothing of the spec's allocation and offset, so the harness compares no
-pointer result
+pointer result with `fir-ref`'s
 ([x86-64-backend-lowering-memory.md](x86-64-backend-lowering-memory.md#pointers)).
-This contract is as the human ruled on 2026-11-15 (#399). Rejected: refusing
+It relates a returned address to the global it falls in: the global whose
+native address plus `fir-ref`'s offset is that address, as the human ruled
+on 2026-11-22 (#213, Q2 A). This contract is as the human ruled on
+2026-11-15 (#399), and on 2026-11-22 (#213, Q1 B) that the executable
+reports memory only when given `--memory`
+([Reporting memory](#reporting-memory)). Rejected: refusing
 to build a module with a pointer parameter or result, since a module builds
 whole and a function that takes a pointer may be called by one that the
 harness runs; and a run that refuses such a function, which hides an address
-that is useful when reading a run.
+that is useful when reading a run. Rejected on 2026-11-22: returned pointers
+that stay opaque, which leave them unchecked; and memory reported on every
+run, a wrapper that the harness generates, or no memory report at all.
 
 On success it writes one line to standard output, `{"values":["V1","V2"]}`, a
 JSON list of the returned values in order, each a string with the same
@@ -59,11 +66,35 @@ needs a C compiler and libc; and bare numbers in the JSON list, since `i1`
 would read as JSON booleans and `i64` values past 2^53 lose precision in many
 JSON readers.
 
+### Reporting memory
+
+`OUTPUT --memory @FUNCTION ARG...` runs the function as above and adds one
+field to the line, after `values`: `memory`, every global of the module's
+own table in the table's order, as it holds when the function has returned
+(ADR-2026-11-22-1336):
+
+```json
+{"values":["4202496"],"memory":[{"global":"@msg","memory":0,"address":"4202496","units":"686900"},
+ {"global":"@buf","memory":0,"address":"4207712","units":"07zeros(31)"}]}
+```
+
+`global` is the name as fir's text writes it, as a JSON string; `address`
+is spelled as a pointer result is; `units` gives each unit, a byte, as two
+lower-case hexadecimal digits, and a run of 16 or more zero units as
+`zeros(N)`, since globals take up to 2^30 bytes. A module without globals
+prints `"memory":[]`. The option comes before the function, so a function
+of any name can be run. The runtime prints the report from the process's
+stack after the function returns (`entry/memory.s`), so the stack figures
+do not change. The globals' table, `__funk_globals`, is in the module's
+assembly, where a global that is not `export` is a local symbol: a hidden
+global symbol that a module without globals does not define, and that the
+entry file refers to weakly.
+
 ## The entry file and its runtime
 
 The entry file holds a runtime in assembly that needs no libc,
 `crates/funk-x86-64/src/entry/runtime.s` and `entry/values.s`, which follows it
-in the entry file. The value routines moved to `values.s` to keep `runtime.s`
+in the entry file, then `entry/memory.s`, the report of `--memory`. The value routines moved to `values.s` to keep `runtime.s`
 within the file-size budget. For each function the entry file adds a wrapper,
 and a table of the functions by their fir names. The wrapper parses the
 arguments, calls the function through `abi::call` and passes each result,

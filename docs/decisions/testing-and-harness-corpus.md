@@ -110,9 +110,12 @@ pointers since stage 5 of #231, so the differential side has `i1` to
 `i128` and `ptr`, filled by `tests/fir/canonical/memory-native.fir` and the
 tests of `store` and `pointer-store` that return integer values. A test of
 poison stays interpreter-only, since native code may give any value for it
-and so pins nothing. A test that returns a pointer stays interpreter-only, since native code returns
-an address, not a pointer of the spec, and so does one with a poison
-pointer argument, which has no stand-in. A run's pointers come from
+and so pins nothing. A test that returns a pointer into a global runs as
+native code too, since the harness relates the address to the global that
+native code reports
+([testing-and-harness.md](testing-and-harness.md#native-runs-report-memory));
+any other test that returns a pointer stays interpreter-only, and so does
+one with a poison pointer argument, which has no stand-in. A run's pointers come from
 `alloca`, so the tests that fill the `ptradd` cells move real pointers, as
 `tests/fir/canonical/memory-native.fir` does, and also pass poison
 through it; its rule on pointers is checked in Lean too, in

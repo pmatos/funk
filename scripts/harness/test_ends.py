@@ -3,9 +3,12 @@
 import unittest
 
 import tools
-from ends import ADDRESS, NOTHING, Alloc, End, pointer_memory, refined, unjudged
+from ends import NOTHING, Alloc, End, pointer_memory, refined, unjudged
 from refine import FAILED, INVALID, PASSED, RETURN, Outcome, refines
 from sets import member, problem
+
+# A pointer as native code prints it: an address.
+ADDRESS = "4198400"
 
 
 def block(alloc, *units, memory=0, kind="global", align=1, live=True):
@@ -132,9 +135,10 @@ class Comparison(unittest.TestCase):
 
 
 class NativeEnds(unittest.TestCase):
-    """Native code's end shows no event, lets nothing escape and reaches no
-    live allocation, so values alone judge it only when fir-ref's end
-    observes nothing either."""
+    """Native code's end shows no event and lets nothing escape; given no
+    memory report, as here, it reaches no global, so values alone judge it
+    only when fir-ref's end observes nothing either (`test_native_ends.py`
+    judges the globals it reports)."""
 
     def test_values_alone_judge_an_end_that_observes_nothing(self):
         ref = Outcome(RETURN, ("7",))
@@ -144,7 +148,7 @@ class NativeEnds(unittest.TestCase):
         ref = Outcome(RETURN, VALUES, end=SOURCE)
         j = refines(ref, ("4096",), TYPES)
         self.assertEqual(j.status, FAILED)
-        self.assertIn("an observer reaches, and the target's is an address", j.why)
+        self.assertIn("an observer reaches, and the target's is 4096", j.why)
 
     def test_a_poison_or_dangling_pointer_is_refined_by_an_address(self):
         for want in ("poison", "ptr(0, 0)"):

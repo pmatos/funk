@@ -31,8 +31,13 @@ use crate::width::{self, Class, Ext, PAIR};
 
 /// The runtime: the entry point `__funk_start` and the routines that the
 /// wrappers call, among them those that read arguments and print results
-/// at every width, `i128` included, in `values.s`.
-const RUNTIME: &str = concat!(include_str!("runtime.s"), include_str!("values.s"));
+/// at every width, `i128` included, in `values.s`, and the report of the
+/// module's globals that `--memory` asks for, in `memory.s`.
+const RUNTIME: &str = concat!(
+    include_str!("runtime.s"),
+    include_str!("values.s"),
+    include_str!("memory.s")
+);
 
 /// The line that goes before the entry's assembly when the program links
 /// with the C library: it turns on the runtime's `.ifdef .Lfunk_libc`

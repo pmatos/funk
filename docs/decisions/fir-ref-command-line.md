@@ -135,7 +135,9 @@ A float of `float<e,m>` is spelled as its constants are, as `1.0` or
 
 `poison`, spelled exactly so, is an argument of any `iN`, of any float type and
 of any `ptr<N>` (`FirRef.readArg`). It is the only argument of `ptr<N>`: a run
-starts with no allocation. `poison` is not a choice, since `freeze` chooses a
+starts with no allocation but its table's globals
+([semantics-m1-globals.md](semantics-m1-globals.md#globals-in-runs)), and an
+argument cannot name one. `poison` is not a choice, since `freeze` chooses a
 value. The human ruled on 2026-11-03 that `fir-ref run` takes `poison` (#123);
 the harness's use of it is in
 [testing-and-harness.md](testing-and-harness.md#poison-arguments).
@@ -155,8 +157,10 @@ Its `choices` field counts the choices the path made, `0` when it made none:
   `ptr<N>` it is `"ptr(A, O)"`, for the allocation `A` it has provenance for
   and its offset `O`, both in decimal, such as `"ptr(0, -3)"`, or
   `"ptr(none, O)"` when it has no provenance (`FirRef.valueText`). It names no
-  address, so the harness compares no pointer result with native code's
-  ([x86-64-backend-executable.md](x86-64-backend-executable.md#running-one-function)).
+  address, so the harness never compares it with a native address: it
+  relates a native pointer result to the global it points into, through
+  the offset `O`
+  ([testing-and-harness.md](testing-and-harness.md#native-runs-report-memory)).
   A function with no result prints `"values":[]`.
 - `{"kind":"ub","reason":"...","choices":N}`: immediate UB.
 - `{"kind":"fuel-exhausted","choices":N}`: the run used all its fuel.
