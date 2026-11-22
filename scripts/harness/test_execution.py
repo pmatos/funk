@@ -1,5 +1,6 @@
 """The process adapter preserves commands, decoding and native-only limits."""
 
+import os
 import unittest
 from pathlib import Path as FilePath
 from unittest.mock import patch
@@ -10,6 +11,9 @@ from execution import ProcessRuns
 from sets import BudgetExceeded, Outcomes, Path
 
 TEST = Test("m.fir", "@f", args=("poison",), fuel=99)
+# What `fir-ref run --world` adds to a return: its empty end.
+END = '"trace":[],"escaped":[],"memory":[]'
+WORLD = ["--world", os.devnull]
 
 
 class Execution(unittest.TestCase):
@@ -26,7 +30,8 @@ class Execution(unittest.TestCase):
         ) as run:
             self.assertEqual(self.runs.exhaustive(("0",)), BudgetExceeded(16))
         run.assert_called_once_with(
-            ["fir-ref", "run", "--fuel", "99", "--exhaustive", "--", "m.fir", "@f", "0"]
+            ["fir-ref", "run", "--fuel", "99", "--exhaustive", *WORLD]
+            + ["--", "m.fir", "@f", "0"]
         )
 
     def test_exhaustive_passes_the_nans_it_is_given(self):
@@ -35,29 +40,34 @@ class Execution(unittest.TestCase):
             self.runs.exhaustive(("0",), ())
             self.runs.exhaustive(("0",), ("0xffc00000", "0x7fc00001"))
         mode = ["fir-ref", "run", "--fuel", "99", "--exhaustive", "--nans"]
-        tail = ["--", "m.fir", "@f", "0"]
+        tail = [*WORLD, "--", "m.fir", "@f", "0"]
         self.assertEqual(run.call_args_list[0].args[0], mode + [""] + tail)
         self.assertEqual(
             run.call_args_list[1].args[0], mode + ["0xffc00000,0x7fc00001"] + tail
         )
 
     def test_scripted_distinguishes_omitted_and_explicit_empty_choices(self):
-        response = tools.Ran(0, '{"kind":"return","values":["7"],"choices":0}\n', "")
-        with patch.object(tools, "run", return_value=response) as run:
+        out = '{"kind":"return","values":["7"],' + END + ',"choices":0}\n'
+        with patch.object(tools, "run", return_value=tools.Ran(0, out, "")) as run:
             self.assertIsInstance(self.runs.scripted(TEST.args, None), Path)
             self.assertIsInstance(self.runs.scripted(TEST.args, ()), Path)
         base = ["fir-ref", "run", "--fuel", "99"]
-        tail = ["--", "m.fir", "@f", "poison"]
+        tail = [*WORLD, "--", "m.fir", "@f", "poison"]
         self.assertEqual(run.call_args_list[0].args[0], base + tail)
         self.assertEqual(run.call_args_list[1].args[0], base + ["--choices", ""] + tail)
+
+    def test_a_return_without_its_end_is_no_report(self):
+        out = '{"kind":"return","values":["7"],"choices":0}\n'
+        with patch.object(tools, "run", return_value=tools.Ran(0, out, "")):
+            self.assertIn("prints", self.runs.scripted(TEST.args, None))
 
     def test_a_kernel_s_work_item_goes_before_the_mode(self):
         test = Test(
             "m.fir", "@d::@k", expect=(), work_item=(("group_size", (4, 1, 1)),)
         )
         runs = ProcessRuns("fir-ref", FilePath("m.fir"), test, "is not built")
-        response = tools.Ran(0, '{"kind":"return","values":[],"choices":0}\n', "")
-        with patch.object(tools, "run", return_value=response) as run:
+        out = '{"kind":"return","values":[],' + END + ',"choices":0}\n'
+        with patch.object(tools, "run", return_value=tools.Ran(0, out, "")) as run:
             self.assertIsInstance(runs.scripted((), None), Path)
         run.assert_called_once_with(
             [
@@ -67,6 +77,7 @@ class Execution(unittest.TestCase):
                 "1000000",
                 "--work-group-size",
                 "4,1,1",
+                *WORLD,
                 "--",
                 "m.fir",
                 "@d::@k",
@@ -74,9 +85,10 @@ class Execution(unittest.TestCase):
         )
 
     def test_sampled_passes_seed_and_decodes_its_sequence(self):
-        response = tools.Ran(
-            0, '{"kind":"return","values":["7"],"choices":1,"sequence":["3"]}\n', ""
+        out = (
+            '{"kind":"return","values":["7"],' + END + ',"choices":1,"sequence":["3"]}'
         )
+        response = tools.Ran(0, out + "\n", "")
         with patch.object(tools, "run", return_value=response) as run:
             self.assertEqual(self.runs.sampled(TEST.args, 9).sequence, ("3",))
         run.assert_called_once_with(
@@ -87,6 +99,7 @@ class Execution(unittest.TestCase):
                 "99",
                 "--seed",
                 "9",
+                *WORLD,
                 "--",
                 "m.fir",
                 "@f",
@@ -97,7 +110,9 @@ class Execution(unittest.TestCase):
     def test_exhaustive_decodes_outcomes_and_scripted_rejects_bad_json(self):
         response = tools.Ran(
             0,
-            '{"kind":"outcomes","choices":0,"outcomes":[{"kind":"return","values":[]}]}\n',
+            '{"kind":"outcomes","choices":0,"outcomes":[{"kind":"return","values":[],'
+            + END
+            + "}]}\n",
             "",
         )
         with patch.object(tools, "run", return_value=response):

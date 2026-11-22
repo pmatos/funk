@@ -18,12 +18,13 @@ when its result refines one declared result.
 
 from dataclasses import dataclass
 
+import ends
 from refine import (
+    END,
     FAILED,
     FUEL_EXHAUSTED,
     INVALID,
     PASSED,
-    RETURN,
     STUCK,
     UB,
     Judgement,
@@ -96,7 +97,8 @@ class Declared:
 
 def problem(outcomes) -> Judgement | None:
     """Why a set of outcomes judges the test by itself: a stuck path fails
-    it, even beside UB, and UB or fuel exhausted in it makes it invalid."""
+    it, even beside UB, and UB, fuel exhausted or an end that the harness
+    cannot judge (`ends.unjudged`) in it makes it invalid."""
     if any(o.kind == STUCK for o in outcomes):
         return Judgement(FAILED, "no run of a valid module is stuck")
     for o in outcomes:
@@ -113,23 +115,34 @@ def problem(outcomes) -> Judgement | None:
                 "a path runs out of fuel, so the result depends on the fuel"
                 " budget: raise the test's budget",
             )
+    for o in outcomes:
+        why = ends.unjudged(o.end, ends.NOTHING)
+        if why is not None:
+            return Judgement(INVALID, f"{why}, so the test proves nothing")
     return None
 
 
-def member(outcomes, native, types, what: str = "outcomes") -> Judgement:
-    """Native code's result refines one of `outcomes`."""
+def member(outcomes, native, types, what: str = "outcomes", shown=None) -> Judgement:
+    """Native code's result refines one of `outcomes`. A failure lists the
+    values `shown`, by default those of `outcomes`."""
     if isinstance(native, OutOfStack):
         return native.judgement()
     if isinstance(native, str):
         return Judgement(FAILED, "native code fails where fir-ref returns")
+    same = ""
     for o in outcomes:
-        if refines(o, native, types).status == PASSED:
+        j = refines(o, native, types)
+        if j.status == PASSED:
             return Judgement(PASSED)
-    some = ", ".join(show_values(o.values) for o in outcomes[:3])
-    more = ", ..." if len(outcomes) > 3 else ""
+        if not same and j.why.startswith(END):
+            same = f"; where the values match, {j.why}"
+    shown = [o.values for o in outcomes] if shown is None else shown
+    some = ", ".join(show_values(v) for v in shown[:3])
+    more = ", ..." if len(shown) > 3 else ""
     return Judgement(
         FAILED,
-        f"the native result refines none of the {len(outcomes)} {what}: {some}{more}",
+        f"the native result refines none of the {len(shown)} {what}:"
+        f" {some}{more}{same}",
     )
 
 
@@ -162,11 +175,14 @@ CUT_SHORT = (
 )
 
 
-def judge_declared(results, native, types) -> Judgement:
+def judge_declared(results, seen, native, types) -> Judgement:
     """Judges a differential test on its declared results, once they are
-    checked."""
-    outcomes = tuple(Outcome(RETURN, r.values) for r in results)
-    return member(outcomes, native, types, "declared results")
+    checked: `seen` are the outcomes of the run that give them, from their
+    witnesses, the set and the seeded runs, each with the end of its
+    return, which a declared result does not name."""
+    shown = [r.values for r in results]
+    outcomes = tuple(dict.fromkeys(seen))
+    return member(outcomes, native, types, "declared results", shown)
 
 
 def witness(i: int, r: Declared, got) -> Judgement | None:

@@ -25,10 +25,13 @@ it. `Gpu.observedRuns_of_memEnd` proves that a return or UB that they report
 is an outcome of the spec's traced runs (`Func.observedRuns`), with an empty
 trace: neither the core nor `gpu` shows an event yet.
 
-Rejected for now: printing the end of a run with no option, or only when it
-is not empty. Either changes outputs that tests compare today, such as a
-kernel that returns a pointer into work-group memory. Which of the three the
-harness should use is a question for the human (#233, stage 4).
+The human ruled on 2026-11-20 (#466, Q1) that `fir-ref run` prints the end
+of a run only with `--world`, and the harness passes `--world` with the
+empty script on every run
+([testing-and-harness.md](testing-and-harness.md#the-end-of-a-return)).
+Rejected: printing the end of a run with no option, or only when it is not
+empty. Either changes outputs that tests compare today, such as a kernel
+that returns a pointer into work-group memory.
 
 ## Results
 

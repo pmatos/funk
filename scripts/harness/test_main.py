@@ -57,9 +57,11 @@ if sys.argv[1] == "build":
 """
 
 FIR_REF = """
-R = '{"kind":"return","values":["%s"]}'
-WHY = '{"kind":"ub","reason":"why"}'
-FUEL = '{"kind":"fuel-exhausted"}'
+# Each path as `fir-ref run --world` reports it, with its trace, and a
+# return with its end.
+R = '{"kind":"return","values":["%s"],"trace":[],"escaped":[],"memory":[]}'
+WHY = '{"kind":"ub","reason":"why","trace":[]}'
+FUEL = '{"kind":"fuel-exhausted","trace":[]}'
 # What exhaustive mode prints for each function: the most choices on one
 # path and every outcome, or None past the budget.
 SETS = {
