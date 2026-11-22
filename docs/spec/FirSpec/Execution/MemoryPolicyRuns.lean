@@ -17,7 +17,7 @@ build fails when the Lean changes under it.
 :::moduleDocs (fingerprint := "17971604853313405782")
 :::
 
-:::readable Fir.Func.memBehaviour (pin := Fir.RunItems.withAddrs) (pin := Fir.observable) (fingerprint := "4448296497315507262")
+:::readable Fir.Func.memBehaviour (pin := Fir.RunItems.withAddrs) (pin := Fir.observable) (fingerprint := "18378795664081012112")
 *Definition: the behaviour under every policy.* The observable behaviour
 with memory of the function $`f` of $`M` on the arguments $`\vec{a}`,
 with the items $`L`, is

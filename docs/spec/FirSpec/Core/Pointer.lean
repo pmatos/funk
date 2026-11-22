@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Pointer offset rules: readable blocks" =>
 
-:::moduleDocs (fingerprint := "2567423782005151861")
+:::moduleDocs (fingerprint := "17911226279046408122")
 :::
 
 :::readable Fir.Core.movePointer (pin := Fir.Memory.Pointer) (fingerprint := "237795450677840688")
@@ -27,7 +27,7 @@ offset is an integer of any size: it never wraps, and it may be negative
 or past the end of the allocation.
 :::
 
-:::readable Fir.Core.ptraddValue (pin := Fir.Core.movePointer) (fingerprint := "5609987791060288381")
+:::readable Fir.Core.ptraddValue (pin := Fir.Core.movePointer) (fingerprint := "15592451715474905142")
 *Definition: the rule of $`\mathsf{ptradd}`.* For every width $`W`, every
 pointer $`p` and $`k \in \mathbb{B}^W`:
 

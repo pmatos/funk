@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "A module's dialect set: readable blocks" =>
 
-:::moduleDocs (fingerprint := "1116411222265291335")
+:::moduleDocs (fingerprint := "10318774126801634875")
 :::
 
 :::readable Fir.opDialects Fir.Operation.wordDialects Fir.Func.wordDialects Fir.DialectItem.wordDialects Fir.Aggregate.wordDialects (fingerprint := "8204107113261555020")
@@ -60,7 +60,7 @@ dialect writes only the core's words, whatever its parent names, and a
 parent's set does not name the dialects of a nested module's set.
 :::
 
-:::readable Fir.Func.setProblems Fir.DialectItem.setProblems Fir.Aggregate.setProblems Fir.SymbolTable.setProblems Fir.Module.setProblems (fingerprint := "8021086164976072698")
+:::readable Fir.Func.setProblems Fir.DialectItem.setProblems Fir.Aggregate.setProblems Fir.SymbolTable.setProblems Fir.Module.setProblems (fingerprint := "12873700925837375934")
 *Definition: the check of a module's dialect sets.* The check of a table
 gives, in order: "the dialect set names $`x`, which is not a known dialect"
 for each dialect $`x` of its set that $`d` does not hold; then, for each of

@@ -14,7 +14,7 @@ changes under it.
 
 #doc (Manual) "The text of a sum: readable blocks" =>
 
-:::moduleDocs (fingerprint := "13835648070737097907")
+:::moduleDocs (fingerprint := "18241243966484209126")
 :::
 
 :::readable Fir.Dialect.sum.mapM_getLeft_map Fir.Dialect.sum.eq_map_of_mapM_getLeft (fingerprint := "10425250833271113799")
@@ -23,7 +23,7 @@ back as a list of the base's types $`t^*` exactly when it is
 $`(\mathsf{inl}\ t)^*`.
 :::
 
-:::readable Fir.Dialect.sum.decodeOp_ext Fir.Dialect.sum.decodeOp_base Fir.Dialect.sum.decodeTy_ext Fir.Dialect.sum.decodeTy_base (fingerprint := "14936538594500116695")
+:::readable Fir.Dialect.sum.decodeOp_ext Fir.Dialect.sum.decodeOp_base Fir.Dialect.sum.decodeTy_ext Fir.Dialect.sum.decodeTy_base (fingerprint := "3509354199102334845")
 *Lemmas: where a word goes.* These restate the reader of the sum one case
 at a time: a word of $`e`'s name goes to $`e`, and every other word to the
 base.
@@ -52,7 +52,7 @@ wrote it, and the reader decides that side by the word alone, so the words
 route. So a lawful sum has no op name on both of its sides.
 :::
 
-:::readable Fir.LawfulDialectName (fingerprint := "7376599880967418752")
+:::readable Fir.LawfulDialectName (fingerprint := "1460778055990132947")
 *Definition: an extension that writes its words under its name.* The
 extension $`e` over the base $`b` writes its words under its name $`n_e`
 when, for every op $`q` of $`e` and every valid own type $`t` of $`e`:

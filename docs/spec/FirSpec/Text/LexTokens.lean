@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Maximal munch: readable blocks" =>
 
-:::moduleDocs (fingerprint := "18260065154122842717")
+:::moduleDocs (fingerprint := "8785655363695071328")
 :::
 
 :::readable Fir.Text.Boundary (pin := Fir.isNameChar) (fingerprint := "8957515299771534444")
@@ -28,7 +28,7 @@ characters follow ends where they start, since the lexer reads every name
 character that follows one as part of it.
 :::
 
-:::readable Fir.Text.Lexes (pin := Fir.Text.lexFrom) (fingerprint := "3916154460907332518")
+:::readable Fir.Text.Lexes (pin := Fir.Text.lexFrom) (fingerprint := "12413437014549942135")
 *Definition: characters that lex to tokens.* Characters $`c` _lex to_ the
 tokens $`u`, $`\mathrm{lexes}(c, u)`, when, from every position and after
 any tokens already read, the
@@ -69,7 +69,7 @@ any characters, is at the end of a token. The proofs below rewrite with
 both.
 :::
 
-:::readable Fir.Text.Lexes.nil Fir.Text.Lexes.space Fir.Text.Lexes.lf Fir.Text.Lexes.spaces (pin := Fir.Text.lexFrom) (fingerprint := "16200125908219753043")
+:::readable Fir.Text.Lexes.nil Fir.Text.Lexes.space Fir.Text.Lexes.lf Fir.Text.Lexes.spaces (pin := Fir.Text.lexFrom) (fingerprint := "8463735246709352570")
 *Theorems: the empty text, and whitespace.* The empty text lexes to no
 token, $`\mathrm{lexes}(\epsilon, \epsilon)`: the lexer gives only
 $`\mathsf{eof}`. For all characters $`c` and tokens $`u` with
@@ -83,7 +83,7 @@ The lexer drops whitespace, and these are how the proofs drop the
 printer's spaces, line feeds and indentation.
 :::
 
-:::readable Fir.Text.ReadsToken Fir.Text.Lexes.token (pin := Fir.Text.lexToken) (pin := Fir.Text.lexFrom) (fingerprint := "327146298003870081")
+:::readable Fir.Text.ReadsToken Fir.Text.Lexes.token (pin := Fir.Text.lexToken) (pin := Fir.Text.lexFrom) (fingerprint := "2762494186131508038")
 *Definition and theorem: reading one token.* The lexer reads each token
 with a token reader, which is given the token's first character $`c`, the
 characters $`\mathit{rest}` after it and a position.
@@ -101,7 +101,7 @@ or a comment, to the token reader, so this is how each token below joins
 the tokens that follow it.
 :::
 
-:::readable Fir.Text.Tok.IsPunct Fir.Text.Tok.lexes_punct (pin := Fir.Text.lexToken) (pin := Fir.Text.Tok.spell) (fingerprint := "10820562728343311765")
+:::readable Fir.Text.Tok.IsPunct Fir.Text.Tok.lexes_punct (pin := Fir.Text.lexToken) (pin := Fir.Text.Tok.spell) (fingerprint := "205234785825103291")
 *Definition and theorem: punctuation is read before any characters.* The
 punctuation tokens are $`\texttt{(}`, $`\texttt{)}`, $`\texttt{\{}`,
 $`\texttt{\}}`, $`\texttt{,}`, $`\texttt{:}`, $`\texttt{=}`,
@@ -146,7 +146,7 @@ from 48 to 57 (`0` to `9`) or 46 (`.`). It starts a word exactly when its
 code point is from 65 to 90, from 97 to 122, or 95.
 :::
 
-:::readable Fir.Text.formatChars_ge Fir.Text.isEscaped_toNat Fir.Text.isEscaped_of_ascii Fir.Text.allowed_of_ascii Fir.Text.ascii_of_isNameChar (pin := Fir.Text.formatChars) (pin := Fir.Text.isEscaped) (pin := Fir.Text.allowedOutsideStrings) (fingerprint := "5791646338419249936")
+:::readable Fir.Text.formatChars_ge Fir.Text.isEscaped_toNat Fir.Text.isEscaped_of_ascii Fir.Text.allowed_of_ascii Fir.Text.ascii_of_isNameChar (pin := Fir.Text.formatChars) (pin := Fir.Text.isEscaped) (pin := Fir.Text.allowedOutsideStrings) (fingerprint := "9923879203026181487")
 *Theorems: names are printable ASCII, which the lexer allows.* Printable
 ASCII is the characters with code points from 32 to 126.
 
@@ -173,7 +173,7 @@ is not a decimal digit. A name character is none of `(`, `)`, `{`, `}`,
 character as a word.
 :::
 
-:::readable Fir.Text.readsToken_name (pin := Fir.Text.lexToken) (fingerprint := "15375547802178131023")
+:::readable Fir.Text.readsToken_name (pin := Fir.Text.lexToken) (fingerprint := "9510390544187738697")
 *Theorem: a value or a label is read up to the end of its name.* Let
 $`\sigma` be `%` or `^`, $`x` a
 {ref "The-fir-specification--Abstract-syntax--Modules___-functions___-blocks-and-ops"}[name], and $`c` characters with
@@ -182,7 +182,7 @@ $`t` is $`\mathsf{value}~x` when $`\sigma` is `%`, and
 $`\mathsf{label}~x` when it is `^`.
 :::
 
-:::readable Fir.Text.readsToken_word (pin := Fir.Text.lexToken) (fingerprint := "14486480192679108832")
+:::readable Fir.Text.readsToken_word (pin := Fir.Text.lexToken) (fingerprint := "4942766324032178830")
 *Theorem: a word is read up to the end of a token.* Let $`a` be a
 character that starts a
 {ref "The-fir-specification--Abstract-syntax--Modules___-functions___-blocks-and-ops"}[word], $`l` characters that are each a name
@@ -199,7 +199,7 @@ the start of $`d~c` gives $`d` and leaves $`c`. Every character of the
 decimal digits of a number is a decimal digit.
 :::
 
-:::readable Fir.Text.lexDigits_toDigits (pin := Fir.Text.lexDigits) (pin := Nat.toDigits) (fingerprint := "13397634704300405350")
+:::readable Fir.Text.lexDigits_toDigits (pin := Fir.Text.lexDigits) (pin := Nat.toDigits) (fingerprint := "12305502281936691500")
 *Theorem: the printer's digits of a number are read whole.* For every
 natural number $`n` whose decimal digits are $`d~l`, a first digit $`d`
 and the others $`l`, all characters $`c` with $`\mathrm{boundary}(c)`
@@ -214,7 +214,7 @@ neither.
 first digit and the others, and every digit is a name character.
 :::
 
-:::readable Fir.Text.afterWhole_toDigits Fir.Text.lexFloat_of_boundary Fir.Text.readsToken_nat (pin := Fir.Text.lexToken) (pin := Fir.Text.lexInt) (pin := Fir.Text.lexNumber) (pin := Fir.Text.afterWhole) (pin := Fir.Text.lexFloat) (fingerprint := "13455776487975053776")
+:::readable Fir.Text.afterWhole_toDigits Fir.Text.lexFloat_of_boundary Fir.Text.readsToken_nat (pin := Fir.Text.lexToken) (pin := Fir.Text.lexInt) (pin := Fir.Text.lexNumber) (pin := Fir.Text.afterWhole) (pin := Fir.Text.lexFloat) (fingerprint := "6767443396454006623")
 *Theorem: a natural number is read as an integer token.* For every natural
 number $`n` whose decimal digits are $`d~l`, and characters $`c` with
 $`\mathrm{boundary}(c)`: $`\mathrm{reads}(d, l~c, \mathsf{int}~n, c)`.
@@ -226,7 +226,7 @@ gives nothing when what follows a whole part is at the end of a token,
 since that starts neither with `.` nor with `x`.
 :::
 
-:::readable Fir.Text.readsToken_neg (pin := Fir.Text.lexToken) (pin := Fir.Text.lexInt) (pin := Nat.toDigits) (fingerprint := "7184645242891463747")
+:::readable Fir.Text.readsToken_neg (pin := Fir.Text.lexToken) (pin := Fir.Text.lexInt) (pin := Nat.toDigits) (fingerprint := "2606824207760351205")
 *Theorem: a negative integer is read as an integer token.* For every
 natural number $`m`, with $`d~l` the decimal digits of $`m + 1`, and
 characters $`c` with $`\mathrm{boundary}(c)`:
@@ -235,7 +235,7 @@ negative integer is $`-(m+1)` for some $`m`, and is spelled `-` then the
 digits of its magnitude, which do not start with `0`.
 :::
 
-:::readable Fir.Text.readsToken_locRef (pin := Fir.Text.lexToken) (pin := Fir.Text.lexAt) (pin := Fir.Location.limit) (fingerprint := "9659659399176993467")
+:::readable Fir.Text.readsToken_locRef (pin := Fir.Text.lexToken) (pin := Fir.Text.lexAt) (pin := Fir.Location.limit) (fingerprint := "4061626360886601328")
 *Theorem: a location reference below 2³² is read.* For every natural
 number $`r < 2^{32}` whose decimal digits are $`d~l`, and characters $`c`
 with $`\mathrm{boundary}(c)`, the

@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Checking functions: readable blocks" =>
 
-:::moduleDocs (fingerprint := "12199305077287303799")
+:::moduleDocs (fingerprint := "1908175635621064778")
 :::
 
 :::readable Fir.Func.problem Fir.Func.blockProblem (fingerprint := "495569798519738376")
@@ -25,7 +25,7 @@ its block $`b` is placed at the symbol of $`f`, the label of $`b`, and the
 location reference of the first op of $`b`, when $`b` has an op.
 :::
 
-:::readable Fir.Func.kindProblems Fir.Func.kindProblems_eq_nil Fir.Func.entryProblems Fir.Func.entryProblems_eq_nil (fingerprint := "12997526125689500835")
+:::readable Fir.Func.kindProblems Fir.Func.kindProblems_eq_nil Fir.Func.entryProblems Fir.Func.entryProblems_eq_nil (fingerprint := "14834906140806634517")
 *Definitions and theorems: the checks of the body's kind and of the entry
 block.* The check of the body's kind gives "the function's body is a region
 of kind $`k`: a function's body is a region of the core's kind" when the
@@ -41,7 +41,7 @@ that declares no arguments, the first premise of the
 {ref "The-fir-specification--Validation--The-general-rules"}[rule of a valid function].
 :::
 
-:::readable Fir.Func.ruleProblem (fingerprint := "15893493299113378936")
+:::readable Fir.Func.ruleProblem (fingerprint := "12593315339500597083")
 *Definition: the problem of a broken function rule.* A function has no
 location of its own. So when a function breaks its dialect's own rule over a
 whole function, the problem "the function breaks a rule of its dialect"
@@ -69,7 +69,7 @@ It gives no problem exactly when the
 is valid.
 :::
 
-:::readable Fir.Func.problemsIn Fir.Func.problems (fingerprint := "9514364291446282071")
+:::readable Fir.Func.problemsIn Fir.Func.problems (fingerprint := "4706065624343365171")
 *Definition: the check of a function.* Given a
 {ref "The-fir-specification--Validation--The-validation-check"}[lookup] and
 a list of the function's blocks at any depth, the check of the function

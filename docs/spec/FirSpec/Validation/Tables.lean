@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Tables: readable blocks" =>
 
-:::moduleDocs (fingerprint := "3640817744468341152")
+:::moduleDocs (fingerprint := "6321278056451013515")
 :::
 
 :::readable Fir.firsts Fir.getElem?_foldl_insertIfNew Fir.getElem?_firsts (fingerprint := "9794351328742573981")
@@ -63,7 +63,7 @@ inserted into any starting table $`m`, where the values and keys of $`m`
 count too.
 :::
 
-:::readable Fir.repeatsFrom Fir.repeats Fir.repeatsFrom_eq_nil Fir.repeats_eq_nil (fingerprint := "10449059347519524485")
+:::readable Fir.repeatsFrom Fir.repeats Fir.repeatsFrom_eq_nil Fir.repeats_eq_nil (fingerprint := "9973966440258175553")
 *Definition and theorems: the elements that repeat.*
 $`\mathrm{repeats}(l)` is the elements of the list $`l` that equal an
 earlier element of $`l`, in order, once for each time they repeat. It walks
@@ -81,7 +81,7 @@ found, it ends with no repeats exactly when $`a` is empty, no element of
 $`l` is in $`S`, and the elements of $`l` are distinct.
 :::
 
-:::readable Fir.sameLists Fir.sameLists_iff (fingerprint := "3306983009728256386")
+:::readable Fir.sameLists Fir.sameLists_iff (fingerprint := "5140673896794552981")
 *Definition and theorem: comparing two lists.* $`\mathrm{same}(l_1, l_2)`
 compares two lists element by element, in a loop, and is true when they
 have the same length and equal elements at every position.

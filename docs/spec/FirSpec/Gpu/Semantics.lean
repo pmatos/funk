@@ -14,10 +14,10 @@ changes under it.
 
 #doc (Manual) "The GPU dialect's rules: readable blocks" =>
 
-:::moduleDocs (fingerprint := "2998706189026444271")
+:::moduleDocs (fingerprint := "12406346210387345153")
 :::
 
-:::readable Fir.Gpu.WorkItem Fir.Gpu.WorkItem.answer (fingerprint := "6943720344622700870")
+:::readable Fir.Gpu.WorkItem Fir.Gpu.WorkItem.answer (fingerprint := "11042259307807238080")
 *Definition: the work-item.* A run of a kernel takes the work-item that it
 runs as its input, beside its arguments. A work-item $`w` gives four
 numbers in each dimension $`d`: its id within its work-group,
@@ -46,7 +46,7 @@ are all $`0` and whose sizes and counts are all $`1`. It is one of its grid,
 and it is the one that `fir-ref run` runs when no option gives another.
 :::
 
-:::readable Fir.Gpu.queryResults Fir.Gpu.instDialectDenote (fingerprint := "7226692803670689930")
+:::readable Fir.Gpu.queryResults Fir.Gpu.instDialectDenote (fingerprint := "9082091216029937413")
 *Definition: the rules of `gpu` in the set monad.* At a work-item $`w`, the op
 $`\mathsf{query}_N~q~d` takes no operand and gives one result, the
 answer of $`w` to $`q` in $`d`, as an integer of $`N` bits, modulo
@@ -61,7 +61,7 @@ outcome, as `alloca` has none. No op of
 written as a return.
 :::
 
-:::readable Fir.Gpu.allocRule Fir.Gpu.memDenoteIn Fir.Gpu.instDialectMemDenote Fir.Gpu.instDialectCall (pin := Fir.Core.allocaShape) (fingerprint := "15517050764245440989")
+:::readable Fir.Gpu.allocRule Fir.Gpu.memDenoteIn Fir.Gpu.instDialectMemDenote Fir.Gpu.instDialectCall (pin := Fir.Core.allocaShape) (fingerprint := "10959138033490950294")
 *Definition: the rules of `gpu` with memory, and its calls.* Where a run's
 memories have the layout entries $`\mathit{lay}` and the run names `gpu`'s
 memory $`x` as $`\rho(x)`, a question gives its results and keeps the

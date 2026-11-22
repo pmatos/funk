@@ -14,10 +14,10 @@ when the Lean changes under it.
 
 #doc (Manual) "Core op semantics: readable blocks" =>
 
-:::moduleDocs (fingerprint := "14598358282361320016")
+:::moduleDocs (fingerprint := "3422133187310587073")
 :::
 
-:::readable Fir.Core.Op.denote? (fingerprint := "16936680403472588131")
+:::readable Fir.Core.Op.denote? (fingerprint := "18428645373403082656")
 *Definition: the rule of each core op that is not a terminator.* For
 every way of computing with the
 {ref "The-fir-specification--Execution--Effects-and-op-semantics"}[choice and UB effects],
@@ -94,7 +94,7 @@ effects, so the spec's set of the ways a run may end and the tree of
 choices that `fir-ref run` walks share them.
 :::
 
-:::readable Fir.Core.Op.exit? (fingerprint := "12382476930572762633")
+:::readable Fir.Core.Op.exit? (fingerprint := "11055750913476252207")
 *Definition: the rule of each core terminator.* For every way of
 computing with the
 {ref "The-fir-specification--Execution--Effects-and-op-semantics"}[UB effect],
@@ -106,7 +106,7 @@ Each takes the terminator's operand values and says where control goes.
 Every op that is not a terminator has none here.
 :::
 
-:::readable Fir.Core.denoteWith Fir.Core.denoteIn (fingerprint := "548956072214993055")
+:::readable Fir.Core.denoteWith Fir.Core.denoteIn (fingerprint := "4638849842117945950")
 *Definition: the core dialect's semantics in a monad.* Given two tables
 of rules in a monad $`m`, one for the ops that are not terminators and one
 for the terminators, and a computation $`z(p)` for each op $`p`, the core's
@@ -118,7 +118,7 @@ tree of choices and the state layer use the same tables, or tables with
 memory, with their own $`z`.
 :::
 
-:::readable Fir.Core.Op.hasRules Fir.Core.Op.touchesMemory Fir.Core.Op.readsItems (pin := Fir.instDialectDenoteCoreDialectSetM) (pin := Fir.instDialectCallCoreDialect) (pin := Fir.Core.Op.callTarget?) (pin := Fir.Core.Op.denote?) (pin := Fir.Core.Op.exit?) (fingerprint := "10638700516224202857")
+:::readable Fir.Core.Op.hasRules Fir.Core.Op.touchesMemory Fir.Core.Op.readsItems (pin := Fir.instDialectDenoteCoreDialectSetM) (pin := Fir.instDialectCallCoreDialect) (pin := Fir.Core.Op.callTarget?) (pin := Fir.Core.Op.denote?) (pin := Fir.Core.Op.exit?) (fingerprint := "11248207992490347464")
 *Definition: the core ops that touch memory.* $`\mathsf{alloca}`, which
 allocates, $`\mathsf{load}`, which reads, and $`\mathsf{store}`, which
 writes, an integer, a pointer or a float (`loadPtr`, `storePtr`,

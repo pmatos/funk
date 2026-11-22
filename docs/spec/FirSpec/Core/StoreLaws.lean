@@ -17,7 +17,7 @@ when the Lean changes under it.
 :::moduleDocs (fingerprint := "17495321334511808242")
 :::
 
-:::readable Fir.Memory.Memory.storeAligned_error_length Fir.Memory.Memories.store_error_length (pin := Fir.Memory.Memory.storeAligned) (pin := Fir.Memory.Memories.store) (fingerprint := "9244491371724419118")
+:::readable Fir.Memory.Memory.storeAligned_error_length Fir.Memory.Memories.store_error_length (pin := Fir.Memory.Memory.storeAligned) (pin := Fir.Memory.Memories.store) (fingerprint := "11317491908908309544")
 *Theorems: a store faults by how many units it writes.* If an aligned store
 of the units $`u^*` through $`p`, aligned to $`a`, faults for the reason
 $`f`, in one memory or in a memory of a run, then a store of any units
@@ -26,7 +26,7 @@ for $`f` too. A store locates its units by their number alone, and its
 alignment check reads the allocations, not the units.
 :::
 
-:::readable Fir.Core.storeAccess Fir.Core.store_denote Fir.Core.storeRule_poison Fir.Core.storeRule_value Fir.Core.store_ownRuleHas (pin := Fir.Core.storeRule) (pin := Fir.Core.memDenoteAt) (pin := Fir.OwnRuleHas) (fingerprint := "8708398983508984205")
+:::readable Fir.Core.storeAccess Fir.Core.store_denote Fir.Core.storeRule_poison Fir.Core.storeRule_value Fir.Core.store_ownRuleHas (pin := Fir.Core.storeRule) (pin := Fir.Core.memDenoteAt) (pin := Fir.OwnRuleHas) (fingerprint := "14174035155718047468")
 *Definitions and theorems: $`\mathsf{store}` with memory.* In the
 {ref "The-fir-specification--Memory--The-state-layer"}[state layer] over
 the set monad, at the layout entries $`\ell` and naming $`\rho`, the

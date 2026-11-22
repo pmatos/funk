@@ -17,14 +17,14 @@ when the Lean changes under it.
 :::moduleDocs (fingerprint := "2564905609020490607")
 :::
 
-:::readable Fir.Memory.Memory.lt_of_holds Fir.Memory.Memory.holds_iff (pin := Fir.Memory.Memory.holds) (fingerprint := "8474854142891744067")
+:::readable Fir.Memory.Memory.lt_of_holds Fir.Memory.Memory.holds_iff (pin := Fir.Memory.Memory.holds) (fingerprint := "17134526779271951987")
 *Theorems: holding an address.* An allocation that holds an address is
 one of the memory. The allocation $`a` holds $`z` exactly when
 $`M[a] = (k, \alpha, \vec{x}, \top, y)` with
 $`y \le z \le y + |\vec{x}|`.
 :::
 
-:::readable Fir.Memory.Memory.pick_holds Fir.Memory.Memory.pick_eq_none Fir.Memory.Memory.resolve_holds Fir.Memory.Memory.resolve_eq_none Fir.Memory.Memory.resolve_of_holds (pin := Fir.Memory.Memory.pick) (pin := Fir.Memory.Memory.resolve) (fingerprint := "6575618705645188425")
+:::readable Fir.Memory.Memory.pick_holds Fir.Memory.Memory.pick_eq_none Fir.Memory.Memory.resolve_holds Fir.Memory.Memory.resolve_eq_none Fir.Memory.Memory.resolve_of_holds (pin := Fir.Memory.Memory.pick) (pin := Fir.Memory.Memory.resolve) (fingerprint := "145180506494799728")
 *Theorems: the allocation picked holds the address.* The memory model's
 pick holds the address, and it picks none exactly when no allocation
 holds it. So whatever the proposal, the allocation an address resolves to

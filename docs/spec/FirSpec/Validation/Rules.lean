@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "The general rules: readable blocks" =>
 
-:::moduleDocs (fingerprint := "17784800555946572975")
+:::moduleDocs (fingerprint := "17418526677908425425")
 :::
 
 :::readable Fir.ModuleContext (fingerprint := "11943729197067539422")
@@ -256,7 +256,7 @@ chapters on the text and on execution read a valid module through these,
 and look only at its own functions.
 :::
 
-:::readable Fir.Module.dialectItems_of_flat Fir.Module.valid_of_flat (fingerprint := "14615332829573057705")
+:::readable Fir.Module.dialectItems_of_flat Fir.Module.valid_of_flat (fingerprint := "6283653760050759271")
 *Theorem: a module with no nested module.* A module $`M` whose items are
 all functions has one table, its own. So $`M` is valid when the symbols of
 its items are distinct, its location table is valid, each of its functions

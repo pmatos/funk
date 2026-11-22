@@ -14,7 +14,7 @@ changes under it.
 
 #doc (Manual) "The memories of a run: readable blocks" =>
 
-:::moduleDocs (fingerprint := "11102810991945992361")
+:::moduleDocs (fingerprint := "15852211188585987574")
 :::
 
 :::readable Fir.Memory.Memories (fingerprint := "16888250131718672919")
@@ -57,7 +57,7 @@ back into a pointer: $`(\epsilon, \epsilon, x \mapsto 0)`.
 $`\mathrm{enter}(T, \mathit{fr}^*, c) = (T, \epsilon~\mathit{fr}^*, c)`.
 :::
 
-:::readable Fir.Memory.Memories.lookup Fir.Memory.Memories.mem (fingerprint := "13563901702307232982")
+:::readable Fir.Memory.Memories.lookup Fir.Memory.Memories.mem (fingerprint := "13526315122793642062")
 *Definition: the memory of a name.* The memory $`x` of a table is the
 memory of its first pair named $`x`, and the empty memory when no pair is:
 
@@ -85,7 +85,7 @@ $`(T, \mathit{fr}^*, c)[x := m] = ((x, m)~T', \mathit{fr}^*, c)`, where $`T'`
 is $`T` without its pairs named $`x`.
 :::
 
-:::readable Fir.Memory.Memories.record (fingerprint := "9893985816796311440")
+:::readable Fir.Memory.Memories.record (fingerprint := "13605680622301485857")
 *Definition: recording a stack allocation.* Recording the allocation $`a`
 of the memory $`x` adds $`(x, a)` to the innermost frame. Outside every
 call there is no frame, and nothing is recorded.
@@ -113,13 +113,13 @@ model's aligned store in $`\mathit{mem}(x)`: the memories with that
 memory stored to, or the fault that makes the store UB.
 :::
 
-:::readable Fir.Memory.Memories.freeAll (fingerprint := "1703035536802842936")
+:::readable Fir.Memory.Memories.freeAll (fingerprint := "1105949709820377174")
 *Definition: freeing a list.* Freeing the list
 $`(x_1, a_1) \dots (x_n, a_n)` frees $`a_1` of $`x_1`, then the others in
 order.
 :::
 
-:::readable Fir.Memory.Memories.exit (fingerprint := "5519792992993556050")
+:::readable Fir.Memory.Memories.exit (fingerprint := "12035581706300799354")
 *Definition: leaving a call.* Leaving a call frees every allocation of the
 innermost frame and pops it:
 

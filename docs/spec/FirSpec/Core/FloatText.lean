@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Float constants in text: readable blocks" =>
 
-:::moduleDocs (fingerprint := "14198019101386972462")
+:::moduleDocs (fingerprint := "8855411194627553379")
 :::
 
 :::readable Fir.Core.hasDecimals Fir.Core.modelFormat Fir.Core.modelFormat_cond (fingerprint := "10244866007434555026")
@@ -62,7 +62,7 @@ of $`c`, its value is $`d.ddd \cdot 10^E` with $`E = j + n - 1`:
   right, and zeros after the point to fill: `12.5`, `0.0001`.
 :::
 
-:::readable Fir.Core.dropZeros (fingerprint := "10264759184242514435")
+:::readable Fir.Core.dropZeros (fingerprint := "14678918071483032247")
 *Definition: dropping trailing zeros.* For $`c > 0`,
 $`\mathrm{dropzeros}(c, j)` writes the same number $`c \cdot 10^j` with
 every trailing zero of $`c` moved into the exponent: $`(1500, 0)` becomes
@@ -80,7 +80,7 @@ digits of $`\mathit{den}`, the rational times $`10^K` is at least 1, and
 $`E` is the number of digits of its whole part, less one, less $`K`.
 :::
 
-:::readable Fir.Core.around Fir.Core.pickNearest (fingerprint := "5751218576497923777")
+:::readable Fir.Core.around Fir.Core.pickNearest (fingerprint := "7257250491022295442")
 *Definition: the candidates at one length.* $`\mathrm{around}(\mathit{num},
 \mathit{den}, j)` is the multiples $`c` of $`10^j`, written by $`c`, next
 to $`x = \mathit{num} / \mathit{den}`: $`\lfloor x / 10^j \rfloor` alone
@@ -89,7 +89,7 @@ that read back, $`\mathrm{nearest}` takes the only one, or of two the one
 nearer to $`x / 10^j`, and of two equally near the even one.
 :::
 
-:::readable Fir.Core.shortestFrom (fingerprint := "10200600422469486499")
+:::readable Fir.Core.shortestFrom (fingerprint := "10621541598721012761")
 *Definition: the shortest decimal that reads back.* For bits $`b` of the
 format $`f` whose value is $`(-1)^s \cdot \mathit{num} / \mathit{den}`,
 with decimal exponent $`E`, $`\mathrm{shortest}` tries $`n = 1, 2,
@@ -101,7 +101,7 @@ one by $`\mathrm{nearest}`, and stops at the first $`n` that has one. A
 count bounds the search.
 :::
 
-:::readable Fir.Core.decimalLit (fingerprint := "10505506536399580889")
+:::readable Fir.Core.decimalLit (fingerprint := "7539190388552879873")
 *Definition: the decimal of a float.* $`\mathrm{declit}_{e,m}(b)` is the
 decimal literal of the bits $`b` of $`\mathsf{float}\langle e,m \rangle`,
 when the format has decimals and $`b` is a zero or finite. A zero is
@@ -111,7 +111,7 @@ $`m + 4` digits, and its decimal, with trailing zeros dropped, is laid out
 by $`\mathrm{layout}`. Infinities and NaNs have no decimal.
 :::
 
-:::readable Fir.Core.readFloatLit (pin := Fir.Text.hexValue) (pin := Fir.Text.digitsValue) (fingerprint := "11515655109855277683")
+:::readable Fir.Core.readFloatLit (pin := Fir.Text.hexValue) (pin := Fir.Text.digitsValue) (fingerprint := "11830352779592440798")
 *Definition: reading a float literal.* $`\mathrm{readlit}_{e,m}(l)` is the
 bits of $`\mathsf{float}\langle e,m \rangle` that the literal $`l` reads
 as, before the check that it is their spelling:
@@ -129,7 +129,7 @@ Every other literal reads as no bits. The bounds come before any power of
 ten is computed, so reading never computes a huge one.
 :::
 
-:::readable Fir.Core.floatLit Fir.Core.decodeFloatLit (fingerprint := "5791246253075251208")
+:::readable Fir.Core.floatLit Fir.Core.decodeFloatLit (fingerprint := "3052885314461945510")
 *Definition: the spelling of a float, and reading it back.*
 $`\mathrm{floatlit}_{e,m}(b)` is the one spelling of the bits $`b`: its
 decimal, when it has one and that decimal reads back as $`b`, and
@@ -139,7 +139,7 @@ nothing otherwise. So `1.0` at `f32` decodes, and `1.00`, `0x3f800000` and
 `1.0e39`, which reads as an infinity spelled `0x7f800000`, do not.
 :::
 
-:::readable Fir.Core.spellBits (pin := Fir.Core.floatLit) (fingerprint := "16880542188548857659")
+:::readable Fir.Core.spellBits (pin := Fir.Core.floatLit) (fingerprint := "12876208618886451119")
 *Definition: a spelling for tests.* $`\mathrm{spellbits}(e, m, b)` is the
 text of $`\mathrm{floatlit}_{e,m}` of the bits whose value is the natural
 number $`b`. The tests of this section, and the shared cases that

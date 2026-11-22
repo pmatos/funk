@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Fast-math flag rules: readable blocks" =>
 
-:::moduleDocs (fingerprint := "12738882715856259893")
+:::moduleDocs (fingerprint := "3923338215902587184")
 :::
 
 :::readable Fir.Core.FastMath.Le Fir.Core.FastMath.mayPoison (fingerprint := "173714507355988952")
@@ -27,7 +27,7 @@ Flags _may make poison_ when they set $`\mathsf{nnan}` or
 $`\mathsf{ninf}`.
 :::
 
-:::readable Fir.Core.isZeroFloat Fir.Core.FastMath.breaks Fir.Core.operandsBreak (fingerprint := "3337372104630655655")
+:::readable Fir.Core.isZeroFloat Fir.Core.FastMath.breaks Fir.Core.operandsBreak (fingerprint := "9141787052641619718")
 *Definition: a float that breaks the flags.* A float of the model breaks
 flags $`\phi` when it is a NaN and $`\phi` sets $`\mathsf{nnan}`, or an
 infinity and $`\phi` sets $`\mathsf{ninf}`. Operands $`a_1, \dots, a_k`

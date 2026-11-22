@@ -14,10 +14,10 @@ when the Lean changes under it.
 
 #doc (Manual) "Fills in text: readable blocks" =>
 
-:::moduleDocs (fingerprint := "17480349319958099658")
+:::moduleDocs (fingerprint := "17191336852747197111")
 :::
 
-:::readable Fir.Core.decodeMemSet (pin := Fir.Core.decodeOrdering) (fingerprint := "11984578854323030551")
+:::readable Fir.Core.decodeMemSet (pin := Fir.Core.decodeOrdering) (fingerprint := "16965728665276019198")
 *Definition: how a fill is read.* A fill is named `memset`. It reads from
 one attribute, the word of its ordering $`o`, and from the operand types
 $`[\mathsf{ptr}\langle N \rangle, \mathsf{i}V, \mathsf{i}W]` with no

@@ -14,10 +14,10 @@ when the Lean changes under it.
 
 #doc (Manual) "Field addresses in text: readable blocks" =>
 
-:::moduleDocs (fingerprint := "7924608909497886101")
+:::moduleDocs (fingerprint := "9390283070840950200")
 :::
 
-:::readable Fir.Core.fieldAddrAttrs Fir.Core.decodeFieldAddr (fingerprint := "11526414541414562509")
+:::readable Fir.Core.fieldAddrAttrs Fir.Core.decodeFieldAddr (fingerprint := "8938191834239352988")
 *Definitions: how $`\mathsf{fieldaddr}` is written and read.* The
 attributes of $`\mathsf{fieldaddr}~s~j` are the symbol $`@s` and the
 integer $`j`. They read back as that op from a pointer operand, or a

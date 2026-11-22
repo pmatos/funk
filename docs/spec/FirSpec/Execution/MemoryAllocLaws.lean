@@ -70,7 +70,7 @@ that it allocates in no memory $`y \ne x`: $`y` keeps its allocations and
 the frames its stack allocations.
 :::
 
-:::readable Fir.alloc_readsNot (pin := Fir.ReadsNot) (pin := Fir.ReadsNot.Match) (fingerprint := "4133569275535584349")
+:::readable Fir.alloc_readsNot (pin := Fir.ReadsNot) (pin := Fir.ReadsNot.Match) (fingerprint := "4782131002409410305")
 *Theorem: an allocation reads no memory.* For every memory $`y`, an
 allocation meets the
 {ref "The-fir-specification--Memory--Memory-obligations"}[obligation]

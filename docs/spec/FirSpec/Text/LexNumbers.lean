@@ -17,7 +17,7 @@ when the Lean changes under it.
 :::moduleDocs (fingerprint := "1478478681583041683")
 :::
 
-:::readable Fir.Text.digitsValue_eq_ofDigitChars (pin := Fir.Text.digitsValue) (pin := Nat.ofDigitChars) (fingerprint := "1285901628117838782")
+:::readable Fir.Text.digitsValue_eq_ofDigitChars (pin := Fir.Text.digitsValue) (pin := Nat.ofDigitChars) (fingerprint := "221150037528623453")
 *Theorem: reading digits in two halves gives their value read from left to
 right.* For every list of characters $`d_1 \dots d_k`, the value that the
 {ref "The-fir-specification--Text-format--The-parser"}[lexer] gives
@@ -36,7 +36,7 @@ for a second half of $`m` digits. The halves keep a constant of millions
 of digits fast to read; this theorem says that they change no value.
 :::
 
-:::readable Fir.Text.digitsValue_toDigits (pin := Nat.toDigits) (pin := Fir.Text.digitsValue) (fingerprint := "15308239454782963082")
+:::readable Fir.Text.digitsValue_toDigits (pin := Nat.toDigits) (pin := Fir.Text.digitsValue) (fingerprint := "18018059818834890005")
 *Theorem: the digits of a number read back as the number.* For every
 natural number $`n`, with $`\mathrm{val}_{10}` the
 {ref "The-fir-specification--Text-format--The-parser"}[lexer's] reading of

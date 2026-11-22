@@ -102,7 +102,7 @@ $`\mathrm{ret}(o)` is the result types of the op instance of $`o`, as its
 {ref "The-fir-specification--Abstract-syntax--Dialects"}[signature] says.
 :::
 
-:::readable Fir.Func.op_ready (pin := Fir.Func.runOps) (fingerprint := "7913536591878374034")
+:::readable Fir.Func.op_ready (pin := Fir.Func.runOps) (fingerprint := "10051359018966618146")
 *Theorem: what a run needs of an op of the entry block.* Let $`f` be valid
 in a module context, $`e` its entry block, which declares no arguments,
 and $`o` the op at index $`i` of $`e`, for $`i` less than the number of
@@ -175,7 +175,7 @@ op: each op is ready, its results bind and the next op holds what was
 defined before it, and the terminator returns.
 :::
 
-:::readable Fir.Func.enter_entry (pin := Fir.Func.enter) (fingerprint := "3523465629260489036")
+:::readable Fir.Func.enter_entry (pin := Fir.Func.enter) (fingerprint := "9191461151161353259")
 *Theorem: a run starts at the entry block.* Let $`e` be the first block
 of the function $`f`, which declares no arguments, and let
 $`v_1, \dots, v_n` be values of the types $`t_1, \dots, t_n` of the

@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "The items a run gives each op: readable blocks" =>
 
-:::moduleDocs (fingerprint := "13106791973199834997")
+:::moduleDocs (fingerprint := "9141546586703785228")
 :::
 
 :::readable Fir.FieldPlace Fir.LayoutPlace Fir.StartAlloc Fir.RunItems Fir.RunItems.empty Fir.RunItems.withAddrs Fir.RunItems.withResolvers (pin := Fir.Memory.Policy.canonical) (pin := Fir.Memory.Resolver.canonical) (fingerprint := "11698783885250333117")
@@ -69,7 +69,7 @@ names, the address of a global (#237) and later that of a function
 guarantees stay as they are.
 :::
 
-:::readable Fir.Field.place Fir.Aggregate.place Fir.Global.startId? Fir.InitPiece.startUnits Fir.Global.start Fir.RunItems.ofTable Fir.Module.runItems (pin := Fir.Field.shape) (pin := Fir.roundUp) (pin := Fir.InitPiece.unitCount) (pin := Fir.Memory.encodePtr) (fingerprint := "2255788849791229403")
+:::readable Fir.Field.place Fir.Aggregate.place Fir.Global.startId? Fir.InitPiece.startUnits Fir.Global.start Fir.RunItems.ofTable Fir.Module.runItems (pin := Fir.Field.shape) (pin := Fir.roundUp) (pin := Fir.InitPiece.unitCount) (pin := Fir.Memory.encodePtr) (fingerprint := "555063838255734094")
 *Definition: the items of a table.* In the memory $`n` of a module whose
 data layout is $`l`, a field of the type $`t` is placed at its offset,
 with its count, and with the step $`\mathrm{roundUp}(u, a)`, where one
@@ -117,7 +117,7 @@ every run, a layout of $`s` of the memory and with the fields it was
 checked against.
 :::
 
-:::readable Fir.RunItems.ofTable_globalMem (pin := Fir.SymbolTable.globalMems) (pin := Fir.Global.startId?) (fingerprint := "18261365452395412676")
+:::readable Fir.RunItems.ofTable_globalMem (pin := Fir.SymbolTable.globalMems) (pin := Fir.Global.startId?) (fingerprint := "11026496696803375363")
 *Theorem: a run gives an op the global that validation checks it
 against.* For every data layout $`l`, table $`T` and symbol $`s`, the
 memory in which a run of a function of $`T` places the global $`s` is the

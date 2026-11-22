@@ -22,7 +22,7 @@ when the Lean changes under it.
 at least $`\lceil c \rceil_\alpha`.
 :::
 
-:::readable Fir.Memory.Memory.admits_of_fits Fir.Memory.Memory.lt_of_admits Fir.Memory.Memory.fallback_admits Fir.Memory.Memory.admits_alignUp Fir.Memory.Memory.fallback_eq_none (pin := Fir.Memory.Memory.admits) (pin := Fir.Memory.Memory.fallback) (fingerprint := "13589898158671568480")
+:::readable Fir.Memory.Memory.admits_of_fits Fir.Memory.Memory.lt_of_admits Fir.Memory.Memory.fallback_admits Fir.Memory.Memory.admits_alignUp Fir.Memory.Memory.fallback_eq_none (pin := Fir.Memory.Memory.admits) (pin := Fir.Memory.Memory.fallback) (fingerprint := "17052591926842556763")
 *Theorems: the fallback.* An address that fits may be given, and only to
 an allocation of the memory. The fallback may be given. When no address
 fits a freed allocation but some may be given, $`\lceil lo \rceil_\alpha`
@@ -30,7 +30,7 @@ may be given, so the fallback is none exactly when no address may be
 given.
 :::
 
-:::readable Fir.Memory.Memory.choose_admits Fir.Memory.Memory.choose_eq_none Fir.Memory.Memory.choose_of_admits (pin := Fir.Memory.Memory.choose) (fingerprint := "10701143210617362353")
+:::readable Fir.Memory.Memory.choose_admits Fir.Memory.Memory.choose_eq_none Fir.Memory.Memory.choose_of_admits (pin := Fir.Memory.Memory.choose) (fingerprint := "624001098378890935")
 *Theorems: the address given may be given.* Whatever the proposal, the
 address given may be given; none is given exactly when no address may be;
 and an address that may be given is the one given when it is proposed.
@@ -43,7 +43,7 @@ same addresses may be given in both, and the same address is given on the
 same proposal.
 :::
 
-:::readable Fir.Memory.Memories.expose_of_some Fir.Memory.Memories.expose_of_none Fir.Memory.Memories.expose_transfer Fir.Memory.Memories.expose_eq_none Fir.Memory.Memories.expose_cases (pin := Fir.Memory.Memories.expose) (fingerprint := "6110478029810255681")
+:::readable Fir.Memory.Memories.expose_of_some Fir.Memory.Memories.expose_of_none Fir.Memory.Memories.expose_transfer Fir.Memory.Memories.expose_eq_none Fir.Memory.Memories.expose_cases (pin := Fir.Memory.Memories.expose) (fingerprint := "15210433942198251773")
 *Theorems: what exposing gives.* Exposing $`(a, o)` when $`a` has the
 address $`y` gives $`y + o`, wrapped, and changes nothing. When $`a` has no
 address, it gives the address that $`\mathrm{choose}` gives, and the

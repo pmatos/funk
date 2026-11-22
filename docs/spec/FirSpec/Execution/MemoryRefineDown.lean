@@ -14,10 +14,10 @@ pins their fingerprint; the build fails when the Lean changes under it.
 
 #doc (Manual) "Running out of fuel with memory, followed back: readable blocks" =>
 
-:::moduleDocs (fingerprint := "996605864201942051")
+:::moduleDocs (fingerprint := "7779035470071737805")
 :::
 
-:::readable Fir.MemAllowedBelow Fir.MemAllowedBelow.of_someUB Fir.MemAllowedBelow.of_exhausted Fir.MemAllowedBelow.of_not Fir.MemAllowedBelow.of_step (pin := Fir.SomeUB) (fingerprint := "15847632938509607330")
+:::readable Fir.MemAllowedBelow Fir.MemAllowedBelow.of_someUB Fir.MemAllowedBelow.of_exhausted Fir.MemAllowedBelow.of_not Fir.MemAllowedBelow.of_step (pin := Fir.SomeUB) (fingerprint := "14433934477651343748")
 *Definition and theorems: a path allowed below a budget.* The source at
 the budget $`N` allows, below the ratio $`B`, a path of the target that
 runs out of fuel or returns $`(a', k')`, when it runs out of fuel at $`N`,

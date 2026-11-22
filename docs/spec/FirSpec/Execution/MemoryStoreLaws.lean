@@ -17,7 +17,7 @@ fails when the Lean changes under it.
 :::moduleDocs (fingerprint := "13617852752948260425")
 :::
 
-:::readable Fir.Memory.Memory.unitAt_eq Fir.Memory.Memory.shape_getElem? Fir.Memory.Memory.locate_allocs (pin := Fir.Memory.Memory.unitAt) (pin := Fir.Memory.Memory.allocs) (pin := Fir.Memory.Memory.locate) (fingerprint := "4395230573399054201")
+:::readable Fir.Memory.Memory.unitAt_eq Fir.Memory.Memory.shape_getElem? Fir.Memory.Memory.locate_allocs (pin := Fir.Memory.Memory.unitAt) (pin := Fir.Memory.Memory.allocs) (pin := Fir.Memory.Memory.locate) (fingerprint := "9499794533945570541")
 *Theorems: memories of the same allocations.* The unit at offset $`i` of
 the allocation $`a` is the $`i`th unit of the $`a`th block, when both
 exist. Two memories of the same
@@ -43,7 +43,7 @@ same allocation $`a` at the same offset $`o`, and writes $`\vec{y}` at
 $`o` of the block of $`a` in each.
 :::
 
-:::readable Fir.store_apply Fir.store_ok (pin := Fir.instMonadMemoryStateT) (pin := Fir.Memory.Memories.store) (fingerprint := "4968675893260349970")
+:::readable Fir.store_apply Fir.store_ok (pin := Fir.instMonadMemoryStateT) (pin := Fir.Memory.Memories.store) (fingerprint := "15535855919413598325")
 *Theorems: how a store ends.* In the
 {ref "The-fir-specification--Memory--The-state-layer"}[state layer] over
 the set monad, the
@@ -73,7 +73,7 @@ kind, alignment, size, liveness and constness of every allocation, and
 the frames.
 :::
 
-:::readable Fir.store_readsNot_ne Fir.store_readsNot_self Fir.store_readsNot (pin := Fir.ReadsNot) (pin := Fir.ReadsNot.Match) (fingerprint := "3154124953088058554")
+:::readable Fir.store_readsNot_ne Fir.store_readsNot_self Fir.store_readsNot (pin := Fir.ReadsNot) (pin := Fir.ReadsNot.Match) (fingerprint := "4009286203557455038")
 *Theorems: a store reads no memory.* For every memory $`y`, a store to
 $`x` meets the
 {ref "The-fir-specification--Memory--Memory-obligations"}[obligation]

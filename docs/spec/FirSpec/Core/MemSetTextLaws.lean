@@ -17,7 +17,7 @@ when the Lean changes under it.
 :::moduleDocs (fingerprint := "14954070489155432549")
 :::
 
-:::readable Fir.Core.decodeMemSet_loadAttrs Fir.Core.decodeMemSet_eq (pin := Fir.Core.decodeMemSet) (pin := Fir.Core.loadAttrs) (fingerprint := "11119664380843990156")
+:::readable Fir.Core.decodeMemSet_loadAttrs Fir.Core.decodeMemSet_eq (pin := Fir.Core.decodeMemSet) (pin := Fir.Core.loadAttrs) (fingerprint := "6652108335918399781")
 *Theorems: every fill reads back from its spelling, and only from it.*
 For every ordering $`o`, widths $`V` and $`W` and memory $`N`, valid or
 not:

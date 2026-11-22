@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Traces of events: readable blocks" =>
 
-:::moduleDocs (fingerprint := "16837739857232725315")
+:::moduleDocs (fingerprint := "17772980484116052317")
 :::
 
 :::readable Fir.Act (fingerprint := "5574297282604202850")
@@ -35,7 +35,7 @@ $$`\langle e, a\rangle \sqsubseteq \langle e', a'\rangle \iff e \sqsubseteq e' \
 transitive when refinement of events is.
 :::
 
-:::readable Fir.TOutcome Fir.TOutcome.act? Fir.TOutcome.before (fingerprint := "12100416140504337342")
+:::readable Fir.TOutcome Fir.TOutcome.act? Fir.TOutcome.before (fingerprint := "12154170364582663832")
 *Definition: how a traced run ends.* A traced outcome is one of:
 
 $$`\mathsf{ret}~t~o \quad \mathsf{ub}~t~r \quad \mathsf{diverge}~t \quad \mathsf{reacts}~T`
@@ -48,7 +48,7 @@ and $`\mathrm{before}_i` is the list of its first $`i` acts, or all of
 them when there are fewer.
 :::
 
-:::readable Fir.TOutcome.ShowsRefined Fir.TOutcome.IsRefinedBy (pin := Fir.TOutcome.instHRefinement) (fingerprint := "15454297988416176158")
+:::readable Fir.TOutcome.ShowsRefined Fir.TOutcome.IsRefinedBy (pin := Fir.TOutcome.instHRefinement) (fingerprint := "431698318276658496")
 *Definition: one traced outcome allows another.* The outcome $`u` _shows_
 the finite trace $`t` when, at each place $`i` of $`t`, $`u` has an act that
 refines $`t_i`. A source outcome allows a target outcome in exactly these
@@ -128,7 +128,7 @@ world's answer to the target's event is an answer to the source's, whose
 poison may be any value (ADR-2026-11-09-1540).
 :::
 
-:::readable Fir.TOutcome.ofOutcome Fir.TBehaviour.ofBehaviour (fingerprint := "8968012538506122234")
+:::readable Fir.TOutcome.ofOutcome Fir.TBehaviour.ofBehaviour (fingerprint := "17321863309613832772")
 *Definition: a behaviour with no event.* An
 {ref "The-fir-specification--Execution--Outcomes-and-behaviours"}[outcome]
 of M0 is a traced outcome with an empty trace:

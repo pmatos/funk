@@ -14,10 +14,10 @@ when the Lean changes under it.
 
 #doc (Manual) "Checking modules: readable blocks" =>
 
-:::moduleDocs (fingerprint := "2510490571771964585")
+:::moduleDocs (fingerprint := "15594949938723443964")
 :::
 
-:::readable Fir.Location.malformed (pin := Fir.Location.WellFormed) (fingerprint := "1748085792573784321")
+:::readable Fir.Location.malformed (pin := Fir.Location.WellFormed) (fingerprint := "2430325542484681324")
 *Definition: whether a location is well formed, and why not.* Whether a
 location is
 {ref "The-fir-specification--Validation--The-general-rules"}[well formed]
@@ -28,7 +28,7 @@ least two" for a $`\mathsf{fused}` location. Every other kind is well
 formed, so its message, "the location is not well formed", is never given.
 :::
 
-:::readable Fir.locProblem Fir.LocTable.problems (fingerprint := "1027737757807816924")
+:::readable Fir.locProblem Fir.LocTable.problems (fingerprint := "3413961839684224244")
 *Definition: the check of a location table.* Each problem of the table
 starts "location table: `@r`", for the reference $`r` of the entry it is
 about. The check gives, in this order:
@@ -64,7 +64,7 @@ is a
 {ref "The-fir-specification--Validation--The-general-rules"}[valid location table].
 :::
 
-:::readable Fir.Attr.writable Fir.Attr.allWritable Fir.Attr.writable_iff Fir.Attr.allWritable_iff Fir.instDecidableAllWritable (fingerprint := "3733944330885058779")
+:::readable Fir.Attr.writable Fir.Attr.allWritable Fir.Attr.writable_iff Fir.Attr.allWritable_iff Fir.instDecidableAllWritable (fingerprint := "5372239850269537085")
 *Definition and theorems: whether attributes can be written.* Whether an
 attribute can be
 {ref "The-fir-specification--Abstract-syntax--Modules___-functions___-blocks-and-ops"}[written] is
@@ -133,7 +133,7 @@ check of a function apply to every function of $`T`, checked with the
 lookup of $`T`.
 :::
 
-:::readable Fir.SymbolTable.problems (pin := Fir.Text.printSymbol) (pin := Fir.isWord) (fingerprint := "14719092477157320935")
+:::readable Fir.SymbolTable.problems (pin := Fir.Text.printSymbol) (pin := Fir.isWord) (fingerprint := "1126699444997919176")
 *Definition: the check of a symbol table.* The check of the table $`T`,
 given a hash set of the references of the module's location table, builds
 the lookup of $`T` once, and gives, in this order:

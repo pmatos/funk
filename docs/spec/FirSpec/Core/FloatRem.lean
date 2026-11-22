@@ -14,10 +14,10 @@ when the Lean changes under it.
 
 #doc (Manual) "Float remainder rules: readable blocks" =>
 
-:::moduleDocs (fingerprint := "7356797234388421224")
+:::moduleDocs (fingerprint := "11300169030388460542")
 :::
 
-:::readable Fir.Core.remainder (fingerprint := "7356797234388421224")
+:::readable Fir.Core.remainder (fingerprint := "11300169030388460542")
 *Definition: the remainder.* For a format $`F` of Lean's model and
 $`\nu \in \{\mathrm{near}, \mathrm{trunc}\}`, the remainder of $`x` by
 $`y` is

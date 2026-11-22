@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Address resolvers: readable blocks" =>
 
-:::moduleDocs (fingerprint := "8200240555650958190")
+:::moduleDocs (fingerprint := "7408892042134367911")
 :::
 
 :::readable Fir.Memory.Resolver Fir.Memory.Resolver.canonical (pin := Fir.Memory.Place) (fingerprint := "7276955279853646180")
@@ -27,7 +27,7 @@ sees the count, so each call may pick differently (the human's ruling of
 follows, proposes none.
 :::
 
-:::readable Fir.Memory.Memory.holds Fir.Memory.Memory.within (fingerprint := "8291348009940736794")
+:::readable Fir.Memory.Memory.holds Fir.Memory.Memory.within (fingerprint := "1766188059573123978")
 *Definitions: the allocations that hold an address.* The allocation $`a`
 of $`M`, with $`M[a] = (k, \alpha, \vec{x}, \ell, y^?)`, holds the address
 $`z` when it is live, has an address $`y`, and
@@ -40,7 +40,7 @@ _within_ $`a` when $`a` holds both $`z` and $`z + 1`: it is the address of
 one of its units.
 :::
 
-:::readable Fir.Memory.Memory.pick Fir.Memory.Memory.resolve Fir.Memory.Memory.rebuild (pin := Fir.Memory.Memory.addrOf) (fingerprint := "16933549399704389872")
+:::readable Fir.Memory.Memory.pick Fir.Memory.Memory.resolve Fir.Memory.Memory.rebuild (pin := Fir.Memory.Memory.addrOf) (fingerprint := "6809211879133486425")
 *Definitions: the allocation picked, and the pointer.* The memory model's
 own pick for $`z` is the first allocation, in the order they were made,
 that $`z` is within, and when there is none, the first that holds $`z`:

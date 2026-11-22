@@ -14,10 +14,10 @@ when the Lean changes under it.
 
 #doc (Manual) "Global address rules: readable blocks" =>
 
-:::moduleDocs (fingerprint := "7383995525567511730")
+:::moduleDocs (fingerprint := "5693254418170990564")
 :::
 
-:::readable Fir.Core.globalAddrValue (fingerprint := "16751499241651980524")
+:::readable Fir.Core.globalAddrValue (fingerprint := "4018322394135654186")
 *Definition: the rule of $`\mathsf{globaladdr}`.* Where the
 {ref "The-fir-specification--Memory--The-items-a-run-gives-each-op"}[items]
 of a run place the global $`s` in the memory $`m`, as its allocation

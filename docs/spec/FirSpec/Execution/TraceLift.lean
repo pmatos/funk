@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Traced runs of a dialect with no event: readable blocks" =>
 
-:::moduleDocs (fingerprint := "10762966644135900264")
+:::moduleDocs (fingerprint := "15688661461772215454")
 :::
 
 :::readable Fir.DialectTrace.ofMem Fir.DialectTrace.ofMem_liftsMem (fingerprint := "58147739265247047")
@@ -44,7 +44,7 @@ and a live allocation's units refine the other's. A dangling pointer is
 seen as poison, which every value refines.
 :::
 
-:::readable Fir.Result.memEnd Fir.Func.memEndRuns_eq Fir.SetM.map_iff (fingerprint := "14736022310476980214")
+:::readable Fir.Result.memEnd Fir.Func.memEndRuns_eq Fir.SetM.map_iff (fingerprint := "11228892043111768784")
 *Definition: the end of a run from given memories.* A path of a run from
 given memories that returns $`(\vec{v}, S)` is seen as returning the end
 $`\langle \vec{v}, S, []\rangle`, with nothing escaped; a path out of

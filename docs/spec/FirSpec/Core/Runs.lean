@@ -14,10 +14,10 @@ when the Lean changes under it.
 
 #doc (Manual) "The tracer subset: readable blocks" =>
 
-:::moduleDocs (fingerprint := "15134440734122311900")
+:::moduleDocs (fingerprint := "2823122157401104181")
 :::
 
-:::readable Fir.Core.Op.InTracer Fir.Core.InTracer (fingerprint := "13366650318176343246")
+:::readable Fir.Core.Op.InTracer Fir.Core.InTracer (fingerprint := "12196290557123388331")
 *Definition: the tracer subset.* An op is in the _tracer subset_ when it
 is $`\mathsf{const}_N~c`, $`\mathsf{add}_N` with neither
 $`\mathsf{nuw}` nor $`\mathsf{nsw}`, or $`\mathsf{ret}~t^*`, for any
@@ -30,7 +30,7 @@ x86-64 backend. They were the first ops given execution rules, and the
 first for which the three obligations were proved.
 :::
 
-:::readable Fir.Core.straight_of_tracer (pin := Fir.Func.Straight) (pin := Fir.Core.Op.Valid) (pin := Fir.Core.Op.callTarget?) (pin := Fir.Core.Op.isTerminator) (pin := Fir.Core.Op.exit?) (pin := Fir.Core.retExit) (pin := Fir.Core.Op.sig) (fingerprint := "11624591205240746798")
+:::readable Fir.Core.straight_of_tracer (pin := Fir.Func.Straight) (pin := Fir.Core.Op.Valid) (pin := Fir.Core.Op.callTarget?) (pin := Fir.Core.Op.isTerminator) (pin := Fir.Core.Op.exit?) (pin := Fir.Core.retExit) (pin := Fir.Core.Op.sig) (fingerprint := "17374947035677598593")
 *Theorem: a valid function of the tracer subset runs straight.* Let $`f`
 be a core function that is
 {ref "The-fir-specification--Validation--The-general-rules"}[valid] in a

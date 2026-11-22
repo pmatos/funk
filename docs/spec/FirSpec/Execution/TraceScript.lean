@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Scripted worlds: readable blocks" =>
 
-:::moduleDocs (fingerprint := "1070449704553100243")
+:::moduleDocs (fingerprint := "17457669449123587726")
 :::
 
 :::readable Fir.WorldScript Fir.WorldScript.world (fingerprint := "6187795664184713745")
@@ -31,7 +31,7 @@ allocations and the heap allocations it creates and frees, so a script
 gives them in order with its answers.
 :::
 
-:::readable Fir.TOutcome.Follows Fir.TOutcome.trace? (fingerprint := "5746875925175018701")
+:::readable Fir.TOutcome.Follows Fir.TOutcome.trace? (fingerprint := "8260703967591190496")
 *Definition: an outcome follows a script.* The trace of a finite outcome,
 a return, UB or silent divergence after the trace $`t`, is $`t`; an
 outcome that shows acts forever has none. A finite outcome with the trace

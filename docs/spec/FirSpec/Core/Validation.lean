@@ -14,10 +14,10 @@ when the Lean changes under it.
 
 #doc (Manual) "Core rules: readable blocks" =>
 
-:::moduleDocs (fingerprint := "17536140510780449916")
+:::moduleDocs (fingerprint := "10548369879162268612")
 :::
 
-:::readable Fir.Core.Ty.Valid Fir.Core.Ty.memory (pin := Fir.Core.maxWidth) (pin := Fir.Core.floatWidth) (fingerprint := "744407091263889301")
+:::readable Fir.Core.Ty.Valid Fir.Core.Ty.memory (pin := Fir.Core.maxWidth) (pin := Fir.Core.floatWidth) (fingerprint := "1308968798942516744")
 *Definition: valid core types.* A
 {ref "The-fir-specification--Abstract-syntax--Core-types"}[core type] is
 valid when it is an integer type $`\mathsf{i}N` whose width $`N` is at
@@ -50,7 +50,7 @@ in every module, and $`\mathsf{ptr}\langle N \rangle` with $`N \ge 1` is in
 a module whose layout declares memory $`N` (ADR-2026-11-12-1821).
 :::
 
-:::readable Fir.Core.Op.symbolRefs (fingerprint := "14697847205720360782")
+:::readable Fir.Core.Op.symbolRefs (fingerprint := "7692249599903560492")
 *Definition: the symbols a core op refers to.* $`\mathsf{call}~f : t^* \to r^*`
 refers to the symbol $`f` of its callee: its list of symbols is the
 one-element sequence $`(f)`. No other core op refers to a function:
@@ -64,7 +64,7 @@ $$`\mathrm{refs}(\mathit{op}) = \epsilon \ \text{ for every other op}`
 The general rules check that $`f` names a function of the module.
 :::
 
-:::readable Fir.Core.Op.attrTypes (fingerprint := "4172422755499661638")
+:::readable Fir.Core.Op.attrTypes (fingerprint := "11309927691034080155")
 *Definition: the types a core op carries.* $`\mathsf{alloca}_N~k~t~c~a`
 carries the type $`t` that it allocates values of in its attributes, when
 $`t` is valid:
@@ -80,7 +80,7 @@ core op carries a type of its own: $`\mathsf{call}`'s are its callee's, and
 $`\mathsf{ret}`'s the function's results.
 :::
 
-:::readable Fir.Core.Op.addrWidths (fingerprint := "8896024128672350661")
+:::readable Fir.Core.Op.addrWidths (fingerprint := "12346836845600142848")
 *Definition: the pointer widths a core op asks.*
 $`\mathsf{ptr\_expose}_N~W` and $`\mathsf{ptr\_from\_int}_N~W` turn
 pointers of memory $`N` into integers of $`\mathsf{i}W`, or back, so each
@@ -95,7 +95,7 @@ $`\mathsf{ptr}` into an $`\mathsf{i32}` is not valid where memory 0 has
 64-bit pointers, and neither is one of a non-integral memory.
 :::
 
-:::readable Fir.Core.Op.unitWidths (fingerprint := "3022310587127404671")
+:::readable Fir.Core.Op.unitWidths (fingerprint := "15532834157907353974")
 *Definition: the unit widths a core op asks.* $`\mathsf{memset}_N~o~V~W`
 writes values of $`\mathsf{i}V` in the units of memory $`N`, so it asks
 that they be $`V` bits wide (the human's ruling on #251: a fill writes
@@ -109,7 +109,7 @@ $`\mathsf{memset}` of an $`\mathsf{i16}` into memory 0, of bytes, is not
 valid.
 :::
 
-:::readable Fir.Core.pow2AtLeast Fir.Core.pow2AtLeast.go Fir.Core.pow2AtLeast.two_mul_le Fir.Core.pow2AtLeast.go_spec Fir.Core.pow2AtLeast_eq (fingerprint := "14321921282438045218")
+:::readable Fir.Core.pow2AtLeast Fir.Core.pow2AtLeast.go Fir.Core.pow2AtLeast.two_mul_le Fir.Core.pow2AtLeast.go_spec Fir.Core.pow2AtLeast_eq (fingerprint := "1491655453649461933")
 *Definition: the least power of two at least a number.* $`\mathrm{pow2}(n)`
 doubles $`1` while it is below $`n`, at most $`n` times. It is the least
 power of two that is at least $`n`, Lean's `Nat.nextPowerOfTwo`: each
@@ -118,7 +118,7 @@ and $`n` doublings reach $`n`. It is written as a loop of at most $`n`
 steps, by structural recursion, so the rules that use it rest on no axiom.
 :::
 
-:::readable Fir.Core.Ty.fieldShape (fingerprint := "332229719061644368")
+:::readable Fir.Core.Ty.fieldShape (fingerprint := "11480272077969549060")
 *Definition: a core field's units and alignment.* In the memory $`n` of a
 module whose memories have the entries $`\ell`, with $`e = \ell(n)`, a field
 of a core type takes (ADR-2026-11-16-1546):
@@ -134,7 +134,7 @@ So every core type may be a field (#236). These are the units and the
 alignment that $`\mathsf{alloca}` gives one value of a field's type.
 :::
 
-:::readable Fir.Core.FBin.mode Fir.Core.FUnary.mode Fir.LayoutRef.admits Fir.Core.Op.Valid (pin := Fir.isPowerOfTwo) (pin := Fir.MemLayout.limit) (pin := Fir.MemLayout.ValidAlign) (fingerprint := "14760602530455253019")
+:::readable Fir.Core.FBin.mode Fir.Core.FUnary.mode Fir.LayoutRef.admits Fir.Core.Op.Valid (pin := Fir.isPowerOfTwo) (pin := Fir.MemLayout.limit) (pin := Fir.MemLayout.ValidAlign) (fingerprint := "14791142846085783327")
 *Definition: the core rules of an op.* Beyond its signature, which the
 {ref "The-fir-specification--Validation--The-general-rules"}[general rules]
 check, a core op obeys these rules in its op context $`C`:
@@ -293,7 +293,7 @@ are what the core dialect
 {ref "The-fir-specification--Validation--Scope-and-symbols"}[adds to validation].
 :::
 
-:::readable Fir.Core.Ty.sigAttrsAllowed (fingerprint := "12737309115106275351")
+:::readable Fir.Core.Ty.sigAttrsAllowed (fingerprint := "1995343573980004862")
 *Definition: the attributes a core type allows in a signature.* A
 parameter or a result of a core type $`t` may carry the attributes $`a^*`
 after its type when $`a^*` is empty, or when $`t` is

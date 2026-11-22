@@ -14,10 +14,10 @@ fails when the Lean changes under it.
 
 #doc (Manual) "Addresses of globals in text: readable blocks" =>
 
-:::moduleDocs (fingerprint := "13366237319441740475")
+:::moduleDocs (fingerprint := "1578808768119333926")
 :::
 
-:::readable Fir.Core.globalAddrAttrs Fir.Core.decodeGlobalAddr (fingerprint := "7872527083620493349")
+:::readable Fir.Core.globalAddrAttrs Fir.Core.decodeGlobalAddr (fingerprint := "1979450539000302260")
 *Definitions: how $`\mathsf{globaladdr}` is written and read.* The one
 attribute of $`\mathsf{globaladdr}~s` is the symbol $`@s`. It reads back as
 that op from no operands and one pointer result, of any memory $`N`. Every

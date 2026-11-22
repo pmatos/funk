@@ -18,7 +18,7 @@ changes under it.
 :::moduleDocs (fingerprint := "6317374750478558262")
 :::
 
-:::readable Fir.Core.divEv_poison (pin := Fir.Core.divEv) (fingerprint := "6440902949525710604")
+:::readable Fir.Core.divEv_poison (pin := Fir.Core.divEv) (fingerprint := "17457106507586724216")
 *Theorem: on a poison operand, a division that gives a result gives
 poison.* The four division ops share one
 {ref "The-fir-specification--Execution--Division-rules"}[rule]:
@@ -33,7 +33,7 @@ $`a, b \in \llbracket \mathsf{i}w \rrbracket` of which one is poison: if
 $`\mathrm{div}_{s,q}(a, b) = \mathsf{ok}~r`, then $`r = \mathsf{poison}`.
 :::
 
-:::readable Fir.Core.divEv_fill (pin := Fir.Core.divEv) (fingerprint := "7677906897816023495")
+:::readable Fir.Core.divEv_fill (pin := Fir.Core.divEv) (fingerprint := "217567150134417627")
 *Theorem: on a poison operand, a division that is UB is UB with values in
 place of each poison.* For every name, $`s` and $`q`, every width $`w`,
 and all $`a, b \in \llbracket \mathsf{i}w \rrbracket` of which one is
@@ -49,14 +49,14 @@ signed op, and then $`x`, the signed minimum, does it. This is the
 "UB only by the op's own rules", for the shared rule.
 :::
 
-:::readable Fir.Ev.isRefinedBy_refl (pin := Fir.Ev.IsRefinedBy) (fingerprint := "2823742979544037986")
+:::readable Fir.Ev.isRefinedBy_refl (pin := Fir.Ev.IsRefinedBy) (fingerprint := "4758154168405728665")
 *Theorem: a way to end allows itself, when the relation on results is
 reflexive.* A step in the proofs below: for every relation
 $`\mathrel{R}` such that $`a \mathrel{R} a` for all $`a`, every way to end
 $`e` {ref "The-fir-specification--Execution--Poison-classes"}[allows] $`e`.
 :::
 
-:::readable Fir.Core.divEv_isRefinedBy (pin := Fir.Core.divEv) (pin := Fir.Ev.IsRefinedBy) (pin := Fir.PoisonOr.IsRefinedBy) (fingerprint := "16906655582611594514")
+:::readable Fir.Core.divEv_isRefinedBy (pin := Fir.Core.divEv) (pin := Fir.Ev.IsRefinedBy) (pin := Fir.PoisonOr.IsRefinedBy) (fingerprint := "14496378025365989080")
 *Theorem: refining the operands of a division refines how it ends.* For
 every name, $`s` and $`q`, every width $`w`, and all
 $`a, b, a', b' \in \llbracket \mathsf{i}w \rrbracket` with
@@ -74,7 +74,7 @@ the one the
 broke.
 :::
 
-:::readable Fir.Core.divEv_zero_one Fir.Core.divEv_width_zero (pin := Fir.Core.divEv) (fingerprint := "12712449943925121617")
+:::readable Fir.Core.divEv_zero_one Fir.Core.divEv_width_zero (pin := Fir.Core.divEv) (fingerprint := "16758014780546702525")
 *Theorem: at a width above zero, $`0` divided by $`1` gives a result.* For
 every name, $`s` and $`q`, and every $`w > 0`,
 $`\mathrm{div}_{s,q}(0, 1) = \mathsf{ok}~q(0, 1)`.
@@ -85,7 +85,7 @@ every vector $`y` of zero bits, $`\mathrm{div}_{s,q}(a, y)` is UB: the only vect
 $`0`, so every divisor is zero.
 :::
 
-:::readable Fir.Core.ruleOfEv_iff Fir.Core.ruleOfEv_total (pin := Fir.Core.ruleOfEv) (fingerprint := "9176955032566464068")
+:::readable Fir.Core.ruleOfEv_iff Fir.Core.ruleOfEv_total (pin := Fir.Core.ruleOfEv) (fingerprint := "7022599885239434246")
 *Theorem: an op rule made from a way to end ends that way.* A division
 ends in one way and never chooses, so its rule is a function $`g` from two
 operands to a way to end, and the
@@ -102,7 +102,7 @@ $$`\begin{aligned} & e \in \mathrm{rule}_g(a, b) \iff \\ & \quad (\exists v.\ g(
 $`g`, $`\mathrm{rule}_g(a, b)` is not empty, for all $`a` and $`b`.
 :::
 
-:::readable Fir.Core.div_poisonOut Fir.Core.div_ubByOwnRules (pin := Fir.Core.ruleOfEv) (pin := Fir.Core.divEv) (pin := Fir.HVector.Any) (pin := Fir.HVector.All) (pin := Fir.HVector.IsFilledBy) (pin := Fir.Core.Ty.IsPoison) (fingerprint := "10215796250261143857")
+:::readable Fir.Core.div_poisonOut Fir.Core.div_ubByOwnRules (pin := Fir.Core.ruleOfEv) (pin := Fir.Core.divEv) (pin := Fir.HVector.Any) (pin := Fir.HVector.All) (pin := Fir.HVector.IsFilledBy) (pin := Fir.Core.Ty.IsPoison) (fingerprint := "1520542971241669412")
 *Theorem: the two poison clauses, for a division.* For every name, $`s`
 and $`q`, the op rule $`\mathrm{rule}_{\mathrm{div}}` made from
 $`\mathrm{div}_{s,q}` meets the two clauses of an op that
@@ -118,7 +118,7 @@ The first follows from the first theorem above, the second from the
 second.
 :::
 
-:::readable Fir.Core.div_returnsOnDefined Fir.Core.div_width_zero_noResult (pin := Fir.Core.ruleOfEv) (pin := Fir.Core.divEv) (pin := Fir.HVector.Any) (pin := Fir.Core.Ty.IsPoison) (fingerprint := "2999488611889033026")
+:::readable Fir.Core.div_returnsOnDefined Fir.Core.div_width_zero_noResult (pin := Fir.Core.ruleOfEv) (pin := Fir.Core.divEv) (pin := Fir.HVector.Any) (pin := Fir.Core.Ty.IsPoison) (fingerprint := "5318033849902411721")
 *Theorem: at a width above zero, a division returns a result on defined
 operands.* For every name, $`s` and $`q`, and every $`w > 0`, some
 operand vector of $`\mathsf{i}w` with no poison, namely $`(0, 1)`, makes
@@ -130,7 +130,7 @@ $`\mathsf{i}0` with no poison, $`\mathrm{rule}_{\mathrm{div}}` never ends
 with a result: it is UB.
 :::
 
-:::readable Fir.Core.div_monotone (pin := Fir.Core.ruleOfEv) (pin := Fir.Core.divEv) (pin := Fir.SetM.IsRefinedBy) (pin := Fir.HVector.Forall₂) (fingerprint := "950946975740316542")
+:::readable Fir.Core.div_monotone (pin := Fir.Core.ruleOfEv) (pin := Fir.Core.divEv) (pin := Fir.SetM.IsRefinedBy) (pin := Fir.HVector.Forall₂) (fingerprint := "96866373285526204")
 *Theorem: a division is monotone.* For every name, $`s` and $`q`, and
 all operand vectors $`\vec{v}` and
 $`\vec{v}'` of two values of $`\mathsf{i}w` such that each $`v'_i` refines
@@ -141,7 +141,7 @@ position by position. It is the theorem on refined operands above, carried
 to the op rule.
 :::
 
-:::readable Fir.Core.sdiv_propagatesPoison Fir.Core.sdiv_returnsOnDefined Fir.Core.sdiv_total Fir.Core.sdiv_monotone Fir.Core.udiv_propagatesPoison Fir.Core.udiv_returnsOnDefined Fir.Core.udiv_total Fir.Core.udiv_monotone Fir.Core.srem_propagatesPoison Fir.Core.srem_returnsOnDefined Fir.Core.srem_total Fir.Core.srem_monotone Fir.Core.urem_propagatesPoison Fir.Core.urem_returnsOnDefined Fir.Core.urem_total Fir.Core.urem_monotone (pin := Fir.PropagatesPoison) (pin := Fir.ReturnsOnDefined) (pin := Fir.OpTotal) (pin := Fir.OpMonotone) (pin := Fir.Core.Op.denote?) (pin := Fir.Core.sdivWith) (pin := Fir.Core.udivWith) (pin := Fir.Core.sremValues) (pin := Fir.Core.uremValues) (fingerprint := "1160599780260163113")
+:::readable Fir.Core.sdiv_propagatesPoison Fir.Core.sdiv_returnsOnDefined Fir.Core.sdiv_total Fir.Core.sdiv_monotone Fir.Core.udiv_propagatesPoison Fir.Core.udiv_returnsOnDefined Fir.Core.udiv_total Fir.Core.udiv_monotone Fir.Core.srem_propagatesPoison Fir.Core.srem_returnsOnDefined Fir.Core.srem_total Fir.Core.srem_monotone Fir.Core.urem_propagatesPoison Fir.Core.urem_returnsOnDefined Fir.Core.urem_total Fir.Core.urem_monotone (pin := Fir.PropagatesPoison) (pin := Fir.ReturnsOnDefined) (pin := Fir.OpTotal) (pin := Fir.OpMonotone) (pin := Fir.Core.Op.denote?) (pin := Fir.Core.sdivWith) (pin := Fir.Core.udivWith) (pin := Fir.Core.sremValues) (pin := Fir.Core.uremValues) (fingerprint := "11763031625133965218")
 *Theorem: $`\mathsf{sdiv}`, $`\mathsf{udiv}`, $`\mathsf{srem}` and
 $`\mathsf{urem}` are lawful at every width above zero.* For every width
 $`w`, under fir's execution rules, each of $`\mathsf{sdiv}_w` and
@@ -159,7 +159,7 @@ $`\mathsf{exact}` changes only that result, poison in place of a quotient,
 so the theorems hold with it and without it.
 :::
 
-:::readable Fir.Core.div_zero_width (pin := Fir.ReturnsOnDefined) (pin := Fir.LawfulDialectPoison) (pin := Fir.Core.Ty.Valid) (fingerprint := "5938164575148040375")
+:::readable Fir.Core.div_zero_width (pin := Fir.ReturnsOnDefined) (pin := Fir.LawfulDialectPoison) (pin := Fir.Core.Ty.Valid) (fingerprint := "2832060269240422035")
 *Theorem: at width zero, no division returns a result on defined
 operands.* With or without $`\mathsf{exact}`, none of
 $`\mathsf{sdiv}_0`, $`\mathsf{udiv}_0`, $`\mathsf{srem}_0` and

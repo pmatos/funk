@@ -14,10 +14,10 @@ changes under it.
 
 #doc (Manual) "Store rules: readable blocks" =>
 
-:::moduleDocs (fingerprint := "18264806575999898273")
+:::moduleDocs (fingerprint := "6298267089411857260")
 :::
 
-:::readable Fir.Core.storeAlign Fir.Core.storeAlign_eq Fir.Core.storeUnits (pin := Fir.MemLayout.intAlign) (pin := Fir.Core.loadShape) (pin := Fir.Memory.encodeInt) (fingerprint := "12379333368898911469")
+:::readable Fir.Core.storeAlign Fir.Core.storeAlign_eq Fir.Core.storeUnits (pin := Fir.MemLayout.intAlign) (pin := Fir.Core.loadShape) (pin := Fir.Memory.encodeInt) (fingerprint := "11524865338370814019")
 *Definitions: the alignment and the units of a store.* A store of
 $`\mathsf{i}W` to a memory whose
 {ref "The-fir-specification--Abstract-syntax--Data-layouts"}[entry] is
@@ -34,7 +34,7 @@ $`v` is poison. In memory 0, the $`\mathsf{i32}` `0x04030201` is the bytes
 1, 2, 3 and 4, in that order, aligned to 4.
 :::
 
-:::readable Fir.Core.poisonStorePointer Fir.Core.storeRule (pin := Fir.MonadMemory) (pin := Fir.MonadUB) (pin := Fir.Core.Op) (fingerprint := "11456535394922517443")
+:::readable Fir.Core.poisonStorePointer Fir.Core.storeRule (pin := Fir.MonadMemory) (pin := Fir.MonadUB) (pin := Fir.Core.Op) (fingerprint := "14343989008357434366")
 *Definition: the rule of $`\mathsf{store}`.* Let a run's memories have the
 layout entries $`\ell`, and let the run name the core's memory $`x` as
 $`\rho(x)`. For $`\mathsf{store}_N~o~W~a` on the operands $`v`, the value,

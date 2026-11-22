@@ -14,10 +14,10 @@ when the Lean changes under it.
 
 #doc (Manual) "The location table read back: readable blocks" =>
 
-:::moduleDocs (fingerprint := "4937616668860296335")
+:::moduleDocs (fingerprint := "9023441130972602640")
 :::
 
-:::readable Fir.Text.readNat_cons (pin := Fir.Text.readNat) (pin := Fir.Location.limit) (fingerprint := "13339058689089240795")
+:::readable Fir.Text.readNat_cons (pin := Fir.Text.readNat) (pin := Fir.Location.limit) (fingerprint := "15967328905924347228")
 *Theorem: a line or a column in range reads back.* For every number
 $`n < 2^{32}`, the
 {ref "The-fir-specification--Text-format--Reading-the-location-table-and-the-module"}[reader of a line or a column],
@@ -27,7 +27,7 @@ $`\mathsf{int}~n` at the front of any tokens as $`n`, and leaves the tokens
 after it. A larger number is an error, so the bound is needed.
 :::
 
-:::readable Fir.Text.readLocRef_cons Fir.Text.readLocRef_reads (pin := Fir.Text.readLocRef) (fingerprint := "16774580523897873593")
+:::readable Fir.Text.readLocRef_cons Fir.Text.readLocRef_reads (pin := Fir.Text.readLocRef) (fingerprint := "10948285247106508030")
 *Theorems: a location reference inside a location reads back.* For every
 location reference $`r` and every position, the reader of a location
 reference reads $`\mathsf{locref}~r` at the front of any tokens as $`r`,
@@ -37,7 +37,7 @@ $`\mathsf{locref}~r` as $`r` before any token but `(`, the form that the
 reader of the rest of a list needs.
 :::
 
-:::readable Fir.Text.Location.reads (pin := Fir.Text.readLocation) (pin := Fir.Text.readRange) (pin := Fir.Text.readLocArgs) (pin := Fir.Location.tokens) (pin := Fir.Location.numbers) (pin := Fir.Location.limit) (pin := Fir.Location.refs) (pin := Fir.Text.readNat) (fingerprint := "10535621466050368762")
+:::readable Fir.Text.Location.reads (pin := Fir.Text.readLocation) (pin := Fir.Text.readRange) (pin := Fir.Text.readLocArgs) (pin := Fir.Location.tokens) (pin := Fir.Location.numbers) (pin := Fir.Location.limit) (pin := Fir.Location.refs) (pin := Fir.Text.readNat) (fingerprint := "1923572627390941219")
 *Theorem: a location reads back.* For every
 {ref "The-fir-specification--Abstract-syntax--Locations"}[location]
 $`\mathit{loc}` each of whose numbers is below $`2^{32}`, the reader of a
@@ -53,7 +53,7 @@ that its reader takes alone, a number, `)` or the word `unknown`, so what
 follows does not matter.
 :::
 
-:::readable Fir.Text.readLocEntries_reads (pin := Fir.Text.readLocEntries) (pin := Fir.LocTable.InLimits) (pin := Fir.Location.numbers) (pin := Fir.Location.limit) (fingerprint := "3611193189611079672")
+:::readable Fir.Text.readLocEntries_reads (pin := Fir.Text.readLocEntries) (pin := Fir.LocTable.InLimits) (pin := Fir.Location.numbers) (pin := Fir.Location.limit) (fingerprint := "4287984696284645447")
 *Theorem: the entries of a location table read back.* For every location
 table $`t`
 {ref "The-fir-specification--Abstract-syntax--Locations"}[within limits],
@@ -64,7 +64,7 @@ entry $`r = \mathit{loc}` of $`t` in order, as $`t`, before `}`. It reads
 entries as long as a location reference follows, so the `}` stops it.
 :::
 
-:::readable Fir.Text.LocTable.reads (pin := Fir.Text.readLocs) (pin := Fir.LocTable.tokens) (pin := Fir.LocTable.InLimits) (fingerprint := "15775362934042837333")
+:::readable Fir.Text.LocTable.reads (pin := Fir.Text.readLocs) (pin := Fir.LocTable.tokens) (pin := Fir.LocTable.InLimits) (fingerprint := "3406540594722673530")
 *Theorem: a location table reads back.* For every location table $`t`
 {ref "The-fir-specification--Abstract-syntax--Locations"}[within limits],
 the reader of the location table reads its tokens,

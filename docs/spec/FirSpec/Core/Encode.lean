@@ -14,10 +14,10 @@ when the Lean changes under it.
 
 #doc (Manual) "The core's values in memory: readable blocks" =>
 
-:::moduleDocs (fingerprint := "1685886482333139305")
+:::moduleDocs (fingerprint := "11016119071322803169")
 :::
 
-:::readable Fir.Core.Ty.units? (fingerprint := "18252888801582788257")
+:::readable Fir.Core.Ty.units? (fingerprint := "16990507579851503599")
 *Definition: the size of a type.* In a memory whose units are $`u` bits
 wide, under the layout $`l`:
 
@@ -28,7 +28,7 @@ for it. A float takes the size of the integer of its width (#264). A
 pointer type whose memory $`l` does not declare has no size.
 :::
 
-:::readable Fir.Core.Ty.encode? Fir.Core.Ty.decode? (fingerprint := "5356233529281198230")
+:::readable Fir.Core.Ty.encode? Fir.Core.Ty.decode? (fingerprint := "5488089383301933240")
 *Definition: the core's values in units.* A value of $`\mathsf{i}N` is
 encoded and decoded as an integer of $`N` bits, a value of
 $`\mathsf{float}\langle e,m\rangle` as the integer of its $`1+e+m` bits,
