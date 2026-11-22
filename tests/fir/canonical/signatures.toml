@@ -1,0 +1,18 @@
+# Tests of signatures.fir: functions whose parameters and results carry
+# the core's extension markers, sext and zext, on integers narrower than
+# 32 bits (#239). A marker says how code outside funk extends the value
+# at a call, so it changes no run: widen adds its i8 to its i1 widened
+# with zext and doubles its i16, caller calls it, and last returns its
+# i1 marked sext. The canonical text keeps each marker after its type, a
+# result's after the result, and the round trip checks it.
+# Each test without expect is differential: fir-ref and native code run
+# it, and the native result must refine fir-ref's.
+tests = [
+  { func = "@widen", args = ["-3", "true", "7", "9"] },
+  { func = "@widen", args = ["127", "true", "-32768", "-1"] },
+  { func = "@widen", args = ["-128", "false", "32767", "2147483647"] },
+  { func = "@caller", args = ["5"] },
+  { func = "@caller", args = ["127"] },
+  { func = "@last", args = ["1", "true"] },
+  { func = "@last", args = ["-1", "false"] },
+]

@@ -1,5 +1,6 @@
 import Fir.Text.DecodeAccepted
 import Fir.Text.GlobalLaws
+import Fir.Text.SigAttrs
 
 /-!
 # Functions, items and the module as decoded
@@ -11,8 +12,9 @@ order. So the scope can be replaced by the function's own types in what the
 second pass accepts, and each decoded function is well formed. Its result
 types decode as types do, from attributes written as types.
 
-An item decodes only as a `func` with no attributes, whose body holds
-blocks or holds nothing, as a `module` with no parameters, results or
+An item decodes only as a `func`, whose attributes after each result are
+that result's, held in the short form with its parameters', and whose body
+holds blocks or holds nothing, as a `module` with no parameters, results or
 attributes, whose body holds a dialect set and items, decoded in turn, or
 holds nothing, as an aggregate's layout whose numbers are within the limit
 and whose fields' types are written as types and decode back, as a global
@@ -64,14 +66,16 @@ theorem decodeFunc_wellFormed {name : String} {params : List SDef}
   obtain ⟨k₁, n₁⟩ := define_holds e₂ e₄ Scope.holds_empty (by simp)
   obtain ⟨k₂, n₂⟩ := SBlock.adds sbs e₃ e₅ k₁ n₁
   simp only [List.nil_append] at k₂ n₂
-  have hperm := Func.scopeDefs_perm (d := d) ⟨name, ps, rs, ⟨none, bs⟩⟩
+  have hperm := Func.scopeDefs_perm (d := d) ⟨name, ps, rs, ⟨none, bs⟩, [], [], false⟩
   have hnd := (hperm.map (·.1)).nodup_iff.mp n₂
-  have hsc : ∀ x, sc[x]? = Func.typeOf ⟨name, ps, rs, ⟨none, bs⟩⟩ x := fun x => Option.ext fun t => by
+  have hsc : ∀ x, sc[x]? = Func.typeOf ⟨name, ps, rs, ⟨none, bs⟩, [], [], false⟩ x :=
+    fun x => Option.ext fun t => by
     rw [k₂ x t, Func.typeOf, find?_fst_eq_some hnd]
     simpa [Func.blocks] using hperm.mem_iff (a := (x, t))
   have hbs := SBlock.decodesTo sc name sbs hb bs e₅
   have hps := mapM_decodeDef_writable e₄ hp
-  have hdefs : ∀ y ∈ Func.defs (d := d) ⟨name, ps, rs, ⟨none, bs⟩⟩, WritableDef y := by
+  have hdefs : ∀ y ∈ Func.defs (d := d) ⟨name, ps, rs, ⟨none, bs⟩, [], [], false⟩,
+      WritableDef y := by
     intro y hy
     simp only [Func.defs, Func.allBlocks, Func.blocks, List.mem_append, List.mem_flatMap,
       Block.defs] at hy
@@ -80,7 +84,8 @@ theorem decodeFunc_wellFormed {name : String} {params : List SDef}
     · exact (hbs b hb).params y hy
     · exact ((hbs b hb).ops o ho).defs y hy
   refine ⟨hnd, fun y hy => (hdefs y hy).1, fun b hb => (hbs b hb).label, fun t ht => ?_,
-    fun o ho => ?_, rfl, fun o ho => ?_⟩
+    fun o ho => ?_, rfl, fun o ho => ?_, ⟨Nat.zero_le _, by simp⟩, ⟨Nat.zero_le _, by simp⟩,
+    by simp⟩
   · simp only [Func.types, List.mem_append, List.mem_map] at ht
     rcases ht with ht | ⟨y, hy, rfl⟩
     · exact mapM_decodeType_writable (fun _ _ => rfl) e₁ hr t ht
@@ -95,28 +100,120 @@ theorem decodeFunc_wellFormed {name : String} {params : List SDef}
     obtain ⟨b, hb, ho⟩ := ho
     exact ((hbs b hb).ops o ho).kinds
 
-/-- A `func` decoded from a tree that can be written is well formed. -/
-theorem decodeFuncItem_wellFormed {kindPos : TextPos} {name : String} {params : List SDef}
-    {results attrs : List (Attr × TextPos)} {body : SBody} {i : Item d}
-    (h : decodeFuncItem kindPos name params results attrs body = .ok i)
-    (hp : ∀ x ∈ params, x.Writable) (hr : ∀ r ∈ results, r.1.IsType) (hb : body.Writable) :
-    i.WellFormed := by
-  unfold decodeFuncItem at h
-  split at h
-  · cases h
-  · cases h
-  · cases h
-  · bind_step h with ⟨f', e, h⟩
-    cases h
-    exact decodeFunc_wellFormed e hp hr trivial
-  · bind_step h with ⟨f', e, h⟩
-    cases h
-    exact decodeFunc_wellFormed e hp hr hb
+omit [DialectSignature d] [DialectValidation d] [LawfulDialectText d] in
+/-- Decoding a function gives one parameter for each definition and one
+result for each type. -/
+theorem decodeFunc_lengths {name : String} {params : List SDef}
+    {results : List (Attr × TextPos)} {sbs : List SBlock} {f : Func d}
+    (h : decodeFunc name params results sbs = .ok f) :
+    f.params.length = params.length ∧ f.results.length = results.length := by
+  have hl : ∀ {α β : Type} {g : α → Except ParseError β} {xs : List α} {ys : List β},
+      xs.mapM g = .ok ys → ys.length = xs.length := by
+    intro α β g xs
+    induction xs with
+    | nil => intro ys h; cases h; rfl
+    | cons x xs ih =>
+      intro ys h
+      rw [List.mapM_cons] at h
+      bind_step h with ⟨y, -, h⟩
+      bind_step h with ⟨ys', h₂, h⟩
+      cases h
+      simp [ih h₂]
+  unfold decodeFunc at h
+  bind_step h with ⟨rs, e₁, h⟩
+  bind_step h with ⟨sc₁, -, h⟩
+  bind_step h with ⟨sc, -, h⟩
+  bind_step h with ⟨ps, e₄, h⟩
+  bind_step h with ⟨bs, -, h⟩
+  cases h
+  exact ⟨hl e₄, hl e₁⟩
+
+omit [DialectValidation d] [LawfulDialectText d] in
+/-- A function that is well formed stays so with attributes for its
+parameters and results that have the form a function holds and can be
+written, and with its parameters ending in `...` or not. -/
+theorem Func.WellFormed.withAttrs {f : Func d} (hf : f.WellFormed) {pa ra : List (List Attr)}
+    {v : Bool} (hpa : AttrsTrimmed f.params.length pa) (hra : AttrsTrimmed f.results.length ra)
+    (hw : ∀ as ∈ pa ++ ra, Attr.AllWritable as) :
+    (⟨f.name, f.params, f.results, f.body, pa, ra, v⟩ : Func d).WellFormed :=
+  ⟨hf.namesUnique, hf.names, hf.labels, hf.types, hf.ops, hf.bodyKind, hf.kinds, hpa, hra, hw⟩
 
 /-- Attributes that can each be written can all be written. -/
 theorem Attr.allWritable_of_mem : ∀ {as : List Attr}, (∀ a ∈ as, a.Writable) → Attr.AllWritable as
   | [], _ => trivial
   | _ :: _, h => ⟨h _ (.head _), Attr.allWritable_of_mem fun a ha => h a (.tail _ ha)⟩
+
+/-- The attributes of a func's results as decoded have the form a function
+holds, and can be written, from a tree that can be written. -/
+theorem funcResultAttrs_wellFormed {results : List (Attr × TextPos)}
+    {resultAttrs : List (List (Attr × TextPos))} {attrs : List (Attr × TextPos)}
+    {ras : List (List Attr)} (h : funcResultAttrs results resultAttrs attrs = .ok ras)
+    (hl : resultAttrs.length = results.length - 1) (hw : ∀ as ∈ resultAttrs, ∀ a ∈ as, a.1.Writable)
+    (ha : ∀ a ∈ attrs, a.1.Writable) :
+    AttrsTrimmed results.length ras ∧ ∀ as ∈ ras, Attr.AllWritable as := by
+  unfold funcResultAttrs at h
+  split at h
+  · cases h
+  · cases h
+    rename_i hne
+    have hw' : ∀ as ∈ trimAttrs ((resultAttrs ++ [attrs]).map (·.map (·.1))),
+        Attr.AllWritable as := by
+      intro as has
+      obtain ⟨xs, hxs, rfl⟩ := List.mem_map.mp (mem_of_mem_trimAttrs has)
+      refine Attr.allWritable_of_mem fun a ha' => ?_
+      obtain ⟨y, hy, rfl⟩ := List.mem_map.mp ha'
+      rcases List.mem_append.mp hxs with hxs | hxs
+      · exact hw xs hxs y hy
+      · obtain rfl := List.mem_singleton.mp hxs
+        exact ha y hy
+    refine ⟨?_, hw'⟩
+    rcases results with _ | ⟨r, rs⟩
+    · obtain rfl : attrs = [] := by
+        cases attrs with
+        | nil => rfl
+        | cons a _ => exact (hne a.1 a.2 _ rfl rfl).elim
+      obtain rfl : resultAttrs = [] := List.eq_nil_of_length_eq_zero hl
+      exact ⟨Nat.le_refl _, by simp [trimAttrs]⟩
+    · have ht := trimAttrs_trimmed ((resultAttrs ++ [attrs]).map (·.map (·.1)))
+      refine ⟨Nat.le_trans ht.1 ?_, ht.2⟩
+      simp [hl]
+
+/-- A `func` decoded from a tree that can be written is well formed. -/
+theorem decodeFuncItem_wellFormed {kindPos : TextPos} {name : String} {params : List SDef}
+    {paramAttrs : List (List (Attr × TextPos))} {variadic : Option TextPos}
+    {results : List (Attr × TextPos)} {resultAttrs : List (List (Attr × TextPos))}
+    {attrs : List (Attr × TextPos)} {body : SBody} {i : Item d}
+    (h : decodeFuncItem kindPos name params paramAttrs variadic results resultAttrs attrs body =
+      .ok i)
+    (hp : ∀ x ∈ params, x.Writable) (hr : ∀ r ∈ results, r.1.IsType) (hb : body.Writable)
+    (hpw : ∀ as ∈ paramAttrs, ∀ a ∈ as, a.1.Writable) (hpl : paramAttrs.length = params.length)
+    (hrw : ∀ as ∈ resultAttrs, ∀ a ∈ as, a.1.Writable)
+    (hrl : resultAttrs.length = results.length - 1) (ha : ∀ a ∈ attrs, a.1.Writable) :
+    i.WellFormed := by
+  unfold decodeFuncItem at h
+  bind_step h with ⟨ras, e₁, h⟩
+  bind_step h with ⟨bs, e₂, h⟩
+  bind_step h with ⟨f', e₃, h⟩
+  cases h
+  have hbs : SBlock.WritableList bs := by
+    unfold funcBlocks at e₂
+    split at e₂
+    · cases e₂
+    · cases e₂
+    · cases e₂; trivial
+    · cases e₂; exact hb
+  have hf' := decodeFunc_wellFormed e₃ hp hr hbs
+  obtain ⟨lp, lr⟩ := decodeFunc_lengths e₃
+  obtain ⟨tr, wr⟩ := funcResultAttrs_wellFormed e₁ hrl hrw ha
+  have tp := trimAttrs_trimmed (paramAttrs.map fun as => as.map (·.1))
+  refine hf'.withAttrs (by simpa [lp, hpl] using tp) (lr ▸ tr) fun as has => ?_
+  rcases List.mem_append.mp has with has | has
+  · obtain ⟨xs, hxs, rfl⟩ := List.mem_map.mp (mem_of_mem_trimAttrs has)
+    refine Attr.allWritable_of_mem fun a ha' => ?_
+    obtain ⟨y, hy, rfl⟩ := List.mem_map.mp ha'
+    exact hpw xs hxs y hy
+  · exact wr as has
+
 
 /-- An item of a dialect's kind decoded from a tree that can be written is
 well formed. -/
@@ -212,20 +309,23 @@ mutual
 depth. -/
 theorem decodeItem_wellFormed : ∀ {si : SItem} {i : Item d}, decodeItem si = .ok i →
     si.Writable → i.WellFormed
-  | ⟨kind, kindPos, name, params, results, attrs, .items ds sis⟩, i, h, hw => by
-    obtain ⟨hp, hr, ha, hd, hs⟩ := hw
+  | ⟨kind, kindPos, name, params, paramAttrs, variadic, results, resultAttrs, attrs,
+      .items ds sis⟩, i, h, hw => by
+    obtain ⟨hp, hr, ha, ⟨hd, hs⟩, hpw, hrw, hpl, hrl⟩ := hw
     rw [decodeItem.eq_def] at h
     dsimp only at h
     by_cases hk : kind = "func"
     · simp only [hk, ↓reduceIte] at h
-      exact decodeFuncItem_wellFormed h hp hr ⟨hd, hs⟩
-    · by_cases hm : kind = "module"
+      exact decodeFuncItem_wellFormed h hp hr ⟨hd, hs⟩ hpw hpl hrw hrl ha
+    · simp only [hk, ↓reduceIte] at h
+      bind_step h with ⟨_, -, h⟩
+      by_cases hm : kind = "module"
       · simp only [hm, ↓reduceIte] at h
         bind_step h with ⟨_, -, h⟩
         bind_step h with ⟨is, e, h⟩
         cases h
         exact ⟨hd, decodeItems_wellFormed e hs⟩
-      · simp only [hk, hm, ↓reduceIte] at h
+      · simp only [hm, ↓reduceIte] at h
         by_cases hg : kind = "aggregate"
         · simp only [hg, ↓reduceIte] at h
           exact decodeAggregate_wellFormed h ha
@@ -237,14 +337,17 @@ theorem decodeItem_wellFormed : ∀ {si : SItem} {i : Item d}, decodeItem si = .
         split at h
         · exact decodeDialectItem_wellFormed h (by assumption) hp hr ha
         · cases h
-  | ⟨kind, kindPos, name, params, results, attrs, .blocks bs⟩, i, h, hw => by
-    obtain ⟨hp, hr, ha, hb⟩ := hw
+  | ⟨kind, kindPos, name, params, paramAttrs, variadic, results, resultAttrs, attrs,
+      .blocks bs⟩, i, h, hw => by
+    obtain ⟨hp, hr, ha, hb, hpw, hrw, hpl, hrl⟩ := hw
     rw [decodeItem.eq_def] at h
     dsimp only at h
     by_cases hk : kind = "func"
     · simp only [hk, ↓reduceIte] at h
-      exact decodeFuncItem_wellFormed h hp hr hb
-    · by_cases hm : kind = "module"
+      exact decodeFuncItem_wellFormed h hp hr hb hpw hpl hrw hrl ha
+    · simp only [hk, ↓reduceIte] at h
+      bind_step h with ⟨_, -, h⟩
+      by_cases hm : kind = "module"
       · simp only [hm, ↓reduceIte] at h
         bind_step h with ⟨_, -, h⟩
         cases bs with
@@ -252,7 +355,7 @@ theorem decodeItem_wellFormed : ∀ {si : SItem} {i : Item d}, decodeItem si = .
           cases h
           exact ⟨by simp, trivial⟩
         | cons => simp [errorAt] at h
-      · simp only [hk, hm, ↓reduceIte] at h
+      · simp only [hm, ↓reduceIte] at h
         by_cases hg : kind = "aggregate"
         · simp only [hg, ↓reduceIte] at h
           exact decodeAggregate_wellFormed h ha

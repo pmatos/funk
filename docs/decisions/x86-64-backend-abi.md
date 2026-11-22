@@ -202,6 +202,12 @@ backend extends a marked argument at the call and a marked result at the
 return, and nothing unmarked. An `i1` marked `zext` is a C `_Bool`. With no
 marker, neither side may rely on the upper bits.
 
+Today the backend extends nothing at a marker. The text and the verifier
+accept markers on a function's own signature (#239, stage 1). The backend
+starts to extend at them in stage 5, when external declarations let funk
+code call C. Until then, no funk code relies on the upper bits, marked or
+not.
+
 C defines only bits 0 to 7 of a `_Bool` result: bit 0 is the value, and bits 1
 to 7 are zero. So code that calls a C function may rely only on bit 0 of an
 unmarked `i1` result, and a caller that needs a C `_Bool`, 0 or 1 in `%al`,

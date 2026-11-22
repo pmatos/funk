@@ -14,7 +14,7 @@ changes under it.
 
 #doc (Manual) "Decoding: readable blocks" =>
 
-:::moduleDocs (fingerprint := "15291453173045403699")
+:::moduleDocs (fingerprint := "13608665382560905650")
 :::
 
 :::readable Fir.Text.Scope Fir.Text.decodeType Fir.Text.decodeDef Fir.Text.define (pin := Fir.DialectText) (fingerprint := "12263311160479661426")
@@ -61,28 +61,47 @@ The op keeps its results, its operands by name, its successors as written
 and its location reference.
 :::
 
-:::readable Fir.Text.decodeFunc (fingerprint := "13471885149451493050")
+:::readable Fir.Text.decodeFunc (fingerprint := "1029637409521661969")
 *Definition: decoding a function.* A function is decoded from its symbol,
 its parameters, its result types and its blocks: first its result types,
 then the scope, built by the first pass from its parameters and then its
 blocks, then its parameters, and then its blocks by the second pass, in
 that scope. So its errors are found in that order. Its body is a region of
-the core's kind.
+the core's kind. The function carries no attributes and is not variadic:
+decoding an item of kind `func` adds them.
 :::
 
-:::readable Fir.Text.decodeFuncItem Fir.Text.moduleHeader Fir.Text.decodeDialectItem Fir.Text.decodeItem Fir.Text.decodeGlobal Fir.Text.decodeItems Fir.Text.decodeItems_eq_mapM Fir.Text.decodeMemLayout Fir.Text.decodeModule (fingerprint := "2102019124917897587")
+:::readable Fir.Text.funcResultAttrs Fir.Text.funcBlocks Fir.Text.plainHeader (pin := Fir.trimAttrs) (fingerprint := "16461084186727819202")
+*Definitions: the parts of an item's header.*
+
+* The attributes of a `func`'s results are those after each result's type,
+  the item's attributes being those of its last result, with the empty
+  lists at the end left out. A `func` with no results and attributes is an
+  error at its first attribute, "a func with no results has no
+  attributes".
+* The blocks of a `func`'s body are its blocks, or none when it is empty; a
+  body that holds a dialect set is an error at the kind, "a func's body
+  holds blocks, not a dialect set", and one that holds items an error at
+  the kind of the first of them.
+* An item other than a `func` has a plain header: no parameter carries
+  attributes, the parameters do not end in `...`, and no result that a
+  comma follows carries attributes. Otherwise it is an error at the first
+  such attribute, or at the `...`.
+:::
+
+:::readable Fir.Text.decodeFuncItem Fir.Text.moduleHeader Fir.Text.decodeDialectItem Fir.Text.decodeItem Fir.Text.decodeGlobal Fir.Text.decodeItems Fir.Text.decodeItems_eq_mapM Fir.Text.decodeMemLayout Fir.Text.decodeModule (fingerprint := "13892725217271052846")
 *Definition: decoding an item and a module.* An item decodes as a function,
 as a nested module (ADR-2026-11-10-1510), as an aggregate's layout
 (ADR-2026-11-16-1546), as a global (ADR-2026-11-09-1546) or as an item of
 a dialect's kind
 (ADR-2026-11-09-1543):
 
-* a `func` with attributes is an error at its first attribute;
-* a `func` whose body holds a dialect set is an error at its kind, "a
-  func's body holds blocks, not a dialect set", and one whose body holds
-  items is an error at the kind of the first of them;
-* any other `func` decodes as a function, without blocks when its body is
-  empty;
+* a `func` decodes the attributes of its results, then the blocks of its
+  body, then the function, each as above, and stops at the first error; the
+  function keeps the attributes of its parameters and results, without
+  their positions and without the empty lists at the end, and whether its
+  parameters end in `...`;
+* an item of any other kind first checks that its header is plain;
 * a `module` with parameters, results or attributes is an error at the
   first of them;
 * a `module` whose body holds blocks is an error at its kind, and one whose
@@ -112,7 +131,7 @@ names known dialects, and whether the module's words keep to it, is a rule
 of validation, and so is whether a dialect registers the kind of an item.
 :::
 
-:::readable Fir.Text.decodeField Fir.Text.decodeAggregate (pin := Fir.Field.decode) (pin := Fir.Aggregate.decodeNumber) (fingerprint := "2851346155990452494")
+:::readable Fir.Text.decodeField Fir.Text.decodeAggregate (pin := Fir.Field.decode) (pin := Fir.Aggregate.decodeNumber) (fingerprint := "16916386382379042516")
 *Definitions: decoding an aggregate's layout.* A field decodes as
 $`\mathrm{decode}` of its attribute says, or is an error at the attribute.
 An item of kind `aggregate` decodes when it has no parameters, no results,
@@ -124,7 +143,7 @@ at the first of the three that does not decode, and at the first field that
 does not.
 :::
 
-:::readable Fir.parse (pin := Fir.Text.lex) (pin := Fir.Text.readModule) (fingerprint := "11087151413922587211")
+:::readable Fir.parse (pin := Fir.Text.lex) (pin := Fir.Text.readModule) (fingerprint := "17491092743443124447")
 *Definition: the parser.* The parser of a dialect with a
 {ref "The-fir-specification--Text-format--Grammar"}[text] reads a text in
 three steps, and stops at the first error, with its position: it

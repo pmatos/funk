@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Core rules: readable blocks" =>
 
-:::moduleDocs (fingerprint := "15424461390396372845")
+:::moduleDocs (fingerprint := "6921522426549223349")
 :::
 
 :::readable Fir.Core.Ty.Valid Fir.Core.Ty.memory (pin := Fir.Core.maxWidth) (pin := Fir.Core.floatWidth) (fingerprint := "744407091263889301")
@@ -283,4 +283,16 @@ as its memory and whether each of its fields is repeated.
 Every other op has no rule beyond its signature. These definitions
 are what the core dialect
 {ref "The-fir-specification--Validation--Scope-and-symbols"}[adds to validation].
+:::
+
+:::readable Fir.Core.Ty.sigAttrsAllowed (fingerprint := "12737309115106275351")
+*Definition: the attributes a core type allows in a signature.* A
+parameter or a result of a core type $`t` may carry the attributes $`a^*`
+after its type when $`a^*` is empty, or when $`t` is
+$`\mathsf{i}N` with $`N < 32` and $`a^*` is one word, `sext` or `zext`
+(ADR-2026-11-09-1547). The word is an extension marker: a marked
+parameter is extended by the caller, and a marked result by the callee,
+by its sign with `sext` and with zeros with `zext`, and the other side may
+rely on it. No other type carries an attribute. This is the core's rule
+$`\vdash t~a^*~\text{valid}`.
 :::

@@ -82,8 +82,9 @@ end
 mutual
 /-- Two items are the same, at any depth. -/
 def sitemEq : SItem → SItem → Bool
-  | ⟨k, kp, n, ps, rs, as, b⟩, ⟨k', kp', n', ps', rs', as', b'⟩ =>
-    k == k' && kp == kp' && n == n' && listEq sdefEq ps ps' && listEq atEq rs rs' &&
+  | ⟨k, kp, n, ps, pas, v, rs, ras, as, b⟩, ⟨k', kp', n', ps', pas', v', rs', ras', as', b'⟩ =>
+    k == k' && kp == kp' && n == n' && listEq sdefEq ps ps' && listEq (listEq atEq) pas pas' &&
+      v == v' && listEq atEq rs rs' && listEq (listEq atEq) ras ras' &&
       listEq atEq as as' && sbodyEq b b'
 
 /-- Two item bodies are the same. -/
@@ -158,9 +159,11 @@ def applied : Module AttrDialect where
           aop [] "ret" [] [] [] [⟨none, []⟩] 2]⟩,
         ⟨"b", [("q", .word "h"), ("q2", .app "h" [])], [aop [] "ret" [] ["q"] [] [] 2]⟩,
         ⟨"c", [], [aop [("u", .word "a"), ("v", .app "b" [])] "pair" [] [],
-          aop [] "ret" [.word "h"] ["u", "v"] [] [] 3]⟩]⟩⟩,
-    .func ⟨"empty", [], [], ⟨none, []⟩⟩,
-    .func ⟨"1", [("p", .word "h")], [], ⟨none, [⟨"e", [], [aop [] "br" [] [] [⟨"e", []⟩]]⟩]⟩⟩]
+          aop [] "ret" [.word "h"] ["u", "v"] [] [] 3]⟩]⟩,
+      [[], [.word "m", .int 2]], [[.word "r"], [.app "k" [.word "h"]]], true⟩,
+    .func ⟨"empty", [], [], ⟨none, []⟩, [], [], true⟩,
+    .func ⟨"1", [("p", .word "h")], [], ⟨none, [⟨"e", [], [aop [] "br" [] [] [⟨"e", []⟩]]⟩]⟩,
+      [[.str "a"]], [], false⟩]
   locs := [(0, .unknown), (1, .range "f.c" 1 0 4294967295 4), (2, .fused []),
     (3, .fused [0, 1, 2]), (4, .callsite 1 2), (5, .derived 4), (6, .name "n")]
 
@@ -178,15 +181,15 @@ def applied : Module AttrDialect where
 
 -- A function with no blocks, `{ }`, reads as a body of no blocks.
 #guard match readModule (tokensAt applied) with
-  | .ok ⟨[], [], [_, ⟨_, _, "empty", [], [], [], .blocks []⟩, _], _⟩ => true
+  | .ok ⟨[], [], [_, ⟨_, _, "empty", [], [], some _, [], [], [], .blocks []⟩, _], _⟩ => true
   | _ => false
 
 -- A type that is not written as a type does not read back, and neither
 -- does a line of `2^32`.
 #guard !readsTokensAt (Module.mk (d := AttrDialect) [] []
-  [.func ⟨"f", [("x", .int 5)], [], ⟨none, []⟩⟩] [])
+  [.func ⟨"f", [("x", .int 5)], [], ⟨none, []⟩, [], [], false⟩] [])
 #guard !readsTokensAt (Module.mk (d := AttrDialect) [] []
-  [.func ⟨"f", [], [.str "t"], ⟨none, []⟩⟩] [])
+  [.func ⟨"f", [], [.str "t"], ⟨none, []⟩, [], [], false⟩] [])
 #guard !readsTokensAt (Module.mk (d := AttrDialect) [] [] [] [(0, .range "f" 4294967296 1 1 1)])
 
 /--

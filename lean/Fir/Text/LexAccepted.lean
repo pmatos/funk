@@ -225,6 +225,8 @@ theorem lexToken_writable {c : Char} {cs : List Char} {p : TextPos} {t : Tok} {r
   · exact lexNumber_writable h
   split at h
   · cases h; exact isWord_takeWhile ‹_›
+  split at h
+  · cases h; exact True.intro
   · cases h
 
 /-- Every token of `ts` but `eof` can be written. The lexer ends every list

@@ -3,6 +3,7 @@ import Fir.Syntax.Location
 import Fir.Syntax.Layout
 import Fir.Syntax.Global
 import Fir.Syntax.Module
+import Fir.Syntax.FuncAttrs
 import Fir.Core.Types
 import Fir.Core.Rounding
 import Fir.Core.OpAttrs
@@ -13,6 +14,8 @@ import Fir.Validation.Dominance
 import Fir.Validation.Layout
 import Fir.Validation.Global
 import Fir.Validation.LocTable
+import Fir.Validation.Signature
+import Fir.Validation.AllBlocks
 import Fir.Validation.Rules
 import Fir.Core.Validation
 import Fir.Core.Rejects
@@ -252,6 +255,7 @@ import Fir.Text.LayoutLaws
 import Fir.Text.GlobalText
 import Fir.Text.GlobalLaws
 import Fir.Text.Print
+import Fir.Text.SigAttrs
 import Fir.Text.RoundTrip
 import Fir.Text.Lex
 import Fir.Text.Read
@@ -282,13 +286,16 @@ import Fir.Text.LexTokens
 import Fir.Text.LexStrings
 import Fir.Text.LexLayout
 import Fir.Text.LexPrint
+import Fir.Text.LexFunc
 import Fir.Text.LexModule
+import Fir.Text.LexWritable
 import Fir.Text.LexWellFormed
 import Fir.Text.Tree
 import Fir.Text.ReadAttrs
 import Fir.Text.ReadDefs
 import Fir.Text.ReadOps
 import Fir.Text.ReadBlocks
+import Fir.Text.ReadParams
 import Fir.Text.ReadFunc
 import Fir.Text.ReadTable
 import Fir.Text.ReadModule

@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Round trips: readable blocks" =>
 
-:::moduleDocs (fingerprint := "4306001451845472634")
+:::moduleDocs (fingerprint := "9934922582506034649")
 :::
 
 :::readable Fir.Func.OpWellFormed (pin := Fir.Func.typeOf) (pin := Fir.DialectSignature) (pin := Fir.Location.limit) (fingerprint := "12115051900375411089")
@@ -58,7 +58,7 @@ and each type it states is written as a type and decodes back to itself.
 Its symbol can be any string.
 :::
 
-:::readable Fir.Func.WellFormed Fir.Item.WellFormed Fir.Item.WellFormedList Fir.Item.wellFormedList_iff Fir.Module.WellFormed Fir.Module.WellFormed.funcs (pin := Fir.Func.defs) (pin := Fir.Func.types) (pin := Fir.LocTable.InLimits) (pin := Fir.Location.numbers) (pin := Fir.Location.limit) (pin := Fir.Module.funcs) (fingerprint := "8148014266322020997")
+:::readable Fir.Func.WellFormed Fir.Item.WellFormed Fir.Item.WellFormedList Fir.Item.wellFormedList_iff Fir.Module.WellFormed Fir.Module.WellFormed.funcs (pin := Fir.Func.defs) (pin := Fir.Func.types) (pin := Fir.LocTable.InLimits) (pin := Fir.Location.numbers) (pin := Fir.Location.limit) (pin := Fir.Module.funcs) (fingerprint := "5392792188802292626")
 *Definition: a well-formed function, item and module.* A function
 $`f` is _well formed_ when:
 
@@ -72,7 +72,10 @@ $`f` is _well formed_ when:
 * the body of $`f` is a region of the core's kind, since the text of a
   function names no kind;
 * each region of an op of $`\mathrm{allops}(f)` that names a kind names it
-  by a word.
+  by a word;
+* it holds the attributes of its parameters, and of its results, in the
+  short form, at most one list per place with no empty list at the end,
+  and every attribute of them can be written.
 
 Its symbol may be any string, since a symbol that is not a word is quoted.
 An item is well formed when it is a well-formed function, a nested module
@@ -145,7 +148,7 @@ and two different valid modules never print the same text. The next block
 shows that every dialect whose text is lawful meets it.
 :::
 
-:::readable Fir.Func.Valid.wellFormed Fir.SymbolTable.Valid.itemsWellFormed Fir.MemLayout.Valid.inLimits Fir.validIsWellFormed (pin := Fir.Func.Valid) (pin := Fir.LocTable.Valid) (pin := Fir.Module.Valid) (pin := Fir.SymbolTable.Valid) (pin := Fir.Location.limit) (fingerprint := "3518665833573594769")
+:::readable Fir.Func.Valid.wellFormed Fir.SymbolTable.Valid.itemsWellFormed Fir.MemLayout.Valid.inLimits Fir.validIsWellFormed (pin := Fir.Func.Valid) (pin := Fir.LocTable.Valid) (pin := Fir.Module.Valid) (pin := Fir.SymbolTable.Valid) (pin := Fir.Location.limit) (fingerprint := "3782106221552955658")
 *Theorems: a valid function is well formed, and so is every valid module.*
 Let $`d` be a dialect with a signature, a text and validation rules, whose
 text is {ref "The-fir-specification--Text-format--Grammar"}[lawful]. Then:
@@ -176,8 +179,10 @@ that pass values that the function defines, and location references that
 are keys of the table, whose keys are below $`2^{32}`, dialect sets
 whose names are words, the module's own and each nested module's, a
 data layout whose entries are valid, so within the limit, and valid
-globals, whose numbers are within the limit. The
-laws give op names that are words, attributes that can be written, and
+globals, whose numbers are within the limit. A valid signature gives attributes in the short form that its
+dialect allows. The
+laws give op names that are words, attributes that can be written, a
+signature's attributes that can be written, and
 valid types that are written as types and read back. A nested module is
 well formed when its set's names are words and its items are well formed,
 which its own table, valid like every table of the module, gives, by

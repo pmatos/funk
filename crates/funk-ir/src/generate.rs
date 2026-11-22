@@ -439,13 +439,25 @@ fn start<'k>(
         ops: Vec::new(),
         taken: Vec::new(),
     };
-    for t in &me.ty.params {
+    for (i, t) in me.ty.params.iter().enumerate() {
         let n = body.fresh_name(rng);
         body.values.push((n.clone(), t.clone()));
-        f = f.param(n, t.clone());
+        f = f.marked_param(n, t.clone(), marker(t, i));
     }
-    for t in &me.ty.results {
-        f = f.result(t.clone());
+    for (i, t) in me.ty.results.iter().enumerate() {
+        f = f.marked_result(t.clone(), marker(t, i + 1));
     }
     (f, body)
+}
+
+/// The extension marker of the `i`-th place of a signature whose type is
+/// `t`: none, `sext` or `zext` in turn on an integer narrower than 32 bits
+/// (ADR-2026-11-09-1547), and none on any other type. It draws nothing from
+/// the generator, so the modules are those of the same seed without markers.
+fn marker(t: &Type, i: usize) -> Vec<Attr> {
+    match (int_width(t), i % 3) {
+        (Some(w), 1) if w < 32 => vec![Attr::word("sext")],
+        (Some(w), 2) if w < 32 => vec![Attr::word("zext")],
+        _ => Vec::new(),
+    }
 }

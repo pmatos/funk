@@ -26,7 +26,8 @@ def itemsModule (is : List (Item CoreDialect)) : Module CoreDialect := ⟨[], []
 
 /-- A function `@name` whose one block calls `@callee` and returns. -/
 def caller (name callee : Name) : Func CoreDialect :=
-  ⟨name, [], [], ⟨none, [⟨"e", [], [op [] (.call callee [] []) [], op [] (.ret []) []]⟩]⟩⟩
+  ⟨name, [], [], ⟨none, [⟨"e", [], [op [] (.call callee [] []) [], op [] (.ret []) []]⟩]⟩, [], [],
+    false⟩
 
 /-! # One symbol table at a time -/
 

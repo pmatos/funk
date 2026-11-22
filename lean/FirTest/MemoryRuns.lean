@@ -275,6 +275,7 @@ theorem allocMain_valid : allocMain.Valid allocModule.context where
         by decide⟩
   inner := Func.inner_of_noRegions (by decide +kernel)
   dialect := trivial
+  signature := (Func.sigProblems_eq_nil _).1 rfl
 
 /-- The module is valid. -/
 theorem allocModule_valid : allocModule.Valid := Module.valid_of_flat

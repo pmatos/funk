@@ -94,6 +94,9 @@ theorem lawfulText [DialectSet dep] [DialectSet big] [LawfulDialectSet big]
   tyAttr_isType
     | .inl t, hv => LawfulDialectText.tyAttr_isType (d := big) t hv
     | .inr t, hv => LawfulDialectText.tyAttr_isType (d := dep.over e) (.inr t) hv
+  sigAttrs_writable
+    | .inl t, as, hv => LawfulDialectText.sigAttrs_writable (d := big) t as hv
+    | .inr t, as, hv => LawfulDialectText.sigAttrs_writable (d := dep.over e) (.inr t) as hv
 
 /-!
 # The round trip over a sum with a lift

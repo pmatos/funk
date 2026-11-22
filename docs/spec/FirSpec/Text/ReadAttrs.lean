@@ -17,7 +17,7 @@ when the Lean changes under it.
 :::moduleDocs (fingerprint := "5338463033325093932")
 :::
 
-:::readable Fir.Text.Reads (pin := Fir.Text.Read) (pin := Fir.Text.Token) (pin := Fir.Text.Tok) (fingerprint := "8378616456371445232")
+:::readable Fir.Text.Reads (pin := Fir.Text.Read) (pin := Fir.Text.Token) (pin := Fir.Text.Tok) (fingerprint := "14272487332625815987")
 *Definition: a reader reads tokens back.* A
 {ref "The-fir-specification--Text-format--Reading-the-grammar"}[reader]
 takes a list of tokens, each with its position, and gives what it read and
@@ -81,7 +81,7 @@ a mismatch, reads $`t` at the front of any tokens and leaves the tokens
 after it.
 :::
 
-:::readable Fir.Text.Reads.more (pin := Fir.Text.readMore) (fingerprint := "10768617766237672040")
+:::readable Fir.Text.Reads.more (pin := Fir.Text.readMore) (fingerprint := "3648654731409239769")
 *Theorem: the rest of a list reads back when each element does.* Let $`\mathit{item}` be a reader,
 and $`S` and $`S'` sets of tokens such that the comma is in $`S`, and every
 token of $`S'` is in $`S` and is not a comma. For every list
@@ -97,7 +97,7 @@ and the token after the list, which is not a comma, stops the reader of
 the rest.
 :::
 
-:::readable Fir.Text.Attr.tokens_cons (pin := Fir.Attr.tokens) (pin := Fir.Text.Tok.startsAttr) (fingerprint := "15385218398395115587")
+:::readable Fir.Text.Attr.tokens_cons (pin := Fir.Attr.tokens) (pin := Fir.Text.Tok.startsAttr) (fingerprint := "16070070699057775948")
 *Theorem: an attribute's tokens start with a token that starts an
 attribute.* For every
 {ref "The-fir-specification--Text-format--Grammar"}[attribute] $`a`, the
@@ -112,7 +112,7 @@ $`a_1, \dots, a_n`, the tokens
 $`\texttt{,}~\mathrm{tokens}(a_1)~\dots~\texttt{,}~\mathrm{tokens}(a_n)`.
 :::
 
-:::readable Fir.Text.Attr.reads Fir.Text.Attr.readsArgs Fir.Text.Attr.readsMoreArgs (pin := Fir.Text.readAttr) (pin := Fir.Text.readAttrArgs) (pin := Fir.Text.readMoreAttrArgs) (pin := Fir.Attr.tokens) (fingerprint := "2923884403898544206")
+:::readable Fir.Text.Attr.reads Fir.Text.Attr.readsArgs Fir.Text.Attr.readsMoreArgs (pin := Fir.Text.readAttr) (pin := Fir.Text.readAttrArgs) (pin := Fir.Text.readMoreAttrArgs) (pin := Fir.Attr.tokens) (fingerprint := "2559225069090151797")
 *Theorems: an attribute, and an applied attribute's arguments, read
 back.* For every attribute $`a`, list of
 attributes $`a_1, \dots, a_n` and tokens $`v`, at any positions:
@@ -134,7 +134,7 @@ attribute. The three are proved together, since an applied attribute holds
 attributes. Nothing is asked of the attribute: the readers take any word.
 :::
 
-:::readable Fir.Text.readType_reads (pin := Fir.Text.readType) (pin := Fir.Attr.IsType) (fingerprint := "8810621514370726686")
+:::readable Fir.Text.readType_reads (pin := Fir.Text.readType) (pin := Fir.Attr.IsType) (fingerprint := "7306658269049518996")
 *Theorem: a type reads back.* For every attribute $`a` that is
 {ref "The-fir-specification--Text-format--Grammar"}[written as a type], a
 word or a word applied to attributes, that can be written, the reader of a
@@ -149,7 +149,7 @@ $`p_0` the empty position. The reader of a type takes only a word or an
 applied word, so the condition on $`a` is needed.
 :::
 
-:::readable Fir.Text.readAttrs_reads (pin := Fir.Text.readAttrs) (pin := Fir.Text.Tok.startsAttr) (fingerprint := "1979857583153628765")
+:::readable Fir.Text.readAttrs_reads (pin := Fir.Text.readAttrs) (pin := Fir.Text.Tok.startsAttr) (fingerprint := "4541679681696583914")
 *Theorem: the attributes of an op or an item read back.* For every list of
 attributes $`a_1, \dots, a_n`, the reader of attributes reads
 $`\mathrm{tokens}(a_1)~\dots~\mathrm{tokens}(a_n)` as

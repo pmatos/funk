@@ -150,6 +150,7 @@ theorem countFn_valid : countFn.Valid ubModule.context where
   ops := opValid_of (dom := []) (fun _ h => nomatch h) (by decide +kernel)
   inner := Func.inner_of_noRegions (by decide +kernel)
   dialect := trivial
+  signature := (Func.sigProblems_eq_nil _).1 rfl
 
 /-- `@g` is valid in its module. -/
 theorem gFn_valid : gFn.Valid ubModule.context where
@@ -171,6 +172,7 @@ theorem gFn_valid : gFn.Valid ubModule.context where
   ops := opValid_of (dom := []) (fun _ h => nomatch h) (by decide +kernel)
   inner := Func.inner_of_noRegions (by decide +kernel)
   dialect := trivial
+  signature := (Func.sigProblems_eq_nil _).1 rfl
 
 /-- The module of `@count` and `@g` is valid. -/
 theorem ubModule_valid : ubModule.Valid := Module.valid_of_flat
@@ -223,6 +225,7 @@ theorem gFn'_valid : ({ gFn with body := gBody } : Func CoreDialect).Valid ubMod
   ops := opValid_of (dom := []) (fun _ h => nomatch h) (by decide +kernel)
   inner := Func.inner_of_noRegions (by decide +kernel)
   dialect := trivial
+  signature := (Func.sigProblems_eq_nil _).1 rfl
 
 /-- The module with `@g`'s new body is valid too. -/
 theorem ubModule'_valid : ubModule'.Valid :=

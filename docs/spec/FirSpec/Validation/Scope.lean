@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Scope and symbols: readable blocks" =>
 
-:::moduleDocs (fingerprint := "12599902380509584910")
+:::moduleDocs (fingerprint := "15099674176827109952")
 :::
 
 :::readable Fir.Func.blocks Fir.Region.allBlocks Fir.Block.allBlocks Fir.Operation.regionBlocks Fir.Func.allBlocks (fingerprint := "9127946111391752751")
@@ -191,11 +191,11 @@ operands and the results of such an op stay visible. A dialect sees its own
 functions through the identity view.
 :::
 
-:::readable Fir.DialectValidation (fingerprint := "7515782552734661237")
+:::readable Fir.DialectValidation (fingerprint := "6149178156669781523")
 *Definition: what a dialect adds to validation.* The general rules of the
 next sections hold for every
 {ref "The-fir-specification--Abstract-syntax--Dialects"}[dialect]. Each
-dialect $`d` adds eleven things of its own:
+dialect $`d` adds twelve things of its own:
 
 * which of its types are valid, written $`\vdash_d t~\text{valid}`;
 * $`\mathrm{refs}_d(\mathit{op})`, the symbols that the op instance
@@ -247,7 +247,12 @@ dialect $`d` adds eleven things of its own:
   takes as a field of an aggregate's layout in the memory $`n` of a module
   whose memories have the entries $`\ell`, and its alignment there, in
   units, or none for a type that may not be a field (ADR-2026-11-16-1546).
-  A dialect whose types may not be fields gives none, the default.
+  A dialect whose types may not be fields gives none, the default;
+* which attributes a parameter or a result of type $`t` may carry after
+  its type in a function's signature, written $`\vdash_d t~a^*~\text{valid}`
+  ($`\mathrm{validSigAttrs}` in the Lean), such as the core's extension
+  markers `sext` and `zext` (ADR-2026-11-21-1307). By default a type carries
+  none.
 
 The {ref "The-fir-specification--Validation--Core-rules"}[core rules] give
 these for the core dialect: for example, $`\mathsf{ret}` must return the
@@ -260,7 +265,9 @@ $`\mathsf{ptr\_expose}` and $`\mathsf{ptr\_from\_int}`. Each of its types, an in
 a float or a pointer, may be a field, with the units and alignment that
 $`\mathsf{alloca}` gives one value of it. It registers no kind of item: its kinds, `func`,
 `module`, `aggregate` and `global`, have rules of their own in the next sections. It registers no region kind either: the rule of its own kind, a
-control-flow graph, is the rule of a function's body.
+control-flow graph, is the rule of a function's body. An integer narrower
+than 32 bits may carry one extension marker, `sext` or `zext`, and no other
+type carries any attribute.
 :::
 
 :::readable Fir.Operation.ownsCoreRegion (fingerprint := "3667057443299565156")

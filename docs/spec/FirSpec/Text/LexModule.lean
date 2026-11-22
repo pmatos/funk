@@ -75,16 +75,18 @@ characters. The four are proved together, since ops hold regions, which
 hold blocks of ops.
 :::
 
-:::readable Fir.Func.spells Fir.Item.spells Fir.Item.spellsList (pin := Fir.Func.print) (pin := Fir.Item.print) (pin := Fir.Item.printList) (fingerprint := "5947654041831721123")
+:::readable Fir.Func.spells Fir.Item.spells Fir.Item.spellsList (pin := Fir.Func.print) (pin := Fir.Item.print) (pin := Fir.Item.printList) (fingerprint := "16517739686563005803")
 *Theorems: a printed function, an item, and items, spell their tokens
 before any characters.* For every dialect with a text format and every
 indentation $`n`:
 
 * every function $`f` whose tokens can all be written spells
   $`\mathrm{tokens}(f)` before any characters, printed as $`n` spaces,
-  `func`, a space, its symbol, its parameters in parentheses, ` -> ` and
-  its result types with `, ` between them when it has results, ` {`, a
-  line feed, its blocks, $`n` spaces, `}` and a line feed;
+  `func`, a space, its symbol, its parameters in parentheses, each with
+  its attributes, and `...` when it is variadic, its results, each with its
+  attributes, after ` -> ` and with `, ` between them, when it has
+  results, ` {`, a line feed, its blocks, $`n` spaces, `}` and a line
+  feed;
 * so does every item whose tokens can all be written: a function as
   above, an item of a dialect's kind by the theorem for such items, an
   aggregate's layout and a global by that theorem for the item of kind
@@ -135,7 +137,7 @@ be written, printed as its dialect set, its data layout, its items and then
 its location table, spells $`\mathrm{tokens}(m)` before any characters.
 :::
 
-:::readable Fir.lex_print (pin := Fir.Text.lex) (pin := Fir.Module.tokens) (pin := Fir.Text.Tok.Writable) (fingerprint := "18342169326104170006")
+:::readable Fir.lex_print (pin := Fir.Text.lex) (pin := Fir.Module.tokens) (pin := Fir.Text.Tok.Writable) (fingerprint := "5963351127919059821")
 *Theorem: lexing printed text gives its tokens.* For every dialect with a
 text format and every module $`m` whose tokens can all be
 {ref "The-fir-specification--Text-format--Lexing-printed-text"}[written],

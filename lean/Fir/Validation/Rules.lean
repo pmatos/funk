@@ -2,6 +2,8 @@ import Fir.Validation.Dominance
 import Fir.Validation.Layout
 import Fir.Validation.Global
 import Fir.Validation.LocTable
+import Fir.Validation.Signature
+import Fir.Validation.AllBlocks
 
 /-!
 The general rules of validation, for every dialect. A module is valid when
@@ -127,104 +129,6 @@ regions, not deeper. -/
 def Operation.innerOps (o : Operation d) : List (Operation d) :=
   o.regions.flatMap fun r => r.blocks.flatMap (·.body)
 
-/-- The block `b` is a block of a region of an op of a block of `all`. -/
-def Block.InRegionOf (all : List (Block d)) (b : Block d) : Prop :=
-  ∃ b₀ ∈ all, ∃ o ∈ b₀.body, ∃ r ∈ o.regions, b ∈ r.blocks
-
-omit [DialectSignature d] [DialectValidation d] in
-theorem Block.InRegionOf.mono {all all' : List (Block d)} {b : Block d}
-    (h : ∀ x ∈ all, x ∈ all') : Block.InRegionOf all b → Block.InRegionOf all' b
-  | ⟨b₀, hb₀, rest⟩ => ⟨b₀, h b₀ hb₀, rest⟩
-
-section
-omit [DialectSignature d] [DialectValidation d]
-
-/-- Each block of a list is among its blocks at any depth. -/
-theorem Block.mem_allBlocks {b : Block d} :
-    ∀ {bs : List (Block d)}, b ∈ bs → b ∈ Block.allBlocks bs
-  | ⟨_, _, _⟩ :: _, h => by
-    rw [Block.allBlocks]
-    rcases List.mem_cons.1 h with rfl | h
-    · exact List.mem_cons_self
-    · exact List.mem_cons_of_mem _ (List.mem_append_right _ (Block.mem_allBlocks h))
-
-mutual
-/-- A block of these regions, at any depth, is a block of one of them, or of
-a region of an op of one of their blocks. -/
-theorem Region.mem_allBlocks_cases : ∀ {rs : List (Region d)} {b : Block d},
-    b ∈ Region.allBlocks rs → (∃ r ∈ rs, b ∈ r.blocks) ∨ Block.InRegionOf (Region.allBlocks rs) b
-  | [], _, h => by simp [Region.allBlocks] at h
-  | ⟨k, bs⟩ :: rs, b, h => by
-    have hsub₁ : ∀ x ∈ Block.allBlocks bs, x ∈ Region.allBlocks (⟨k, bs⟩ :: rs) := fun x hx => by
-      rw [Region.allBlocks]; exact List.mem_append_left _ hx
-    have hsub₂ : ∀ x ∈ Region.allBlocks rs, x ∈ Region.allBlocks (⟨k, bs⟩ :: rs) := fun x hx => by
-      rw [Region.allBlocks]; exact List.mem_append_right _ hx
-    rw [Region.allBlocks] at h
-    rcases List.mem_append.1 h with h | h
-    · rcases Block.mem_allBlocks_cases h with h | h
-      · exact .inl ⟨_, List.mem_cons_self, h⟩
-      · exact .inr (h.mono hsub₁)
-    · rcases Region.mem_allBlocks_cases h with ⟨r, hr, hb⟩ | h
-      · exact .inl ⟨r, List.mem_cons_of_mem _ hr, hb⟩
-      · exact .inr (h.mono hsub₂)
-
-/-- A block of these blocks at any depth is one of them, or a block of a
-region of an op of one of them, at any depth. -/
-theorem Block.mem_allBlocks_cases : ∀ {bs : List (Block d)} {b : Block d},
-    b ∈ Block.allBlocks bs → b ∈ bs ∨ Block.InRegionOf (Block.allBlocks bs) b
-  | [], _, h => by simp [Block.allBlocks] at h
-  | ⟨l, ps, body⟩ :: bs, b, h => by
-    have hsub₁ : ∀ x ∈ Operation.regionBlocks body,
-        x ∈ Block.allBlocks (⟨l, ps, body⟩ :: bs) := fun x hx => by
-      rw [Block.allBlocks]; exact List.mem_cons_of_mem _ (List.mem_append_left _ hx)
-    have hsub₂ : ∀ x ∈ Block.allBlocks bs, x ∈ Block.allBlocks (⟨l, ps, body⟩ :: bs) :=
-      fun x hx => by
-        rw [Block.allBlocks]; exact List.mem_cons_of_mem _ (List.mem_append_right _ hx)
-    have hself : ⟨l, ps, body⟩ ∈ Block.allBlocks (⟨l, ps, body⟩ :: bs) := by
-      rw [Block.allBlocks]; exact List.mem_cons_self
-    rw [Block.allBlocks] at h
-    rcases List.mem_cons.1 h with rfl | h
-    · exact .inl List.mem_cons_self
-    rcases List.mem_append.1 h with h | h
-    · rcases Operation.mem_regionBlocks_cases h with ⟨o, ho, r, hr, hb⟩ | h
-      · exact .inr ⟨_, hself, o, ho, r, hr, hb⟩
-      · exact .inr (h.mono hsub₁)
-    · rcases Block.mem_allBlocks_cases h with h | h
-      · exact .inl (List.mem_cons_of_mem _ h)
-      · exact .inr (h.mono hsub₂)
-
-/-- A block of the regions of these ops, at any depth, is a block of a
-region of one of them, or of a region of an op of a block below them. -/
-theorem Operation.mem_regionBlocks_cases : ∀ {os : List (Operation d)} {b : Block d},
-    b ∈ Operation.regionBlocks os → (∃ o ∈ os, ∃ r ∈ o.regions, b ∈ r.blocks) ∨
-      Block.InRegionOf (Operation.regionBlocks os) b
-  | [], _, h => by simp [Operation.regionBlocks] at h
-  | ⟨rs', op, xs, ss, regions, loc⟩ :: os, b, h => by
-    have hsub₁ : ∀ x ∈ Region.allBlocks regions,
-        x ∈ Operation.regionBlocks (⟨rs', op, xs, ss, regions, loc⟩ :: os) := fun x hx => by
-      rw [Operation.regionBlocks]; exact List.mem_append_left _ hx
-    have hsub₂ : ∀ x ∈ Operation.regionBlocks os,
-        x ∈ Operation.regionBlocks (⟨rs', op, xs, ss, regions, loc⟩ :: os) := fun x hx => by
-      rw [Operation.regionBlocks]; exact List.mem_append_right _ hx
-    rw [Operation.regionBlocks] at h
-    rcases List.mem_append.1 h with h | h
-    · rcases Region.mem_allBlocks_cases h with ⟨r, hr, hb⟩ | h
-      · exact .inl ⟨_, List.mem_cons_self, r, hr, hb⟩
-      · exact .inr (h.mono hsub₁)
-    · rcases Operation.mem_regionBlocks_cases h with ⟨o, ho, r, hr, hb⟩ | h
-      · exact .inl ⟨o, List.mem_cons_of_mem _ ho, r, hr, hb⟩
-      · exact .inr (h.mono hsub₂)
-end
-
-end
-
-omit [DialectSignature d] [DialectValidation d] in
-/-- A block of a function at any depth is a block of its body, or a block of
-a region of an op of one of its blocks at any depth. -/
-theorem Func.mem_allBlocks_cases {f : Func d} {b : Block d} (h : b ∈ f.allBlocks) :
-    b ∈ f.blocks ∨ Block.InRegionOf f.allBlocks b :=
-  Block.mem_allBlocks_cases h
-
 /-- A function whose ops own no region, at any depth, has no op inside a
 region. -/
 theorem Func.inner_of_noRegions {ctx : ModuleContext d} {f : Func d}
@@ -241,8 +145,8 @@ control-flow graph (ADR-2026-10-29-2005), its entry block declares no
 arguments, every block is reachable from the entry, its labels and value
 names are unique and can be written in the text, every type it states is
 valid, every block holds at least one op, each of them valid, every op
-inside a region of an op obeys the general rules, and the function obeys
-its dialect's own rule over a whole function.
+inside a region of an op obeys the general rules, the function obeys
+its dialect's own rule over a whole function, and its signature is valid.
 -/
 
 /-- A function is valid in the context of its module. -/
@@ -260,6 +164,7 @@ structure Func.Valid (ctx : ModuleContext d) (f : Func d) : Prop where
     b.body[i]? = some o → f.OpValid ctx b i o
   inner : ∀ b ∈ f.allBlocks, ∀ o ∈ b.body, ∀ o' ∈ o.innerOps, f.InnerOpValid ctx o'
   dialect : validFunc (DialectView.id d) ⟨ctx.symbols⟩ f
+  signature : f.SigValid
 
 /-!
 # Modules

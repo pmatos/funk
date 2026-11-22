@@ -74,8 +74,8 @@ pub use float_to_int::FLOAT_TO_INT_OPS;
 pub use int_to_float::INT_TO_FLOAT_OPS;
 pub use rounding::ROUNDING_MODES;
 pub use types::{
-    CoreType, FLOAT_ALIASES, MAX_MEMORY, MAX_WIDTH, core_type, float_format, float_type, int_type,
-    int_width, ptr_type,
+    CoreType, EXT_MARKERS, FLOAT_ALIASES, MAX_MEMORY, MAX_WIDTH, core_type, float_format,
+    float_type, int_type, int_width, ptr_type,
 };
 pub use width::WIDTH_CHANGES;
 

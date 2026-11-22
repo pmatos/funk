@@ -313,6 +313,11 @@ The rules a dialect adds to validation.
   pointers of that width and does not mark it non-integral (the human's
   rulings of 2026-11-11 on #231 and of 2026-11-18 on #232, Q2). An op that
   turns no pointer into an integer lists none, the default.
+* `validSigAttrs` says which attributes a parameter or a result of a
+  function may carry after its type, read by the dialect of the type, such
+  as the core's extension markers `sext` and `zext` on an integer narrower
+  than 32 bits (ADR-2026-11-09-1547). A dialect that reads none allows none,
+  the default.
 -/
 class DialectValidation (d : Dialect) where
   validTy : d.Ty → Prop
@@ -330,7 +335,8 @@ class DialectValidation (d : Dialect) where
   opUnits : d.Op → List (Nat × Nat) := fun _ => []
   opAddrs : d.Op → List (Nat × Nat) := fun _ => []
   fieldShape : (Nat → MemLayout) → Nat → d.Ty → Option (Nat × Nat) := fun _ _ _ => none
+  validSigAttrs : d.Ty → List Attr → Prop := fun _ as => as = []
 export DialectValidation (validTy symbolRefs validOp validFunc regionKindNames validRegion
-  itemKindNames validItem tyMemory opTypes opUnits opAddrs fieldShape)
+  itemKindNames validItem tyMemory opTypes opUnits opAddrs fieldShape validSigAttrs)
 
 end Fir
