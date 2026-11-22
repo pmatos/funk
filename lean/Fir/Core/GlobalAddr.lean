@@ -26,33 +26,38 @@ constant global faults: it is UB when it runs (the human's ruling of
 2026-11-20 on #237, Q2).
 
 Validation requires that `s` name a global of the op's table in the memory
-`N` (the section on the core rules of an op). The rule itself holds for
-every record that a run may give: one that has no global `s` gives the
-pointer with no provenance at offset 0, through which every access is
-UB, so the op is never UB and never gives poison, for every record, with
-no hypothesis on it.
+`N` (the section on the core rules of an op), and a run of a valid module
+gives each op the same memory for it (`RunItems.ofTable_globalMem`). The
+rule itself holds for every record that a run may give: one that has no
+global `s`, or has it in a memory other than `N`, gives the pointer with no
+provenance at offset 0, through which every access is UB, so a pointer of
+`ptr<N>` never names an allocation of another memory, and the op is never
+UB and never gives poison, for every record, with no hypothesis on it.
 -/
 
 namespace Fir.Core
 
 open Memory
 
-/-- The rule of `globalAddr`, where the run gives where its global starts,
-`g`: the pointer to the first unit of the global's allocation, and the
-pointer with no provenance at offset 0 when the run gives no global. -/
-def globalAddrValue : Option (Nat × AllocId) → Pointer
-  | some (_, a) => ⟨some a, 0⟩
+/-- The rule of `globalAddr` in the memory `n`, where the run gives where
+its global starts, `g`: the pointer to the first unit of the global's
+allocation, and the pointer with no provenance at offset 0 when the run
+gives no global, or gives it in another memory. -/
+def globalAddrValue (n : Nat) : Option (Nat × AllocId) → Pointer
+  | some (m, a) => if m = n then ⟨some a, 0⟩ else ⟨none, 0⟩
   | none => ⟨none, 0⟩
 
 /-- The result of `globalAddr s n`, where the run gives where its global
 starts, `g`: one pointer, never poison. -/
 def globalAddrResult (g : Option (Nat × AllocId)) {n : Nat} : HVector toType [Ty.ptr n] :=
-  .cons (.value (globalAddrValue g)) .nil
+  .cons (.value (globalAddrValue n g)) .nil
 
 -- `@table`, memory 0's allocation 1: a pointer to its first unit. A
--- record with no such global gives the pointer with no provenance.
-#guard globalAddrValue (some (0, 1)) == ⟨some 1, 0⟩ &&
-  globalAddrValue (some (3, 0)) == ⟨some 0, 0⟩ &&
-  globalAddrValue none == ⟨none, 0⟩
+-- record with no such global, or with it in another memory, gives the
+-- pointer with no provenance.
+#guard globalAddrValue 0 (some (0, 1)) == ⟨some 1, 0⟩ &&
+  globalAddrValue 3 (some (3, 0)) == ⟨some 0, 0⟩ &&
+  globalAddrValue 0 (some (1, 0)) == ⟨none, 0⟩ &&
+  globalAddrValue 0 none == ⟨none, 0⟩
 
 end Fir.Core

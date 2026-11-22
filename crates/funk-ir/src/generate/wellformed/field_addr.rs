@@ -12,41 +12,7 @@
 use super::super::{Rng, Widths, symbol, width};
 use super::{Shaper, insert};
 use crate::dialects::core::{MAX_MEMORY, int_width, ptr_type};
-use crate::ir::{Attr, Block, Def, Func, Item, Op};
-
-/// Adds `fieldaddr` ops to two in three of the functions of `items`, a
-/// nested module's, which may name the layouts of `items`, and `globaladdr`
-/// ops to one in three, which may name the globals of `items`.
-pub(super) fn add_to_items(rng: &mut Rng, items: &mut [Item]) {
-    let symbols: Vec<String> = items
-        .iter()
-        .filter_map(Item::as_func)
-        .map(|f| f.name.clone())
-        .collect();
-    let layouts: Vec<String> = items
-        .iter()
-        .filter_map(Item::as_aggregate)
-        .map(|a| a.name.clone())
-        .collect();
-    let globals: Vec<String> = items
-        .iter()
-        .filter_map(Item::as_global)
-        .map(|g| g.name.clone())
-        .collect();
-    for item in items {
-        let Item::Func(f) = item else { continue };
-        if f.body.blocks.is_empty() {
-            continue;
-        }
-        let mut shaper = Shaper::new(f, &symbols, &[], false);
-        if !rng.one_in(3) {
-            shaper.add_field_addrs(rng, f, &layouts);
-        }
-        if rng.one_in(3) {
-            shaper.add_global_addrs(rng, f, &globals);
-        }
-    }
-}
+use crate::ir::{Attr, Block, Def, Func, Op};
 
 /// A block of `blocks`, which must not be empty: one of them, or in one
 /// draw of two a block of a region of one of its ops, at any depth.

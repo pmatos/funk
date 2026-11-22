@@ -17,7 +17,7 @@ fails when the Lean changes under it.
 :::moduleDocs (fingerprint := "18201747163340802579")
 :::
 
-:::readable Fir.Core.globalAddr_denote Fir.Core.globalAddr_ownRuleHas (pin := Fir.Core.memDenoteAt) (pin := Fir.Core.globalAddrResult) (fingerprint := "17284928555500596725")
+:::readable Fir.Core.globalAddr_denote Fir.Core.globalAddr_ownRuleHas (pin := Fir.Core.memDenoteAt) (pin := Fir.Core.globalAddrResult) (fingerprint := "5813222297987529054")
 *Theorems: $`\mathsf{globaladdr}` with memory.* In the
 {ref "The-fir-specification--Memory--The-state-layer"}[state layer] over
 the set monad, at every layout, naming and record $`L` of the items a run
@@ -34,7 +34,7 @@ in none, ends with the memories it started with and the same result from
 any others, and has one outcome from any memories.
 :::
 
-:::readable Fir.Core.globalAddrResult_defined Fir.Core.globalAddr_neverUB Fir.Core.globalAddr_makesNoPoison Fir.Core.globalAddr_memTotal Fir.Core.globalAddr_memMonotone (pin := Fir.Core.globalAddrValue) (pin := Fir.NeverUB) (pin := Fir.MakesNoPoison) (pin := Fir.MemTotal) (pin := Fir.MemMonotone) (fingerprint := "15556265228726386682")
+:::readable Fir.Core.globalAddrResult_defined Fir.Core.globalAddr_neverUB Fir.Core.globalAddr_makesNoPoison Fir.Core.globalAddr_memTotal Fir.Core.globalAddr_memMonotone (pin := Fir.Core.globalAddrValue) (pin := Fir.NeverUB) (pin := Fir.MakesNoPoison) (pin := Fir.MemTotal) (pin := Fir.MemMonotone) (fingerprint := "12523656021472137280")
 *Theorems: $`\mathsf{globaladdr}` is pure, total and monotone with
 memory.* For every symbol and memory, and every record of items, the
 result of $`\mathsf{globaladdr}` is a pointer, never poison; it never ends
@@ -42,7 +42,8 @@ in UB, has an outcome from any memories, and is
 {ref "The-fir-specification--Memory--Monotonicity-with-memory"}[monotone with memory]:
 it takes no operands, so it gives the same pointer from memories that
 refine others. None of these asks anything of the record: a global it
-does not place gives the pointer with no provenance.
+does not place, or places in another memory, gives the pointer with no
+provenance.
 :::
 
 :::readable Fir.Core.globalAddr_memPropagates Fir.Core.globalAddrNoArgs Fir.Core.globalAddr_memReturnsOnDefined (pin := Fir.MemPropagatesPoison) (pin := Fir.MemReturnsOnDefined) (fingerprint := "6270317597999269340")

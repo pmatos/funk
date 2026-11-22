@@ -78,7 +78,7 @@ poison class through `DialectEffects`: `propagates` or `exception`
 (ADR-2026-10-29-2006). Rejected: propagation in prose only, as LLVM's reference
 states it. An op whose rules forget to propagate poison would go unnoticed.
 
-In the core dialect, 44 ops propagate and eight are exceptions. The 44 are
+In the core dialect, 45 ops propagate and eight are exceptions. The 45 are
 `const`, the float constant and `poison`, which have no operands, `add`, `sub`
 and `mul`, the four divisions, the bitwise ops and shifts, `icmp`, the width
 changes, `fcmp`, the three ops of float arithmetic, the two bit casts, the

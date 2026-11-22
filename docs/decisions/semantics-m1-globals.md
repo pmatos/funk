@@ -118,8 +118,10 @@ Its rule reads the run's items (`Op.readsItems`), as `fieldaddr`'s does:
 `RunItems.ofTable` from `Global.startId?`, the same function that gives an
 `addr(@g, K)` piece its pointer, so the op and an initializer cannot name
 different allocations. The pointer has the global's allocation as its
-provenance and offset 0. A record that places no global `@g` gives the
-pointer with no provenance at offset 0, through which every access is UB, so
+provenance and offset 0. A record that places no global `@g`, or places it
+in a memory other than `N`, gives the pointer with no provenance at offset
+0, through which every access is UB, so a `ptr(N)` never names another
+memory's allocation, and so
 the op is never UB and never gives poison for every record, and its laws,
 and the #384 guarantees, hold with no hypothesis on the record. A store
 through it to a constant global is UB when it runs (Q2 above). Validation

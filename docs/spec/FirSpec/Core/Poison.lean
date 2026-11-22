@@ -18,7 +18,7 @@ when the Lean changes under it.
 :::
 
 :::readable Fir.Core.Op.poisonClass (fingerprint := "14816339387676642636")
-*Definition: the poison class of each core op.* Forty-four core ops
+*Definition: the poison class of each core op.* Forty-five core ops
 {ref "The-fir-specification--Execution--Poison-classes"}[propagate poison],
 and eight are exceptions:
 

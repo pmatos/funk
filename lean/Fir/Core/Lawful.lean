@@ -10,7 +10,7 @@ types validation accepts, from the obligations that each op family
 proves, in the sections from the
 constant obligations to the branch obligations:
 
-* _Propagation._ Each of the 44 ops that propagate poison does, at every
+* _Propagation._ Each of the 45 ops that propagate poison does, at every
   width and float format: `const` at an integer and at a float type,
   `poison`, the arithmetic, the four divisions, the bitwise ops and
   shifts, `icmp`, `fcmp`, the width changes, the float arithmetic, the
