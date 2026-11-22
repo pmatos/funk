@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Ops of finitely many outcomes, given the world's answers: readable blocks" =>
 
-:::moduleDocs (fingerprint := "16202730342285462058")
+:::moduleDocs (fingerprint := "10241120728310508422")
 :::
 
 :::readable Fir.Act.Agrees Fir.Act.Agrees.of_prefix Fir.Act.agrees_append Fir.Act.Agrees.of_isRefinedPrefix (fingerprint := "14362968264670860557")
@@ -56,10 +56,17 @@ step.
 every path of a computation shows exactly one step.
 :::
 
-:::readable Fir.DialectTrace.stepAt_oneStep Fir.OpsTraceFinite.stepAt Fir.OpsTraceFinite.ofMem (fingerprint := "10506582894469531751")
-*Theorems: two ways to meet the hypothesis.* In the traced layer of marked
+:::readable Fir.DialectTrace.stepAt_oneStep Fir.OpsTraceFinite.stepAt (fingerprint := "14223753183709414526")
+*Theorems: the step keeps the hypothesis.* In the traced layer of marked
 traces, at $`\ell`, $`\rho` and $`L`, every path of every op shows exactly
 one step, and ops with finitely many outcomes by the dialect's rule have
-finitely many there. A dialect whose ops show no event and have finitely
-many outcomes with memory has ops with finitely many in the traced layer.
+finitely many there.
+:::
+
+:::readable Fir.OpsTraceFinite.ofLift Fir.OpsTraceFinite.ofMem (fingerprint := "17379445355191742434")
+*Theorem: ops that lift their rule have finitely many outcomes.* In a
+dialect whose ops each lift their rule with memory, ops of finitely many
+outcomes with memory have finitely many in the traced layer, given the
+world's answers: the lift shows nothing and keeps what escaped. In
+particular, in the traced semantics of a dialect whose ops show no event.
 :::

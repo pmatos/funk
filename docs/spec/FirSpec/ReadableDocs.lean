@@ -312,6 +312,8 @@ import FirSpec.Execution.TraceFollowStep
 import FirSpec.Execution.TraceCalleeDiverge
 import FirSpec.Execution.TraceReplaceDiverge
 import FirSpec.Execution.TraceLiftFrom
+import FirSpec.Execution.TraceSeen
+import FirSpec.Core.Event
 import FirSpec.Core.Trace
 import FirSpec.Execution.MemoryEndModes
 import FirSpec.Execution.MemoryModes
@@ -348,6 +350,7 @@ import FirSpec.Gpu.Trace
 import FirSpec.Gpu.EndModes
 import FirSpec.Sum.RunLaws
 import FirSpec.Sum.Pointers
+import FirSpec.Sum.Trace
 import FirSpec.Validation.Nest
 
 /-!

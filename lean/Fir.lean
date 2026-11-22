@@ -195,6 +195,7 @@ import Fir.Execution.TraceWorld
 import Fir.Execution.Observe
 import Fir.Execution.ObserveEnd
 import Fir.Execution.ObserveEndLaws
+import Fir.Execution.TraceSeen
 import Fir.Execution.TraceDialect
 import Fir.Execution.TraceLift
 import Fir.Execution.TraceRefine
@@ -232,6 +233,7 @@ import Fir.Execution.TraceLiftFrom
 import Fir.Execution.TraceScript
 import Fir.Execution.MemoryEndModes
 import Fir.Core.Observe
+import Fir.Core.Event
 import Fir.Core.Trace
 import Fir.Memory.Model
 import Fir.Memory.Ordering
@@ -323,6 +325,7 @@ import Fir.Sum.PoisonLaws
 import Fir.Sum.EffectLaws
 import Fir.Sum.AddressLaws
 import Fir.Sum.Inclusion
+import Fir.Sum.Trace
 import Fir.Sum.Lift
 import Fir.Sum.LiftTextLaws
 import Fir.Sum.LiftPoisonLaws

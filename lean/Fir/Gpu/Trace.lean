@@ -1,15 +1,20 @@
 import Fir.Gpu.Runs
 import Fir.Core.Trace
 import Fir.Sum.Pointers
+import Fir.Sum.Trace
 
 /-!
 # The traced runs of the core and `gpu`
 
-`CoreGpu` shows no event: neither the core nor `gpu` has one yet. So its
-traced semantics is its semantics with memory, lifted onto the memories of
-the traced state, at every work-item, as the core's is
-(`Fir.Core.Trace`). Its values hold the core's pointers, since `gpu` has no
-type of its own (`Fir.Sum.Pointers`).
+`CoreGpu`'s traced semantics is the sum of the core's and `gpu`'s
+(`Fir.Sum.Trace`), at every work-item: its events are the core's, the
+external calls (`Fir.Core.Event`), since `gpu` shows none, and each op runs
+by its side's traced rule. `gpu`'s is its semantics with memory, lifted
+onto the memories of the traced state, and so is each core op's
+(`Fir.Core.Trace`), so each op of the sum lifts its rule with memory: no
+op shows an event, and the sum's traced semantics lifts its semantics with
+memory. Its values hold the core's pointers, since `gpu` has no type of
+its own (`Fir.Sum.Pointers`).
 
 Two of its guarantees hold over the spec's traced runs (`Func.observedRuns`),
 and at every world, with no hypothesis beyond those they have with memory:
@@ -25,25 +30,38 @@ Its ops meet the obligation of the traced layer for a dialect that shows
 events (`Fir.Execution.TraceObligations`), and the hypothesis of that
 layer's divergence (`Fir.Execution.TraceFinite`), as the core's do. So
 both are proved by the traced layer's own theorems
-(`Fir.Execution.TraceDiverge`, `Fir.Execution.TraceReplaceDiverge`), with
-no `LiftsMem`. Congruence in the callee keeps its hypothesis with memory,
-which the lift takes to the traced one (`Fir.Execution.TraceLiftFrom`), so
-that step lasts only while the sum shows no event.
+(`Fir.Execution.TraceDiverge`, `Fir.Execution.TraceReplaceDiverge`).
+Congruence in the callee keeps its hypothesis with memory, which the lift
+takes to the traced one (`Fir.Execution.TraceLiftFrom`), so that step
+lasts only while no run of the sum can make an external call (#239).
 -/
 
 namespace Fir.Gpu
 
 variable [WorkItem]
 
-/-- The traced semantics of the sum: it shows no event, and each op runs by
-its rule with memory, on the memories of the traced state. -/
-instance coreGpu_instDialectTrace : DialectTrace CoreGpu := DialectTrace.ofMem CoreGpu
+/-- The traced semantics of `gpu` over the core: it shows no event, and each
+op runs by its rule with memory, on the memories of the traced state. -/
+instance gpu_instDialectTrace : DialectTrace GpuDialect := DialectTrace.ofMem GpuDialect
 
-/-- The traced semantics of the sum lifts its semantics with memory. -/
-instance coreGpu_liftsMem : LiftsMem CoreGpu := DialectTrace.ofMem_liftsMem CoreGpu
+/-- The traced semantics of `gpu` lifts its semantics with memory. -/
+instance gpu_liftsMem : LiftsMem GpuDialect := DialectTrace.ofMem_liftsMem GpuDialect
 
-/-- The world's answers to the sum's events: one, since it shows none. -/
-instance coreGpu_instInhabitedAnswer : Inhabited (DialectTrace.Answer CoreGpu) := ⟨()⟩
+/-- The traced semantics of the sum: the sum of the core's and `gpu`'s, which
+shows the core's events. -/
+instance coreGpu_instDialectTrace : DialectTrace CoreGpu := Dialect.sum.instDialectTrace
+
+/-- The traced semantics of the sum lifts its semantics with memory: no op of
+either side shows an event. -/
+instance coreGpu_liftsMem : LiftsMem CoreGpu := Dialect.sum.liftsMem
+
+/-- The world's default answer to an event of the sum: the core's. -/
+instance coreGpu_instInhabitedAnswer : Inhabited (DialectTrace.Answer CoreGpu) := ⟨.inl default⟩
+
+/-- Refinement of the sum's events is transitive. -/
+theorem event_isRefinedBy_trans {e₁ e₂ e₃ : DialectTrace.Event CoreGpu} :
+    e₁ ⊑ e₂ → e₂ ⊑ e₃ → e₁ ⊑ e₃ :=
+  Dialect.sum.event_isRefinedBy_trans Core.Event.isRefinedBy_trans fun {e₁} => (e₁ : Empty).elim
 
 variable {M : Module CoreGpu} {t : SymbolTable CoreGpu} {f : Func CoreGpu} {N : Type}
   [DecidableEq N] (lay : N → MemLayout) (ρ : DialectEffects.Mem CoreGpu → N) (L : RunItems)
@@ -51,22 +69,23 @@ variable {M : Module CoreGpu} {t : SymbolTable CoreGpu} {f : Func CoreGpu} {N : 
 
 /-- Every function of the sum has its ops that run by their own rule
 monotone in the sum's traced semantics, wherever a run names the sum's
-memories: each is monotone with memory, and the lift onto the traced state
-keeps it. -/
+memories: each runs by its rule with memory, lifted, and is monotone with
+memory, and the lift onto the traced state keeps it. -/
 theorem traceOpsMonotone (g : Func CoreGpu) :
     letI := DialectTrace.traceAt (d := CoreGpu) lay ρ L
     g.TraceOpsMonotone (DialectTrace.Acts CoreGpu) (TraceState N (unitsOf lay)) :=
-  Func.TraceOpsMonotone.ofMem lay ρ L (memOpsMonotone lay ρ L g)
+  Func.TraceOpsMonotone.ofLift lay ρ L (LiftsMem.opLiftsMem lay ρ L) (memOpsMonotone lay ρ L g)
 
 /-- Every op of the sum that runs by its own rule has finitely many outcomes
 in the sum's traced semantics, given the world's answers, wherever a run
-names the sum's memories: each has finitely many with memory, and the lift
-onto the traced state keeps it. -/
+names the sum's memories: each runs by its rule with memory, lifted, and
+has finitely many outcomes with memory, and the lift onto the traced state
+keeps it. -/
 theorem opsTraceFinite :
     letI := DialectTrace.traceAt (d := CoreGpu) lay ρ L
     OpsTraceFinite CoreGpu (DialectTrace.Event CoreGpu) (DialectTrace.Answer CoreGpu)
       (TraceState N (unitsOf lay)) :=
-  OpsTraceFinite.ofMem lay ρ L (opsFinite lay ρ L)
+  OpsTraceFinite.ofLift lay ρ L (LiftsMem.opLiftsMem lay ρ L) (opsFinite lay ρ L)
 
 /-- Refined arguments over traced runs: on arguments that refine others, the
 spec's traced runs of every function of every module of the sum, a module
@@ -113,7 +132,7 @@ theorem trace_replaceBody_isRefinedBy_of_from (hM : M.Valid) (ht : t ∈ M.table
       (f.replaceBody g.name b).observedRuns lay ρ L μ ((M.nest t).replaceBody g.name b) :=
   Func.traceRuns_replaceBody_isRefinedBy lay ρ L μ _ (opsTraceFinite lay ρ L)
     (fun g _ => traceOpsMonotone lay ρ L g) isRefinedBy_refl isRefinedBy_trans
-    (fun {e₁} => (e₁ : Empty).elim) (hM.nest ht).symbolsUnique hg b
+    event_isRefinedBy_trans (hM.nest ht).symbolsUnique hg b
     (fun p => Func.traceRunsFrom_isRefinedBy_of_memRunsFrom lay ρ L (h (p.1, p.2.mem))) hf
 
 /-- Congruence in the callee over traced runs, at every world: under the

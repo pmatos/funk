@@ -2,8 +2,8 @@ import FirTest.RefineCallsFrom
 
 /-!
 Tests of the core's traced runs (#233, stage 3a), and the axioms of their
-proofs. The core shows no event yet, so its traced semantics is its
-semantics with memory, lifted:
+proofs. No core op shows an event, and no run makes an external call yet
+(#239), so its traced semantics lifts its semantics with memory:
 
 * the traced behaviour of `@fact` is its behaviour with memory, each return
   seen at its end, with an empty trace;
@@ -89,8 +89,8 @@ theorem count_traceIsRefinedBy_world (L : RunItems) :
 /-- info: 'Fir.Func.traceRunsFrom_isRefinedBy_of_memRunsFrom' depends on axioms: [propext, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Func.traceRunsFrom_isRefinedBy_of_memRunsFrom
 
-/-- info: 'Fir.Func.traceRunsFrom_noActs_ofMem' depends on axioms: [propext, Quot.sound] -/
-#guard_msgs in #print axioms Fir.Func.traceRunsFrom_noActs_ofMem
+/-- info: 'Fir.Func.traceRunsFrom_noActs' depends on axioms: [propext, Quot.sound] -/
+#guard_msgs in #print axioms Fir.Func.traceRunsFrom_noActs
 
 /-- info: 'Fir.Core.trace_replaceBody_isRefinedBy_of_from' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in #print axioms Fir.Core.trace_replaceBody_isRefinedBy_of_from

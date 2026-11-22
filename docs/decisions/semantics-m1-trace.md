@@ -9,7 +9,9 @@ direction decision.
 These are decided designs. The spec defines traces, worlds and traced
 refinement (`lean/Fir/Execution/Trace*.lean`), and what an observer sees at
 a return and the world's actions on escaped memory
-(`lean/Fir/Execution/Observe*.lean`, `TraceWorld.lean`), and scripted
+(`lean/Fir/Execution/Observe*.lean`, `TraceWorld.lean`), what the world sees of values and escaped memory
+(`lean/Fir/Execution/TraceSeen.lean`), the core's events
+(`lean/Fir/Core/Event.lean`), and scripted
 worlds (`lean/Fir/Execution/TraceScript.lean`), which `fir-ref run --world`
 takes, reporting the end of each return (`lean/Fir/Gpu/EndModes.lean`,
 [fir-ref-run-end.md](fir-ref-run-end.md)).
@@ -23,8 +25,9 @@ shows events. semantics-refinement.md says what a run shows in M0.
 A run shows an ordered trace of events (ADR-2026-11-09-1540). The core dialect
 has these kinds of event:
 
-- An external call: the callee's symbol, its arguments, and the units reachable
-  from its pointer arguments when the call is made.
+- An external call: the callee's symbol, its arguments, and the units of
+  every escaped allocation once the call has let escape what its pointer
+  arguments, and the allocations that escaped earlier, reach.
 - A volatile access: load or store, the accessed location as the observer sees
   it, and the value read or written.
 - An inline assembly block whose effect set says observable
@@ -44,6 +47,15 @@ observer can reach stays invisible, so a store to it can be removed
 
 Another dialect may add events of its own, such as a device's I/O, since
 observations already come from the dialect (ADR-2026-11-09-1540).
+
+The human ruled on 2026-11-20, on #239, that an external call's event holds
+the units reachable from every allocation that escaped earlier, as well as
+those reachable from its pointer arguments: outside code can read memory
+that escaped earlier. Rejected: only the units reachable from its pointer
+arguments, under which a source that stores 5 into an allocation that
+escaped earlier and a target that stores 7, both calling `g()` with no
+arguments and then overwriting it, could not be told apart, though `g`
+could have read 5 or 7.
 
 S4 makes correctness the refinement of observable behaviour, and the human
 ruled what a run shows on 2026-11-09, on #207. Rejected: calls and returned
@@ -162,6 +174,24 @@ These are #233's choices of form, within the rules above.
   #233. Rejected: `AddrRule.same`, under which related allocations keep the
   same address, which forbids a pass to move an exposed allocation.
 
+- **The core's events.** The core's event type has one constructor for
+  each kind of event; an external call is `call g args seen`
+  (`Core.Event`). It shows what the world sees from the traced state after
+  the call has let escape what it reaches (`TraceState.worldVal`,
+  `TraceState.seen`): each pointer of its arguments names its allocation
+  by its handle, a pointer into an allocation that has no handle or is
+  not live is poison, and `seen` lists the units of each escaped
+  allocation by handle, none of one that is not live. The world's answer
+  is the call's results, each pointer named by its handle, with its
+  actions (`TraceM.ask`). One event refines another of the same symbol
+  whose arguments and units refine its own, poison by any value
+  (`Core.Event.IsRefinedBy`). The volatile accesses of #238 and the
+  observable assembly blocks of #240 add their constructors. Rejected: an
+  event that names allocation ids, which the world never sees.
+- **A sum's events.** A sum of dialects shows both sides' events, and its
+  world answers each as its side does (`Fir.Sum.Trace`). So CoreGpu shows
+  the core's events, since `gpu` has none.
+
 When the source returns no pointer and nothing escaped, the end of its
 return is refined exactly when its returned values are and nothing escaped
 in the target (`End.isRefinedBy_iff_vals`), so M0's tests keep their
@@ -228,6 +258,39 @@ acts forever. A run with no event is a
 traced run whose every trace is empty, and its traced refinement is its
 refinement as today. M0's dialects show no event, so once they run in the
 traced layer their tests keep their results.
+
+## External calls
+
+The human ruled on 2026-11-21, on #239, how an external call runs. The
+spec states the core's events and its traced semantics op by op
+(`lean/Fir/Core/Event.lean`, `lean/Fir/Core/Trace.lean`); the rest of
+these rules comes with #239's next stage, which makes calls to
+declarations run.
+
+- **One `call` op.** When `call` names an external declaration, the run
+  hands the call to a new external-call rule of the dialect, given the
+  symbol, the arguments and the result types. In the traced layer the
+  core's rule shows the event and asks the world. An indirect call (#235)
+  whose pointer names a declaration reuses it. Rejected: a separate op,
+  `call_extern`, valid only on a declaration.
+- **The layers with no world.** In the set-monad and memory layers an
+  external call is UB, as a stand-in. Every guarantee with memory keeps
+  its statement and stays true, but says nothing of code that calls
+  outside the module: the traced guarantees are the ones that cover
+  external calls. Rejected: any results and any memories, which breaks
+  the finiteness that congruence in the callee needs; and guarantees
+  with memory that cover only modules that call no declaration.
+- **Congruence in the callee over traced runs** takes its hypothesis over
+  traced runs from every traced state (`Func.traceRunsFrom`), the form the
+  traced layer's own theorem takes. Rejected: the hypothesis with memory,
+  plus no external call, volatile access or assembly block in either body
+  of the callee.
+- **Poison handed to the world.** Alive2's rule: a target may not let
+  escape what the source did not, so refined arguments over traced runs
+  gains that condition. Rejected: the call freezes the poison it hands
+  out, which gives a call infinitely many outcomes; and handing poison to
+  the world is UB, which an uninitialised buffer or struct padding passed
+  to C would hit.
 
 ## Scripts and native runs
 
