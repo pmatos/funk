@@ -6,6 +6,7 @@ from dataclasses import replace
 
 from corpus import Test
 from differential import Runs, evaluate, evaluate_generated
+from ends import Alloc, End
 from refine import (
     FAILED,
     FUEL_EXHAUSTED,
@@ -89,6 +90,25 @@ class Differential(unittest.TestCase):
         self.assertIn(
             "native code outgrew its 8388608 bytes of stack", result.judgement.why
         )
+
+    def test_memory_an_observer_reaches_is_judged(self):
+        # fir-ref's return points into a live allocation, which native code,
+        # with no global and no external call, cannot hold.
+        end = End(memory=(Alloc(0, 0, "global", 1, 1, True, ("0x07",)),))
+        ref = Outcomes(0, (Outcome(RETURN, ("ptr(0, 0)",), end=end),))
+        result = self.judge(RecordedRuns(ref, ("4096",)), types=("ptr",))
+        self.assertEqual(result.judgement.status, FAILED)
+        self.assertIn("allocation 0 of memory 0, which an observer", result.detail)
+
+    def test_a_declared_result_is_judged_with_its_witness_s_end(self):
+        alloc = Alloc(0, 0, "global", 1, 1, True, ("0x07",))
+        end = End(escaped=((0, 0),), memory=(alloc,))
+        seen = Path(Outcome(RETURN, ("7",), end=end), 1)
+        sampled = Path(seen.outcome, 1, ("3",))
+        runs = RecordedRuns(WIDE, seen, *[sampled] * len(SEEDS), ("7",))
+        result = self.judge(runs, replace(TEST, results=(DECLARED,)))
+        self.assertEqual(result.judgement.status, FAILED)
+        self.assertIn("fir-ref's run lets 1 allocation escape", result.detail)
 
     def test_native_failure_is_judged_after_the_reference_run(self):
         runs = RecordedRuns(ONE, "is killed by signal 8")

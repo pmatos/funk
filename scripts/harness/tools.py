@@ -11,6 +11,7 @@ import resource
 import subprocess
 from dataclasses import dataclass
 
+import ends
 from refine import FUEL_EXHAUSTED, RETURN, STUCK, UB, Outcome, OutOfStack
 from sets import BudgetExceeded, Outcomes, Path
 
@@ -152,20 +153,75 @@ def strings(value) -> tuple[str, ...] | None:
     return None
 
 
-def read_outcome(obj: dict) -> Outcome | None:
+def read_outcome(obj: dict, world: bool = False) -> Outcome | None:
     """One outcome, as `fir-ref run` writes it
     (docs/decisions/fir-ref-command-line.md#fir-ref-run):
     `return` with its values, `ub` or `stuck` with a reason, or
-    `fuel-exhausted`."""
+    `fuel-exhausted`. With `world`, as `fir-ref run --world` writes it
+    (docs/decisions/fir-ref-run-end.md#results): each with its `trace`, and
+    a return with its end."""
     kind = obj.get("kind")
+    if world and not isinstance(obj.get("trace"), list):
+        return None
     if kind == RETURN:
         values = strings(obj.get("values"))
-        return None if values is None else Outcome(RETURN, values)
+        end = read_end(obj) if world else ends.NOTHING
+        if values is None or end is None:
+            return None
+        return Outcome(RETURN, values, end=end)
     if kind in (UB, STUCK) and isinstance(obj.get("reason"), str):
         return Outcome(kind, reason=obj["reason"])
     if kind == FUEL_EXHAUSTED:
         return Outcome(FUEL_EXHAUSTED)
     return None
+
+
+def read_end(obj: dict) -> ends.End | None:
+    """The end of a return that `fir-ref run --world` reports: its trace,
+    the allocations that escaped and the memory an observer reaches."""
+    escaped = obj.get("escaped")
+    memory = obj.get("memory")
+    if not isinstance(escaped, list) or not (
+        memory is None or isinstance(memory, list)
+    ):
+        return None
+    refs = [allocation(e) for e in escaped]
+    blocks = None if memory is None else [read_alloc(a) for a in memory]
+    if None in refs or (blocks is not None and None in blocks):
+        return None
+    return ends.End(
+        tuple(obj["trace"]),
+        tuple((a.memory, a.alloc) for a in refs),
+        None if blocks is None else tuple(blocks),
+    )
+
+
+def allocation(obj) -> ends.Alloc | None:
+    """An allocation by its memory and id, `{"memory":N,"alloc":A}`."""
+    if not isinstance(obj, dict):
+        return None
+    memory, alloc = count(obj.get("memory")), count(obj.get("alloc"))
+    if memory is None or alloc is None:
+        return None
+    return ends.Alloc(memory, alloc, None)
+
+
+def read_alloc(obj) -> ends.Alloc | None:
+    """An allocation that an observer reaches: its kind, alignment, size and
+    liveness, and its units while it is live; or a null kind."""
+    a = allocation(obj)
+    if a is None or "kind" not in obj:
+        return None
+    if obj["kind"] is None:
+        return a
+    kind, align, size = obj.get("kind"), count(obj.get("align")), count(obj.get("size"))
+    live = obj.get("live")
+    units = strings(obj.get("units")) if live is True else ()
+    if not isinstance(kind, str) or align is None or size is None:
+        return None
+    if not isinstance(live, bool) or units is None or (live and len(units) != size):
+        return None
+    return ends.Alloc(a.memory, a.alloc, kind, align, size, live, units)
 
 
 def count(value) -> int | None:
@@ -174,17 +230,18 @@ def count(value) -> int | None:
     return None
 
 
-def path(ran: Ran) -> Path | str:
+def path(ran: Ran, world: bool = False) -> Path | str:
     """What `fir-ref run` reports in scripted or sampled mode
     (docs/decisions/fir-ref-command-line.md#fir-ref-run): one outcome, with the
     number of `choices` the path made and, in sampled mode, the `sequence` it
-    drew. The exit status is 1 for `stuck`, and 0 otherwise."""
+    drew. The exit status is 1 for `stuck`, and 0 otherwise. `world` reads
+    what `--world` adds to the outcome."""
     if ran.status not in (0, 1):
         return failure(ran)
     obj = one_json_line(ran.stdout)
     if obj is None:
         return no_report(ran)
-    o = read_outcome(obj)
+    o = read_outcome(obj, world)
     choices = count(obj.get("choices"))
     sequence = strings(obj.get("sequence")) if "sequence" in obj else None
     status = 1 if obj.get("kind") == STUCK else 0
@@ -194,14 +251,15 @@ def path(ran: Ran) -> Path | str:
     return Path(o, choices, sequence)
 
 
-def outcomes(ran: Ran) -> Outcomes | BudgetExceeded | str:
+def outcomes(ran: Ran, world: bool = False) -> Outcomes | BudgetExceeded | str:
     """What `fir-ref run --exhaustive` reports
     (docs/decisions/fir-ref-command-line.md#scripted-and-exhaustive-modes):
     every outcome of the run and the most `choices` that one path made, with
     exit status 1 when one is `stuck` and 0 otherwise; with `--nans`, also
     whether the outcomes are `complete`
     (docs/decisions/fir-ref-command-line.md#trying-a-few-nans); or that a
-    path would choose more bits than the `budget`, with exit status 0."""
+    path would choose more bits than the `budget`, with exit status 0.
+    `world` reads what `--world` adds to each outcome."""
     if ran.status not in (0, 1):
         return failure(ran)
     obj = one_json_line(ran.stdout)
@@ -217,7 +275,7 @@ def outcomes(ran: Ran) -> Outcomes | BudgetExceeded | str:
     complete = obj.get("complete", True)
     if kind != OUTCOMES or choices is None or not isinstance(items, list):
         return bad
-    found = [read_outcome(i) if isinstance(i, dict) else None for i in items]
+    found = [read_outcome(i, world) if isinstance(i, dict) else None for i in items]
     if not found or None in found or not isinstance(complete, bool):
         return bad
     status = 1 if any(o.kind == STUCK for o in found) else 0
