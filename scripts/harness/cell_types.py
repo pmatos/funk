@@ -10,7 +10,7 @@ from typing import NamedTuple
 
 class Cell(NamedTuple):
     """`table` is `ops`, `floats`, `casts`, `conversions`, `pointers`,
-    `fields`, `values`, `gpu`, `copies` or `addresses`.
+    `fields`, `globals`, `values`, `gpu`, `copies` or `addresses`.
     `row` is a flag set or predicate, the source type of a width change or a
     conversion, or what a value row passes, and empty for a pointer op;
     `width` is a width, a float format, the result type of a width change
@@ -19,7 +19,7 @@ class Cell(NamedTuple):
     integer a `store` stores, `ptr` for a pointer that an `alloca`
     allocates, a `load` loads or a `store` stores, or empty where nothing
     is passed. A `fieldaddr`'s `width` is the type of its index, empty
-    with none. A `gpu` op's `row` is its dimension and its `width` the
+    with none. A `globaladdr`'s `row` and `width` are empty. A `gpu` op's `row` is its dimension and its `width` the
     `i32` it gives; a copy's, a move's or a fill's `width` is the width of
     its length, and a `ptr_expose`'s or a `ptr_from_int`'s the width of
     its integer."""

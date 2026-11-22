@@ -14,7 +14,7 @@ changes under it.
 
 #doc (Manual) "Lifting an extension: readable blocks" =>
 
-:::moduleDocs (fingerprint := "6563313203471539571")
+:::moduleDocs (fingerprint := "16824010224651684417")
 :::
 
 :::readable Fir.Dialect.lift Fir.Dialect.lift.instDialectName Fir.Dialect.lift.instTyDenote Fir.Dialect.lift.instTyPoison Fir.Dialect.lift.instTyRefinement Fir.Dialect.lift.instDecidableEqOp Fir.Dialect.lift.instDecidableEqTy (fingerprint := "3765934098038364283")
@@ -37,15 +37,15 @@ $`B`, $`\mathrm{Ty}_B \uplus \mathrm{Ty}_e`, by $`\iota` over $`e`'s own
 types. This inclusion is written $`\hat\iota` below.
 :::
 
-:::readable Fir.Dialect.lift.projFuncType Fir.Dialect.lift.projContext Fir.Dialect.lift.projView (fingerprint := "3023199963232031369")
+:::readable Fir.Dialect.lift.projFuncType Fir.Dialect.lift.projContext Fir.Dialect.lift.projView (fingerprint := "7638646997504243707")
 *Definition: the context that the lift sees.* A function type of the lift
 is one of $`e` over $`d` when all its types project by $`\hat\iota`. The
 lift sees the symbols whose types project, and no other. It sees the op
 context $`C` only when the result types of $`C` project:
 
-$$`\mathrm{proj}(C) = (\mathrm{symtab}_C|_{d,e},\ \hat\iota^{-1}(r^*),\ \mathrm{layouts}_C) \quad\text{when every } r \in \mathrm{results}_C \text{ projects}`
+$$`\mathrm{proj}(C) = (\mathrm{symtab}_C|_{d,e},\ \hat\iota^{-1}(r^*),\ \mathrm{layouts}_C,\ \mathrm{globals}_C) \quad\text{when every } r \in \mathrm{results}_C \text{ projects}`
 
-and has no context otherwise, and sees all the layouts of $`C`. Its view of a host keeps the host's ops that
+and has no context otherwise, and sees all the layouts and globals of $`C`. Its view of a host keeps the host's ops that
 are $`e`'s, and the host's types that project.
 :::
 

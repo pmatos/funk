@@ -1,0 +1,306 @@
+# Must-reject texts of the address of a global globaladdr (#237,
+# ADR-2026-11-09-1546). globaladdr writes one attribute, a global's symbol,
+# takes no operands and defines one pointer; any other shape does not
+# decode. Validation accepts it when its symbol names a global of its own
+# module, not of a module nested in it or holding it, and its result is a
+# pointer of the global's memory. A write through it to a constant global
+# is valid and UB when it runs (#237 Q2), so the corpus tests it as a run,
+# in canonical/globaladdr.toml.
+
+[[reject]]
+verdict = "parse-error"
+rule = "globaladdr names its global by a symbol: the word msg does not decode"
+text = '''
+global @msg() size(8) align(1) const units(104, 105, 0) {
+}
+
+aggregate @pair() memory(0) size(16) align(8) field(0, i64) field(8, ptr) {
+}
+
+func @f() -> ptr {
+^e:
+  %q: ptr = globaladdr msg @0
+  ret %q @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "globaladdr has one attribute: none does not decode"
+text = '''
+global @msg() size(8) align(1) const units(104, 105, 0) {
+}
+
+aggregate @pair() memory(0) size(16) align(8) field(0, i64) field(8, ptr) {
+}
+
+func @f() -> ptr {
+^e:
+  %q: ptr = globaladdr @0
+  ret %q @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "globaladdr has one attribute: a second symbol does not decode"
+text = '''
+global @msg() size(8) align(1) const units(104, 105, 0) {
+}
+
+aggregate @pair() memory(0) size(16) align(8) field(0, i64) field(8, ptr) {
+}
+
+func @f() -> ptr {
+^e:
+  %q: ptr = globaladdr @msg @msg @0
+  ret %q @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "globaladdr has one attribute: an offset after the symbol does not decode"
+text = '''
+global @msg() size(8) align(1) const units(104, 105, 0) {
+}
+
+aggregate @pair() memory(0) size(16) align(8) field(0, i64) field(8, ptr) {
+}
+
+func @f() -> ptr {
+^e:
+  %q: ptr = globaladdr @msg 8 @0
+  ret %q @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "globaladdr defines a pointer: an i64 result does not decode"
+text = '''
+global @msg() size(8) align(1) const units(104, 105, 0) {
+}
+
+aggregate @pair() memory(0) size(16) align(8) field(0, i64) field(8, ptr) {
+}
+
+func @f() -> i64 {
+^e:
+  %q: i64 = globaladdr @msg @0
+  ret %q @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "globaladdr takes no operands: a pointer operand does not decode"
+text = '''
+global @msg() size(8) align(1) const units(104, 105, 0) {
+}
+
+aggregate @pair() memory(0) size(16) align(8) field(0, i64) field(8, ptr) {
+}
+
+func @f(%p: ptr) -> ptr {
+^e:
+  %q: ptr = globaladdr @msg %p @0
+  ret %q @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "globaladdr names a global: @none names no item"
+text = '''
+global @msg() size(8) align(1) const units(104, 105, 0) {
+}
+
+aggregate @pair() memory(0) size(16) align(8) field(0, i64) field(8, ptr) {
+}
+
+func @f() -> ptr {
+^e:
+  %q: ptr = globaladdr @none @0
+  ret %q @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "globaladdr names a global: @f is a function"
+text = '''
+global @msg() size(8) align(1) const units(104, 105, 0) {
+}
+
+aggregate @pair() memory(0) size(16) align(8) field(0, i64) field(8, ptr) {
+}
+
+func @f() -> ptr {
+^e:
+  %q: ptr = globaladdr @f @0
+  ret %q @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "globaladdr names a global: @pair is an aggregate's layout"
+text = '''
+global @msg() size(8) align(1) const units(104, 105, 0) {
+}
+
+aggregate @pair() memory(0) size(16) align(8) field(0, i64) field(8, ptr) {
+}
+
+func @f() -> ptr {
+^e:
+  %q: ptr = globaladdr @pair @0
+  ret %q @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "globaladdr's result is of its global's memory: @msg is of memory 0, the result of memory 1"
+text = '''
+layout memory(1, unit(16), pointer(32), little)
+
+global @msg() size(8) align(1) const units(104, 105, 0) {
+}
+
+aggregate @pair() memory(0) size(16) align(8) field(0, i64) field(8, ptr) {
+}
+
+func @f() -> ptr(1) {
+^e:
+  %q: ptr(1) = globaladdr @msg @0
+  ret %q @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "globaladdr's result is of its global's memory: @cell is of memory 1, the result of memory 0"
+text = '''
+layout memory(1, unit(16), pointer(32), little)
+
+global @msg() size(8) align(1) const units(104, 105, 0) {
+}
+
+aggregate @pair() memory(0) size(16) align(8) field(0, i64) field(8, ptr) {
+}
+
+global @cell() memory(1) size(2) align(2) {
+}
+
+func @f() -> ptr {
+^e:
+  %q: ptr = globaladdr @cell @0
+  ret %q @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "globaladdr names a global of its own module: @in is a nested module's"
+text = '''
+global @out() size(8) align(8) {
+}
+
+module @dev() {
+  global @in() size(4) align(4) {
+  }
+
+  func @g() -> ptr {
+  ^entry:
+    %q: ptr = globaladdr @in @0
+    ret %q @0
+  }
+
+}
+
+func @f() -> ptr {
+^entry:
+  %q: ptr = globaladdr @in @0
+  ret %q @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "globaladdr in a nested module names a global of that module: @out is the outer module's"
+text = '''
+global @out() size(8) align(8) {
+}
+
+module @dev() {
+  global @in() size(4) align(4) {
+  }
+
+  func @g() -> ptr {
+  ^entry:
+    %q: ptr = globaladdr @out @0
+    ret %q @0
+  }
+
+}
+
+func @f() -> ptr {
+^entry:
+  %q: ptr = globaladdr @out @0
+  ret %q @0
+}
+
+locs {
+  @0 = unknown
+}
+'''

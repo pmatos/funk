@@ -4,7 +4,7 @@
 
 use super::super::{Rng, Widths, symbol, width};
 use super::attr::attr;
-use super::{ITEM_KINDS, Shaper, aggregate, field_addr, global};
+use super::{ITEM_KINDS, Shaper, aggregate, global};
 use crate::dialects::core::int_type;
 use crate::ir::{Attr, Def, DialectItem, Extern, Item, NestedModule, trim_attrs};
 
@@ -80,7 +80,7 @@ pub(super) fn nested(rng: &mut Rng, depth: u32) -> NestedModule {
     if rng.one_in(3) {
         n.items.push(global::global(rng));
     }
-    field_addr::add_to_items(rng, &mut n.items);
+    add_addresses(rng, &mut n.items);
     if depth > 1 && rng.one_in(3) {
         n.items.push(Item::Module(nested(rng, depth - 1)));
     }
@@ -88,4 +88,38 @@ pub(super) fn nested(rng: &mut Rng, depth: u32) -> NestedModule {
         n.items.push(extern_decl(rng));
     }
     n
+}
+
+/// Adds `fieldaddr` ops to two in three of the functions of `items`, a
+/// nested module's, which may name the layouts of `items`, and `globaladdr`
+/// ops to one in three, which may name the globals of `items`.
+fn add_addresses(rng: &mut Rng, items: &mut [Item]) {
+    let symbols: Vec<String> = items
+        .iter()
+        .filter_map(Item::as_func)
+        .map(|f| f.name.clone())
+        .collect();
+    let layouts: Vec<String> = items
+        .iter()
+        .filter_map(Item::as_aggregate)
+        .map(|a| a.name.clone())
+        .collect();
+    let globals: Vec<String> = items
+        .iter()
+        .filter_map(Item::as_global)
+        .map(|g| g.name.clone())
+        .collect();
+    for item in items {
+        let Item::Func(f) = item else { continue };
+        if f.body.blocks.is_empty() {
+            continue;
+        }
+        let mut shaper = Shaper::new(f, &symbols, &[], false);
+        if !rng.one_in(3) {
+            shaper.add_field_addrs(rng, f, &layouts);
+        }
+        if rng.one_in(3) {
+            shaper.add_global_addrs(rng, f, &globals);
+        }
+    }
 }

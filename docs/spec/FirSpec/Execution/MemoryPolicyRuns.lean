@@ -17,7 +17,7 @@ build fails when the Lean changes under it.
 :::moduleDocs (fingerprint := "17971604853313405782")
 :::
 
-:::readable Fir.Func.memBehaviour (pin := Fir.RunItems.withAddrs) (pin := Fir.observable) (fingerprint := "7040573654846431868")
+:::readable Fir.Func.memBehaviour (pin := Fir.RunItems.withAddrs) (pin := Fir.observable) (fingerprint := "18378795664081012112")
 *Definition: the behaviour under every policy.* The observable behaviour
 with memory of the function $`f` of $`M` on the arguments $`\vec{a}`,
 with the items $`L`, is
@@ -43,7 +43,7 @@ policy, the behaviour of $`f` under every policy is refined by that of
 $`f'`.
 :::
 
-:::readable Fir.Func.memRunsUnder Fir.Func.Kept (pin := Fir.RunItems.withResolvers) (fingerprint := "6322419569217851262")
+:::readable Fir.Func.memRunsUnder Fir.Func.Kept (pin := Fir.RunItems.withResolvers) (fingerprint := "7319330220634298382")
 *Definitions: the resolvers kept.* The runs of $`f` on $`\vec{a}` under
 the policies $`g` and the resolvers $`k` are those with the items
 $`L[\mathrm{addrs} := g, \mathrm{resolvers} := k]`. The resolvers $`k` are

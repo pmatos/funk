@@ -103,7 +103,7 @@ def projFuncType (t : FuncType (big.over (e.lift dep ι μ))) : Option (FuncType
 the function's result types: the symbols whose types `e` can write. -/
 def projContext (ctx : OpContext (big.over (e.lift dep ι μ))) : Option (OpContext (dep.over e)) :=
   (ctx.results.mapM (incl e ι μ).proj).map fun rs =>
-    ⟨fun g => (ctx.symbols g).bind projFuncType, rs, ctx.layouts⟩
+    ⟨fun g => (ctx.symbols g).bind projFuncType, rs, ctx.layouts, ctx.globals⟩
 
 /-- How `e` sees a host that holds the lift: the lift's view, with the
 types projected to `dep`'s and `e`'s own. -/

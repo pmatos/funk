@@ -14,16 +14,16 @@ when the Lean changes under it.
 
 #doc (Manual) "Core op semantics: readable blocks" =>
 
-:::moduleDocs (fingerprint := "7406353012077263746")
+:::moduleDocs (fingerprint := "3422133187310587073")
 :::
 
-:::readable Fir.Core.Op.denote? (fingerprint := "14311393963360050157")
+:::readable Fir.Core.Op.denote? (fingerprint := "18428645373403082656")
 *Definition: the rule of each core op that is not a terminator.* For
 every way of computing with the
 {ref "The-fir-specification--Execution--Effects-and-op-semantics"}[choice and UB effects],
 each core op that is not a terminator, other than $`\mathsf{call}`,
 $`\mathsf{alloca}`, the loads and stores of an integer, a pointer or
-a float, $`\mathsf{fieldaddr}`, $`\mathsf{memcpy}`,
+a float, $`\mathsf{fieldaddr}`, $`\mathsf{globaladdr}`, $`\mathsf{memcpy}`,
 $`\mathsf{memmove}`, $`\mathsf{memset}`, $`\mathsf{ptr\_expose}` and
 $`\mathsf{ptr\_from\_int}`, has the rule of its family, which takes its operand values and gives its
 one result:
@@ -74,7 +74,8 @@ the one mode that validation accepts.
 
 $`\mathsf{call}`, $`\mathsf{alloca}`, the loads and stores of an integer,
 a pointer or a float (`loadPtr`, `storePtr`, `loadFloat` and `storeFloat`
-in the Lean), $`\mathsf{fieldaddr}`, $`\mathsf{memcpy}` and
+in the Lean), $`\mathsf{fieldaddr}`, $`\mathsf{globaladdr}`,
+$`\mathsf{memcpy}` and
 $`\mathsf{memmove}` (`memCopy`), $`\mathsf{memset}` (`memSet`),
 $`\mathsf{ptr\_expose}` and $`\mathsf{ptr\_from\_int}` (`ptrExpose` and
 `ptrFromInt`) and the terminators have none here: a call's meaning is the
@@ -82,8 +83,9 @@ run of its callee, $`\mathsf{alloca}` allocates, $`\mathsf{load}` reads,
 $`\mathsf{store}` and $`\mathsf{memset}` write, $`\mathsf{memcpy}` and
 $`\mathsf{memmove}` read and write, $`\mathsf{ptr\_expose}` and
 $`\mathsf{ptr\_from\_int}` read the addresses of a memory and change
-them or its count, and $`\mathsf{fieldaddr}` reads the
-layouts that the run gives, so each of
+them or its count, $`\mathsf{fieldaddr}` reads the
+layouts that the run gives, and $`\mathsf{globaladdr}` where the run
+starts its global, so each of
 their rules needs the run and is one of the
 {ref "The-fir-specification--Memory--The-core___s-rules-with-memory"}[core's rules with memory],
 and a terminator's rule says where control goes.
@@ -92,7 +94,7 @@ effects, so the spec's set of the ways a run may end and the tree of
 choices that `fir-ref run` walks share them.
 :::
 
-:::readable Fir.Core.Op.exit? (fingerprint := "14341036196485753654")
+:::readable Fir.Core.Op.exit? (fingerprint := "11055750913476252207")
 *Definition: the rule of each core terminator.* For every way of
 computing with the
 {ref "The-fir-specification--Execution--Effects-and-op-semantics"}[UB effect],
@@ -116,7 +118,7 @@ tree of choices and the state layer use the same tables, or tables with
 memory, with their own $`z`.
 :::
 
-:::readable Fir.Core.Op.hasRules Fir.Core.Op.touchesMemory Fir.Core.Op.readsItems (pin := Fir.instDialectDenoteCoreDialectSetM) (pin := Fir.instDialectCallCoreDialect) (pin := Fir.Core.Op.callTarget?) (pin := Fir.Core.Op.denote?) (pin := Fir.Core.Op.exit?) (fingerprint := "9904403233661584733")
+:::readable Fir.Core.Op.hasRules Fir.Core.Op.touchesMemory Fir.Core.Op.readsItems (pin := Fir.instDialectDenoteCoreDialectSetM) (pin := Fir.instDialectCallCoreDialect) (pin := Fir.Core.Op.callTarget?) (pin := Fir.Core.Op.denote?) (pin := Fir.Core.Op.exit?) (fingerprint := "11248207992490347464")
 *Definition: the core ops that touch memory.* $`\mathsf{alloca}`, which
 allocates, $`\mathsf{load}`, which reads, and $`\mathsf{store}`, which
 writes, an integer, a pointer or a float (`loadPtr`, `storePtr`,
@@ -129,12 +131,14 @@ op does. Each rule needs the memory effect, so each has one only in a
 monad with memory.
 
 *Definition: the core ops that read the run's items.*
-$`\mathsf{fieldaddr}` reads the layout it names in the
+$`\mathsf{fieldaddr}` reads the layout it names, and
+$`\mathsf{globaladdr}` where the global it names starts, in the
 {ref "The-fir-specification--Memory--The-items-a-run-gives-each-op"}[items]
 that the run gives every op, and no other core op that touches no memory
 does: $`\mathsf{ptr\_expose}` and $`\mathsf{ptr\_from\_int}` read the
-run's address policy and resolver, but they touch memory. $`\mathsf{fieldaddr}`
-touches no memory, but the set monad has no run, so it too has a rule only
+run's address policy and resolver, but they touch memory. Neither
+$`\mathsf{fieldaddr}` nor $`\mathsf{globaladdr}` touches memory, but the
+set monad has no run, so each too has a rule only
 with memory.
 
 *Definition: an op has rules.* A core op has rules when one of the two
@@ -149,9 +153,9 @@ float op of arithmetic, both bit casts, both conversions from integers,
 both conversions between formats and both conversions to integers, among
 them;
 $`\mathsf{call}` counts through its callee, and $`\mathsf{alloca}`, the
-loads and stores, $`\mathsf{fieldaddr}`, the copies and moves, the
-fills, $`\mathsf{ptr\_expose}` and $`\mathsf{ptr\_from\_int}` through
-their rules with memory.
+loads and stores, $`\mathsf{fieldaddr}`, $`\mathsf{globaladdr}`, the
+copies and moves, the fills, $`\mathsf{ptr\_expose}` and
+$`\mathsf{ptr\_from\_int}` through their rules with memory.
 
 *Definition: the core dialect's semantics.* In the
 {ref "The-fir-specification--Execution--Outcomes-and-behaviours"}[set monad], the
@@ -177,8 +181,9 @@ unless one of its operand types has no value
 $`\mathsf{call}` has no rule here, and its meaning has no outcome, but no
 run reaches it: the interpreter runs the callee of an op that has one
 instead. So a call has no op-level obligation (ADR-2026-10-29-2006).
-$`\mathsf{alloca}`, the loads and stores, $`\mathsf{fieldaddr}`, the
-copies and moves, the fills, $`\mathsf{ptr\_expose}` and
-$`\mathsf{ptr\_from\_int}` have no rule here either: their meaning in the set monad has no outcome, and their rules and their
+$`\mathsf{alloca}`, the loads and stores, $`\mathsf{fieldaddr}`,
+$`\mathsf{globaladdr}`, the copies and moves, the fills,
+$`\mathsf{ptr\_expose}` and $`\mathsf{ptr\_from\_int}` have no rule here
+either: their meaning in the set monad has no outcome, and their rules and their
 obligations are those with memory.
 :::

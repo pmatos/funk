@@ -14,10 +14,10 @@ changes under it.
 
 #doc (Manual) "Call rules: readable blocks" =>
 
-:::moduleDocs (fingerprint := "14185404352101705562")
+:::moduleDocs (fingerprint := "7240400998943885988")
 :::
 
-:::readable Fir.Core.Op.callTarget? (fingerprint := "14185404352101705562")
+:::readable Fir.Core.Op.callTarget? (fingerprint := "7240400998943885988")
 *Definition: the function that a core op calls.*
 $`\mathsf{call}~f : t^* \to r^*` calls the function with the symbol $`f`,
 and no other core op calls a function:

@@ -24,7 +24,9 @@
 # tries a few NaNs at each NaN choice (#219). It stores through the address of
 # a struct's field and of an array's element that fieldaddr gives, and loads
 # each back, and an element past the array is UB only when it is accessed
-# (#236).
+# (#236). It follows a table of pointers in a global's initializer from the
+# address that globaladdr gives, and a store to a constant global is UB
+# when it runs (#237).
 set -euo pipefail
 
 if [[ $# -ne 1 ]]; then
@@ -333,6 +335,9 @@ runs "$tmp/fieldaddr.fir" 0 "${ret}[\"5\"]$none" @elem 5 1 || status=1
 runs "$tmp/fieldaddr.fir" 0 "${ret}[\"poison\"]$none" @elem 5 2 || status=1
 runs "$tmp/fieldaddr.fir" 0 '{"kind":"ub","reason":"an access out of bounds","choices":0}' \
     @elem 5 4 || status=1
+runs $c/globaladdr.fir 0 "${ret}[\"7\"]$none" @follow 2 || status=1
+runs $c/globaladdr.fir 0 '{"kind":"ub","reason":"a store to a constant allocation","choices":0}' \
+    @write_msg 1 || status=1
 runs $c/add.fir 2 'fir-ref: @add3 takes 3 arguments, not 2' @add3 1 2 || status=1
 runs $c/empty.fir 2 "fir-ref: $c/empty.fir has no function @f" @f || status=1
 # A kernel of a device module runs as one work-item, named by the path of

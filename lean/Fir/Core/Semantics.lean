@@ -40,17 +40,18 @@ choice effect, and the divisions,
   `ptrFromInt`, which turn pointers into integers and back, have none
   either: they allocate, read and write, so each rule needs the memory
   effect, and is
-  one of the core's rules with memory. Nor has the field address
-  `fieldAddr`: it reads the layout it names in the items that the run
-  gives each op, so its rule too is one of the core's rules with memory.
+  one of the core's rules with memory. Nor have the field address
+  `fieldAddr` and the address of a global `globalAddr`: they read the
+  layout or the global they name in the items that the run gives each op,
+  so their rules too are among the core's rules with memory.
 * Each terminator has the rule of the control-flow rules or the branch
   rules.
 * An op has rules when one of the two tables gives it one, when it calls
   a function, when it touches memory, or when it reads the run's items.
   Every core op has rules: each family gave its ops theirs, the call rules
   name the callee of `call`, and `alloca`, the loads and stores,
-  `fieldAddr`, `memCopy`, `memSet`, `ptrExpose` and `ptrFromInt` have
-  their rules with memory.
+  `fieldAddr`, `globalAddr`, `memCopy`, `memSet`, `ptrExpose` and
+  `ptrFromInt` have their rules with memory.
 
 An op has no rules when its dialect's semantics gives it none. The rule for
 such an op, first written while its family had not landed, is the one the spec
@@ -112,21 +113,22 @@ def Op.touchesMemory : Op → Bool
   | _ => false
 
 /-- The core ops that touch no memory but whose rules read the items that
-the run gives each op: `fieldAddr`, which reads the layout it names. The
-set monad has no run and no items, so it too has a rule only with memory
-(the section on the core's rules with memory). `ptrExpose` and
-`ptrFromInt` read the run's address policy and resolver, but they touch
-memory, so they are not marked here. -/
+the run gives each op: `fieldAddr`, which reads the layout it names, and
+`globalAddr`, which reads where the global it names starts. The set monad
+has no run and no items, so each too has a rule only with memory (the
+section on the core's rules with memory). `ptrExpose` and `ptrFromInt`
+read the run's address policy and resolver, but they touch memory, so they
+are not marked here. -/
 def Op.readsItems : Op → Bool
-  | .fieldAddr .. => true
+  | .fieldAddr .. | .globalAddr .. => true
   | _ => false
 
 /-- The rule of each core op that is not a terminator, in any monad with
 the choice and UB effects; `none` for `call`, whose meaning is its
 callee's run, for `alloca`, the loads `load`, `loadPtr` and `loadFloat`,
 the stores `store`, `storePtr` and `storeFloat`, `memCopy`, `memSet`,
-`ptrExpose` and `ptrFromInt`, whose rules need memory, for `fieldAddr`, whose rule needs the run's items,
-and for the terminators. -/
+`ptrExpose` and `ptrFromInt`, whose rules need memory, for `fieldAddr` and
+`globalAddr`, whose rules need the run's items, and for the terminators. -/
 def Op.denote? [MonadChoice m] [MonadUB m] : (op : Op) →
     Option (HVector toType (Fir.sig (d := CoreDialect) op) →
       m (HVector toType (Fir.returnTypes (d := CoreDialect) op)))
@@ -232,8 +234,8 @@ def Op.hasRules (op : Op) : Bool :=
 -- Every core op has rules: one instance of each, `add` with each of its
 -- flags, and `icmp` and `fcmp` with each of their predicates among them. `call`'s are
 -- its callee's run, and those of `alloca`, the loads and stores, `fieldAddr`,
--- `memCopy`, `memSet`, `ptrExpose` and `ptrFromInt` are their rules with
--- memory: none of them has an
+-- `globalAddr`, `memCopy`, `memSet`, `ptrExpose` and `ptrFromInt` are
+-- their rules with memory: none of them has an
 -- entry in `Op.denote?`.
 #guard (samples.filter Op.hasRules).map Op.name == samples.map Op.name
 #guard WrapFlags.all.all fun f => (Op.add 1 f).hasRules && (Op.sub 7 f).hasRules
@@ -269,6 +271,7 @@ def Op.hasRules (op : Op) : Bool :=
   (Op.loadFloat .nonatomic 8 23 none 0).hasRules && (Op.loadFloat .seqCst 2 1 (some 4) 1).hasRules
 #guard ((Op.fieldAddr "pair" 1 0 none).denote? (m := SetM)).isNone &&
   (Op.fieldAddr "pair" 1 0 none).hasRules && (Op.fieldAddr "a" 0 1 (some 32)).hasRules
+#guard ((Op.globalAddr "msg" 0).denote? (m := SetM)).isNone && (Op.globalAddr "msg" 0).hasRules
 #guard ((Op.storeFloat .nonatomic 8 23 none 0).denote? (m := SetM)).isNone &&
   (Op.storeFloat .nonatomic 8 23 none 0).hasRules &&
   (Op.storeFloat .seqCst 2 1 (some 4) 1).hasRules

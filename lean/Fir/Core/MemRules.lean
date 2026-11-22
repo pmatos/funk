@@ -7,6 +7,7 @@ import Fir.Core.MemCopy
 import Fir.Core.MemSet
 import Fir.Core.PtrInt
 import Fir.Core.FieldAddr
+import Fir.Core.GlobalAddr
 import Fir.Core.Lawful
 import Fir.Execution.MemoryRuns
 
@@ -35,8 +36,10 @@ allocate there, under the address policy and resolver that the run gives
 each op: each is its
 rule with memory alone, and has no rule in the set monad. The run also
 gives each op the items of its module that ops read (the section on the
-items a run gives each op): `fieldAddr` touches no memory, but its rule
-reads the layout it names there, so it too has a rule with memory alone.
+items a run gives each op): `fieldAddr` and `globalAddr` touch no memory,
+but the rule of `fieldAddr` reads the layout it names there, and that of
+`globalAddr` where the global it names starts, so each too has a rule with
+memory alone.
 Every other core op touches no memory and reads no item, and its rule with
 memory is its rule. The core's semantics with memory runs those rules in the state layer
 over the set monad, op by op; an op with no rule, as `call`, has no outcome
@@ -45,14 +48,14 @@ there, as in the set monad.
 Lifting a computation of the set monad into the state layer keeps choice
 and UB, so it maps each rule in the set monad to the same rule with memory.
 So each core op but `alloca`, the loads and stores, `fieldAddr`,
-`memCopy`, `memSet`, `ptrExpose` and `ptrFromInt` is tied: it runs with memory by its rule in the set monad and
+`globalAddr`, `memCopy`, `memSet`, `ptrExpose` and `ptrFromInt` is tied: it runs with memory by its rule in the set monad and
 keeps the memories. Each obligation with memory of a tied op follows from
 its own tie and its obligation in the set monad, and `alloca`, the loads
-and stores, `fieldAddr`, `memCopy`, `memSet`, `ptrExpose` and
-`ptrFromInt` meet each by their own proofs (the sections on the stack
+and stores, `fieldAddr`, `globalAddr`, `memCopy`, `memSet`, `ptrExpose`
+and `ptrFromInt` meet each by their own proofs (the sections on the stack
 allocation, load, store, pointer load, pointer store, float load, float
-store, field address, copy and move, fill, and pointers as integers
-obligations). No theorem asks that the whole core dialect lift the set monad.
+store, field address, global address, copy and move, fill, and pointers
+as integers obligations). No theorem asks that the whole core dialect lift the set monad.
 -/
 
 namespace Fir.Core
@@ -130,7 +133,7 @@ theorem denoteIn_mapsDenote (zm : {α : Type} → Op → μ α) (zn : {α : Type
       | .br, _ | .condBr, _ | .ret _, _ | .unreachable, _ | .call .., _ | .alloca .., _
       | .load .., _ | .store .., _ | .loadPtr .., _ | .storePtr .., _ | .loadFloat .., _
       | .storeFloat .., _ | .memCopy .., _ | .memSet .., _ | .fieldAddr .., _
-      | .ptrExpose .., _ | .ptrFromInt .., _ => hz _
+      | .ptrExpose .., _ | .ptrFromInt .., _ | .globalAddr .., _ => hz _
     exit := fun
       | .br, _ | .ret _, _ => φ.map_pure _
       | .condBr, .cons c .nil => exitOfEv_map φ hk (condBrExit c)
@@ -144,7 +147,7 @@ theorem denoteIn_mapsDenote (zm : {α : Type} → Op → μ α) (zn : {α : Type
       | .ptradd .., _ | .alloca .., _ | .load .., _ | .store .., _ | .loadPtr .., _
       | .storePtr .., _ | .loadFloat .., _ | .storeFloat .., _ | .fptosi .., _
       | .fptoui .., _ | .memCopy .., _ | .memSet .., _ | .fieldAddr .., _
-      | .ptrExpose .., _ | .ptrFromInt .., _ => hz _ }
+      | .ptrExpose .., _ | .ptrFromInt .., _ | .globalAddr .., _ => hz _ }
 
 end
 
@@ -162,6 +165,7 @@ loads, each store stores, `memCopy` copies or moves, `memSet` fills,
 `ptrExpose` exposes and `ptrFromInt` turns an integer back into a pointer,
 by its rule, under the policy and resolver that `L` gives;
 `fieldAddr` moves its pointer to the field of the layout that `L` gives;
+`globalAddr` gives the address of the global that `L` places;
 every other op's rule is its rule in `Op.denote?`. -/
 def Op.memDenote? (lay : N → MemLayout) (ρ : Mem → N) (L : RunItems)
     [MonadMemory N (unitsOf lay) m] :
@@ -189,6 +193,7 @@ def Op.memDenote? (lay : N → MemLayout) (ρ : Mem → N) (L : RunItems)
   | .ptrFromInt n w => some fun
     | .cons i .nil => ptrFromIntRule lay ρ L n w i
   | .fieldAddr s i _ w => some fun args => pure (fieldAddrResult (L.layout? s) i w args)
+  | .globalAddr s _ => some fun _ => pure (globalAddrResult (L.global? s))
   | op => op.denote? (m := m)
 
 /-- The rule of each core terminator, with memory: its rule in `Op.exit?`,
@@ -241,9 +246,9 @@ theorem memCopyRule_map {μ ν : Type → Type} [Monad μ] [Monad ν] [MonadChoi
 allocation, loads and stores maps the core's semantics with memory in the
 one to its semantics with memory in the other, op by op, when it maps what
 an op with no rule does: `alloca` by its allocation, `load` by its UB and
-its load, `store` by its UB and its store, `fieldAddr` by its result,
-`ptrExpose` by its UB and its exposure, `ptrFromInt` by turning its integer
-back into a pointer, and every other op by its rule.
+its load, `store` by its UB and its store, `fieldAddr` and `globalAddr` by
+their results, `ptrExpose` by its UB and its exposure, `ptrFromInt` by
+turning its integer back into a pointer, and every other op by its rule.
 Lifting through the state layer keeps allocation, loads, stores, exposing
 and turning integers back into pointers (`MonadMorphism.state_alloc`,
 `MonadMorphism.state_load`, `MonadMorphism.state_store`,
@@ -317,7 +322,7 @@ theorem memDenoteIn_mapsDenote {μ ν : Type → Type} [Monad μ] [Monad ν] [Mo
       | ptrFromInt n w =>
         match args with
         | .cons i .nil => exact ptrFromIntRule_map lay ρ φ hf L n w i
-      | fieldAddr => exact φ.map_pure _
+      | fieldAddr | globalAddr => exact φ.map_pure _
       | _ =>
         exact @MonadMorphism.MapsDenote.denote μ ν _ _ φ CoreDialect _ _ (denoteIn @zm)
           (denoteIn @zn) h _ args)
@@ -344,8 +349,8 @@ instance Core.instDialectMemDenote : DialectMemDenote CoreDialect :=
 namespace Core
 
 /-- Each core op that touches no memory and reads no item of the run, every
-core op but `alloca`, the loads and stores, `fieldAddr`, `memCopy`,
-`memSet`, `ptrExpose` and `ptrFromInt`, runs
+core op but `alloca`, the loads and stores, `fieldAddr`, `globalAddr`,
+`memCopy`, `memSet`, `ptrExpose` and `ptrFromInt`, runs
 with memory by its rule in the set monad and keeps the memories, at every
 layout, naming and record of items. Lifting into the layer keeps choice and
 UB, and maps an op with no rule to one with no outcome. -/
@@ -361,7 +366,7 @@ theorem Op.liftsSetM (op : Op) (hm : op.touchesMemory = false) (hi : op.readsIte
   cases op with
   | alloca | load | store | loadPtr | storePtr | loadFloat | storeFloat | memCopy | memSet
   | ptrExpose | ptrFromInt => cases hm
-  | fieldAddr => cases hi
+  | fieldAddr | globalAddr => cases hi
   | _ => exact ⟨(hd _ args).symm, (he _ args).symm⟩
 
 end Core

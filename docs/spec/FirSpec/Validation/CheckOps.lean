@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Checking ops: readable blocks" =>
 
-:::moduleDocs (fingerprint := "8879838920595129627")
+:::moduleDocs (fingerprint := "5789074718386447926")
 :::
 
 :::readable Fir.FuncTables Fir.Func.defSites Fir.Func.tables (fingerprint := "3089582122989733551")
@@ -171,7 +171,7 @@ check gives no problem exactly when the regions of $`o` are valid:
 $$`\begin{aligned} & \mathrm{regionproblems}(o) = \epsilon \\ \iff\ & C, f \vdash \mathrm{regions}(o)~\text{valid} \end{aligned}`
 :::
 
-:::readable Fir.generalProblems Fir.succCountProblems (fingerprint := "16097382409340989306")
+:::readable Fir.generalProblems Fir.succCountProblems (fingerprint := "4979607711645901955")
 *Definition: the checks of an op that hold in every region.* Two parts of
 the check of an op hold for every op, whatever the kind of its region. The
 first gives the problems of its operand and result types, and then those
@@ -205,7 +205,7 @@ is valid:
 $$`\begin{aligned} & \mathrm{opproblems}(o) = \epsilon \\ \iff\ & C, f, b, i \vdash o~\text{valid} \end{aligned}`
 :::
 
-:::readable Fir.innerOpProblems Fir.Operation.innerProblems Fir.Func.scope_contains Fir.innerOpProblems_eq_nil Fir.Operation.innerProblems_eq_nil (pin := Fir.Func.InnerOpValid) (fingerprint := "12833483187213599100")
+:::readable Fir.innerOpProblems Fir.Operation.innerProblems Fir.Func.scope_contains Fir.innerOpProblems_eq_nil Fir.Operation.innerProblems_eq_nil (pin := Fir.Func.InnerOpValid) (fingerprint := "12112470262232976485")
 *Definitions and theorems: the check of the ops inside a region.* The check
 of an op inside a region tests the premises of the rule of a
 {ref "The-fir-specification--Validation--The-general-rules"}[valid op inside a region]

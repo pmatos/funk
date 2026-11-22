@@ -14,20 +14,22 @@ when the Lean changes under it.
 
 #doc (Manual) "The general rules: readable blocks" =>
 
-:::moduleDocs (fingerprint := "11133596580782490728")
+:::moduleDocs (fingerprint := "6508606505331268914")
 :::
 
-:::readable Fir.ModuleContext (fingerprint := "6320046082962391219")
+:::readable Fir.ModuleContext (fingerprint := "11943729197067539422")
 *Definition: the context of a function.* A function is checked in the
-context of its module, and the rules read three things of the module: its
+context of its module, and the rules read four things of the module: its
 {ref "The-fir-specification--Validation--Scope-and-symbols"}[symbol table],
 the references that its
 {ref "The-fir-specification--Abstract-syntax--Locations"}[location table]
-has, and the aggregates' layouts of its table. A _module context_ $`C`
-holds them: $`\mathrm{symtab}_C(s)` is the function type of the symbol
-$`s`, or is undefined, $`\mathrm{locs}_C` is the list of the table's
-references, and $`\mathrm{layouts}_C(s)` is the layout with the symbol
-$`s`, as the rule of an op sees it, or is undefined.
+has, the aggregates' layouts of its table, and the memories of its
+table's globals. A _module context_ $`C` holds them: $`\mathrm{symtab}_C(s)`
+is the function type of the symbol $`s`, or is undefined, $`\mathrm{locs}_C`
+is the list of the table's references, $`\mathrm{layouts}_C(s)` is the
+layout with the symbol $`s`, as the rule of an op sees it, or is undefined,
+and $`\mathrm{globals}_C(s)` is the memory of the first global with the
+symbol $`s`, or is undefined.
 :::
 
 :::readable Fir.Func.SuccValid (pin := Fir.Func.entryLabel?) (pin := Fir.Func.block?) (pin := Fir.Func.typeOf) (fingerprint := "15074293607687035826")
@@ -73,7 +75,7 @@ op that owns no region, of an op instance that states none, has valid
 regions: every core op that owns no region.
 :::
 
-:::readable Fir.Func.OpValid (pin := Fir.Operation.uses) (pin := Fir.DialectSignature) (fingerprint := "1296916691621288045")
+:::readable Fir.Func.OpValid (pin := Fir.Operation.uses) (pin := Fir.DialectSignature) (fingerprint := "1454127738843350448")
 *Definition: a valid op.* Let $`o` be the op at index $`i` of the block
 $`b` of the function $`f`, checked in the module context $`C`, let $`l`
 be the label of $`b`, let $`p` be its
@@ -81,7 +83,7 @@ be the label of $`b`, let $`p` be its
 let $`d` be the dialect of $`p`. The op is valid when every premise of this
 rule holds:
 
-$$`\dfrac{\begin{array}{c} C, f \vdash \mathrm{regions}(o)~\text{valid} \\ \mathrm{type}_f(\mathrm{operands}(o)) = \mathrm{sig}(p) \\ \mathrm{results}(o) = (y : t)^* \qquad t^* = \mathrm{ret}(p) \\ \mathrm{term}(p) \iff i + 1 = |\mathrm{body}(b)| \\ |\mathrm{succs}(o)| = \mathrm{nsucc}(p) \\ \neg\,\mathrm{term}(p) \implies \mathrm{succs}(o) = \epsilon \\ f \vdash s~\text{valid} \ \text{ for each } s \in \mathrm{succs}(o) \\ \mathrm{inscope}_f(x, l, i) \text{ for each } x \in \mathrm{uses}(o) \\ \mathrm{symtab}_C(g) \text{ defined, each } g \in \mathrm{refs}_d(p) \\ (\mathrm{symtab}_C, \mathrm{results}(f), \mathrm{layouts}_C) \vdash_d p~\text{valid} \\ \mathrm{loc}(o) \in \mathrm{locs}_C \end{array}}{C, f, b, i \vdash o~\text{valid}}`
+$$`\dfrac{\begin{array}{c} C, f \vdash \mathrm{regions}(o)~\text{valid} \\ \mathrm{type}_f(\mathrm{operands}(o)) = \mathrm{sig}(p) \\ \mathrm{results}(o) = (y : t)^* \qquad t^* = \mathrm{ret}(p) \\ \mathrm{term}(p) \iff i + 1 = |\mathrm{body}(b)| \\ |\mathrm{succs}(o)| = \mathrm{nsucc}(p) \\ \neg\,\mathrm{term}(p) \implies \mathrm{succs}(o) = \epsilon \\ f \vdash s~\text{valid} \ \text{ for each } s \in \mathrm{succs}(o) \\ \mathrm{inscope}_f(x, l, i) \text{ for each } x \in \mathrm{uses}(o) \\ \mathrm{symtab}_C(g) \text{ defined, each } g \in \mathrm{refs}_d(p) \\ (\mathrm{symtab}_C, \mathrm{results}(f), \mathrm{layouts}_C, \mathrm{globals}_C) \vdash_d p~\text{valid} \\ \mathrm{loc}(o) \in \mathrm{locs}_C \end{array}}{C, f, b, i \vdash o~\text{valid}}`
 
 Here $`\mathrm{regions}(o)`, $`\mathrm{operands}(o)`, $`\mathrm{results}(o)`,
 $`\mathrm{succs}(o)` and $`\mathrm{loc}(o)` are the parts of the op
@@ -105,7 +107,8 @@ type of each operand, in turn. In words, the premises say:
   {ref "The-fir-specification--Validation--Dominance"}[in scope] at the op.
 * Each symbol it refers to names a function of the module.
 * Its dialect's own rule holds, in the op context of the module's symbol
-  table, the result types of $`f` and the layouts of the table.
+  table, the result types of $`f`, and the layouts and globals of the
+  table.
 * Its location reference is a key of the module's location table
   (ADR-2026-10-29-2013).
 
@@ -118,13 +121,13 @@ $`\vdash_d` are what the
 {ref "The-fir-specification--Validation--Scope-and-symbols"}[dialect adds to validation].
 :::
 
-:::readable Fir.Func.InnerOpValid Fir.Operation.innerOps (fingerprint := "17753846816470364388")
+:::readable Fir.Func.InnerOpValid Fir.Operation.innerOps (fingerprint := "1633398049638985753")
 *Definition: a valid op inside a region.* An op inside a region of an op
 of the function $`f` is checked by the general rules that do not depend on
 the kind of its region. Let $`o` be such an op, $`p` its op instance and
 $`d` the dialect. It is valid in the module context $`C` when:
 
-$$`\dfrac{\begin{array}{c} C, f \vdash \mathrm{regions}(o)~\text{valid} \\ \mathrm{type}_f(\mathrm{operands}(o)) = \mathrm{sig}(p) \\ \mathrm{results}(o) = (y : t)^* \qquad t^* = \mathrm{ret}(p) \\ |\mathrm{succs}(o)| = \mathrm{nsucc}(p) \qquad \neg\,\mathrm{term}(p) \implies \mathrm{succs}(o) = \epsilon \\ \mathrm{isname}(l) \text{ and } \mathrm{type}_f(x^*) \text{ defined, each } l(x^*) \in \mathrm{succs}(o) \\ \mathrm{symtab}_C(g) \text{ defined, each } g \in \mathrm{refs}_d(p) \\ (\mathrm{symtab}_C, \mathrm{results}(f), \mathrm{layouts}_C) \vdash_d p~\text{valid} \qquad \mathrm{loc}(o) \in \mathrm{locs}_C \end{array}}{C, f \vdash o~\text{valid inside}}`
+$$`\dfrac{\begin{array}{c} C, f \vdash \mathrm{regions}(o)~\text{valid} \\ \mathrm{type}_f(\mathrm{operands}(o)) = \mathrm{sig}(p) \\ \mathrm{results}(o) = (y : t)^* \qquad t^* = \mathrm{ret}(p) \\ |\mathrm{succs}(o)| = \mathrm{nsucc}(p) \qquad \neg\,\mathrm{term}(p) \implies \mathrm{succs}(o) = \epsilon \\ \mathrm{isname}(l) \text{ and } \mathrm{type}_f(x^*) \text{ defined, each } l(x^*) \in \mathrm{succs}(o) \\ \mathrm{symtab}_C(g) \text{ defined, each } g \in \mathrm{refs}_d(p) \\ (\mathrm{symtab}_C, \mathrm{results}(f), \mathrm{layouts}_C, \mathrm{globals}_C) \vdash_d p~\text{valid} \qquad \mathrm{loc}(o) \in \mathrm{locs}_C \end{array}}{C, f \vdash o~\text{valid inside}}`
 
 These are the premises of a
 valid op, but for three that the kind of the region decides: where the op
@@ -197,16 +200,17 @@ reads its kinds by name, so a sum of dialects sends the item to the
 dialect that registers its kind.
 :::
 
-:::readable Fir.Module.context Fir.SymbolTable.context Fir.SymbolTable.Valid Fir.Module.Valid (fingerprint := "3180822863195772124")
+:::readable Fir.Module.context Fir.SymbolTable.context Fir.SymbolTable.Valid Fir.Module.Valid (fingerprint := "3736123775819286395")
 *Definition: a valid symbol table and a valid module.* The context of the
 module $`M`, $`\mathrm{ctx}(M)`, is its symbol table $`\mathrm{symtab}_M`,
-the references of its location table and the layouts of its own table. A module holds a
+the references of its location table and the layouts and globals of its own table. A module holds a
 {ref "The-fir-specification--Validation--Scope-and-symbols"}[symbol table]
 at each level of nesting: its own, and that of each module nested in it
 (ADR-2026-11-10-1510). In a module whose location table has the references
 $`K`, the context of the table $`T`, $`\mathrm{ctx}_K(T)`, is the symbol
 table of the functions of $`T`, $`\mathrm{symtab}_T`, $`K`, and the
-layouts of $`T`, so an op names only the layouts of its own table. The table
+layouts and globals of $`T`, so an op names only the layouts and globals
+of its own table. The table
 $`T` is valid in $`K` when:
 
 $$`\dfrac{\begin{array}{c} \text{the symbols of } \mathrm{items}(T) \text{ are distinct} \\ \mathrm{ctx}_K(T) \vdash f~\text{valid} \\ \text{for each } f \in \mathrm{funcs}(T) \\ (\mathrm{symtab}_T) \vdash i~\text{valid} \\ \text{for each } i \in \mathrm{ditems}(T) \\ e~\text{valid} \\ \text{for each } e \in \mathrm{externs}(T) \\ \text{the names of } \mathrm{dialects}(T) \text{ are distinct words} \end{array}}{K \vdash T~\text{valid}}`

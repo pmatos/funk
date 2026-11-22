@@ -58,7 +58,7 @@ theorem inModule_of_valid {M : Module CoreDialect} {f : Func CoreDialect}
   calls b hb o ho _ s h := by
     obtain ⟨ts, rs, hop⟩ := Op.eq_call_of_callee h
     obtain ⟨i, hi, rfl⟩ := List.getElem_of_mem ho
-    have hvalid : validOp ⟨M.context.symbols, f.results, M.context.layouts⟩ b.body[i].op :=
+    have hvalid : validOp ⟨M.context.symbols, f.results, M.context.layouts, M.context.globals⟩ b.body[i].op :=
       (hv.ops b hb i b.body[i] (List.getElem?_eq_getElem hi)).2.2.2.2.2.2.2.2.2.1
     rw [hop] at hvalid ⊢
     exact hvalid
@@ -66,7 +66,7 @@ theorem inModule_of_valid {M : Module CoreDialect} {f : Func CoreDialect}
   returns b hb o ho _ args h := by
     obtain ⟨ts, hts⟩ := Op.exit_ret o.op args h
     obtain ⟨i, hi, rfl⟩ := List.getElem_of_mem ho
-    have hvalid : validOp ⟨M.context.symbols, f.results, M.context.layouts⟩ b.body[i].op :=
+    have hvalid : validOp ⟨M.context.symbols, f.results, M.context.layouts, M.context.globals⟩ b.body[i].op :=
       (hv.ops b hb i b.body[i] (List.getElem?_eq_getElem hi)).2.2.2.2.2.2.2.2.2.1
     rw [hts] at hvalid ⊢
     exact hvalid

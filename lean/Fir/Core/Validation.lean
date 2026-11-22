@@ -16,7 +16,8 @@ or a move, `memCopy`, and of a fill, `memSet` (ADR-2026-11-18-2131), the
 width that a fill asks of its memory's units, the width and the integral
 memory that `ptrExpose` and `ptrFromInt` ask of their memory's pointers
 (#232), the rule of `fieldAddr`,
-which reads the layouts of the op's table (#236), the
+which reads the layouts of the op's table (#236), the rule of
+`globalAddr`, which reads the globals of the op's table (#237), the
 units and alignment of a field of an aggregate's layout
 (ADR-2026-11-16-1546), and the extension markers that a parameter or a
 result may carry (ADR-2026-11-09-1547).
@@ -150,8 +151,8 @@ def Op.addrWidths : Op → List (Nat × Nat)
   | _ => []
 
 /-- `call` refers to its callee's symbol, which names a function; no other
-core op refers to a function. `fieldAddr` names a layout, which its own
-rule checks. -/
+core op refers to a function. `fieldAddr` names a layout and
+`globalAddr` a global, which their own rules check. -/
 def Op.symbolRefs : Op → List String
   | .call f _ _ => [f]
   | _ => []
@@ -235,6 +236,11 @@ The core rules of an op beyond its signature.
   index, which gives its first element. The index's value is not checked:
   an element out of the field's range is an address, as for `ptradd`
   (the human's ruling of 2026-11-16 on #236, Q3 A).
+* `globalAddr s n` names a global of its own table, `s`, whose memory is
+  `n`, the memory of its result (#237). An op names only the items of its
+  own table, as `call` does, so a function of a nested module names the
+  globals of that module, and a function of its parent does not
+  (ADR-2026-11-10-1510).
 * `memCopy`, a copy or a move, has the ordering `nonatomic`. Its two
   pointers and its length are values of the function, so validation checks
   that the module has their memory, and that the length's width is valid,
@@ -271,6 +277,7 @@ def Op.Valid (ctx : OpContext CoreDialect) : Op → Prop
     o = .nonatomic ∧ ∀ x ∈ a, MemLayout.ValidAlign x
   | .memCopy _ o _ _ | .memSet o _ _ _ => o = .nonatomic
   | .fieldAddr s i n w => (ctx.layouts s).map (·.admits i n w.isSome) = some true
+  | .globalAddr s n => ctx.globals s = some n
   | _ => True
 
 /--

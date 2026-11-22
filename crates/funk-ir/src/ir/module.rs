@@ -362,11 +362,13 @@ impl Module {
 
 /// The items of one symbol table, by symbol. When two items share a symbol,
 /// which validation rejects, the first function wins, or else the first
-/// item; and the first aggregate's layout is the symbol's layout.
+/// item; the first aggregate's layout is the symbol's layout, and the first
+/// global the symbol's global.
 #[derive(Clone, Debug)]
 pub struct SymbolTable<'m> {
     map: HashMap<&'m str, &'m Item>,
     layouts: HashMap<&'m str, &'m Aggregate>,
+    globals: HashMap<&'m str, &'m Global>,
 }
 
 impl<'m> SymbolTable<'m> {
@@ -376,10 +378,12 @@ impl<'m> SymbolTable<'m> {
     /// A symbol names its first function, as `SymbolTable.symbols` in
     /// `lean/Fir/Validation/Scope.lean` does, and otherwise its first item.
     /// Its layout is its first aggregate's, as `SymbolTable.layouts` there
-    /// gives it.
+    /// gives it, and its global its first global, as
+    /// `SymbolTable.globalMems` there gives it.
     pub fn of(items: &'m [Item]) -> SymbolTable<'m> {
         let mut map: HashMap<&str, &Item> = HashMap::new();
         let mut layouts: HashMap<&str, &Aggregate> = HashMap::new();
+        let mut globals: HashMap<&str, &Global> = HashMap::new();
         for item in items {
             let first = map.entry(item.name()).or_insert(item);
             if first.as_func().is_none() && item.as_func().is_some() {
@@ -388,8 +392,15 @@ impl<'m> SymbolTable<'m> {
             if let Some(a) = item.as_aggregate() {
                 layouts.entry(item.name()).or_insert(a);
             }
+            if let Some(g) = item.as_global() {
+                globals.entry(item.name()).or_insert(g);
+            }
         }
-        SymbolTable { map, layouts }
+        SymbolTable {
+            map,
+            layouts,
+            globals,
+        }
     }
 
     /// The item that `name` names.
@@ -401,6 +412,12 @@ impl<'m> SymbolTable<'m> {
     /// symbol, whatever other item shares it.
     pub fn layout(&self, name: &str) -> Option<&'m Aggregate> {
         self.layouts.get(name).copied()
+    }
+
+    /// The global that `name` names: the first with that symbol, whatever
+    /// other item shares it.
+    pub fn global(&self, name: &str) -> Option<&'m Global> {
+        self.globals.get(name).copied()
     }
 
     /// The type of the function that `name` names.

@@ -1,0 +1,21 @@
+# Tests of globaladdr-memories.fir: the address of a global in a memory of
+# 16-bit units with 32-bit pointers, and in a nested module (#237 stage 2b).
+# @wide is memory 1's allocation 0: its units are 65535 and 1, then its own
+# address plus 1, which takes two units, so a load of an i16 there reads a
+# pointer's unit and gives poison. @wide_self loads that pointer and reads
+# the unit it points to. @narrow is memory 0's allocation 0. A run holds
+# its own table's globals only (#237 Q3): a run of @dev's functions holds
+# only @cell, which is memory 1's allocation 0 there, and names it by its
+# own table. The backend realises neither memory 1 nor a nested module's
+# functions, so each test is interpreter-only.
+tests = [
+  { func = "@wide_unit", args = ["0"], expect = ["-1"] },
+  { func = "@wide_unit", args = ["1"], expect = ["1"] },
+  { func = "@wide_unit", args = ["3"], expect = ["poison"] },
+  { func = "@wide_unit", args = ["4"], expect = "ub" },
+  { func = "@wide_self", expect = ["1"] },
+  { func = "@narrow_value", expect = ["42"] },
+  { func = "@addresses", expect = ["ptr(0, 0)", "ptr(0, 0)"] },
+  { func = "@dev::@read_cell", expect = ["300"] },
+  { func = "@dev::@cell_address", expect = ["ptr(0, 0)"] },
+]

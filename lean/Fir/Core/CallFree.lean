@@ -25,11 +25,11 @@ vector of its parameter types, poison included (the section on core
 functions with memory):
 
 * _every core op but `call`, `alloca`, the loads and stores,
-  `fieldAddr`, `memCopy`, `memSet`, `ptrExpose` and `ptrFromInt` is
-  total_, by the obligations that each family proves of its ops, and
-  `alloca`, the loads and stores, of an integer, a pointer or a float,
-  `fieldAddr`, `memCopy`, `memSet`, `ptrExpose` and `ptrFromInt` are total
-  with memory, each by its own rule;
+  `fieldAddr`, `globalAddr`, `memCopy`, `memSet`, `ptrExpose` and
+  `ptrFromInt` is total_, by the obligations that each family proves of
+  its ops, and `alloca`, the loads and stores, of an integer, a pointer or
+  a float, `fieldAddr`, `globalAddr`, `memCopy`, `memSet`, `ptrExpose`
+  and `ptrFromInt` are total with memory, each by its own rule;
 * _every valid core function without calls runs within itself_: none of
   its ops calls a function; `br` and `cond_br` go only to successors they
   have and give no results; and `ret`, the only core op whose exit
@@ -59,11 +59,11 @@ instance (f : Func CoreDialect) : Decidable (CallFree f) :=
   inferInstanceAs (Decidable (∀ b ∈ f.blocks, ∀ o ∈ b.body, o.op.isCall = false))
 
 /-- Every core op but `call`, `alloca`, the loads and stores, `fieldAddr`,
-`memCopy`, `memSet`, `ptrExpose` and `ptrFromInt` is total in the set monad.
-Those have no rule there: each is total with memory, by its own rule (the
-sections on the stack allocation, load, store, pointer load, pointer store,
-float load, float store, field address, copy and move, fill, and pointers
-as integers obligations). -/
+`globalAddr`, `memCopy`, `memSet`, `ptrExpose` and `ptrFromInt` is total in
+the set monad. Those have no rule there: each is total with memory, by its
+own rule (the sections on the stack allocation, load, store, pointer load,
+pointer store, float load, float store, field address, global address,
+copy and move, fill, and pointers as integers obligations). -/
 theorem Op.total : (op : Op) → op.isCall = false → op.touchesMemory = false →
     op.readsItems = false → OpTotal (d := CoreDialect) op
   | .const w v, _, _, _ => const_total w v
@@ -109,7 +109,7 @@ theorem Op.total : (op : Op) → op.isCall = false → op.touchesMemory = false 
   | .alloca .., _, h, _ | .load .., _, h, _ | .store .., _, h, _ | .loadPtr .., _, h, _
   | .storePtr .., _, h, _ | .loadFloat .., _, h, _ | .storeFloat .., _, h, _
   | .memCopy .., _, h, _ | .memSet .., _, h, _ => nomatch h
-  | .fieldAddr .., _, _, h => nomatch h
+  | .fieldAddr .., _, _, h | .globalAddr .., _, _, h => nomatch h
 
 /-- A core terminator that jumps goes to a successor that it has, and gives
 no results. -/
@@ -156,7 +156,7 @@ theorem local_of_valid {ctx : ModuleContext CoreDialect} {f : Func CoreDialect}
   returns b hb o ho _ args h := by
     obtain ⟨ts, hts⟩ := Op.exit_ret o.op args h
     obtain ⟨i, hi, rfl⟩ := List.getElem_of_mem ho
-    have hvalid : validOp ⟨ctx.symbols, f.results, ctx.layouts⟩ b.body[i].op :=
+    have hvalid : validOp ⟨ctx.symbols, f.results, ctx.layouts, ctx.globals⟩ b.body[i].op :=
       (hv.ops b hb i b.body[i] (List.getElem?_eq_getElem hi)).2.2.2.2.2.2.2.2.2.1
     rw [hts] at hvalid ⊢
     exact hvalid

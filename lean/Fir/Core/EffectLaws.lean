@@ -6,6 +6,7 @@ import Fir.Core.MemCopyPoison
 import Fir.Core.MemSetPoison
 import Fir.Core.FieldAddrLaws
 import Fir.Core.PtrIntLaws
+import Fir.Core.GlobalAddrLaws
 import Fir.Execution.MemoryObligationLaws
 import Fir.Core.Unlawful
 
@@ -33,11 +34,12 @@ effects. Each effect that a core op leaves out, it does not have:
   terminator.
 * _No write, read or allocation._ Every core op but `alloca`, the loads
   and stores, `memCopy`, `memSet`, `ptrExpose` and `ptrFromInt` touches
-  no memory. Each but `fieldAddr` runs
-  with memory by its rule in the set monad and keeps the memories, at every
-  layout and naming of them (the section on the core's rules with memory);
-  `fieldAddr` gives its result at once and keeps them, by its own rule
-  (the section on the field address obligations). `alloca` writes and reads
+  no memory. Each but `fieldAddr` and `globalAddr` runs with memory by its
+  rule in the set monad and keeps the memories, at every layout and naming
+  of them (the section on the core's rules with memory); `fieldAddr` and
+  `globalAddr` give their results at once and keep them, by their own
+  rules (the sections on the field address and global address
+  obligations). `alloca` writes and reads
   no memory, and allocates only in the memory it declares, by its own rule
   (the section on the stack allocation obligations). A load, `load`,
   `loadPtr` or `loadFloat`, writes no memory, allocates in none, and reads
@@ -53,10 +55,10 @@ effects. Each effect that a core op leaves out, it does not have:
   none, and read only the memory they declare (the section on pointers as
   integers obligations).
 
-So each op but `alloca`, the loads and stores, `fieldAddr`, `memCopy`,
-`memSet`, `ptrExpose` and `ptrFromInt` is tied, and the first two obligations, stated over the semantics with
-memory, follow from what its rule does in the set monad; `alloca` and
-`fieldAddr` meet them by their rules with memory, a load declares both
+So each op but `alloca`, the loads and stores, `fieldAddr`, `globalAddr`,
+`memCopy`, `memSet`, `ptrExpose` and `ptrFromInt` is tied, and the first two obligations, stated over the semantics with
+memory, follow from what its rule does in the set monad; `alloca`,
+`fieldAddr` and `globalAddr` meet them by their rules with memory, a load declares both
 may-UB and may produce poison, so neither asks anything of it, and a
 store, `memCopy` and `memSet` declare may-UB and make no poison, since
 they give no result.
@@ -97,7 +99,7 @@ theorem Op.neverUB_all : (op : Op) → (Fir.effects (d := CoreDialect) op).mayUB
         obtain ⟨_, h, _⟩ := (freeze_denote w a _).1 h
         cases h), fun h => nomatch h⟩
   | .br, _ | .ret _, _ => fun _ _ => ⟨fun h => (nomatch h), fun _ h => (by cases h)⟩
-  | .call .., _ | .alloca .., _ | .fieldAddr .., _ | .ptrFromInt .., _ =>
+  | .call .., _ | .alloca .., _ | .fieldAddr .., _ | .globalAddr .., _ | .ptrFromInt .., _ =>
     fun _ _ => ⟨fun _ h => h, fun h => nomatch h⟩
   | .fbin o fl e m, _ => fbin_neverUB o fl e m
   | .funary o fl e m, _ => funary_neverUB o fl e m
@@ -248,7 +250,8 @@ theorem Op.makesNoPoison_all : (op : Op) → (Fir.effects (d := CoreDialect) op)
       cases he
       exact not_any_of_ne fun h => nomatch h
   | .call .., _ | .alloca .., _ | .store .., _ | .storePtr .., _ | .storeFloat .., _
-  | .memCopy .., _ | .memSet .., _ | .fieldAddr .., _ | .ptrExpose .., _ | .ptrFromInt .., _ =>
+  | .memCopy .., _ | .memSet .., _ | .fieldAddr .., _ | .globalAddr .., _ | .ptrExpose .., _
+  | .ptrFromInt .., _ =>
     fun _ _ _ _ hr => hr.elim
   | .fbin o fl e m, h => fbin_makesNoPoison o fl e m h
   | .funary o fl e m, h => funary_makesNoPoison o fl e m h
@@ -276,7 +279,7 @@ namespace Fir
 leaves out, it does not have. Each op that touches no memory and reads no
 item of the run runs with memory by its rule in the set monad
 (`Core.Op.liftsSetM`), so each of its obligations follows from its own rule
-there; `alloca`, the loads and stores, `fieldAddr`, `memCopy` and `memSet` meet each
+there; `alloca`, the loads and stores, `fieldAddr`, `globalAddr`, `memCopy` and `memSet` meet each
 by their own rules with memory. -/
 theorem Core.lawfulDialectEffects : LawfulDialectEffects CoreDialect where
   neverUB op _ _ h := Core.Op.memCases (P := fun op =>
@@ -285,8 +288,9 @@ theorem Core.lawfulDialectEffects : LawfulDialectEffects CoreDialect where
     (fun k t c a n _ => Core.alloca_neverUB k t c a n) (fun _ _ _ _ h => nomatch h)
     (fun _ _ _ _ h => nomatch h) (fun _ _ _ _ h => nomatch h) (fun _ _ _ _ h => nomatch h)
     (fun _ _ _ _ _ h => nomatch h) (fun _ _ _ _ _ h => nomatch h)
-    (fun s j n w _ => Core.fieldAddr_neverUB s j n w) (fun _ _ _ _ h => nomatch h)
-    (fun _ _ _ _ h => nomatch h) (fun _ _ h => nomatch h) (fun n w _ => Core.ptrFromInt_neverUB n w) h
+    (fun s j n w _ => Core.fieldAddr_neverUB s j n w) (fun s n _ => Core.globalAddr_neverUB s n)
+    (fun _ _ _ _ h => nomatch h) (fun _ _ _ _ h => nomatch h) (fun _ _ h => nomatch h)
+    (fun n w _ => Core.ptrFromInt_neverUB n w) h
   makesNoPoison op _ _ h := Core.Op.memCases (P := fun op =>
       (Fir.effects (d := CoreDialect) op).mayPoison = false → MakesNoPoison (d := CoreDialect) op) op
     (fun op hm hi h => MakesNoPoison.ofLifts (Core.Op.liftsSetM op hm hi)
@@ -296,6 +300,7 @@ theorem Core.lawfulDialectEffects : LawfulDialectEffects CoreDialect where
     (fun o mp a n _ => Core.storePtr_makesNoPoison o mp a n) (fun _ _ _ _ _ h => nomatch h)
     (fun o e m a n _ => Core.storeFloat_makesNoPoison o e m a n)
     (fun s j n w _ => Core.fieldAddr_makesNoPoison s j n w)
+    (fun s n _ => Core.globalAddr_makesNoPoison s n)
     (fun k o w n _ => Core.memCopy_makesNoPoison k o w n)
     (fun o v w n _ => Core.memSet_makesNoPoison o v w n)
     (fun n w _ => Core.ptrExpose_makesNoPoison n w) (fun n w _ => Core.ptrFromInt_makesNoPoison n w) h
@@ -313,6 +318,7 @@ theorem Core.lawfulDialectEffects : LawfulDialectEffects CoreDialect where
     (fun o e m a n _ => Core.loadFloat_writesNot o e m a n lay ρ L x)
     (fun o e m a n hx => Core.storeFloat_writesNot o e m a n lay ρ L x hx)
     (fun s j n w _ => Core.fieldAddr_writesNot s j n w lay ρ L x)
+    (fun s n _ => Core.globalAddr_writesNot s n lay ρ L x)
     (fun k o w n hx => Core.memCopy_writesNot k o w n lay ρ L x hx)
     (fun o v w n hx => Core.memSet_writesNot o v w n lay ρ L x hx)
     (fun n w _ => Core.ptrExpose_writesNot n w lay ρ L x)
@@ -330,6 +336,7 @@ theorem Core.lawfulDialectEffects : LawfulDialectEffects CoreDialect where
     (fun o e m a n hx => Core.loadFloat_readsNot o e m a n lay ρ L x hx)
     (fun o e m a n _ => Core.storeFloat_readsNot o e m a n lay ρ L x)
     (fun s j n w _ => Core.fieldAddr_readsNot s j n w lay ρ L x)
+    (fun s n _ => Core.globalAddr_readsNot s n lay ρ L x)
     (fun k o w n hx => Core.memCopy_readsNot k o w n lay ρ L x hx)
     (fun o v w n _ => Core.memSet_readsNot o v w n lay ρ L x)
     (fun n w hx => Core.ptrExpose_readsNot n w lay ρ L x hx)
@@ -347,6 +354,7 @@ theorem Core.lawfulDialectEffects : LawfulDialectEffects CoreDialect where
     (fun o e m a n _ => Core.loadFloat_allocatesNot o e m a n lay ρ L x)
     (fun o e m a n _ => Core.storeFloat_allocatesNot o e m a n lay ρ L x)
     (fun s j n w _ => Core.fieldAddr_allocatesNot s j n w lay ρ L x)
+    (fun s n _ => Core.globalAddr_allocatesNot s n lay ρ L x)
     (fun k o w n _ => Core.memCopy_allocatesNot k o w n lay ρ L x)
     (fun o v w n _ => Core.memSet_allocatesNot o v w n lay ρ L x)
     (fun n w _ => Core.ptrExpose_allocatesNot n w lay ρ L x)

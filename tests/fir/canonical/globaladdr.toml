@@ -1,0 +1,28 @@
+# Tests of globaladdr.fir: the address of a global (#237 stage 2b). A run
+# starts with each global's allocation, in memory 0 in the table's order,
+# so @msg, @table, @counter and @pad take the ids 0 to 3, and globaladdr
+# gives a pointer to the first unit of each. @msg_unit reads @msg's
+# initializer unit by unit, then the zeros up to its size (#237 Q1), and
+# one past its size is out of bounds. @table is a table of pointers to
+# globals, two into @msg and one to @counter, which @follow loads and
+# follows. @bump reads @counter through the table and writes it back
+# through its own address. @write_msg stores to @msg, a constant global:
+# the program is valid, and the store is UB when it runs (#237 Q2).
+# @read_past reads @pad's one unit and the zeros after it. The backend
+# lowers globals and globaladdr in stage 3 and builds a module whole, so
+# each test is interpreter-only.
+tests = [
+  { func = "@msg_unit", args = ["0"], expect = ["104"] },
+  { func = "@msg_unit", args = ["1"], expect = ["105"] },
+  { func = "@msg_unit", args = ["2"], expect = ["0"] },
+  { func = "@msg_unit", args = ["7"], expect = ["0"] },
+  { func = "@msg_unit", args = ["8"], expect = "ub" },
+  { func = "@follow", args = ["0"], expect = ["104"] },
+  { func = "@follow", args = ["1"], expect = ["105"] },
+  { func = "@follow", args = ["2"], expect = ["7"] },
+  { func = "@bump", args = ["5"], expect = ["12"] },
+  { func = "@write_msg", args = ["1"], expect = "ub" },
+  { func = "@read_past", args = ["0"], expect = ["1"] },
+  { func = "@read_past", args = ["8"], expect = ["0"] },
+  { func = "@addresses", expect = ["ptr(0, 0)", "ptr(1, 0)", "ptr(2, 0)"] },
+]

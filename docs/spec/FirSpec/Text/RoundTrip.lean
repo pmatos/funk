@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Round trips: readable blocks" =>
 
-:::moduleDocs (fingerprint := "16176944834168535516")
+:::moduleDocs (fingerprint := "17788756930403564417")
 :::
 
 :::readable Fir.Func.OpWellFormed (pin := Fir.Func.typeOf) (pin := Fir.DialectSignature) (pin := Fir.Location.limit) (fingerprint := "12115051900375411089")
@@ -161,7 +161,7 @@ attributes have the short form, and can be written since its types allow
 them.
 :::
 
-:::readable Fir.Func.Valid.wellFormed Fir.SymbolTable.Valid.itemsWellFormed Fir.MemLayout.Valid.inLimits Fir.validIsWellFormed (pin := Fir.Func.Valid) (pin := Fir.LocTable.Valid) (pin := Fir.Module.Valid) (pin := Fir.SymbolTable.Valid) (pin := Fir.Location.limit) (fingerprint := "12830487251074968921")
+:::readable Fir.Func.Valid.wellFormed Fir.SymbolTable.Valid.itemsWellFormed Fir.MemLayout.Valid.inLimits Fir.validIsWellFormed (pin := Fir.Func.Valid) (pin := Fir.LocTable.Valid) (pin := Fir.Module.Valid) (pin := Fir.SymbolTable.Valid) (pin := Fir.Location.limit) (fingerprint := "11811749064084623744")
 *Theorems: a valid function is well formed, and so is every valid module.*
 Let $`d` be a dialect with a signature, a text and validation rules, whose
 text is {ref "The-fir-specification--Text-format--Grammar"}[lawful]. Then:

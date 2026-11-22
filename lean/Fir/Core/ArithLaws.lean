@@ -14,8 +14,8 @@ every core op but `call`, must also be total, with some outcome on every
 operand vector, and monotone, so that refining its operands refines what it
 does. Each proof is about fir's execution rules, read in the set monad, so
 these sections cover the ops that touch no memory and read no item of the
-run: `alloca`, the loads and stores, `fieldAddr`, `memCopy`, `memSet`,
-`ptrExpose` and `ptrFromInt` have no rule there and meet their obligations with memory, each by its own
+run: `alloca`, the loads and stores, `fieldAddr`, `globalAddr`, `memCopy`,
+`memSet`, `ptrExpose` and `ptrFromInt` have no rule there and meet their obligations with memory, each by its own
 rule (`docs/decisions/semantics-effects.md#soundness`). With every
 obligation met, the core dialect is lawful with memory, and refinement is
 compositional: run on arguments that refine others, every function's

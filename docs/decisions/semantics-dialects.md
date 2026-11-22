@@ -156,8 +156,8 @@ memory map (ADR-2026-11-09-1541). The round trip, well-formedness and the
 poison obligations hold for the sum with no new assumption. So two extensions
 of the core, written apart, combine in one lawful sum (ADR-2026-11-09-2306).
 The core meets the lawful classes with memory alone, since `alloca`, the
-loads and stores, `fieldAddr`, `memCopy` and `memSet` have no rule in the
-set monad ([semantics-effects.md](semantics-effects.md#soundness)), so its
+loads and stores, `fieldAddr`, `globalAddr`, `memCopy` and `memSet` have no
+rule in the set monad ([semantics-effects.md](semantics-effects.md#soundness)), so its
 sums are lawful with memory: in their totality,
 monotonicity, poison with memory and effects (`Dialect.sum.lawfulTotal`,
 `Dialect.lift.sum_lawfulTotal` and their siblings; `lean/FirTest/Deps.lean`;

@@ -188,6 +188,15 @@ Field addresses (#236; the human's rulings of 2026-11-16 on #236):
   only an access through the result must be in bounds. It is never UB,
   and a poison operand gives poison.
 
+Addresses of globals (#237; ADR-2026-11-09-1546):
+
+* `globalAddr s n`: the address of the global with symbol `s`, a pointer
+  of `ptr<N>`, `N = n`, to the first unit of the global's allocation. A
+  run starts with one allocation for each global of its function's table,
+  live for the whole run (the section on the memories a run starts with),
+  and reads where it is from the items that the run gives each op. It
+  takes no operands, is never UB and never gives poison.
+
 Stack allocation (#231; the human's ruling of 2026-11-14 on #378):
 
 * `alloca k t c a n`: allocates room for `c` values of the type `t` in the
@@ -376,6 +385,7 @@ inductive Op where
   | fptrunc (r : RoundingMode) (e m e' m' : Nat)
   | ptradd (n w : Nat)
   | fieldAddr (s : String) (i : Nat) (n : Nat) (w : Option Nat)
+  | globalAddr (s : String) (n : Nat)
   | alloca (k : Memory.AllocKind) (t : Ty) (c : Nat) (a : Option Nat) (n : Nat)
   | load (o : Memory.Ordering) (w : Nat) (a : Option Nat) (n : Nat)
   | store (o : Memory.Ordering) (w : Nat) (a : Option Nat) (n : Nat)

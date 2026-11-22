@@ -21,10 +21,10 @@
 //! `fptosi` and `fptoui`. #231 adds the pointer offset `ptradd`, the
 //! stack allocation `alloca`, the load `load` and the store `store`, and
 //! #264 loads, stores and allocations of floats. #236 adds the field
-//! address `fieldaddr`. #234 adds the copy `memcpy`, the move `memmove`
-//! and the fill `memset`, and #232 `ptr_expose` and `ptr_from_int`, which
-//! turn pointers into integers and back. A later family adds a file and a
-//! line here.
+//! address `fieldaddr`, and #237 the address of a global `globaladdr`.
+//! #234 adds the copy `memcpy`, the move `memmove` and the fill `memset`,
+//! and #232 `ptr_expose` and `ptr_from_int`, which turn pointers into
+//! integers and back. A later family adds a file and a line here.
 
 mod access;
 mod align;
@@ -45,6 +45,7 @@ mod float_convert;
 mod float_text;
 mod float_to_int;
 mod freeze;
+mod global_addr;
 mod int_to_float;
 mod load;
 mod memcopy;
@@ -122,6 +123,7 @@ pub fn dialect() -> Dialect {
         .op(float_convert::Convert("fptrunc"))
         .op(pointer::PtrAdd)
         .op(field_addr::FieldAddr)
+        .op(global_addr::GlobalAddr)
         .op(alloca::Alloca)
         .op(load::LOAD)
         .op(store::STORE)
