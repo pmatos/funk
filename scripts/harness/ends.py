@@ -83,9 +83,12 @@ class _Renaming:
         self.todo = deque()
 
     def reached(self, memory: int, alloc: str) -> tuple[int, int] | None:
-        """The source's allocation that a pointer points into, or None for
-        a dangling pointer, which is poison in the comparison."""
-        if alloc == "none" or (memory, int(alloc)) not in self.source:
+        """The source's allocation that a pointer with provenance points
+        into, or None for a dangling pointer, which is poison in the
+        comparison: one into an allocation that the observer does not
+        reach, or into a freed one (`FirRef.reachOf`)."""
+        a = self.source.get((memory, int(alloc)))
+        if a is None or (a.kind is not None and not a.live):
             return None
         return memory, int(alloc)
 
@@ -125,6 +128,8 @@ class _Renaming:
         if w is None:
             return None if want in (POISON, got) else f"{where} is {got}, not {want}"
         memory, alloc, offset, index = w.groups()
+        if alloc == "none":
+            return None if got == want else f"{where} is {got}, not {want}"
         if self.reached(int(memory), alloc) is None:
             return None
         g = FRAGMENT.fullmatch(got)
@@ -163,11 +168,10 @@ def _count(items, noun: str) -> str:
     return f"{len(items)} {noun}{'' if len(items) == 1 else 's'}"
 
 
-def refined(source: End, want, target: End, got, types) -> str | None:
-    """Why the target's end, with the returned values `got`, does not refine
-    the source's, with `want`, or None when it does. `types` are the result
-    types. Only pointer values are compared here: `refine.refines` compares
-    the others."""
+def unjudged(source: End, target: End) -> str | None:
+    """Why the harness cannot judge the two ends, so the test proves
+    nothing: fir-ref's walk of the memory ran out of steps, or a path shows
+    events, which the harness does not judge yet (#213, stage 3)."""
     if source.memory is None:
         return "fir-ref's walk of the memory an observer reaches ran out of steps"
     if source.trace or target.trace:
@@ -175,6 +179,17 @@ def refined(source: End, want, target: End, got, types) -> str | None:
             f"fir-ref's path shows {_count(source.trace, 'event')} and the"
             f" target's {len(target.trace)}, and the harness judges no event yet"
         )
+    return None
+
+
+def refined(source: End, want, target: End, got, types) -> str | None:
+    """Why the target's end, with the returned values `got`, does not refine
+    the source's, with `want`, or None when it does. `types` are the result
+    types. Only pointer values are compared here: `refine.refines` compares
+    the others."""
+    why = unjudged(source, target)
+    if why is not None:
+        return why
     if len(source.escaped) != len(target.escaped):
         return (
             f"fir-ref's run lets {_count(source.escaped, 'allocation')} escape"

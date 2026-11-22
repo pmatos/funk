@@ -112,6 +112,8 @@ class _Run:
         # by the NaNs, and how such a run failed, if one did.
         self.with_nans = {}
         self.rerun_failure = None
+        # The outcomes that give the declared results, ends included.
+        self.seen = []
 
     def compare(self, ref) -> Evaluation:
         """Judge the test on fir-ref's report `ref` on its arguments."""
@@ -163,7 +165,7 @@ class _Run:
         if isinstance(self.ref, BudgetExceeded) or (
             self.test.results and not self.ref.complete
         ):
-            return sets.judge_declared(self.witnessed, native, self.types)
+            return sets.judge_declared(self.test.results, self.seen, native, self.types)
         j = sets.judge_set(self.ref, native, self.types)
         if self.ref.complete or j.status != FAILED:
             return j
@@ -230,14 +232,14 @@ class _Run:
 
     def _declared(self) -> Judgement | None:
         t = self.test
-        self.witnessed = []
         for i, r in enumerate(t.results, 1):
             got = self.runs.scripted(t.args, r.witness)
             j = sets.witness(i, r, got)
             if j is not None:
                 return j
-            self.witnessed.append(got.outcome)
+            self.seen.append(got.outcome)
         if isinstance(self.ref, Outcomes):
+            self.seen += self.ref.outcomes
             j = sets.undeclared(self.ref, t.results)
             if j is not None or self.ref.complete:
                 return j
@@ -246,6 +248,7 @@ class _Run:
             j = sets.sample(seed, got, t.results)
             if j is not None:
                 return j
+            self.seen.append(got.outcome)
         return None
 
     def _recheck(self, args: tuple[str, ...], j: Judgement) -> Judgement:

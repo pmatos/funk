@@ -18,13 +18,15 @@ from dataclasses import dataclass
 import ends
 import float_text
 
-POISON = "poison"
+POISON = ends.POISON
 UB = "ub"
 FUEL_EXHAUSTED = "fuel-exhausted"
 STUCK = "stuck"
 RETURN = "return"
 
 PASSED = "passed"
+# How a failure of the end of a return, not of its values, begins.
+END = "the end of the return: "
 FAILED = "failed"
 INVALID = "invalid"
 
@@ -169,21 +171,23 @@ def refines(ref: Outcome, native, types) -> Judgement:
         return Judgement(
             FAILED, f"the function returns {len(types)} values, not {len(ref.values)}"
         )
+    seen = []
     for i, (want, got, ty) in enumerate(zip(ref.values, native, types), 1):
         if ends.pointer_memory(ty) is not None:
             if not is_value(got, "i64"):
                 return Judgement(FAILED, f"value {i}, {got}, is not an address")
+            got = ends.ADDRESS
         elif want == POISON:
             if not is_value(got, ty):
                 return Judgement(FAILED, f"value {i}, {got}, is not a value of {ty}")
         elif got != want:
             return Judgement(FAILED, f"value {i} is {got}, not {want}")
-    seen = tuple(
-        ends.ADDRESS if ends.pointer_memory(t) is not None else v
-        for v, t in zip(native, types)
-    )
+        seen.append(got)
+    why = ends.unjudged(ref.end, ends.NOTHING)
+    if why is not None:
+        return Judgement(INVALID, f"{why}, so the test proves nothing")
     why = ends.refined(ref.end, ref.values, ends.NOTHING, seen, types)
-    return Judgement(FAILED, why) if why else Judgement(PASSED)
+    return Judgement(FAILED, END + why) if why else Judgement(PASSED)
 
 
 def expected(ref: Outcome, expect) -> Judgement:

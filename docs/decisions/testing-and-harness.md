@@ -85,8 +85,10 @@ reaches ([fir-ref-run-end.md](fir-ref-run-end.md)), as the human ruled on
 ends as `End.SeenUnder` does: a one-to-one renaming built from the source's
 side, the escaped lists matched by place, a dangling pointer of the source
 poison, and each matched pair of allocations agreeing on kind, alignment,
-size and liveness, each live unit refined. No id and no address is
-compared, and the harness judges no event yet (#213, stage 3).
+size and liveness, each live unit refined. A pointer into a freed
+allocation is dangling. No id and no address is compared. A path that shows
+an event, which the harness judges from #213's stage 3, or whose memory
+`fir-ref` could not walk, makes the test invalid.
 
 Native code's end is its values, with no event, nothing escaped and no live
 allocation: `funk build` emits no global and calls nothing outside the
@@ -95,7 +97,8 @@ values alone judge a test only where `fir-ref`'s end observes nothing, and
 a native pointer result, an address, refines only a poison or dangling
 pointer. Native runs report memory once they can hold it (#213, stage 2).
 A declared result names values only, so native code is judged against the
-outcome its witness gives, end included.
+outcomes that give it, from its witness, the set and the seeded runs, ends
+included.
 
 Rejected: judging values alone, which passes a wrong store to memory that
 an observer sees.

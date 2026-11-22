@@ -19,6 +19,7 @@ when its result refines one declared result.
 from dataclasses import dataclass
 
 from refine import (
+    END,
     FAILED,
     FUEL_EXHAUSTED,
     INVALID,
@@ -115,8 +116,9 @@ def problem(outcomes) -> Judgement | None:
     return None
 
 
-def member(outcomes, native, types, what: str = "outcomes") -> Judgement:
-    """Native code's result refines one of `outcomes`."""
+def member(outcomes, native, types, what: str = "outcomes", shown=None) -> Judgement:
+    """Native code's result refines one of `outcomes`. A failure lists the
+    values `shown`, by default those of `outcomes`."""
     if isinstance(native, OutOfStack):
         return native.judgement()
     if isinstance(native, str):
@@ -126,14 +128,14 @@ def member(outcomes, native, types, what: str = "outcomes") -> Judgement:
         j = refines(o, native, types)
         if j.status == PASSED:
             return Judgement(PASSED)
-        if not same and o.values == tuple(native):
-            # The values match, so the end of the return does not.
+        if not same and j.why.startswith(END):
             same = f"; where the values match, {j.why}"
-    some = ", ".join(show_values(o.values) for o in outcomes[:3])
-    more = ", ..." if len(outcomes) > 3 else ""
+    shown = [o.values for o in outcomes] if shown is None else shown
+    some = ", ".join(show_values(v) for v in shown[:3])
+    more = ", ..." if len(shown) > 3 else ""
     return Judgement(
         FAILED,
-        f"the native result refines none of the {len(outcomes)} {what}:"
+        f"the native result refines none of the {len(shown)} {what}:"
         f" {some}{more}{same}",
     )
 
@@ -167,11 +169,14 @@ CUT_SHORT = (
 )
 
 
-def judge_declared(witnessed, native, types) -> Judgement:
+def judge_declared(results, seen, native, types) -> Judgement:
     """Judges a differential test on its declared results, once they are
-    checked: `witnessed` are the outcomes that their witnesses give, each
-    with the end of its return, which a declared result does not name."""
-    return member(tuple(witnessed), native, types, "declared results")
+    checked: `seen` are the outcomes of the run that give them, from their
+    witnesses, the set and the seeded runs, each with the end of its
+    return, which a declared result does not name."""
+    shown = [r.values for r in results]
+    outcomes = tuple(dict.fromkeys(seen))
+    return member(outcomes, native, types, "declared results", shown)
 
 
 def witness(i: int, r: Declared, got) -> Judgement | None:

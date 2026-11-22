@@ -4,7 +4,8 @@ import unittest
 
 import tools
 from ends import ADDRESS, NOTHING, Alloc, End, pointer_memory, refined
-from refine import FAILED, PASSED, RETURN, Outcome, refines
+from refine import FAILED, INVALID, PASSED, RETURN, Outcome, refines
+from sets import member
 
 
 def block(alloc, *units, memory=0, kind="global", align=1, live=True):
@@ -106,6 +107,25 @@ class Comparison(unittest.TestCase):
             "not ptr(none, 8)", refined(NOTHING, want, NOTHING, (ADDRESS,), TYPES)
         )
 
+    def test_a_stored_pointer_with_no_provenance_is_refined_by_itself(self):
+        s = End(memory=(block(0, "frag(0, ptr(none, 8), 0)"),))
+        for unit, refines_it in (
+            ("frag(0, ptr(none, 8), 0)", True),
+            ("frag(0, ptr(none, 9), 0)", False),
+            ("0x07", False),
+        ):
+            t = target(block(0, unit))
+            why = refined(s, ("ptr(0, 0)",), t, ("ptr(0, 0)",), TYPES)
+            self.assertEqual(why is None, refines_it, unit)
+
+    def test_a_pointer_into_a_freed_allocation_is_dangling(self):
+        # The world freed the escaped heap allocation 1, so a pointer into
+        # it is poison, though the observer still reaches the allocation.
+        freed = Alloc(0, 1, "heap", 1, 4, False)
+        s = End((), ((0, 1),), (freed,))
+        t = target(Alloc(0, 6, "heap", 1, 4, False), escaped=((0, 6),))
+        self.assertIsNone(refined(s, ("ptr(1, 0)",), t, ("poison",), TYPES))
+
     def test_the_memory_of_a_pointer_type(self):
         self.assertEqual(
             [pointer_memory(t) for t in ("ptr", "ptr(3)", "i64")], [0, 3, None]
@@ -133,6 +153,19 @@ class NativeEnds(unittest.TestCase):
             self.assertEqual(j.status, PASSED)
         j = refines(Outcome(RETURN, ("poison",)), ("x",), TYPES)
         self.assertEqual((j.status, j.why), (FAILED, "value 1, x, is not an address"))
+
+    def test_what_the_harness_cannot_judge_proves_nothing(self):
+        for end in (End(memory=None), End(("e",))):
+            j = refines(Outcome(RETURN, (), end=end), (), [])
+            self.assertEqual(j.status, INVALID)
+            self.assertIn("so the test proves nothing", j.why)
+
+    def test_an_end_that_fails_among_outcomes_says_why(self):
+        live = Outcome(RETURN, VALUES, end=SOURCE)
+        j = member((live, Outcome(RETURN, ("poison",)), live), ("4096",), TYPES)
+        self.assertEqual(j.status, PASSED)
+        j = member((Outcome(RETURN, ("poison",), end=End(("e",))), live), ("1",), TYPES)
+        self.assertIn("where the values match, the end of the return:", j.why)
 
     def test_an_escape_fails(self):
         ref = Outcome(RETURN, (), end=End((), ((0, 0),), (block(0, "0x00"),)))
