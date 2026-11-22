@@ -135,9 +135,10 @@ class Comparison(unittest.TestCase):
 
 
 class NativeEnds(unittest.TestCase):
-    """Native code's end shows no event, lets nothing escape and reaches no
-    live allocation, so values alone judge it only when fir-ref's end
-    observes nothing either."""
+    """Native code's end shows no event and lets nothing escape; given no
+    memory report, as here, it reaches no global, so values alone judge it
+    only when fir-ref's end observes nothing either (`test_native_ends.py`
+    judges the globals it reports)."""
 
     def test_values_alone_judge_an_end_that_observes_nothing(self):
         ref = Outcome(RETURN, ("7",))
