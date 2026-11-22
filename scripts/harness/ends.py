@@ -74,7 +74,7 @@ def pointer_memory(ty: str) -> int | None:
     return int(m.group(1) or 0)
 
 
-class _Renaming:
+class Renaming:
     """A renaming of the source's allocations into the target's, built from
     the source's side. A subclass that reads the target another way
     overrides `image`, `fields` and `units`."""
@@ -248,4 +248,4 @@ def refined(source: End, want, target: End, got, types) -> str | None:
     native end with `native_ends.refined`, through the same renaming; this
     one states the rule on two of fir-ref's ends. The harness can judge
     both ends (`unjudged`)."""
-    return _Renaming(source, target).refined(want, got, types)
+    return Renaming(source, target).refined(want, got, types)

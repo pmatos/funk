@@ -330,10 +330,7 @@ def read_globals(items) -> tuple[native_ends.Global, ...] | None:
         )
         if not isinstance(name, str) or memory is None or units is None:
             return None
-        if (
-            not isinstance(address, str)
-            or native_ends.DECIMAL.fullmatch(address) is None
-        ):
+        if not isinstance(address, str) or ends.DECIMAL.fullmatch(address) is None:
             return None
         out.append(native_ends.Global(name, memory, int(address), units))
     return tuple(out)

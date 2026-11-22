@@ -33,7 +33,6 @@ import ends
 # byte I of its address.
 POINTER_UNITS = 8
 UNITS = re.compile(r"(?:[0-9a-f]{2}|zeros\((?:0|[1-9][0-9]*)\))*")
-DECIMAL = ends.DECIMAL
 PIECE = re.compile(r"([0-9a-f]{2})|zeros\(([0-9]+)\)")
 
 
@@ -105,7 +104,7 @@ class Unrelated(Exception):
     native run, so the test proves nothing."""
 
 
-class _Native(ends._Renaming):
+class _Native(ends.Renaming):
     def __init__(self, source: ends.End, globals_: tuple[Global, ...]):
         self.globals = {(g.memory, i): g for i, g in enumerate(globals_)}
         memory = tuple(
@@ -120,7 +119,7 @@ class _Native(ends._Renaming):
         """The global whose address plus `offset` is the address `got`;
         when several are, one already renamed from `s`, else one of `s`'s
         size that nothing is renamed into."""
-        if DECIMAL.fullmatch(got) is None:
+        if ends.DECIMAL.fullmatch(got) is None:
             return None
         address = int(got) % 2**64
         found = [
@@ -193,15 +192,15 @@ class _Native(ends._Renaming):
         if s is None:
             return None
         start = p - int(index)
-        whole = a.units[max(start, 0) : start + POINTER_UNITS]
+        held = a.units[max(start, 0) : start + POINTER_UNITS]
         mine = [
             f"frag({memory}, ptr({alloc}, {offset}), {i})" for i in range(POINTER_UNITS)
         ]
-        if start >= 0 and list(whole) == mine:
+        if start >= 0 and list(held) == mine:
             if int(index) != 0:
                 return None
-            whole = bytes(g.units[j] for j in range(p, p + POINTER_UNITS))
-            address = int.from_bytes(whole, "little")
+            native = bytes(g.units[j] for j in range(p, p + POINTER_UNITS))
+            address = int.from_bytes(native, "little")
             return self.pointer(
                 int(memory), f"ptr({alloc}, {offset})", str(address), where
             )
