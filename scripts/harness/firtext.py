@@ -239,16 +239,24 @@ class Reader:
         parameters and results with their markers and maybe `...`, then its
         empty body."""
         self.take("word")
-        self.take("symbol")
-        self.take("(")
-        if not self.at(")"):
-            self.params()
-        self.take(")")
-        if self.at("->"):
-            self.take("->")
-            self.results()
+        self.header()
         self.take("{")
         self.take("}")
+
+    def header(
+        self,
+    ) -> tuple[str, tuple[tuple[str, str], ...], tuple[str, ...]]:
+        """A function's header after its kind: its symbol, its parameters
+        and its results, up to its `{`."""
+        symbol = self.take("symbol").text
+        self.take("(")
+        params = () if self.at(")") else self.params()
+        self.take(")")
+        results = ()
+        if self.at("->"):
+            self.take("->")
+            results = self.results()
+        return symbol, params, results
 
     def nested(self, scope: str) -> list[Function]:
         """The functions of a nested module, in the table `scope`."""
@@ -265,14 +273,8 @@ class Reader:
         kind = self.take("word")
         if kind.text != "func":
             raise TextError(f"line {kind.line}: an item of kind {kind.text}")
-        symbol = scope + self.take("symbol").text
-        self.take("(")
-        params = () if self.at(")") else self.params()
-        self.take(")")
-        results = ()
-        if self.at("->"):
-            self.take("->")
-            results = self.results()
+        symbol, params, results = self.header()
+        symbol = scope + symbol
         self.take("{")
         defined, ops = list(params), []
         while self.at("label"):

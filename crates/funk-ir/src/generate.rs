@@ -31,10 +31,7 @@ use crate::dialects::core::{
     BITWISE_OPS, DIVISION_OPS, MAX_WIDTH, PREDICATES, SHIFT_OPS, WRAP_FLAG_SETS, int_type,
     int_width,
 };
-use crate::ir::{
-    Attr, Def, Extern, Func, Int, Item, LocRef, LocTable, Location, Module, Nat, Op, Type,
-    trim_attrs,
-};
+use crate::ir::{Attr, Extern, Func, Int, Item, LocRef, LocTable, Location, Module, Nat, Op, Type};
 
 mod blocks;
 mod bounded;
@@ -132,39 +129,29 @@ pub fn module_of(rng: &mut Rng, widths: Widths) -> Module {
     for k in 0..funcs.len() {
         m = m.func(func(rng, &funcs, k, &keys, widths));
     }
-    m.items.extend(declaration(&funcs).map(Item::Extern));
+    let decl = m.funcs().next().map(|f| declaration(f, &funcs));
+    m.items.extend(decl.map(Item::Extern));
     m
 }
 
 /// An external declaration beside the functions, which draws nothing from
 /// the generator, so the functions are those of the same seed without it:
-/// the signature of the first function, with its markers, under a symbol
-/// that no function has, and variadic when the module has two functions or
-/// more (ADR-2026-11-09-1547). No op calls it: a call to a declaration
-/// waits on the external call rule (#239).
-fn declaration(funcs: &[Callee]) -> Option<Extern> {
-    let first = funcs.first()?;
+/// the signature of the first function `first`, with its markers, under a
+/// symbol that no function has, and variadic when the module has two
+/// functions or more (ADR-2026-11-09-1547). No op calls it: a call to a
+/// declaration waits on the external call rule (#239).
+fn declaration(first: &Func, funcs: &[Callee]) -> Extern {
     let mut name = format!("{}.ext", first.name);
     while funcs.iter().any(|f| f.name == name) {
         name.push('x');
     }
     let mut e = Extern::new(name);
-    e.params = (first.ty.params.iter().enumerate())
-        .map(|(i, t)| Def::new(format!("p{i}"), t.clone()))
-        .collect();
-    e.param_attrs = trim_attrs(
-        (first.ty.params.iter().enumerate())
-            .map(|(i, t)| marker(t, i))
-            .collect(),
-    );
-    e.results.clone_from(&first.ty.results);
-    e.result_attrs = trim_attrs(
-        (first.ty.results.iter().enumerate())
-            .map(|(i, t)| marker(t, i + 1))
-            .collect(),
-    );
+    e.params.clone_from(&first.params);
+    e.param_attrs.clone_from(&first.param_attrs);
+    e.results.clone_from(&first.results);
+    e.result_attrs.clone_from(&first.result_attrs);
     e.variadic = funcs.len() >= 2;
-    Some(e)
+    e
 }
 
 /// A table of one to eight entries in increasing order of reference, each

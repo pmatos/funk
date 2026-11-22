@@ -6,9 +6,10 @@ Tests of external declarations (ADR-2026-11-09-1547): their text, which
 reads back and prints as itself, and the headers that do not decode; and
 the rules of a valid declaration: its markers, its types, the memories its
 types name and the words of its types. A call to a declaration stays
-rejected until the run can make one (#239). `crates/funk-ir/tests/extern.rs`
-checks the same texts, so the two parsers and the two validators agree on
-each.
+rejected until the run can make one (#239).
+`crates/funk-ir/tests/extern_decl.rs` checks the same texts, so the two
+parsers agree on each and the two validators give the same problems for
+each declaration; on the call they share only the verdict.
 -/
 
 namespace FirTest
@@ -31,9 +32,6 @@ def externText (ps rs : String) : String := oneFunc ("extern @g(" ++ ps ++ ")" +
 -- A declaration beside a function.
 #guard roundTrips (oneFunc ("extern @puts(%s: ptr) -> i32 {\n}\n\n" ++
   "func @f() {\n^e:\n  ret @0\n}\n"))
--- The empty lists of attributes at the end are left out, so these print
--- as the declaration without them.
-#guard printsAs (externText "%a: i32, ..." " -> i32") (externText "%a: i32, ..." " -> i32")
 
 -- Headers that do not decode.
 #guard rejectedAt (externText "" " zext") 1 13 "an extern with no results has no attributes"

@@ -1,10 +1,11 @@
 //! External declarations (ADR-2026-11-09-1547), on the texts of
 //! `lean/FirTest/Extern.lean`, so the two parsers reject each malformed
 //! declaration at the same place and the two validators give the same
-//! problems: the text reads back and prints as itself, a header that does
-//! not decode is a parse error where it stops, and validation checks the
-//! markers, types and memories of the declaration. A call to a declaration
-//! stays rejected until the run can make one (#239).
+//! problems for each declaration: the text reads back and prints as itself,
+//! a header that does not decode is a parse error where it stops, and
+//! validation checks the markers, types and memories of the declaration. A
+//! call to a declaration stays rejected until the run can make one (#239),
+//! by both validators in their own words.
 
 mod common;
 
@@ -133,7 +134,8 @@ fn validation_checks_markers_types_and_memories() {
 }
 
 /// A call to a declaration does not validate yet: the run cannot make one
-/// until the external call rule (#239).
+/// until the external call rule (#239). Both validators reject it, but they
+/// word a call's problems differently, so only the verdict is shared.
 #[test]
 fn a_call_to_a_declaration_is_rejected() {
     let text = one_func(
