@@ -57,7 +57,7 @@ callee's run, recursion included. For poison, the run keeps its
 environment clean.
 :::
 
-:::readable Fir.Module.summary_neverUB Fir.Module.summary_noPoison (pin := Fir.LawfulDialectEffects) (pin := Fir.Func.memRuns) (fingerprint := "1481588206354085020")
+:::readable Fir.Module.summary_neverUB Fir.Module.summary_noPoison (pin := Fir.LawfulDialectEffects) (pin := Fir.Func.memRuns) (fingerprint := "1275865335785394527")
 *Theorems: function summaries are sound.* Let the dialect be lawful in
 its effects, every function of the module $`M` valid, and $`s` name the
 function $`f` of $`M`. Wherever a run names the dialect's memories, with

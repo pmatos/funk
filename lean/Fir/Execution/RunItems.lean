@@ -1,5 +1,7 @@
-import Fir.Validation.Layout
+import Fir.Validation.Global
+import Fir.Memory.Policy
 import Fir.Memory.Resolver
+import Fir.Memory.Encode
 
 /-!
 # The items a run gives each op
@@ -32,6 +34,15 @@ canonical resolver, which proposes none, so a run made from its module
 gives it, and the spec's runs replace it by each resolver that they keep
 (the section on runs under every address policy).
 
+The record also lists the allocations that a run starts with: one for each
+global of the table, in the table's order (the section on the memories a
+run starts with). Each lives in the memory of its number for the whole
+run, with the global's alignment, its constness, and its initializer's
+units followed by zeros up to its size (the human's ruling of 2026-11-20 on
+#237, Q1). A run holds the globals of its own function's table only (Q3):
+a nested module's globals are its kernels', as an op of a table names only
+the items of that table.
+
 Every obligation and guarantee over the semantics with memory holds for
 every such record, with no hypothesis on it, so for every address policy.
 So the items that later ops name, such as the address of a function (#235)
@@ -62,14 +73,29 @@ structure LayoutPlace where
   align : Nat
   fields : List FieldPlace
 
+/-- An allocation that a run starts with, in the memory that the module's
+data layout numbers `mem`: its kind, its alignment, whether it is
+constant, and its units in a memory whose units are `u` bits wide. A
+global's is one (ADR-2026-11-09-1546), and a function's address will be
+another, of the kind `function` (the human's ruling of 2026-11-19 on
+#235). -/
+structure StartAlloc where
+  mem : Nat
+  kind : Memory.AllocKind
+  align : Nat
+  const : Bool
+  units : (u : Nat) → List (Memory.MemUnit u)
+
 /-- The items of a module that a run gives each op's rule: the layout of
-each aggregate, by its symbol, if there is one, and the address policy and
+each aggregate, by its symbol, if there is one, the address policy and
 resolver of each memory, by its number, which are the canonical ones unless
-the run says otherwise. -/
+the run says otherwise, and the allocations the run starts with, in
+order. -/
 structure RunItems where
   layout? : Name → Option LayoutPlace
   addrs : Nat → Memory.Policy := fun _ => Memory.Policy.canonical
   resolvers : Nat → Memory.Resolver := fun _ => Memory.Resolver.canonical
+  starts : List StartAlloc := []
 
 /-- The items of a run that gives no item, under the canonical layout. -/
 def RunItems.empty : RunItems := { layout? := fun _ => none }
@@ -96,13 +122,54 @@ def Field.place (l : DataLayout) (n : Nat) (f : Field d) : FieldPlace :=
 def Aggregate.place (l : DataLayout) (a : Aggregate d) : LayoutPlace :=
   { mem := a.mem, size := a.size, align := a.align, fields := a.fields.map (Field.place l a.mem) }
 
+/-- Where a run starts the global `s` of a table whose globals are `gs`:
+its memory, and its allocation's id in that memory, which counts the
+globals of that memory before it. The first global with the symbol is the
+one, as validation reads it. -/
+def Global.startId? (gs : List Global) (s : Name) : Option (Nat × Memory.AllocId) :=
+  let i := gs.findIdx (·.name == s)
+  match gs[i]? with
+  | some g => some (g.mem, ((gs.take i).filter (·.mem == g.mem)).length)
+  | none => none
+
+/-- The units that a piece of an initializer gives in the memory `n`, of
+`u`-bit units, of a module whose data layout is `l`, as an item of a table
+whose globals are `gs`: the units it gives, each cut to `u` bits; its
+zeros; or the address of a global plus its offset, as a store of that
+pointer writes it (`encodePtr`), in as many units as `InitPiece.unitCount`
+counts. An address of a symbol that names no global gives none, so the
+units stay those that validation counts. -/
+def InitPiece.startUnits (l : DataLayout) (gs : List Global) (n u : Nat) :
+    InitPiece → List (Memory.MemUnit u)
+  | .units us => us.map fun x => .bits (BitVec.ofNat u x)
+  | .zeros k => List.replicate k (.bits 0)
+  | .addr s k =>
+    match Global.startId? gs s with
+    | some (m, a) =>
+      Memory.encodePtr m ((l.entry n).bitsUnits (l.entry m).pointer) (l.entry n).order
+        (.value ⟨some a, k⟩)
+    | none => []
+
+/-- The allocation that a run starts a global with, as an item of a table
+whose globals are `gs`, in a module whose data layout is `l`: of the kind
+`global`, in its memory, with its alignment and constness, and its
+initializer's units followed by zeros up to its size (the human's ruling
+of 2026-11-20 on #237, Q1). An initializer longer than the size, which
+validation rejects, is cut to it. -/
+def Global.start (l : DataLayout) (gs : List Global) (g : Global) : StartAlloc :=
+  { mem := g.mem, kind := .global, align := g.align, const := g.const,
+    units := fun u =>
+      let us := g.init.flatMap (·.startUnits l gs g.mem u)
+      us.take g.size ++ List.replicate (g.size - us.length) (.bits 0) }
+
 /-- The items that a run of a function of the symbol table `t`, in a module
 whose data layout is `l`, gives each op: the first aggregate's layout of
-`t` with each symbol, placed, under the canonical layout. The layouts are
-placed once, not at each lookup. -/
+`t` with each symbol, placed, under the canonical layout, and the
+allocation of each of `t`'s globals, in order. The layouts are placed once,
+not at each lookup. -/
 def RunItems.ofTable (l : DataLayout) (t : SymbolTable d) : RunItems :=
   let placed := t.aggregates.map fun a => (a.name, a.place l)
-  { layout? := fun s => placed.lookup s }
+  { layout? := fun s => placed.lookup s, starts := t.globals.map (Global.start l t.globals) }
 
 /-- The items that a run of a function of a module's own table gives each
 op. -/

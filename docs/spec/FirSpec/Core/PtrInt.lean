@@ -17,7 +17,7 @@ when the Lean changes under it.
 :::moduleDocs (fingerprint := "13580712945572408298")
 :::
 
-:::readable Fir.Core.poisonExposePointer Fir.Core.ptrExposeRule (pin := Fir.MonadMemory) (pin := Fir.MonadUB) (pin := Fir.RunItems) (fingerprint := "3569500572371951093")
+:::readable Fir.Core.poisonExposePointer Fir.Core.ptrExposeRule (pin := Fir.MonadMemory) (pin := Fir.MonadUB) (pin := Fir.RunItems) (fingerprint := "1911466079812049626")
 *Definition: the rule of $`\mathsf{ptr\_expose}`.* Let a run's memories
 have the layout entries $`\ell`, let the run name the core's memory $`x` as
 $`\rho(x)` and give the items $`L`. For $`\mathsf{ptrExpose}~N~W` on the
@@ -35,7 +35,7 @@ A valid module has $`W = P`, so the cut and the padding only make the rule
 total for a module that `fir-ref run` runs without validating it.
 :::
 
-:::readable Fir.Core.ptrFromIntRule (pin := Fir.MonadMemory) (pin := Fir.RunItems) (fingerprint := "17518957462230432106")
+:::readable Fir.Core.ptrFromIntRule (pin := Fir.MonadMemory) (pin := Fir.RunItems) (fingerprint := "2277570268470996773")
 *Definition: the rule of $`\mathsf{ptr\_from\_int}`.* For
 $`\mathsf{ptrFromInt}~N~W` on the integer $`i`, with $`P` as above: when
 $`i` is defined, the pointer that the memory effect turns $`i`, cut or

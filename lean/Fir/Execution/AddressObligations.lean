@@ -17,9 +17,8 @@ memory, as a declared effect: an op that leaves an allocation in the memory
 The same holds of the count of integers turned back into pointers of a
 memory, which the run's resolver sees (the section on address resolvers):
 an op that leaves an allocation in `x` out of its declaration counts no
-rebuild in `x`. Which declared effect covers that count is open for the
-human; this obligation states the recommended one, that it counts as
-allocating, as exposing does.
+rebuild in `x`. The human ruled on 2026-11-21, on #232, that the count
+counts as allocating, as exposing does.
 
 So, beside the effect obligations (the section on effect obligations), a
 dialect whose declarations cover addresses meets two more, over each

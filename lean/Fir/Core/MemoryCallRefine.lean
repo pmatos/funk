@@ -29,7 +29,8 @@ second for a callee that reaches no memory:
 * with memory, for a callee that reaches no memory in the module where it
   runs, nor in the new one: no function that its run may reach declares a
   memory effect. Its runs then do not depend on the memories, so refinement
-  with memory, from the empty memories, is refinement from given memories,
+  with memory, from the memories a run starts with, is refinement from given
+  memories,
   and the form from given memories applies. Like it, this form asks nothing
   of the parameter types of `@g`, pointers included (#214). Before #214 it
   asked that `@g` have no pointer parameter, as the human's ruling on #373

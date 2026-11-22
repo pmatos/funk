@@ -19,6 +19,7 @@ namespace Core.Unlawful
   effects
     | .sdiv _ x => { mayPoison := x }
     | op => Core.Op.effects op
+  numbered := some
 
 /-- `sdiv` by zero is UB, so the obligations reject the declaration, over
 the core's own semantics with memory: an op left without may-UB must never

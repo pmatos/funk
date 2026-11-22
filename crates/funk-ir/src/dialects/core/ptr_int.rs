@@ -12,8 +12,8 @@
 //! the layout.
 //!
 //! Each reads memory `N` and allocates in it: exposing counts as allocating
-//! (the human's ruling of 2026-11-20 on #232, question B), and so, until the
-//! human rules otherwise, does turning an integer back into a pointer.
+//! (the human's ruling of 2026-11-20 on #232, question B), and so does
+//! turning an integer back into a pointer (the human's ruling of 2026-11-21).
 //! `ptr_expose` may be UB, on a poison pointer and when no address may be
 //! given; `ptr_from_int` never is. On defined operands neither gives poison.
 

@@ -29,10 +29,15 @@ size, kind and alignment, freeing a block, and loading and storing a run of
 units. Loads and stores are the accesses. An access is immediate UB, a
 _fault_ below, when its pointer has no provenance for an allocation of the
 memory, when its allocation is freed, or when the units it touches are not
-all inside the allocation (ADR-2026-11-09-1542). Allocating and freeing
-never fault: the run frees a call's stack allocations when the call returns
-(ADR-2026-11-09-1548), and a heap allocation is freed by an external call,
-which the world answers. How a value of a type becomes units, and how an op
+all inside the allocation (ADR-2026-11-09-1542). A block may also be
+_constant_: a run starts with a constant global's block so
+(ADR-2026-11-09-1546), and a store to a constant block faults, so writing
+a constant global is UB when the write runs (the human's ruling of
+2026-11-20 on #237, Q2). An allocation that an op makes is never
+constant, and a load reaches a constant block as it reaches any other.
+Allocating and freeing never fault: the run frees a call's stack
+allocations when the call returns (ADR-2026-11-09-1548), and a heap
+allocation is freed by an external call, which the world answers. How a value of a type becomes units, and how an op
 reaches these operations, are left to the ops that use them.
 
 A block records the alignment it was allocated with, in units: every address
@@ -106,19 +111,22 @@ of two, as the human ruled on 2026-11-11 on #231, and validation rejects
 any other; the model itself takes any number. A freed block keeps its
 units, but no access may reach them. A block has no address until it is
 exposed, and then keeps the one it was given (#232; the section on
-addresses). -/
+addresses). A constant block may be read and not written: a store to it
+faults. -/
 structure Block (u : Nat) where
   kind : AllocKind
   align : Nat
   units : List (MemUnit u)
   live : Bool
   addr : Option Nat
+  const : Bool
   deriving Repr, DecidableEq
 
-/-- The shape of a block: its kind, its alignment, its size and its
-liveness, everything but what its units hold and its address. -/
-def Block.shape {u : Nat} (b : Block u) : AllocKind × Nat × Nat × Bool :=
-  (b.kind, b.align, b.units.length, b.live)
+/-- The shape of a block: its kind, its alignment, its size, its liveness
+and whether it is constant, everything but what its units hold and its
+address. -/
+def Block.shape {u : Nat} (b : Block u) : AllocKind × Nat × Nat × Bool × Bool :=
+  (b.kind, b.align, b.units.length, b.live, b.const)
 
 /-- A memory whose units are `u` bits wide: its allocations, in the order
 they were made, so that the block with id `a` is `blocks[a]`. -/
@@ -137,6 +145,8 @@ inductive Fault where
   /-- The access is not aligned at every address its allocation may be
   given. -/
   | misaligned
+  /-- The access stores to a constant allocation. -/
+  | constant
   deriving Repr, DecidableEq
 
 /-- The reason that a run which faults gives for its UB. -/
@@ -145,6 +155,7 @@ def Fault.reason : Fault → String
   | .freed => "an access to a freed allocation"
   | .outOfBounds => "an access out of bounds"
   | .misaligned => "a misaligned access"
+  | .constant => "a store to a constant allocation"
 
 variable {u : Nat}
 
@@ -153,14 +164,14 @@ def Block.read (b : Block u) (o n : Nat) : List (MemUnit u) :=
   (b.units.drop o).take n
 
 /-- The block with its units from offset `o` on replaced by `us`. Its kind,
-alignment, liveness and address stay as they were, and so does its size when the
-units fit in it, from `o` to `o + |us|`. A store writes only units that
-fit, as its access checks. -/
+alignment, liveness, address and constness stay as they were, and so
+does its size when the units fit in it, from `o` to `o + |us|`. A store
+writes only units that fit, as its access checks. -/
 def Block.write (b : Block u) (o : Nat) (us : List (MemUnit u)) : Block u :=
   { b with units := b.units.take o ++ us ++ b.units.drop (o + us.length) }
 
-/-- The block, freed: no longer live, with its kind, alignment, units and
-address. -/
+/-- The block, freed: no longer live, with its kind, alignment, units,
+address and constness. -/
 def Block.kill (b : Block u) : Block u := { b with live := false }
 
 namespace Memory
@@ -169,10 +180,11 @@ namespace Memory
 def empty : Memory u := ⟨[]⟩
 
 /-- Allocates a block of `n` units of kind `k`, aligned to `al` units. Its
-units are poison, it has no address yet, its id is one that no allocation
-had before, and it gives the pointer to its first unit. -/
+units are poison, it has no address yet, it is not constant, its id is one
+that no allocation had before, and it gives the pointer to its first
+unit. -/
 def alloc (M : Memory u) (k : AllocKind) (n al : Nat) : Pointer × Memory u :=
-  (⟨some M.blocks.length, 0⟩, ⟨M.blocks ++ [⟨k, al, List.replicate n .poison, true, none⟩]⟩)
+  (⟨some M.blocks.length, 0⟩, ⟨M.blocks ++ [⟨k, al, List.replicate n .poison, true, none, false⟩]⟩)
 
 /-- Frees the allocation `a`: it stays in the memory, and no access may
 reach it again. Freeing changes nothing else. It never faults: freeing an
@@ -202,10 +214,12 @@ def load (M : Memory u) (p : Pointer) (n : Nat) : Except Fault (List (MemUnit u)
   pure (b.read o n)
 
 /-- Stores the units `us` through `p`, in place of the units of its
-allocation from its offset on, or gives the fault that makes the store UB.
-No other unit, and no other allocation, changes. -/
+allocation from its offset on, or gives the fault that makes the store UB:
+its access's, or a fault for a constant allocation, which may not be
+written. No other unit, and no other allocation, changes. -/
 def store (M : Memory u) (p : Pointer) (us : List (MemUnit u)) : Except Fault (Memory u) := do
   let (a, b, o) ← M.locate p us.length
+  if b.const then throw .constant
   pure ⟨M.blocks.set a (b.write o us)⟩
 
 /-- Whether an access through `p` aligned to `al` units is aligned at every

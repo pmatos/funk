@@ -35,7 +35,7 @@ runs by its own rule then has the property. A memory that an op of the
 memory $`N` does not declare is not $`\rho(N)`.
 :::
 
-:::readable Fir.Core.ptrExpose_writesNot Fir.Core.ptrExpose_readsNot Fir.Core.ptrExpose_allocatesNot Fir.Core.ptrExpose_exposesNot Fir.Core.ptrExpose_rebuildsNot (pin := Fir.WritesNot) (pin := Fir.ReadsNot) (pin := Fir.AllocatesNot) (pin := Fir.ExposesNot) (pin := Fir.RebuildsNot) (fingerprint := "2693061827339649108")
+:::readable Fir.Core.ptrExpose_writesNot Fir.Core.ptrExpose_readsNot Fir.Core.ptrExpose_allocatesNot Fir.Core.ptrExpose_exposesNot Fir.Core.ptrExpose_rebuildsNot (pin := Fir.WritesNot) (pin := Fir.ReadsNot) (pin := Fir.AllocatesNot) (pin := Fir.ExposesNot) (pin := Fir.RebuildsNot) (fingerprint := "9251789203616102062")
 *Theorems: what $`\mathsf{ptr\_expose}` touches.* Wherever a run names the
 core's memories, $`\mathsf{ptr\_expose}` writes no unit of any memory and
 neither allocates nor frees in any; it reads no memory but $`\rho(N)`, the
@@ -44,7 +44,7 @@ it declares an allocation; and it counts no integer turned back into a
 pointer in any memory.
 :::
 
-:::readable Fir.Core.ptrFromInt_writesNot Fir.Core.ptrFromInt_readsNot Fir.Core.ptrFromInt_allocatesNot Fir.Core.ptrFromInt_exposesNot Fir.Core.ptrFromInt_rebuildsNot (pin := Fir.WritesNot) (pin := Fir.ReadsNot) (pin := Fir.AllocatesNot) (pin := Fir.ExposesNot) (pin := Fir.RebuildsNot) (fingerprint := "8515576620775580698")
+:::readable Fir.Core.ptrFromInt_writesNot Fir.Core.ptrFromInt_readsNot Fir.Core.ptrFromInt_allocatesNot Fir.Core.ptrFromInt_exposesNot Fir.Core.ptrFromInt_rebuildsNot (pin := Fir.WritesNot) (pin := Fir.ReadsNot) (pin := Fir.AllocatesNot) (pin := Fir.ExposesNot) (pin := Fir.RebuildsNot) (fingerprint := "15244260795874653784")
 *Theorems: what $`\mathsf{ptr\_from\_int}` touches.* Wherever a run names
 the core's memories, $`\mathsf{ptr\_from\_int}` writes no unit of any
 memory, neither allocates nor frees in any, and gives no address in any; it

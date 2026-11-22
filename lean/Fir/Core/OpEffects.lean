@@ -71,10 +71,10 @@ frees its call's stack allocations when the call returns.
 * Reads and allocates in memory `N`: `ptrFromInt`, which turns an integer
   back into a pointer of `ptr<N>`. Its pointer depends on the addresses of
   memory `N`, and it counts the call in memory `N`, which the next call's
-  pick may depend on. Which declared effect covers that count is open for
-  the human; until it is ruled, `ptrFromInt` declares allocating, which
-  over-approximates, so that no pass may move or drop it across another
-  op that turns an integer back into a pointer. It is never UB, and on a
+  pick may depend on. That count counts as allocating there, as a
+  declared effect (the human's ruling of 2026-11-21 on #232), so no pass
+  may move or drop it across another op that turns an integer back into
+  a pointer. It is never UB, and on a
   defined integer it gives a defined pointer.
 * Control: the terminators `br`, `ret`, `cond_br` and `unreachable`.
   `cond_br` may hit UB too, on a poison condition, and `unreachable` hits

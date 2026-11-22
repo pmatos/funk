@@ -207,8 +207,8 @@ Memories refine each other only when they have counted as many calls in
 each memory (`Memories.IsRefinedBy`), so turning an integer back in memories that
 refine each other gives the same pointer. The effect obligations do not
 see the count: turning an integer back writes, allocates and exposes
-nothing. Which declared effect covers the count is open for the human
-(see "The ops" below). _Counts no rebuild in x_ (`RebuildsNot`) is its
+nothing. The count is covered as an allocation is (the human's ruling of
+2026-11-21 on #232; see "The ops" below). _Counts no rebuild in x_ (`RebuildsNot`) is its
 own property: every other operation of the effect has it in every memory,
 and turning an integer back into a pointer in every memory but its own, so
 calls in different memories do not change each other's picks. Rejected:
@@ -268,15 +268,14 @@ decode and those that the layout rejects
 ([texts-addresses.md](../coverage/texts-addresses.md)). The backend comes
 in the next stage.
 
-Which declared effect covers the count of `ptr_from_int` has no ruling yet.
-`ptr_from_int` declares an allocation, which over-approximates and so
-licenses nothing unsound, and `LawfulDialectAddresses` states that an op
-that does not declare one counts no rebuild. The options: count it as
-allocating, as exposing is (recommended, and what the spec does now); no
-declared effect beyond the read, so a pass may drop an unused
+The count of `ptr_from_int` counts as allocating in its memory, as
+exposing does: the human ruled on 2026-11-21, on #232, that `ptr_from_int`
+declares `reads(n)` and `allocates(n)`. `LawfulDialectAddresses` states
+that an op that does not declare an allocation counts no rebuild. Rejected:
+no declared effect beyond the read, so a pass may drop an unused
 `ptr_from_int` or reorder two of them, which the union over resolvers
-allows but a proof for each resolver does not; or a new effect. The answer
-changes one line of `Core.Op.effects` and the second obligation.
+allows but a proof for each resolver does not; and a new effect for the
+count alone.
 
 ## Addresses and the declared allocation
 
@@ -294,4 +293,5 @@ sum `CoreGpu` (`lean/Fir/Gpu/AddressLaws.lean`, `lean/Fir/Sum/AddressLaws.lean`)
 meet it. Rejected: adding both to `LawfulDialectEffects.allocatesNot`, which
 would change the statement of a class that the #384 guarantees ask for.
 
-Which declared effect covers the count is open: see "The ops" above.
+The count is covered as an allocation is, by the human's ruling of
+2026-11-21 on #232: see "The ops" above.

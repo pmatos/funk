@@ -43,7 +43,7 @@ the op runs by its own rule when it holds of the rule on every operand
 vector.
 :::
 
-:::readable Fir.Core.memSet_writesNot Fir.Core.memSet_readsNot Fir.Core.memSet_allocatesNot (pin := Fir.WritesNot) (pin := Fir.ReadsNot) (pin := Fir.AllocatesNot) (pin := Fir.Core.Op.effects) (fingerprint := "483868061393775304")
+:::readable Fir.Core.memSet_writesNot Fir.Core.memSet_readsNot Fir.Core.memSet_allocatesNot (pin := Fir.WritesNot) (pin := Fir.ReadsNot) (pin := Fir.AllocatesNot) (pin := Fir.Core.Op.effects) (fingerprint := "13525186618411311762")
 *Theorems: a fill touches only its own memory.* For every memory $`x`
 other than $`\rho(N)`, the memory it declares that it writes,
 $`\mathsf{memSet}_N~o~V~W` writes no unit of $`x`; and for every memory

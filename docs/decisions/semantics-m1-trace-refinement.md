@@ -43,8 +43,8 @@ semantics-m1-trace.md.
   others and memories that refine others, with the same allocations
   escaped, give ends of returns that refine each other under the renaming
   of every allocation to itself (`End.isRefinedBy_of_mem`). So, for a
-  dialect with no event, refinement from the empty memories, the memories
-  each run ends with included, gives refinement of its traced runs
+  dialect with no event, refinement from the memories a run starts with,
+  the memories each run ends with included, gives refinement of its traced runs
   (`Func.traceRuns_isRefinedBy_of_from`), and refined arguments and
   congruence in the callee from given memories hold over its traced runs
   and at every world (`Fir.Execution.TraceRefine`). The core and CoreGpu
@@ -117,8 +117,8 @@ semantics-m1-trace.md.
   hypothesis compares the new callee with the old one on their traced runs
   from every traced state, which return their values with the traced state
   they end in (`Func.traceRunsFrom`), as congruence with memory compares runs
-  from every memories. Rejected: compare them only from the empty memories,
-  which says nothing of a call made from another traced state.
+  from every memories. Rejected: compare them only from the memories a run
+  starts with, which says nothing of a call made from another traced state.
 - **A traced black box.** Each call of the replaced callee is a black box:
   on arguments and traced states that refine others, the new callee's traced
   behaviour, the traced states it ends in included, refines the old one's

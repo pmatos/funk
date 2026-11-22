@@ -14,7 +14,7 @@ changes under it.
 
 #doc (Manual) "Lifting an extension: readable blocks" =>
 
-:::moduleDocs (fingerprint := "15183511355895336737")
+:::moduleDocs (fingerprint := "2247618695311009746")
 :::
 
 :::readable Fir.Dialect.lift Fir.Dialect.lift.instDialectName Fir.Dialect.lift.instTyDenote Fir.Dialect.lift.instTyPoison Fir.Dialect.lift.instTyRefinement Fir.Dialect.lift.instDecidableEqOp Fir.Dialect.lift.instDecidableEqTy (fingerprint := "6665268587926334873")
@@ -78,7 +78,7 @@ so do $`e`'s kinds of item and an item of one of them.
 Each rule can be decided when $`B`'s and $`e`'s can.
 :::
 
-:::readable Fir.Dialect.lift.liftMem Fir.Dialect.lift.liftMem_ofBase Fir.Dialect.lift.instDialectEffects Fir.Dialect.lift.instDialectMemOver (fingerprint := "7474008779890298085")
+:::readable Fir.Dialect.lift.liftMem Fir.Dialect.lift.liftMem_ofBase Fir.Dialect.lift.instDialectEffects Fir.Dialect.lift.instDialectMemOver (fingerprint := "18008860966876599906")
 *Definition: the memories of the lift.* The memories of the lift over
 $`B` are $`B`'s and $`e`'s own, $`M_B + O_e`. The lift's memory map sends
 $`e`'s name for a memory $`x` of $`d` to $`\mu(x)`, and keeps $`e`'s own:
@@ -90,7 +90,8 @@ each memory of $`d` as $`B` does, and the memory has one name in
 $`B \boxplus e{\uparrow}_\iota` (ADR-2026-11-09-2306). An op of the lift has
 $`e`'s
 {ref "The-fir-specification--Execution--Effect-sets"}[poison class and effects],
-with its memories renamed by $`\hat\mu`.
+with its memories renamed by $`\hat\mu`. Its numbered memories are
+$`B`'s.
 :::
 
 :::readable Fir.Dialect.lift.instDialectCall Fir.Dialect.lift.instDialectDenote (fingerprint := "14255937332289603584")

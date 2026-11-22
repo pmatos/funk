@@ -26,6 +26,7 @@ memory. -/
   effects
     | .load .. => { mayUB := true, mayPoison := true }
     | op => Core.Op.effects op
+  numbered := some
 
 /-- A `load` of an `i8` through a pointer of memory 0 is a valid op
 instance. -/
@@ -35,7 +36,7 @@ theorem load_typesValid : TypesValid (d := CoreDialect) (.load .nonatomic 8 none
 /-- Memories of 8-bit units whose memory holds one live allocation of one
 unit, aligned to 1, that holds `b`. -/
 def oneUnit (b : BitVec 8) : Memories Unit (unitsOf fun _ : Unit => MemLayout.default) :=
-  Memories.empty.set () ⟨[⟨.heap, 1, [.bits b], true, none⟩]⟩
+  Memories.empty.set () ⟨[⟨.heap, 1, [.bits b], true, none, false⟩]⟩
 
 /-- An `i8` takes one unit of the default memory, aligned to 1. -/
 theorem loadShape_i8 : loadShape MemLayout.default 8 none = (1, 1) := by
@@ -70,8 +71,8 @@ theorem loadNoRead_unlawful :
     (loadAccess 8 none 0 (fun _ : Unit => MemLayout.default) (fun _ => ()) ⟨some 0, 0⟩)
     (oneUnit 0) _).2 (.inl ⟨_, _, (Fir.load_apply _ _ _ _ _ _).2 (.inl ⟨_, oneUnit_load₀, rfl⟩),
       rfl⟩)
-  obtain ⟨e', he', hm⟩ := hc (oneUnit 0) ⟨[⟨.heap, 1, [.bits 1], true, none⟩]⟩ rfl _ h0
-  have hs : (oneUnit 0).set () ⟨[⟨.heap, 1, [.bits 1], true, none⟩]⟩ = oneUnit 1 := rfl
+  obtain ⟨e', he', hm⟩ := hc (oneUnit 0) ⟨[⟨.heap, 1, [.bits 1], true, none, false⟩]⟩ rfl _ h0
+  have hs : (oneUnit 0).set () ⟨[⟨.heap, 1, [.bits 1], true, none, false⟩]⟩ = oneUnit 1 := rfl
   rw [hs] at he'
   rcases (SetM.stateMap_apply _ _ _ _).1 he' with ⟨us, S', hl, rfl⟩ | ⟨_, hl, rfl⟩
   · rcases (Fir.load_apply _ _ _ _ _ _).1 hl with ⟨us', hu, he⟩ | ⟨_, hu, _⟩

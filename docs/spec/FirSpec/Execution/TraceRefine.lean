@@ -26,7 +26,7 @@ the dialect's memories:
 $$`\vec{v} \sqsubseteq \vec{v}' \implies \mathrm{traced}(f, \vec{v}) \sqsubseteq \mathrm{traced}(f, \vec{v}')`
 
 calls and recursion included, from refined arguments with memory, from the
-empty memories.
+memories a run starts with.
 :::
 
 :::readable Fir.Func.traceRuns_replaceBody_isRefinedBy_of_bound Fir.Func.traceRuns_replaceBody_isRefinedBy_of_opsFinite (fingerprint := "8233574276402944445")
@@ -38,6 +38,6 @@ then every function $`f` of $`M` is refined over its traced runs by $`f`
 with $`@g`'s new body in $`M[g := b]`. One form asks for a budget past
 which the new $`@g` runs out of fuel only if it diverges; the other asks
 for none when every op that runs by its own rule has finitely many
-outcomes. Both follow from congruence with memory, from the empty
-memories.
+outcomes. Both follow from congruence with memory, from the memories a
+run starts with.
 :::

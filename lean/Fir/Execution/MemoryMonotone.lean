@@ -355,7 +355,7 @@ theorem Func.memRuns_fuelMonotone (lay : N → MemLayout) (ρ : DialectEffects.M
     FuelMonotone (f.memRuns lay ρ L M args) := by
   letI := DialectMemDenote.denoteAt (d := d) lay ρ L
   have key : ∀ n, f.memRuns lay ρ L M args n = (Prod.fst <$> fromState
-      (f.run M (m := StateT (Memories N (unitsOf lay)) SetM) args n) Memories.empty).run :=
+      (f.run M (m := StateT (Memories N (unitsOf lay)) SetM) args n) (RunItems.start d lay ρ L)).run :=
     fun n => fromState_fst _ _
   have up : ∀ n j e, e ≠ .ok (.ok .fuelExhausted) → (∀ st, e ≠ .ok (.error st)) →
       f.memRuns lay ρ L M args n e → f.memRuns lay ρ L M args (n + j) e := by

@@ -32,8 +32,8 @@ Tier: direction; area: semantics
 - **What it leaves to the run.** A global is still one allocation of
   kind `global` (ADR-2026-11-09-1546), apart from the kind `function`
   that the human ruled for a function's address on 2026-11-19 (#235).
-  Its allocation, its address op and `addr(@f)` of a function come with
-  the run's starting allocations in #237's later stages.
+  Its allocation is one of the allocations a run starts with; its address
+  op and `addr(@f)` of a function come in #237's later stages.
 
 ## Why
 

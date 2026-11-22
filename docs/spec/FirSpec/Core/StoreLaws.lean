@@ -39,7 +39,7 @@ $`\mathsf{store}` runs by its own rule has a property when its rule has it
 on every value and pointer operand.
 :::
 
-:::readable Fir.Core.store_writesNot Fir.Core.store_readsNot Fir.Core.store_allocatesNot (pin := Fir.WritesNot) (pin := Fir.ReadsNot) (pin := Fir.AllocatesNot) (fingerprint := "4024226227505133826")
+:::readable Fir.Core.store_writesNot Fir.Core.store_readsNot Fir.Core.store_allocatesNot (pin := Fir.WritesNot) (pin := Fir.ReadsNot) (pin := Fir.AllocatesNot) (fingerprint := "12773932497342114144")
 *Theorems: $`\mathsf{store}` touches memory only by writing where it
 declares.* At every layout $`\ell` and naming $`\rho`, and for every
 memory $`y` of the run, $`\mathsf{store}_N` by its own rule writes no unit

@@ -14,10 +14,10 @@ fingerprint; the build fails when the Lean changes under it.
 
 #doc (Manual) "A declaration that the obligations reject: readable blocks" =>
 
-:::moduleDocs (fingerprint := "8405069403639585495")
+:::moduleDocs (fingerprint := "13140069270219589762")
 :::
 
-:::readable Fir.Core.Unlawful.sdivNoUB Fir.Core.Unlawful.sdivNoUB_unlawful (pin := Fir.Core.Op.effects) (pin := Fir.NeverUB) (pin := Fir.Core.memDenoteAt) (fingerprint := "4767147018774543762")
+:::readable Fir.Core.Unlawful.sdivNoUB Fir.Core.Unlawful.sdivNoUB_unlawful (pin := Fir.Core.Op.effects) (pin := Fir.NeverUB) (pin := Fir.Core.memDenoteAt) (fingerprint := "18134700227641165635")
 *Definition and theorem: the obligations reject a wrong declaration.* The
 declaration $`\mathrm{eff}'` gives each core op its set but
 $`\mathsf{sdiv}`, which it declares without $`\mathsf{mayUB}`, keeping

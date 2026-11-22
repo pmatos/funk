@@ -37,9 +37,8 @@ its own rule, a terminator or an op with no callee, wherever a run names
 the dialect's memories, gives no allocation of a memory $`x` an address and
 counts no integer turned back into a pointer of $`x`, for every $`x` in
 which it does not declare an allocation. Exposing counts as allocating in
-its memory (the human's ruling of 2026-11-20 on #232, question B); the
-count is covered the same way, as recommended, until the human rules on
-it.
+its memory (the human's ruling of 2026-11-20 on #232, question B), and
+so does the count (the human's ruling of 2026-11-21 on #232).
 :::
 
 :::readable Fir.OwnRuleHas.addrs Fir.OwnRuleHas.keeps Fir.LawfulDialectAddresses.ofKeeps (fingerprint := "4985038944793112126")

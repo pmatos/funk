@@ -250,7 +250,7 @@ theorem Func.memNeverStuck (hv : ∀ g ∈ M.funcs, g.Valid ctx)
   have hmem : e ∈ f.blocks := List.mem_of_mem_head? he
   have hns := Module.calls_memNoStuck hv hm n f hf e hmem 0 _
     (List.length_pos_iff.2 (hvf.blocksNonEmpty e hmem)) (Env.scoped_params hvf he hep args)
-    Memories.empty.enter
+    (RunItems.start d lay ρ L).enter
   rw [List.drop_zero] at hns
   rw [Func.memRuns_enter lay ρ L M f args n (Func.enter_entry he hep args)] at h
   exact NoStuck.finish _ (NoStuck.map Result.withState hns) st h
@@ -271,7 +271,7 @@ theorem Func.memProgress [LawfulDialectTotal d] (hv : ∀ g ∈ M.funcs, g.Valid
   have hhp := Module.calls_memHasPath hv hm
     (fun g hg _ hb o ho hc => LawfulDialectTotal.total o.op ((hv g hg).typesValid hb ho) hc lay ρ L)
     n f hf e hmem 0 _ (List.length_pos_iff.2 (hvf.blocksNonEmpty e hmem))
-    (Env.scoped_params hvf he hep args) Memories.empty.enter
+    (Env.scoped_params hvf he hep args) (RunItems.start d lay ρ L).enter
   rw [List.drop_zero] at hhp
   obtain ⟨ev, hev⟩ := HasPath.finish Prod.fst (HasPath.map Result.withState hhp)
   replace hev : f.memRuns lay ρ L M args n ev := by

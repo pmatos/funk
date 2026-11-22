@@ -18,8 +18,8 @@ allocation an address and counts no integer turned back into a pointer.
   counts no rebuild; `ptrFromInt` counts a rebuild only in the memory of its
   pointer, and gives no address. Each declares an allocation in that
   memory, so each meets the obligations: exposing counts as allocating (the
-  human's ruling of 2026-11-20 on #232, question B), and so, until the
-  human rules otherwise, does turning an integer back into a pointer.
+  human's ruling of 2026-11-20 on #232, question B), and so does turning
+  an integer back into a pointer (the human's ruling of 2026-11-21).
 -/
 
 namespace Fir.Core

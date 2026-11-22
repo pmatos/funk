@@ -98,8 +98,8 @@ $`\mathsf{ptr\_expose}_N` and $`\mathsf{ptr\_from\_int}_N` read the
 memory $`N` of their pointer, since their results depend on its addresses,
 and allocate in it: exposing gives an allocation an address, which counts
 as allocating (the human's ruling of 2026-11-20 on #232, question B), and
-turning an integer back into a pointer counts the call, which until the
-human rules on it declares an allocation too, an over-approximation.
+turning an integer back into a pointer counts the call, which counts as
+allocating too (the human's ruling of 2026-11-21 on #232).
 $`\mathsf{ptr\_expose}_N` may be UB, on a poison pointer or when no
 address may be given; $`\mathsf{ptr\_from\_int}_N` never is. On defined
 operands neither gives poison.

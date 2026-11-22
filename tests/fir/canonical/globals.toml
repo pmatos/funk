@@ -1,9 +1,13 @@
 # Tests of globals.fir: globals in the default memory (ADR-2026-11-09-1546)
 # sit beside a function, which runs on fir-ref and as native code as it
 # would without them. @table is a table of pointers to @msg, @counter has no
-# initializer, and @self points into itself. Globals have no run meaning
-# yet: the address op and the run's starting memories are stage 2 of #237,
-# and the backend's .data, .rodata and .bss stage 3.
+# initializer, and @self points into itself. A run on fir-ref starts with
+# each global's allocation (#237 stage 2a), so the four globals of memory 0
+# take its ids 0 to 3 and @after_globals's alloca gets id 4. No op names a
+# global until the address op, #237 stage 2b; the backend's .data, .rodata
+# and .bss are stage 3. @after_globals returns a pointer, which native code
+# returns as an address, so its test is interpreter-only.
 tests = [
   { func = "@msg_size" },
+  { func = "@after_globals", expect = ["ptr(4, 0)"] },
 ]

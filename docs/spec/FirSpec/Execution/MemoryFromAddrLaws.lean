@@ -50,7 +50,7 @@ it has one, so
 and it never ends in UB.
 :::
 
-:::readable Fir.fromAddr_writesNot Fir.fromAddr_allocatesNot Fir.fromAddr_exposesNot (pin := Fir.WritesNot) (pin := Fir.AllocatesNot) (pin := Fir.ExposesNot) (fingerprint := "756414423687342611")
+:::readable Fir.fromAddr_writesNot Fir.fromAddr_allocatesNot Fir.fromAddr_exposesNot (pin := Fir.WritesNot) (pin := Fir.AllocatesNot) (pin := Fir.ExposesNot) (fingerprint := "3598998309868229790")
 *Theorems: no memory changes.* For every memory $`y`, $`x` included, it
 meets the
 {ref "The-fir-specification--Memory--Memory-obligations"}[obligations]
@@ -58,7 +58,7 @@ that it writes no unit of $`y` and neither allocates nor frees in $`y`,
 and it exposes nothing in $`y`.
 :::
 
-:::readable Fir.fromAddr_readsNot_ne (pin := Fir.ReadsNot) (fingerprint := "7045987943169629677")
+:::readable Fir.fromAddr_readsNot_ne (pin := Fir.ReadsNot) (fingerprint := "4578605117455169922")
 *Theorem: it reads no other memory.* For every memory $`y \ne x`, it meets
 the {ref "The-fir-specification--Memory--Memory-obligations"}[obligation]
 that it does not read $`y`: replacing $`y` changes neither the pointer nor
