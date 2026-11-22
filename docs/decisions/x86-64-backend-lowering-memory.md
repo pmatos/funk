@@ -3,8 +3,9 @@
 This page continues [x86-64-backend-lowering.md](x86-64-backend-lowering.md).
 It says what holds today for how the backend lowers pointers and the memory
 ops of #231, `ptradd`, `alloca`, `load` and `store`, the field address of
-#236, `fieldaddr`, and the copies, moves and sets of #234, `memcpy`,
-`memmove` and `memset`. It is the record: when
+#236, `fieldaddr`, the copies, moves and sets of #234, `memcpy`,
+`memmove` and `memset`, and the ops of #232 that turn pointers into
+integers and back, `ptr_expose` and `ptr_from_int`. It is the record: when
 this page and an ADR disagree, the page wins, and the ADR is fixed or deleted
 (ADR-2026-11-09-1610). The ops' meaning is on
 [semantics-m1-memory.md](semantics-m1-memory.md),
@@ -22,9 +23,13 @@ The backend realises a memory whose data layout entry has 8-bit units and
 64-bit pointers, in little-endian order: memory 0 by default, and any other
 memory that the layout declares so. A unit is then a byte, an offset in units
 is an offset in bytes, and the units of a value are its bytes, least
-significant first. Every such memory shares the process's address space: no
-op turns a pointer of one memory into a pointer of another, and allocations
-never overlap, so no run can tell them apart. A value of a pointer of any
+significant first. Every such memory shares the process's address space, and
+allocations never overlap, so the addresses that native code gives each
+memory's allocations are one address policy of the spec for that memory. An
+address of one memory turned into a pointer of another by `ptr_from_int`
+reaches no exposed allocation of that memory under that policy, so every
+access through it is UB ([Pointers as integers](#pointers-as-integers)), and
+no other op turns a pointer of one memory into a pointer of another. A value of a pointer of any
 other memory, of 16-bit units or 32-bit pointers, is reported as unsupported
 where it is defined, so no op of that memory is lowered and no access to it
 is miscompiled (`lower/memory.rs`, `realised`).
@@ -71,6 +76,37 @@ the field's elements gives an address and no fault, as the spec gives one
 `leaq` with a scaled index for strides of 1, 2, 4 or 8 bytes, a second
 lowering beside the one that serves every stride, for a naive backend
 whose speed is not measured on the code it emits.
+
+## Pointers as integers
+
+`ptr_expose` and `ptr_from_int` are moves: each copies its operand's slot
+into its result's through `%rax`, since a pointer is its address
+(`lower/ptr_int.rs`). The data layout asks that the integer be as wide as
+the memory's pointers, so it is an `i64`; a pointer of any other memory is
+reported where it is defined. This is the lowering that #232 asks for.
+
+It agrees with the spec because native code's addresses are one address
+policy of each memory ([semantics-m1-addresses.md](semantics-m1-addresses.md)):
+an allocation's address is a multiple of its alignment, from 1, below
+`2^64 - 1`, and overlaps no live allocation, while a freed stack slot may
+hold a live allocation by the time a dangling pointer to it is exposed, as
+the human ruled on 2026-11-20 (#232, question C). The integer `ptr_expose`
+gives is then an address that the spec may give, and a pointer that
+`ptr_from_int` rebuilds from an address in a live, exposed allocation
+reaches what the allocation that the spec's resolver may pick holds. From
+any other address it rebuilds a pointer through which every access is UB,
+so whatever native code then reads refines the spec.
+
+`fir-ref` follows the canonical layout, which native code need not, so a
+differential test returns only what an address reaches, the difference of
+two addresses of one allocation, or what every policy agrees on, such as
+an address modulo its allocation's alignment
+(`tests/fir/canonical/ptr-int-programs.fir`). A test whose canonical run is
+UB where another policy or resolver has none stays interpreter-only, as the
+human ruled on 2026-11-20 (#451); the harness already counts a differential
+test with UB among its outcomes as invalid, so no new check is needed.
+Rejected: masking or checking the integer at run time, which the spec does
+not ask for.
 
 ## Loads and stores
 

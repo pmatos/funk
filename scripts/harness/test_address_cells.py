@@ -52,17 +52,21 @@ class AddressCells(unittest.TestCase):
             ):
                 of_op(op(name, operands, results, attrs))
 
-    def test_the_cells_are_on_the_interpreter_side_only(self):
+    def test_the_differential_side_has_the_cells_of_64_bit_pointers(self):
         sides = {side.name: side.cells() for side in coverage.SIDES}
-        expected = [
-            Cell("addresses", o, "", f"i{w}")
-            for o in address_cells.ADDRESS_OPS
-            for w in address_cells.ADDRESS_INTERPRETER
-        ]
-        self.assertEqual(
-            [c for c in sides["interpreter"] if c.table == "addresses"], expected
-        )
-        self.assertFalse([c for c in sides["differential"] if c.table == "addresses"])
+        for name, widths in (
+            ("differential", address_cells.ADDRESS_DIFFERENTIAL),
+            ("interpreter", address_cells.ADDRESS_INTERPRETER),
+        ):
+            expected = [
+                Cell("addresses", o, "", f"i{w}")
+                for o in address_cells.ADDRESS_OPS
+                for w in widths
+            ]
+            self.assertEqual(
+                [c for c in sides[name] if c.table == "addresses"], expected
+            )
+        self.assertEqual(address_cells.ADDRESS_DIFFERENTIAL, (64,))
 
 
 if __name__ == "__main__":

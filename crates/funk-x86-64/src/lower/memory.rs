@@ -7,9 +7,12 @@
 //! little-endian order, which x86-64 addresses directly: a unit is a byte,
 //! an offset in units is an offset in bytes, and the units of a value are
 //! its bytes in memory, least significant first. Every such memory shares
-//! the process's address space, since no op turns a pointer of one memory
-//! into a pointer of another. A value of a pointer of any other memory is
-//! reported where it is defined, so no op of that memory is lowered.
+//! the process's address space: its allocations' addresses are one address
+//! policy of the spec for each memory, so a pointer that `ptr_from_int`
+//! rebuilds in one memory from another's address reaches no allocation of
+//! its own, and every access through it is UB (`ptr_int.rs`). A value of a
+//! pointer of any other memory is reported where it is defined, so no op of
+//! that memory is lowered.
 //!
 //! `ptradd` adds its offset, read as signed, to the address, which wraps
 //! at 64 bits where the spec's offset does not; the two agree on every

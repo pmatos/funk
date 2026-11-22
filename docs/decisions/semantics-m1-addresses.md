@@ -262,11 +262,12 @@ type, so an integer of any width reads back.
 
 The Rust IR registers both ops (`crates/funk-ir/src/dialects/core/ptr_int.rs`)
 with the same effects, and `funk verify` checks the width and the integral
-memory with the layout's rules. The corpus runs both ops on `fir-ref`
-only, and `tests/fir/reject/ptr-int.toml` holds the texts that do not
+memory with the layout's rules. The x86-64 backend lowers both ops as moves, and
+the corpus runs each test that does not depend on an address as native
+code too, and `tests/fir/reject/ptr-int.toml` holds the texts that do not
 decode and those that the layout rejects
-([texts-addresses.md](../coverage/texts-addresses.md)). The backend comes
-in the next stage.
+([texts-addresses.md](../coverage/texts-addresses.md),
+[x86-64-backend-lowering-memory.md](x86-64-backend-lowering-memory.md#pointers-as-integers)).
 
 The count of `ptr_from_int` counts as allocating in its memory, as
 exposing does: the human ruled on 2026-11-21, on #232, that `ptr_from_int`
