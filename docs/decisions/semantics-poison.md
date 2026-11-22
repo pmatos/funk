@@ -205,7 +205,7 @@ of the progress proof with calls (`Module.calls_hasPath`,
 them). `Core.Op.monotone_all` holds for every core op that meets the guard:
 every core op but `call`. `Core.Op.total_all` holds for those that also
 touch no memory and read no item of the run (`Core.Op.touchesMemory`,
-`Core.Op.readsItems`): every one but `call` and the ten ops that
+`Core.Op.readsItems`): every one but `call` and the twelve ops that
 `Core.Op.memCases` gives their own rules, which semantics-effects.md#soundness
 lists. With memory every core op that meets the guard is total
 (`Core.lawfulDialectTotal`). Rejected: a stand-in rule
