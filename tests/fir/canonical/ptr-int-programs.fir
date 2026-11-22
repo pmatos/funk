@@ -1,3 +1,5 @@
+layout memory(1, unit(8), pointer(64), little)
+
 func @through_memory(%x: i64) -> i64 {
 ^entry:
   %p: ptr = alloca stack i64 @0
@@ -72,9 +74,30 @@ func @aligned() -> i64, i1 {
   ret %r, %z @3
 }
 
+func @other_memory(%x: i16) -> i16 {
+^entry:
+  %p: ptr(1) = alloca stack i16 @4
+  store nonatomic %x, %p @4
+  %a: i64 = ptr_expose %p @4
+  %q: ptr(1) = ptr_from_int %a @4
+  %v: i16 = load nonatomic %q @4
+  ret %v @4
+}
+
+func @across(%x: i16) -> i16 {
+^entry:
+  %p: ptr = alloca stack i16 @4
+  store nonatomic %x, %p @4
+  %a: i64 = ptr_expose %p @4
+  %q: ptr(1) = ptr_from_int %a @4
+  %v: i16 = load nonatomic %q @4
+  ret %v @4
+}
+
 locs {
   @0 = unknown
   @1 = unknown
   @2 = unknown
   @3 = unknown
+  @4 = unknown
 }

@@ -5,7 +5,11 @@
 # @aligned exposes an allocation aligned to 64 and returns its address
 # modulo 64 and whether it is 0: every address the spec may give is a
 # multiple of the allocation's alignment and at least 1, so the result
-# does not depend on which address it is. No test returns an address.
+# does not depend on which address it is. @other_memory makes the round
+# trip in memory 1, which has 64-bit pointers too. @across turns an
+# address of memory 0 into a pointer of memory 1, which has no exposed
+# allocation, so the load is UB under every address policy, and the test
+# is interpreter-only. No test returns an address.
 tests = [
   { func = "@through_memory", args = ["77"], results = [{ values = ["77"], witness = [] }] },
   { func = "@through_memory", args = ["-1"], results = [{ values = ["-1"], witness = [] }] },
@@ -13,4 +17,6 @@ tests = [
   { func = "@walk", args = ["1"], results = [{ values = ["15"], witness = [] }] },
   { func = "@walk", args = ["-3"], results = [{ values = ["-45"], witness = [] }] },
   { func = "@aligned", results = [{ values = ["0", "false"], witness = [] }] },
+  { func = "@other_memory", args = ["-300"], results = [{ values = ["-300"], witness = [] }] },
+  { func = "@across", args = ["5"], expect = "ub" },
 ]

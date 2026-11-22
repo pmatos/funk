@@ -9,8 +9,9 @@
 //! its bytes in memory, least significant first. Every such memory shares
 //! the process's address space: its allocations' addresses are one address
 //! policy of the spec for each memory, so a pointer that `ptr_from_int`
-//! rebuilds in one memory from another's address reaches no allocation of
-//! its own, and every access through it is UB (`ptr_int.rs`). A value of a
+//! rebuilds in a memory, from another memory's address too, may reach only
+//! an exposed allocation of its own memory that holds the address, whose
+//! bytes native code reaches as well (`ptr_int.rs`). A value of a
 //! pointer of any other memory is reported where it is defined, so no op of
 //! that memory is lowered.
 //!

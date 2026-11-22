@@ -179,9 +179,9 @@ says how to read it.
 | op | `i1` | `i8` | `i16` | `i32` | `i64` | `i128` | `ptr` | `f32` | `f64` |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | `ptradd` | 2 | 4 | 4 | 4 | 145 | 4 |  |  |  |
-| `alloca` | 2 | 19 | 6 | 61 | 187 | 5 | 8 | 20 | 17 |
-| `load` | 2 | 39 | 10 | 40 | 189 | 5 | 10 | 16 | 17 |
-| `store` | 4 | 11 | 9 | 61 | 187 | 5 | 10 | 21 | 20 |
+| `alloca` | 2 | 19 | 7 | 61 | 187 | 5 | 8 | 20 | 17 |
+| `load` | 2 | 39 | 11 | 40 | 189 | 5 | 10 | 16 | 17 |
+| `store` | 4 | 11 | 10 | 61 | 187 | 5 | 10 | 21 | 20 |
 
 ## Passed and returned values
 
@@ -192,14 +192,14 @@ says how to read it.
 | `cond_br` | a successor passes nothing | 863 |  |  |  |  |  |  |  |  |
 | `cond_br` | a successor passes values |  | 58 | 140 | 132 | 162 | 136 | 153 | 9 | 7 |
 | `ret` | returns no value | 74 |  |  |  |  |  |  |  |  |
-| `ret` | returns one value |  | 2949 | 1628 | 1279 | 1722 | 1645 | 2490 | 546 | 473 |
+| `ret` | returns one value |  | 2949 | 1628 | 1280 | 1722 | 1645 | 2490 | 546 | 473 |
 | `ret` | returns several values |  | 283 | 437 | 271 | 259 | 400 | 539 | 12 | 12 |
 | `unreachable` | ends a block | 38 |  |  |  |  |  |  |  |  |
 | `call` | gives no result | 36 |  |  |  |  |  |  |  |  |
 | `call` | gives one result |  | 89 | 87 | 80 | 87 | 93 | 130 | 2 | 2 |
 | `call` | gives several results |  | 171 | 222 | 128 | 113 | 191 | 279 | 3 | 4 |
 | `func` | returns no value | 41 |  |  |  |  |  |  |  |  |
-| `func` | returns one value |  | 2949 | 1628 | 1279 | 1722 | 1645 | 2490 | 544 | 471 |
+| `func` | returns one value |  | 2949 | 1628 | 1280 | 1722 | 1645 | 2490 | 544 | 471 |
 | `func` | returns several values |  | 283 | 435 | 269 | 248 | 400 | 503 | 12 | 12 |
 
 ## Field addresses, with no index or by an index
@@ -220,5 +220,5 @@ says how to read it.
 
 | op | `i64` |
 | --- | --- |
-| `ptr_expose` | 11 |
-| `ptr_from_int` | 9 |
+| `ptr_expose` | 12 |
+| `ptr_from_int` | 10 |

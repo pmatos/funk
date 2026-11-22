@@ -204,9 +204,9 @@ says how to read it.
 | op | `i1` | `i7` | `i8` | `i16` | `i32` | `i33` | `i64` | `i128` | `ptr` | `f16` | `bf16` | `f32` | `f64` | `f128` |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | `ptradd` | 1 | 1 | 36 | 7 | 25 | 1 | 69 | 1 |  |  |  |  |  |  |
-| `alloca` | 4 | 4 | 52 | 27 | 90 | 5 | 14 | 7 | 44 | 5 | 2 | 21 | 19 | 4 |
-| `load` | 3 | 3 | 34 | 20 | 88 | 4 | 17 | 5 | 48 | 4 | 5 | 21 | 24 | 3 |
-| `store` | 2 | 2 | 21 | 13 | 68 | 3 | 13 | 2 | 50 | 7 | 3 | 30 | 22 | 5 |
+| `alloca` | 4 | 4 | 52 | 28 | 90 | 5 | 14 | 7 | 44 | 5 | 2 | 21 | 19 | 4 |
+| `load` | 3 | 3 | 34 | 21 | 88 | 4 | 17 | 5 | 48 | 4 | 5 | 21 | 24 | 3 |
+| `store` | 2 | 2 | 21 | 14 | 68 | 3 | 13 | 2 | 50 | 7 | 3 | 30 | 22 | 5 |
 
 ## Passed and returned values
 
@@ -217,14 +217,14 @@ says how to read it.
 | `cond_br` | a successor passes nothing | 441 |  |  |  |  |  |  |  |  |  |  |  |  |  |
 | `cond_br` | a successor passes values |  | 13 | 138 | 16 | 14 | 14 | 136 | 13 | 11 | 5 | 5 | 7 | 5 | 5 |
 | `ret` | returns no value | 26 |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| `ret` | returns one value |  | 2570 | 1583 | 848 | 837 | 1007 | 1609 | 842 | 1083 | 830 | 782 | 709 | 612 | 533 |
+| `ret` | returns one value |  | 2570 | 1583 | 848 | 838 | 1007 | 1609 | 842 | 1083 | 830 | 782 | 709 | 612 | 533 |
 | `ret` | returns several values |  | 56 | 189 | 43 | 29 | 33 | 189 | 52 | 50 | 5 | 6 | 6 | 8 | 5 |
 | `unreachable` | ends a block | 16 |  |  |  |  |  |  |  |  |  |  |  |  |  |
 | `call` | gives no result | 14 |  |  |  |  |  |  |  |  |  |  |  |  |  |
 | `call` | gives one result |  | 74 | 92 | 28 | 23 | 24 | 92 | 23 | 19 | 2 | 2 | 2 | 2 | 2 |
 | `call` | gives several results |  | 41 | 92 | 17 | 11 | 11 | 92 | 25 | 27 | 2 | 3 | 2 | 3 | 2 |
 | `func` | returns no value | 23 |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| `func` | returns one value |  | 2569 | 1583 | 849 | 837 | 1007 | 1609 | 842 | 1083 | 828 | 780 | 707 | 610 | 531 |
+| `func` | returns one value |  | 2569 | 1583 | 849 | 838 | 1007 | 1609 | 842 | 1083 | 828 | 780 | 707 | 610 | 531 |
 | `func` | returns several values |  | 56 | 189 | 43 | 29 | 33 | 189 | 52 | 48 | 5 | 6 | 6 | 8 | 5 |
 
 ## Ops of the gpu dialect in a dimension
@@ -268,5 +268,5 @@ says how to read it.
 
 | op | `i32` | `i64` |
 | --- | --- | --- |
-| `ptr_expose` | 2 | 5 |
-| `ptr_from_int` | 2 | 7 |
+| `ptr_expose` | 2 | 6 |
+| `ptr_from_int` | 2 | 8 |

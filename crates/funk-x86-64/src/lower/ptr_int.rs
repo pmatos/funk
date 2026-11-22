@@ -13,16 +13,16 @@
 //! policy of the spec for each memory: aligned, from 1, below `2^64 - 1`,
 //! and no two live allocations overlapping. So the integer that
 //! `ptr_expose` gives is an address that the spec may give, and a pointer
-//! rebuilt from it reaches what the allocation that the spec's resolver may
-//! pick holds. An address that no live, exposed allocation of the memory
-//! holds gives a pointer through which every access is UB, so whatever
-//! native code then reaches refines the spec.
+//! rebuilt from it, in any memory, reaches what an allocation that the
+//! spec's resolver may pick holds: a live, exposed allocation of that memory
+//! whose addresses, its end included, hold it. An address that none holds
+//! gives a pointer through which every access is UB, so whatever native
+//! code then reaches refines the spec.
 
 use funk_ir::Op;
 
 use super::{Cx, Lower, Unlowered};
 use crate::asm::Reg;
-use crate::width::POINTER;
 
 pub(super) fn lowering(name: &str) -> Option<Lower> {
     match name {
@@ -37,11 +37,8 @@ fn ptr_int(cx: &mut Cx<'_>, op: &Op) -> Result<(), Unlowered> {
     let ([x], [r]) = (op.operands.as_slice(), op.results.as_slice()) else {
         return Err(format!("{} takes one operand and defines one value", op.name).into());
     };
-    // A pointer of a memory the backend does not realise is reported first.
-    let widths = [cx.width(x)?, cx.width(&r.name)?];
-    if widths != [POINTER; 2] {
-        return Err(format!("{} moves a {POINTER}-bit address", op.name).into());
-    }
+    cx.width(x)?;
+    cx.width(&r.name)?;
     cx.load(Reg::Rax, x)?;
     cx.store(&r.name, Reg::Rax)
 }

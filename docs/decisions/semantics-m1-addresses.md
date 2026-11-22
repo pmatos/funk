@@ -18,7 +18,8 @@ resolver (`lean/Fir/Memory/Resolver.lean`, `ResolverLaws.lean` and
 `lean/Fir/Execution/MemoryFromAddrLaws.lean`). Stage 3 adds the core ops
 that use them, `ptr_expose` and `ptr_from_int` (the human's spelling of
 2026-11-18, Q1), to the spec, `fir-ref`, the Rust IR and verifier and
-the corpus (see "The ops" below). The backend comes in the stage after it.
+the corpus (see "The ops" below). Stage 5 lowers both ops in the x86-64
+backend.
 The spec's memory chapter renders all of them.
 
 ## Which addresses an allocation may be given

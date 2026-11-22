@@ -52,7 +52,7 @@ class AddressCells(unittest.TestCase):
             ):
                 of_op(op(name, operands, results, attrs))
 
-    def test_the_differential_side_has_the_cells_of_64_bit_pointers(self):
+    def test_each_side_has_the_cells_at_its_address_widths(self):
         sides = {side.name: side.cells() for side in coverage.SIDES}
         for name, widths in (
             ("differential", address_cells.ADDRESS_DIFFERENTIAL),
@@ -66,7 +66,6 @@ class AddressCells(unittest.TestCase):
             self.assertEqual(
                 [c for c in sides[name] if c.table == "addresses"], expected
             )
-        self.assertEqual(address_cells.ADDRESS_DIFFERENTIAL, (64,))
 
 
 if __name__ == "__main__":

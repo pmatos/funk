@@ -25,11 +25,13 @@ memory that the layout declares so. A unit is then a byte, an offset in units
 is an offset in bytes, and the units of a value are its bytes, least
 significant first. Every such memory shares the process's address space, and
 allocations never overlap, so the addresses that native code gives each
-memory's allocations are one address policy of the spec for that memory. An
-address of one memory turned into a pointer of another by `ptr_from_int`
-reaches no exposed allocation of that memory under that policy, so every
-access through it is UB ([Pointers as integers](#pointers-as-integers)), and
-no other op turns a pointer of one memory into a pointer of another. A value of a pointer of any
+memory's allocations are one address policy of the spec for that memory. A
+pointer that `ptr_from_int` rebuilds in a memory from any address, another
+memory's included, may reach under that policy only an exposed allocation
+of its own memory that holds the address, its end included, whose bytes
+native code reaches too; through any other, every access is UB
+([Pointers as integers](#pointers-as-integers)). No other op turns a
+pointer of one memory into a pointer of another. A value of a pointer of any
 other memory, of 16-bit units or 32-bit pointers, is reported as unsupported
 where it is defined, so no op of that memory is lowered and no access to it
 is miscompiled (`lower/memory.rs`, `realised`).
@@ -92,8 +94,8 @@ an allocation's address is a multiple of its alignment, from 1, below
 hold a live allocation by the time a dangling pointer to it is exposed, as
 the human ruled on 2026-11-20 (#232, question C). The integer `ptr_expose`
 gives is then an address that the spec may give, and a pointer that
-`ptr_from_int` rebuilds from an address in a live, exposed allocation
-reaches what the allocation that the spec's resolver may pick holds. From
+`ptr_from_int` rebuilds from an address in a live, exposed allocation of
+its memory, its end included, reaches what the allocation that the spec's resolver may pick holds. From
 any other address it rebuilds a pointer through which every access is UB,
 so whatever native code then reads refines the spec.
 

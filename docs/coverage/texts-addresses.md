@@ -38,4 +38,7 @@ not realise. `ptr-int-programs.fir` runs round trips of an address on both:
 stored in memory and loaded back, passed to a call that stores through it,
 and stepped by 4 through an array in a loop; it also returns an address
 modulo its allocation's alignment, 64, and whether it is 0, which every
-address the spec may give agrees on.
+address the spec may give agrees on. It makes the round trip in memory 1,
+of 64-bit pointers too, and turns an address of memory 0 into a pointer of
+memory 1, which has no exposed allocation, so a load through it is UB, an
+interpreter-only test.
