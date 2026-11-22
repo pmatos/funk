@@ -31,7 +31,7 @@ use crate::abi::symbol;
 use crate::asm::{Asm, Reg};
 
 /// The most bytes that a module's globals take, their padding included.
-pub const LIMIT: u64 = 1 << 30;
+const LIMIT: u64 = 1 << 30;
 
 /// How many units go on one `.byte` line.
 const PER_LINE: usize = 16;
@@ -78,9 +78,10 @@ pub fn data(m: &Module, asm: &mut Asm, out: &mut Vec<Diagnostic>) {
                 ));
             }
         }
+        let padding = g.align.saturating_sub(1);
         let taken = g
             .size
-            .checked_add(g.align.saturating_sub(1))
+            .checked_add(padding)
             .and_then(|b| total.checked_add(b))
             .filter(|&t| t <= LIMIT);
         match (taken, why) {
@@ -93,7 +94,7 @@ pub fn data(m: &Module, asm: &mut Asm, out: &mut Vec<Diagnostic>) {
                      padding, past the {total} already placed",
                     print_symbol(&g.name),
                     g.size,
-                    g.align.saturating_sub(1)
+                    padding
                 ),
             )),
             (Some(t), None) => {
@@ -108,7 +109,7 @@ fn at(g: &Global, why: String) -> Diagnostic {
     Diagnostic::at_block(&g.name, None, why)
 }
 
-/// Memory `n`'s entry when the backend realises it, or why not.
+/// Whether the backend realises memory `n`, or why not.
 fn realised(m: &Module, n: u64) -> Result<(), String> {
     let n = u32::try_from(n).map_err(|_| format!("memory {n}, which the layout cannot declare"))?;
     memory::realised(&m.layout, n).map(|_| ())
@@ -128,13 +129,12 @@ fn global(asm: &mut Asm, g: &Global) {
     let sym = symbol(&g.name);
     asm.comment(format_args!("global {}", print_symbol(&g.name)));
     let zero = all_zero(g);
-    if g.constant {
-        asm.directive(format_args!(".section\t.rodata"));
-    } else if zero {
-        asm.directive(format_args!(".bss"));
-    } else {
-        asm.directive(format_args!(".data"));
-    }
+    let section = match (g.constant, zero) {
+        (true, _) => ".section\t.rodata",
+        (false, true) => ".bss",
+        (false, false) => ".data",
+    };
+    asm.directive(format_args!("{section}"));
     if g.linkage == Linkage::Exported {
         asm.directive(format_args!(".globl\t{sym}"));
     }
