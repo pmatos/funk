@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Refined environments: readable blocks" =>
 
-:::moduleDocs (fingerprint := "11034215478884598278")
+:::moduleDocs (fingerprint := "14839862161756447477")
 :::
 
 :::readable Fir.DVal.type_eq_of_isRefinedBy Fir.DVals.types_eq_of_isRefinedBy Fir.DVals.length_eq_of_isRefinedBy (pin := Fir.instHRefinementDVal) (pin := Fir.List.IsRefinedBy) (fingerprint := "12482423081917173134")
@@ -47,7 +47,7 @@ signature, and an environment holds typed values; this carries the
 refinement of the one to the other.
 :::
 
-:::readable Fir.Env.IsRefinedBy (fingerprint := "2605529061200402207")
+:::readable Fir.Env.IsRefinedBy Fir.Env.isRefinedBy_refl (fingerprint := "2403370639123185372")
 *Definition: an environment refined by another.* An
 {ref "The-fir-specification--Execution--The-interpreter"}[environment]
 $`E` is refined by $`E'`, written $`E \sqsubseteq E'`, when both bind the
@@ -63,6 +63,8 @@ Refined arguments refine a run because the run only passes values on: it
 looks them up by name, checks their types and hands them to ops, to
 successors and to callees. This relation is what holds between the source's
 environment and the target's at every step.
+
+*Theorem.* An environment refines itself when every value does.
 :::
 
 :::readable Fir.Env.IsRefinedBy.zip_append (pin := Fir.List.IsRefinedBy) (fingerprint := "10006560756386425582")

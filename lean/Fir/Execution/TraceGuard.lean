@@ -217,22 +217,6 @@ theorem TCfg.Guard.always {M M' : Module d} :
   ext := fun _ _ _ _ _ _ _ _ ⟨cargs, t₀, s₁, hc, hr, ht, hs⟩ =>
     ⟨cargs, t₀, s₁, hc, hr, ht, hs, trivial⟩
 
-omit [DecidableEq Mem] [DecidableEq d.Ty] [DialectSignature d] [DialectCall d]
-  [DialectDenote d (TraceM (Step A) (TraceState Mem unit))]
-  [DialectExtCall d (TraceM (Step A) (TraceState Mem unit))] [HRefinement A A] in
-/-- An environment refines itself when every value does. -/
-theorem Env.isRefinedBy_refl (hrefl : ∀ {t : d.Ty} (v : ⟦t⟧), TyRefinement.IsRefinedBy v v) :
-    ∀ env : Env d, env.IsRefinedBy env
-  | [] => trivial
-  | _ :: env => ⟨rfl, ⟨rfl, hrefl _⟩, Env.isRefinedBy_refl hrefl env⟩
-
-omit [DecidableEq Mem] [DecidableEq d.Ty] [DialectSignature d] [DialectCall d]
-  [DialectDenote d (TraceM (Step A) (TraceState Mem unit))]
-  [DialectExtCall d (TraceM (Step A) (TraceState Mem unit))] [TyRefinement d.Ty] in
-/-- A marked trace refines itself when every act does. -/
-theorem Step.list_isRefinedBy_refl (hA : ∀ a : A, a ⊑ a) (l : List (Step A)) : l ⊑ l :=
-  List.isRefinedBy_refl (fun | .tick => trivial | .act a => hA a) l
-
 /-- In one module, the pairs of equal configurations form a guard, under an
 agreement that every call has with itself, when the refinement of values and
 of acts is reflexive: the source takes the target's own step. -/
@@ -244,7 +228,7 @@ theorem TCfg.Guard.eq
   next := fun {c c' c₁' t' F'} hG hn _ => by
     subst hG
     exact ⟨c₁', t', F', hn, ⟨rfl, rfl, Env.isRefinedBy_refl hrefl _, TraceState.isRefinedBy_refl _⟩,
-      List.isRefinedBy_refl (fun a => hA a) _, rfl⟩
+      List.isRefinedBy_refl hA _, rfl⟩
   enter := fun {c c' o os args args' n n' sym ts cargs' t₀' s₁' g body genv'} hG _ _ hargs hargs' _
       hc _ _ hen' _ => by
     subst hG

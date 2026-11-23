@@ -14,14 +14,16 @@ when the Lean changes under it.
 
 #doc (Manual) "Monotonicity in the traced layer: readable blocks" =>
 
-:::moduleDocs (fingerprint := "4445902941565328772")
+:::moduleDocs (fingerprint := "8277043892456518764")
 :::
 
-:::readable Fir.Step.IsRefinedBy (pin := Fir.instHRefinementStep) (fingerprint := "12649089963462645072")
+:::readable Fir.Step.IsRefinedBy Fir.Step.list_isRefinedBy_refl (pin := Fir.instHRefinementStep) (fingerprint := "4096959769629756404")
 *Definition: refined marked traces.* An element of a marked trace is
 refined by another when both are a step $`\mathsf{tick}`, or both are acts
 and the second refines the first. Marked traces refine one another element
 by element.
+
+*Theorem.* A marked trace refines itself when every act does.
 :::
 
 :::readable Fir.List.IsRefinedPrefix Fir.List.isRefinedPrefix_nil Fir.List.IsRefinedPrefix.append_left Fir.List.IsRefinedPrefix.append_right (fingerprint := "927429146959535312")

@@ -69,6 +69,11 @@ def Step.IsRefinedBy [HRefinement A A] : Step A → Step A → Prop
 
 instance [HRefinement A A] : HRefinement (Step A) (Step A) := ⟨Step.IsRefinedBy⟩
 
+/-- A marked trace refines itself when every act does. -/
+theorem Step.list_isRefinedBy_refl [HRefinement A A] (hA : ∀ a : A, a ⊑ a) (l : List (Step A)) :
+    l ⊑ l :=
+  List.isRefinedBy_refl (fun | .tick => trivial | .act a => hA a) l
+
 /-- `l` is refined by a prefix of `l'`: the list `l'` first shows a list that
 refines `l`, element by element. -/
 def List.IsRefinedPrefix [HRefinement A A] (l l' : List A) : Prop :=

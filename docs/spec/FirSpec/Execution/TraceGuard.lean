@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Guards: the source path that a proof of refinement picks: readable blocks" =>
 
-:::moduleDocs (fingerprint := "6882244936680689005")
+:::moduleDocs (fingerprint := "57255181865954138")
 :::
 
 :::readable Fir.TCfg.Next Fir.TCfg.Next.move (fingerprint := "7921536623754248073")
@@ -44,7 +44,7 @@ with the target's when both run the same ops of the same function, from
 an environment and a traced state that the target's refine.
 :::
 
-:::readable Fir.TCfg.Guard Fir.TCfg.Guard.always Fir.Env.isRefinedBy_refl Fir.Step.list_isRefinedBy_refl Fir.TCfg.Guard.eq (fingerprint := "17049711334335994572")
+:::readable Fir.TCfg.Guard Fir.TCfg.Guard.always Fir.TCfg.Guard.eq (fingerprint := "12001343867501197807")
 *Definition: a guard.* A guard of the source module $`M` and the target
 module $`M'`, under an agreement of two external calls, is a set $`G` of
 pairs of configurations, the source's first, closed in three ways:
@@ -65,11 +65,10 @@ No clause says that the source has a step: each says only which of its
 steps to take.
 
 *Theorems.* Where two external calls always agree, the set of all pairs is
-a guard. An environment refines itself, and so does a marked trace, when
-every value, or every act, does. In one module, under an agreement that
-every call has with itself, the pairs of equal configurations form a
-guard, when the refinement of values and of acts is reflexive: the source
-takes the target's own step.
+a guard. In one module, under an agreement that every call has with
+itself, the pairs of equal configurations form a guard, when the
+refinement of values and of acts is reflexive: the source takes the
+target's own step.
 :::
 
 :::readable Fir.TraceCallsRefined.callee_allowed (fingerprint := "17626441752865209854")
