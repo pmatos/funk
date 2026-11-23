@@ -71,7 +71,7 @@ hold, in the order of its units, each with the number of its memory: none
 when it is not live. -/
 def TraceState.ptrsIn (s : TraceState Mem unit) (x : Mem) (a : AllocId) : List (Nat × Pointer) :=
   match (s.mem.mem x).blocks[a]? with
-  | some b => if b.live then b.units.flatMap MemUnit.ptrs else []
+  | some b => if b.live then HasPtrs.ptrs b.units else []
   | none => []
 
 /-! # The allocations that may still escape -/

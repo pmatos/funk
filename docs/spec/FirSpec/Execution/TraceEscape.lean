@@ -14,10 +14,10 @@ fails when the Lean changes under it.
 
 #doc (Manual) "What an external call lets escape: readable blocks" =>
 
-:::moduleDocs (fingerprint := "12609950944018777986")
+:::moduleDocs (fingerprint := "16754516298346023830")
 :::
 
-:::readable Fir.TraceState.Live Fir.TraceState.instDecidableLive Fir.TraceState.escapePtr Fir.TraceState.escapePtrs Fir.TraceState.ptrsIn (fingerprint := "3223482053865899791")
+:::readable Fir.TraceState.Live Fir.TraceState.instDecidableLive Fir.TraceState.escapePtr Fir.TraceState.escapePtrs Fir.TraceState.ptrsIn (fingerprint := "1619006368938630683")
 *Definition: letting a pointer's allocation escape.* The allocation $`a`
 of the memory $`x` is live in the traced state $`s` when the memory has
 an allocation $`a` that is not freed. A pointer $`p` of the memory
