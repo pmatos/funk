@@ -76,6 +76,8 @@ has neither operands nor attributes, is a cell at each width of its result
   (`address_cells.py`, #232).
 """
 
+from typing import Any
+
 from address_cells import ADDRESS_OPS, address_cell, addresses_table
 from cell_types import Cell, CellError, Row, Table
 from conversion_cells import (
@@ -399,33 +401,12 @@ def catalog(
     return tuple(tables)
 
 
-def cells(
-    widths: tuple[int, ...],
-    formats: tuple[str, ...] = (),
-    offsets: tuple[int, ...] = (),
-    gpu: bool = False,
-    memory: tuple[str, ...] = (),
-    fields: tuple[int, ...] = (),
-    copies: bool = False,
-    addresses: tuple[int, ...] = (),
-    global_addrs: bool = False,
-    func_addrs: bool = False,
-) -> list[Cell]:
-    """Every actual cell of one side, in catalog order."""
+def cells(*args: Any, **kwargs: Any) -> list[Cell]:
+    """Every actual cell of one side, in catalog order. It takes `catalog`'s
+    arguments."""
     return [
         cell
-        for table in catalog(
-            widths,
-            formats,
-            offsets,
-            gpu,
-            memory,
-            fields,
-            copies,
-            addresses,
-            global_addrs,
-            func_addrs,
-        )
+        for table in catalog(*args, **kwargs)
         for row in table.rows
         for cell in row.entries
         if cell is not None

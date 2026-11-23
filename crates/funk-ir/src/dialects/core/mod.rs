@@ -56,6 +56,7 @@ mod pointer;
 mod ptr_int;
 mod rounding;
 mod store;
+mod symbol_addr;
 mod types;
 mod width;
 

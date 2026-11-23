@@ -41,6 +41,17 @@ memory law (ADR-2026-11-23-0906).
   refinement keeps it (`Block.IsRefinedBy.extent`). This is the agent's
   design. Rejected: one unit in the block, which a load of one byte would
   read.
+- **Back from an integer.** The resolvers (`lean/Fir/Memory/Resolver.lean`)
+  still read a block's units: a function's allocation holds its address
+  as its end, as any allocation of no units does. So `ptr_from_int` of an
+  exposed function's address may give the function's pointer, since the
+  run's resolver is angelic, as for data. `fir-ref`'s own pick prefers an
+  allocation whose units hold the address, then the first whose end it is,
+  so it gives another allocation only when one made before the function
+  ends at that address. The canonical layout leaves a gap after every
+  block, so that happens only when a memory is too narrow for it and the
+  lowest fit places the function at another block's end. Stage 3, whose
+  call through a pointer needs the function's provenance, may revisit it.
 - **The run's start.** A run starts memory 0 with its table's globals of
   memory 0, in the table's order, then one allocation for each function of
   the table, in the table's order (`RunItems.ofTable`, `funcStart`). So
