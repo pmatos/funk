@@ -41,16 +41,17 @@ choice effect, and the divisions,
   either: they allocate, read and write, so each rule needs the memory
   effect, and is
   one of the core's rules with memory. Nor have the field address
-  `fieldAddr` and the address of a global `globalAddr`: they read the
-  layout or the global they name in the items that the run gives each op,
-  so their rules too are among the core's rules with memory.
+  `fieldAddr`, the address of a global `globalAddr` and the address of a
+  function `funcAddr`: they read the layout, the global or the function
+  they name in the items that the run gives each op, so their rules too
+  are among the core's rules with memory.
 * Each terminator has the rule of the control-flow rules or the branch
   rules.
 * An op has rules when one of the two tables gives it one, when it calls
   a function, when it touches memory, or when it reads the run's items.
   Every core op has rules: each family gave its ops theirs, the call rules
   name the callee of `call`, and `alloca`, the loads and stores,
-  `fieldAddr`, `globalAddr`, `memCopy`, `memSet`, `ptrExpose` and
+  `fieldAddr`, `globalAddr`, `funcAddr`, `memCopy`, `memSet`, `ptrExpose` and
   `ptrFromInt` have their rules with memory.
 
 An op has no rules when its dialect's semantics gives it none. The rule for
@@ -120,15 +121,15 @@ section on the core's rules with memory). `ptrExpose` and `ptrFromInt`
 read the run's address policy and resolver, but they touch memory, so they
 are not marked here. -/
 def Op.readsItems : Op → Bool
-  | .fieldAddr .. | .globalAddr .. => true
+  | .fieldAddr .. | .globalAddr .. | .funcAddr .. => true
   | _ => false
 
 /-- The rule of each core op that is not a terminator, in any monad with
 the choice and UB effects; `none` for `call`, whose meaning is its
 callee's run, for `alloca`, the loads `load`, `loadPtr` and `loadFloat`,
 the stores `store`, `storePtr` and `storeFloat`, `memCopy`, `memSet`,
-`ptrExpose` and `ptrFromInt`, whose rules need memory, for `fieldAddr` and
-`globalAddr`, whose rules need the run's items, and for the terminators. -/
+`ptrExpose` and `ptrFromInt`, whose rules need memory, for `fieldAddr`, `globalAddr`
+and `funcAddr`, whose rules need the run's items, and for the terminators. -/
 def Op.denote? [MonadChoice m] [MonadUB m] : (op : Op) →
     Option (HVector toType (Fir.sig (d := CoreDialect) op) →
       m (HVector toType (Fir.returnTypes (d := CoreDialect) op)))
@@ -272,6 +273,7 @@ def Op.hasRules (op : Op) : Bool :=
 #guard ((Op.fieldAddr "pair" 1 0 none).denote? (m := SetM)).isNone &&
   (Op.fieldAddr "pair" 1 0 none).hasRules && (Op.fieldAddr "a" 0 1 (some 32)).hasRules
 #guard ((Op.globalAddr "msg" 0).denote? (m := SetM)).isNone && (Op.globalAddr "msg" 0).hasRules
+#guard ((Op.funcAddr "f" 0).denote? (m := SetM)).isNone && (Op.funcAddr "f" 0).hasRules
 #guard ((Op.storeFloat .nonatomic 8 23 none 0).denote? (m := SetM)).isNone &&
   (Op.storeFloat .nonatomic 8 23 none 0).hasRules &&
   (Op.storeFloat .seqCst 2 1 (some 4) 1).hasRules

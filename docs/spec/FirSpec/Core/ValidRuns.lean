@@ -17,7 +17,7 @@ when the Lean changes under it.
 :::moduleDocs (fingerprint := "6392434937513212440")
 :::
 
-:::readable Fir.Core.Op.eq_call_of_callee (pin := Fir.Core.Op.callTarget?) (fingerprint := "15872756656267079313")
+:::readable Fir.Core.Op.eq_call_of_callee (pin := Fir.Core.Op.callTarget?) (fingerprint := "6842950763105203500")
 *Theorem: a core op that calls a function is $`\mathsf{call}` of that
 function.* For every core op $`o` and symbol $`g`: if
 $`\mathrm{callee}(o) = \mathsf{fixed}~g`, then $`o` is $`\mathsf{call}~g : t^* \to r^*`
@@ -36,11 +36,11 @@ $`\mathrm{callee}(o)` is none, $`o` is
 operand vector, its semantics, or its exit for a terminator, has some
 outcome. These are the core ops other than $`\mathsf{call}`,
 $`\mathsf{alloca}`, the loads and stores, $`\mathsf{fieldaddr}`,
-$`\mathsf{globaladdr}`, the copies and moves, the fills,
+$`\mathsf{globaladdr}`, $`\mathsf{funcaddr}`, the copies and moves, the fills,
 $`\mathsf{ptr\_expose}` and $`\mathsf{ptr\_from\_int}`, each total by the
 {ref "The-fir-specification--Execution--Core-functions-without-calls"}[previous section].
 With $`\mathsf{alloca}`, the loads and stores, $`\mathsf{fieldaddr}`,
-$`\mathsf{globaladdr}`, the copies and moves, the fills,
+$`\mathsf{globaladdr}`, $`\mathsf{funcaddr}`, the copies and moves, the fills,
 $`\mathsf{ptr\_expose}` and $`\mathsf{ptr\_from\_int}`, which are total
 with memory by their own rules
 ({ref "The-fir-specification--Memory--Stack-allocation-obligations"}[stack allocation obligations],
@@ -55,7 +55,7 @@ they are the ops that the progress theorem for modules asks to be total,
 the ops that the interpreter runs by their own rule.
 :::
 
-:::readable Fir.Core.inModule_of_valid (pin := Fir.Func.InModule) (pin := Fir.Core.Op.Valid) (pin := Fir.Core.Op.sig) (pin := Fir.Core.Op.returnTypes) (pin := Fir.Module.context) (fingerprint := "1986446084803581005")
+:::readable Fir.Core.inModule_of_valid (pin := Fir.Func.InModule) (pin := Fir.Core.Op.Valid) (pin := Fir.Core.Op.sig) (pin := Fir.Core.Op.returnTypes) (pin := Fir.Module.context) (fingerprint := "9916945797203209589")
 *Theorem: every core function valid in the context of a module runs
 within that module.* Let $`M` be a core module, and $`f` a core function
 {ref "The-fir-specification--Validation--The-general-rules"}[valid] in the

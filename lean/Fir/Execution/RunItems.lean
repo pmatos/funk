@@ -35,12 +35,17 @@ gives it, and the spec's runs replace it by each resolver that they keep
 (the section on runs under every address policy).
 
 The record also lists the allocations that a run starts with: one for each
-global of the table, in the table's order (the section on the memories a
-run starts with). Each lives in the memory of its number for the whole
+global of the table, in the table's order, then one for each function of
+the table, in the table's order (the section on the memories a run starts
+with). Each lives in the memory of its number for the whole
 run, with the global's alignment, its constness, and its initializer's
 units followed by zeros up to its size (the human's ruling of 2026-11-20 on
-#237, Q1). The record gives, for each global's symbol, its memory and its
-allocation's id there, which `globalAddr` reads (#237). A run holds the globals of its own function's table only (Q3):
+#237, Q1). A function's lives in memory 0 for the whole run, constant,
+aligned to 1, with no units (the human's ruling of 2026-11-19 on #235,
+Q1). The record gives, for each global's symbol, its memory and its
+allocation's id there, which `globalAddr` reads (#237), and for each
+function's symbol its allocation's id in memory 0, which `funcAddr` reads
+(#235). A run holds the globals of its own function's table only (Q3):
 a nested module's globals are its kernels', as an op of a table names only
 the items of that table.
 
@@ -56,7 +61,11 @@ first layout with a symbol, so an op that validation accepts finds, in
 every run, the layout it was checked against (`RunItems.ofTable_ref`).
 They read its globals alike too: each takes the first global with a
 symbol, so an op that validation accepts finds, in every run, a global of
-the memory it was checked against (`RunItems.ofTable_globalMem`).
+the memory it was checked against (`RunItems.ofTable_globalMem`). And they
+read its functions alike: the run gives an allocation to each symbol that
+names a function of the table, as validation reads the table's symbols,
+and to no other (`RunItems.ofTable_func`), and the allocations of two
+symbols differ (`RunItems.ofTable_func_ne`).
 -/
 
 namespace Fir
@@ -80,9 +89,8 @@ structure LayoutPlace where
 /-- An allocation that a run starts with, in the memory that the module's
 data layout numbers `mem`: its kind, its alignment, whether it is
 constant, and its units in a memory whose units are `u` bits wide. A
-global's is one (ADR-2026-11-09-1546), and a function's address will be
-another, of the kind `function` (the human's ruling of 2026-11-19 on
-#235). -/
+global's is one (ADR-2026-11-09-1546), and a function's is another, of the
+kind `function` (the human's ruling of 2026-11-19 on #235, Q1). -/
 structure StartAlloc where
   mem : Nat
   kind : Memory.AllocKind
@@ -95,13 +103,15 @@ each aggregate, by its symbol, if there is one, the address policy and
 resolver of each memory, by its number, which are the canonical ones unless
 the run says otherwise, the allocations the run starts with, in order, and
 where each global starts, by its symbol, if there is one: its memory and
-its allocation's id in that memory. -/
+its allocation's id in that memory, and where each function starts, by its
+symbol, if there is one: its allocation's id in memory 0. -/
 structure RunItems where
   layout? : Name → Option LayoutPlace
   addrs : Nat → Memory.Policy := fun _ => Memory.Policy.canonical
   resolvers : Nat → Memory.Resolver := fun _ => Memory.Resolver.canonical
   starts : List StartAlloc := []
   global? : Name → Option (Nat × Memory.AllocId) := fun _ => none
+  func? : Name → Option Memory.AllocId := fun _ => none
 
 /-- The items of a run that gives no item, under the canonical layout. -/
 def RunItems.empty : RunItems := { layout? := fun _ => none }
@@ -168,16 +178,36 @@ def Global.start (l : DataLayout) (gs : List Global) (g : Global) : StartAlloc :
       let us := g.init.flatMap (·.startUnits l gs g.mem u)
       us.take g.size ++ List.replicate (g.size - us.length) (.bits 0) }
 
+/-- The allocation that a run starts a function with (the human's ruling of
+2026-11-19 on #235, Q1): of the kind `function`, in memory 0, aligned to 1,
+constant, and with no units, so that every load and store through its
+address faults. -/
+def funcStart : StartAlloc :=
+  { mem := 0, kind := .function, align := 1, const := true, units := fun _ => [] }
+
+/-- Where a run starts the function `s` of a table whose globals are `gs`
+and whose functions are `fs`: its allocation's id in memory 0, which counts
+the globals of memory 0, which the run starts first, and the functions
+before it. The first function with the symbol is the one, as a call finds
+its callee. -/
+def Func.startId? (gs : List Global) (fs : List (Func d)) (s : Name) : Option Memory.AllocId :=
+  let i := fs.findIdx (·.name == s)
+  match fs[i]? with
+  | some _ => some ((gs.filter (·.mem == 0)).length + i)
+  | none => none
+
 /-- The items that a run of a function of the symbol table `t`, in a module
 whose data layout is `l`, gives each op: the first aggregate's layout of
 `t` with each symbol, placed, under the canonical layout, the allocation of
-each of `t`'s globals, in order, and where each global of `t` starts, as
-an address in an initializer reads it (`Global.startId?`). The layouts are
-placed once, not at each lookup. -/
+each of `t`'s globals, in order, then of each of its functions, in order,
+where each global of `t` starts, as an address in an initializer reads it
+(`Global.startId?`), and where each function of `t` starts
+(`Func.startId?`). The layouts are placed once, not at each lookup. -/
 def RunItems.ofTable (l : DataLayout) (t : SymbolTable d) : RunItems :=
   let placed := t.aggregates.map fun a => (a.name, a.place l)
-  { layout? := fun s => placed.lookup s, starts := t.globals.map (Global.start l t.globals),
-    global? := Global.startId? t.globals }
+  { layout? := fun s => placed.lookup s,
+    starts := t.globals.map (Global.start l t.globals) ++ t.funcs.map fun _ => funcStart,
+    global? := Global.startId? t.globals, func? := Func.startId? t.globals t.funcs }
 
 /-- The items that a run of a function of a module's own table gives each
 op. -/
@@ -219,5 +249,42 @@ theorem RunItems.ofTable_globalMem (l : DataLayout) (t : SymbolTable d) (s : Nam
   rw [List.find?_eq_getElem?_findIdx]
   dsimp only
   split <;> rename_i h <;> simp [h]
+
+/-- The run gives an allocation to each symbol that names a function of the
+table, as validation reads the table's symbols (`SymbolTable.symbols`),
+and to no other. So an op that validation accepts in a table, naming a
+function, finds its allocation in each run of a function of the table. -/
+theorem RunItems.ofTable_func (l : DataLayout) (t : SymbolTable d) (s : Name) :
+    ((RunItems.ofTable l t).func? s).isSome = (t.symbols s).isSome := by
+  show (Func.startId? t.globals t.funcs s).isSome = ((t.funcs.find? (·.name == s)).map _).isSome
+  unfold Func.startId?
+  rw [List.find?_eq_getElem?_findIdx]
+  dsimp only
+  split <;> rename_i h <;> simp [h]
+
+/-- The run gives two symbols different allocations. -/
+theorem RunItems.ofTable_func_ne (l : DataLayout) (t : SymbolTable d) {s s' : Name}
+    {a a' : Memory.AllocId} (hs : (RunItems.ofTable l t).func? s = some a)
+    (hs' : (RunItems.ofTable l t).func? s' = some a') (hne : s ≠ s') : a ≠ a' := by
+  change Func.startId? t.globals t.funcs s = some a at hs
+  change Func.startId? t.globals t.funcs s' = some a' at hs'
+  unfold Func.startId? at hs hs'
+  dsimp only at hs hs'
+  split at hs
+  case h_2 => cases hs
+  rename_i f hf
+  split at hs'
+  case h_2 => cases hs'
+  rename_i f' hf'
+  cases hs
+  cases hs'
+  intro heq
+  have hi : t.funcs.findIdx (·.name == s) = t.funcs.findIdx (·.name == s') := Nat.add_left_cancel heq
+  have hn := List.findIdx_of_getElem?_eq_some hf
+  have hn' := List.findIdx_of_getElem?_eq_some hf'
+  rw [hi, hf'] at hf
+  cases hf
+  simp only [beq_iff_eq] at hn hn'
+  exact hne (hn.symm.trans hn')
 
 end Fir

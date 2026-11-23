@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Exposure laws: readable blocks" =>
 
-:::moduleDocs (fingerprint := "6027608012345001473")
+:::moduleDocs (fingerprint := "9310211366301851513")
 :::
 
 :::readable Fir.Memory.Block.giveAddr_const Fir.Memory.Block.giveAddr_shape Fir.Memory.Block.giveAddr_units Fir.Memory.Block.giveAddr_live Fir.Memory.Block.giveAddr_write (pin := Fir.Memory.Block.giveAddr) (fingerprint := "2438581652375946545")
@@ -60,10 +60,11 @@ the same address before. So exposing the same allocation at the same
 address in $`M \sqsubseteq M'` gives memories that refine each other.
 :::
 
-:::readable Fir.Memory.Block.IsRefinedBy.leavesRoom Fir.Memory.roomFrom_isRefinedBy Fir.Memory.Memory.IsRefinedBy.addrOf Fir.Memory.Memory.IsRefinedBy.fits Fir.Memory.Memory.bumpFrom_isRefinedBy Fir.Memory.Memory.lowestFrom_isRefinedBy Fir.Memory.Memory.IsRefinedBy.lowestFit Fir.Memory.Memory.IsRefinedBy.canonical (fingerprint := "1660268409456979510")
+:::readable Fir.Memory.Block.IsRefinedBy.extent Fir.Memory.Block.IsRefinedBy.leavesRoom Fir.Memory.roomFrom_isRefinedBy Fir.Memory.Memory.IsRefinedBy.addrOf Fir.Memory.Memory.IsRefinedBy.fits Fir.Memory.Memory.bumpFrom_isRefinedBy Fir.Memory.Memory.lowestFrom_isRefinedBy Fir.Memory.Memory.IsRefinedBy.lowestFit Fir.Memory.Memory.IsRefinedBy.canonical (fingerprint := "5416009633938480922")
 *Theorems: refined memories agree on addresses.* Blocks that refine each
-other have the same liveness, size and address, so they leave room for
-the same addresses. In $`M \sqsubseteq M'` every allocation has the same
+other have the same kind, liveness, size and address, so they take the
+same {ref "The-fir-specification--Memory--Addresses"}[extent] and leave
+room for the same addresses. In $`M \sqsubseteq M'` every allocation has the same
 address, the same addresses fit it, its canonical address is the same,
 the lowest address that fits it is the same, and the canonical layout
 gives it the same address.

@@ -1,5 +1,6 @@
 import Fir.Core.EffectLaws
 import Fir.Core.GlobalAddrLaws
+import Fir.Core.FuncAddrLaws
 import Fir.Core.PtrIntLaws
 import Fir.Execution.AddressObligations
 
@@ -14,7 +15,7 @@ allocation an address and counts no integer turned back into a pointer.
   memory by its rule in the set monad, so it keeps the memories.
 * `alloca`, the loads and stores, `memCopy` and `memSet` run allocations,
   loads, stores and choices of bits, each of which keeps every address and
-  count, and `fieldAddr` and `globalAddr` keep the memories.
+  count, and `fieldAddr`, `globalAddr` and `funcAddr` keep the memories.
 * `ptrExpose` gives an address only in the memory of its pointer, and
   counts no rebuild; `ptrFromInt` counts a rebuild only in the memory of its
   pointer, and gives no address. Each declares an allocation in that
@@ -89,6 +90,11 @@ theorem globalAddr_keepsAddrs (s : String) (n : Nat) :
     OwnRuleHas lay ρ L (KeepsAddrs x) (d := CoreDialect) (.globalAddr s n) :=
   globalAddr_ownRuleHas s n lay ρ L fun c => keepsAddrs_lift c
 
+/-- `funcAddr` keeps the memories. -/
+theorem funcAddr_keepsAddrs (s : String) (n : Nat) :
+    OwnRuleHas lay ρ L (KeepsAddrs x) (d := CoreDialect) (.funcAddr s n) :=
+  funcAddr_ownRuleHas s n lay ρ L fun c => keepsAddrs_lift c
+
 /-- `memCopy` keeps every address and count. -/
 theorem memCopy_keepsAddrs (k : CopyKind) (o : Memory.Ordering) (w n : Nat) :
     OwnRuleHas lay ρ L (KeepsAddrs x) (d := CoreDialect) (.memCopy k o w n) :=
@@ -127,6 +133,7 @@ theorem lawfulDialectAddresses : LawfulDialectAddresses CoreDialect :=
     (fun o e m a n _ => storeFloat_keepsAddrs lay ρ L x o e m a n)
     (fun s j n w _ => fieldAddr_keepsAddrs lay ρ L x s j n w)
     (fun s n _ => globalAddr_keepsAddrs lay ρ L x s n)
+    (fun s n _ => funcAddr_keepsAddrs lay ρ L x s n)
     (fun k o w n _ => memCopy_keepsAddrs lay ρ L x k o w n)
     (fun o v w n _ => memSet_keepsAddrs lay ρ L x o v w n)
     (fun n w hx => OwnRuleHas.keeps (ptrExpose_exposesNot n w lay ρ L x hx)

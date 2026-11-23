@@ -53,4 +53,5 @@ the table keeps an item naming only items of its own table
   and overlaps to reject.
 - **A negative offset in `addr`:** no C address constant needs one.
 - **`addr` of a function now:** a function's address is an allocation
-  of kind `function` (#235, ruled 2026-11-19), which no run makes yet.
+  of kind `function` (#235, ruled 2026-11-19, ADR-2026-11-23-0906), whose
+  value in an initializer #237's last stage writes.

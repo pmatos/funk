@@ -163,11 +163,12 @@ def frags (p : String) : String :=
 #guard runWorld "@add" ["2", "3"] (some []) == { out := "{\"kind\":\"return\",\"values\":[\"5\"]," ++
   "\"trace\":[],\"escaped\":[],\"memory\":[],\"choices\":0}", status := 0 }
 /-- The report of `@keep`: the pointer's allocation, then the one its units
-point into. -/
+point into. Memory 0 starts with the allocations of `@dev`'s two
+functions, 0 and 1 (#235), so the kernel's are 2 and 3. -/
 def keepOut : String :=
-  "{\"kind\":\"return\",\"values\":[\"ptr(1, 0)\"],\"trace\":[],\"escaped\":[]," ++
-  "\"memory\":[{\"memory\":0,\"alloc\":1,\"kind\":\"global\",\"align\":8,\"size\":8," ++
-  "\"live\":true,\"units\":[" ++ frags "ptr(0, 0)" ++ "]},{\"memory\":0,\"alloc\":0," ++
+  "{\"kind\":\"return\",\"values\":[\"ptr(3, 0)\"],\"trace\":[],\"escaped\":[]," ++
+  "\"memory\":[{\"memory\":0,\"alloc\":3,\"kind\":\"global\",\"align\":8,\"size\":8," ++
+  "\"live\":true,\"units\":[" ++ frags "ptr(2, 0)" ++ "]},{\"memory\":0,\"alloc\":2," ++
   "\"kind\":\"global\",\"align\":1,\"size\":1,\"live\":true,\"units\":[\"0xff\"]}]," ++
   "\"choices\":0}"
 
@@ -177,7 +178,7 @@ def keepOut : String :=
 #guard runWorld "@dev::@keep" ["-1"] (some []) == { out := keepOut, status := 0 }
 -- A returned stack pointer is dangling: it reaches nothing.
 #guard (runWorld "@dev::@frame" [] (some [])).out == "{\"kind\":\"return\"," ++
-  "\"values\":[\"ptr(0, 0)\"],\"trace\":[],\"escaped\":[],\"memory\":[],\"choices\":0}"
+  "\"values\":[\"ptr(2, 0)\"],\"trace\":[],\"escaped\":[],\"memory\":[],\"choices\":0}"
 -- Every outcome of exhaustive mode carries its trace and its end.
 #guard (runWorld "@add" ["poison", "1"] (some []) (.exhaustive 16)).out ==
   "{\"kind\":\"outcomes\",\"choices\":0,\"outcomes\":[{\"kind\":\"return\"," ++

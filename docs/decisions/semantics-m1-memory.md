@@ -100,8 +100,10 @@ an allocation may be given, and what the canonical layout is.
 
 Memory ops carry an `ordering` attribute. M1 accepts only `nonatomic`, so a
 concurrency model (S6) needs no format change. Allocations carry a kind: stack,
-global, or heap through external calls. Managed memory can be added as another
-kind later (ADR-2026-11-09-1542). The world may create and free heap
+global, heap through external calls, or function, the address of a function
+(the human's ruling of 2026-11-19 on #235, Q1;
+[semantics-m1-functions.md](semantics-m1-functions.md)). Managed memory can be
+added as another kind later (ADR-2026-11-09-1542). The world may create and free heap
 allocations when it answers an external call (ADR-2026-11-09-1540).
 
 Every theorem that relies on `ptr` having no values is restated
@@ -179,14 +181,16 @@ which changes the dialect's structure where the versions with memory
 already cover every op.
 
 `fieldaddr`, which came after that ruling (ADR-2026-11-18-2041), and
-`globaladdr` (#237) touch no memory but read an item of the run, which the
+`globaladdr` (#237) and `funcaddr` (#235) touch no memory but read an
+item of the run, which the
 set monad does not have, so the statements over the set monad leave them
 out too: they cover the ops that
 touch no memory and read no item (`Core.Op.readsItems`). The semantics with
 memory carries their guarantees, by their own rules and proofs.
 
 These hold for every core op, and for every function of a valid core
-module, the ops that touch memory, `fieldaddr` and `globaladdr` included:
+module, the ops that touch memory, `fieldaddr`, `globaladdr` and
+`funcaddr` included:
 
 - the lawful classes with memory: `Core.lawfulDialectTotal`,
   `Core.lawfulDialectMonotone` and `Core.lawfulDialectMemPoison`
@@ -211,7 +215,8 @@ rule only with memory, as `alloca` and the loads and stores do, and meets
 each obligation by its own proofs (`lean/Fir/Core/FieldAddrLaws.lean`), so
 the guarantees keep their statements with no new hypothesis. `globaladdr`
 reads where its global starts in the same record, in the same way
-(`lean/Fir/Core/GlobalAddrLaws.lean`).
+(`lean/Fir/Core/GlobalAddrLaws.lean`), and `funcaddr` where its function
+starts (`lean/Fir/Core/FuncAddrLaws.lean`).
 Rejected: the parser looking a layout up when it reads an op (Q1 B), which
 changes every dialect's text laws.
 
@@ -221,8 +226,8 @@ kernels included (`lean/Fir/Gpu/Runs.lean`, #212; semantics-m1-dialects.md).
 
 Each new op with no tie, one that touches memory or reads the run's items,
 keeps every one of them holding, with its own rule with memory and its own
-proofs: each op that touches memory does, and so do `fieldAddr` and
-`globalAddr`, which touch no memory but read items. `Core.Op.memCases` joins them to the tied ops
+proofs: each op that touches memory does, and so do `fieldAddr`,
+`globalAddr` and `funcAddr`, which touch no memory but read items. `Core.Op.memCases` joins them to the tied ops
 (semantics-effects.md#soundness lists each op's laws files).
 
 PR #382 narrowed these statements, which now cover memory-free code; beside

@@ -92,8 +92,8 @@ stays from `lo` to `hi`, `x` is a multiple of its alignment, and every
 other allocation leaves room for it. -/
 theorem fits_eq_true {M : Memory u} {lo hi a x : Nat} :
     M.fits lo hi a x = true ↔ ∃ b, M.blocks[a]? = some b ∧ lo ≤ x ∧ b.align ∣ x ∧
-      x + b.units.length ≤ hi ∧
-      ∀ j c, M.blocks[j]? = some c → j ≠ a → c.leavesRoom x b.units.length = true := by
+      x + b.extent ≤ hi ∧
+      ∀ j c, M.blocks[j]? = some c → j ≠ a → c.leavesRoom x b.extent = true := by
   unfold fits
   cases hb : M.blocks[a]? with
   | none => simp
@@ -107,7 +107,7 @@ multiples from where each live allocation with an address ends. -/
 theorem fits_candidate {M : Memory u} {lo hi a : Nat} {b : Block u} (hb : M.blocks[a]? = some b)
     {x : Nat} (hx : M.fits lo hi a x = true) : (x = alignUp lo b.align ∨
       ∃ (j : Nat) (c : Block u) (z : Nat), M.blocks[j]? = some c ∧ c.addr = some z ∧
-        c.live = true ∧ x = alignUp (z + c.units.length) b.align) ∨
+        c.live = true ∧ x = alignUp (z + c.extent) b.align) ∨
       ∃ y, y < x ∧ M.fits lo hi a y = true := by
   obtain ⟨b', hb', hlo, hdvd, hhi, hroom⟩ := fits_eq_true.mp hx
   rw [hb, Option.some.injEq] at hb'
@@ -126,7 +126,7 @@ theorem fits_candidate {M : Memory u} {lo hi a : Nat} {b : Block u} (hb : M.bloc
     · exact .inr ⟨x - b.align, by omega, hx'⟩
     · -- The address below does not fit, so a live block is in its way.
       have : ¬ ∀ j c, M.blocks[j]? = some c → j ≠ a →
-          c.leavesRoom (x - b.align) b.units.length = true := fun h =>
+          c.leavesRoom (x - b.align) b.extent = true := fun h =>
         hx' (fits_eq_true.mpr ⟨b, hb, by omega, hdvd', by omega, h⟩)
       simp only [Classical.not_forall, Bool.not_eq_true] at this
       obtain ⟨j, c, hc, hne, hfalse⟩ := this
@@ -139,7 +139,7 @@ theorem fits_candidate {M : Memory u} {lo hi a : Nat} {b : Block u} (hb : M.bloc
           Bool.or_eq_false_iff, decide_eq_false_iff_not] at hfalse htrue
         obtain ⟨⟨hlive, h₁⟩, h₂⟩ := hfalse
         have hlive' : c.live = true := by simpa using hlive
-        have hend : z + c.units.length ≤ x := by
+        have hend : z + c.extent ≤ x := by
           rcases htrue with (hl | h₃) | h₄
           · simp [hlive'] at hl
           · omega
@@ -182,7 +182,7 @@ theorem lowestFrom_fits {M : Memory u} {lo hi a al y : Nat} :
         | some b₀ =>
           simp only [Option.merge, Option.some.injEq] at hb'
           rw [← hb']
-          rcases Nat.le_total b₀ (alignUp (_ + c.units.length) al) with hle | hle
+          rcases Nat.le_total b₀ (alignUp (_ + c.extent) al) with hle | hle
           · rw [Nat.min_eq_left hle]
             exact hb b₀ rfl
           · rw [Nat.min_eq_right hle]
@@ -199,7 +199,7 @@ theorem lowestFrom_le_best {M : Memory u} {lo hi a al : Nat} :
     unfold lowestFrom
     split
     · split
-      · obtain ⟨y, hy, -, hyb⟩ := merge_min_le (best := best) (z := alignUp (_ + c.units.length) al)
+      · obtain ⟨y, hy, -, hyb⟩ := merge_min_le (best := best) (z := alignUp (_ + c.extent) al)
         obtain ⟨y', hy', hle⟩ := lowestFrom_le_best (M := M) (lo := lo) (hi := hi) (a := a)
           (al := al) (cs := cs) hy
         exact ⟨y', hy', Nat.le_trans hle (hyb b h)⟩
@@ -210,13 +210,13 @@ theorem lowestFrom_le_best {M : Memory u} {lo hi a al : Nat} :
 `cs` with an address, aligned up, that fits. -/
 theorem lowestFrom_le_after {M : Memory u} {lo hi a al : Nat} :
     ∀ {best : Option Nat} {cs : List (Block u)} {c : Block u} {z : Nat}, c ∈ cs →
-      c.addr = some z → c.live = true → M.fits lo hi a (alignUp (z + c.units.length) al) = true →
-      ∃ y, lowestFrom M lo hi a al best cs = some y ∧ y ≤ alignUp (z + c.units.length) al
+      c.addr = some z → c.live = true → M.fits lo hi a (alignUp (z + c.extent) al) = true →
+      ∃ y, lowestFrom M lo hi a al best cs = some y ∧ y ≤ alignUp (z + c.extent) al
   | best, c' :: cs, c, z, hm, hz, hl, hf => by
     rcases List.mem_cons.mp hm with rfl | hm
     · unfold lowestFrom
       simp only [hz, hl, hf, Bool.and_self, ↓reduceIte]
-      obtain ⟨y, hy, hyz, -⟩ := merge_min_le (best := best) (z := alignUp (z + c.units.length) al)
+      obtain ⟨y, hy, hyz, -⟩ := merge_min_le (best := best) (z := alignUp (z + c.extent) al)
       obtain ⟨y', hy', hle⟩ := lowestFrom_le_best (M := M) (lo := lo) (hi := hi) (a := a)
         (al := al) (cs := cs) hy
       exact ⟨y', hy', Nat.le_trans hle hyz⟩

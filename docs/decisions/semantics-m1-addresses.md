@@ -61,7 +61,12 @@ and one past its end could wrap to 0.
 
 An allocation of no units takes no address, so it may share its address
 with another, as zero-sized objects may in LLVM and Rust. No op of M1
-makes one: `alloca` allocates at least one unit.
+makes one: `alloca` allocates at least one unit. A function's allocation,
+of the kind `function`, is the exception: it has no units and takes one
+address, so two functions exposed get different addresses (the human's
+ruling of 2026-11-19 on #235, Q1). The model states the addresses a block
+takes as its extent (`Block.extent`)
+([semantics-m1-functions.md](semantics-m1-functions.md)).
 
 Exposure changes no access: a load, an aligned access and a store fault
 or succeed as before, and every block keeps its shape and units

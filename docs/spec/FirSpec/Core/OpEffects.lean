@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Core effects: readable blocks" =>
 
-:::moduleDocs (fingerprint := "14258655793256399875")
+:::moduleDocs (fingerprint := "9901949777961985680")
 :::
 
 :::readable Fir.Core.Mem (fingerprint := "11401156343561318334")
@@ -32,11 +32,11 @@ $`\mathsf{ptr\_from\_int}` the memory of their pointers; no other core op
 names a memory.
 :::
 
-:::readable Fir.Core.Op.effects (fingerprint := "570010211677034150")
+:::readable Fir.Core.Op.effects (fingerprint := "262967141254237085")
 *Definition: the effects of each core op.* For each
 {ref "The-fir-specification--Abstract-syntax--Core-ops"}[core op instance]:
 
-$$`\begin{aligned} \emptyset:\ & \mathsf{const},\ \mathsf{and},\ \mathsf{or},\ \mathsf{xor},\ \mathsf{icmp}, \\ & \mathsf{select},\ \mathsf{zext},\ \mathsf{sext},\ \mathsf{trunc},\ \mathsf{freeze},\ \mathsf{call}, \\ & \mathsf{bitcast}^{\to \mathsf{i}},\ \mathsf{bitcast}^{\mathsf{i} \to},\ \mathsf{sitofp},\ \mathsf{uitofp}, \\ & \mathsf{fpext},\ \mathsf{fptrunc},\ \mathsf{ptradd},\ \mathsf{fieldaddr},\ \mathsf{globaladdr} \end{aligned}`
+$$`\begin{aligned} \emptyset:\ & \mathsf{const},\ \mathsf{and},\ \mathsf{or},\ \mathsf{xor},\ \mathsf{icmp}, \\ & \mathsf{select},\ \mathsf{zext},\ \mathsf{sext},\ \mathsf{trunc},\ \mathsf{freeze},\ \mathsf{call}, \\ & \mathsf{bitcast}^{\to \mathsf{i}},\ \mathsf{bitcast}^{\mathsf{i} \to},\ \mathsf{sitofp},\ \mathsf{uitofp}, \\ & \mathsf{fpext},\ \mathsf{fptrunc},\ \mathsf{ptradd},\ \mathsf{fieldaddr},\ \mathsf{globaladdr},\ \mathsf{funcaddr} \end{aligned}`
 
 $$`\mathsf{fcmp}_\phi,\ \mathit{fbin}_\phi,\ \mathit{funary}_\phi,\ \mathsf{fma}_\phi:\ \{\mathsf{mayPoison}\} \text{ if } \phi \text{ sets } \mathsf{nnan} \text{ or } \mathsf{ninf}, \text{ else } \emptyset`
 

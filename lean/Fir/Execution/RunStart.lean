@@ -4,24 +4,32 @@ import Fir.Execution.MemoryObligations
 # The memories a run starts with
 
 Each global is one allocation of kind `global`, live for the whole run
-(ADR-2026-11-09-1546). So a run does not start from empty memories: it
-starts from memories that already hold the allocations that the items of
-the run list (`RunItems.starts`), one for each global of its function's
-table, outside every call. Each is the next allocation of the memory of
-its number, in the order of the list, so in each memory the globals of
-the table take the ids from 0 up, in the table's order, before anything the
-run allocates. A global's units are its initializer's, followed by zeros up
+(ADR-2026-11-09-1546), and each function is one allocation of kind
+`function`, in memory 0, live for the whole run, with no units (the human's
+ruling of 2026-11-19 on #235, Q1). So a run does not start from empty
+memories: it starts from memories that already hold the allocations that
+the items of the run list (`RunItems.starts`), one for each global of its
+function's table, then one for each function of the table, outside every
+call. Each is the next allocation of the memory of its number, in the order
+of the list, so in each memory the globals of the table take the ids from 0
+up, in the table's order, and in memory 0 the functions take the ids after
+them, in the table's order, before anything the run allocates. A run of a
+function of a table with functions `@f` and `@g` and no global of memory 0
+starts memory 0 with `@f`'s allocation, 0, and `@g`'s, 1, so the first
+`alloca` of memory 0 makes its allocation 2. A global's units are its initializer's, followed by zeros up
 to its size (the human's ruling of 2026-11-20 on #237, Q1). A constant
 global's block is constant, so a store to it faults: writing a constant
 global is UB when the write runs (Q2). A run holds the globals of its own
-table only (Q3).
+table only (Q3), and the functions of its own table only, as an op names
+only the items of its own table. A function's block has no units, so every
+load and store through its address is out of bounds, and it is constant.
 
 A run names the dialect's memories by `ρ`, and the dialect says which of
 its memories a module's data layout numbers (`DialectEffects.numbered`):
 the core's memory `n` is the memory numbered `n`, and a sum's are its
 base's. An allocation in a memory the dialect does not number is left out,
 so a dialect with no numbered memory starts from empty memories, as every
-run did before globals.
+run did before globals and functions' allocations.
 
 Every run of the spec starts so: the runs with memory, the runs that see
 the end of each return and the traced runs, under every address policy.

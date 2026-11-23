@@ -70,8 +70,12 @@ def globsIn (l : String) (gs : List String) : String :=
   some [(.global, 1, false, ["0", "0", "7", "0"])]
 -- A global of no units is an empty block.
 #guard startBlocks (glob "size(0) align(1)") 0 0 == some [(.global, 1, false, [])]
--- A module with no global starts from empty memories.
-#guard startBlocks (oneFunc "func @f() {\n^e:\n  ret @0\n}\n") 0 0 == some []
+-- A module with no global starts from no global's block: memory 0 holds
+-- its function's block only (#235), and a module with no item starts from
+-- empty memories.
+#guard startBlocks (oneFunc "func @f() {\n^e:\n  ret @0\n}\n") 0 0 ==
+  some [(.function, 1, true, [])]
+#guard startBlocks (oneFunc "") 0 0 == some []
 
 /-! # Addresses -/
 

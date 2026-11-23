@@ -29,7 +29,7 @@ touches no memory (`coreProbe_replaceBody`). Neither asks that the ops have
 finitely many outcomes, which `CoreProbe` does not prove; these are the
 forms that such a dialect uses. Each op of the sum that declares no memory
 effect ignores the memories, since it runs by its rule in the set monad
-and keeps them, or it is `fieldAddr` or `globalAddr`, which gives its
+and keeps them, or it is `fieldAddr`, `globalAddr` or `funcAddr`, which gives its
 result at once and keeps them (`coreProbe_opsIgnoreMemory`).
 -/
 
@@ -261,7 +261,7 @@ theorem core_touchesMemory_false {o : Core.Op}
 
 /-- Each op of `CoreProbe` ignores the memories, at every layout and
 naming: a core op and a probe op each run by their rule in the set monad and
-keep the memories, and `fieldAddr` and `globalAddr` give their results at
+keep the memories, and `fieldAddr`, `globalAddr` and `funcAddr` give their results at
 once and keep them. -/
 theorem coreProbe_opsIgnoreMemory {N : Type} [DecidableEq N] (lay : N → MemLayout)
     (ρ : DialectEffects.Mem CoreProbe → N) (L : RunItems) :
@@ -278,7 +278,8 @@ theorem coreProbe_opsIgnoreMemory {N : Type} [DecidableEq N] (lay : N → MemLay
           | true =>
             cases o <;> try cases hi
             · exact Core.fieldAddr_ignoresMemory _ _ _ _ lay _ L
-            · exact Core.globalAddr_ignoresMemory _ _ lay _ L)
+            · exact Core.globalAddr_ignoresMemory _ _ lay _ L
+            · exact Core.funcAddr_ignoresMemory _ _ lay _ L)
       | .inr o, _, _ =>
         exact Dialect.sum.ownRuleHas_inr lay ρ L
           (OwnRuleHas.ofLifts (LiftsSetM.opLifts (d := ProbeDialect) o) lay ρ L IgnoresMemory.lift)

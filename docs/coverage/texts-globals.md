@@ -2,7 +2,8 @@
 
 This page continues [texts.md](texts.md): it lists the texts of the fir
 test corpus that test globals and their address `globaladdr` (#237), in
-the order their stages added them. Paths are relative to `tests/fir/`.
+the order their stages added them, and those of the address of a function
+`funcaddr` (#235), a starting allocation as a global is. Paths are relative to `tests/fir/`.
 
 The texts of #237's first stage hold globals, core items of units and
 addresses
@@ -38,3 +39,21 @@ addresses differ by 8, and a global of a second memory of bytes, aligned to
 returns an address. The tests of `globals-memories` and
 `globaladdr-memories` stay interpreter-only, since the backend realises
 neither a memory of 16-bit units nor a nested module's functions.
+
+The texts of #235's second stage use `funcaddr`
+([semantics-m1-functions.md](../decisions/semantics-m1-functions.md)).
+`funcaddr` returns two functions' addresses, the allocations after the
+table's globals; loads, stores and moved loads through one, each UB, since
+a function's allocation has no unit; the distance of two exposed
+functions' addresses, 2 under the canonical layout; an exposed address
+turned back into the function's pointer; tables of function pointers on
+the stack and in a global, stored and loaded back; and a nested module's
+function, whose run holds its own table's function only. Its tests are
+interpreter-only until the backend lowers `funcaddr` (#235 stage 4).
+`reject/funcaddr.toml` holds the texts that do not decode and those that
+name no function of the op's table, an external declaration's symbol
+included, or give a pointer of another memory, and `reject/alloca.toml`
+an `alloca` of the kind `function`. Stage 2 also moved the expected
+pointers of `alloca`, `globals`, `globals-memories`, `memcpy` and
+`pointer-store`: a run's own allocations in memory 0 now follow the
+table's functions'.

@@ -239,6 +239,9 @@ import FirSpec.Core.FieldAddrText
 import FirSpec.Core.GlobalAddr
 import FirSpec.Core.GlobalAddrLaws
 import FirSpec.Core.GlobalAddrText
+import FirSpec.Core.FuncAddr
+import FirSpec.Core.FuncAddrLaws
+import FirSpec.Core.FuncAddrText
 import FirSpec.Core.StoreFloatLaws
 import FirSpec.Core.MemCopy
 import FirSpec.Core.MemCopyLaws

@@ -14,15 +14,15 @@ pins their fingerprint; the build fails when the Lean changes under it.
 
 #doc (Manual) "Core ops: readable blocks" =>
 
-:::moduleDocs (fingerprint := "11960897865273487084")
+:::moduleDocs (fingerprint := "9453024814666237631")
 :::
 
-:::readable Fir.Core.Op (pin := Fir.Core.Op.Valid) (fingerprint := "5996042547449664215")
+:::readable Fir.Core.Op (fingerprint := "9453024814666237631")
 *Ops.* An op of the core dialect carries the width $`N` of the integers it
 works on, or the format $`\mathsf{float}\langle e,m \rangle` of the floats
 it works on, so the types of its operands and results follow from it.
 Below, $`c` is a constant of type $`\mathsf{i}N`, $`v` a vector of
-$`1+e+m` bits, $`t` and $`r` are types, and $`f` is a function's symbol. The ops come in twenty families.
+$`1+e+m` bits, $`t` and $`r` are types, and $`f` is a function's symbol. The ops come in twenty-one families.
 
 *Constants* put a fixed value in the program.
 
@@ -254,6 +254,19 @@ globalAddr \mathsf{globaladdr}_{N}~s
   $`\mathsf{ptr}\langle N \rangle` to the first unit of the global $`s`.
   It is never UB and never gives poison.
 
+*Addresses of functions* give a pointer to a function (#235).
+
+```grammar Fir.Core.Op
+\mathit{op}
+-        \dots
+funcAddr \mathsf{funcaddr}_{N}~f
+```
+
+* $`\mathsf{funcaddr}_{N}~f` gives a pointer of
+  $`\mathsf{ptr}\langle N \rangle` to the function $`f`: to its
+  allocation, which has no units (the human's ruling of 2026-11-19 on
+  #235). It is never UB and never gives poison.
+
 *Stack allocation* makes room in a memory for the current call (#231; the
 human's ruling of 2026-11-14 on #378).
 
@@ -457,16 +470,7 @@ call \mathsf{call}~f : t^* \to r^*
   operand is a poison argument, and a poison that the callee returns is a
   poison result. A function may call itself.
 
-*Validation.* The grammar allows ops that no program may hold. Beyond the
-types of each op's operands and results, which every dialect checks, the
+*Validation.* The grammar allows ops that no program may hold: the
 {ref "The-fir-specification--Validation--Core-rules"}[core rules] of
-validation ask more of some ops: a width change strictly widens or
-narrows, $`\mathsf{ret}` returns its function's result types,
-$`\mathsf{call}` names a function of its type, a conversion between
-formats goes the way its name says, the ops that round carry the mode
-$`\mathsf{rne}`, the float ops carry no reserved word of their fast-math
-flags, $`\mathsf{fieldaddr}` names a layout of its memory with the field
-it asks, and $`\mathsf{globaladdr}` names a global of its own table in
-its memory. $`\mathsf{alloca}`, the loads and the stores have the rules
-given with them above, and the other ops have no core rule of their own.
+validation say what the core ops ask beyond their types.
 :::

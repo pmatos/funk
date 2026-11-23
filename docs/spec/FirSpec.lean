@@ -203,6 +203,8 @@ functions, blocks and ops.
 
 {includeReadable "." Fir.Core.GlobalAddrText "Addresses of globals in text" FirSpec.Core.GlobalAddrText (level := 2)}
 
+{includeReadable "." Fir.Core.FuncAddrText "Addresses of functions in text" FirSpec.Core.FuncAddrText (level := 2)}
+
 {includeReadable "." Fir.Core.TextSamples "The core dialect's text, checked" FirSpec.Core.TextSamples (level := 2)}
 
 {includeReadable "." Fir.Core.FloatText "Float constants in text" FirSpec.Core.FloatText (level := 2)}

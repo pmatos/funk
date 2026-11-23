@@ -9,10 +9,10 @@ The core dialect's ops: constants, integer arithmetic, bitwise ops and
 shifts, comparison and selection, width changes, `freeze` and `poison`,
 branches and calls, the float constants, comparisons, arithmetic, bit
 casts, conversions from integers, conversions between formats and
-conversions to integers, pointer offsets, field addresses, stack
-allocation, loads and stores, of integers, pointers and floats,
-copies and moves of units, fills of units, and the exposure of pointers
-as integers and back.
+conversions to integers, pointer offsets, field addresses, the
+addresses of globals and of functions, stack allocation, loads and
+stores, of integers, pointers and floats, copies and moves of units,
+fills of units, and the exposure of pointers as integers and back.
 Each op below is an op instance: it carries its
 attributes and the widths it is used at, so that its operand and result
 types follow from it.
@@ -196,6 +196,12 @@ Addresses of globals (#237; ADR-2026-11-09-1546):
   live for the whole run (the section on the memories a run starts with),
   and reads where it is from the items that the run gives each op. It
   takes no operands, is never UB and never gives poison.
+
+Addresses of functions (#235; the human's ruling of 2026-11-19 on #235):
+
+* `funcAddr s n`: the address of the function with symbol `s`, a pointer
+  of `ptr<N>`, `N = n`, to the function's allocation, which has no units.
+  It takes no operands, is never UB and never gives poison.
 
 Stack allocation (#231; the human's ruling of 2026-11-14 on #378):
 
@@ -386,6 +392,7 @@ inductive Op where
   | ptradd (n w : Nat)
   | fieldAddr (s : String) (i : Nat) (n : Nat) (w : Option Nat)
   | globalAddr (s : String) (n : Nat)
+  | funcAddr (s : String) (n : Nat)
   | alloca (k : Memory.AllocKind) (t : Ty) (c : Nat) (a : Option Nat) (n : Nat)
   | load (o : Memory.Ordering) (w : Nat) (a : Option Nat) (n : Nat)
   | store (o : Memory.Ordering) (w : Nat) (a : Option Nat) (n : Nat)

@@ -17,7 +17,7 @@ fails when the Lean changes under it.
 :::moduleDocs (fingerprint := "8898764745509703924")
 :::
 
-:::readable Fir.Core.loadFloatResult Fir.Core.loadFloatRule Fir.Core.storeFloatRule (pin := Fir.Core.loadShape) (pin := Fir.Core.storeAlign) (pin := Fir.Core.storeUnits) (pin := Fir.MonadMemory) (pin := Fir.MonadUB) (pin := Fir.Memory.decodeInt) (pin := Fir.Memory.encodeInt) (pin := Fir.Core.Op) (fingerprint := "843386374781985095")
+:::readable Fir.Core.loadFloatResult Fir.Core.loadFloatRule Fir.Core.storeFloatRule (pin := Fir.Core.loadShape) (pin := Fir.Core.storeAlign) (pin := Fir.Core.storeUnits) (pin := Fir.MonadMemory) (pin := Fir.MonadUB) (pin := Fir.Memory.decodeInt) (pin := Fir.Memory.encodeInt) (pin := Fir.Core.Op) (fingerprint := "12331826996714905316")
 *Definition: the rules of the load and store of a float.* Let a run's
 memories have the layout entries $`\ell`, and let the run name the core's
 memory $`x` as $`\rho(x)`. For $`\mathsf{load}_N~o~\mathsf{float}\langle e,m \rangle~a`

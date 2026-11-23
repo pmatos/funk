@@ -25,10 +25,10 @@ vector of its parameter types, poison included (the section on core
 functions with memory):
 
 * _every core op but `call`, `alloca`, the loads and stores,
-  `fieldAddr`, `globalAddr`, `memCopy`, `memSet`, `ptrExpose` and
+  `fieldAddr`, `globalAddr`, `funcAddr`, `memCopy`, `memSet`, `ptrExpose` and
   `ptrFromInt` is total_, by the obligations that each family proves of
   its ops, and `alloca`, the loads and stores, of an integer, a pointer or
-  a float, `fieldAddr`, `globalAddr`, `memCopy`, `memSet`, `ptrExpose`
+  a float, `fieldAddr`, `globalAddr`, `funcAddr`, `memCopy`, `memSet`, `ptrExpose`
   and `ptrFromInt` are total with memory, each by its own rule;
 * _every valid core function without calls runs within itself_: none of
   its ops calls a function; `br` and `cond_br` go only to successors they
@@ -109,7 +109,7 @@ theorem Op.total : (op : Op) → op.isCall = false → op.touchesMemory = false 
   | .alloca .., _, h, _ | .load .., _, h, _ | .store .., _, h, _ | .loadPtr .., _, h, _
   | .storePtr .., _, h, _ | .loadFloat .., _, h, _ | .storeFloat .., _, h, _
   | .memCopy .., _, h, _ | .memSet .., _, h, _ => nomatch h
-  | .fieldAddr .., _, _, h | .globalAddr .., _, _, h => nomatch h
+  | .fieldAddr .., _, _, h | .globalAddr .., _, _, h | .funcAddr .., _, _, h => nomatch h
 
 /-- A core terminator that jumps goes to a successor that it has, and gives
 no results. -/

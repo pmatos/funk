@@ -14,7 +14,7 @@ changes under it.
 
 #doc (Manual) "The memory model: readable blocks" =>
 
-:::moduleDocs (fingerprint := "2571809499204133603")
+:::moduleDocs (fingerprint := "10907334517862453530")
 :::
 
 :::readable Fir.Memory.AllocId (fingerprint := "11401156343561318334")
@@ -60,13 +60,13 @@ frag     \mathsf{frag}~m~p~i
   back as a pointer of another (ADR-2026-11-12-2125).
 :::
 
-:::readable Fir.Memory.AllocKind (fingerprint := "3213965169790151508")
+:::readable Fir.Memory.AllocKind (fingerprint := "15187323217587274289")
 *Definition: an allocation kind.* Every allocation has a kind
 (ADR-2026-11-09-1542):
 
 ```grammar Fir.Memory.AllocKind
 \mathit{kind}
-stack,global,heap   \mathsf{stack} \mid \mathsf{global} \mid \mathsf{heap}
+stack,global,heap,function   \mathsf{stack} \mid \mathsf{global} \mid \mathsf{heap} \mid \mathsf{function}
 ```
 
 * $`\mathsf{stack}`: it lives until the call that made it returns
@@ -74,6 +74,9 @@ stack,global,heap   \mathsf{stack} \mid \mathsf{global} \mid \mathsf{heap}
 * $`\mathsf{global}`: it lives for the whole run (ADR-2026-11-09-1546).
 * $`\mathsf{heap}`: it comes from an external call, such as one to
   `malloc`.
+* $`\mathsf{function}`: it is the address of a function, with no units,
+  made when the run starts and live for the whole run (the human's ruling
+  of 2026-11-19 on #235, Q1).
 
 Managed memory can be added as another kind.
 :::

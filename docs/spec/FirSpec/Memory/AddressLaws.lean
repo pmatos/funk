@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Address laws: readable blocks" =>
 
-:::moduleDocs (fingerprint := "13213713090563566759")
+:::moduleDocs (fingerprint := "12669670268187583083")
 :::
 
 :::readable Fir.Memory.le_alignUp Fir.Memory.dvd_alignUp Fir.Memory.alignUp_eq (pin := Fir.Memory.alignUp) (fingerprint := "16294352692073450699")
@@ -23,7 +23,7 @@ $`\alpha > 0`, $`\alpha \mid \lceil c \rceil_\alpha`. A multiple $`z` of
 $`\alpha > 0` with $`c \le z < c + \alpha` is $`\lceil c \rceil_\alpha`.
 :::
 
-:::readable Fir.Memory.roomFrom_eq_true Fir.Memory.Memory.fits_eq_true (pin := Fir.Memory.roomFrom) (pin := Fir.Memory.Memory.fits) (fingerprint := "17166369630723595643")
+:::readable Fir.Memory.roomFrom_eq_true Fir.Memory.Memory.fits_eq_true (pin := Fir.Memory.roomFrom) (pin := Fir.Memory.Memory.fits) (fingerprint := "16165531337278633516")
 *Theorems: when an address fits.* The blocks leave room exactly when each
 block but the allocation $`a` does. So $`z` fits $`a` in $`M` exactly
 when $`M[a] = b` for some block $`b` of alignment $`\alpha` and size $`n`,
@@ -31,7 +31,7 @@ $`lo \le z`, $`\alpha \mid z`, $`z + n \le hi`, and every block $`M[j]`,
 $`j \ne a`, leaves room for $`n` units from $`z`.
 :::
 
-:::readable Fir.Memory.Memory.fits_candidate (fingerprint := "5584864563810579598")
+:::readable Fir.Memory.Memory.fits_candidate (fingerprint := "16128561336780452753")
 *Theorem: the candidates.* Let $`M[a]` be aligned to $`\alpha`, and let
 $`z` fit $`a`. Then $`z` is a candidate, $`\lceil lo \rceil_\alpha` or
 $`\lceil y + n \rceil_\alpha` for a live block of $`M` at $`y` of size
@@ -41,7 +41,7 @@ with an address overlaps $`z - \alpha` but not $`z`, so it ends between
 $`z - \alpha` and $`z`, and $`z` is its end aligned up.
 :::
 
-:::readable Fir.Memory.merge_min_le Fir.Memory.lowestFrom_fits Fir.Memory.lowestFrom_le_best Fir.Memory.lowestFrom_le_after (pin := Fir.Memory.lowestFrom) (fingerprint := "2681823001635160878")
+:::readable Fir.Memory.merge_min_le Fir.Memory.lowestFrom_fits Fir.Memory.lowestFrom_le_best Fir.Memory.lowestFrom_le_after (pin := Fir.Memory.lowestFrom) (fingerprint := "6021165736068846353")
 *Theorems: the lowest candidate.* Keeping the lower of two addresses gives
 one at most each. The walk gives an address that fits when the one it
 starts from does, at most the one it starts from, and at most

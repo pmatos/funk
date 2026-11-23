@@ -16,6 +16,7 @@ this page and an ADR disagree, the page wins, and the ADR is fixed or deleted
 - semantics-floats-conversions.md: the conversions of floats;
 - semantics-m1-design.md: the M1 design, most of it not built yet;
 - semantics-m1-globals.md: M1's globals and the allocations a run starts with;
+- semantics-m1-functions.md: the address of a function in M1;
 - semantics-m1-memory.md: M1's memory and its pointer ops;
 - semantics-m1-stack.md: stack allocation in M1;
 - semantics-m1-memory-access.md: aligned accesses, loads and stores in M1;

@@ -181,8 +181,9 @@ theorem IsRefinedBy.admits {M M' : Memory u} (h : M ⊑ M') (lo hi a x : Nat) :
   rw [IsRefinedBy.fits h]
   rcases List.IsRefinedBy.getElem? h a with ⟨h₁, h₂⟩ | ⟨b, b', h₁, h₂, hb⟩
   · rw [h₁, h₂]
-  · obtain ⟨-, hal, hl, hn, -, -⟩ := hb
-    simp only [h₁, h₂, hal, hl, hn]
+  · have he := hb.extent
+    obtain ⟨-, hal, hl, -, -, -⟩ := hb
+    simp only [h₁, h₂, hal, hl, he]
 
 /-- Memories that refine each other give the same address on the same
 proposal. -/
