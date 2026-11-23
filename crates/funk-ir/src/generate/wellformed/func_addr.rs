@@ -6,8 +6,6 @@
 
 use super::super::{Rng, symbol};
 use super::Shaper;
-use super::field_addr::any_block;
-use super::insert;
 use crate::dialects::core::MAX_MEMORY;
 use crate::ir::{Attr, Func, Op};
 
@@ -15,11 +13,7 @@ impl Shaper<'_> {
     /// Adds one or two `funcaddr` ops to blocks of `f` at any depth; `f`
     /// must have a block.
     pub(super) fn add_func_addrs(&mut self, rng: &mut Rng, f: &mut Func) {
-        for _ in 0..1 + rng.below(2) {
-            let op = self.func_addr(rng);
-            let block = any_block(rng, &mut f.body.blocks);
-            insert(rng, &mut block.ops, op);
-        }
+        self.add_one_or_two(rng, f, Self::func_addr);
     }
 
     /// `funcaddr` of a function of the table three times in four when it has

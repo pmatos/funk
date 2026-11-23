@@ -15,8 +15,19 @@ impl Shaper<'_> {
     /// Adds one or two `globaladdr` ops to blocks of `f` at any depth; `f`
     /// must have a block.
     pub(super) fn add_global_addrs(&mut self, rng: &mut Rng, f: &mut Func, globals: &[String]) {
+        self.add_one_or_two(rng, f, |s, rng| s.global_addr(rng, globals));
+    }
+
+    /// Adds one or two ops that `make` gives to blocks of `f` at any depth;
+    /// `f` must have a block.
+    pub(super) fn add_one_or_two(
+        &mut self,
+        rng: &mut Rng,
+        f: &mut Func,
+        mut make: impl FnMut(&mut Self, &mut Rng) -> Op,
+    ) {
         for _ in 0..1 + rng.below(2) {
-            let op = self.global_addr(rng, globals);
+            let op = make(self, rng);
             let block = any_block(rng, &mut f.body.blocks);
             insert(rng, &mut block.ops, op);
         }
