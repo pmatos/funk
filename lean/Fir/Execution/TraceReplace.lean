@@ -68,8 +68,9 @@ theorem Func.traceRunsFrom_tAllowed
   have hmono' := fun g hg => Func.TraceOpsMonotone.stepAt lay ρ L (hmono g hg)
   have hf' := Func.TraceOpsMonotone.stepAt lay ρ L hf
   obtain ⟨env, hen, henv⟩ := Func.enter_isRefinedBy (HVector.toDVals_isRefinedBy ha) hen'
-  exact ⟨env, hen, Func.traceCall_tAllowed (fun e₀ he₀ => Func.traceOps_tAllowed hmono' hcalls n f
-    env env' body _ _ hf' (hf'.enter hen') henv (TraceState.IsRefinedBy.enter hs) e₀ he₀) he'⟩
+  exact ⟨env, hen, Func.traceCall_tAllowed (fun e₀ he₀ => Func.traceOps_tAllowed hmono' hcalls
+    TCfg.Guard.always n f env env' body _ _ hf' (hf'.enter hen') henv (TraceState.IsRefinedBy.enter hs)
+    trivial e₀ he₀) he'⟩
 
 /-- Each return of a function's traced runs from a traced state in the
 target is allowed by its traced runs in the source, from arguments and a

@@ -93,7 +93,7 @@ theorem TCfg.Follows.step (hone : OpsOneStep d A (TraceState Mem unit))
     case inr =>
       exact .inl (ubActs (mk (N := 0) hos (.pickUB hreg hargs hT hpc hpu) (TraceEnd.notStuck_error _ _))
         (Step.actsOf_isRefinedPrefix (htp.append_right _)))
-    obtain ⟨e, he, hle⟩ := hc₀.extMonotone hT (hext hos) cargs _ hcr s₁ _ hs₁ _ hx'
+    obtain ⟨e, he, hle⟩ := hc₀.extMonotone hT (hext hos) cargs _ hcr s₁ _ hs₁ trivial _ hx'
     rcases e with ⟨r, t₁⟩ | ⟨vs, t, s₂⟩
     · refine .inl (ubActs (mk hos (.extUB hreg hargs hT hc₀ hg hd he) (TraceEnd.notStuck_error _ _)) ?_)
       rw [Step.actsOf_append, Step.actsOf_append]
@@ -127,9 +127,10 @@ theorem TCfg.Follows.step (hone : OpsOneStep d A (TraceState Mem unit))
     case inr =>
       exact .inl (ubActs (mk (N := 0) hos (.pickUB hreg hargs hT hpc hpu) (TraceEnd.notStuck_error _ _))
         (Step.actsOf_isRefinedPrefix (htp.append_right _)))
-    obtain ⟨g, p, hg, hen, hm⟩ := hcalls.callee_allowed hmono hg' hcr hs₁ (p' := (_, _)) hen'
-      (fun hgm hbm env₀ env₀' h t₀ t₀' ht e₀ he₀ =>
-        Func.traceOps_tAllowed hmono hcalls _ _ env₀ env₀' _ t₀ t₀' hgm hbm h ht e₀ he₀) hx' trivial
+    obtain ⟨g, p, hg, hen, hm⟩ := hcalls.callee_allowed (G := fun _ _ => True) hmono hg' hcr hs₁
+      (p' := (_, _)) hen' (fun _ _ _ => trivial)
+      (fun hgm hbm env₀ env₀' h t₀ t₀' ht _ e₀ he₀ => Func.traceOps_tAllowed hmono hcalls
+        TCfg.Guard.always _ _ env₀ env₀' _ t₀ t₀' hgm hbm h ht trivial e₀ he₀) hx' trivial
     rcases hm with ⟨N, r, mt, hN, hle⟩ | ⟨N, vs, k, t, s₂, hN, hvs, ht, hs₂⟩
     · refine .inl (ubActs (mk hos (.callUB hreg hargs hT (hc₀.at N) hg hen hN)
         (TraceEnd.notStuck_error _ _)) ?_)

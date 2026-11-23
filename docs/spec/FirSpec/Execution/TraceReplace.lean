@@ -14,10 +14,10 @@ pins their fingerprint; the build fails when the Lean changes under it.
 
 #doc (Manual) "Congruence in the callee over traced runs: returns and UB: readable blocks" =>
 
-:::moduleDocs (fingerprint := "9414097386851560193")
+:::moduleDocs (fingerprint := "5131638045090122057")
 :::
 
-:::readable Fir.Func.traceRunsFrom_tAllowed Fir.Func.traceRunsFrom_ret_allowed Fir.Func.traceRunsFrom_ub_allowed (fingerprint := "2714280520113377549")
+:::readable Fir.Func.traceRunsFrom_tAllowed Fir.Func.traceRunsFrom_ret_allowed Fir.Func.traceRunsFrom_ub_allowed (fingerprint := "5561435148282997304")
 *Theorems: returns and UB from a traced state, call by call.* For a dialect
 whose ops show events, let the target module $`M'` run each call in the
 traced layer as the source $`M` does, and every terminator and every op
@@ -42,7 +42,7 @@ memories that hold $`L`'s starting allocations, with nothing escaped, its values
 the traced state it ends in; UB is UB after the same marked trace.
 :::
 
-:::readable Fir.Func.traceRuns_calls_ret_allowed Fir.Func.traceRuns_calls_ub_allowed (fingerprint := "16725242360954730649")
+:::readable Fir.Func.traceRuns_calls_ret_allowed Fir.Func.traceRuns_calls_ub_allowed (fingerprint := "2079837471260775434")
 *Theorems: returns and UB of the traced runs.* Under the same hypotheses,
 on arguments $`\vec{v} \sqsubseteq \vec{v}'`, a poison by any value, each
 $`\mathsf{ret}~t'~o'` of the traced runs of $`f` in $`M'` is allowed by
@@ -53,7 +53,7 @@ escaped, give ends that refine each other. Each $`\mathsf{ub}~t'~r'` is
 allowed by UB after a refined prefix of $`t'`.
 :::
 
-:::readable Fir.Module.replaceBody_traceCallsRefined (fingerprint := "459015107095542549")
+:::readable Fir.Module.replaceBody_traceCallsRefined (fingerprint := "6844210484100796195")
 *Theorem: replacing a callee's body gives calls refined.* Let the symbols
 of $`M` be unique, every terminator and every op with no callee of its
 functions be monotone in the traced layer,

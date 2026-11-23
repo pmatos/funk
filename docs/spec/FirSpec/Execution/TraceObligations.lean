@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Monotonicity in the traced layer: readable blocks" =>
 
-:::moduleDocs (fingerprint := "14269994992287765121")
+:::moduleDocs (fingerprint := "4445902941565328772")
 :::
 
 :::readable Fir.Step.IsRefinedBy (pin := Fir.instHRefinementStep) (fingerprint := "12649089963462645072")
@@ -82,19 +82,26 @@ each way that $`c'` may end from $`s'` is allowed by a way that $`c` may
 end from $`s`.
 :::
 
-:::readable Fir.ExtTraceMonotone Fir.ExtTraceMonotone.of_ub (pin := Fir.DialectExtCall) (fingerprint := "1972893532678965549")
-*Definition: an external-call rule monotone in the traced layer.* In the
-traced layer, the external-call rule is monotone at the symbol $`g`, the
-operand types $`\vec{t}` and the result types $`\vec{r}` when, on
-arguments $`\vec{v} \sqsubseteq \vec{v}'` of the types $`\vec{t}`, what
-$`\mathrm{ext}(g, \vec{v}', \vec{r})` runs refines what
-$`\mathrm{ext}(g, \vec{v}, \vec{r})` runs, by refinement of its results.
+:::readable Fir.ExtAgree.always Fir.ExtTraceMonotone Fir.ExtTraceMonotone.of_ub (pin := Fir.DialectExtCall) (fingerprint := "13687539404162419082")
+*Definition: an external-call rule monotone in the traced layer.* An
+_agreement_ of two external calls relates the arguments and the traced
+state of each; the one that always holds is the default. In the traced
+layer, the external-call rule is monotone at the symbol $`g`, the operand
+types $`\vec{t}` and the result types $`\vec{r}`, under an agreement, when,
+on arguments $`\vec{v} \sqsubseteq \vec{v}'` of the types $`\vec{t}`, from
+traced states $`s \sqsubseteq s'` on which the two calls agree, each way
+that $`\mathrm{ext}(g, \vec{v}', \vec{r})` may end from $`s'` is allowed by
+a way that $`\mathrm{ext}(g, \vec{v}, \vec{r})` may end from $`s`, by
+refinement of its results. The core's external calls agree when both let
+escape the same allocations, in the same order. The obligation is asked at
+every symbol, since one guarded by its agreement can hold at every symbol.
 
 *Theorem.* An external-call rule that is UB, with the same reason at every
-symbol, is monotone: UB that shows no act allows every way of ending.
+symbol, is monotone under every agreement: UB that shows no act allows every
+way of ending.
 :::
 
-:::readable Fir.OpTraceMonotone Fir.OpTracePickMonotone Fir.TraceMonotoneOps Fir.Func.TraceOpsMonotone Fir.Func.TraceOpsMonotone.enter Fir.Func.TraceOpsMonotone.jump (fingerprint := "4846228915632173443")
+:::readable Fir.OpTraceMonotone Fir.OpTracePickMonotone Fir.TraceMonotoneOps Fir.Func.TraceOpsMonotone Fir.Func.TraceOpsMonotone.enter Fir.Func.TraceOpsMonotone.jump (fingerprint := "1106816730811437773")
 *Definition: an op monotone in the traced layer.* In a semantics in the
 traced layer, an op is monotone when, on operands
 $`\vec{v} \sqsubseteq \vec{v}'`, what it runs by its own rule on
@@ -110,12 +117,14 @@ that picks its callee is monotone when, on operands that refine others,
 from traced states that refine others, and where the run can call at least
 the same symbols, what it picks refines what it picks on those others: UB,
 or the same symbol. The ops of a list, or of a function's blocks, are
-monotone when each that runs by its own rule, a terminator or an op with
-no callee, is; the external-call rule is monotone at the symbol and types
-of each other op that names a symbol, which goes to that rule when no
-function has the symbol; and each op whose callee is picked has a monotone
-rule to pick it, and the external-call rule is monotone at every symbol for
-its operands but the first and its results.
+monotone, under an agreement of external calls (by default the one that
+always holds), when each that runs by its own rule, a terminator or an op
+with no callee, is; the external-call rule is monotone under the agreement
+at the symbol and types of each other op that names a symbol, which goes to
+that rule when no function has the symbol; and each op whose callee is
+picked has a monotone rule to pick it, and the external-call rule is
+monotone under the agreement at every symbol for its operands but the first
+and its results.
 
 *Theorems.* A run of such a function starts, and jumps, to the ops of one
 of its blocks, all monotone.

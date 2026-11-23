@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Refined arguments over traced runs, divergence included: readable blocks" =>
 
-:::moduleDocs (fingerprint := "12509372194637193811")
+:::moduleDocs (fingerprint := "257287344937963338")
 :::
 
 :::readable Fir.Func.traceRuns_exhausted_iff Fir.Func.traceRuns_exhausted_iff_from Fir.Func.traceRuns_truncates Fir.Func.traceRuns_finitelyMany (fingerprint := "13473661547675340659")
@@ -32,7 +32,7 @@ the world's answers, they have finitely many traces at each budget. Both hold be
 of the traced runs from a traced state.
 :::
 
-:::readable Fir.Func.traceRuns_isRefinedBy_of_args (fingerprint := "5828108410899439507")
+:::readable Fir.Func.traceRuns_isRefinedBy_of_args (fingerprint := "15973313231424897390")
 *Theorem: refined arguments over traced runs.* For a dialect whose ops
 show events, let every terminator and every op with no callee of $`f` and
 of the module's functions be monotone in the traced layer,

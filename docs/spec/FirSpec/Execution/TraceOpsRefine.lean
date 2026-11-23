@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "A traced run of ops on refined environments and states: readable blocks" =>
 
-:::moduleDocs (fingerprint := "3910815211414401764")
+:::moduleDocs (fingerprint := "1937706494638633214")
 :::
 
 :::readable Fir.Result.InStep Fir.TraceEnd.Allows.exitFrame Fir.TraceEnd.Allows.ub_prefix (fingerprint := "17434285451285169466")
@@ -27,7 +27,7 @@ $`t` that are a refined prefix of $`t'` allows every way that the target
 ends after $`t'`.
 :::
 
-:::readable Fir.Func.traceCall_allowed Fir.Func.traceOps_allowed (fingerprint := "13802294596748228481")
+:::readable Fir.Func.traceCall_allowed Fir.Func.traceOps_allowed (fingerprint := "11004103266500902403")
 *Theorem: traced runs of ops in step.* When every terminator and every op
 with no callee of the module's functions, of the function $`f` and of
 $`os` is monotone in the traced layer, and so is the external-call rule at
