@@ -317,7 +317,11 @@ import FirSpec.Execution.TraceCalleeDiverge
 import FirSpec.Execution.TraceReplaceDiverge
 import FirSpec.Execution.TraceLiftFrom
 import FirSpec.Execution.TraceSeen
+import FirSpec.Execution.TraceEscape
+import FirSpec.Execution.TraceEscapeLaws
+import FirSpec.Execution.TraceWorldRefine
 import FirSpec.Core.Event
+import FirSpec.Core.ExtCallRule
 import FirSpec.Core.Trace
 import FirSpec.Execution.MemoryEndModes
 import FirSpec.Execution.MemoryModes

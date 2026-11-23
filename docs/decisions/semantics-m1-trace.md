@@ -145,8 +145,25 @@ These are #233's choices of form, within the rules above.
   allocations already escaped when it is made, since a pointer stored into
   escaped memory is handed out too, as in LLVM's capture tracking.
   It escapes them in an order fixed by the arguments and by where each
-  pointer is stored, never by allocation ids, so that source and target
-  give the same allocations the same handles. Only a live allocation can
+  pointer is stored, never by allocation ids, so that a source and a
+  target that hold the same pointers in the same places give the same
+  allocations the same handles: the pointer arguments
+  first, in order, then, handle by handle from the first, the pointers
+  that the units of each escaped live allocation hold, in the order of
+  its units, each allocation that joins the list being scanned in its
+  turn (`TraceState.escapeCall`). The handles it gives are exactly those
+  of the allocations the call reaches, and the allocations that had
+  escaped keep theirs. This order is an agent's choice, made in #239's
+  stage 3b-2a, not a ruling, and it decides where the condition of Q6
+  holds: a source that passes poison and a target that passes a pointer
+  into an allocation that escaped memory reaches anyway let escape the
+  same allocations in another order. Rejected: escaped memory first, then
+  the arguments, which gives equal lists there but differs where an
+  argument reaches what the source's escaped memory holds as poison.
+  That neither order gives equal lists wherever the same allocations
+  escape is argued on paper, not checked in Lean; the tests pin the first
+  case (`FirTest.CoreExtCallRule`). Which order to keep goes to the human
+  before #239's stage 3b-2b states the condition. Only a live allocation can
   escape: a dangling pointer is poison in the comparison, so it escapes
   nothing. The world's heap allocations are aligned to a power of
   two, as every allocation is (#231).
@@ -267,47 +284,9 @@ traced layer their tests keep their results.
 
 ## External calls
 
-The human ruled on 2026-11-21, on #239, how an external call runs. The
-spec states the core's events and its traced semantics op by op
-(`lean/Fir/Core/Event.lean`, `lean/Fir/Core/Trace.lean`), and the run
-hands a call to a declaration to the external-call rule
-(`lean/Fir/Execution/ExtCall.lean`), UB in the layers with no world. Until
-#239's next stage, the core's traced external-call rule is still its rule
-with memory, lifted, so UB too, and validation still rejects a call to a
-declaration, so no valid module reaches it. That stage gives the core's
-traced rule its event and the world's answer, states the conditions of
-poison handed to the world below, and lets validation accept the call.
-
-- **One `call` op.** When `call` names an external declaration, the run
-  hands the call to a new external-call rule of the dialect, given the
-  symbol, the arguments and the result types. In the traced layer the
-  core's rule shows the event and asks the world. An indirect call (#235)
-  whose pointer names a declaration reuses it. Rejected: a separate op,
-  `call_extern`, valid only on a declaration.
-- **The layers with no world.** In the set-monad and memory layers an
-  external call is UB, as a stand-in. Every guarantee with memory keeps
-  its statement and stays true, but says nothing of code that calls
-  outside the module: the traced guarantees are the ones that cover
-  external calls. Rejected: any results and any memories, which breaks
-  the finiteness that congruence in the callee needs; and guarantees
-  with memory that cover only modules that call no declaration.
-- **Congruence in the callee over traced runs** takes its hypothesis over
-  traced runs from every traced state (`Func.traceRunsFrom`), the form the
-  traced layer's own theorem takes. Rejected: the hypothesis with memory,
-  plus no external call, volatile access or assembly block in either body
-  of the callee.
-- **Poison handed to the world.** Alive2's rule: a target may not let
-  escape what the source did not, so refined arguments over traced runs
-  gains that condition. Rejected: the call freezes the poison it hands
-  out, which gives a call infinitely many outcomes; and handing poison to
-  the world is UB, which an uninitialised buffer or struct padding passed
-  to C would hit.
-- **Poison handed to the world, in the callee.** Congruence in the callee
-  over traced runs gains the condition that refined arguments gains: the
-  new module may not let escape what the old one did not. The human ruled
-  this on 2026-11-22, on #239 (Q5). Rejected: keep the theorem
-  unconditional, and ask that the new callee hold no pointer wherever the
-  old one returned or left poison.
+How an external call runs, what it lets escape and the conditions of
+poison handed to the world are on
+[semantics-m1-extcalls.md](semantics-m1-extcalls.md).
 
 ## Scripts and native runs
 
