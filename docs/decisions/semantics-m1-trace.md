@@ -145,17 +145,25 @@ These are #233's choices of form, within the rules above.
   allocations already escaped when it is made, since a pointer stored into
   escaped memory is handed out too, as in LLVM's capture tracking.
   It escapes them in an order fixed by the arguments and by where each
-  pointer is stored, never by allocation ids, so that source and target
-  give the same allocations the same handles: the pointer arguments
+  pointer is stored, never by allocation ids, so that a source and a
+  target that hold the same pointers in the same places give the same
+  allocations the same handles: the pointer arguments
   first, in order, then, handle by handle from the first, the pointers
   that the units of each escaped live allocation hold, in the order of
   its units, each allocation that joins the list being scanned in its
   turn (`TraceState.escapeCall`). The handles it gives are exactly those
   of the allocations the call reaches, and the allocations that had
   escaped keep theirs. This order is an agent's choice, made in #239's
-  stage 3b-2a, not a ruling. Rejected: the escaped allocations first, then
-  the arguments, which gives an argument's allocation a handle that
-  depends on what escaped memory holds. Only a live allocation can
+  stage 3b-2a, not a ruling, and it decides where the condition of Q6
+  holds: a source that passes poison and a target that passes a pointer
+  into an allocation that escaped memory reaches anyway let escape the
+  same allocations in another order. Rejected: escaped memory first, then
+  the arguments, which gives equal lists there but differs where an
+  argument reaches what the source's escaped memory holds as poison.
+  That neither order gives equal lists wherever the same allocations
+  escape is argued on paper, not checked in Lean; the tests pin the first
+  case (`FirTest.CoreExtCallRule`). Which order to keep goes to the human
+  before #239's stage 3b-2b states the condition. Only a live allocation can
   escape: a dangling pointer is poison in the comparison, so it escapes
   nothing. The world's heap allocations are aligned to a power of
   two, as every allocation is (#231).

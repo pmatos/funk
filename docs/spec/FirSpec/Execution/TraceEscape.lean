@@ -31,13 +31,11 @@ units of a live allocation hold, in the order of its units, and none of an
 allocation that is not live.
 :::
 
-:::readable Fir.Memory.Memories.allocs Fir.Memory.Memories.mem_lookup_allocs Fir.Memory.Memories.mem_allocs Fir.TraceState.unescaped Fir.List.filter_length_le_of_imp Fir.List.filter_length_lt_of_imp (fingerprint := "1637773271867210751")
+:::readable Fir.Memory.Memories.allocs Fir.Memory.Memories.mem_lookup_allocs Fir.Memory.Memories.mem_allocs Fir.TraceState.unescaped Fir.filter_length_le_of_imp Fir.filter_length_lt_of_imp (fingerprint := "1637773271867210751")
 *Definition: the allocations that may still escape.* The allocations of
 the memories' table are those of each memory it holds, and every
 allocation of a memory is one of them. $`\mathrm{unescaped}(s)` counts
 the allocations of the table that are not in the escaped list. A filter
-by a test keeps no more elements than a filter by a weaker test, and fewer
-when the weaker one keeps an element that the first drops. A filter
 by a test keeps no more elements than a filter by a weaker test, and fewer
 when the weaker one keeps an element that the first drops.
 :::

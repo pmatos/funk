@@ -108,24 +108,24 @@ def TraceState.unescaped (s : TraceState Mem unit) : Nat :=
   (s.mem.allocs.filter fun p => decide (p ∉ s.escaped)).length
 
 /-- A filter keeps no more than a filter by a weaker test. -/
-theorem List.filter_length_le_of_imp {α : Type} {P Q : α → Bool} :
+theorem filter_length_le_of_imp {α : Type} {P Q : α → Bool} :
     ∀ {l : List α}, (∀ y ∈ l, P y = true → Q y = true) → (l.filter P).length ≤ (l.filter Q).length
   | [], _ => Nat.le_refl _
   | y :: l, h => by
-    have ih := List.filter_length_le_of_imp (l := l) fun z hz => h z (List.mem_cons_of_mem _ hz)
+    have ih := filter_length_le_of_imp (l := l) fun z hz => h z (List.mem_cons_of_mem _ hz)
     have hy := h y List.mem_cons_self
     simp only [List.filter_cons]
     cases hP : P y <;> cases hQ : Q y <;> simp_all <;> omega
 
 /-- A filter keeps fewer than a filter by a weaker test that keeps an element
 the first drops. -/
-theorem List.filter_length_lt_of_imp {α : Type} {P Q : α → Bool} {l : List α}
+theorem filter_length_lt_of_imp {α : Type} {P Q : α → Bool} {l : List α}
     (h : ∀ y ∈ l, P y = true → Q y = true) {z : α} (hz : z ∈ l) (hP : P z = false)
     (hQ : Q z = true) : (l.filter P).length < (l.filter Q).length := by
   induction l with
   | nil => cases hz
   | cons y l ih =>
-    have hle := List.filter_length_le_of_imp (P := P) (Q := Q) (l := l) fun w hw => h w (List.mem_cons_of_mem _ hw)
+    have hle := filter_length_le_of_imp (P := P) (Q := Q) (l := l) fun w hw => h w (List.mem_cons_of_mem _ hw)
     have hy := h y List.mem_cons_self
     simp only [List.filter_cons]
     rcases List.mem_cons.1 hz with rfl | hz
@@ -210,7 +210,7 @@ theorem TraceState.escapePtrs_cases (qs : List (Nat × Pointer)) :
           cases hb : (s.mem.mem (μ q.1)).blocks[a]? with
           | none => rw [hb] at hl; cases hl
           | some b => exact ⟨b, rfl⟩
-        refine List.filter_length_lt_of_imp (z := (μ q.1, a)) (fun y _ hy => ?_) (Memories.mem_allocs hb)
+        refine filter_length_lt_of_imp (z := (μ q.1, a)) (fun y _ hy => ?_) (Memories.mem_allocs hb)
           (by simp) (by simpa using hn)
         simp only [List.mem_append, decide_eq_true_eq, not_or] at hy ⊢
         exact hy.1

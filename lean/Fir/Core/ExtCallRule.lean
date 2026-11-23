@@ -28,8 +28,10 @@ results of the types `rs` runs in three parts, from the traced state `s`:
 
 The memory numbered `n` is `μ n`, as for what the world sees. The core
 names its memories by number, and a sum numbers its memories as its base
-does, so the core's rule takes `μ` to be the names that the run gives the
-core's memories.
+does, so #239's next stage is expected to install the rule with `μ` the
+names that the run gives the core's memories, with no new parameter of
+the traced semantics; that stage checks it against the theorems, which
+take `μ` apart from those names.
 
 Its laws, in the forms the traced layer's theorems use:
 

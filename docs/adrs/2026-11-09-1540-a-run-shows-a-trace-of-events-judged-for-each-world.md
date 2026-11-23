@@ -32,7 +32,9 @@ Tier: direction; area: semantics
 
 [semantics-m1-trace.md](../decisions/semantics-m1-trace.md) states each rule:
 what each event holds, the ways an address escapes, and how tests script the
-world. The human ruled this on 2026-11-09, on #207, and on 2026-11-11 on #251
+world; [semantics-m1-extcalls.md](../decisions/semantics-m1-extcalls.md)
+states how an external call runs and the conditions on poison handed to
+the world. The human ruled this on 2026-11-09, on #207, and on 2026-11-11 on #251
 (what an observer sees, heap from the world) and on #299 (escape, live memory
 only), and on 2026-11-15 on #309 (a dangling pointer in observed memory is
 poison) and on #233 (in returned values and call arguments too), and on

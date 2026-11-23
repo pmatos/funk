@@ -111,6 +111,21 @@ def q6tgt : TraceState Nat w := st [blk [frag 2, frag 1, frag 2], blk [.bits 1],
 #guard (q6src.escapeCall id []).escaped == [(0, 0), (0, 1), (0, 2)]
 #guard (q6tgt.escapeCall id []).escaped == [(0, 0), (0, 2), (0, 1)]
 
+/-! # The order of escape -/
+
+/-- Allocation `0` escaped earlier and points into `1`, then `2`. -/
+def order : TraceState Nat w := st [blk [frag 1, frag 2], blk [.bits 1], blk [.bits 2]] [(0, 0)]
+
+-- The pointer arguments come first, then what escaped memory points into. A
+-- source that passes poison and a target that passes a pointer into `2`,
+-- which escaped memory reaches anyway, let escape the same allocations, but
+-- in another order, so the condition of Q6 fails. Walking escaped memory
+-- first would give equal lists here, and differ where an argument reaches
+-- what the source's escaped memory holds as poison: neither order makes
+-- the condition hold in every case where the same allocations escape.
+#guard (order.escapeCall id []).escaped == [(0, 0), (0, 1), (0, 2)]
+#guard (order.escapeCall id [(0, ⟨some 2, 0⟩)]).escaped == [(0, 0), (0, 2), (0, 1)]
+
 /-! # Reading back the world's reply -/
 
 /-- A traced state in which allocation `0` has the handle 0. -/
@@ -142,6 +157,15 @@ example {s s' : TraceState Nat w} (hS : s ⊑ s') (hs : s.escaped = []) :
   traceExtCall_isRefinedBy id (show ([⟨.int 32, .poison⟩] : List (DVal CoreDialect)) ⊑
     [⟨.int 32, .value 5⟩] from ⟨⟨rfl, trivial⟩, trivial⟩) hS
     ((escapeCall_nil s hs).trans (escapeCall_nil s' (hS.2 ▸ hs)).symm) "g" [.int 32]
+
+/-! # It fits the traced layer -/
+
+/-- The rule, for the names `ρ` that a run gives the core's memories, is an
+external-call rule of the core's traced layer, as #239's next stage
+installs it. -/
+example {N : Type} [DecidableEq N] (lay : N → MemLayout) (ρ : DialectEffects.Mem CoreDialect → N) :
+    DialectExtCall CoreDialect (TraceM (DialectTrace.Acts CoreDialect) (TraceState N (unitsOf lay))) :=
+  ⟨traceExtCall ρ⟩
 
 /-! # Its laws -/
 

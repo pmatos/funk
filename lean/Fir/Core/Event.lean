@@ -33,7 +33,8 @@ others, events that refine each other.
 
 The run hands a call to a declaration to the core's external-call rule,
 which shows this event (the human's ruling of 2026-11-21 on #239, Q1). That
-rule arrives with calls to declarations; until then the core's ops show no
+rule is defined (`Fir.Core.ExtCallRule`) but not yet installed: until
+#239's next stage makes it the core's, no run of the core shows an
 event.
 -/
 
