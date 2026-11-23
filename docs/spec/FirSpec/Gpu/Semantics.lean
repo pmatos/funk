@@ -14,7 +14,7 @@ changes under it.
 
 #doc (Manual) "The GPU dialect's rules: readable blocks" =>
 
-:::moduleDocs (fingerprint := "12406346210387345153")
+:::moduleDocs (fingerprint := "10338107252691823645")
 :::
 
 :::readable Fir.Gpu.WorkItem Fir.Gpu.WorkItem.answer (fingerprint := "11042259307807238080")
@@ -46,7 +46,7 @@ are all $`0` and whose sizes and counts are all $`1`. It is one of its grid,
 and it is the one that `fir-ref run` runs when no option gives another.
 :::
 
-:::readable Fir.Gpu.queryResults Fir.Gpu.instDialectDenote (fingerprint := "9082091216029937413")
+:::readable Fir.Gpu.queryResults Fir.Gpu.instDialectDenote (fingerprint := "1709893777497589848")
 *Definition: the rules of `gpu` in the set monad.* At a work-item $`w`, the op
 $`\mathsf{query}_N~q~d` takes no operand and gives one result, the
 answer of $`w` to $`q` in $`d`, as an integer of $`N` bits, modulo
@@ -58,10 +58,11 @@ It is never poison and never UB, and it makes no choice: it gives its
 result at once. An allocation needs memory, so in the set monad it has no
 outcome, as `alloca` has none. No op of
 `gpu` is a terminator, so the interpreter never asks where one goes; it is
-written as a return.
+written as a return. No op of `gpu` picks its callee, so the interpreter
+never asks which; it is written as the empty symbol.
 :::
 
-:::readable Fir.Gpu.allocRule Fir.Gpu.memDenoteIn Fir.Gpu.instDialectMemDenote Fir.Gpu.instDialectCall (pin := Fir.Core.allocaShape) (fingerprint := "10959138033490950294")
+:::readable Fir.Gpu.allocRule Fir.Gpu.memDenoteIn Fir.Gpu.instDialectMemDenote Fir.Gpu.instDialectCall (pin := Fir.Core.allocaShape) (fingerprint := "2972605156995950751")
 *Definition: the rules of `gpu` with memory, and its calls.* Where a run's
 memories have the layout entries $`\mathit{lay}` and the run names `gpu`'s
 memory $`x` as $`\rho(x)`, a question gives its results and keeps the

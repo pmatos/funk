@@ -72,6 +72,12 @@ class DialectDenote (d : Dialect) [TyDenote d.Ty] [DialectSignature d]
     (m : Type → Type) where
   denote : (op : d.Op) → HVector toType (sig op) → m (HVector toType (returnTypes op))
   exit : (op : d.Op) → HVector toType (sig op) → m Exit
+  /-- `pick op ok args` is the symbol that `op`, an op whose callee is
+  picked when it runs, calls on the operands `args`. The run gives it the
+  test `ok`: `ok s` holds when the module has a function, or an external
+  declaration, with the symbol `s` that takes the values the call passes
+  and gives the call's results (#235). -/
+  pick : (op : d.Op) → (Name → Bool) → HVector toType (sig op) → m Name
 
 /-!
 # The call effect
@@ -98,13 +104,36 @@ the interpreter runs that function:
 An op that calls no function runs by the meaning its dialect gives it. In
 the core dialect, `call @g` calls `@g`, and no other op calls a function:
 naming the callee of `call` is what gives `call` its meaning.
+
+An op may instead call a function that its rule picks when it runs, as a
+call through a pointer does (#235, the human's ruling of 2026-11-19, Q2).
+Its rule, `pick`, maps its first operand to a symbol, and is UB when that
+operand names no function, or one whose signature is not the call's. The
+call then runs as a call of that symbol does, with the op's other operands
+as the callee's arguments. The rule is the dialect's, so UB stays in the
+dialect's semantics, where every other UB is; the run only says where the
+call starts and where it returns. Such an op takes two steps of fuel: one
+for its rule, which picks the callee, as an op that runs by its own rule
+does, and one for the call, which then runs as a call of a callee that an
+op names does.
 -/
 
 /--
-The ops of a dialect that call a function of the module: `callee? op` is the
-symbol of the function that `op` calls, and `none` for an op that calls
-none. The interpreter runs the callee with the fuel that the caller has
-left. It asks `callee?` only of an op that is not a terminator: a
+The callee of an op that calls a function: a symbol that the op names, as
+`call @g` names `@g`, or one that the op's rule picks when it runs, from
+the op's first operand, as a call through a pointer does (#235). An op
+whose callee is picked passes its other operands to the callee.
+-/
+inductive Callee where
+  | fixed (s : Name)
+  | picked
+  deriving DecidableEq
+
+/--
+The ops of a dialect that call a function of the module: `callee? op` is
+`op`'s callee, a symbol it names or one its rule picks, and `none` for an
+op that calls none. The interpreter runs the callee with the fuel that the
+caller has left. It asks `callee?` only of an op that is not a terminator: a
 terminator runs through `exit`, whatever `callee?` says of it.
 
 Nothing ties `callee?` to validation. The dialect's own validation rule
@@ -113,7 +142,7 @@ that the types of its operands and results match the callee's signature,
 as the core rule for `call` does.
 -/
 class DialectCall (d : Dialect) where
-  callee? : d.Op → Option Name
+  callee? : d.Op → Option Callee
 export DialectCall (callee?)
 
 end Fir

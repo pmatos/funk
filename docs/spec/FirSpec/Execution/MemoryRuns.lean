@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Runs with memory: readable blocks" =>
 
-:::moduleDocs (fingerprint := "17993495430161081642")
+:::moduleDocs (fingerprint := "4015304265349843418")
 :::
 
 :::readable Fir.MonadMorphism.liftState Fir.MonadMorphism.liftState_mapsFrame (fingerprint := "8015592493867984939")
@@ -41,12 +41,12 @@ $`\mathsf{ub}~r \mathbin{>\!\!>\!\!=} f = \{\mathsf{ub}~r\}`: UB has no
 result for $`f` to go on from.
 :::
 
-:::readable Fir.DialectDenote.liftState Fir.DialectDenote.liftState_mapsDenote (fingerprint := "1253374098376535126")
+:::readable Fir.DialectDenote.liftState Fir.DialectDenote.liftState_mapsDenote (fingerprint := "15782951411075535265")
 *Definition: a semantics with no memory, in the layer.* A dialect whose
 ops have their semantics in $`m` has one in the state layer over $`m`:
 each op runs by its rule in $`m` and keeps the memories,
 $`\mathrm{denote}_o(\vec{v}) = \mathrm{lift}(\mathrm{denote}^m_o(\vec{v}))`
-and the same for $`\mathrm{exit}_o`. Lifting keeps this semantics, by its
+and the same for $`\mathrm{exit}_o` and $`\mathrm{pick}_o`. Lifting keeps this semantics, by its
 definition.
 :::
 
@@ -55,10 +55,10 @@ definition.
 rule in the layer is the rule below it, lifted.
 :::
 
-:::readable Fir.DialectDenote.ext Fir.LiftsSetM (pin := Fir.DialectMemDenote) (fingerprint := "17854582661801022819")
+:::readable Fir.DialectDenote.ext Fir.LiftsSetM (pin := Fir.DialectMemDenote) (fingerprint := "5783513157774936896")
 *Theorem: semantics are equal op by op.* Two semantics of a dialect in one
-monad are equal when each op means the same in both and each terminator
-goes to the same places.
+monad are equal when each op means the same in both, each terminator
+goes to the same places, and each op picks the same callees.
 
 *Definition: a dialect that lifts the set monad.* A dialect's
 {ref "The-fir-specification--Memory--Memory-obligations"}[semantics with memory]
@@ -66,7 +66,7 @@ _lifts_ its semantics in the set monad when, at every naming $`\rho` of its
 memories and all layout entries $`\ell` of the run's memories, it is that
 semantics lifted into the layer:
 $`\mathrm{denote}^{\ell,\rho}_o = \mathrm{lift} \circ \mathrm{denote}_o` and the same
-for $`\mathrm{exit}_o`. This ties the two semantics of a dialect whose ops
+for $`\mathrm{exit}_o` and $`\mathrm{pick}_o`. This ties the two semantics of a dialect whose ops
 all have their rules in the set monad, such as the toy, bit and probe
 dialects of the tests and their sums and lifts. A dialect with an op that
 touches memory, or that reads an item of the run, has no such tie, since
@@ -75,13 +75,14 @@ has a sum with it, and the core ties only its ops that touch no memory and
 read no item of the run.
 :::
 
-:::readable Fir.OpLiftsSetM Fir.LiftsSetM.opLifts Fir.LiftsSetM.ofOpLifts (fingerprint := "12979419841126230776")
+:::readable Fir.OpLiftsSetM Fir.LiftsSetM.opLifts Fir.LiftsSetM.ofOpLifts (fingerprint := "7345158410454042868")
 *Definition: an op that touches no memory.* An op $`o` of a dialect is
 _tied_ when, at every naming $`\rho` of the dialect's memories and all
 layout entries $`\ell` of the run's memories, on every operand vector
 $`\vec{v}`,
 $`\mathrm{denote}^{\ell,\rho}_o(\vec{v}) = \mathrm{lift}(\mathrm{denote}_o(\vec{v}))`,
-and the same for $`\mathrm{exit}_o`: it runs with memory by its rule in
+and the same for $`\mathrm{exit}_o` and, for every test of the symbols a
+run can call, $`\mathrm{pick}_o`: it runs with memory by its rule in
 the set monad and keeps the memories. This is the tie of one op, so a
 dialect can tie each op on its own, and an op that touches memory can sit
 beside tied ones with a proof of its own.

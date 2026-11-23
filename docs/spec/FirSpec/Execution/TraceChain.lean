@@ -14,13 +14,13 @@ when the Lean changes under it.
 
 #doc (Manual) "Calls between two steps: readable blocks" =>
 
-:::moduleDocs (fingerprint := "1571611182379316198")
+:::moduleDocs (fingerprint := "11281565777526231401")
 :::
 
-:::readable Fir.Module.callHead? Fir.Module.CallChain Fir.Module.CallChain.unique (fingerprint := "11229309543807958068")
+:::readable Fir.Module.callHead? Fir.Module.CallChain Fir.Module.CallChain.unique (fingerprint := "13177748713016896576")
 *Definition: chains of calls.* $`\mathrm{callHead}_M(os)` is the ops of
 the entry block of the function of $`M` that the first op of $`os` calls,
-when that op is a call of a function of $`M` with an entry block. The ops
+when that op names its callee, a function of $`M` with an entry block. The ops
 $`os` start a chain of $`c` calls when $`c` such calls follow each other
 into entry blocks, before an op that is not one:
 
@@ -31,22 +31,25 @@ $$`\frac{\mathrm{callHead}_M(os) = \mathsf{none}}{\mathrm{chain}_M(os, 0)}
 *Theorem.* A list of ops starts at most one chain.
 :::
 
-:::readable Fir.Module.callHead?_terminator Fir.Module.callHead?_noCallee Fir.Module.callHead?_call (fingerprint := "5494783123581111281")
+:::readable Fir.Module.callHead?_terminator Fir.Module.callHead?_noCallee Fir.Module.callHead?_call Fir.Module.callHead?_picked (fingerprint := "18428602926681341617")
 *Theorems.* A terminator and an op with no callee start no call. A call of
 a function of the module that enters it starts a call of its entry block's
-ops.
+ops. An op whose callee is picked starts no call: its rule shows a step
+first.
 :::
 
-:::readable Fir.Module.callHead?_noFunc (fingerprint := "11358993282750030086")
+:::readable Fir.Module.callHead?_noFunc (fingerprint := "16088552977637500595")
 *Theorem.* Ops whose first op calls a symbol that names no function of
 the module, as a call to an external declaration does, start no call: the
 call runs by the external-call rule, and enters no callee.
 :::
 
-:::readable Fir.Module.exists_callBound (fingerprint := "9455717655566123013")
-*Theorem: the bound.* Every module $`M` has a $`W > 0` with $`c + 1 \le W`
+:::readable Fir.Module.exists_callBound (fingerprint := "366081022903048883")
+*Theorem: the bound.* Every module $`M` has a $`W > 0` with $`c + 2 \le W`
 whenever $`\mathrm{chain}_M(os, c)`: a chain that starts with a call goes
-on from the entry block of one of the finitely many functions of $`M`.
+on from the entry block of one of the finitely many functions of $`M`. The
+bound leaves room for one step more than the chain: a call whose callee is
+picked spends its rule's step before its callee's chain starts.
 :::
 
 :::readable Fir.Func.traceOps_silent (fingerprint := "1301248812232124812")

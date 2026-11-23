@@ -191,14 +191,14 @@ theorem OwnRuleHas.ofLifts {N : Type} [DecidableEq N] (lay : N → MemLayout)
         lay)) SetM α → Prop}
     (hP : ∀ {α : Type} (c : SetM α), P (StateT.lift c)) : OwnRuleHas lay ρ L P op :=
   fun args => by
-    rw [(hl lay ρ L args).1, (hl lay ρ L args).2]
+    rw [(hl lay ρ L args).1, (hl lay ρ L args).2.1]
     exact ⟨fun _ => hP _, fun _ => hP _⟩
 
 /-- An op that touches no memory and never ends in UB in the set monad never
 does with memory, at every naming. -/
 theorem NeverUB.ofLifts (h : NeverUBSetM op) : NeverUB op :=
   fun lay ρ L args => by
-    rw [(hl lay ρ L args).1, (hl lay ρ L args).2]
+    rw [(hl lay ρ L args).1, (hl lay ρ L args).2.1]
     exact ⟨fun ht => noUB_lift fun r => (h args r).1 ht,
       fun ht => noUB_lift fun r => (h args r).2 ht⟩
 
@@ -263,14 +263,14 @@ attribute [local instance] DialectMemDenote.ofSetM in
 /-- An op of a dialect whose ops touch no memory that never ends in UB in the
 set monad never does with memory, at every naming. -/
 theorem NeverUB.ofSetM {op : d.Op} (h : NeverUBSetM op) : NeverUB op :=
-  NeverUB.ofLifts (fun _ _ _ _ => ⟨rfl, rfl⟩) h
+  NeverUB.ofLifts (fun _ _ _ _ => ⟨rfl, rfl, fun _ => rfl⟩) h
 
 attribute [local instance] DialectMemDenote.ofSetM in
 /-- An op of a dialect whose ops touch no memory that makes no poison in the
 set monad makes none with memory, at every naming. -/
 theorem MakesNoPoison.ofSetM [TyPoison d.Ty] {op : d.Op} (h : MakesNoPoisonSetM op) :
     MakesNoPoison op :=
-  MakesNoPoison.ofLifts (fun _ _ _ _ => ⟨rfl, rfl⟩) h
+  MakesNoPoison.ofLifts (fun _ _ _ _ => ⟨rfl, rfl, fun _ => rfl⟩) h
 
 /-! # Back to the set monad -/
 

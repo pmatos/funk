@@ -76,7 +76,7 @@ These are the pieces from which the interpreter builds a run of ops, so
 the bound can be followed through a run step by step.
 :::
 
-:::readable Fir.Func.runOps_left_le (pin := Fir.Func.runOps) (fingerprint := "8096342770755385714")
+:::readable Fir.Func.runOps_left_le (pin := Fir.Func.runOps) (fingerprint := "1686284679604647795")
 *Theorem: a run gives back at most the fuel it was given.* For every module
 $`M`, budget $`n`, function $`f`, environment $`E` and list of ops
 $`o^*`, the run $`\mathrm{run}_M(n, f, E, o^*)` leaves at most $`n` steps.
@@ -84,7 +84,8 @@ $`o^*`, the run $`\mathrm{run}_M(n, f, E, o^*)` leaves at most $`n` steps.
 Here $`\mathrm{run}_M(n, f, E, o^*)` is the interpreter's run, in the set
 monad, of the ops $`o^*` of a block of $`f`, then of the blocks that
 control goes to, in the environment $`E`, with $`n` steps of fuel. Each op
-takes one step; a return leaves the steps that remain; a call runs its
+takes one step, and an op whose rule picks its callee one more for its
+call; a return leaves the steps that remain; a call runs its
 callee with the steps that remain, and goes on with the smaller of the
 callee's leftover $`k` and those steps; a call to a declaration goes on
 with the steps that remain.
@@ -149,14 +150,14 @@ callee out of fuel ends its caller so, and a return that leaves $`j` more
 steps lets the caller go on with $`j` more.
 :::
 
-:::readable Fir.Func.runOps_ahead (pin := Fir.Func.runOps) (fingerprint := "14360912489030509587")
+:::readable Fir.Func.runOps_ahead (pin := Fir.Func.runOps) (fingerprint := "15928365050903272338")
 *Theorem: a run with $`j` more steps of fuel is ahead by $`j` steps.* For
 every module $`M`, budget $`n`, number $`j`, function $`f`, environment
 $`E` and list of ops $`o^*`, the run $`\mathrm{run}_M(n + j, f, E, o^*)`
 is ahead of $`\mathrm{run}_M(n, f, E, o^*)` by $`j` steps. Here
 $`\mathrm{run}_M` is the interpreter's run of a block's ops, in the set
-monad, as above: each op takes one step, and a call goes on with the
-steps its callee leaves.
+monad, as above: each op takes one step, an op whose rule picks its callee
+one more, and a call goes on with the steps its callee leaves.
 
 It holds for every function, calls included, whatever the ops do, by
 induction on $`n`. With no fuel, the smaller run runs out of fuel, and

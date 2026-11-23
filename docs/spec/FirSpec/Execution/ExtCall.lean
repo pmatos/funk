@@ -27,7 +27,7 @@ call's results, each a typed value. The interpreter checks that the
 results have the types $`r_1, \dots, r_k`.
 :::
 
-:::readable Fir.DialectRun (pin := Fir.DialectDenote) (fingerprint := "17599692979383069987")
+:::readable Fir.DialectRun (pin := Fir.DialectDenote) (fingerprint := "2084966955205077144")
 *Definition: a dialect's semantics with its external-call rule.* The
 semantics of a dialect's ops in $`m` together with its external-call rule
 in $`m`. It is what the traced layer takes of a dialect, since there the

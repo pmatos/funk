@@ -17,7 +17,7 @@ pins their fingerprint; the build fails when the Lean changes under it.
 :::moduleDocs (fingerprint := "1685433652560901497")
 :::
 
-:::readable Fir.Func.memRunsFrom_isRefinedBy_of_opsFinite (pin := Fir.OpsFinite) (pin := Fir.MemCallsRefined) (pin := Fir.Func.MemOpsMonotone) (pin := Fir.Func.memRunsFrom) (pin := Fir.observable) (fingerprint := "7036049710172432527")
+:::readable Fir.Func.memRunsFrom_isRefinedBy_of_opsFinite (pin := Fir.OpsFinite) (pin := Fir.MemCallsRefined) (pin := Fir.Func.MemOpsMonotone) (pin := Fir.Func.memRunsFrom) (pin := Fir.observable) (fingerprint := "13650077694616335106")
 *Theorem: two modules with memory, compared call by call, with no budget.*
 Let the target module $`M'` run each call with memory as the source $`M`
 does, the ops of the dialect have finitely many outcomes, and every op of
@@ -36,7 +36,7 @@ would not either, by
 {ref "The-fir-specification--Memory--Divergence-with-ops-of-finitely-many-outcomes"}[divergence with ops of finitely many outcomes].
 :::
 
-:::readable Fir.Func.memRunsFrom_replaceBody_isRefinedBy_of_opsFinite (pin := Fir.FuncRuns.IsRefinedBy) (pin := Fir.OpsFinite) (pin := Fir.Func.MemOpsMonotone) (fingerprint := "5056365940688537200")
+:::readable Fir.Func.memRunsFrom_replaceBody_isRefinedBy_of_opsFinite (pin := Fir.FuncRuns.IsRefinedBy) (pin := Fir.OpsFinite) (pin := Fir.Func.MemOpsMonotone) (fingerprint := "16953452075585272583")
 *Theorem: congruence in the callee, with memory, with no budget.* In a
 module $`M` whose symbols are unique, let every op of its functions that
 runs by its own rule be monotone with memory, the ops of the dialect have
@@ -55,7 +55,7 @@ it does to the memories. This is the form that König's lemma over the
 tree of choices gives (`docs/decisions/semantics-refinement.md#congruence-in-the-callee`).
 :::
 
-:::readable Fir.Func.memRuns_replaceBody_isRefinedBy_of_opsFinite (pin := Fir.LawfulDialectMonotone) (fingerprint := "10804564535338498196")
+:::readable Fir.Func.memRuns_replaceBody_isRefinedBy_of_opsFinite (pin := Fir.LawfulDialectMonotone) (fingerprint := "2259903479069873356")
 *Theorem: congruence in the callee, with memory, with no budget, for a
 lawful dialect.* For a dialect lawful in its monotonicity, in a valid
 module, at a layout and naming of the dialect's memories at which its ops

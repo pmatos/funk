@@ -14,13 +14,15 @@ when the Lean changes under it.
 
 #doc (Manual) "Returns and UB, followed back: readable blocks" =>
 
-:::moduleDocs (fingerprint := "2628800625013436451")
+:::moduleDocs (fingerprint := "5932741881307479241")
 :::
 
-:::readable Fir.MonotoneOps Fir.Func.OpsMonotone (pin := Fir.OpMonotone) (fingerprint := "11196719689786516999")
+:::readable Fir.MonotoneOps Fir.Func.OpsMonotone (pin := Fir.OpMonotone) (fingerprint := "17275856277651969965")
 *Definition: ops whose own rules are monotone.* A list of ops $`o^*` has
-_monotone ops_ when every op of it that runs by its own rule, a terminator
-or an op with no callee, is
+_monotone ops_ when every op of it whose callee is picked has a
+{ref "The-fir-specification--Execution--Poison-classes"}[monotone rule to pick it],
+and every op of it that runs by its own rule, a terminator or an op with
+no callee, is
 {ref "The-fir-specification--Execution--Poison-classes"}[monotone]: on
 operands that refine others position by position, every way its semantics
 may end, or every place its exit may go, is allowed by a way it may end,
@@ -66,12 +68,12 @@ one step longer, or longer by a callee's budget too, which leaves $`k`
 more steps.
 :::
 
-:::readable Fir.CallsRefined.callee_allowed (pin := Fir.CallsRefined) (fingerprint := "13172121786263032807")
+:::readable Fir.CallsRefined.callee_allowed (pin := Fir.CallsRefined) (fingerprint := "14297865431680936291")
 *Theorem: the source's callee allows what the target's callee does.* Let
 the target module $`M'` run each call as the source $`M` does, with the
 bound $`\beta`: each symbol names the same function in both, or a
-{ref "The-fir-specification--Execution--Calls-as-black-boxes"}[black box], and $`M` declares each symbol that $`M'` declares. Let every
-function of $`M` have monotone ops. Let the
+{ref "The-fir-specification--Execution--Calls-as-black-boxes"}[black box], $`M` declares each symbol that $`M'` declares, and $`M'` can
+call each symbol that $`M` can. Let every function of $`M` have monotone ops. Let the
 symbol $`s`
 name the function $`g_0` in $`M'`, let $`a \sqsubseteq a'`, position by
 position, be vectors of values of the same types, and let entering $`g_0`
@@ -95,12 +97,12 @@ covers. When $`s` names a black box, the
 what its target does.
 :::
 
-:::readable Fir.Func.runOps_allowed (pin := Fir.Allowed) (pin := Fir.CallsRefined) (pin := Fir.MonotoneOps) (pin := Fir.Func.OpsMonotone) (fingerprint := "1765960331688120262")
+:::readable Fir.Func.runOps_allowed (pin := Fir.Allowed) (pin := Fir.CallsRefined) (pin := Fir.MonotoneOps) (pin := Fir.Func.OpsMonotone) (fingerprint := "14236814870580327392")
 *Theorem: every return and every UB of the target is allowed by the
 source.* Let the target module $`M'` run each call as the source $`M`
 does, with some bound $`\beta`: each symbol names the same function in
-both, or a {ref "The-fir-specification--Execution--Calls-as-black-boxes"}[black box], and $`M` declares each symbol that $`M'`
-declares. Let every function of $`M` have monotone ops. Then for every budget $`n`, every function $`f` with monotone ops,
+both, or a {ref "The-fir-specification--Execution--Calls-as-black-boxes"}[black box], $`M` declares each symbol that $`M'`
+declares, and $`M'` can call each symbol that $`M` can. Let every function of $`M` have monotone ops. Then for every budget $`n`, every function $`f` with monotone ops,
 all {ref "The-fir-specification--Execution--Refined-environments"}[environments]
 $`E \sqsubseteq E'` and every list of ops $`o^*` with monotone ops,
 every end $`e'` of the target's run $`\mathrm{run}_{M'}(n, f, E', o^*)`
@@ -118,7 +120,7 @@ calls: the returns and UB of the target. Divergence is the
 
 The proof is by strong induction on the target's budget, for every
 function at once, and follows the target's path by the
-{ref "The-fir-specification--Execution--The-ways-a-step-goes-on"}[nine ways]
+{ref "The-fir-specification--Execution--The-ways-a-step-goes-on"}[eleven ways]
 a step goes on:
 
 * The op's operands are found in the source's environment too,
@@ -129,7 +131,11 @@ a step goes on:
   block. The environments after the op stay refined, and the induction
   covers the rest, with one step less.
 * A call is allowed by the source's callee, by the previous theorem, with
-  the induction for a callee that is the same function.
+  the induction for a callee that is the same function. When the callee
+  is picked, the rule is monotone and the target can call each symbol that
+  the source can, so the source picks the same symbol, on arguments that
+  the target's refine, or its rule is UB, which allows anything; a rule
+  that is UB in the target is UB in the source too.
 * A call to a declaration is UB in the target, and in the source too: a
   symbol that names no function of $`M'` names none of $`M`, and $`M`
   declares each symbol that $`M'` declares.

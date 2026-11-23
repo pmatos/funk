@@ -1,4 +1,4 @@
-import Fir.Execution.MemoryStepPaths
+import Fir.Execution.MemoryCallsAt
 import Fir.Execution.BlackBox
 import Fir.Memory.Refine
 
@@ -118,14 +118,16 @@ theorem Func.memOps_exhausted_down (M : Module d) (n : Nat) :
     | k + 1, o :: os =>
       rw [Nat.add_right_comm] at h
       refine (Func.memStepPath_iff hne).2 ?_
-      have exhCall : ∀ {g genv body}, (Func.memCall M (k + j) g genv body S).run
-          (.ok (.ok .fuelExhausted)) → (Func.memCall M k g genv body S).run (.ok (.ok .fuelExhausted)) :=
-        fun hx => by
+      have exhCall : ∀ {k' : Nat} {g : Func d} {genv : Env d} {body : List (Operation d)}
+          {S₁ : Memories Mem unit}, k' ≤ k → (Func.memCall M (k' + j) g genv body S₁).run
+          (.ok (.ok .fuelExhausted)) →
+            (Func.memCall M k' g genv body S₁).run (.ok (.ok .fuelExhausted)) :=
+        fun hk' hx => by
           rw [Func.memCall_eq] at hx ⊢
           rcases (SetM.run_map _ _ _).1 hx with ⟨r, hr, he⟩ | ⟨_, _, he⟩ | ⟨_, _, he⟩
           · match r, hr, he with
             | .fuelExhausted, hr, _ =>
-              exact (SetM.run_map _ _ _).2 (.inl ⟨_, ih k (Nat.lt_succ_self k) j _ _ _ _ hr, rfl⟩)
+              exact (SetM.run_map _ _ _).2 (.inl ⟨_, ih _ (Nat.lt_succ_of_le hk') j _ _ _ _ hr, rfl⟩)
             | .ret _, _, he => cases he
           · cases he
           · cases he
@@ -134,18 +136,25 @@ theorem Func.memOps_exhausted_down (M : Module d) (n : Nat) :
         exact .goto hreg hargs hT hos hx hj (ih k (Nat.lt_succ_self k) j _ _ _ _ h)
       | denote hreg hargs hT hc hx hlen h =>
         exact .denote hreg hargs hT hc hx hlen (ih k (Nat.lt_succ_self k) j _ _ _ _ h)
-      | callExh hreg hargs hT hc hg hen hx => exact .callExh hreg hargs hT hc hg hen (exhCall hx)
+      | callExh hreg hargs hT hc hg hen hx =>
+        rcases hc.down with ⟨n'', rfl, hc'⟩ | ⟨rfl, hpc, hs⟩
+        · exact .callExh hreg hargs hT hc' hg hen (exhCall hc'.le.1 hx)
+        · exact .pickExh hreg hargs hT hpc hs rfl
       | callRet hreg hargs hT hc hg hen hx hty hlen h =>
         rename_i vs S' kk
-        have hle := Func.memCall_left_le M (k + j) _ _ _ _ _ _ hx
-        rcases (Func.memCall_ahead M k j _ _ _ _).down_ret _ kk hx with ⟨hj, hx'⟩ | hx'
-        · have hle' : kk - j ≤ k := by omega
-          have hmin : min kk (k + j) = (kk - j) + j := by omega
-          rw [hmin] at h
-          have h' := ih (kk - j) (Nat.lt_succ_of_le hle') j _ _ _ _ h
-          refine .callRet hreg hargs hT hc hg hen hx' hty hlen ?_
-          rwa [Nat.min_eq_left hle']
-        · exact .callExh hreg hargs hT hc hg hen hx'
+        rcases hc.down with ⟨n'', rfl, hc'⟩ | ⟨rfl, hpc, hs⟩
+        · have hle := Func.memCall_left_le M (n'' + j) _ _ _ _ _ _ hx
+          have hn'' := hc'.le.1
+          rcases (Func.memCall_ahead M n'' j _ _ _ _).down_ret _ kk hx with ⟨hj, hx'⟩ | hx'
+          · have hle' : kk - j ≤ n'' := by omega
+            have hmin : min kk (n'' + j) = (kk - j) + j := by omega
+            rw [hmin] at h
+            have h' := ih (kk - j) (Nat.lt_succ_of_le (Nat.le_trans hle' hn'')) j _ _ _ _ h
+            refine .callRet hreg hargs hT hc' hg hen hx' hty hlen ?_
+            rwa [Nat.min_eq_left hle']
+          · exact .callExh hreg hargs hT hc' hg hen hx'
+        · exact .pickExh hreg hargs hT hpc hs rfl
+      | pickExh hreg hargs hT hc hs hn => exact .pickExh hreg hargs hT hc hs (by omega)
 
 /-! # Runs of a function from given memories -/
 

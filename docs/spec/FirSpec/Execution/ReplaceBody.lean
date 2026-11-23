@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Replacing a body: readable blocks" =>
 
-:::moduleDocs (fingerprint := "6771104645172578604")
+:::moduleDocs (fingerprint := "4593921381656862635")
 :::
 
 :::readable Fir.Func.replaceBody Fir.Item.replaceBody Fir.Module.replaceBody (fingerprint := "16462803487075343210")
@@ -70,6 +70,14 @@ every other symbol finds what it finds in $`M`.
 *Theorem: replacing a body keeps the declarations.* A module with the body
 of a function replaced declares each symbol for the same types as the
 module does: replacing a body changes no external declaration.
+:::
+
+:::readable Fir.Module.callable_replaceBody (pin := Fir.Module.callable) (fingerprint := "8045198629372872118")
+*Theorem: replacing a body keeps what the module can call.* For every
+symbol $`s`, region $`b`, types $`t^*` and $`r^*`, and symbol $`x`,
+$`\mathrm{callable}_{M[s \leftarrow b]}(t^*, r^*)(x) = \mathrm{callable}_M(t^*, r^*)(x)`:
+every function keeps its parameter and result types, and every external
+declaration stays.
 :::
 
 :::readable Fir.Module.symbols_replaceBody Fir.Module.context_replaceBody Fir.Module.dialectItems_replaceBody Fir.Module.aggregates_replaceBody Fir.Module.layouts_replaceBody Fir.Module.globals_replaceBody Fir.Module.externs_replaceBody (pin := Fir.Module.symbols) (pin := Fir.Module.context) (fingerprint := "2786223183160312306")

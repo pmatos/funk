@@ -14,10 +14,10 @@ when the Lean changes under it.
 
 #doc (Manual) "Progress and no stuck path, with memory: readable blocks" =>
 
-:::moduleDocs (fingerprint := "5114359547151064600")
+:::moduleDocs (fingerprint := "16927147274306651871")
 :::
 
-:::readable Fir.Module.calls_memNoStuck Fir.Module.calls_memHasPath (pin := Fir.HasOutcome) (fingerprint := "15539059036724553534")
+:::readable Fir.Module.calls_memNoStuck Fir.Module.calls_memHasPath (pin := Fir.HasOutcome) (fingerprint := "8233877103917015420")
 *Theorem: in a module whose functions are all valid and run within it with
 memory, the run from any op of any of its functions, from any memories, has
 no stuck path, and has a path when every op that runs by its own rule has
@@ -32,7 +32,8 @@ on. Then:
 * $`\mathrm{run}_M(n, f, E, o^*) \mathbin{@} S` has no stuck path;
 * if every op of every block of every function of $`M` that is a
   terminator or calls no function has an outcome from any memories, on
-  every operand vector, it has a path.
+  every operand vector, and so does the rule of every op that picks its
+  callee, it has a path.
 
 Here $`\mathrm{run}_M(n, f, E, o^*)` is the interpreter's run of the ops
 $`o^*` in the state layer, and $`\cdot \mathbin{@} S` reads it
@@ -46,7 +47,9 @@ ended with, which the induction covers. A call runs its callee from the
 memories with a new frame entered, and the caller goes on, after the frame
 is left, from the memories that the callee's return ends with; the callee
 returns values of the call's result types, whatever it did to the
-memories.
+memories. An op that picks its callee runs its rule from the memories it
+starts from, and calls the symbol it picks, which the module can call,
+from the memories the rule ends with.
 :::
 
 :::readable Fir.NoStuck.finish Fir.HasPath.finish (pin := Fir.Result.finish) (fingerprint := "10422367548990677132")
@@ -55,7 +58,7 @@ what its entry block's ops return, or runs out of fuel when they do; it has
 no stuck path when they have none, and a path when they have one.
 :::
 
-:::readable Fir.Func.memNeverStuck Fir.Func.memProgress (pin := Fir.NeverStuck) (pin := Fir.Progress) (fingerprint := "15426673428919102909")
+:::readable Fir.Func.memNeverStuck Fir.Func.memProgress (pin := Fir.NeverStuck) (pin := Fir.Progress) (fingerprint := "3917379165209571664")
 *Theorem: every function of a module whose functions are all valid and run
 within it with memory has no stuck path with memory, and has progress
 with memory when its dialect is lawful in its totality, calls and recursion

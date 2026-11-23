@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "The traced semantics of a sum: readable blocks" =>
 
-:::moduleDocs (fingerprint := "10119587815397272044")
+:::moduleDocs (fingerprint := "9406702412001711321")
 :::
 
 :::readable Fir.Act.inl Fir.Act.inr Fir.TraceM.mapActs_liftMem (fingerprint := "2600471622454697333")
@@ -34,13 +34,13 @@ base's type seen in the sum; a value of a type of $`e` is none of the
 base's.
 :::
 
-:::readable Fir.Dialect.sum.instDialectTrace Fir.Dialect.sum.event_isRefinedBy_refl Fir.Dialect.sum.event_isRefinedBy_trans (fingerprint := "13410313127962479420")
+:::readable Fir.Dialect.sum.instDialectTrace Fir.Dialect.sum.event_isRefinedBy_refl Fir.Dialect.sum.event_isRefinedBy_trans (fingerprint := "12886927047803689425")
 *Definition: the sum's traced semantics.* The events of $`\mathit{base} \boxplus e`
 are $`\mathrm{Event}(\mathit{base}) \oplus \mathrm{Event}(e)`, and the
 world's answers $`\mathrm{Answer}(\mathit{base}) \oplus \mathrm{Answer}(e)`;
 one event refines another when both are of the same side and refine there.
-An op of $`e` runs by $`e`'s traced rule, and an op of the base by the
-base's, where the run names each memory of the base as the sum does, its
+An op of $`e` runs, exits and picks its callee by $`e`'s traced rules,
+and an op of the base by the base's, where the run names each memory of the base as the sum does, its
 results seen at the sum's types; each act of a side is the sum's act on
 that side. An external call whose arguments and result types are all of
 the base runs by the base's external-call rule, its results seen at the

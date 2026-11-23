@@ -81,11 +81,11 @@ returns at $`N_0` what the black box allows, leaving at most $`N_0`
 steps, which keeps the ratio.
 :::
 
-:::readable Fir.CallsRefined.callee_allowedBelow (pin := Fir.CallsRefined) (pin := Fir.AllowedBelow) (fingerprint := "8711143637199471452")
+:::readable Fir.CallsRefined.callee_allowedBelow (pin := Fir.CallsRefined) (pin := Fir.AllowedBelow) (fingerprint := "10134408716661097592")
 *Theorem: the source's callee allows what the target's callee does, at a
 budget.* Let the target module $`M'` run each call as the source $`M`
 does, with the bound $`\beta`, each symbol naming the same function in
-both or a {ref "The-fir-specification--Execution--Calls-as-black-boxes"}[black box], with $`M` declaring each symbol that $`M'` declares, and let every function of $`M` have
+both or a {ref "The-fir-specification--Execution--Calls-as-black-boxes"}[black box], with $`M` declaring each symbol that $`M'` declares and $`M'` able to call each symbol that $`M` can, and let every function of $`M` have
 {ref "The-fir-specification--Execution--Returns-and-UB___-followed-back"}[monotone ops].
 Let the symbol $`s` name the function $`g_0` in $`M'`, let
 $`a \sqsubseteq a'`, position by position, be vectors of values of the
@@ -106,12 +106,12 @@ The same function is covered by the induction, and a black box by the
 previous theorem.
 :::
 
-:::readable Fir.Func.runOps_allowedBelow (pin := Fir.AllowedBelow) (pin := Fir.CallsRefined) (pin := Fir.MonotoneOps) (pin := Fir.Func.OpsMonotone) (fingerprint := "4631087863213561350")
+:::readable Fir.Func.runOps_allowedBelow (pin := Fir.AllowedBelow) (pin := Fir.CallsRefined) (pin := Fir.MonotoneOps) (pin := Fir.Func.OpsMonotone) (fingerprint := "10310611887635010592")
 *Theorem: every path of the target that runs out of fuel or returns is
 allowed by the source at a budget.* Let the target module $`M'` run each
 call as the source $`M` does, with the bound $`\beta`: each symbol names
-the same function in both, or a {ref "The-fir-specification--Execution--Calls-as-black-boxes"}[black box], and $`M` declares each symbol
-that $`M'` declares. Let every function of $`M` have
+the same function in both, or a {ref "The-fir-specification--Execution--Calls-as-black-boxes"}[black box], $`M` declares each symbol
+that $`M'` declares, and $`M'` can call each symbol that $`M` can. Let every function of $`M` have
 {ref "The-fir-specification--Execution--Returns-and-UB___-followed-back"}[monotone ops].
 Then for every budget $`n`, every function $`f` with monotone ops, all
 {ref "The-fir-specification--Execution--Refined-environments"}[environments] $`E \sqsubseteq E'`, every list of ops
@@ -139,7 +139,10 @@ leaves.
 
 The proof is by strong induction on the target's budget. Each op takes
 one step in both runs, a call of the same function included, whose callee
-the induction covers, so the ratio holds with room to spare. A black-box
+the induction covers, and an op that picks its callee takes one more for
+its call in both, so the ratio holds with room to spare. Where the
+target's rule picks a callee with no step left for the call, the source's
+picks the same one, or is UB, and runs out of fuel there too. A black-box
 call is where the budgets part: a callee that returns in the target took
 at most $`\beta` steps there, and with the call's own step, at most
 $`\beta + 1` steps of the target stand for one or more of the source's.

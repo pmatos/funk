@@ -105,7 +105,11 @@ callee hold.
 
 {includeReadable "." Fir.Execution.MemoryPoison "Poison obligations with memory" FirSpec.Execution.MemoryPoison (level := 1)}
 
+{includeReadable "." Fir.Execution.MemoryPathsFrom "Paths of a run with memory" FirSpec.Execution.MemoryPathsFrom (level := 1)}
+
 {includeReadable "." Fir.Execution.MemoryStepPaths "The ways a step with memory goes on" FirSpec.Execution.MemoryStepPaths (level := 1)}
+
+{includeReadable "." Fir.Execution.MemoryCallsAt "The callee of a call, with memory" FirSpec.Execution.MemoryCallsAt (level := 1)}
 
 {includeReadable "." Fir.Execution.MemoryCalls "Runs from given memories" FirSpec.Execution.MemoryCalls (level := 1)}
 
@@ -120,6 +124,8 @@ callee hold.
 {includeReadable "." Fir.Execution.MemoryReplace "Replacing a callee, with memory" FirSpec.Execution.MemoryReplace (level := 1)}
 
 {includeReadable "." Fir.Execution.MemoryFinite "Ops of finitely many outcomes" FirSpec.Execution.MemoryFinite (level := 1)}
+
+{includeReadable "." Fir.Execution.MemoryFiniteExit "A terminator's exits, with a budget" FirSpec.Execution.MemoryFiniteExit (level := 1)}
 
 {includeReadable "." Fir.Execution.MemoryFiniteDown "Divergence with ops of finitely many outcomes" FirSpec.Execution.MemoryFiniteDown (level := 1)}
 
@@ -245,7 +251,11 @@ callee hold.
 
 {includeReadable "." Fir.Execution.TracePaths "Paths of the interpreter in the traced layer" FirSpec.Execution.TracePaths (level := 1)}
 
+{includeReadable "." Fir.Execution.TraceStepWays "The ways a traced step goes on" FirSpec.Execution.TraceStepWays (level := 1)}
+
 {includeReadable "." Fir.Execution.TraceStepPaths "A traced run of ops, one step at a time" FirSpec.Execution.TraceStepPaths (level := 1)}
+
+{includeReadable "." Fir.Execution.TraceCallSource "A traced call of the target, followed back" FirSpec.Execution.TraceCallSource (level := 1)}
 
 {includeReadable "." Fir.Execution.TraceOpsRefine "A traced run of ops on refined environments and states" FirSpec.Execution.TraceOpsRefine (level := 1)}
 
@@ -260,6 +270,8 @@ callee hold.
 {includeReadable "." Fir.Execution.TraceChain "Calls between two steps" FirSpec.Execution.TraceChain (level := 1)}
 
 {includeReadable "." Fir.Execution.TracePace "The fuel of a return" FirSpec.Execution.TracePace (level := 1)}
+
+{includeReadable "." Fir.Execution.TraceCut "Truncated paths and cuts" FirSpec.Execution.TraceCut (level := 1)}
 
 {includeReadable "." Fir.Execution.TraceTruncate "Truncating a traced run" FirSpec.Execution.TraceTruncate (level := 1)}
 
@@ -279,9 +291,13 @@ callee hold.
 
 {includeReadable "." Fir.Execution.TraceBranch "Streams of acts and branches of moves" FirSpec.Execution.TraceBranch (level := 1)}
 
+{includeReadable "." Fir.Execution.TraceCallPace "A callee's return, paced" FirSpec.Execution.TraceCallPace (level := 1)}
+
 {includeReadable "." Fir.Execution.TraceMoves "Configurations and their moves" FirSpec.Execution.TraceMoves (level := 1)}
 
 {includeReadable "." Fir.Execution.TraceMoveCases "How a run goes on by moves" FirSpec.Execution.TraceMoveCases (level := 1)}
+
+{includeReadable "." Fir.Execution.TraceMoveFinite "Finitely many moves" FirSpec.Execution.TraceMoveFinite (level := 1)}
 
 {includeReadable "." Fir.Execution.TraceGood "A stream at unboundedly many budgets" FirSpec.Execution.TraceGood (level := 1)}
 

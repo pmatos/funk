@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Reading a run path by path: readable blocks" =>
 
-:::moduleDocs (fingerprint := "9355909806303777818")
+:::moduleDocs (fingerprint := "1835564557721932034")
 :::
 
 :::readable Fir.SetM.run_pure Fir.SetM.run_bind Fir.SetM.run_liftExcept Fir.SetM.run_lift (fingerprint := "4071084253136644651")
@@ -77,7 +77,7 @@ computation with no path is the empty set: a path that reaches it has no
 way to end, so it drops out of the run.
 :::
 
-:::readable Fir.NoStuck.pure' Fir.NoStuck.liftExcept_ok Fir.NoStuck.lift Fir.NoStuck.bind (fingerprint := "5336409005677587399")
+:::readable Fir.NoStuck.pure' Fir.NoStuck.liftExcept_ok Fir.NoStuck.lift Fir.NoStuck.bind Fir.NoStuck.bind_lift (fingerprint := "9454201023656238677")
 *Theorem: no stuck path, piece by piece.* For results of any kind:
 
 * $`\{\mathsf{ok}~a\}` has no stuck path.
@@ -88,6 +88,10 @@ way to end, so it drops out of the run.
   $`g\,a` has none for every result $`a` that $`x` may end with:
 
 $$`\begin{aligned} & \mathrm{nostuck}(x) \\ \wedge\ & \bigl(\forall a.\ x \leadsto a \implies \mathrm{nostuck}(g\,a)\bigr) \\ \implies\ & \mathrm{nostuck}(x \mathbin{>\!\!>\!\!=} g) \end{aligned}`
+
+* The semantics of an op, made a computation of the run, then $`g`, has no
+  stuck path when $`g\,a` has none for every result $`a` that the
+  semantics may end with.
 
 So to show that no path of a run is stuck, it is enough to show, at each
 step, that every check the interpreter makes there succeeds.
@@ -110,4 +114,29 @@ which the
 asks of every op. When $`c` hits UB, that is already a path. The rule for
 sequencing in general, which a call needs, is in the section
 {ref "The-fir-specification--Execution--What-a-call-step-needs"}[what a call step needs].
+:::
+
+:::readable Fir.Ev.NotStuck (fingerprint := "8592670422160197782")
+*Definition: an end that is not stuck.* A path of a run ends with a
+result, with UB, or
+{ref "The-fir-specification--Execution--Outcomes-and-behaviours"}[stuck].
+An end $`e` is _not stuck_ when $`e \neq \mathsf{stuck}~s` for every
+reason $`s`. The refinement proofs of the next sections follow only such
+paths: a stuck path is not an outcome, and refinement compares outcomes.
+:::
+
+:::readable Fir.run_liftExcept_bind Fir.run_lift_bind (fingerprint := "1201202150306426404")
+*Theorems: two kinds of step, read path by path.* Proof plumbing, so that
+the proofs below can read a run one step at a time without unfolding the
+{ref "The-fir-specification--Execution--Outcomes-and-behaviours"}[set monad].
+Let $`g` give a computation for each value, and let $`e` be an end.
+
+* Let $`x` be a check of the interpreter, which gives a value or is
+  stuck, such as looking up an op's operands. If $`e` is not stuck, then
+  $`e` is an end of $`x`, then $`g`, exactly when $`x` gives a value $`a`
+  and $`e` is an end of $`g(a)`.
+* Let $`s` be a computation of the set monad, which is never stuck, such
+  as an op's semantics. Then $`e` is an end of $`s`, then $`g`, exactly
+  when $`s` may end with a value $`a` and $`e` is an end of $`g(a)`, or
+  $`s` may end with $`\mathsf{ub}~r` and $`e = \mathsf{ub}~r`.
 :::

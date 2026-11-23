@@ -210,7 +210,8 @@ theorem Func.local_noStuck (hv : f.Valid ctx) (hl : f.Local) (M : Module d) (n :
         rw [Env.bind_ok _ _ hlen] at henv'
         cases (run_liftExcept _ _).1 henv'
         exact ih b hb (i + 1) _ (hnext (by simpa using hT)) (Func.scoped_next hv hb hi hold rs hrty)
-      · rename_i heq
+      all_goals
+        rename_i heq
         rw [hl.noCall b hb _ ho] at heq
         cases heq
 
@@ -259,7 +260,8 @@ theorem Func.local_hasPath (hv : f.Valid ctx) (hl : f.Local)
           (Func.scoped_next hv hb hi hold rs hrty))
         rw [Env.bind_ok _ _ hlen]
         rfl
-      · rename_i heq
+      all_goals
+        rename_i heq
         rw [hl.noCall b hb _ ho] at heq
         cases heq
 

@@ -24,7 +24,8 @@ from that tree to the set monad carries their results to the spec's run.
 A morphism that also keeps choice and UB maps each op rule written once for
 any monad with those effects to the same rule in the other monad, so a
 dialect whose rules are written that way meets the theorem's condition op
-by op.
+by op. The condition covers the rule that picks a callee (#235) as it covers
+an op's meaning and a terminator's exit.
 -/
 
 namespace Fir
@@ -113,6 +114,8 @@ structure MonadMorphism.MapsDenote : Prop where
     φ.map (DialectDenote.denote (m := m) op args) = DialectDenote.denote (m := n) op args
   exit : ∀ (op : d.Op) (args : HVector toType (sig op)),
     φ.map (DialectDenote.exit (m := m) op args) = DialectDenote.exit (m := n) op args
+  pick : ∀ (op : d.Op) (ok : Name → Bool) (args : HVector toType (sig op)),
+    φ.map (DialectDenote.pick (m := m) op ok args) = DialectDenote.pick (m := n) op ok args
 
 /-- The morphism maps the external-call rule in `m` to the rule in `n`. -/
 def MonadMorphism.MapsExtCall : Prop :=
@@ -138,14 +141,13 @@ theorem Func.runOps_map (h : φ.MapsDenote (d := d)) (hx : φ.MapsExtCall (d := 
       have hx' : ∀ (g : Name) (args : List (DVal d)) (rs : List d.Ty),
           φ.map (DialectExtCall.extCall (m := m) g args rs) =
             DialectExtCall.extCall (m := n) g args rs := hx
-      have ih₀ := ih k (Nat.lt_succ_self k)
-      have ih₁ : ∀ j, _ := fun j => ih (min j k) (Nat.lt_succ_of_le (Nat.min_le_right j k))
       simp only [Func.runOps]
       all_goals repeat' (first
         | (apply bind_congr; intro _)
         | split
-        | simp only [(φ.except Stuck).map_bind, (φ.except Stuck).map_pure, φ.except_liftExcept,
-            φ.except_lift, φ.except_inFrame hf, h.denote, h.exit, hx', ih₀, ih₁])
+        | simp (disch := omega) only [(φ.except Stuck).map_bind, (φ.except Stuck).map_pure,
+            φ.except_liftExcept, φ.except_lift, φ.except_inFrame hf, h.denote, h.exit, h.pick, hx',
+            ih])
 
 /-- The interpreter cannot tell monads apart: a morphism that maps each
 op's semantics in `m` to its semantics in `n`, the external-call rule to

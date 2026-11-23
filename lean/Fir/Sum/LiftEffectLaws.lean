@@ -99,7 +99,7 @@ instance liftsSetM [DialectDenote (dep.over e) SetM] [LiftsSetM (dep.over e)] :
     dsimp only [DialectMemDenote.denoteAt]
     rw [LiftsSetM.lifts (d := dep.over e)]
     exact DialectDenote.ext (fun _ _ => ((MonadMorphism.liftState SetM _).map_map _ _).symm)
-      (fun _ _ => rfl)
+      (fun _ _ => rfl) (fun _ _ _ => rfl)
 
 end
 

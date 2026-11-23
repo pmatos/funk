@@ -14,7 +14,7 @@ build fails when the Lean changes under it.
 
 #doc (Manual) "Meeting the memory obligations: readable blocks" =>
 
-:::moduleDocs (fingerprint := "5935866181051029924")
+:::moduleDocs (fingerprint := "12200323356320109226")
 :::
 
 :::readable Fir.MemSet.map_map Fir.prefix_refl (fingerprint := "1913305905240732111")
@@ -48,10 +48,11 @@ then so does $`f \mathbin{<\$>} c`, for every $`f`: mapping changes the
 results and not the memories.
 :::
 
-:::readable Fir.DialectMemDenote.ofSetM Fir.DialectMemDenote.ofSetM_writesNot Fir.DialectMemDenote.ofSetM_readsNot Fir.DialectMemDenote.ofSetM_allocatesNot (fingerprint := "179854379232335473")
+:::readable Fir.DialectMemDenote.ofSetM Fir.DialectMemDenote.ofSetM_writesNot Fir.DialectMemDenote.ofSetM_readsNot Fir.DialectMemDenote.ofSetM_allocatesNot (fingerprint := "17497471663074502607")
 *Definition: the semantics with memory of a dialect whose ops touch no
-memory.* At every naming $`\rho`, each op runs by its rule in the set
-monad, lifted into the state layer, and keeps the memories.
+memory.* At every naming $`\rho`, each op runs, exits and picks its
+callee by its rules in the set monad, lifted into the state layer, and
+keeps the memories.
 
 *Theorem: such a dialect meets the memory obligations.* At every naming
 $`\rho` and for every memory $`x` of the run, what each of its ops runs by
@@ -79,7 +80,7 @@ UB with memory, at every naming and from every memories, and one that
 makes no poison in the set monad makes none with memory.
 :::
 
-:::readable Fir.OwnRuleHas.ofLifts Fir.NeverUB.ofLifts Fir.MakesNoPoison.ofLifts (pin := Fir.OpLiftsSetM) (fingerprint := "17081666191821061240")
+:::readable Fir.OwnRuleHas.ofLifts Fir.NeverUB.ofLifts Fir.MakesNoPoison.ofLifts (pin := Fir.OpLiftsSetM) (fingerprint := "8850247460607929372")
 *Theorems: the obligations of an op that touches no memory.* What an op
 that is
 {ref "The-fir-specification--Memory--Runs-with-memory"}[tied] runs by its

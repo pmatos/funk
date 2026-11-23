@@ -95,9 +95,8 @@ theorem Func.runOps_left_le (M : Module d) (n : Nat) :
         | exact LeavesAtMost.of_stuck
         | exact LeavesAtMost.exhausted
         | exact LeavesAtMost.ret (Nat.le_succ _)
-        | exact (ih _ (Nat.lt_succ_self _) _ _ _).mono (Nat.le_succ _)
-        | exact (ih _ (Nat.lt_succ_of_le (Nat.min_le_right _ _)) _ _ _).mono
-            (Nat.le_trans (Nat.min_le_right _ _) (Nat.le_succ _)))
+        | exact LeavesAtMost.ret (by omega)
+        | exact (ih _ (by omega) _ _ _).mono (by omega))
 
 /-! # A run with more fuel -/
 
@@ -247,18 +246,20 @@ theorem Func.runOps_ahead (M : Module d) (n : Nat) :
       simp only [Func.runOps]
       all_goals repeat' (first
         | (apply Ahead.bind; intro _ _)
-        | (refine Ahead.bindRun (ih _ (Nat.lt_succ_self _) _ _ _ _)
+        | (refine Ahead.bindRun (ih _ (by omega) _ _ _ _)
             (Func.runOps_left_le _ _ _ _ _) ?_ ?_ ?_
            · rfl
            · rfl
            intro _ _ hk
            dsimp only)
+        | exact Ahead.exhausted
+        | simp only [Nat.add_right_comm _ 1 j]
         | split
         | exact Ahead.of_stuck
         | exact Ahead.ret
-        | exact ih _ (Nat.lt_succ_self _) _ _ _ _
+        | exact ih _ (by omega) _ _ _ _
         | (rw [Nat.min_eq_left hk, Nat.min_eq_left (Nat.add_le_add_right hk _)]
-           exact ih _ (Nat.lt_succ_of_le hk) _ _ _ _))
+           exact ih _ (by omega) _ _ _ _))
 
 /-! # The run of a function -/
 

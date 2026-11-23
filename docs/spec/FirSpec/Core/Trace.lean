@@ -14,15 +14,15 @@ when the Lean changes under it.
 
 #doc (Manual) "The core's traced runs: readable blocks" =>
 
-:::moduleDocs (fingerprint := "7434962166205281528")
+:::moduleDocs (fingerprint := "6535809247946832645")
 :::
 
-:::readable Fir.Core.instDialectTrace Fir.Core.liftsMem Fir.Core.instInhabitedAnswer (fingerprint := "12075076144742745011")
+:::readable Fir.Core.instDialectTrace Fir.Core.liftsMem Fir.Core.instInhabitedAnswer (fingerprint := "13717638021267847626")
 *Definition: the core's traced semantics.* The core's events are its
 external calls, which the world answers with a reply and its actions on
 escaped memory; the default answer has no results and no actions. Each op
-runs by its rule with memory, lifted onto the memories of the traced
-state, and shows no event: an external call is not an op's rule. The
+runs, exits and picks its callee by its rules with memory, lifted onto the
+memories of the traced state, and shows no event: an external call is not an op's rule. The
 core's external-call rule is, for now, its rule with memory, UB, lifted
 too, so the core's traced semantics lifts its semantics with memory; the
 next stage of #239 gives an external call its event and the world's

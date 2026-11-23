@@ -101,10 +101,11 @@ instance liftsSetM [DialectDenote base SetM] [DialectDenote (base.over e) SetM]
   lifts lay ρ L := by
     dsimp only [DialectMemDenote.denoteAt]
     rw [LiftsSetM.lifts (d := base), LiftsSetM.lifts (d := base.over e)]
-    refine DialectDenote.ext (fun op args => ?_) (fun op args => ?_)
+    refine DialectDenote.ext (fun op args => ?_) (fun op args => ?_) (fun op ok args => ?_)
     · cases op with
       | inl o => exact ((MonadMorphism.liftState SetM _).map_map _ _).symm
       | inr o => rfl
+    · cases op <;> rfl
     · cases op <;> rfl
 
 end

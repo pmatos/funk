@@ -14,10 +14,10 @@ pins their fingerprint; the build fails when the Lean changes under it.
 
 #doc (Manual) "Refined arguments over traced runs from a given traced state: readable blocks" =>
 
-:::moduleDocs (fingerprint := "646806415934435627")
+:::moduleDocs (fingerprint := "16429314609073414273")
 :::
 
-:::readable Fir.Func.traceRunsFrom Fir.Func.traceRunsFrom_truncates Fir.Func.traceRunsFrom_finitelyMany (fingerprint := "9340626417269703949")
+:::readable Fir.Func.traceRunsFrom Fir.Func.traceRunsFrom_truncates Fir.Func.traceRunsFrom_finitelyMany (fingerprint := "14861942271792698399")
 *Definition: a function's traced runs from a traced state.* At $`\ell`,
 $`\rho` and $`L`, the traced runs of $`f` in $`M` from given traced states
 run $`f` on each argument vector from each traced state, each op that runs
@@ -25,8 +25,9 @@ by the dialect's rule showing a step before it, and return its values with
 the traced state each return ends in.
 
 *Theorems.* They truncate, with any $`W > 0` that exceeds the length of
-every chain of calls of the module by at least one. When every op that
-runs by its own rule, and every external call,
+every chain of calls of the module by at least two. When every op that
+runs by its own rule, every external call and every rule that picks a
+callee
 has finitely many outcomes given the world's answers, they
 have finitely many traces at each budget.
 :::

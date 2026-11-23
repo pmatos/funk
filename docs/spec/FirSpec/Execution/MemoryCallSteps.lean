@@ -14,7 +14,7 @@ build fails when the Lean changes under it.
 
 #doc (Manual) "The steps of a call, with memory: readable blocks" =>
 
-:::moduleDocs (fingerprint := "283898696705507377")
+:::moduleDocs (fingerprint := "6201724665560416323")
 :::
 
 :::readable Fir.liftExcept_ok_bind Fir.NoStuck.map Fir.HasPath.map (fingerprint := "59618637625475726")
@@ -55,7 +55,7 @@ the interpreter checks them before it returns, whatever the ops do to the
 memories.
 :::
 
-:::readable Fir.Func.MemInModule (fingerprint := "11963576496452871621")
+:::readable Fir.Func.MemInModule (fingerprint := "3418013352707737109")
 *Definition: a function that runs within a module, with memory.* The ops
 of a function $`f` _run within the module $`M` with memory_ when, for every
 op $`o` of every block of $`f`:
@@ -63,6 +63,10 @@ op $`o` of every block of $`f`:
 * if $`o` is not a terminator and calls the symbol $`s`, the symbol table
   of $`M` gives $`s` the type of the call, as for a function that
   {ref "The-fir-specification--Execution--Progress-with-calls"}[runs within a module];
+* if $`o` is not a terminator and its callee is picked, every symbol $`s`
+  that $`\mathrm{pick}_o` may give from any memories, on any operands, is
+  one that the module can call on the operands but the first, for the
+  results of $`o`;
 * if $`o` is a terminator, whenever $`\mathrm{exit}_o` may end with
   $`\mathsf{goto}~i` from any memories, on any operands,
   $`i < \mathrm{nsucc}(o)`, and $`o` has no result types;
@@ -70,24 +74,26 @@ op $`o` of every block of $`f`:
   $`\mathsf{ret}` from any memories, on any operands, its operand types
   are the result types of $`f`.
 
-Here $`\mathrm{exit}_o` is the exit of $`o` in the state layer.
+Here $`\mathrm{exit}_o` and $`\mathrm{pick}_o` are those of $`o` in the
+state layer.
 :::
 
-:::readable Fir.Func.InModuleAt Fir.Func.InModule.inModuleAt_of_tied Fir.Func.InModule.inModuleAt (pin := Fir.OpLiftsSetM) (fingerprint := "12955099331783691999")
+:::readable Fir.Func.InModuleAt Fir.Func.InModule.inModuleAt_of_tied Fir.Func.InModule.inModuleAt (pin := Fir.OpLiftsSetM) (fingerprint := "13874495771160803077")
 *Definition and theorems: running within a module, at a naming.* The ops of
 $`f` run within $`M` with memory _at the naming_ $`\rho`, with layout
 entries $`\ell`, when they run within it by the dialect's semantics with
 memory where a run names the dialect's memory $`x` as $`\rho(x)`, whose
 entry is $`\ell(\rho(x))`. A function that runs within its module, each of
 whose terminators is
-{ref "The-fir-specification--Memory--Runs-with-memory"}[tied], runs within
-it with memory at every naming: each terminator goes where it goes in the
-set monad and keeps the memories, whatever the function's other ops do to
-them. So, in a dialect that lifts the set monad, where every op is tied,
+{ref "The-fir-specification--Memory--Runs-with-memory"}[tied], and the
+rule of each of whose ops that pick their callee picks, with memory at the
+naming, only symbols that the module can call, runs within it with memory
+there: each terminator goes where it goes in the set monad and keeps the
+memories, whatever the function's other ops do to them. So, in a dialect that lifts the set monad, where every op is tied,
 every function that runs within its module runs within it with memory.
 :::
 
-:::readable Fir.Func.memRuns_enter (pin := Fir.Func.memRuns) (fingerprint := "17172988828675489419")
+:::readable Fir.Func.memRuns_enter (pin := Fir.Func.memRuns) (fingerprint := "14156279378454141511")
 *Theorem: a run with memory that starts.* When a function $`f` starts on
 its arguments, at its entry block's ops $`o^*` with the environment $`E`,
 its runs with memory at a naming, at the budget $`n`, are

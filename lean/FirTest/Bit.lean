@@ -152,6 +152,7 @@ def Op.denote : (op : Op) → HVector toType (Fir.sig (d := BitDialect) op) →
 instance : DialectDenote BitDialect SetM where
   denote := Op.denote
   exit _ _ := fun _ => False
+  pick _ _ _ := fun _ => False
 
 /-- Both bit ops propagate poison, and both are pure: each gives a defined
 result on a defined operand and is never UB. The bit dialect has no memory
@@ -288,6 +289,8 @@ instance lawful : LawfulDialectPoison BitDialect where
     | .low _, _, _ => fun | .cons _ .nil => ⟨fun _ => ⟨_, rfl⟩, fun h => nomatch h⟩
     | .int, _, _ => fun | .cons _ .nil => ⟨fun _ => ⟨_, rfl⟩, fun h => nomatch h⟩
   monotone o _ _ := monotone o
+  pickTotal _ _ h := nomatch h
+  pickMonotone _ _ h := nomatch h
 
 /-- The bit dialect is lawful in its effects: both ops are never UB, give a
 defined result on a defined operand, are not terminators, and touch no

@@ -31,6 +31,9 @@ each return seen at its end. M0's dialects show no event and return no
 pointer. The core and CoreGpu have a traced semantics that lifts their
 semantics with memory (`Fir.Core.Trace`, `Fir.Gpu.Trace`), so their tests
 keep their results by this theorem and `End.isRefinedBy_iff_vals`.
+
+The rule of an op whose callee is picked (#235) runs after a step too, as
+an op's own rule does; the call it then makes shows no step of its own.
 -/
 
 namespace Fir
@@ -81,6 +84,8 @@ act of its traces an act of the marked trace. -/
       TraceM.mapActs (fun a => [.act a]) (DialectDenote.denote op args)
     exit op args := TraceM.tick >>= fun _ =>
       TraceM.mapActs (fun a => [.act a]) (DialectDenote.exit op args)
+    pick op ok args := TraceM.tick >>= fun _ =>
+      TraceM.mapActs (fun a => [.act a]) (DialectDenote.pick op ok args)
     extCall g args rs := TraceM.tick >>= fun _ =>
       TraceM.mapActs (fun a => [.act a]) (DialectExtCall.extCall g args rs) }
 
@@ -147,9 +152,13 @@ theorem Func.run_eraseSteps (M : Module d) (f : Func d)
     exact TraceM.mapActs_singleton x
   have hmaps : (MonadMorphism.mapActs (TraceState N (unitsOf lay))
       (Step.acts (A := DialectTrace.Acts d))).MapsDenote (d := d) := by
-    constructor <;> intro op args
-    · exact hstep (DialectDenote.denote (m := TraceM (DialectTrace.Acts d) _) op args)
-    · exact hstep (DialectDenote.exit (m := TraceM (DialectTrace.Acts d) _) op args)
+    constructor
+    · intro op args
+      exact hstep (DialectDenote.denote (m := TraceM (DialectTrace.Acts d) _) op args)
+    · intro op args
+      exact hstep (DialectDenote.exit (m := TraceM (DialectTrace.Acts d) _) op args)
+    · intro op ok args
+      exact hstep (DialectDenote.pick (m := TraceM (DialectTrace.Acts d) _) op ok args)
   exact Func.run_map hmaps
     (fun g args rs =>
       hstep (DialectExtCall.extCall (m := TraceM (DialectTrace.Acts d) _) g args rs))

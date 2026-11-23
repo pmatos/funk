@@ -377,6 +377,9 @@ instance instDialectDenote [TyDenote base.Ty] [TyDenote e.Ty] [DialectSignature 
   exit
     | .inl o, args => DialectDenote.exit o (HVector.ofSum args)
     | .inr o, args => DialectDenote.exit (d := base.over e) o args
+  pick
+    | .inl o, ok, args => DialectDenote.pick o ok (HVector.ofSum args)
+    | .inr o, ok, args => DialectDenote.pick (d := base.over e) o ok args
 
 /-! # Text -/
 

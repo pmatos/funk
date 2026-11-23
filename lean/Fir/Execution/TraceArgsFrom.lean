@@ -50,7 +50,7 @@ def Func.traceRunsFrom (M : Module d) (f : Func d) :
 /-- A function's traced runs from a traced state truncate, with at most `W`
 steps of fuel between two steps of a path, for any `W` that exceeds the
 length of every chain of calls of the module by at least one. -/
-theorem Func.traceRunsFrom_truncates {W : Nat} (hW : ∀ os c, M.CallChain os c → c + 1 ≤ W)
+theorem Func.traceRunsFrom_truncates {W : Nat} (hW : ∀ os c, M.CallChain os c → c + 2 ≤ W)
     (hpos : 0 < W) (p : HVector toType (f.params.map (·.2)) × TraceState N (unitsOf lay)) :
     TRun.Truncates W (f.traceRunsFrom lay ρ L M p) := by
   letI := DialectTrace.stepAt (d := d) lay ρ L

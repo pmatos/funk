@@ -14,18 +14,19 @@ when the Lean changes under it.
 
 #doc (Manual) "Refined arguments over traced runs, divergence included: readable blocks" =>
 
-:::moduleDocs (fingerprint := "17714747247148021241")
+:::moduleDocs (fingerprint := "12509372194637193811")
 :::
 
-:::readable Fir.Func.traceRuns_exhausted_iff Fir.Func.traceRuns_exhausted_iff_from Fir.Func.traceRuns_truncates Fir.Func.traceRuns_finitelyMany (fingerprint := "971216076862408849")
+:::readable Fir.Func.traceRuns_exhausted_iff Fir.Func.traceRuns_exhausted_iff_from Fir.Func.traceRuns_truncates Fir.Func.traceRuns_finitelyMany (fingerprint := "13473661547675340659")
 *Theorems.* A path of a function's traced runs that runs out of fuel is a
 path of its entry block's ops, in a frame from the memories that hold
 $`L`'s starting allocations, with nothing escaped, that runs out of fuel after the same marked trace, and a
 path of its traced runs from that traced state (those of the section on
 refined arguments from a given traced state) that does so. The
 traced runs of a function truncate, with any $`W > 0` that
-exceeds the length of every chain of calls of the module by at least one.
-When every op that runs by its own rule, and every external call,
+exceeds the length of every chain of calls of the module by at least two.
+When every op that runs by its own rule, every external call and every
+rule that picks a callee
 has finitely many outcomes, given
 the world's answers, they have finitely many traces at each budget. Both hold because they hold
 of the traced runs from a traced state.

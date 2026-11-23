@@ -24,9 +24,9 @@ path that returns, from which the caller goes on.
 
 Showing that no path is stuck needs nothing of the ops' semantics: an op
 that may end in many ways, from any memories, is never stuck in any of
-them. Progress needs each op that runs by its own rule to have an outcome
-from the memories it starts from, which a dialect lawful in its totality
-gives at every naming.
+them. Progress needs each op that runs by its own rule, and the rule of each
+op whose callee is picked (#235), to have an outcome from the memories it
+starts from, which a dialect lawful in its totality gives at every naming.
 -/
 
 namespace Fir
@@ -78,7 +78,7 @@ theorem Module.calls_memNoStuck (hv : ∀ g ∈ M.funcs, g.Valid ctx)
         obtain ⟨tgt, env', hj, htm, hold'⟩ := Func.jump_ok hvf hb hi hold hT hres hk
         dsimp only
         rw [hj, liftExcept_ok_bind]
-        have hns := ih n (Nat.lt_succ_self n) f hf tgt htm 0 env'
+        have hns := ih n (by omega) f hf tgt htm 0 env'
           (List.length_pos_iff.2 (hvf.blocksNonEmpty tgt htm)) hold' S'
         rwa [List.drop_zero] at hns
     · rename_i hT
@@ -91,7 +91,7 @@ theorem Module.calls_memNoStuck (hv : ∀ g ∈ M.funcs, g.Valid ctx)
           simp only [List.length_map] at h1 h2 ⊢
           omega
         rw [Env.bind_ok _ _ hlen, liftExcept_ok_bind]
-        exact ih n (Nat.lt_succ_self n) f hf b hb (i + 1) _ (hnext hTf)
+        exact ih n (by omega) f hf b hb (i + 1) _ (hnext hTf)
           (Func.scoped_next hvf hb hi hold rs hrty) S'
       · rename_i s heq
         obtain ⟨g, hg, hgm, hgp, hgr⟩ :=
@@ -102,7 +102,7 @@ theorem Module.calls_memNoStuck (hv : ∀ g ∈ M.funcs, g.Valid ctx)
         have hty : args.toDVals.map (·.1) = g.params.map (·.2) :=
           (HVector.toDVals_types args).trans hgp.symm
         simp only [hg, Func.enter_ok he hep hty, liftExcept_ok_bind]
-        have hns := fun S => ih n (Nat.lt_succ_self n) g hgm e hem 0 _
+        have hns := fun S => ih n (by omega) g hgm e hem 0 _
           (List.length_pos_iff.2 (hvg.blocksNonEmpty e hem)) (Env.scoped_entry hvg he hep hty) S
         simp only [List.drop_zero] at hns
         refine NoStuck.fromState_bind ?_ fun r S' hr => ?_
@@ -121,17 +121,62 @@ theorem Module.calls_memNoStuck (hv : ∀ g ∈ M.funcs, g.Valid ctx)
           simp only [hvs, ite_true, Env.bind_ok _ _ hlen, liftExcept_ok_bind]
           exact ih (min k n) (Nat.lt_succ_of_le (Nat.min_le_right _ _)) f hf b hb (i + 1) _
             (hnext hTf) (Func.scoped_results hvf hb hi hold (hvs.trans hrty.symm)) S'
+      · rename_i heq
+        refine NoStuck.fromState_bind (NoStuck.fromState_lift _ _) fun s S₁ hs => ?_
+        cases n with
+        | zero => rw [fromState_pure]; exact NoStuck.pure'
+        | succ n =>
+        dsimp only
+        have hok := (hm f hf).picks b hb _ ho hTf heq args S s S₁ (fromState_lift_ok hs)
+        unfold Module.callable at hok
+        split at hok
+        · rename_i g hg
+          simp only [Bool.and_eq_true, beq_iff_eq] at hok
+          obtain ⟨hgp, hgr⟩ := hok
+          have hgm : g ∈ M.funcs := List.mem_of_find?_eq_some hg
+          have hvg := hv g hgm
+          obtain ⟨e, he, hep⟩ := hvg.entry
+          have hem : e ∈ g.blocks := List.mem_of_mem_head? he
+          have hty : args.tail.toDVals.map (·.1) = g.params.map (·.2) := by
+            rw [HVector.toDVals_types]; exact hgp.symm
+          simp only [Func.enter_ok he hep hty, liftExcept_ok_bind]
+          have hns := fun S => ih n (by omega) g hgm e hem 0 _
+            (List.length_pos_iff.2 (hvg.blocksNonEmpty e hem)) (Env.scoped_entry hvg he hep hty) S
+          simp only [List.drop_zero] at hns
+          refine NoStuck.fromState_bind ?_ fun r S' hr => ?_
+          · rw [fromState_inFrame]
+            exact NoStuck.map _ (hns _)
+          match r, hr with
+          | .fuelExhausted, _ => rw [fromState_pure]; exact NoStuck.pure'
+          | .ret (vs, k), hr =>
+            have hvs : vs.map (·.1) = returnTypes b.body[i].op :=
+              ((Func.runOps_memReturns M n g _ _).inFrame S₁ vs k S' hr).trans hgr
+            have hlen : (b.body[i].results.map (·.1)).length = vs.length := by
+              have h1 := congrArg List.length hvs
+              have h2 := congrArg List.length hrty
+              simp only [List.length_map] at h1 h2 ⊢
+              omega
+            simp only [hvs, ite_true, Env.bind_ok _ _ hlen, liftExcept_ok_bind]
+            exact ih (min k n) (by omega) f hf b hb (i + 1) _
+              (hnext hTf) (Func.scoped_results hvf hb hi hold (hvs.trans hrty.symm)) S'
+        · simp only [hok, ↓reduceIte]
+          refine NoStuck.fromState_bind (NoStuck.fromState_lift _ _) fun _ _ hvs => ?_
+          cases (extCall_stateT_setM _ _ _ _ _).1 (fromState_lift_ok hvs)
 
 /-- A run with memory of a function of the module `M` has a path, from any
 op of any of its blocks on, with an environment that holds the values in
 scope there, from any memories, when every function of `M` is valid and
-runs within `M` with memory, and every op of `M` that runs by its own rule
-has an outcome from any memories. -/
+runs within `M` with memory, every op of `M` that runs by its own rule
+has an outcome from any memories, and so has the rule of every op of `M`
+whose callee is picked. -/
 theorem Module.calls_memHasPath (hv : ∀ g ∈ M.funcs, g.Valid ctx)
     (hm : ∀ g ∈ M.funcs, g.MemInModule unit M)
     (ht : ∀ g ∈ M.funcs, ∀ b ∈ g.blocks, ∀ o ∈ b.body,
       isTerminator o.op = true ∨ callee? o.op = none →
-        OpHasOutcome (σ := Memories Mem unit) o.op) (n : Nat) :
+        OpHasOutcome (σ := Memories Mem unit) o.op)
+    (hpt : ∀ g ∈ M.funcs, ∀ b ∈ g.blocks, ∀ o ∈ b.body, callee? o.op = some .picked →
+      ∀ ok args, HasOutcome (DialectDenote.pick (m := StateT (Memories Mem unit) SetM) o.op ok args))
+    (n : Nat) :
     ∀ f ∈ M.funcs, ∀ b ∈ f.blocks, ∀ (i : Nat) (env : Env d), i < b.body.length →
       env.Scoped f b.label i → ∀ S : Memories Mem unit,
         HasPath (fromState (Func.runOps (m := StateT (Memories Mem unit) SetM) M n f env
@@ -163,7 +208,7 @@ theorem Module.calls_memHasPath (hv : ∀ g ∈ M.funcs, g.Valid ctx)
         obtain ⟨tgt, env', hj, htm, hold'⟩ := Func.jump_ok hvf hb hi hold hT hres hk
         dsimp only
         rw [hj, liftExcept_ok_bind]
-        have hhp := ih n (Nat.lt_succ_self n) f hf tgt htm 0 env'
+        have hhp := ih n (by omega) f hf tgt htm 0 env'
           (List.length_pos_iff.2 (hvf.blocksNonEmpty tgt htm)) hold' S'
         rwa [List.drop_zero] at hhp
     · rename_i hT
@@ -178,7 +223,7 @@ theorem Module.calls_memHasPath (hv : ∀ g ∈ M.funcs, g.Valid ctx)
           simp only [List.length_map] at h1 h2 ⊢
           omega
         rw [Env.bind_ok _ _ hlen, liftExcept_ok_bind]
-        exact ih n (Nat.lt_succ_self n) f hf b hb (i + 1) _ (hnext hTf)
+        exact ih n (by omega) f hf b hb (i + 1) _ (hnext hTf)
           (Func.scoped_next hvf hb hi hold rs hrty) S'
       · rename_i s heq
         obtain ⟨g, hg, hgm, hgp, hgr⟩ :=
@@ -189,7 +234,7 @@ theorem Module.calls_memHasPath (hv : ∀ g ∈ M.funcs, g.Valid ctx)
         have hty : args.toDVals.map (·.1) = g.params.map (·.2) :=
           (HVector.toDVals_types args).trans hgp.symm
         simp only [hg, Func.enter_ok he hep hty, liftExcept_ok_bind]
-        have hhp := fun S => ih n (Nat.lt_succ_self n) g hgm e hem 0 _
+        have hhp := fun S => ih n (by omega) g hgm e hem 0 _
           (List.length_pos_iff.2 (hvg.blocksNonEmpty e hem)) (Env.scoped_entry hvg he hep hty) S
         simp only [List.drop_zero] at hhp
         refine HasPath.fromState_bind ?_ fun r S' hr => ?_
@@ -208,6 +253,49 @@ theorem Module.calls_memHasPath (hv : ∀ g ∈ M.funcs, g.Valid ctx)
           simp only [hvs, ite_true, Env.bind_ok _ _ hlen, liftExcept_ok_bind]
           exact ih (min k n) (Nat.lt_succ_of_le (Nat.min_le_right _ _)) f hf b hb (i + 1) _
             (hnext hTf) (Func.scoped_results hvf hb hi hold (hvs.trans hrty.symm)) S'
+      · rename_i heq
+        refine HasPath.fromState_bind (HasPath.fromState_lift (hpt f hf b hb _ ho heq _ args S))
+          fun s S₁ hs => ?_
+        cases n with
+        | zero => rw [fromState_pure]; exact HasPath.pure'
+        | succ n =>
+        dsimp only
+        have hok := (hm f hf).picks b hb _ ho hTf heq args S s S₁ (fromState_lift_ok hs)
+        unfold Module.callable at hok
+        split at hok
+        · rename_i g hg
+          simp only [Bool.and_eq_true, beq_iff_eq] at hok
+          obtain ⟨hgp, hgr⟩ := hok
+          have hgm : g ∈ M.funcs := List.mem_of_find?_eq_some hg
+          have hvg := hv g hgm
+          obtain ⟨e, he, hep⟩ := hvg.entry
+          have hem : e ∈ g.blocks := List.mem_of_mem_head? he
+          have hty : args.tail.toDVals.map (·.1) = g.params.map (·.2) := by
+            rw [HVector.toDVals_types]; exact hgp.symm
+          simp only [Func.enter_ok he hep hty, liftExcept_ok_bind]
+          have hhp := fun S => ih n (by omega) g hgm e hem 0 _
+            (List.length_pos_iff.2 (hvg.blocksNonEmpty e hem)) (Env.scoped_entry hvg he hep hty) S
+          simp only [List.drop_zero] at hhp
+          refine HasPath.fromState_bind ?_ fun r S' hr => ?_
+          · rw [fromState_inFrame]
+            exact HasPath.map _ (hhp _)
+          match r, hr with
+          | .fuelExhausted, _ => rw [fromState_pure]; exact HasPath.pure'
+          | .ret (vs, k), hr =>
+            have hvs : vs.map (·.1) = returnTypes b.body[i].op :=
+              ((Func.runOps_memReturns M n g _ _).inFrame S₁ vs k S' hr).trans hgr
+            have hlen : (b.body[i].results.map (·.1)).length = vs.length := by
+              have h1 := congrArg List.length hvs
+              have h2 := congrArg List.length hrty
+              simp only [List.length_map] at h1 h2 ⊢
+              omega
+            simp only [hvs, ite_true, Env.bind_ok _ _ hlen, liftExcept_ok_bind]
+            exact ih (min k n) (by omega) f hf b hb (i + 1) _
+              (hnext hTf) (Func.scoped_results hvf hb hi hold (hvs.trans hrty.symm)) S'
+        · simp only [hok, ↓reduceIte]
+          refine HasPath.fromState_bind
+            (HasPath.fromState_lift ⟨_, (extCall_stateT_setM _ _ _ _ _).2 rfl⟩) fun _ _ hvs => ?_
+          cases (extCall_stateT_setM _ _ _ _ _).1 (fromState_lift_ok hvs)
 
 end
 
@@ -270,6 +358,8 @@ theorem Func.memProgress [LawfulDialectTotal d] (hv : ∀ g ∈ M.funcs, g.Valid
   have hmem : e ∈ f.blocks := List.mem_of_mem_head? he
   have hhp := Module.calls_memHasPath hv hm
     (fun g hg _ hb o ho hc => LawfulDialectTotal.total o.op ((hv g hg).typesValid hb ho) hc lay ρ L)
+    (fun g hg _ hb o ho hc =>
+      LawfulDialectTotal.pickTotal o.op ((hv g hg).typesValid hb ho) hc lay ρ L)
     n f hf e hmem 0 _ (List.length_pos_iff.2 (hvf.blocksNonEmpty e hmem))
     (Env.scoped_params hvf he hep args) (RunItems.start d lay ρ L).enter
   rw [List.drop_zero] at hhp

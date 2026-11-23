@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Poison classes: readable blocks" =>
 
-:::moduleDocs (fingerprint := "17031746216395161371")
+:::moduleDocs (fingerprint := "11110371725002340670")
 :::
 
 :::readable Fir.TyPoison (fingerprint := "4292109808732388566")
@@ -24,7 +24,7 @@ Each op's poison class, $`\mathrm{class}(o)`, comes from the dialect's
 {ref "The-fir-specification--Execution--Effect-sets"}[effect class].
 :::
 
-:::readable Fir.HVector.Any Fir.HVector.All Fir.HVector.Forall₂ Fir.HVector.forall₂_refl (fingerprint := "8576323161967341222")
+:::readable Fir.HVector.Any Fir.HVector.Forall₂.tail Fir.HVector.All Fir.HVector.Forall₂ Fir.HVector.forall₂_refl (fingerprint := "7632817752922074308")
 *Definition: some, every, and position by position, for vectors of
 values.* An op takes a vector of operand values
 $`\vec{v} = (v_1, \dots, v_n)`, one of each operand type, and gives a
@@ -44,6 +44,8 @@ value $`x`, then $`\vec{v}` and $`\vec{v}` are related by $`\mathrel{R}`
 position by position, for every vector $`\vec{v}`. The proofs of
 monotonicity, below, use it to show that a vector of results refines
 itself, as for $`\mathsf{const}`, which has no operands.
+Two vectors related position by position have tails related position by
+position.
 :::
 
 :::readable Fir.HVector.IsFilledBy Fir.PoisonOut Fir.UBByOwnRules Fir.PropagatesPoison (pin := Fir.HVector.Any) (pin := Fir.HVector.All) (pin := Fir.HVector.Forall₂) (fingerprint := "15235999358011640241")
@@ -110,6 +112,14 @@ every run that reaches it, and a run with fewer outcomes refines more
 sources.
 :::
 
+:::readable Fir.PickTotal (fingerprint := "17800813744920209882")
+*Definition: a total rule to pick a callee.* The rule of an op $`o` whose
+callee is picked (#235) is _total_ when, on every operand vector $`v^*` and
+for every test $`\mathit{ok}` of the symbols the run can call,
+$`\mathrm{pick}_o(\mathit{ok}, v^*)` has some outcome: a symbol, or an
+effect such as UB.
+:::
+
 :::readable Fir.ReturnsOnDefined (pin := Fir.HVector.Any) (fingerprint := "10141812518646116617")
 *Definition: a result on defined operands.* An op $`o` _returns a result on
 defined operands_ when some operand vector $`\vec{v}` with no poison
@@ -140,12 +150,24 @@ refinement compositional: a pass that replaces a value by one that refines
 it refines every op that uses it, and so the whole function.
 :::
 
-:::readable Fir.LawfulDialectPoison (pin := Fir.TypesValid) (fingerprint := "4142040794794364572")
+:::readable Fir.PickMonotone (pin := Fir.SetM.IsRefinedBy) (fingerprint := "2506072841411318797")
+*Definition: a monotone rule to pick a callee.* The rule of an op $`o`
+whose callee is picked is _monotone_ when, for tests $`\mathit{ok}` and
+$`\mathit{ok}'` with $`\mathit{ok}'(s)` whenever $`\mathit{ok}(s)`, and
+operand vectors $`v^*` refined by $`v'^*` position by position, every way
+$`\mathrm{pick}_o(\mathit{ok}', v'^*)` may end is allowed by a way
+$`\mathrm{pick}_o(\mathit{ok}, v^*)` may end: UB, or the same symbol. So
+the rule depends on what the run can call only by being UB where the run
+can call less, and a poison operand may make it UB but never pick another
+symbol than a value that refines it does.
+:::
+
+:::readable Fir.LawfulDialectPoison (pin := Fir.TypesValid) (fingerprint := "1182561261174092161")
 *Definition: a lawful dialect.* A dialect is _lawful_ when it meets every
 poison obligation on its valid op instances. An op instance is _valid_
 when validation accepts its operand and result types
 ({ref "The-fir-specification--Validation--The-general-rules"}[the general rules]).
-A lawful dialect meets five clauses:
+A lawful dialect meets seven clauses:
 
 * a poison value of a valid type is {ref "The-fir-specification--Execution--Values-and-refinement"}[refined] by every value of that
   type;
@@ -154,10 +176,18 @@ A lawful dialect meets five clauses:
 * every such instance returns a result on defined operands;
 * every valid op instance that runs by its own rule, that is, a
   terminator, or an op with no callee, is total;
-* every such instance is monotone.
+* every such instance is monotone;
+* every valid op instance whose callee is picked has a total rule to pick
+  it: on every operands, and whatever the run says it can call, the rule
+  has an outcome;
+* that rule is monotone: on operands that refine others, and where the run
+  can call at least the same symbols, every way it may end is UB or the
+  same symbol as a way it may end on those others.
 
-An op with a callee is left out of the last two: it runs its callee, never
-a rule of its own, and its counterparts hold at function level. An
+An op with a callee is left out of the fourth and fifth: it runs its
+callee, never a rule of its own, and its counterparts hold at function
+level. An op whose callee is picked runs its rule first, which the last two
+cover. An
 instance that validation rejects may break an obligation without harm,
 since no valid program runs it. Each core op that touches no memory and
 reads no item of the run meets the obligations, as the section on

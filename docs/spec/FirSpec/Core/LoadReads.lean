@@ -36,7 +36,7 @@ default memory, aligned to 1, so the load of an $`\mathsf{i8}` through the
 pointer to that unit gives the unit $`b`, from $`S_0` and from $`S_1`.
 :::
 
-:::readable Fir.Core.Unlawful.loadNoRead_unlawful (pin := Fir.LawfulDialectEffects) (fingerprint := "10965699435837586507")
+:::readable Fir.Core.Unlawful.loadNoRead_unlawful (pin := Fir.LawfulDialectEffects) (fingerprint := "4155167222183602367")
 *Theorem: the obligations reject the declaration.* Over the core's own
 {ref "The-fir-specification--Memory--The-core___s-rules-with-memory"}[semantics with memory],
 the declaration above is not lawful in its effects. The obligation on an

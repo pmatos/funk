@@ -1,4 +1,5 @@
 import Fir.Execution.TraceFollow
+import Fir.Execution.TraceCallSource
 
 /-!
 # One move of the target, followed by the source
@@ -48,6 +49,26 @@ theorem TCfg.Follows.step (hone : OpsOneStep d A (TraceState Mem unit))
       Func.TStepPath M N f env o os' s e → TraceEnd.NotStuck e →
       Func.traceOps (Step A) M (N + 1) f env os s e := fun hos' h hne =>
     hos' ▸ (Func.tStepPath_iff hne).2 h
+  -- The source's call, or the source's rule that picks the callee hitting UB.
+  have src : ∀ {o : Operation d} {os' : List (Operation d)} {args args' : HVector toType (sig o.op)}
+      {s' : TraceState Mem unit} {δ sym ts} {cargs' : HVector toType ts} {t₀' s'₁},
+      os = o :: os' → s ⊑ s' → isTerminator o.op = false →
+      args.Forall₂ TyRefinement.IsRefinedBy args' →
+      Func.TCallsAt M' o args' s' δ sym ts cargs' 0 t₀' s'₁ →
+      (∃ (cargs : HVector toType ts) (t₀ : List (Step A)) (s₁ : TraceState Mem unit),
+        Func.TCallsAt M o args s δ sym ts cargs 0 t₀ s₁ ∧
+          cargs.Forall₂ TyRefinement.IsRefinedBy cargs' ∧ t₀ ⊑ t₀' ∧ s₁ ⊑ s'₁) ∨
+      (callee? o.op = some .picked ∧ ∃ (r : String) (t : List (Step A)),
+        DialectDenote.pick (m := TraceM (Step A) (TraceState Mem unit)) o.op
+          (M.callable (sig o.op).tail (returnTypes o.op)) args s (.error (r, t)) ∧
+        List.IsRefinedPrefix t t₀') := fun hos' hs hT hr hc => by
+    subst hos'
+    exact hc.source hr hs hcalls.2.2 fun hpc => ((hops _ List.mem_cons_self).2.2 hT hpc).1
+  have hext : ∀ {o : Operation d} {os' : List (Operation d)}, os = o :: os' →
+      TraceMonotoneOps (Step A) (TraceState Mem unit) [o] := fun hos' o' h => by
+    subst hos'
+    rw [List.mem_singleton.1 h]
+    exact hops _ List.mem_cons_self
   cases hmv with
   | @denote _ _ o os' s' s'₁ args' rs' t' hreg hargs' hT hcn hx' hlen' =>
     subst hf hos
@@ -63,20 +84,29 @@ theorem TCfg.Follows.step (hone : OpsOneStep d A (TraceState Mem unit))
         (hlen'.trans (DVals.length_eq_of_isRefinedBy hvs).symm),
         ⟨rfl, rfl, henv.zip_append _ hvs, hs₁, hfm, fun o' h => hops o' (List.mem_cons_of_mem _ h)⟩,
         Step.actsOf_isRefinedBy ht⟩
-  | @ext _ _ o os' s' s'₁ args' sym vs' t' hreg hargs' hT hcs hg' hd' hx' hty' hlen' =>
-    subst hf hos
+  | @ext _ _ o os' s' s'₁ s'₂ args' δ sym ts cargs' t₀' vs' tx' hreg hargs' hT hcs hg' hd' hx' hty'
+      hlen' =>
+    subst hf
     obtain ⟨args, hargs, hr⟩ := henv.operands hargs'
     obtain ⟨hg, hd⟩ := hcalls.ext hg' hd'
-    obtain ⟨e, he, hle⟩ := (hops o List.mem_cons_self).2 hT sym hcs args args' hr s s' hs _ hx'
-    rcases e with ⟨r, t₀⟩ | ⟨vs, t, s₁⟩
-    · exact .inl (ubActs (mk (N := 0) rfl (.extUB hreg hargs hT hcs hg hd he)
-        (TraceEnd.notStuck_error _ _)) (Step.actsOf_isRefinedPrefix hle))
-    · obtain ⟨hvs, ht, hs₁⟩ := hle
-      exact .inr ⟨_, t, 1, .ext hreg hargs hT hcs hg hd he
+    obtain ⟨cargs, t₀, s₁, hc₀, hcr, ht₀, hs₁⟩ | ⟨hpc, r, tp, hpu, htp⟩ := src hos hs hT hr hcs
+    case inr =>
+      exact .inl (ubActs (mk (N := 0) hos (.pickUB hreg hargs hT hpc hpu) (TraceEnd.notStuck_error _ _))
+        (Step.actsOf_isRefinedPrefix (htp.append_right _)))
+    obtain ⟨e, he, hle⟩ := hc₀.extMonotone hT (hext hos) cargs _ hcr s₁ _ hs₁ _ hx'
+    rcases e with ⟨r, t₁⟩ | ⟨vs, t, s₂⟩
+    · refine .inl (ubActs (mk hos (.extUB hreg hargs hT hc₀ hg hd he) (TraceEnd.notStuck_error _ _)) ?_)
+      rw [Step.actsOf_append, Step.actsOf_append]
+      exact (Step.actsOf_isRefinedPrefix hle).append_left (Step.actsOf_isRefinedBy ht₀)
+    · obtain ⟨hvs, ht, hs₂⟩ := hle
+      subst hos
+      refine .inr ⟨_, t₀ ++ t, δ + 1, .ext hreg hargs hT hc₀ hg hd he
         ((DVals.types_eq_of_isRefinedBy hvs).trans hty')
         (hlen'.trans (DVals.length_eq_of_isRefinedBy hvs).symm),
-        ⟨rfl, rfl, henv.zip_append _ hvs, hs₁, hfm, fun o' h => hops o' (List.mem_cons_of_mem _ h)⟩,
-        Step.actsOf_isRefinedBy ht⟩
+        ⟨rfl, rfl, henv.zip_append _ hvs, hs₂, hfm, fun o' h => hops o' (List.mem_cons_of_mem _ h)⟩,
+        ?_⟩
+      rw [Step.actsOf_append, Step.actsOf_append]
+      exact List.IsRefinedBy.append (Step.actsOf_isRefinedBy ht₀) (Step.actsOf_isRefinedBy ht)
   | @goto _ _ env'₁ o os' s' s'₁ args' i t' b hreg hargs' hT hos' hx' hj' =>
     subst hf hos
     obtain ⟨args, hargs, hr⟩ := henv.operands hargs'
@@ -89,63 +119,82 @@ theorem TCfg.Follows.step (hone : OpsOneStep d A (TraceState Mem unit))
       obtain ⟨env₁, hj, henv₁⟩ := henv.jump hj'
       exact .inr ⟨_, t, 1, .goto hreg hargs hT hos' he hj,
         ⟨rfl, rfl, henv₁, hs₁, hfm, hfm.jump hj⟩, Step.actsOf_isRefinedBy ht⟩
-  | @ret _ _ o os' s' s'₁ args' sym g₀ body' genv' U k' vs' t' hreg hargs' hT hcs hg' hen' hx' hty' hlen' =>
-    subst hf hos
+  | @ret _ _ o os' s' s'₁ s'₂ args' δ sym ts cargs' t₀' g₀ body' genv' U k' vs' tx' hreg hargs' hT hcs
+      hg' hen' hx' hty' hlen' =>
+    subst hf
     obtain ⟨args, hargs, hr⟩ := henv.operands hargs'
-    obtain ⟨g, p, hg, hen, hm⟩ := hcalls.callee_allowed hmono hg' hr hs (p' := (_, _)) hen'
+    obtain ⟨cargs, t₀, s₁, hc₀, hcr, ht₀, hs₁⟩ | ⟨hpc, r, tp, hpu, htp⟩ := src hos hs hT hr hcs
+    case inr =>
+      exact .inl (ubActs (mk (N := 0) hos (.pickUB hreg hargs hT hpc hpu) (TraceEnd.notStuck_error _ _))
+        (Step.actsOf_isRefinedPrefix (htp.append_right _)))
+    obtain ⟨g, p, hg, hen, hm⟩ := hcalls.callee_allowed hmono hg' hcr hs₁ (p' := (_, _)) hen'
       (fun hgm hbm env₀ env₀' h t₀ t₀' ht e₀ he₀ =>
         Func.traceOps_tAllowed hmono hcalls _ _ env₀ env₀' _ t₀ t₀' hgm hbm h ht e₀ he₀) hx' trivial
-    rcases hm with ⟨N, r, mt, hN, hle⟩ | ⟨N, vs, k, t, s₁, hN, hvs, ht, hs₁⟩
-    · exact .inl (ubActs (mk rfl (.callUB hreg hargs hT hcs hg hen hN) (TraceEnd.notStuck_error _ _)) hle)
-    · exact .inr ⟨_, t, N + 1, .ret hreg hargs hT hcs hg hen hN
+    rcases hm with ⟨N, r, mt, hN, hle⟩ | ⟨N, vs, k, t, s₂, hN, hvs, ht, hs₂⟩
+    · refine .inl (ubActs (mk hos (.callUB hreg hargs hT (hc₀.at N) hg hen hN)
+        (TraceEnd.notStuck_error _ _)) ?_)
+      rw [Step.actsOf_append, Step.actsOf_append]
+      exact hle.append_left (Step.actsOf_isRefinedBy ht₀)
+    · subst hos
+      refine .inr ⟨_, t₀ ++ t, N + δ + 1, .ret hreg hargs hT hc₀ hg hen hN
         ((DVals.types_eq_of_isRefinedBy hvs).trans hty')
         (hlen'.trans (DVals.length_eq_of_isRefinedBy hvs).symm),
-        ⟨rfl, rfl, henv.zip_append _ hvs, hs₁, hfm, fun o' h => hops o' (List.mem_cons_of_mem _ h)⟩, ht⟩
-  | @enter _ _ o os' s' args' sym g' body' genv' hreg hargs' hT hcs hg' hen' =>
-    subst hf hos
+        ⟨rfl, rfl, henv.zip_append _ hvs, hs₂, hfm, fun o' h => hops o' (List.mem_cons_of_mem _ h)⟩,
+        ?_⟩
+      rw [Step.actsOf_append, Step.actsOf_append]
+      exact List.IsRefinedBy.append (Step.actsOf_isRefinedBy ht₀) ht
+  | @enter _ _ o os' s' s'₁ args' δ sym ts cargs' t₀' g' body' genv' hreg hargs' hT hcs hg' hen' =>
+    subst hf
     obtain ⟨args, hargs, hr⟩ := henv.operands hargs'
+    obtain ⟨cargs, t₀, s₁, hc₀, hcr, ht₀, hs₁⟩ | ⟨hpc, r, tp, hpu, htp⟩ := src hos hs hT hr hcs
+    case inr =>
+      exact .inl (ubActs (mk (N := 0) hos (.pickUB hreg hargs hT hpc hpu) (TraceEnd.notStuck_error _ _))
+        (Step.actsOf_isRefinedPrefix htp))
+    subst hos
     rcases hcalls.1 sym with hsame | ⟨g, g'', hg, hg'', bb⟩
     · have hg : M.func? sym = some g' := hsame ▸ hg'
-      obtain ⟨genv, hen, hgenv⟩ := Func.enter_isRefinedBy (HVector.toDVals_isRefinedBy hr) hen'
+      obtain ⟨genv, hen, hgenv⟩ := Func.enter_isRefinedBy (HVector.toDVals_isRefinedBy hcr) hen'
       have hgm := hmono g' (List.mem_of_find?_eq_some hg)
-      exact .inr ⟨_, [], 1, .enter hreg hargs hT hcs hg hen,
-        ⟨rfl, rfl, hgenv, TraceState.IsRefinedBy.enter hs, hgm, hgm.enter hen⟩, trivial⟩
+      exact .inr ⟨_, t₀, δ + 1, .enter hreg hargs hT hc₀ hg hen,
+        ⟨rfl, rfl, hgenv, TraceState.IsRefinedBy.enter hs₁, hgm, hgm.enter hen⟩,
+        Step.actsOf_isRefinedBy ht₀⟩
     have hgg : g' = g'' := Option.some.inj (hg'.symm.trans hg'')
     subst hgg
     -- A call of a black box whose callee diverges in the target.
     refine .inl ?_
-    rw [show Step.actsOf ([] : List (Step A)) = [] from rfl, Stream.cat_nil]
     have hsig := bb.sig hen'
-    have hcast : ((args.cast hsig) : HVector toType _).toDVals = args.toDVals := HVector.toDVals_cast _ _
-    have hcast' : ((args'.cast hsig).cast bb.params.symm : HVector toType _).toDVals =
-        args'.toDVals := by rw [HVector.toDVals_cast, HVector.toDVals_cast]
-    have hen'' : g'.enter ((args'.cast hsig).cast bb.params.symm).toDVals = .ok (body', genv') :=
+    have hcast : ((cargs.cast hsig) : HVector toType _).toDVals = cargs.toDVals :=
+      HVector.toDVals_cast _ _
+    have hcast' : ((cargs'.cast hsig).cast bb.params.symm : HVector toType _).toDVals =
+        cargs'.toDVals := by rw [HVector.toDVals_cast, HVector.toDVals_cast]
+    have hen'' : g'.enter ((cargs'.cast hsig).cast bb.params.symm).toDVals = .ok (body', genv') :=
       hcast' ▸ hen'
     have hshow' := hshow.congr (TCfg.exh_iff_traceFrom hen'')
     obtain ⟨t₁, ht₁, hdiv, hact⟩ := hshow'.toObservable hcl
-    obtain ⟨t₀, ht₀, hle⟩ := bb.refines _ _ s s' (HVector.forall₂_cast hsig hr) hs t₁ ht₁
-    match t₀, ht₀, hle with
+    obtain ⟨to, hto, hle⟩ := bb.refines _ _ s₁ s'₁ (HVector.forall₂_cast hsig hcr) hs₁ t₁ ht₁
+    match to, hto, hle with
     | .ub tr r, ⟨N, mt, hN, htr⟩, hle =>
       obtain ⟨body, genv, hen, h⟩ := Func.traceFrom_ub_iff.1 hN
       rw [hcast] at hen
-      refine .inl ⟨N + 1, r, mt, mk rfl (.callUB hreg hargs hT hcs hg hen h)
-        (TraceEnd.notStuck_error _ _), fun i a ha => ?_⟩
+      refine .inl ⟨_, r, t₀ ++ mt, mk rfl (.callUB hreg hargs hT (hc₀.at N) hg hen h)
+        (TraceEnd.notStuck_error _ _), ?_⟩
+      rw [Step.actsOf_append]
+      refine Stream.ShowsRefined.cat (Step.actsOf_isRefinedBy ht₀) fun i a ha => ?_
       obtain ⟨b, hb, hab⟩ := hle i a (htr ▸ ha)
       exact ⟨b, hact i ▸ hb, hab⟩
     | .ret _ _, _, hle =>
       match t₁, hdiv with
       | .diverge _, _ | .reacts _, _ => exact (hle : False).elim
-    | .diverge tr₀, ht₀, hle | .reacts T₀, ht₀, hle =>
-      obtain ⟨K, hK⟩ := TShows.ofObservable ht₀ trivial
+    | .diverge tr₀, hto, hle | .reacts T₀, hto, hle =>
+      obtain ⟨K, hK⟩ := TShows.ofObservable hto trivial
       obtain ⟨mt₀, hmt₀, -⟩ := hK 0
       obtain ⟨body, genv, -, hen, -⟩ := Func.traceFrom_exhausted_iff.1 hmt₀
       have hen₀ := hen
       rw [hcast] at hen₀
       have hK' := hK.congr fun n mt => (TCfg.exh_iff_traceFrom (M := M) hen n mt).symm
       have := TShows.step ((TCfg.Move.enter (M := M) (f := f) (env := env) (os := os')
-        (s := s) hreg hargs hT hcs hg hen₀).tStep hone) hK'
-      rw [show Step.actsOf ([] : List (Step A)) = [] from rfl, Stream.cat_nil] at this
-      refine .inr ⟨_, _, this, fun i => ?_⟩
+        (s := s) hreg hargs hT hc₀ hg hen₀).tStep hone) hK'
+      refine .inr ⟨_, _, this, Stream.IsRefinedBy.cat (Step.actsOf_isRefinedBy ht₀) fun i => ?_⟩
       rw [← hact i]
       exact TOutcome.stream_isRefinedBy (by exact trivial) hdiv hle i
 

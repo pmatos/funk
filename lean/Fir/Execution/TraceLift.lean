@@ -94,6 +94,7 @@ items it gives each op; an external call is UB, as with memory. -/
     letI := DialectMemDenote.denoteAt (d := d) lay ρ L
     { denote op args := TraceM.liftMem (DialectDenote.denote op args)
       exit op args := TraceM.liftMem (DialectDenote.exit op args)
+      pick op ok args := TraceM.liftMem (DialectDenote.pick op ok args)
       extCall g args rs :=
         TraceM.liftMem
           (DialectExtCall.extCall (m := StateT (Memories _ (unitsOf lay)) SetM) g args rs) }
@@ -106,7 +107,7 @@ theorem DialectTrace.ofMem_liftsMem [DecidableEq d.Ty] [DialectCall d] :
   ⟨fun lay ρ L => by
     letI := DialectMemDenote.denoteAt (d := d) lay ρ L
     letI := DialectTrace.traceAt (d := d) lay ρ L
-    exact ⟨fun _ _ => rfl, fun _ _ => rfl⟩,
+    exact ⟨fun _ _ => rfl, fun _ _ => rfl, fun _ _ _ => rfl⟩,
    fun _ _ _ => fun _ _ _ => rfl⟩
 
 end

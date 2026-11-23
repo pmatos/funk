@@ -72,6 +72,7 @@ instance Core.instDialectTrace : DialectTrace CoreDialect where
     letI := DialectMemDenote.denoteAt (d := CoreDialect) lay ρ L
     { denote op args := TraceM.liftMem (DialectDenote.denote op args)
       exit op args := TraceM.liftMem (DialectDenote.exit op args)
+      pick op ok args := TraceM.liftMem (DialectDenote.pick op ok args)
       extCall g args rs := TraceM.liftMem
         (DialectExtCall.extCall (m := StateT (Memory.Memories _ (unitsOf lay)) SetM) g args rs) }
 
@@ -81,7 +82,7 @@ instance Core.liftsMem : LiftsMem CoreDialect :=
   ⟨fun lay ρ L => by
     letI := DialectMemDenote.denoteAt (d := CoreDialect) lay ρ L
     letI := DialectTrace.traceAt (d := CoreDialect) lay ρ L
-    exact ⟨fun _ _ => rfl, fun _ _ => rfl⟩,
+    exact ⟨fun _ _ => rfl, fun _ _ => rfl, fun _ _ _ => rfl⟩,
    fun _ _ _ => fun _ _ _ => rfl⟩
 
 /-- The world's default answer to a core event: no results and no actions. -/
@@ -96,7 +97,7 @@ variable {M : Module CoreDialect} {f : Func CoreDialect} {N : Type} [DecidableEq
 memory, lifted onto the memories of the traced state, wherever a run names
 the core's memories: no op shows an event. -/
 theorem opLiftsMem (op : Op) : OpLiftsMem (d := CoreDialect) lay ρ L op :=
-  fun _ => ⟨rfl, rfl⟩
+  fun _ => ⟨rfl, rfl, fun _ => rfl⟩
 
 /-- Every core function's ops that run by their own rule are monotone in the
 core's traced semantics, wherever a run names the core's memories: each
@@ -106,7 +107,8 @@ theorem traceOpsMonotone (g : Func CoreDialect) :
     letI := DialectTrace.traceAt (d := CoreDialect) lay ρ L
     g.TraceOpsMonotone (DialectTrace.Acts CoreDialect) (TraceState N (unitsOf lay)) :=
   Func.TraceOpsMonotone.ofLift lay ρ L (opLiftsMem lay ρ L) (fun _ _ _ => rfl)
-    fun _ _ o _ hc => Op.memMonotone_all o.op hc lay ρ L
+    fun _ _ o _ => ⟨fun hc => Op.memMonotone_all o.op hc lay ρ L,
+      fun hc => absurd hc (Op.callee_ne_picked o.op)⟩
 
 /-- Every core op that runs by its own rule has finitely many outcomes in
 the core's traced semantics, given the world's answers, wherever a run names

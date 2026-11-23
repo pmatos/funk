@@ -32,6 +32,11 @@ the dividend could be the signed minimum. It rejects UB on a poison operand
 of every other propagating op: an `add` that is UB on a poison operand does
 not meet it. A value that cannot be poison, such as a value of a dialect
 type with no poison, never triggers either clause.
+
+An op whose callee is picked when it runs (#235) first runs the rule that
+picks it, which is a rule of its own: the lawful class asks that rule to be
+total and monotone (`PickTotal`, `PickMonotone`), as it asks the rules of
+terminators and of ops with no callee.
 -/
 
 namespace Fir
@@ -62,6 +67,13 @@ theorem HVector.forall₂_refl {f : α → Type} {r : {a : α} → f a → f a �
     (h : ∀ {a : α} (x : f a), r x x) : ∀ {as : List α} (xs : HVector f as), xs.Forall₂ r xs
   | _, .nil => trivial
   | _, .cons x xs => ⟨h x, HVector.forall₂_refl h xs⟩
+
+/-- Two vectors related position by position are so without their first
+values. -/
+theorem HVector.Forall₂.tail {f : α → Type} {r : {a : α} → f a → f a → Prop} :
+    {as : List α} → {xs ys : HVector f as} → xs.Forall₂ r ys → xs.tail.Forall₂ r ys.tail
+  | [], .nil, .nil, _ => trivial
+  | _ :: _, .cons _ _, .cons _ _, h => h.2
 
 variable {d : Dialect} [TyDenote d.Ty] [TyPoison d.Ty] [DialectSignature d]
 
@@ -183,6 +195,13 @@ def OpTotal (op : d.Op) : Prop :=
     (isTerminator op = false → ∃ e, DialectDenote.denote (m := SetM) op args e) ∧
     (isTerminator op = true → ∃ e, DialectDenote.exit (m := SetM) op args e)
 
+/-- Totality of the rule that picks a callee (#235): on every operand
+vector, and whatever the run says it can call, an op whose callee is picked
+has an outcome. -/
+def PickTotal (op : d.Op) : Prop :=
+  ∀ (ok : Name → Bool) (args : HVector toType (sig op)),
+    ∃ e, DialectDenote.pick (m := SetM) op ok args e
+
 /-- A result on defined operands: on some operand vector with no poison, the
 op returns a result. -/
 def ReturnsOnDefined (op : d.Op) : Prop :=
@@ -201,11 +220,24 @@ def OpMonotone (op : d.Op) : Prop :=
       (isTerminator op = true →
         SetM.IsRefinedBy Eq (DialectDenote.exit op args) (DialectDenote.exit op args'))
 
+/-- Monotonicity of the rule that picks a callee (#235): on operands that
+refine `args` position by position, and where the run can call each symbol
+that `ok` accepts, every way an op whose callee is picked may end is
+allowed by a way it may end on `args` with `ok`: UB, or the same symbol.
+So the rule depends on what the run can call only by being UB where the
+run can call less. -/
+def PickMonotone (op : d.Op) : Prop :=
+  ∀ (ok ok' : Name → Bool), (∀ s, ok s = true → ok' s = true) →
+    ∀ args args' : HVector toType (sig op), args.Forall₂ TyRefinement.IsRefinedBy args' →
+      SetM.IsRefinedBy Eq (DialectDenote.pick op ok args) (DialectDenote.pick op ok' args')
+
 /-- A dialect whose valid op instances meet the poison obligations: a
 poison value of a valid type is refined by every value of its type; every
 valid instance that propagates poison propagates it and returns a result
 on some defined operands; and every valid instance that runs by its own
-rule, a terminator or an op with no callee, is total and monotone. -/
+rule, a terminator or an op with no callee, is total and monotone; and
+every valid instance whose rule picks its callee picks it totally and
+monotonically. -/
 class LawfulDialectPoison (d : Dialect) [TyDenote d.Ty] [TyPoison d.Ty] [TyRefinement d.Ty]
     [DialectSignature d] [DialectEffects d] [DialectDenote d SetM] [DialectCall d]
     [DialectValidation d] : Prop where
@@ -217,5 +249,7 @@ class LawfulDialectPoison (d : Dialect) [TyDenote d.Ty] [TyPoison d.Ty] [TyRefin
   total : ∀ op : d.Op, TypesValid op → isTerminator op = true ∨ callee? op = none → OpTotal op
   monotone : ∀ op : d.Op, TypesValid op → isTerminator op = true ∨ callee? op = none →
     OpMonotone op
+  pickTotal : ∀ op : d.Op, TypesValid op → callee? op = some .picked → PickTotal op
+  pickMonotone : ∀ op : d.Op, TypesValid op → callee? op = some .picked → PickMonotone op
 
 end Fir

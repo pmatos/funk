@@ -19,6 +19,10 @@ are seen at:
   computations with memory: moving values to the sum's types does, and so
   does crossing a lawful inclusion up.
 
+The rule that picks the callee of an op of a side (#235) is that side's
+rule, on the same test of what the run can call, and gives a symbol, which
+no map changes, so it is monotone in the sum when it is in its side.
+
 Neither needs a semantics in the set monad, so a side whose ops touch
 memory may take part.
 -/
@@ -42,6 +46,13 @@ theorem memMonotone_inl {o : base.Op} (h : MemMonotone o) :
       rw [← forall₂_refines_ofSum, HVector.ofSum_toSum, HVector.ofSum_toSum]
       exact ha) (hm.1 hn), hm.2⟩
 
+/-- A base op whose rule picks its callee monotonically with memory in the
+base does so in the sum. -/
+theorem memPickMonotone_inl {o : base.Op} (h : MemPickMonotone o) :
+    MemPickMonotone (d := base ⊞ e) (.inl o) := fun lay ρ L ok ok' hok args args' hargs =>
+  h lay (ρ ∘ DialectMemOver.ofBase) L ok ok' hok (HVector.ofSum args) (HVector.ofSum args')
+    ((forall₂_refines_ofSum args args').2 hargs)
+
 variable [DialectCall base] [DialectCall (base.over e)]
   [DialectValidation base] [DialectValidation (base.over e)]
 
@@ -54,6 +65,9 @@ theorem lawfulMonotone [h₁ : LawfulDialectMonotone base]
   monotone
     | .inl o, hv, hc => memMonotone_inl (h₁.monotone o (typesValid_inl hv) hc)
     | .inr o, hv, hc => h₂.monotone o (typesValid_inr hty hv) hc
+  pickMonotone
+    | .inl o, hv, hc => memPickMonotone_inl (h₁.pickMonotone o (typesValid_inl hv) hc)
+    | .inr o, hv, hc => h₂.pickMonotone o (typesValid_inr hty hv) hc
 
 end Dialect.sum
 
@@ -76,6 +90,15 @@ theorem memMonotone_lift (hι : ι.Lawful) {o : e.Op} (h : MemMonotone (d := dep
     (fun {a a'} ha => (HVector.forall₂_up (incl_lawful e μ hι).isRefinedBy_up a a').2 ha)
     (hm.1 hn), hm.2⟩
 
+/-- An op of `e` whose rule picks its callee monotonically with memory over
+`dep` does so in the lift, when the inclusion is lawful. -/
+theorem memPickMonotone_lift (hι : ι.Lawful) {o : e.Op}
+    (h : MemPickMonotone (d := dep.over e) o) :
+    MemPickMonotone (d := big.over (e.lift dep ι μ)) o := fun lay ρ L ok ok' hok args args' hargs =>
+  h lay (ρ ∘ liftMem μ) L ok ok' hok (HVector.down (incl e ι μ) args)
+    (HVector.down (incl e ι μ) args')
+    ((HVector.forall₂_down (incl_lawful e μ hι).isRefinedBy_up args args').2 hargs)
+
 variable [DialectCall (dep.over e)] [DialectValidation big] [DialectValidation (dep.over e)]
 
 /-- The lift of an extension lawful in its monotonicity is lawful in its
@@ -85,6 +108,7 @@ theorem lawfulMonotone [h : LawfulDialectMonotone (dep.over e)] (hι : ι.Lawful
     (hty : ∀ t : dep.Ty, validTy (ι.incl t) → validTy (d := dep.over e) (.inl t)) :
     LawfulDialectMonotone (big.over (e.lift dep ι μ)) where
   monotone o hv hc := memMonotone_lift hι (h.monotone o (typesValid_lift hty hv) hc)
+  pickMonotone o hv hc := memPickMonotone_lift hι (h.pickMonotone o (typesValid_lift hty hv) hc)
 
 variable [DialectSignature big] [DialectCall big] [DialectMemDenote big]
 

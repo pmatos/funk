@@ -87,6 +87,8 @@ theorem retOps_iff {M : Module CallDialect} {f : Func CallDialect} (hres : f.res
       | callRet _ _ hT => cases hT
       | extUB _ _ hT => cases hT
       | ext _ _ hT => cases hT
+      | pickUB _ _ hT => cases hT
+      | pickExh _ _ hT => cases hT
   · rintro (⟨rfl, rfl⟩ | ⟨m, rfl, rfl⟩)
     · exact Func.traceOps_zero.2 rfl
     · exact (Func.tStepPath_iff (TraceEnd.notStuck_ok _ _ _)).2

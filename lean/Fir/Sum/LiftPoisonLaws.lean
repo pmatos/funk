@@ -205,6 +205,11 @@ theorem lawfulPoison {μ : DialectEffects.Mem dep → DialectEffects.Mem big}
       (HVector.down (incl e ι μ) args')
       ((HVector.forall₂_down (incl_lawful e μ hι).isRefinedBy_up args args').2 hargs)
     exact ⟨fun hn => HVector.isRefinedBy_map_up (incl_lawful e μ hι) (hm.1 hn), hm.2⟩
+  pickTotal o hv hc ok args :=
+    h₂.pickTotal o (typesValid_lift hty hv) hc ok (HVector.down (incl e ι μ) args)
+  pickMonotone o hv hc ok ok' hok args args' hargs :=
+    h₂.pickMonotone o (typesValid_lift hty hv) hc ok ok' hok _ _
+      ((HVector.forall₂_down (incl_lawful e μ hι).isRefinedBy_up args args').2 hargs)
 
 /-- The sum of a lawful `big` and the lift of a lawful extension into it is
 lawful, when the inclusion is lawful and `e` accepts each type of `dep`

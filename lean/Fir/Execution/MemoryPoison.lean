@@ -217,6 +217,8 @@ theorem LawfulDialectPoison.ofMem [LawfulDialectMemPoison d] [LawfulDialectTotal
   returnsOnDefined op hv hc := MemReturnsOnDefined.setM (LawfulDialectMemPoison.returnsOnDefined op hv hc)
   total op hv hc := MemTotal.setM (LawfulDialectTotal.total op hv hc)
   monotone op hv hc := MemMonotone.setM (LawfulDialectMonotone.monotone op hv hc)
+  pickTotal op hv hc := MemPickTotal.setM (LawfulDialectTotal.pickTotal op hv hc)
+  pickMonotone op hv hc := MemPickMonotone.setM (LawfulDialectMonotone.pickMonotone op hv hc)
 
 /-- In a dialect that lifts the set monad, the poison obligations hold
 exactly when the obligations with memory do: it is lawful exactly when it is

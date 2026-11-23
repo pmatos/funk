@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Calls as black boxes: readable blocks" =>
 
-:::moduleDocs (fingerprint := "6479642496386002928")
+:::moduleDocs (fingerprint := "12147049884133241294")
 :::
 
 :::readable Fir.HVector.cast Fir.HVector.toDVals_cast Fir.HVector.forall₂_cast (fingerprint := "1918683470415412202")
@@ -75,7 +75,7 @@ bound is what the section on
 needs to relate the two budgets.
 :::
 
-:::readable Fir.CallsRefined (fingerprint := "8673431818244253080")
+:::readable Fir.CallsRefined (fingerprint := "15864324874677863284")
 *Definition: the target runs each call as the source does.* For modules
 $`M` and $`M'` and a bound $`\beta`, every symbol $`s` names the same
 function in both, $`\mathrm{lookup}_{M'}(s) = \mathrm{lookup}_M(s)`, or
@@ -86,7 +86,11 @@ the bound $`\beta`. And $`M'`
 no symbol for types that $`M` does not declare it for, so that a call
 that goes to the external-call rule in $`M'` goes to it in $`M` too.
 $`M` may declare more: where only $`M` declares a symbol, a call to it is
-stuck in $`M'`, and a stuck path asks nothing. Here
+stuck in $`M'`, and a stuck path asks nothing. And $`M'` can call each
+symbol that $`M` can, at the same types
+($`\mathrm{callable}_M(t^*, r^*)(s) \implies \mathrm{callable}_{M'}(t^*, r^*)(s)`),
+so that the rule of an op that picks its callee, given what the target
+can call, picks in the target no less than in the source (#235). Here
 $`\mathrm{lookup}_M(s)` is the function that a call of $`s` runs in $`M`,
 as the
 {ref "The-fir-specification--Execution--The-interpreter"}[interpreter]
@@ -105,7 +109,7 @@ names no function of $`M`, and $`M` declares it for those types too: the
 call goes to the external-call rule in both.
 :::
 
-:::readable Fir.Ev.addLeft Fir.Func.call_cont (pin := Fir.Ahead) (fingerprint := "269872429721377223")
+:::readable Fir.Ev.addLeft Fir.Func.call_cont (pin := Fir.Ahead) (fingerprint := "7883612061957206949")
 *Definition and theorem: a caller goes on after its callee at the sum of
 their budgets.*
 For an end $`e` of a run of ops, $`e + k` is $`e` with $`k` more steps
@@ -116,22 +120,26 @@ Let the call step of the
 {ref "The-fir-specification--Execution--The-ways-a-step-goes-on"}[eighth way]
 apply to the first op $`o` of $`o\,o'^*`: $`o` owns no region of the
 core's kind, the values
-$`v^*` of its operands are found in $`E`, $`o` is not a terminator and
-calls the symbol $`s`, $`g = \mathrm{lookup}_M(s)`, and entering $`g`
-with $`v^*` starts at the ops $`p^*` in the environment $`G`. Let
+$`v^*` of its operands are found in $`E`, $`o` is not a terminator and,
+with $`n` steps after its own,
+{ref "The-fir-specification--Execution--The-callee-of-a-call"}[calls]
+the symbol $`s` on the arguments $`a^*` with $`n'` steps,
+$`g = \mathrm{lookup}_M(s)`, and entering $`g` with $`a^*` starts at the
+ops $`p^*` in the environment $`G`. Let
 $`\mathsf{ret}~(u^*, k) \in \mathrm{run}_M(N_1, g, G, p^*)`, with the
 types of $`u^*` the result types of $`o` and as many values as the names
 $`x^*` of its results. Let $`e`, neither stuck nor
 $`\mathsf{fuel\_exhausted}`, be an end of
 $`\mathrm{run}_M(N_2, f, [x^* \mapsto u^*] \cdot E, o'^*)`. Then
 
-$$`e + k \in \mathrm{run}_M(N_1 + N_2 + 1, f, E, o\,o'^*)`
+$$`e + k \in \mathrm{run}_M(N_1 + (n - n') + N_2 + 1, f, E, o\,o'^*)`
 
 Given $`N_2` more steps, the callee returns the same values and leaves
 $`N_2` more, as the section on
 {ref "The-fir-specification--Execution--The-runs-of-a-function___-and-fuel-monotonicity"}[the runs of a function]
 proves; the rest then runs with $`k + N_2` steps, which is $`k` more than
-it needed, and ends the same way, leaving $`k` more. A call adds the
+it needed, and ends the same way, leaving $`k` more. An op that picks its
+callee spends one more step, $`n - n' = 1`, for its call. A call adds the
 budgets of its parts, which the refinement proofs use to put a source's
 budget together from its callee's budget and that of the rest of the
 caller's ops after the call.

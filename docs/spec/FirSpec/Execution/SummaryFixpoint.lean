@@ -14,7 +14,7 @@ build fails when the Lean changes under it.
 
 #doc (Manual) "The summary is the least fixpoint: readable blocks" =>
 
-:::moduleDocs (fingerprint := "6579528842134264182")
+:::moduleDocs (fingerprint := "17652757386047602203")
 :::
 
 :::readable Fir.SymbolTable.Closed (fingerprint := "3623272267800276189")
@@ -62,4 +62,23 @@ $`\mathrm{caller}(\mathrm{eff}(o)) \le \mathrm{sum}_t(s)` and
 $`\mathrm{caller}(\mathrm{eff}_t(o)) \le \mathrm{sum}_t(s)`: the effects
 of an op in place, its callee's summary included, are below its
 function's summary, but for control.
+:::
+
+:::readable Fir.SymbolTable.all_le_opOwn Fir.SymbolTable.opOwn_picked (fingerprint := "1582699255287693613")
+*Theorems: what a caller sees of an op that picks its callee.* What a
+caller sees of an op that picks its callee is at least every effect but
+control: its callee is unknown (ADR-2026-11-09-1541). So it may be UB and
+may give poison.
+:::
+
+:::readable Fir.Effects.Le.mayUB_false Fir.Effects.Le.mayPoison_false (pin := Fir.Effects.Le) (fingerprint := "3284232413199481622")
+*Theorems: a smaller set leaves out what a larger one leaves out.* If
+$`a \le b` and $`b` leaves out may-UB, so does $`a`; and likewise for may
+produce poison.
+:::
+
+:::readable Fir.SymbolTable.not_picked_of_mayUB Fir.SymbolTable.not_picked_of_mayPoison (fingerprint := "16041969994010060273")
+*Theorems: a summary that leaves out may-UB or may produce poison rules out
+a picked callee.* A function of the table whose summary leaves out may-UB,
+or may produce poison, has no op, at any depth, that picks its callee.
 :::

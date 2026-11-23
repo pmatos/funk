@@ -17,7 +17,9 @@ obligations do (`docs/decisions/semantics-interpreter.md#memory-and-progress-wit
 
 It looks only at what runs by the op's own rule, and speaks only of valid
 op instances, as the poison obligations do. An op with a callee goes on by
-its callee's run, and needs no rule of its own (ADR-2026-10-29-2006).
+its callee's run, and needs no rule of its own (ADR-2026-10-29-2006). An op
+whose callee is picked (#235) runs its rule that picks first, and the class
+asks that rule to have an outcome from any memories too (`MemPickTotal`).
 
 It holds as the obligation on may-UB does:
 
@@ -103,11 +105,22 @@ def MemTotal (op : d.Op) : Prop :=
   ∀ {N : Type} [DecidableEq N] (lay : N → MemLayout) (ρ : DialectEffects.Mem d → N) (L : RunItems),
     OwnRuleHas lay ρ L HasOutcome op
 
+/-- Total with memory, for the rule that picks a callee (#235): wherever a
+run names the dialect's memories, on every operand vector and whatever the
+run says it can call, the rule has an outcome from any memories. -/
+def MemPickTotal (op : d.Op) : Prop :=
+  ∀ {N : Type} [DecidableEq N] (lay : N → MemLayout) (ρ : DialectEffects.Mem d → N) (L : RunItems),
+    letI := DialectMemDenote.denoteAt (d := d) lay ρ L
+    ∀ (ok : Name → Bool) (args : HVector toType (sig op)),
+      HasOutcome (DialectDenote.pick (m := StateT (Memories N (unitsOf lay)) SetM) op ok args)
+
 /-- A dialect lawful in its totality: every valid instance that runs by its
-own rule, a terminator or an op with no callee, is total with memory. -/
+own rule, a terminator or an op with no callee, is total with memory, and so
+is the rule of every valid instance whose callee is picked. -/
 class LawfulDialectTotal (d : Dialect) [TyDenote d.Ty] [DialectSignature d] [DialectEffects d]
     [DialectCall d] [DialectValidation d] [DialectMemDenote d] : Prop where
   total : ∀ op : d.Op, TypesValid op → isTerminator op = true ∨ callee? op = none → MemTotal op
+  pickTotal : ∀ op : d.Op, TypesValid op → callee? op = some .picked → MemPickTotal op
 
 end
 
@@ -120,8 +133,16 @@ variable {d : Dialect} [TyDenote d.Ty] [DialectSignature d] [DialectEffects d]
 with memory. -/
 theorem MemTotal.ofLifts {op : d.Op} (hl : OpLiftsSetM op) (h : OpTotal op) : MemTotal op :=
   fun lay ρ L args => by
-    rw [(hl lay ρ L args).1, (hl lay ρ L args).2]
+    rw [(hl lay ρ L args).1, (hl lay ρ L args).2.1]
     exact ⟨fun ht => hasOutcome_lift ((h args).1 ht), fun ht => hasOutcome_lift ((h args).2 ht)⟩
+
+/-- An op that touches no memory and picks its callee totally in the set
+monad picks it totally with memory. -/
+theorem MemPickTotal.ofLifts {op : d.Op} (hl : OpLiftsSetM op) (h : PickTotal op) :
+    MemPickTotal op :=
+  fun lay ρ L ok args => by
+    rw [(hl lay ρ L args).2.2 ok]
+    exact hasOutcome_lift (h ok args)
 
 variable [LiftsSetM d]
 
@@ -133,10 +154,20 @@ theorem MemTotal.setM {op : d.Op} (h : MemTotal op) : OpTotal op := by
   rw [LiftsSetM.lifts] at hu
   exact ⟨fun ht => (hu.1 ht).of_lift Memories.empty, fun ht => (hu.2 ht).of_lift Memories.empty⟩
 
+/-- In a dialect that lifts the set monad, a rule that picks a callee
+totally with memory does so in the set monad. -/
+theorem MemPickTotal.setM {op : d.Op} (h : MemPickTotal op) : PickTotal op := by
+  intro ok args
+  have hu := h (N := Unit) (fun _ => MemLayout.default) (fun _ => ()) RunItems.empty ok args
+  rw [LiftsSetM.lifts] at hu
+  exact hu.of_lift Memories.empty
+
 /-- A lawful dialect that lifts the set monad is lawful in its totality: its
 totality in the set monad holds with memory. -/
 theorem LawfulDialectTotal.ofLawful [DialectCall d] [DialectValidation d] [TyPoison d.Ty]
     [TyRefinement d.Ty] [LawfulDialectPoison d] : LawfulDialectTotal d where
   total op hv hc := MemTotal.ofLifts (LiftsSetM.opLifts op) (LawfulDialectPoison.total op hv hc)
+  pickTotal op hv hc :=
+    MemPickTotal.ofLifts (LiftsSetM.opLifts op) (LawfulDialectPoison.pickTotal op hv hc)
 
 end Fir

@@ -116,6 +116,14 @@ theorem Module.symbols_replaceBody (M : Module d) (s : Name) (b : Region d) :
   simp only [Module.symbols, Module.funcs_replaceBody, List.find?_map, Option.map_map]
   rfl
 
+/-- Replacing a body keeps what the module can call: every function keeps
+its type, and every external declaration stays. -/
+theorem Module.callable_replaceBody [TyDenote d.Ty] [DecidableEq d.Ty] (M : Module d) (s : Name)
+    (b : Region d) (ts rs : List d.Ty) (x : Name) :
+    (M.replaceBody s b).callable ts rs x = M.callable ts rs x := by
+  simp only [Module.callable, Module.func?_replaceBody, Module.declares_replaceBody]
+  cases M.func? x <;> rfl
+
 /-- Replacing a body keeps the aggregates' layouts of the module's own
 table. -/
 theorem Module.layouts_replaceBody (M : Module d) (s : Name) (b : Region d) :

@@ -1,4 +1,4 @@
-import Fir.Execution.TraceMoveCases
+import Fir.Execution.TraceMoveFinite
 import Fir.Execution.TraceKonig
 import Fir.Execution.TraceBlackBox
 

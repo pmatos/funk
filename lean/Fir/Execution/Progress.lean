@@ -245,7 +245,8 @@ theorem Func.straight_noStuck (hv : f.Valid ctx) (hs : f.Straight) (he : f.block
         rw [Env.bind_ok _ _ hlen] at henv'
         cases (run_liftExcept _ _).1 henv'
         exact ih (i + 1) _ (hnext (by simpa using hT)) (Func.holds_next hv he hep hi hold rs hrty)
-      · rename_i heq
+      all_goals
+        rename_i heq
         rw [hs.noCall e hmem _ ho] at heq
         cases heq
 
@@ -291,7 +292,8 @@ theorem Func.straight_hasPath (hv : f.Valid ctx) (hs : f.Straight)
           (Func.holds_next hv he hep hi hold rs hrty))
         rw [Env.bind_ok _ _ hlen]
         rfl
-      · rename_i heq
+      all_goals
+        rename_i heq
         rw [hs.noCall e hmem _ ho] at heq
         cases heq
 

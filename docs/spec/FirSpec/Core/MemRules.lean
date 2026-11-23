@@ -32,7 +32,7 @@ $`\mathsf{unreachable}`'s, to the same rule in $`n`: a result maps to the
 same result, and UB to UB for the same reason.
 :::
 
-:::readable Fir.Core.denoteIn_mapsDenote (pin := Fir.Core.denoteIn) (pin := Fir.MonadMorphism.MapsDenote) (fingerprint := "2231277382733149318")
+:::readable Fir.Core.denoteIn_mapsDenote (pin := Fir.Core.denoteIn) (pin := Fir.MonadMorphism.MapsDenote) (fingerprint := "9993117668522461")
 *Theorem: every core op means the same in both monads.* Let $`\varphi` be
 a monad morphism from $`m` to $`n` that keeps choice and UB, and let
 $`z_m` and $`z_n` say what an op with no rule does in $`m` and in $`n`, with
@@ -41,7 +41,8 @@ $`\varphi(z_m(p)) = z_n(p)` for every op $`p`. Then $`\varphi`
 semantics in $`m` with $`z_m` to its semantics in $`n` with $`z_n`: for
 every core op $`p` and operand vector $`\vec{v}`, it maps
 $`\mathrm{denote}_p(\vec{v})` and $`\mathrm{exit}_p(\vec{v})` in $`m` to
-those in $`n`.
+those in $`n`, and the rule to pick a callee, $`z_m(p)`, to $`z_n(p)`, by
+the hypothesis.
 
 The proof goes op by op. An op whose rule gives its result at once maps by
 $`\varphi(\mathsf{pure}~r) = \mathsf{pure}~r`. $`\mathsf{freeze}`, the
@@ -52,7 +53,7 @@ keeps UB; and an op with no rule, as $`\mathsf{call}`, maps by the
 hypothesis on $`z_m` and $`z_n`.
 :::
 
-:::readable Fir.Core.Op.memDenote? Fir.Core.Op.memExit? Fir.Core.memDenoteIn (pin := Fir.Core.denoteWith) (pin := Fir.MonadMemory) (pin := Fir.Core.allocaRule) (fingerprint := "11121080505334148759")
+:::readable Fir.Core.Op.memDenote? Fir.Core.Op.memExit? Fir.Core.memDenoteIn (pin := Fir.Core.denoteWith) (pin := Fir.MonadMemory) (pin := Fir.Core.allocaRule) (fingerprint := "9924537363333144154")
 *Definition: the core's rules with memory.* Let $`m` be a monad with
 choice, UB and the
 {ref "The-fir-specification--Memory--The-memory-effect"}[memory effect] on
@@ -101,7 +102,8 @@ is its
 
 The core's semantics in $`m` at $`\ell`, $`\rho` and $`L`, with $`z` for an op
 with no rule, gives each op its rule with memory, and $`z(p)` to an op
-$`p` that has none.
+$`p` that has none, and as its rule to pick a callee, since no core op picks
+one.
 :::
 
 :::readable Fir.Core.memCopyRule_map Fir.Core.memDenoteIn_mapsDenote (pin := Fir.Core.memCopyRule) (fingerprint := "12713930000773128625")
@@ -149,15 +151,15 @@ $`\mathsf{alloca}`, the loads and stores, the copies and moves and the
 fills do.
 :::
 
-:::readable Fir.Core.Op.liftsSetM (pin := Fir.OpLiftsSetM) (fingerprint := "6022338225824521883")
+:::readable Fir.Core.Op.liftsSetM (pin := Fir.OpLiftsSetM) (fingerprint := "74384437735182071")
 *Theorem: every core op that touches no memory and reads no item is tied.*
 For every core op $`p` but $`\mathsf{alloca}`, the loads, the stores,
 $`\mathsf{fieldaddr}`, $`\mathsf{globaladdr}`, the copies and moves, the
 fills, $`\mathsf{ptr\_expose}` and $`\mathsf{ptr\_from\_int}`, at every
 layout $`\ell`,
 naming $`\rho` and record of items $`L`, on every operand vector, $`p`'s meaning with
-memory is its meaning in the set monad, lifted into the state layer: it
-keeps the memories. Lifting
+memory, its exit and its rule to pick a callee are those in the set monad,
+lifted into the state layer: it keeps the memories. Lifting
 {ref "The-fir-specification--Memory--Runs-with-memory"}[keeps choice and UB],
 and maps an op with no rule, which has no way to end in the set monad, to
 one with no way to end in the layer, so the theorem above maps the core's

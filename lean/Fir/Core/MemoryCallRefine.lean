@@ -97,7 +97,8 @@ those functions declares no memory effect. -/
 theorem reachesNoMemory {t : SymbolTable CoreDialect} {s : Name}
     (h : ∀ g ∈ t.reach [s] [], ∀ f, t.func? g = some f → ∀ o ∈ f.allOps,
       o.op.touchesMemory = false) : t.ReachesNoMemory s :=
-  fun g hg f hf o ho => Op.effects_touchesNoMemory o.op (h g hg f hf o ho)
+  ⟨fun g hg f hf o ho => Op.effects_touchesNoMemory o.op (h g hg f hf o ho),
+    fun ⟨_, _, _, _, o, _, hp⟩ => absurd hp (by simp [Operation.picks, Op.callee_ne_picked o.op])⟩
 
 /-- A function of a core table reaches no memory when no function of the
 table has an op that touches memory. -/
@@ -114,7 +115,8 @@ the memories, or, for `fieldAddr` and `globalAddr`, gives its result at
 once and keeps them. -/
 theorem opsIgnoreMemory :
     letI := DialectMemDenote.denoteAt (d := CoreDialect) lay ρ L
-    OpsIgnoreMemory CoreDialect N (unitsOf lay) := fun op _ h => by
+    OpsIgnoreMemory CoreDialect N (unitsOf lay) := by
+  refine ⟨fun op _ h => ?_, fun op hc => absurd hc (Op.callee_ne_picked op)⟩
   cases hi : op.readsItems with
   | false =>
     exact OwnRuleHas.ofLifts (Op.liftsSetM op (Op.touchesMemory_false h) hi) lay ρ L
@@ -135,7 +137,8 @@ loads and stores, `fieldAddr`, `globalAddr`, `memCopy`, `memSet`,
 `ptrExpose` and `ptrFromInt` have finitely many by their own rules. -/
 theorem opsFinite :
     letI := DialectMemDenote.denoteAt (d := CoreDialect) lay ρ L
-    OpsFinite CoreDialect N (unitsOf lay) := fun op _ args => by
+    OpsFinite CoreDialect N (unitsOf lay) := by
+  refine ⟨fun op _ args => ?_, fun op hc => absurd hc (Op.callee_ne_picked op)⟩
   cases hmem : op.touchesMemory with
   | true =>
     cases op <;> try cases hmem
@@ -159,7 +162,7 @@ theorem opsFinite :
   | false => ?_
   have hm := denoteIn_mapsDenote (ChoiceTree.toSetMorphism (ε := Op)) ChoiceTree.toSet_keeps
     (fun op => .noOutcome op) (fun _ _ => False) fun _ => rfl
-  rw [(Op.liftsSetM op hmem hi lay ρ L args).1, (Op.liftsSetM op hmem hi lay ρ L args).2]
+  rw [(Op.liftsSetM op hmem hi lay ρ L args).1, (Op.liftsSetM op hmem hi lay ρ L args).2.1]
   refine ⟨fun _ => FinitelyMany.lift ?_, fun _ => FinitelyMany.lift ?_⟩
   · rw [← hm.denote op args]
     exact ChoiceTree.toSet_finitelyMany _
@@ -233,5 +236,21 @@ theorem caller_isRefinedBy (hM : M.Valid) {g : Func CoreDialect} (hg : g ∈ M.f
   change f.memRuns lay ρ L M ⊑
     Func.memRuns lay ρ L _ { f with body := if f.name = g.name then b else f.body } at this
   rwa [ite_eq_right hfg] at this
+
+/-! # Refined arguments -/
+
+/-- Refined arguments, with memory: on arguments that refine others, a
+poison by any value, the runs with memory of every function of every core
+module refine its runs with memory on those others, calls and recursion
+included, wherever a run names the core's memories. -/
+theorem args_isRefinedBy (M : Module CoreDialect) (f : Func CoreDialect)
+    {a a' : HVector toType (f.params.map (·.2))} (h : a.Forall₂ TyRefinement.IsRefinedBy a') :
+    observable (f.memRuns lay ρ L M a) ⊑ observable (f.memRuns lay ρ L M a') :=
+  letI := DialectMemDenote.denoteAt (d := CoreDialect) lay ρ L
+  have hm : ∀ g : Func CoreDialect, g.MemOpsMonotone N (unitsOf lay) :=
+    fun _ _ _ o _ => ⟨fun hc => Op.memMonotone_all o.op hc lay ρ L,
+      fun hc => absurd hc (Op.callee_ne_picked o.op)⟩
+  Func.memRuns_isRefinedBy_of_from lay ρ L (Func.memRunsFrom_args_isRefinedBy M (fun g _ => hm g) f
+    (hm f) h (Memory.Memories.isRefinedBy_refl _))
 
 end Fir.Core

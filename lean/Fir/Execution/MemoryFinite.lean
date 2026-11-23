@@ -125,14 +125,43 @@ variable {Mem : Type} {unit : Mem → Nat} [DecidableEq Mem]
 
 /-- Every op of `d` that runs by its own rule, a terminator or an op with no
 callee, has finitely many outcomes with memory, from each operands, as an op
-that is not a terminator and as a terminator. -/
+that is not a terminator and as a terminator; and so has the rule of every
+op whose callee is picked, whatever the run says it can call. -/
 def OpsFinite (d : Dialect) [TyDenote d.Ty] [DialectSignature d] [DialectCall d] (Mem : Type)
     (unit : Mem → Nat) [DialectDenote d (StateT (Memories Mem unit) SetM)] : Prop :=
-  ∀ op : d.Op, isTerminator op = true ∨ callee? op = none → ∀ args : HVector toType (sig op),
+  (∀ op : d.Op, isTerminator op = true ∨ callee? op = none → ∀ args : HVector toType (sig op),
     (isTerminator op = false →
       FinitelyMany (DialectDenote.denote (m := StateT (Memories Mem unit) SetM) op args)) ∧
     (isTerminator op = true →
-      FinitelyMany (DialectDenote.exit (m := StateT (Memories Mem unit) SetM) op args))
+      FinitelyMany (DialectDenote.exit (m := StateT (Memories Mem unit) SetM) op args))) ∧
+  ∀ op : d.Op, callee? op = some .picked → ∀ (ok : Name → Bool) (args : HVector toType (sig op)),
+    FinitelyMany (DialectDenote.pick (m := StateT (Memories Mem unit) SetM) op ok args)
+
+omit [DecidableEq Mem] in
+/-- An op, on its operands, from given memories, calls finitely many
+symbols on finitely many arguments from finitely many memories, when the
+rule of each op whose callee is picked has finitely many outcomes. -/
+theorem Func.MemCallsAt.cover (hfin : OpsFinite d Mem unit) (M : Module d) (o : Operation d)
+    (args : HVector toType (sig o.op)) (S : Memories Mem unit) :
+    ∃ T : List (Name × List (DVal d) × Nat × Memories Mem unit),
+      ∀ n s ts (cargs : HVector toType ts) n' S₁,
+        Func.MemCallsAt M o args S n s ts cargs n' S₁ → (s, cargs.toDVals, n - n', S₁) ∈ T := by
+  cases hc : callee? o.op with
+  | none => exact ⟨[], fun _ _ _ _ _ _ h => by cases h <;> simp_all⟩
+  | some c =>
+  cases c with
+  | fixed s =>
+    refine ⟨[(s, args.toDVals, 0, S)], fun n s' ts cargs n' S₁ h => ?_⟩
+    cases h with
+    | fixed hc' =>
+      rw [hc'] at hc; cases hc; rw [Nat.sub_self]; exact List.mem_singleton_self _
+    | picked hc' => rw [hc'] at hc; cases hc
+  | picked =>
+    obtain ⟨L, hL⟩ := hfin.2 o.op hc (M.callable (sig o.op).tail (returnTypes o.op)) args S
+    refine ⟨L.map fun p => (p.1, args.tail.toDVals, 1, p.2), fun n s' ts cargs n' S₁ h => ?_⟩
+    cases h with
+    | fixed hc' => rw [hc'] at hc; cases hc
+    | picked _ hs => rw [show _ + 1 - _ = 1 by omega]; exact List.mem_map.2 ⟨_, hL _ hs, rfl⟩
 
 /-! # Runs at a budget -/
 
@@ -184,6 +213,39 @@ theorem Func.memCall_notExhausted_up {m m' : Nat} (hle : m ≤ m')
 
 end
 
+/-- A path of a call of the op `o` of `f`, with `n` steps for the call, to
+the symbol `s` on the arguments `dvs`, from the memories `S₁`, that runs
+out of fuel: in the callee, or in the rest of `f`'s ops after the callee
+returns. -/
+def Func.CallRunsOut (M : Module d) (n : Nat) (f : Func d) (env : Env d) (o : Operation d)
+    (os : List (Operation d)) (s : Name) (dvs : List (DVal d)) (S₁ : Memories Mem unit) : Prop :=
+  ∃ g p, M.func? s = some g ∧ g.enter dvs = .ok p ∧
+    ((Func.memCall M n g p.2 p.1 S₁).run (.ok (.ok .fuelExhausted)) ∨
+      ∃ vs T k, (Func.memCall M n g p.2 p.1 S₁).run (.ok (.ok (.ret ((vs, T), k)))) ∧
+        vs.map (·.1) = returnTypes o.op ∧ (o.results.map (·.1)).length = vs.length ∧
+        (Func.memOps M (min k n) f ((o.results.map (·.1)).zip vs ++ env) os T).run
+          (.ok (.ok .fuelExhausted)))
+
+/-- A call that runs out of fuel with `j` more steps runs out of fuel with
+fewer. -/
+theorem Func.CallRunsOut.down {M : Module d} {n j : Nat} {f : Func d} {env : Env d}
+    {o : Operation d} {os : List (Operation d)} {s : Name} {dvs : List (DVal d)}
+    {S₁ : Memories Mem unit} (h : Func.CallRunsOut M (n + j) f env o os s dvs S₁) :
+    Func.CallRunsOut M n f env o os s dvs S₁ := by
+  obtain ⟨g, p, hg, hen, hx | ⟨vs, T, k, hx, hty, hlen, h⟩⟩ := h
+  · refine ⟨g, p, hg, hen, .inl ?_⟩
+    rw [Func.memCall_exhausted_iff] at hx ⊢
+    exact Func.memOps_exhausted_down M n j _ _ _ _ hx
+  · have hle := Func.memCall_left_le M (n + j) _ _ _ _ _ _ hx
+    rcases (Func.memCall_ahead M n j _ _ _ _).down_ret _ k hx with ⟨hj, hx'⟩ | hx'
+    · refine ⟨g, p, hg, hen, .inr ⟨vs, T, k - j, hx', hty, hlen, ?_⟩⟩
+      have hle' : k - j ≤ n := by omega
+      have hmin : min k (n + j) = (k - j) + j := by omega
+      rw [hmin] at h
+      rw [Nat.min_eq_left hle']
+      exact Func.memOps_exhausted_down M (k - j) j _ _ _ _ h
+    · exact ⟨g, p, hg, hen, .inl hx'⟩
+
 /-- A run of ops with memory at one budget returns finitely many things,
 from any environment and memories, calls and recursion included, when every
 op that runs by its own rule has finitely many outcomes. -/
@@ -208,7 +270,7 @@ theorem Func.memOps_finitelyManyRets (hfin : OpsFinite d Mem unit) (M : Module d
         have same : ∀ {a}, env.operands (sig o.op) o.operands = .ok a → a = args :=
           fun h => Except.ok.inj (h.symm.trans hargs)
         by_cases hT : isTerminator o.op = true
-        · obtain ⟨LE, hLE⟩ := (hfin o.op (.inl hT) args).2 hT S
+        · obtain ⟨LE, hLE⟩ := (hfin.1 o.op (.inl hT) args).2 hT S
           obtain ⟨C, hC⟩ := List.exists_cover (P := fun (p : Exit × Memories Mem unit) b =>
             ∃ i blk env₁, p.1 = .goto i ∧ f.jump env o.succs i = .ok (blk, env₁) ∧
               (Func.memOps M n f env₁ blk.body p.2).run (.ok (.ok (.ret b)))) (L := LE)
@@ -238,7 +300,7 @@ theorem Func.memOps_finitelyManyRets (hfin : OpsFinite d Mem unit) (M : Module d
         cases hc : callee? o.op with
         | none =>
           have hT' : isTerminator o.op = false := by simpa using hT
-          obtain ⟨LD, hLD⟩ := (hfin o.op (.inr hc) args).1 hT' S
+          obtain ⟨LD, hLD⟩ := (hfin.1 o.op (.inr hc) args).1 hT' S
           obtain ⟨C, hC⟩ := List.exists_cover (L := LD) (P := fun p b =>
             (o.results.map (·.1)).length = p.1.toDVals.length ∧
               (Func.memOps M n f ((o.results.map (·.1)).zip p.1.toDVals ++ env) os p.2).run
@@ -253,40 +315,48 @@ theorem Func.memOps_finitelyManyRets (hfin : OpsFinite d Mem unit) (M : Module d
           | denote _ hargs' _ _ hx hlen h =>
             cases same hargs'
             exact hC _ (hLD _ hx) b ⟨hlen, h⟩
-          | callRet _ _ _ hc' => simp_all
-        | some s =>
-          cases hg : M.func? s with
-          | none =>
-            refine ⟨[], fun b h => ?_⟩
-            cases path h <;> simp_all
-          | some g =>
-            cases hen : g.enter args.toDVals with
-            | error _ =>
-              refine ⟨[], fun b h => ?_⟩
-              cases path h <;> simp_all
-            | ok p =>
-              obtain ⟨LC, hLC⟩ : FinitelyManyRets (Func.memCall M n g p.2 p.1 S) := by
+          | callRet _ _ _ hc' => cases hc' <;> simp_all
+        | some c =>
+          obtain ⟨T, hTc⟩ := Func.MemCallsAt.cover hfin M o args S
+          obtain ⟨C, hC⟩ := List.exists_cover (L := T) (P := fun t b =>
+              ∃ g p r, M.func? t.1 = some g ∧ g.enter t.2.1 = .ok p ∧
+                (Func.memCall M (n - t.2.2.1) g p.2 p.1 t.2.2.2).run (.ok (.ok (.ret r))) ∧
+                (Func.memOps M (min r.2 (n - t.2.2.1)) f ((o.results.map (·.1)).zip r.1.1 ++ env)
+                  os r.1.2).run (.ok (.ok (.ret b))))
+            fun t _ => by
+              have hn' : n - t.2.2.1 ≤ n := Nat.sub_le _ _
+              cases hg : M.func? t.1 with
+              | none => exact ⟨[], fun _ ⟨_, _, _, h, _⟩ => by simp_all⟩
+              | some g =>
+              cases hen : g.enter t.2.1 with
+              | error _ => exact ⟨[], fun _ ⟨_, _, _, h, h', _⟩ => by simp_all⟩
+              | ok p =>
+              obtain ⟨LC, hLC⟩ : FinitelyManyRets (Func.memCall M (n - t.2.2.1) g p.2 p.1 t.2.2.2) := by
                 rw [Func.memCall_eq]
-                exact (ihn g p.2 p.1 S.enter).mapVal _
+                exact (ih _ (Nat.lt_succ_of_le hn') g p.2 p.1 t.2.2.2.enter).mapVal _
               obtain ⟨C, hC⟩ := List.exists_cover (L := LC) (P := fun (r : (List (DVal d) ×
                   Memories Mem unit) × Nat) b =>
-                (Func.memOps M (min r.2 n) f ((o.results.map (·.1)).zip r.1.1 ++ env) os
+                (Func.memOps M (min r.2 (n - t.2.2.1)) f ((o.results.map (·.1)).zip r.1.1 ++ env) os
                   r.1.2).run (.ok (.ok (.ret b))))
-                fun r _ => ih (min r.2 n) (Nat.lt_succ_of_le (Nat.min_le_right _ _)) f _ os _
-              refine ⟨C, fun b h => ?_⟩
-              cases path h with
-              | ret _ _ hT' => exact absurd hT' hT
-              | goto _ _ hT' => exact absurd hT' hT
-              | denote _ _ _ hc' => simp_all
-              | callRet _ hargs' _ hc' hg' hen' hx _ _ h =>
-                cases same hargs'
-                rw [hc'] at hc
-                cases hc
-                rw [hg'] at hg
-                cases hg
-                rw [hen'] at hen
-                cases hen
-                exact hC _ (hLC _ hx) b h
+                fun r _ => ih (min r.2 (n - t.2.2.1))
+                  (Nat.lt_succ_of_le (Nat.le_trans (Nat.min_le_right _ _) hn')) f _ os _
+              refine ⟨C, fun b ⟨g', p', r, hg', hen', hx, h⟩ => ?_⟩
+              cases hg'
+              rw [hen] at hen'
+              cases hen'
+              exact hC _ (hLC _ hx) b h
+          refine ⟨C, fun b h => ?_⟩
+          cases path h with
+          | ret _ _ hT' => exact absurd hT' hT
+          | goto _ _ hT' => exact absurd hT' hT
+          | denote _ _ _ hc' => simp_all
+          | @callRet _ _ _ _ _ _ _ _ _ vs S' k _ _ hargs' _ hc' hg' hen' hx _ _ h =>
+            cases same hargs'
+            have hn : n - (n - _) = _ := Nat.sub_sub_self hc'.le.1
+            refine hC _ (hTc _ _ _ _ _ _ hc') b ⟨_, _, ((vs, S'), k), hg', hen', ?_, ?_⟩ <;>
+              dsimp only <;> rw [hn]
+            · exact hx
+            · exact h
 
 /-- A run in a call's frame at one budget returns finitely many things, from
 any memories, when every op that runs by its own rule has finitely many

@@ -33,8 +33,8 @@ whose functions it may call.
 namespace Fir.Core
 
 /-- A core op that calls a function is `call`, of that function. -/
-theorem Op.eq_call_of_callee {op : Op} {s : Name} (h : callee? (d := CoreDialect) op = some s) :
-    ∃ ts rs, op = .call s ts rs := by
+theorem Op.eq_call_of_callee {op : Op} {s : Name}
+    (h : callee? (d := CoreDialect) op = some (.fixed s)) : ∃ ts rs, op = .call s ts rs := by
   cases op <;> (cases h; try exact ⟨_, _, rfl⟩)
 
 /-- Every core terminator and every core op with no callee that touches no
@@ -62,6 +62,7 @@ theorem inModule_of_valid {M : Module CoreDialect} {f : Func CoreDialect}
       (hv.ops b hb i b.body[i] (List.getElem?_eq_getElem hi)).2.2.2.2.2.2.2.2.2.1
     rw [hop] at hvalid ⊢
     exact hvalid
+  picks _ _ o _ _ h := absurd h (Op.callee_ne_picked o.op)
   jumps _ _ o _ hT args _ h := Op.exit_goto o.op args hT h
   returns b hb o ho _ args h := by
     obtain ⟨ts, hts⟩ := Op.exit_ret o.op args h

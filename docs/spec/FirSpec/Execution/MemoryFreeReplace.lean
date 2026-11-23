@@ -37,7 +37,7 @@ they end with included: from $`S`, both end with $`S`, which refines
 itself.
 :::
 
-:::readable Fir.Func.memRuns_replaceBody_isRefinedBy_of_finite Fir.Func.memRuns_replaceBody_isRefinedBy_of_memRuns (pin := Fir.LawfulDialectMonotone) (fingerprint := "16201362122271735226")
+:::readable Fir.Func.memRuns_replaceBody_isRefinedBy_of_finite Fir.Func.memRuns_replaceBody_isRefinedBy_of_memRuns (pin := Fir.LawfulDialectMonotone) (fingerprint := "5521543471320246610")
 *Theorems: congruence in the callee, with no budget, for a callee that
 touches no memory.* For a dialect lawful in its monotonicity, whose values'
 refinement is reflexive and transitive, at a layout and naming at which its
@@ -65,7 +65,7 @@ vectors. These theorems ask no finitely many
 outcomes, so they stay for a dialect whose ops may have infinitely many.
 :::
 
-:::readable Fir.Func.memRuns_replaceBody_isRefinedBy_of_opsFinite_memRuns (pin := Fir.OpsFinite) (fingerprint := "16948426808443807025")
+:::readable Fir.Func.memRuns_replaceBody_isRefinedBy_of_opsFinite_memRuns (pin := Fir.OpsFinite) (fingerprint := "5604738715730613490")
 *Theorem: congruence in the callee, with memory, for a callee that touches
 no memory, with ops of finitely many outcomes.* For a dialect lawful in its
 monotonicity, whose values' refinement is reflexive and transitive, at a

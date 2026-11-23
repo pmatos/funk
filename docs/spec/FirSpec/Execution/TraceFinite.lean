@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Ops of finitely many outcomes, given the world's answers: readable blocks" =>
 
-:::moduleDocs (fingerprint := "4083937775120015375")
+:::moduleDocs (fingerprint := "4526681264093363768")
 :::
 
 :::readable Fir.Act.Agrees Fir.Act.Agrees.of_prefix Fir.Act.agrees_append Fir.Act.Agrees.of_isRefinedPrefix (fingerprint := "14362968264670860557")
@@ -48,15 +48,16 @@ the memories of the traced state, has finitely many in the traced layer.
 only one, UB with an empty trace.
 :::
 
-:::readable Fir.OpsTraceFinite Fir.OpsStepFinite Fir.OpsOneStep Fir.TraceM.step_ticks (fingerprint := "4775478515740754117")
+:::readable Fir.OpsTraceFinite Fir.OpsStepFinite Fir.OpsOneStep Fir.TraceM.step_ticks (fingerprint := "8100468544612697770")
 *Definition: the hypothesis.* $`\mathrm{OpsTraceFinite}`: every op that
 runs by its own rule, a terminator or an op with no callee, has finitely
 many outcomes in the traced layer, given the world's answers, on every
 operands, as an op that is not a terminator and as a terminator, and so
-does every external call, at every symbol, arguments and result types.
-$`\mathrm{OpsStepFinite}` is the same in the traced layer of marked
-traces. $`\mathrm{OpsOneStep}`: every path of every op and of every
-external call shows exactly one step.
+does every external call, at every symbol, arguments and result types, and
+the rule of every op that picks its callee, whatever the run says it can
+call. $`\mathrm{OpsStepFinite}` is the same in the traced layer of marked
+traces. $`\mathrm{OpsOneStep}`: every path of every op, of every external
+call and of every rule that picks a callee shows exactly one step.
 
 *Theorem.* After a step, each act of its traces an act of the marked trace,
 every path of a computation shows exactly one step.

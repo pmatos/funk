@@ -6,8 +6,10 @@ import Fir.Execution.MemoryOpRefine
 
 Let every call name the same function in both modules or a black box with
 memory. Let every op that runs by its own rule, a terminator or an op with
-no callee, be monotone with memory, among the ops of the source module's
-functions and of the function that runs. Then every return and every UB of
+no callee, be monotone with memory, and so the rule of every op whose
+callee is picked (#235), among the ops of the source module's functions
+and of the function that runs, and let the target call each symbol that
+the source can. Then every return and every UB of
 the target's run of ops, from an environment that refines the source's and
 from memories that refine the source's, is allowed by the source's run of
 the same ops at some budget. Calls and recursion are included.
@@ -45,10 +47,12 @@ variable {Mem : Type} {unit : Mem → Nat} [DecidableEq Mem]
 omit [DecidableEq Mem] [DecidableEq d.Ty] [DialectCall d] in
 variable (Mem unit) in
 /-- Every op of `os` that runs by its own rule, a terminator or an op with
-no callee, is monotone with memory. -/
+no callee, is monotone with memory, and so is the rule of every op of `os`
+whose callee is picked. -/
 def MemMonotoneOps (os : List (Operation d)) : Prop :=
-  ∀ o ∈ os, isTerminator o.op = true ∨ callee? o.op = none →
-    OpMemMonotone (σ := Memories Mem unit) o.op
+  ∀ o ∈ os, (isTerminator o.op = true ∨ callee? o.op = none →
+    OpMemMonotone (σ := Memories Mem unit) o.op) ∧
+    (callee? o.op = some .picked → OpMemPickMonotone (σ := Memories Mem unit) o.op)
 
 omit [DecidableEq Mem] [DecidableEq d.Ty] in
 variable (Mem unit) in
@@ -146,12 +150,12 @@ theorem Func.memOps_allowed {M M' : Module d} (hmono : ∀ g ∈ M.funcs, g.MemO
       cases (Func.memStepPath_iff hne).1 he' with
       | exitUB hreg hargs' hT hos hx =>
         obtain ⟨args, hargs, hr⟩ := henv.operands hargs'
-        obtain ⟨e₀, he₀, hle⟩ := (hmo (.inl hT) args _ hr).2 hT S S' hS _ hx
+        obtain ⟨e₀, he₀, hle⟩ := (hmo.1 (.inl hT) args _ hr).2 hT S S' hS _ hx
         match e₀, he₀, hle with
         | .ub r, he₀, _ => exact MemAllowed.of_someUB ⟨1, r, hub (.exitUB hreg hargs hT hos he₀)⟩ _
       | ret hreg hargs' hT hos hx hs =>
         obtain ⟨args, hargs, hr⟩ := henv.operands hargs'
-        obtain ⟨e₀, he₀, hle⟩ := (hmo (.inl hT) args _ hr).2 hT S S' hS _ hx
+        obtain ⟨e₀, he₀, hle⟩ := (hmo.1 (.inl hT) args _ hr).2 hT S S' hS _ hx
         match e₀, he₀, hle with
         | .ub r, he₀, _ => exact MemAllowed.of_someUB ⟨1, r, hub (.exitUB hreg hargs hT hos he₀)⟩ _
         | .ok (_, S₁), he₀, ⟨rfl, hS₁⟩ =>
@@ -160,7 +164,7 @@ theorem Func.memOps_allowed {M M' : Module d} (hmono : ∀ g ∈ M.funcs, g.MemO
             HVector.toDVals_isRefinedBy hr, hS₁⟩
       | goto hreg hargs' hT hos hx hj he =>
         obtain ⟨args, hargs, hr⟩ := henv.operands hargs'
-        obtain ⟨e₀, he₀, hle⟩ := (hmo (.inl hT) args _ hr).2 hT S S' hS _ hx
+        obtain ⟨e₀, he₀, hle⟩ := (hmo.1 (.inl hT) args _ hr).2 hT S S' hS _ hx
         match e₀, he₀, hle with
         | .ub r, he₀, _ => exact MemAllowed.of_someUB ⟨1, r, hub (.exitUB hreg hargs hT hos he₀)⟩ _
         | .ok (_, S₁), he₀, ⟨rfl, hS₁⟩ =>
@@ -169,13 +173,13 @@ theorem Func.memOps_allowed {M M' : Module d} (hmono : ∀ g ∈ M.funcs, g.MemO
             (ihn _ _ _ _ _ _ hf (hf.jump hj) henv₁ hS₁ _ he)
       | denoteUB hreg hargs' hT hc hx =>
         obtain ⟨args, hargs, hr⟩ := henv.operands hargs'
-        obtain ⟨e₀, he₀, hle⟩ := (hmo (.inr hc) args _ hr).1 hT S S' hS _ hx
+        obtain ⟨e₀, he₀, hle⟩ := (hmo.1 (.inr hc) args _ hr).1 hT S S' hS _ hx
         match e₀, he₀, hle with
         | .ub r, he₀, _ =>
           exact MemAllowed.of_someUB ⟨1, r, hub (.denoteUB hreg hargs hT hc he₀)⟩ _
       | denote hreg hargs' hT hc hx hlen' he =>
         obtain ⟨args, hargs, hr⟩ := henv.operands hargs'
-        obtain ⟨e₀, he₀, hle⟩ := (hmo (.inr hc) args _ hr).1 hT S S' hS _ hx
+        obtain ⟨e₀, he₀, hle⟩ := (hmo.1 (.inr hc) args _ hr).1 hT S S' hS _ hx
         match e₀, he₀, hle with
         | .ub r, he₀, _ =>
           exact MemAllowed.of_someUB ⟨1, r, hub (.denoteUB hreg hargs hT hc he₀)⟩ _
@@ -186,28 +190,45 @@ theorem Func.memOps_allowed {M M' : Module d} (hmono : ∀ g ∈ M.funcs, g.MemO
             (ihn _ _ _ _ _ _ hf hops' (henv.zip_append _ hvs) hS₁ _ he)
       | callUB hreg hargs' hT hc hg' hen' hx =>
         obtain ⟨args, hargs, hr⟩ := henv.operands hargs'
-        obtain ⟨g, p, hg, hen, hm⟩ := hcalls.callee_allowed hmono hg' hr hS (p' := (_, _)) hen'
-          (fun hgm hbm env env' h T T' hT e' he' => ihn _ env env' _ T T' hgm hbm h hT e' he') hx
+        obtain ⟨cargs, S₁, hc₀, hcr, hS₁⟩ | ⟨hpc, r, hpu⟩ := hc.source hr hS hcalls.2.2 hmo.2
+        case inr =>
+          exact MemAllowed.of_someUB ⟨1, r, hub (.pickUB (n := 0) hreg hargs hT hpc hpu)⟩ _
+        obtain ⟨g, p, hg, hen, hm⟩ := hcalls.callee_allowed hmono hg' hcr hS₁ (p' := (_, _)) hen'
+          (fun hgm hbm env env' h T T' hT e' he' =>
+            ih _ (Nat.lt_succ_of_le hc.le.1) _ env env' _ T T' hgm hbm h hT e' he') hx
           (fun _ h => nomatch h) (fun h => nomatch h)
         obtain ⟨N, r, hN⟩ := hm
-        exact MemAllowed.of_someUB ⟨N + 1, r, hub (.callUB hreg hargs hT hc hg hen hN)⟩ _
+        exact MemAllowed.of_someUB ⟨_, r, hub (.callUB hreg hargs hT (hc₀.at N) hg hen hN)⟩ _
       | callExh _ _ _ _ _ _ _ => exact absurd rfl hexh
+      | pickExh _ _ _ _ _ _ => exact absurd rfl hexh
       | extUB hreg hargs' hT hc hg' hd' =>
-        obtain ⟨args, hargs, -⟩ := henv.operands hargs'
+        obtain ⟨args, hargs, hr⟩ := henv.operands hargs'
         obtain ⟨hg, hd⟩ := hcalls.ext hg' hd'
-        exact MemAllowed.of_someUB ⟨1, _, hub (.extUB hreg hargs hT hc hg hd)⟩ _
+        obtain ⟨cargs, S₁, hc₀, -, -⟩ | ⟨hpc, r, hpu⟩ := hc.source hr hS hcalls.2.2 hmo.2
+        case inr =>
+          exact MemAllowed.of_someUB ⟨1, r, hub (.pickUB (n := 0) hreg hargs hT hpc hpu)⟩ _
+        exact MemAllowed.of_someUB ⟨_, _, hub (.extUB hreg hargs hT (hc₀.at 0) hg hd)⟩ _
+      | pickUB hreg hargs' hT hpc hx =>
+        obtain ⟨args, hargs, hr⟩ := henv.operands hargs'
+        obtain ⟨e₀, he₀, hle⟩ := hmo.2 hpc _ _ (hcalls.2.2 _ _) args _ hr S S' hS _ hx
+        match e₀, he₀, hle with
+        | .ub r, he₀, _ => exact MemAllowed.of_someUB ⟨1, r, hub (.pickUB hreg hargs hT hpc he₀)⟩ _
       | callRet hreg hargs' hT hc hg' hen' hx hty' hlen' he =>
         obtain ⟨args, hargs, hr⟩ := henv.operands hargs'
-        obtain ⟨g, p, hg, hen, hm⟩ := hcalls.callee_allowed hmono hg' hr hS (p' := (_, _)) hen'
-          (fun hgm hbm env env' h T T' hT e' he' => ihn _ env env' _ T T' hgm hbm h hT e' he') hx
+        obtain ⟨cargs, S₁, hc₀, hcr, hS₁⟩ | ⟨hpc, r, hpu⟩ := hc.source hr hS hcalls.2.2 hmo.2
+        case inr =>
+          exact MemAllowed.of_someUB ⟨1, r, hub (.pickUB (n := 0) hreg hargs hT hpc hpu)⟩ _
+        obtain ⟨g, p, hg, hen, hm⟩ := hcalls.callee_allowed hmono hg' hcr hS₁ (p' := (_, _)) hen'
+          (fun hgm hbm env env' h T T' hT e' he' =>
+            ih _ (Nat.lt_succ_of_le hc.le.1) _ env env' _ T T' hgm hbm h hT e' he') hx
           (fun _ h => nomatch h) (fun h => nomatch h)
         rcases hm with ⟨N, r, hN⟩ | ⟨N₁, ⟨vs, T⟩, k, hx₁, hvs, hT₁⟩
-        · exact MemAllowed.of_someUB ⟨N + 1, r, hub (.callUB hreg hargs hT hc hg hen hN)⟩ _
+        · exact MemAllowed.of_someUB ⟨_, r, hub (.callUB hreg hargs hT (hc₀.at N) hg hen hN)⟩ _
         have hty := (DVals.types_eq_of_isRefinedBy hvs).trans hty'
         have hlen := hlen'.trans (DVals.length_eq_of_isRefinedBy hvs).symm
-        have hm := ih _ (Nat.lt_succ_of_le (Nat.min_le_right _ _)) _ _ _ _ _ _ hf hops'
-          (henv.zip_append _ hvs) hT₁ _ he
-        exact MemAllowed.of_step N₁ (fun N₂ x hx hxe h =>
-          Func.memCall_cont hreg hargs hT hc hg hen hx₁ hty hlen hx hxe h) hm
+        have hm := ih _ (Nat.lt_succ_of_le (Nat.le_trans (Nat.min_le_right _ _) hc.le.1)) _ _ _ _
+          _ _ hf hops' (henv.zip_append _ hvs) hT₁ _ he
+        exact MemAllowed.of_step (N₁ + (_ - _)) (fun N₂ x hx hxe h =>
+          Func.memCall_cont hreg hargs hT hc₀ hg hen hx₁ hty hlen hx hxe h) hm
 
 end Fir

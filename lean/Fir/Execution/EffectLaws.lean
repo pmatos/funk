@@ -51,6 +51,12 @@ adds no event (ADR-2026-11-09-1540).
 
 A dialect meets every obligation of this section by showing that it is
 lawful in its effects, the last definition below.
+
+An op whose callee is picked when it runs (#235) runs its rule that picks
+first, then its callee. The obligations ask nothing of that rule: what a
+caller sees of such an op is every effect but control
+(`SymbolTable.opOwn`), since its callee is unknown, so no effect is left
+out.
 -/
 
 namespace Fir

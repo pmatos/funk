@@ -4,10 +4,11 @@ import Fir.Execution.TraceFinite
 /-!
 # The fuel of a return
 
-In the traced layer of marked traces, let every path of every op and of
-every external call show exactly one step, as it does when each op runs after a step
-(`DialectTrace.stepAt_oneStep`), and let `W` exceed the length of every
-chain of calls of the module by at least one (`Module.exists_callBound`).
+In the traced layer of marked traces, let every path of every op, of every
+external call and of every rule that picks a callee show exactly one step,
+as it does when each op runs after a step (`DialectTrace.stepAt_oneStep`),
+and let `W` exceed the length of every chain of calls of the module by at
+least two (`Module.exists_callBound`).
 Then a return of a run of ops spends fuel in proportion to its steps: a run
 that starts with `n` steps of fuel and returns with `k` left, after a marked
 trace of `m` steps, has
@@ -23,7 +24,10 @@ budget. An op that runs by its own rule, or a call of an external
 declaration, shows one step and spends one step of fuel, and the run goes
 on from ops whose chain is shorter than `W`. A
 call spends one step of fuel and starts the chain of its callee's entry
-block, one call longer; its callee returns, and the caller goes on.
+block, one call longer; its callee returns, and the caller goes on. A call
+whose callee is picked (#235) shows the step of the rule that picks it and
+spends two steps of fuel, the rule's and the call's; the callee's chain
+then starts after a step, which is why `W` exceeds each chain by two.
 -/
 
 namespace Fir
@@ -50,7 +54,7 @@ omit [DecidableEq d.Ty] [DecidableEq Mem] [DialectDenote d (TraceM (Step A) (Tra
 /-- A return paced from the ops `os₁` with `m` steps, after the trace `t` of
 one step, is paced from ops that start no call with `m + 1` steps. -/
 theorem TraceEnd.RetPaced.after_step {W m : Nat} {os₁ os : List (Operation d)}
-    (hW : ∀ os c, M.CallChain os c → c + 1 ≤ W) (hos : M.callHead? os = none)
+    (hW : ∀ os c, M.CallChain os c → c + 2 ≤ W) (hos : M.callHead? os = none)
     {t : List (Step A)} (ht : Step.ticks t = 1) :
     ∀ {e : TraceEnd (Step A) (TraceState Mem unit) (Except Stuck (Result (List (DVal d) × Nat)))},
       TraceEnd.RetPaced M W m os₁ e → TraceEnd.RetPaced M W (m + 1) os (e.after t)
@@ -63,9 +67,9 @@ theorem TraceEnd.RetPaced.after_step {W m : Nat} {os₁ os : List (Operation d)}
 variable (A) in
 /-- Every return of a traced run of ops is paced by `W`, when every path of
 every op shows exactly one step and `W` exceeds the length of every chain of
-calls of the module by at least one. -/
+calls of the module by at least two. -/
 theorem Func.traceOps_retPaced (hone : OpsOneStep d A (TraceState Mem unit)) {W : Nat}
-    (hW : ∀ os c, M.CallChain os c → c + 1 ≤ W) (n : Nat) :
+    (hW : ∀ os c, M.CallChain os c → c + 2 ≤ W) (n : Nat) :
     ∀ (f : Func d) (env : Env d) (os : List (Operation d)) (s : TraceState Mem unit) e,
       Func.traceOps (Step A) M n f env os s e → TraceEnd.NotStuck e →
         TraceEnd.RetPaced M W n os e := by
@@ -93,30 +97,48 @@ theorem Func.traceOps_retPaced (hone : OpsOneStep d A (TraceState Mem unit)) {W 
           hW (Module.callHead?_noCallee os hc) ((hone.1 _ _ _).1 _ hx)
       | extUB => trivial
       | ext _ _ hT hc hg _ hx _ _ h =>
-        exact (ih n (Nat.lt_succ_self n) _ _ _ _ _ h (TraceEnd.NotStuck.of_after hne)).after_step
-          hW (Module.callHead?_noFunc os hT hc hg) (hone.2 _ _ _ _ _ hx)
+        have hp := ih _ (Nat.lt_succ_of_le hc.le.1) _ _ _ _ _ h
+          (TraceEnd.NotStuck.of_after (TraceEnd.NotStuck.of_after hne))
+        cases hc with
+        | fixed hc =>
+          rw [TraceEnd.after_nil]
+          exact hp.after_step hW (Module.callHead?_noFunc os hT hc hg) (hone.2.1 _ _ _ _ _ hx)
+        | picked hc hs =>
+          have hos := Module.callHead?_picked (M := M) os hc
+          exact (hp.after_step hW hos (hone.2.1 _ _ _ _ _ hx)).after_step hW hos
+            (hone.2.2 _ _ _ _ _ hs)
       | callUB => trivial
       | callExh => trivial
-      | @callRet args sym g body genv vs k₁ tc s₁ e₂ _ _ hT hc hg hen hx _ _ h =>
+      | pickUB => trivial
+      | pickExh => trivial
+      | @callRet args sym _ _ n' t₀ _ g body genv vs k₁ tc s₁ e₂ _ _ hT hc hg hen hx _ _ h =>
         obtain ⟨e₁, h₁, he₁⟩ := (TraceM.run_inFrame _ _ _).1 hx
         rcases e₁ with ⟨_, _⟩ | ⟨y, t₁, s₂⟩
         · cases he₁
         simp only [Except.map, Except.ok.injEq, Prod.mk.injEq] at he₁
         obtain ⟨rfl, rfl, -⟩ := he₁
-        obtain ⟨hk₁, hp₁, c₁, hc₁, hb₁⟩ := ih n (Nat.lt_succ_self n) _ _ _ _ _ h₁
+        have hle := hc.le
+        obtain ⟨hk₁, hp₁, c₁, hc₁, hb₁⟩ := ih n' (by omega) _ _ _ _ _ h₁
           (TraceEnd.notStuck_ok _ _ _)
-        have hmin : min k₁ n = k₁ := Nat.min_eq_left (by omega)
+        have hmin : min k₁ n' = k₁ := Nat.min_eq_left (by omega)
         rw [hmin] at h
         have hW₁ := hW _ _ hc₁
-        have hcall := Module.CallChain.call (Module.callHead?_call os hT hc hg hen) hc₁
         rcases e₂ with ⟨_, _⟩ | ⟨y₂, t₂, s₃⟩
         · trivial
         rcases y₂ with _ | (⟨vs₂, k₂⟩ | _)
         · trivial
         · obtain ⟨hk₂, -, c₂, hc₂, hb₂⟩ := ih k₁ (by omega) _ _ _ _ _ h (TraceEnd.notStuck_ok _ _ _)
           have hW₂ := hW _ _ hc₂
-          refine ⟨?_, ?_, c₁ + 1, hcall, ?_⟩ <;>
-            simp only [Step.ticks_append, Nat.mul_add] <;> omega
+          cases hc with
+          | fixed hc =>
+            have hcall := Module.CallChain.call (Module.callHead?_call os hT hc hg hen) hc₁
+            refine ⟨?_, ?_, c₁ + 1, hcall, ?_⟩ <;>
+              simp only [Step.ticks_append, Nat.mul_add, Step.ticks] <;> omega
+          | picked hc hs =>
+            have ht₀ := hone.2.2 _ _ _ _ _ hs
+            simp only [TraceEnd.trace] at ht₀
+            refine ⟨?_, ?_, 0, .stop (Module.callHead?_picked os hc), ?_⟩ <;>
+              simp only [Step.ticks_append, Nat.mul_add, ht₀] <;> omega
         · trivial
 
 end Fir

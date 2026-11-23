@@ -18,10 +18,10 @@ changes under it.
 
 #doc (Manual) "Dialects: readable blocks" =>
 
-:::moduleDocs (fingerprint := "17479146872936980795")
+:::moduleDocs (fingerprint := "8835411482582150963")
 :::
 
-:::readable Fir.HVector (pin := Fir.DialectDenote) (fingerprint := "5494653853977177333")
+:::readable Fir.HVector Fir.HVector.tail (pin := Fir.DialectDenote) (fingerprint := "6422466382568157506")
 *Definition: a vector of values of given types.* Let $`a_1 \dots a_n` be a
 list of types, and let $`f` give each type $`a` a set of values $`f(a)`. A
 _heterogeneous vector_ for $`a_1 \dots a_n` holds one value of $`f(a_i)`
@@ -38,6 +38,8 @@ LeanMLIR. Since the list of types is part of the vector's type, the
 {ref "The-fir-specification--Execution--Effects-and-op-semantics"}[semantics]
 of an op receives exactly one operand value for each operand type, each of
 its type: a wrong number or a wrong type is ruled out before anything runs.
+The vector without its first value, for the list of types without its
+first, is its _tail_; the tail of the empty vector is empty.
 :::
 
 :::readable Fir.Dialect (fingerprint := "7801125833974356758")

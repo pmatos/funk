@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Core functions with memory: readable blocks" =>
 
-:::moduleDocs (fingerprint := "16317722508308020643")
+:::moduleDocs (fingerprint := "9028394514243793812")
 :::
 
 :::readable Fir.Core.lawfulDialectTotal (fingerprint := "7465536416105822801")
@@ -78,7 +78,7 @@ modes report. The equivalence experiment of #282 and congruence in the
 callee are about them.
 :::
 
-:::readable Fir.Core.Op.liftsSetM_of_terminator Fir.Core.Op.memMonotone_all (pin := Fir.Core.Op.liftsSetM) (pin := Fir.Core.Op.monotone_all) (fingerprint := "879312521481875117")
+:::readable Fir.Core.Op.liftsSetM_of_terminator Fir.Core.Op.memMonotone_all (pin := Fir.Core.Op.liftsSetM) (pin := Fir.Core.Op.monotone_all) (fingerprint := "12079041636401816083")
 *Theorems: every core terminator is tied, and every core op that runs by
 its own rule is monotone with memory.* Each core terminator touches no
 memory and reads no item, so it is
@@ -93,7 +93,7 @@ or $`\mathsf{ptr\_from\_int}`, monotone by its own rule. These are what the
 theorems below ask of the core's ops.
 :::
 
-:::readable Fir.Core.inModuleAt_of_inModule Fir.Core.inModuleAt_of_valid (pin := Fir.Core.inModule_of_valid) (pin := Fir.Func.InModule.inModuleAt_of_tied) (fingerprint := "4552382603713231128")
+:::readable Fir.Core.inModuleAt_of_inModule Fir.Core.inModuleAt_of_valid (pin := Fir.Core.inModule_of_valid) (pin := Fir.Func.InModule.inModuleAt_of_tied) (fingerprint := "7768807148271707476")
 *Theorems: a core function that runs within a module runs within it with
 memory.* For every core module $`M`, every core function $`f` that
 {ref "The-fir-specification--Execution--Core-functions-with-calls"}[runs within M],
@@ -153,18 +153,4 @@ naming of the core's memories, the runs with memory of $`f` on $`v^*` run
 well, and so each of the three holds on its own. $`f` runs straight, so it
 runs within itself, and the theorems on progress with memory without calls
 apply.
-:::
-
-:::readable Fir.Core.args_isRefinedBy (pin := Fir.Core.opsMonotone_all) (fingerprint := "17553697295606449802")
-*Theorem: refined arguments, with memory, for every core module.* For
-every core module $`M`, valid or not, every function $`f` of it, and every
-layout and naming of the core's memories, the behaviour with memory of
-$`f` on arguments $`\vec{v}'` refines its behaviour with memory on
-$`\vec{v} \sqsubseteq \vec{v}'`, calls and recursion included: every core
-op that runs by its own rule is monotone at every width and tied, so it is
-monotone with memory, and the
-{ref "The-fir-specification--Memory--Refined-arguments-and-memories"}[theorem on refined arguments and memories]
-applies from the memories a run starts with, which refine themselves. So a
-call on arguments that refine others
-refines the call on those others.
 :::

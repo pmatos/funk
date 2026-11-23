@@ -47,6 +47,8 @@ import FirTest.LocTable
 import FirTest.Dominance
 import FirTest.OverCore
 import FirTest.Toy
+import FirTest.PickDialect
+import FirTest.PickMachine
 import FirTest.UseOnce
 import FirTest.RegionKinds
 import FirTest.RegionKindCases

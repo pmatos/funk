@@ -71,7 +71,7 @@ theorem traceOpsMonotone (g : Func EmitDialect) :
     g.TraceOpsMonotone (DialectTrace.Acts EmitDialect) (TraceState Unit (unitsOf lay)) :=
   letI := DialectTrace.traceAt (d := EmitDialect) lay Empty.elim RunItems.empty
   fun _ _ o _ => ⟨fun _ => emit_monotone o.op,
-    fun _ _ _ => ExtTraceMonotone.of_ub (fun _ _ _ => rfl) _ _ _⟩
+    fun _ _ _ => ExtTraceMonotone.of_ub (fun _ _ _ => rfl) _ _ _, fun _ h => nomatch h⟩
 
 /-- So each return of `emitMain`'s traced runs is allowed by its own traced
 runs, by the traced layer's theorem for a dialect whose ops show events. -/

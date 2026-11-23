@@ -14,10 +14,10 @@ when the Lean changes under it.
 
 #doc (Manual) "The fuel of a return: readable blocks" =>
 
-:::moduleDocs (fingerprint := "9536968496811566094")
+:::moduleDocs (fingerprint := "16406599235551434217")
 :::
 
-:::readable Fir.TraceEnd.RetPaced Fir.TraceEnd.RetPaced.after_step (fingerprint := "18376876309332620377")
+:::readable Fir.TraceEnd.RetPaced Fir.TraceEnd.RetPaced.after_step (fingerprint := "15724831729578549167")
 *Definition: a paced return.* A return of a run of $`os` with $`n` steps of
 fuel, that leaves $`k` after a marked trace of $`m` steps, is paced by
 $`W` when $`k + m \le n`, $`0 < m`, and $`n + W \le k + W m + c + 1`,
@@ -27,9 +27,10 @@ where $`os` starts a chain of $`c` calls.
 return stays paced, one step of fuel later.
 :::
 
-:::readable Fir.Func.traceOps_retPaced (fingerprint := "2885416854423115048")
-*Theorem.* When every path of every op and of every external call shows
+:::readable Fir.Func.traceOps_retPaced (fingerprint := "13750685712042098113")
+*Theorem.* When every path of every op, of every external call and of
+every rule that picks a callee shows
 exactly one step, and $`W`
-exceeds the length of every chain of calls of the module by at least one,
+exceeds the length of every chain of calls of the module by at least two,
 every return of a traced run of ops is paced by $`W`.
 :::

@@ -14,7 +14,7 @@ changes under it.
 
 #doc (Manual) "The sum of dialects: readable blocks" =>
 
-:::moduleDocs (fingerprint := "244278249107158259")
+:::moduleDocs (fingerprint := "14222411211038838788")
 :::
 
 :::readable Fir.Dialect.over Fir.Dialect.sum (fingerprint := "6781788953757055949")
@@ -164,7 +164,7 @@ $`e` names the base's memory $`x` as
 $`\mathrm{ofBase}(x) = \mathrm{join}(\mathsf{inl}\ x)`.
 :::
 
-:::readable Fir.Dialect.sum.instDialectEffects Fir.Dialect.sum.instDialectCall Fir.Dialect.sum.instDialectDenote (pin := Fir.Effects.map) (fingerprint := "12241663174281592057")
+:::readable Fir.Dialect.sum.instDialectEffects Fir.Dialect.sum.instDialectCall Fir.Dialect.sum.instDialectDenote (pin := Fir.Effects.map) (fingerprint := "971806187069849910")
 *Definition: how an op of a sum runs.* The memories of the sum are
 $`e`'s, $`M_e`, which name the base's: so a memory has one name in the
 sum, whichever side names it (ADR-2026-11-09-2306). An op of the sum has
@@ -183,7 +183,8 @@ results are moved up to the sum's.
 
 $$`[\![\mathsf{inl}\ p]\!](v^*) = \uparrow [\![p]\!]_b(\downarrow v^*) \qquad [\![\mathsf{inr}\ q]\!](v^*) = [\![q]\!]_{b.\mathrm{over}(e)}(v^*)`
 
-A terminator's exit is its side's, in the same way.
+A terminator's exit is its side's, in the same way, and so is the rule of
+an op that picks its callee.
 :::
 
 :::readable Fir.Dialect.sum.decodeOp Fir.Dialect.sum.decodeTy Fir.Dialect.sum.instDialectText (fingerprint := "1987305388185594170")

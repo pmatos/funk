@@ -83,6 +83,7 @@ theorem treeMapsDenote (ρ : DialectEffects.Mem GpuDialect → N) (L : RunItems)
         erw [MonadMorphism.map_map]
         exact congrArg _ (ChoiceTree.toSetMorphism.state_alloc (Mem := N) (unit := unitsOf lay) _ _ _ _))
     (fun _ _ => MonadMorphism.map_pure _ _)
+    (fun _ _ _ => MonadMorphism.map_pure _ _)
 
 /-- The sum's semantics in the layer over the tree denotes its semantics with
 memory, wherever a run names the sum's memories, whatever their entries. -/

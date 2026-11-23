@@ -12,8 +12,11 @@ the run names that side's memories through the side's memory map (the
 sections on the sum and the lift of dialects lawful in their effects), and
 only its results change the type they are seen at. Mapping the results of
 a computation keeps an outcome, so an op that has an outcome from any
-memories in its side has one in the sum and in the lift. Neither needs a
-semantics in the set monad, so a side whose ops touch memory may take part.
+memories in its side has one in the sum and in the lift. The rule that
+picks the callee of an op of a side (#235) is that side's rule, on the
+same test of what the run can call, so it has an outcome in the sum when it
+has one in its side. Neither needs a semantics in the set monad, so a side whose ops touch
+memory may take part.
 -/
 
 namespace Fir
@@ -31,6 +34,12 @@ theorem memTotal_inl {o : base.Op} (h : MemTotal o) : MemTotal (d := base ⊞ e)
   fun lay ρ L => ownRuleHas_inl lay ρ L (fun f _ h => HasOutcome.map f h)
     (h lay (ρ ∘ DialectMemOver.ofBase) L)
 
+/-- An op of the base whose rule picks its callee totally with memory in the
+base does so in the sum. -/
+theorem memPickTotal_inl {o : base.Op} (h : MemPickTotal o) :
+    MemPickTotal (d := base ⊞ e) (.inl o) :=
+  fun lay ρ L ok args => h lay (ρ ∘ DialectMemOver.ofBase) L ok (HVector.ofSum args)
+
 variable [DialectCall base] [DialectCall (base.over e)]
   [DialectValidation base] [DialectValidation (base.over e)]
 
@@ -42,6 +51,9 @@ theorem lawfulTotal [h₁ : LawfulDialectTotal base] [h₂ : LawfulDialectTotal 
   total
     | .inl o, hv, hc => memTotal_inl (h₁.total o (typesValid_inl hv) hc)
     | .inr o, hv, hc => h₂.total o (typesValid_inr hty hv) hc
+  pickTotal
+    | .inl o, hv, hc => memPickTotal_inl (h₁.pickTotal o (typesValid_inl hv) hc)
+    | .inr o, hv, hc => h₂.pickTotal o (typesValid_inr hty hv) hc
 
 end Dialect.sum
 
@@ -58,6 +70,12 @@ theorem memTotal_lift {o : e.Op} (h : MemTotal (d := dep.over e) o) :
     MemTotal (d := big.over (e.lift dep ι μ)) o :=
   fun lay ρ L => ownRuleHas_lift lay ρ L (fun f _ h => HasOutcome.map f h) (h lay (ρ ∘ liftMem μ) L)
 
+/-- An op of `e` whose rule picks its callee totally with memory over `dep`
+does so in the lift. -/
+theorem memPickTotal_lift {o : e.Op} (h : MemPickTotal (d := dep.over e) o) :
+    MemPickTotal (d := big.over (e.lift dep ι μ)) o :=
+  fun lay ρ L ok _ => h lay (ρ ∘ liftMem μ) L ok _
+
 variable [DialectCall (dep.over e)] [DialectValidation big] [DialectValidation (dep.over e)]
 
 /-- The lift of an extension lawful in its totality is lawful in its
@@ -67,6 +85,7 @@ theorem lawfulTotal [h : LawfulDialectTotal (dep.over e)]
     (hty : ∀ t : dep.Ty, validTy (ι.incl t) → validTy (d := dep.over e) (.inl t)) :
     LawfulDialectTotal (big.over (e.lift dep ι μ)) where
   total o hv hc := memTotal_lift (h.total o (typesValid_lift hty hv) hc)
+  pickTotal o hv hc := memPickTotal_lift (h.pickTotal o (typesValid_lift hty hv) hc)
 
 variable [DialectSignature big] [DialectCall big] [DialectMemDenote big]
 

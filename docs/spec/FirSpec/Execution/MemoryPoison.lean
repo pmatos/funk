@@ -67,7 +67,7 @@ it then holds every poison obligation over the semantics with memory, as
 holds them in the set monad.
 :::
 
-:::readable Fir.MemPropagatesPoison.ofLifts Fir.MemPropagatesPoison.setM Fir.MemReturnsOnDefined.ofLifts Fir.MemReturnsOnDefined.setM (pin := Fir.PropagatesPoison) (pin := Fir.ReturnsOnDefined) (pin := Fir.OpLiftsSetM) (fingerprint := "18167095568221111493")
+:::readable Fir.MemPropagatesPoison.ofLifts Fir.MemPropagatesPoison.setM Fir.MemReturnsOnDefined.ofLifts Fir.MemReturnsOnDefined.setM (pin := Fir.PropagatesPoison) (pin := Fir.ReturnsOnDefined) (pin := Fir.OpLiftsSetM) (fingerprint := "8217036996284002089")
 *Theorems: the poison obligations with memory, for an op that touches no
 memory.* An op that is
 {ref "The-fir-specification--Memory--Runs-with-memory"}[tied] and
@@ -79,7 +79,7 @@ same from every memories. In a dialect that lifts the set monad, every op
 is tied, and the converses hold too.
 :::
 
-:::readable Fir.LawfulDialectMemPoison.ofLawful Fir.LawfulDialectPoison.ofMem Fir.LawfulDialectPoison.iff_mem (pin := Fir.LawfulDialectPoison) (fingerprint := "11942904318688002526")
+:::readable Fir.LawfulDialectMemPoison.ofLawful Fir.LawfulDialectPoison.ofMem Fir.LawfulDialectPoison.iff_mem (pin := Fir.LawfulDialectPoison) (fingerprint := "8627183378446860359")
 *Theorems: lawful with memory, for a dialect that lifts the set monad.* A
 lawful dialect that lifts the set monad is lawful in its poison with
 memory. The other way, a dialect that lifts the set monad and is lawful in

@@ -14,7 +14,7 @@ changes under it.
 
 #doc (Manual) "Lifting an extension: readable blocks" =>
 
-:::moduleDocs (fingerprint := "16824010224651684417")
+:::moduleDocs (fingerprint := "14491176487055524217")
 :::
 
 :::readable Fir.Dialect.lift Fir.Dialect.lift.instDialectName Fir.Dialect.lift.instTyDenote Fir.Dialect.lift.instTyPoison Fir.Dialect.lift.instTyRefinement Fir.Dialect.lift.instDecidableEqOp Fir.Dialect.lift.instDecidableEqTy (fingerprint := "3765934098038364283")
@@ -94,14 +94,15 @@ with its memories renamed by $`\hat\mu`. Its numbered memories are
 $`B`'s.
 :::
 
-:::readable Fir.Dialect.lift.instDialectCall Fir.Dialect.lift.instDialectDenote (fingerprint := "14255937332289603584")
+:::readable Fir.Dialect.lift.instDialectCall Fir.Dialect.lift.instDialectDenote (fingerprint := "5955086983059601960")
 *Definition: how an op of the lift runs.* An op of the lift calls what it
 calls in $`e`. It runs by $`e`'s rule on its
 operands moved down across $`\hat\iota`, and its results move up:
 
 $$`[\![q]\!](v^*) = \uparrow_{\hat\iota} [\![q]\!]_{d.\mathrm{over}(e)}(\downarrow_{\hat\iota} v^*)`
 
-A terminator's exit is $`e`'s on the operands moved down.
+A terminator's exit is $`e`'s on the operands moved down, and so is the
+rule of an op that picks its callee.
 :::
 
 :::readable Fir.Dialect.lift.decodeOp Fir.Dialect.lift.tyAttr Fir.Dialect.lift.decodeTy Fir.Dialect.lift.instDialectText (fingerprint := "17631318327578258985")

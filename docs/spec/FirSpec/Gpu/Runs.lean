@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Runs of the core and gpu: readable blocks" =>
 
-:::moduleDocs (fingerprint := "10810036935191732082")
+:::moduleDocs (fingerprint := "5875335761067498375")
 :::
 
 :::readable Fir.Gpu.coreGpu_lawfulEffects Fir.Gpu.coreGpu_lawfulTotal Fir.Gpu.coreGpu_lawfulMonotone Fir.Gpu.coreGpu_lawfulMemPoison (fingerprint := "2096482798007682310")
@@ -24,7 +24,7 @@ poison with memory, since both sides are and `gpu` accepts each type that
 the core accepts.
 :::
 
-:::readable Fir.Gpu.memMonotone_all (fingerprint := "3037100186864541020")
+:::readable Fir.Gpu.memMonotone_all (fingerprint := "14556379405654553872")
 *Theorem: every op of the sum is monotone with memory.* Each op of `gpu`
 is monotone with memory at every width (the section on work-group
 allocation). So each op of the sum that runs by its own rule, a terminator or an op with no
@@ -40,7 +40,7 @@ memories, each op of every function of the sum that runs by its own rule
 is monotone with memory, by the theorem above.
 :::
 
-:::readable Fir.Gpu.inModule_of_valid Fir.Gpu.inModuleAt_of_valid (fingerprint := "8455768621662374231")
+:::readable Fir.Gpu.inModule_of_valid Fir.Gpu.callee_ne_picked Fir.Gpu.inModuleAt_of_valid (fingerprint := "2360473889575935870")
 *Theorems: a valid function of the sum runs within its module.* A core op
 of the sum is valid when the core can write the function's result types
 and the op obeys the core's rule over the symbols whose types are all the
@@ -50,6 +50,8 @@ keep to their successors. An op of `gpu` is no terminator and calls no
 function. So a valid function of the sum runs within its module, and,
 since each of its terminators is the core's and is tied, it runs within it
 with memory, wherever a run names the sum's memories.
+No op of the sum picks its callee: a core op by the core's theorem, and an
+op of `gpu` calls no function.
 :::
 
 :::readable Fir.Gpu.fuelMonotone Fir.Gpu.progress Fir.Gpu.neverStuck (fingerprint := "1577721949564323807")

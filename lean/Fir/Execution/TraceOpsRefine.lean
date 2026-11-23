@@ -1,4 +1,4 @@
-import Fir.Execution.TraceStepPaths
+import Fir.Execution.TraceCallSource
 
 /-!
 # A traced run of ops on environments and states that refine others
@@ -123,7 +123,9 @@ theorem Func.traceOps_allowed {M : Module d}
     | n + 1, o :: os, hops, he' =>
       have ihn := ih n (Nat.lt_succ_self n)
       have hmo := (hops o List.mem_cons_self).1
-      have hext := (hops o List.mem_cons_self).2
+      have hext : TraceMonotoneOps B (TraceState Mem unit) [o] := fun o' h => by
+        rw [List.mem_singleton.1 h]; exact hops o List.mem_cons_self
+      have hpick := (hops o List.mem_cons_self).2.2
       have hops' : TraceMonotoneOps B (TraceState Mem unit) os :=
         fun o' h => hops o' (List.mem_cons_of_mem _ h)
       have src : ∀ {x}, TraceEnd.NotStuck x → Func.TStepPath M n f env o os s x →
@@ -132,21 +134,33 @@ theorem Func.traceOps_allowed {M : Module d}
       have ub : ∀ {r : String} {t : List B}, Func.TStepPath M n f env o os s (.error (r, t)) →
           Func.traceOps B M (n + 1) f env (o :: os) s (.error (r, t)) :=
         fun h => src (TraceEnd.notStuck_error _ _) h
-      have callee : ∀ {args' : HVector toType (sig o.op)} {sym : Name} {g : Func d}
-          {body : List (Operation d)} {genv' : Env d} {e₁'},
-          env'.operands (sig o.op) o.operands = .ok args' → M.func? sym = some g →
-          g.enter args'.toDVals = .ok (body, genv') → Func.traceCall B M n g genv' body s' e₁' →
-          TraceEnd.NotStuck e₁' → ∃ (args : HVector toType (sig o.op)) (genv : Env d) (e₀ : _),
-            env.operands (sig o.op) o.operands = .ok args ∧ g.enter args.toDVals = .ok (body, genv) ∧
-            Func.traceCall B M n g genv body s e₀ ∧ TraceEnd.Allows Result.InStep e₀ e₁' := by
-        intro args' sym g body genv' e₁' hargs' hg hen' hx hne₁
-        obtain ⟨args, hargs, hr⟩ := henv.operands hargs'
+      have callee : ∀ {n' : Nat} {ts : List d.Ty} {cargs cargs' : HVector toType ts} {sym : Name}
+          {g : Func d} {body : List (Operation d)} {genv' : Env d} {s₁ s₁' : TraceState Mem unit}
+          {e₁'}, n' ≤ n →
+          cargs.Forall₂ TyRefinement.IsRefinedBy cargs' → s₁ ⊑ s₁' → M.func? sym = some g →
+          g.enter cargs'.toDVals = .ok (body, genv') → Func.traceCall B M n' g genv' body s₁' e₁' →
+          TraceEnd.NotStuck e₁' → ∃ (genv : Env d) (e₀ : _),
+            g.enter cargs.toDVals = .ok (body, genv) ∧
+            Func.traceCall B M n' g genv body s₁ e₀ ∧ TraceEnd.Allows Result.InStep e₀ e₁' := by
+        intro n' ts cargs cargs' sym g body genv' s₁ s₁' e₁' hn' hr hS₁ hg hen' hx hne₁
         obtain ⟨genv, hen, hgenv⟩ := Func.enter_isRefinedBy (HVector.toDVals_isRefinedBy hr) hen'
         have hgm := hmono _ (List.mem_of_find?_eq_some hg)
         obtain ⟨e₀, he₀, hle⟩ := Func.traceCall_allowed (fun e₂' he₂' hne₂ =>
-          ihn _ genv _ _ _ _ hgm (hgm.enter hen') hgenv (TraceState.IsRefinedBy.enter hS) e₂' he₂'
-            hne₂) hx hne₁
-        exact ⟨args, genv, e₀, hargs, hen, he₀, hle⟩
+          ih _ (Nat.lt_succ_of_le hn') _ genv _ _ _ _ hgm (hgm.enter hen') hgenv
+            (TraceState.IsRefinedBy.enter hS₁) e₂' he₂' hne₂) hx hne₁
+        exact ⟨genv, e₀, hen, he₀, hle⟩
+      have pick : ∀ {args args' : HVector toType (sig o.op)} {n' sym ts}
+          {cargs' : HVector toType ts} {t₀' s₁'}, isTerminator o.op = false →
+          args.Forall₂ TyRefinement.IsRefinedBy args' →
+          Func.TCallsAt M o args' s' n sym ts cargs' n' t₀' s₁' →
+          (∃ (cargs : HVector toType ts) (t₀ : List B) (s₁ : TraceState Mem unit),
+            Func.TCallsAt M o args s n sym ts cargs n' t₀ s₁ ∧
+              cargs.Forall₂ TyRefinement.IsRefinedBy cargs' ∧ t₀ ⊑ t₀' ∧ s₁ ⊑ s₁') ∨
+          (callee? o.op = some .picked ∧ ∃ (r : String) (t : List B),
+            DialectDenote.pick (m := TraceM B (TraceState Mem unit)) o.op
+              (M.callable (sig o.op).tail (returnTypes o.op)) args s (.error (r, t)) ∧
+            List.IsRefinedPrefix t t₀') := fun hT hr hc =>
+        hc.source hr hS (fun _ _ _ h => h) fun hpc => (hpick hT hpc).1
       cases (Func.tStepPath_iff hne).1 he' with
       | exitUB hreg hargs' hT hos hx =>
         obtain ⟨args, hargs, hr⟩ := henv.operands hargs'
@@ -192,50 +206,82 @@ theorem Func.traceOps_allowed {M : Module d}
           exact ⟨_, src ((hle₁.after ht).notStuck fun _ _ h => h) (.denote hreg hargs hT hc he₀ hlen he₁),
             hle₁.after ht⟩
       | callUB hreg hargs' hT hc hg hen' hx =>
-        obtain ⟨args, genv, e₀, hargs, hen, he₀, hle⟩ := callee hargs' hg hen' hx (TraceEnd.notStuck_error _ _)
-        rcases e₀ with ⟨r₀, t₀⟩ | ⟨_, _, _⟩
-        · exact ⟨_, ub (.callUB hreg hargs hT hc hg hen he₀), hle⟩
+        obtain ⟨args, hargs, hr⟩ := henv.operands hargs'
+        obtain ⟨cargs, t₀, s₁, hc₀, hcr, ht₀, hs₁⟩ | ⟨hpc, r, t, hpu, htp⟩ := pick hT hr hc
+        case inr => exact ⟨_, ub (.pickUB hreg hargs hT hpc hpu), TraceEnd.Allows.ub_prefix htp _⟩
+        obtain ⟨genv, e₀, hen, he₀, hle⟩ := callee hc.le.1 hcr hs₁ hg hen' hx (TraceEnd.notStuck_error _ _)
+        rcases e₀ with ⟨r₀, t'⟩ | ⟨_, _, _⟩
+        · exact ⟨_, ub (.callUB hreg hargs hT hc₀ hg hen he₀), hle.after ht₀⟩
         · exact hle.elim
       | callExh hreg hargs' hT hc hg hen' hx =>
-        obtain ⟨args, genv, e₀, hargs, hen, he₀, hle⟩ := callee hargs' hg hen' hx (TraceEnd.notStuck_ok _ _ _)
-        rcases e₀ with ⟨r₀, t₀⟩ | ⟨x, t₀, s₀⟩
-        · exact ⟨_, ub (.callUB hreg hargs hT hc hg hen he₀), hle⟩
-        · rcases x with _ | (_ | _) <;> obtain ⟨hx₀, ht, hs₀⟩ := hle
+        obtain ⟨args, hargs, hr⟩ := henv.operands hargs'
+        obtain ⟨cargs, t₀, s₁, hc₀, hcr, ht₀, hs₁⟩ | ⟨hpc, r, t, hpu, htp⟩ := pick hT hr hc
+        case inr => exact ⟨_, ub (.pickUB hreg hargs hT hpc hpu), TraceEnd.Allows.ub_prefix htp _⟩
+        obtain ⟨genv, e₀, hen, he₀, hle⟩ := callee hc.le.1 hcr hs₁ hg hen' hx (TraceEnd.notStuck_ok _ _ _)
+        rcases e₀ with ⟨r₀, t'⟩ | ⟨x, t', s₀⟩
+        · exact ⟨_, ub (.callUB hreg hargs hT hc₀ hg hen he₀), hle.after ht₀⟩
+        · rcases x with _ | (_ | _) <;> obtain ⟨hx₀, -, -⟩ := id hle
           · exact hx₀.elim
           · exact hx₀.elim
-          · exact ⟨_, src (TraceEnd.notStuck_ok _ _ _) (.callExh hreg hargs hT hc hg hen he₀),
-              trivial, ht, hs₀⟩
+          · exact ⟨_, src (TraceEnd.notStuck_ok _ _ _) (.callExh hreg hargs hT hc₀ hg hen he₀),
+              hle.after ht₀⟩
       | callRet hreg hargs' hT hc hg hen' hx hty' hlen' he =>
-        obtain ⟨args, genv, e₀, hargs, hen, he₀, hle⟩ := callee hargs' hg hen' hx (TraceEnd.notStuck_ok _ _ _)
-        rcases e₀ with ⟨r₀, t₀⟩ | ⟨x, t₀, s₀⟩
-        · exact ⟨_, ub (.callUB hreg hargs hT hc hg hen he₀), TraceEnd.Allows.ub_prefix hle _⟩
+        obtain ⟨args, hargs, hr⟩ := henv.operands hargs'
+        obtain ⟨cargs, t₀, s₁, hc₀, hcr, ht₀, hs₁⟩ | ⟨hpc, r, t, hpu, htp⟩ := pick hT hr hc
+        case inr => exact ⟨_, ub (.pickUB hreg hargs hT hpc hpu), TraceEnd.Allows.ub_prefix htp _⟩
+        obtain ⟨genv, e₀, hen, he₀, hle⟩ := callee hc.le.1 hcr hs₁ hg hen' hx (TraceEnd.notStuck_ok _ _ _)
+        rcases e₀ with ⟨r₀, t'⟩ | ⟨x, t', s₀⟩
+        · exact ⟨_, ub (.callUB hreg hargs hT hc₀ hg hen he₀),
+            (TraceEnd.Allows.ub_prefix hle _).after ht₀⟩
         · rcases x with _ | (⟨vs, k⟩ | _) <;> obtain ⟨hx₀, ht, hs₀⟩ := hle
           · exact hx₀.elim
           · obtain ⟨hvs, rfl⟩ := hx₀
             have hty := (DVals.types_eq_of_isRefinedBy hvs).trans hty'
             have hlen := hlen'.trans (DVals.length_eq_of_isRefinedBy hvs).symm
-            obtain ⟨e₁, he₁, hle₁⟩ := ih _ (Nat.lt_succ_of_le (Nat.min_le_right _ _)) f _ _ os s₀ _
-              hf hops' (henv.zip_append _ hvs) hs₀ _ he (TraceEnd.NotStuck.of_after hne)
-            exact ⟨_, src ((hle₁.after ht).notStuck fun _ _ h => h)
-              (.callRet hreg hargs hT hc hg hen he₀ hty hlen he₁), hle₁.after ht⟩
+            obtain ⟨e₁, he₁, hle₁⟩ := ih _
+              (Nat.lt_succ_of_le (Nat.le_trans (Nat.min_le_right _ _) hc.le.1)) f _ _ os s₀ _
+              hf hops' (henv.zip_append _ hvs) hs₀ _ he
+              (TraceEnd.NotStuck.of_after (TraceEnd.NotStuck.of_after hne))
+            exact ⟨_, src (((hle₁.after ht).after ht₀).notStuck fun _ _ h => h)
+              (.callRet hreg hargs hT hc₀ hg hen he₀ hty hlen he₁), (hle₁.after ht).after ht₀⟩
           · exact hx₀.elim
       | extUB hreg hargs' hT hc hg hd hx =>
         obtain ⟨args, hargs, hr⟩ := henv.operands hargs'
-        obtain ⟨e₀, he₀, hle⟩ := hext hT _ hc args _ hr s s' hS _ hx
-        rcases e₀ with ⟨r₀, t₀⟩ | ⟨_, _, _⟩
-        · exact ⟨_, ub (.extUB hreg hargs hT hc hg hd he₀), hle⟩
+        obtain ⟨cargs, t₀, s₁, hc₀, hcr, ht₀, hs₁⟩ | ⟨hpc, r, t, hpu, htp⟩ := pick hT hr hc
+        case inr => exact ⟨_, ub (.pickUB hreg hargs hT hpc hpu), TraceEnd.Allows.ub_prefix htp _⟩
+        obtain ⟨e₀, he₀, hle⟩ := hc₀.extMonotone hT hext cargs _ hcr s₁ _ hs₁ _ hx
+        rcases e₀ with ⟨r₀, t'⟩ | ⟨_, _, _⟩
+        · exact ⟨_, ub (.extUB hreg hargs hT hc₀ hg hd he₀), hle.after ht₀⟩
         · exact hle.elim
       | ext hreg hargs' hT hc hg hd hx hty' hlen' he =>
         obtain ⟨args, hargs, hr⟩ := henv.operands hargs'
-        obtain ⟨e₀, he₀, hle⟩ := hext hT _ hc args _ hr s s' hS _ hx
-        rcases e₀ with ⟨r₀, t₀⟩ | ⟨vs, t₀, s₀⟩
-        · exact ⟨_, ub (.extUB hreg hargs hT hc hg hd he₀), TraceEnd.Allows.ub_prefix hle _⟩
+        obtain ⟨cargs, t₀, s₁, hc₀, hcr, ht₀, hs₁⟩ | ⟨hpc, r, t, hpu, htp⟩ := pick hT hr hc
+        case inr => exact ⟨_, ub (.pickUB hreg hargs hT hpc hpu), TraceEnd.Allows.ub_prefix htp _⟩
+        obtain ⟨e₀, he₀, hle⟩ := hc₀.extMonotone hT hext cargs _ hcr s₁ _ hs₁ _ hx
+        rcases e₀ with ⟨r₀, t'⟩ | ⟨vs, t', s₀⟩
+        · exact ⟨_, ub (.extUB hreg hargs hT hc₀ hg hd he₀),
+            (TraceEnd.Allows.ub_prefix hle _).after ht₀⟩
         · obtain ⟨hvs, ht, hs₀⟩ := hle
           have hty := (DVals.types_eq_of_isRefinedBy hvs).trans hty'
           have hlen := hlen'.trans (DVals.length_eq_of_isRefinedBy hvs).symm
-          obtain ⟨e₁, he₁, hle₁⟩ := ihn f _ _ os s₀ _ hf hops' (henv.zip_append _ hvs) hs₀ _ he
-            (TraceEnd.NotStuck.of_after hne)
-          exact ⟨_, src ((hle₁.after ht).notStuck fun _ _ h => h)
-            (.ext hreg hargs hT hc hg hd he₀ hty hlen he₁), hle₁.after ht⟩
+          obtain ⟨e₁, he₁, hle₁⟩ := ih _ (Nat.lt_succ_of_le hc.le.1) f _ _ os s₀ _ hf hops'
+            (henv.zip_append _ hvs) hs₀ _ he
+            (TraceEnd.NotStuck.of_after (TraceEnd.NotStuck.of_after hne))
+          exact ⟨_, src (((hle₁.after ht).after ht₀).notStuck fun _ _ h => h)
+            (.ext hreg hargs hT hc₀ hg hd he₀ hty hlen he₁), (hle₁.after ht).after ht₀⟩
+      | pickUB hreg hargs' hT hc hx =>
+        obtain ⟨args, hargs, hr⟩ := henv.operands hargs'
+        obtain ⟨e₀, he₀, hle⟩ := (hpick hT hc).1 _ _ (fun _ h => h) args _ hr s s' hS _ hx
+        rcases e₀ with ⟨r₀, t₀⟩ | ⟨_, _, _⟩
+        · exact ⟨_, ub (.pickUB hreg hargs hT hc he₀), hle⟩
+        · exact hle.elim
+      | pickExh hreg hargs' hT hc hs₁ hn =>
+        obtain ⟨args, hargs, hr⟩ := henv.operands hargs'
+        obtain ⟨e₀, he₀, hle⟩ := (hpick hT hc).1 _ _ (fun _ h => h) args _ hr s s' hS _ hs₁
+        rcases e₀ with ⟨r₀, t₀⟩ | ⟨⟨sym₀, t₀, s₀⟩⟩
+        · exact ⟨_, ub (.pickUB hreg hargs hT hc he₀), hle⟩
+        · obtain ⟨rfl, ht, hs₀⟩ := hle
+          exact ⟨_, src (TraceEnd.notStuck_ok _ _ _) (.pickExh hreg hargs hT hc he₀ hn),
+            trivial, ht, hs₀⟩
 
 end Fir

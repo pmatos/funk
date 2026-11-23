@@ -71,6 +71,13 @@ theorem memMonotone_all :
   | .inl o, hc => Dialect.sum.memMonotone_inl (Core.Op.memMonotone_all o hc)
   | .inr o, _ => Op.memMonotone o
 
+omit [WorkItem] in
+/-- No op of the sum picks its callee: the core's ops name theirs, and no op
+of `gpu` calls. -/
+theorem callee_ne_picked : ∀ op : CoreGpu.Op, callee? op ≠ some .picked
+  | .inl op => Core.Op.callee_ne_picked op
+  | .inr _ => nofun
+
 /-- A valid function of the sum runs within its module: a `call` names a
 function of the module of its type, and the core's terminators keep to
 their rules. -/
@@ -124,6 +131,7 @@ theorem inModule_of_valid {M : Module CoreGpu} {f : Func CoreGpu} (hv : f.Valid 
         exact (Dialect.sum.eq_map_of_mapM_getLeft hrs).symm
       · exact hvalid.elim
     · cases op <;> cases hT
+  picks _ _ o _ _ h := absurd h (callee_ne_picked o.op)
 
 omit [WorkItem] in
 /-- Refinement of values of the sum is reflexive, since the core's is and
@@ -147,18 +155,20 @@ monotone with memory, at every layout and naming. -/
 theorem memOpsMonotone (g : Func CoreGpu) :
     letI := DialectMemDenote.denoteAt (d := CoreGpu) lay ρ L
     g.MemOpsMonotone N (unitsOf lay) :=
-  fun _ _ o _ hc => memMonotone_all o.op hc lay ρ L
+  fun _ _ o _ => ⟨fun hc => memMonotone_all o.op hc lay ρ L,
+    fun hc => absurd hc (callee_ne_picked o.op)⟩
 
 /-- A valid function of the sum runs within its module with memory, wherever
 a run names the sum's memories: each of its terminators is the core's, and
 is tied. -/
 theorem inModuleAt_of_valid {M : Module CoreGpu} {f : Func CoreGpu} (hv : f.Valid M.context) :
     f.InModuleAt lay ρ L M :=
-  (inModule_of_valid hv).inModuleAt_of_tied lay ρ L fun _ _ o _ hT => by
+  (inModule_of_valid hv).inModuleAt_of_tied lay ρ L (fun _ _ o _ hT => by
     rcases ho : o.op with op | op
     · rw [ho] at hT
       exact Dialect.sum.opLiftsSetM_inl (Core.Op.liftsSetM_of_terminator hT)
-    · rw [ho] at hT; cases op <;> cases hT
+    · rw [ho] at hT; cases op <;> cases hT)
+    fun _ _ o _ _ hc => absurd hc (callee_ne_picked o.op)
 
 variable {M : Module CoreGpu} {t : SymbolTable CoreGpu} {f : Func CoreGpu}
 
@@ -203,14 +213,16 @@ theorem args_isRefinedBy (M : Module CoreGpu) (f : Func CoreGpu)
 a question its results, and an allocation its one allocation. -/
 theorem opsFinite_gpu (ρ : DialectEffects.Mem GpuDialect → N) (L : RunItems) :
     letI := DialectMemDenote.denoteAt (d := GpuDialect) lay ρ L
-    OpsFinite GpuDialect N (unitsOf lay)
-  | .query q d w, _, args => ⟨fun _ => by
-      rw [(query_liftsSetM q d w lay ρ L args).1]
-      exact FinitelyMany.lift
-        ⟨[queryResults q d w], fun _ h => by cases h; exact List.mem_singleton_self _⟩,
-    fun h => by cases h⟩
-  | .alloc t c a n, _, args => ⟨fun _ => Op.alloc_finitelyMany t c a n lay ρ L args, fun h => by
-      cases h⟩
+    OpsFinite GpuDialect N (unitsOf lay) :=
+  ⟨fun
+    | .query q d w, _, args => ⟨fun _ => by
+        rw [(query_liftsSetM q d w lay ρ L args).1]
+        exact FinitelyMany.lift
+          ⟨[queryResults q d w], fun _ h => by cases h; exact List.mem_singleton_self _⟩,
+      fun h => by cases h⟩
+    | .alloc t c a n, _, args => ⟨fun _ => Op.alloc_finitelyMany t c a n lay ρ L args, fun h => by
+        cases h⟩,
+   fun _ hc => nomatch hc⟩
 
 /-- Every op of the sum that runs by its own rule has finitely many outcomes
 with memory, at every layout and naming. -/
@@ -224,10 +236,12 @@ effect, at every layout and naming: a question runs by its rule in the set
 monad and keeps the memories, and an allocation declares one. -/
 theorem opsIgnoreMemory_gpu (ρ : DialectEffects.Mem GpuDialect → N) (L : RunItems) :
     letI := DialectMemDenote.denoteAt (d := GpuDialect) lay ρ L
-    OpsIgnoreMemory GpuDialect N (unitsOf lay)
-  | .query q d w, _, _ =>
-    OwnRuleHas.ofLifts (query_liftsSetM q d w) lay ρ L (P := IgnoresMemory) IgnoresMemory.lift
-  | .alloc _ _ _ n, _, h => absurd (List.mem_singleton_self _) ((h (.inl n)).2.2)
+    OpsIgnoreMemory GpuDialect N (unitsOf lay) :=
+  ⟨fun
+    | .query q d w, _, _ =>
+      OwnRuleHas.ofLifts (query_liftsSetM q d w) lay ρ L (P := IgnoresMemory) IgnoresMemory.lift
+    | .alloc _ _ _ n, _, h => absurd (List.mem_singleton_self _) ((h (.inl n)).2.2),
+   fun _ hc => nomatch hc⟩
 
 /-- Every op of the sum that runs by its own rule ignores the memories where
 it declares no memory effect, at every layout and naming. -/

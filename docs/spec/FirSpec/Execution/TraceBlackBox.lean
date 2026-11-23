@@ -14,7 +14,7 @@ pins their fingerprint; the build fails when the Lean changes under it.
 
 #doc (Manual) "Two modules in the traced layer, compared call by call: readable blocks" =>
 
-:::moduleDocs (fingerprint := "1650275520245198217")
+:::moduleDocs (fingerprint := "2228343873603636355")
 :::
 
 :::readable Fir.TraceEnd.withState Fir.Step.actsOf_append (fingerprint := "9274160893709162379")
@@ -63,7 +63,7 @@ its frame from $`s'` is allowed by the source's in its frame from $`s`:
 leaving a frame keeps refinement of traced states.
 :::
 
-:::readable Fir.TraceBlackBox Fir.TraceCallsRefined (fingerprint := "5449653143493034849")
+:::readable Fir.TraceBlackBox Fir.TraceCallsRefined (fingerprint := "16561364521535019707")
 *Definitions: traced black boxes, and modules whose calls refine in the
 traced layer.* A _traced black box_ is a function $`g` of the source module
 $`M` and a function $`g'` of the target module $`M'` with the same
@@ -75,8 +75,9 @@ $$`\mathrm{traceObservable}(g_M(\vec{v}, s)) \sqsubseteq \mathrm{traceObservable
 over their traced runs from given traced states, the traced states they end
 in included. The target module _runs each call in the traced layer as the
 source does_ when each symbol names the same function in both, or a traced
-black box, and the source declares each symbol that the target declares,
-for the same types.
+black box, the source declares each symbol that the target declares,
+for the same types, and the target can call each symbol that the source
+can, at the same types.
 :::
 
 :::readable Fir.TraceCallsRefined.ext (pin := Fir.Module.func?_none_of_calls) (fingerprint := "5173545975530898859")

@@ -46,6 +46,9 @@ theorem mapsDenote {m n : Type → Type} [Monad m] [Monad n] (φ : MonadMorphism
   exit
     | .inl o, _ => h₁.exit o _
     | .inr o, args => h₂.exit o args
+  pick
+    | .inl o, ok, _ => h₁.pick o ok _
+    | .inr o, ok, args => h₂.pick o ok args
 
 variable [DialectEffects base] [DialectEffects (base.over e)] [DialectMemOver base e]
   [DialectMemDenote base] [DialectMemDenote (base.over e)]
@@ -56,7 +59,7 @@ theorem opLiftsSetM_inl [DialectDenote base SetM] [DialectDenote (base.over e) S
   fun lay ρ L _ =>
     ⟨(congrArg (HVector.toSum <$> ·) (h lay (ρ ∘ DialectMemOver.ofBase) L _).1).trans
         ((MonadMorphism.liftState SetM _).map_map _ _).symm,
-      (h lay (ρ ∘ DialectMemOver.ofBase) L _).2⟩
+      (h lay (ρ ∘ DialectMemOver.ofBase) L _).2.1, (h lay (ρ ∘ DialectMemOver.ofBase) L _).2.2⟩
 
 /-- Mapping the results of a computation keeps finitely many outcomes. -/
 theorem _root_.Fir.FinitelyMany.map {σ α β : Type} (f : α → β) {c : StateT σ SetM α}
@@ -80,11 +83,15 @@ theorem opsFinite
     (h₂ : letI := DialectMemDenote.denoteAt (d := base.over e) lay ρ L
       OpsFinite (base.over e) N (unitsOf lay)) :
     letI := DialectMemDenote.denoteAt (d := base ⊞ e) lay ρ L
-    OpsFinite (base ⊞ e) N (unitsOf lay)
-  | .inl o, hc, args =>
-    ⟨fun ht => FinitelyMany.map _ ((h₁ o hc (HVector.ofSum args)).1 ht),
-      (h₁ o hc (HVector.ofSum args)).2⟩
-  | .inr o, hc, args => h₂ o hc args
+    OpsFinite (base ⊞ e) N (unitsOf lay) :=
+  ⟨fun
+    | .inl o, hc, args =>
+      ⟨fun ht => FinitelyMany.map _ ((h₁.1 o hc (HVector.ofSum args)).1 ht),
+        (h₁.1 o hc (HVector.ofSum args)).2⟩
+    | .inr o, hc, args => h₂.1 o hc args,
+   fun
+    | .inl o, hc, ok, args => h₁.2 o hc ok (HVector.ofSum args)
+    | .inr o, hc, ok, args => h₂.2 o hc ok args⟩
 
 /-- The sum's ops ignore the memories where they touch none when the base's
 do, where the run names each memory of the base as the sum does, and `e`'s
@@ -95,11 +102,15 @@ theorem opsIgnoreMemory
     (h₂ : letI := DialectMemDenote.denoteAt (d := base.over e) lay ρ L
       OpsIgnoreMemory (base.over e) N (unitsOf lay)) :
     letI := DialectMemDenote.denoteAt (d := base ⊞ e) lay ρ L
-    OpsIgnoreMemory (base ⊞ e) N (unitsOf lay)
-  | .inl o, hc, ht, args =>
-    have h := h₁ o hc ht.of_map (HVector.ofSum args)
-    ⟨fun hn => IgnoresMemory.map _ (h.1 hn), h.2⟩
-  | .inr o, hc, ht, args => h₂ o hc ht args
+    OpsIgnoreMemory (base ⊞ e) N (unitsOf lay) :=
+  ⟨fun
+    | .inl o, hc, ht, args =>
+      have h := h₁.1 o hc ht.of_map (HVector.ofSum args)
+      ⟨fun hn => IgnoresMemory.map _ (h.1 hn), h.2⟩
+    | .inr o, hc, ht, args => h₂.1 o hc ht args,
+   fun
+    | .inl o, hc, ht, ok, args => h₁.2 o hc ht.of_map ok (HVector.ofSum args)
+    | .inr o, hc, ht, ok, args => h₂.2 o hc ht ok args⟩
 
 end Dialect.sum
 

@@ -87,6 +87,15 @@ theorem OpTraceMonotone.stepAt {op : d.Op}
   fun args args' hr => ⟨fun hT => ((h args args' hr).1 hT).step,
     fun hT => ((h args args' hr).2 hT).step⟩
 
+/-- A rule that picks a callee monotonically in the traced layer does so in
+the traced layer of marked traces, where it runs after a step. -/
+theorem OpTracePickMonotone.stepAt {op : d.Op}
+    (h : letI := DialectTrace.traceAt (d := d) lay ρ L
+      OpTracePickMonotone (B := DialectTrace.Acts d) (σ := TraceState N (unitsOf lay)) op) :
+    letI := DialectTrace.stepAt (d := d) lay ρ L
+    OpTracePickMonotone (B := Step (DialectTrace.Acts d)) (σ := TraceState N (unitsOf lay)) op :=
+  fun ok ok' hok args args' hr => (h ok ok' hok args args' hr).step
+
 /-- An external-call rule monotone in the traced layer is monotone in the
 traced layer of marked traces, where it runs after a step. -/
 theorem ExtTraceMonotone.stepAt {g : Name} {ts rs : List d.Ty}
@@ -106,7 +115,9 @@ theorem Func.TraceOpsMonotone.stepAt {f : Func d}
     letI := DialectTrace.stepAt (d := d) lay ρ L
     f.TraceOpsMonotone (Step (DialectTrace.Acts d)) (TraceState N (unitsOf lay)) :=
   fun b hb o ho => ⟨fun hc => OpTraceMonotone.stepAt lay ρ L ((h b hb o ho).1 hc),
-    fun hT g hc => ExtTraceMonotone.stepAt lay ρ L ((h b hb o ho).2 hT g hc)⟩
+    fun hT g hc => ExtTraceMonotone.stepAt lay ρ L ((h b hb o ho).2.1 hT g hc),
+    fun hT hc => ⟨OpTracePickMonotone.stepAt lay ρ L ((h b hb o ho).2.2 hT hc).1,
+      fun g => ExtTraceMonotone.stepAt lay ρ L (((h b hb o ho).2.2 hT hc).2 g)⟩⟩
 
 end
 
@@ -154,14 +165,17 @@ def OpLiftsMem [DialectTrace d] (op : d.Op) : Prop :=
     TraceM.liftMem (DialectDenote.denote (m := StateT (Memories N (unitsOf lay)) SetM) op args) =
         DialectDenote.denote (m := TraceM (DialectTrace.Acts d) (TraceState N (unitsOf lay))) op args ∧
       TraceM.liftMem (DialectDenote.exit (m := StateT (Memories N (unitsOf lay)) SetM) op args) =
-        DialectDenote.exit (m := TraceM (DialectTrace.Acts d) (TraceState N (unitsOf lay))) op args
+        DialectDenote.exit (m := TraceM (DialectTrace.Acts d) (TraceState N (unitsOf lay))) op args ∧
+      ∀ ok, TraceM.liftMem
+          (DialectDenote.pick (m := StateT (Memories N (unitsOf lay)) SetM) op ok args) =
+        DialectDenote.pick (m := TraceM (DialectTrace.Acts d) (TraceState N (unitsOf lay))) op ok args
 
 /-- In the lifted traced semantics of a dialect whose ops show no event,
 each op lifts its rule with memory. -/
 theorem OpLiftsMem.ofMem (op : d.Op) :
     letI := DialectTrace.ofMem d
     OpLiftsMem lay ρ L op :=
-  fun _ => ⟨rfl, rfl⟩
+  fun _ => ⟨rfl, rfl, fun _ => rfl⟩
 
 /-- In a dialect whose traced semantics lifts its semantics with memory,
 each op lifts its rule with memory. -/
@@ -169,7 +183,8 @@ theorem LiftsMem.opLiftsMem [DecidableEq d.Ty] [DialectCall d] [DialectTrace d] 
     (op : d.Op) : OpLiftsMem lay ρ L op := by
   letI := DialectMemDenote.denoteAt (d := d) lay ρ L
   letI := DialectTrace.traceAt (d := d) lay ρ L
-  exact fun args => ⟨(LiftsMem.lifts lay ρ L).denote op args, (LiftsMem.lifts lay ρ L).exit op args⟩
+  exact fun args => ⟨(LiftsMem.lifts lay ρ L).denote op args, (LiftsMem.lifts lay ρ L).exit op args,
+    fun ok => (LiftsMem.lifts lay ρ L).pick op ok args⟩
 
 variable [TyRefinement d.Ty]
 
@@ -186,8 +201,22 @@ theorem OpTraceMonotone.ofLift [DialectTrace d] {op : d.Op} (hl : OpLiftsMem lay
   refine ⟨fun hT => ?_, fun hT => ?_⟩
   · rw [← (hl args).1, ← (hl args').1]
     exact TraceRefinedBy.liftMem ((h args args' hr).1 hT)
-  · rw [← (hl args).2, ← (hl args').2]
+  · rw [← (hl args).2.1, ← (hl args').2.1]
     exact TraceRefinedBy.liftMem ((h args args' hr).2 hT)
+
+/-- A rule that lifts its rule with memory in a dialect's traced semantics,
+and picks a callee monotonically with memory, picks it monotonically in the
+traced layer. -/
+theorem OpTracePickMonotone.ofLift [DialectTrace d] {op : d.Op} (hl : OpLiftsMem lay ρ L op)
+    (h : letI := DialectMemDenote.denoteAt (d := d) lay ρ L
+      OpMemPickMonotone (σ := Memories N (unitsOf lay)) op) :
+    letI := DialectTrace.traceAt (d := d) lay ρ L
+    OpTracePickMonotone (B := DialectTrace.Acts d) (σ := TraceState N (unitsOf lay)) op := by
+  letI := DialectMemDenote.denoteAt (d := d) lay ρ L
+  letI := DialectTrace.traceAt (d := d) lay ρ L
+  intro ok ok' hok args args' hr
+  rw [← (hl args).2.2 ok, ← (hl args').2.2 ok']
+  exact TraceRefinedBy.liftMem (h ok ok' hok args args' hr)
 
 /-- In the traced semantics of a dialect whose ops show no event, an op
 monotone with memory is monotone in the traced layer. -/
@@ -227,8 +256,10 @@ theorem Func.TraceOpsMonotone.ofLift [DialectTrace d] {f : Func d}
       f.MemOpsMonotone N (unitsOf lay)) :
     letI := DialectTrace.traceAt (d := d) lay ρ L
     f.TraceOpsMonotone (DialectTrace.Acts d) (TraceState N (unitsOf lay)) :=
-  fun b hb o ho => ⟨fun hc => OpTraceMonotone.ofLift lay ρ L (hl o.op) (h b hb o ho hc),
-    fun _ g _ => ExtTraceMonotone.ofLift lay ρ L hlx g _ _⟩
+  fun b hb o ho => ⟨fun hc => OpTraceMonotone.ofLift lay ρ L (hl o.op) ((h b hb o ho).1 hc),
+    fun _ g _ => ExtTraceMonotone.ofLift lay ρ L hlx g _ _,
+    fun _ hc => ⟨OpTracePickMonotone.ofLift lay ρ L (hl o.op) ((h b hb o ho).2 hc),
+      fun g => ExtTraceMonotone.ofLift lay ρ L hlx g _ _⟩⟩
 
 /-- In the traced semantics of a dialect whose ops show no event, a function
 whose ops are monotone with memory has ops monotone in the traced layer. -/

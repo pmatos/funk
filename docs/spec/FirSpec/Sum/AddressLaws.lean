@@ -17,7 +17,7 @@ when the Lean changes under it.
 :::moduleDocs (fingerprint := "9582253694569073584")
 :::
 
-:::readable Fir.Dialect.sum.lawfulAddresses (pin := Fir.LawfulDialectAddresses) (fingerprint := "7281071442827679781")
+:::readable Fir.Dialect.sum.lawfulAddresses (pin := Fir.LawfulDialectAddresses) (fingerprint := "16507533994475846377")
 *Theorem: a sum's declarations cover addresses.* When the base's and the
 extension's declarations cover addresses and rebuilds, and the extension
 accepts every type that the base accepts, so do the sum's: each op meets

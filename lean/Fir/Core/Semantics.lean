@@ -284,7 +284,8 @@ def Op.hasRules (op : Op) : Bool :=
 
 /-- The core dialect's semantics in a monad `m` from two tables of rules,
 `den` for the ops that are not terminators and `ex` for the terminators:
-each op's rule, and `z p` for an op `p` that a table gives none. -/
+each op's rule, and `z p` for an op `p` that a table gives none. No core
+op picks its callee, so `z p` is every op's rule to pick one. -/
 @[instance_reducible] def denoteWith
     (den : (op : Op) → Option (HVector toType (Fir.sig (d := CoreDialect) op) →
       m (HVector toType (Fir.returnTypes (d := CoreDialect) op))))
@@ -296,6 +297,7 @@ each op's rule, and `z p` for an op `p` that a table gives none. -/
   exit op args := match ex op with
     | some rule => rule args
     | none => z op
+  pick op _ _ := z op
 
 /-- The core dialect's semantics in a monad `m` with choice and UB: each
 op's rule in `Op.denote?` or `Op.exit?`, and `z p` for an op `p` that has
@@ -312,7 +314,12 @@ namespace Fir
 outcome where `Op.denote?` or `Op.exit?` gives none. -/
 instance : DialectDenote CoreDialect SetM := Core.denoteIn fun _ _ => False
 
-/-- The core ops that call a function: `call @g` calls `@g`. -/
-instance : DialectCall CoreDialect := ⟨Core.Op.callTarget?⟩
+/-- The core ops that call a function: `call @g` calls `@g`. No core op
+picks its callee when it runs. -/
+instance : DialectCall CoreDialect := ⟨fun op => op.callTarget?.map .fixed⟩
+
+/-- No core op picks its callee when it runs. -/
+theorem Core.Op.callee_ne_picked (op : Core.Op) : callee? (d := CoreDialect) op ≠ some .picked := by
+  cases op <;> simp [callee?, Core.Op.callTarget?]
 
 end Fir

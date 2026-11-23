@@ -14,7 +14,7 @@ pins their fingerprint; the build fails when the Lean changes under it.
 
 #doc (Manual) "Congruence in a core callee: readable blocks" =>
 
-:::moduleDocs (fingerprint := "15085586242917980642")
+:::moduleDocs (fingerprint := "17639485498606785954")
 :::
 
 :::readable Fir.Core.Op.effects_touchesNoMemory Fir.Core.Op.touchesMemory_false Fir.Core.reachesNoMemory Fir.Core.reachesNoMemory_of_all (pin := Fir.Core.Op.effects) (fingerprint := "7607465697785066442")
@@ -55,7 +55,7 @@ $`\mathsf{ptr\_from\_int}`, which touch memory, declare it, so they are
 not asked.
 :::
 
-:::readable Fir.Core.opsFinite (pin := Fir.Core.Op.liftsSetM) (pin := Fir.OpsFinite) (fingerprint := "15692013965595329733")
+:::readable Fir.Core.opsFinite (pin := Fir.Core.Op.liftsSetM) (pin := Fir.OpsFinite) (fingerprint := "12490821205416274222")
 *Theorem: core ops have finitely many outcomes.* At every layout and
 naming of the core's memories, each core op that runs by its own rule has
 {ref "The-fir-specification--Memory--Ops-of-finitely-many-outcomes"}[finitely many outcomes]
@@ -134,4 +134,18 @@ the form over the runs in the set monad did. The comparison is between real beha
 in the old module's context: then the new module is valid, and neither
 module's runs have a stuck path. A body that is stuck at once meets the
 hypothesis with an empty behaviour, which refines every source.
+:::
+
+:::readable Fir.Core.args_isRefinedBy (pin := Fir.Core.opsMonotone_all) (fingerprint := "17553697295606449802")
+*Theorem: refined arguments, with memory, for every core module.* For
+every core module $`M`, valid or not, every function $`f` of it, and every
+layout and naming of the core's memories, the behaviour with memory of
+$`f` on arguments $`\vec{v}'` refines its behaviour with memory on
+$`\vec{v} \sqsubseteq \vec{v}'`, calls and recursion included: every core
+op that runs by its own rule is monotone at every width and tied, so it is
+monotone with memory, and the
+{ref "The-fir-specification--Memory--Refined-arguments-and-memories"}[theorem on refined arguments and memories]
+applies from the memories a run starts with, which refine themselves. So a
+call on arguments that refine others
+refines the call on those others.
 :::

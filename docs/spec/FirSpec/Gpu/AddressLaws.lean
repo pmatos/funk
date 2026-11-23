@@ -17,7 +17,7 @@ when the Lean changes under it.
 :::moduleDocs (fingerprint := "2369309394381797186")
 :::
 
-:::readable Fir.Gpu.Op.alloc_keepsAddrs Fir.Gpu.lawfulAddresses Fir.Gpu.coreGpu_lawfulAddresses (pin := Fir.LawfulDialectAddresses) (fingerprint := "10378081435995605887")
+:::readable Fir.Gpu.Op.alloc_keepsAddrs Fir.Gpu.lawfulAddresses Fir.Gpu.coreGpu_lawfulAddresses (pin := Fir.LawfulDialectAddresses) (fingerprint := "1674752865669587683")
 *Theorems: `gpu`'s declarations cover addresses.* An allocation of
 `gpu.work_group_alloca` keeps every address and count, and a question
 keeps the memories, so `gpu`'s declarations cover addresses and rebuilds at

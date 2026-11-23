@@ -146,6 +146,7 @@ theorem Func.traceOps_finite (hfin : OpsStepFinite d E Ans (TraceState Mem unit)
       all_goals first
         | exact (hfin.1 _ (.inl ‹_›) _).2 ‹_›
         | exact (hfin.1 _ (.inr ‹_›) _).1 (by simpa using ‹¬isTerminator o.op = true›)
-        | exact hfin.2 _ _ _
+        | exact hfin.2.1 _ _ _
+        | exact hfin.2.2 _ ‹_› _ _
 
 end Fir

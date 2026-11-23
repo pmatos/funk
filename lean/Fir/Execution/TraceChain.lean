@@ -7,7 +7,7 @@ import Fir.Execution.TraceSteps
 In the traced layer of marked traces, each op that runs by its own rule shows
 a step, and a call shows none: the ops of its callee show theirs
 (`Fir.Execution.TraceDialect`). Each op, a call included, takes one step of
-fuel. So the fuel that a run spends between two of its steps is the fuel of
+fuel; an op whose callee is picked takes one more, after its rule's step. So the fuel that a run spends between two of its steps is the fuel of
 the calls it makes before its next step. Divergence needs a bound on it, the
 same for every path of every run of the module, so that a run cut at a
 budget has taken a known number of steps.
@@ -19,8 +19,9 @@ op that runs by its own rule, or a call of an external declaration, which
 runs by the external-call rule and shows a step too. The chain depends only
 on the module, not on
 values: an op's callee is its symbol's function, and the callee starts at
-its entry block. So each list of ops starts a chain of a fixed length, or
-an endless one.
+its entry block. An op whose rule picks its callee when it runs (#235) ends
+the chain: its rule shows a step before the call. So each list of ops
+starts a chain of a fixed length, or an endless one.
 
 * _The bound._ A chain starting at a call goes on from the entry block of a
   function of the module, and there are finitely many of those. So the
@@ -39,17 +40,17 @@ variable {d : Dialect} [TyDenote d.Ty] [DecidableEq d.Ty] [DialectSignature d] [
 /-! # Chains of calls -/
 
 /-- The ops of the entry block of the function that the first of the ops
-`os` calls, when it is an op that calls a function of the module `M` that
-has an entry block. -/
+`os` calls, when it is an op that names a function of the module `M` that
+has an entry block as its callee. -/
 def Module.callHead? (M : Module d) : List (Operation d) → Option (List (Operation d))
   | [] => none
   | o :: _ =>
     if isTerminator o.op then none
     else match callee? o.op with
-      | none => none
-      | some s => match M.func? s with
+      | some (.fixed s) => match M.func? s with
         | none => none
         | some g => g.blocks.head?.map (·.body)
+      | _ => none
 
 /-- The ops `os` start a chain of `c` calls in the module `M`: `c` calls, each
 the first op of its callee's entry block but the first, before an op that is
@@ -90,12 +91,20 @@ theorem Module.callHead?_noCallee {o : Operation d} (os : List (Operation d))
     (hc : callee? o.op = none) : M.callHead? (o :: os) = none := by
   simp [Module.callHead?, hc]
 
+omit [TyDenote d.Ty] [DecidableEq d.Ty] in
+/-- An op whose callee is picked starts no call: its rule shows a step
+first. -/
+theorem Module.callHead?_picked {o : Operation d} (os : List (Operation d))
+    (hc : callee? o.op = some .picked) : M.callHead? (o :: os) = none := by
+  simp [Module.callHead?, hc]
+
 omit [TyDenote d.Ty] in
 omit [DecidableEq d.Ty] in
 /-- A call of a symbol that names no function of the module, as a call of
 an external declaration, starts no call. -/
 theorem Module.callHead?_noFunc {o : Operation d} (os : List (Operation d)) {sym : Name}
-    (hT : isTerminator o.op = false) (hc : callee? o.op = some sym) (hg : M.func? sym = none) :
+    (hT : isTerminator o.op = false) (hc : callee? o.op = some (.fixed sym))
+    (hg : M.func? sym = none) :
     M.callHead? (o :: os) = none := by
   simp [Module.callHead?, hT, hc, hg]
 
@@ -103,17 +112,19 @@ theorem Module.callHead?_noFunc {o : Operation d} (os : List (Operation d)) {sym
 ops of its entry block. -/
 theorem Module.callHead?_call {o : Operation d} (os : List (Operation d)) {sym : Name} {g : Func d}
     {dvs : List (DVal d)} {body : List (Operation d)} {genv : Env d}
-    (hT : isTerminator o.op = false) (hc : callee? o.op = some sym) (hg : M.func? sym = some g)
-    (hen : g.enter dvs = .ok (body, genv)) : M.callHead? (o :: os) = some body := by
+    (hT : isTerminator o.op = false) (hc : callee? o.op = some (.fixed sym))
+    (hg : M.func? sym = some g) (hen : g.enter dvs = .ok (body, genv)) :
+    M.callHead? (o :: os) = some body := by
   obtain ⟨e, he, -, -, hp⟩ := Func.enter_eq_ok hen
   cases hp
   simp [Module.callHead?, hT, hc, hg, he]
 
 omit [TyDenote d.Ty] [DecidableEq d.Ty] in
 /-- The chains of a module have a bound: some `W` exceeds the length of every
-chain by at least one. -/
+chain by at least two, one for the op that ends the chain and one for a
+picked call that may start it (#235). -/
 theorem Module.exists_callBound (M : Module d) :
-    ∃ W, 0 < W ∧ ∀ os c, M.CallChain os c → c + 1 ≤ W := by
+    ∃ W, 0 < W ∧ ∀ os c, M.CallChain os c → c + 2 ≤ W := by
   have hg : ∀ g ∈ M.funcs, ∃ m, ∀ body c, g.blocks.head?.map (·.body) = some body →
       M.CallChain body c → c ≤ m := fun g _ => by
     by_cases h : ∃ body c, g.blocks.head?.map (·.body) = some body ∧ M.CallChain body c
@@ -126,7 +137,7 @@ theorem Module.exists_callBound (M : Module d) :
   obtain ⟨m, hm⟩ := List.exists_budget
     (Q := fun (g : Func d) m => ∀ body c, g.blocks.head?.map (·.body) = some body → M.CallChain body c → c ≤ m)
     (fun _ _ _ hle hq body c hb hc => Nat.le_trans (hq body c hb hc) hle) hg
-  refine ⟨m + 2, by omega, fun os c h => ?_⟩
+  refine ⟨m + 3, by omega, fun os c h => ?_⟩
   cases h with
   | stop _ => omega
   | @call _ body c hs hc =>
@@ -136,12 +147,12 @@ theorem Module.exists_callBound (M : Module d) :
       split at hs
       · cases hs
       split at hs
+      · split at hs
+        · cases hs
+        rename_i g hfg
+        have := hm g (List.mem_of_find?_eq_some hfg) body c hs hc
+        omega
       · cases hs
-      split at hs
-      · cases hs
-      rename_i g hfg
-      have := hm g (List.mem_of_find?_eq_some hfg) body c hs hc
-      omega
 
 /-! # A cycle never shows a step again -/
 
@@ -165,7 +176,8 @@ theorem Func.traceOps_silent (n : Nat) :
     | 0, _, he => exact ⟨s, Func.traceOps_zero.1 he⟩
     | _ + 1, [], _ => exact absurd (Module.CallChain.stop rfl) (hno 0)
     | n + 1, o :: os, he =>
-      have callee : ∀ {sym g genv body e₁}, isTerminator o.op = false → callee? o.op = some sym →
+      have callee : ∀ {sym g genv body e₁}, isTerminator o.op = false →
+          callee? o.op = some (.fixed sym) →
           M.func? sym = some g → ∀ {args : HVector toType (sig o.op)},
           g.enter args.toDVals = .ok (body, genv) → Func.traceCall B M n g genv body s e₁ →
           TraceEnd.NotStuck e₁ → ∃ s', e₁ = .ok (.ok .fuelExhausted, [], s') := by
@@ -186,16 +198,33 @@ theorem Func.traceOps_silent (n : Nat) :
       | denoteUB _ _ _ hc => exact (stop (Module.callHead?_noCallee os hc)).elim
       | denote _ _ _ hc => exact (stop (Module.callHead?_noCallee os hc)).elim
       | callUB _ _ hT hc hg hen hx =>
+        cases hc with
+        | picked hc => exact (stop (Module.callHead?_picked os hc)).elim
+        | fixed hc =>
         obtain ⟨_, h⟩ := callee hT hc hg hen hx (TraceEnd.notStuck_error _ _)
         cases h
       | callExh _ _ hT hc hg hen hx =>
+        cases hc with
+        | picked hc => exact (stop (Module.callHead?_picked os hc)).elim
+        | fixed hc =>
         obtain ⟨_, h⟩ := callee hT hc hg hen hx (TraceEnd.notStuck_ok _ _ _)
         cases h
         exact ⟨_, rfl⟩
       | callRet _ _ hT hc hg hen hx =>
+        cases hc with
+        | picked hc => exact (stop (Module.callHead?_picked os hc)).elim
+        | fixed hc =>
         obtain ⟨_, h⟩ := callee hT hc hg hen hx (TraceEnd.notStuck_ok _ _ _)
         cases h
-      | extUB _ _ hT hc hg => exact (stop (Module.callHead?_noFunc os hT hc hg)).elim
-      | ext _ _ hT hc hg => exact (stop (Module.callHead?_noFunc os hT hc hg)).elim
+      | extUB _ _ hT hc hg =>
+        cases hc with
+        | picked hc => exact (stop (Module.callHead?_picked os hc)).elim
+        | fixed hc => exact (stop (Module.callHead?_noFunc os hT hc hg)).elim
+      | ext _ _ hT hc hg =>
+        cases hc with
+        | picked hc => exact (stop (Module.callHead?_picked os hc)).elim
+        | fixed hc => exact (stop (Module.callHead?_noFunc os hT hc hg)).elim
+      | pickUB _ _ _ hc => exact (stop (Module.callHead?_picked os hc)).elim
+      | pickExh _ _ _ hc => exact (stop (Module.callHead?_picked os hc)).elim
 
 end Fir

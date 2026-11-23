@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Core functions without calls: readable blocks" =>
 
-:::moduleDocs (fingerprint := "6650359586829882032")
+:::moduleDocs (fingerprint := "4331680848104962481")
 :::
 
 :::readable Fir.Core.Op.isCall Fir.Core.CallFree (fingerprint := "3917655194405803519")
@@ -71,13 +71,13 @@ $`\mathsf{cond\_br}` jumps, or hits UB on a poison condition, and
 $`\mathsf{unreachable}` always hits UB.
 :::
 
-:::readable Fir.Core.Op.callee_none (pin := Fir.Core.Op.callTarget?) (fingerprint := "2914497974855001185")
+:::readable Fir.Core.Op.callee_none (pin := Fir.Core.Op.callTarget?) (fingerprint := "4716255355396937636")
 *Theorem: a core op other than $`\mathsf{call}` calls no function.* For
 every core op $`o` that is not a call, $`\mathrm{callee}(o)` is none: in
 the core dialect, only $`\mathsf{call}` calls a function.
 :::
 
-:::readable Fir.Core.local_of_valid (pin := Fir.Func.Local) (pin := Fir.Core.Op.Valid) (pin := Fir.Core.Op.sig) (fingerprint := "13543607149490949525")
+:::readable Fir.Core.local_of_valid (pin := Fir.Func.Local) (pin := Fir.Core.Op.Valid) (pin := Fir.Core.Op.sig) (fingerprint := "14970221126046591018")
 *Theorem: every valid core function without calls runs within itself.*
 Let $`f` be a core function that is
 {ref "The-fir-specification--Validation--The-general-rules"}[valid] in a

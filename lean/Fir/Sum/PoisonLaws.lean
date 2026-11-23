@@ -235,6 +235,14 @@ theorem lawfulPoison [h₁ : LawfulDialectPoison base] [h₂ : LawfulDialectPois
         ((forall₂_refines_ofSum args args').2 hargs)
       exact ⟨fun hn => isRefinedBy_map_toSum (hm.1 hn), hm.2⟩
     | .inr o, hv, hr => h₂.monotone o (typesValid_inr hty hv) hr
+  pickTotal
+    | .inl o, hv, hc => fun ok args => h₁.pickTotal o (typesValid_inl hv) hc ok (HVector.ofSum args)
+    | .inr o, hv, hc => h₂.pickTotal o (typesValid_inr hty hv) hc
+  pickMonotone
+    | .inl o, hv, hc => fun ok ok' hok args args' hargs =>
+      h₁.pickMonotone o (typesValid_inl hv) hc ok ok' hok _ _
+        ((forall₂_refines_ofSum args args').2 hargs)
+    | .inr o, hv, hc => h₂.pickMonotone o (typesValid_inr hty hv) hc
 
 end Dialect.sum
 

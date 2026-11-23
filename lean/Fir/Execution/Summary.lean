@@ -37,6 +37,11 @@ a summary of a table's function: a module nested in another has a table of
 its own (ADR-2026-11-10-1510). The section on function summaries' laws
 proves the summary a fixpoint, the least one, and proves it sound: a
 function whose summary leaves out an effect does not have it.
+
+An op whose callee is picked when it runs (#235) may call any function, so
+what a caller sees of it is every effect but control
+(ADR-2026-11-09-1541), until the spec says which functions a pointer can
+name.
 -/
 
 namespace Fir
@@ -97,11 +102,18 @@ end Join
 
 variable {d : Dialect} [DialectSignature d] [DialectCall d]
 
-/-- The symbol that an op in place calls: its callee, when it is not a
-terminator. The interpreter runs a terminator by its exit, whatever its
-callee. -/
+/-- The symbol that an op in place calls: the callee it names, when it is
+not a terminator. The interpreter runs a terminator by its exit, whatever
+its callee. -/
 def Operation.call? (o : Operation d) : Option Name :=
-  if isTerminator o.op then none else callee? o.op
+  if isTerminator o.op then none else match callee? o.op with
+    | some (.fixed s) => some s
+    | _ => none
+
+/-- An op in place calls a function that its rule picks when it runs: it is
+not a terminator, and its callee is picked (#235). -/
+def Operation.picks (o : Operation d) : Bool :=
+  !isTerminator o.op && callee? o.op == some .picked
 
 /-- The function of a symbol table that a symbol names: its first function
 with that symbol, as the interpreter finds a callee. -/
@@ -165,13 +177,15 @@ variable [DialectEffects d]
 
 /-- What a caller sees of an op of a function of `t`, beside its callee's
 summary: the effects of its own rule, and every effect when it calls a
-symbol that names no function of `t`. -/
+symbol that names no function of `t`, or a function that its rule picks
+when it runs, whose callee is unknown (ADR-2026-11-09-1541). -/
 def SymbolTable.opOwn (t : SymbolTable d) (o : Operation d) :
     Effects (DialectEffects.Mem d) :=
   match o.call? with
   | some s => if (t.func? s).isSome then (effects o.op).callerView
     else ((effects o.op).join Effects.all).callerView
-  | none => (effects o.op).callerView
+  | none => if o.picks then ((effects o.op).join Effects.all).callerView
+    else (effects o.op).callerView
 
 /-- What a caller sees of the ops of `f` alone: the join of `t.opOwn` over
 every op of `f`. -/
@@ -186,12 +200,13 @@ def SymbolTable.summary (t : SymbolTable d) (s : Name) : Effects (DialectEffects
 
 /-- The effects of an op in place in a function of `t`: those of its own
 rule, and, when it calls a function, its callee's summary, or every effect
-but control when its callee names no function of `t`. -/
+but control when its callee names no function of `t` or is picked when it
+runs. -/
 def SymbolTable.opEffects (t : SymbolTable d) (o : Operation d) :
     Effects (DialectEffects.Mem d) :=
   match o.call? with
   | some s => (effects o.op).join
     (if (t.func? s).isSome then t.summary s else Effects.all.callerView)
-  | none => effects o.op
+  | none => if o.picks then (effects o.op).join Effects.all.callerView else effects o.op
 
 end Fir

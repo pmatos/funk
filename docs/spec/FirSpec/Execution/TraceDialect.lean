@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "A dialect's traced runs: readable blocks" =>
 
-:::moduleDocs (fingerprint := "11815790170535495271")
+:::moduleDocs (fingerprint := "8442134532818309655")
 :::
 
 :::readable Fir.DialectTrace Fir.DialectTrace.Acts (pin := Fir.instHRefinementEvent) (fingerprint := "3265168171521043987")
@@ -29,14 +29,14 @@ too, by which a call to a declaration runs, and the world answers it. Its acts a
 with their answers.
 :::
 
-:::readable Fir.TraceM.tick Fir.DialectTrace.stepAt (fingerprint := "7724076856212914474")
+:::readable Fir.TraceM.tick Fir.DialectTrace.stepAt (fingerprint := "17730839126400409850")
 *Definition: marking the steps.* A step shows $`[\mathsf{tick}]` and
 changes nothing else. In the traced layer of marked traces, each op that
 runs by the dialect's rule, a terminator among them, shows a step, then
 runs by that rule, each act of its traces an act of the marked trace; so
-does a call to a declaration, by the dialect's external-call rule. A call
-to a function shows no step of its own: the ops of its callee show
-theirs.
+does a call to a declaration, by the dialect's external-call rule, and so
+does the rule of an op that picks its callee, before its call. A call to a
+function shows no step of its own: the ops of its callee show theirs.
 :::
 
 :::readable Fir.TraceState.endOf Fir.Func.traceRuns Fir.Func.observedRuns Fir.Func.run_eraseSteps (pin := Fir.TraceState.init) (fingerprint := "4918620126525168936")

@@ -1,4 +1,4 @@
-import Fir.Execution.Monotone
+import Fir.Execution.CallsAt
 import Fir.Execution.Environment
 
 /-!
@@ -20,7 +20,7 @@ once, every way in which a path of a run of ops goes on from its first
 op, so that the proofs need not unfold the interpreter:
 
 * A path that does not end stuck, with fuel left and an op to run, takes
-  one of nine ways. In each, the op owns no region of the core's kind and
+  one of eleven ways. In each, the op owns no region of the core's kind and
   its operands are
   found. Then the op is a terminator, the last op of its block, whose
   exit hits UB, returns, or jumps to a block, where the run goes on with
@@ -30,7 +30,11 @@ op, so that the proofs need not unfold the interpreter:
   callee hits UB, runs out of fuel, or returns values of the call's
   result types, which bind, and the run goes on with the steps that the
   callee leaves; or it calls an external declaration, which is UB in the
-  set monad, a layer with no world (`Fir.Execution.ExtCall`).
+  set monad, a layer with no world (`Fir.Execution.ExtCall`). A call's
+  callee is a fixed symbol, or one that the op's rule picks when it runs
+  (#235): that rule hits UB, or picks a symbol with no step left for the
+  call, which runs out of fuel, or picks one that the run then calls as
+  above, with one step less (`Func.CallsAt`).
 * A run with no fuel runs out of fuel, and a block with no op left is
   stuck.
 * A run that runs out of fuel runs out of fuel with fewer steps too. It
@@ -45,42 +49,6 @@ open SetM
 
 variable {d : Dialect} [TyDenote d.Ty] [DecidableEq d.Ty] [DialectSignature d] [DialectCall d]
   [DialectDenote d SetM]
-
-/-- A way to end that is not stuck. -/
-def Ev.NotStuck (e : Ev (Except Stuck α)) : Prop := ∀ st, e ≠ .ok (.error st)
-
-/-- A path of `liftExcept x >>= g` that is not stuck goes on from the
-value that `x` holds. -/
-theorem run_liftExcept_bind {x : Except Stuck α} {g : α → ExceptT Stuck SetM β}
-    {e : Ev (Except Stuck β)} (hne : Ev.NotStuck e) :
-    (liftExcept x >>= g).run e ↔ ∃ a, x = .ok a ∧ (g a).run e := by
-  rw [run_bind]
-  constructor
-  · rintro (⟨a, ha, h⟩ | ⟨st, hst, rfl⟩ | ⟨r, hr, _⟩)
-    · exact ⟨a, by cases x <;> cases (run_liftExcept _ _).1 ha; rfl, h⟩
-    · exact absurd rfl (hne st)
-    · exact nomatch (run_liftExcept _ _).1 hr
-  · rintro ⟨a, rfl, h⟩
-    exact .inl ⟨a, (run_liftExcept _ _).2 rfl, h⟩
-
-/-- A path of a lifted computation of the set monad, then `g`, goes on
-from one of its results, or ends where it hits UB. -/
-theorem run_lift_bind {s : SetM α} {g : α → ExceptT Stuck SetM β} {e : Ev (Except Stuck β)} :
-    (ExceptT.lift s >>= g).run e ↔
-      (∃ a, s (.ok a) ∧ (g a).run e) ∨ (∃ r, s (.ub r) ∧ e = .ub r) := by
-  rw [run_bind]
-  constructor
-  · rintro (⟨a, ha, h⟩ | ⟨st, hst, rfl⟩ | ⟨r, hr, rfl⟩)
-    · rcases (run_lift _ _).1 ha with ⟨a', h', he⟩ | ⟨_, _, he⟩
-      · cases he; exact .inl ⟨a, h', h⟩
-      · cases he
-    · rcases (run_lift _ _).1 hst with ⟨_, _, he⟩ | ⟨_, _, he⟩ <;> cases he
-    · rcases (run_lift _ _).1 hr with ⟨_, _, he⟩ | ⟨r', h', he⟩
-      · cases he
-      · cases he; exact .inr ⟨r, h', rfl⟩
-  · rintro (⟨a, ha, h⟩ | ⟨r, hr, rfl⟩)
-    · exact .inl ⟨a, (run_lift _ _).2 (.inl ⟨a, ha, rfl⟩), h⟩
-    · exact .inr (.inr ⟨r, (run_lift _ _).2 (.inr ⟨r, hr, rfl⟩), rfl⟩)
 
 /-- The ways a path of a run of the ops `o :: os` of `f`, with `n + 1`
 steps, goes on, when it does not end stuck. -/
@@ -112,31 +80,47 @@ inductive Func.StepPath (M : Module d) (n : Nat) (f : Func d) (env : Env d) (o :
       (o.results.map (·.1)).length = rs.toDVals.length →
       (Func.runOps (m := SetM) M n f ((o.results.map (·.1)).zip rs.toDVals ++ env) os).run e →
       Func.StepPath M n f env o os e
-  | callUB {args : HVector toType (sig o.op)} {s : Name} {g : Func d} {body genv} {r : String} :
+  | callUB {args : HVector toType (sig o.op)} {s : Name} {ts : List d.Ty}
+      {cargs : HVector toType ts} {n' : Nat} {g : Func d} {body genv} {r : String} :
       o.ownsCoreRegion = false → env.operands (sig o.op) o.operands = .ok args →
-      isTerminator o.op = false → callee? o.op = some s → M.func? s = some g →
-      g.enter args.toDVals = .ok (body, genv) →
-      (Func.runOps (m := SetM) M n g genv body).run (.ub r) → Func.StepPath M n f env o os (.ub r)
-  | callExh {args : HVector toType (sig o.op)} {s : Name} {g : Func d} {body genv} :
+      isTerminator o.op = false → Func.CallsAt M o args n s ts cargs n' → M.func? s = some g →
+      g.enter cargs.toDVals = .ok (body, genv) →
+      (Func.runOps (m := SetM) M n' g genv body).run (.ub r) → Func.StepPath M n f env o os (.ub r)
+  | callExh {args : HVector toType (sig o.op)} {s : Name} {ts : List d.Ty}
+      {cargs : HVector toType ts} {n' : Nat} {g : Func d} {body genv} :
       o.ownsCoreRegion = false → env.operands (sig o.op) o.operands = .ok args →
-      isTerminator o.op = false → callee? o.op = some s → M.func? s = some g →
-      g.enter args.toDVals = .ok (body, genv) →
-      (Func.runOps (m := SetM) M n g genv body).run (.ok (.ok .fuelExhausted)) →
+      isTerminator o.op = false → Func.CallsAt M o args n s ts cargs n' → M.func? s = some g →
+      g.enter cargs.toDVals = .ok (body, genv) →
+      (Func.runOps (m := SetM) M n' g genv body).run (.ok (.ok .fuelExhausted)) →
       Func.StepPath M n f env o os (.ok (.ok .fuelExhausted))
-  | callRet {args : HVector toType (sig o.op)} {s : Name} {g : Func d} {body genv}
-      {vs : List (DVal d)} {k : Nat} {e} :
+  | callRet {args : HVector toType (sig o.op)} {s : Name} {ts : List d.Ty}
+      {cargs : HVector toType ts} {n' : Nat} {g : Func d} {body genv} {vs : List (DVal d)}
+      {k : Nat} {e} :
       o.ownsCoreRegion = false → env.operands (sig o.op) o.operands = .ok args →
-      isTerminator o.op = false → callee? o.op = some s → M.func? s = some g →
-      g.enter args.toDVals = .ok (body, genv) →
-      (Func.runOps (m := SetM) M n g genv body).run (.ok (.ok (.ret (vs, k)))) →
+      isTerminator o.op = false → Func.CallsAt M o args n s ts cargs n' → M.func? s = some g →
+      g.enter cargs.toDVals = .ok (body, genv) →
+      (Func.runOps (m := SetM) M n' g genv body).run (.ok (.ok (.ret (vs, k)))) →
       vs.map (·.1) = returnTypes o.op → (o.results.map (·.1)).length = vs.length →
-      (Func.runOps (m := SetM) M (min k n) f ((o.results.map (·.1)).zip vs ++ env) os).run e →
+      (Func.runOps (m := SetM) M (min k n') f ((o.results.map (·.1)).zip vs ++ env) os).run e →
       Func.StepPath M n f env o os e
-  | extUB {args : HVector toType (sig o.op)} {s : Name} :
+  | extUB {args : HVector toType (sig o.op)} {s : Name} {ts : List d.Ty}
+      {cargs : HVector toType ts} {n' : Nat} :
       o.ownsCoreRegion = false → env.operands (sig o.op) o.operands = .ok args →
-      isTerminator o.op = false → callee? o.op = some s → M.func? s = none →
-      M.declares s (sig o.op) (returnTypes o.op) = true →
+      isTerminator o.op = false → Func.CallsAt M o args n s ts cargs n' → M.func? s = none →
+      M.declares s ts (returnTypes o.op) = true →
       Func.StepPath M n f env o os (.ub extCallUB)
+  | pickUB {args : HVector toType (sig o.op)} {r : String} :
+      o.ownsCoreRegion = false → env.operands (sig o.op) o.operands = .ok args →
+      isTerminator o.op = false → callee? o.op = some .picked →
+      DialectDenote.pick (m := SetM) o.op (M.callable (sig o.op).tail (returnTypes o.op)) args
+        (.ub r) →
+      Func.StepPath M n f env o os (.ub r)
+  | pickExh {args : HVector toType (sig o.op)} {s : Name} :
+      o.ownsCoreRegion = false → env.operands (sig o.op) o.operands = .ok args →
+      isTerminator o.op = false → callee? o.op = some .picked →
+      DialectDenote.pick (m := SetM) o.op (M.callable (sig o.op).tail (returnTypes o.op)) args
+        (.ok s) → n = 0 →
+      Func.StepPath M n f env o os (.ok (.ok .fuelExhausted))
 
 /-- A path of a run of ops that is not stuck is a path that the first op
 goes on by, and every such path is a path of the run. -/
@@ -193,7 +177,7 @@ theorem Func.stepPath_iff {M : Module d} {n : Nat} {f : Func d} {env : Env d} {o
           · match r, hr, h with
             | .fuelExhausted, hr, h =>
               cases (run_pure _ _).1 h
-              exact .callExh hreg' hargs hT' hc hg hen hr
+              exact .callExh hreg' hargs hT' (.fixed hc) hg hen hr
             | .ret (vs, k), hr, h =>
               dsimp only at h
               split at h
@@ -201,19 +185,58 @@ theorem Func.stepPath_iff {M : Module d} {n : Nat} {f : Func d} {env : Env d} {o
                 simp only [Env.bind] at hb
                 split at hb
                 · cases hb
-                  exact .callRet hreg' hargs hT' hc hg hen hr (by assumption) (by assumption) h
+                  exact .callRet hreg' hargs hT' (.fixed hc) hg hen hr (by assumption) (by assumption) h
                 · cases hb
               · exact absurd ((run_liftExcept _ _).1 h) (hne _)
           · exact absurd rfl (hne st)
-          · exact .callUB hreg' hargs hT' hc hg hen hu
+          · exact .callUB hreg' hargs hT' (.fixed hc) hg hen hu
         · rename_i hg
           split at h
           · rename_i hd
             rcases run_lift_bind.1 h with ⟨_, hvs, _⟩ | ⟨r, hr, rfl⟩
             · cases hvs
             · cases hr
-              exact .extUB hreg' hargs hT' hc hg hd
+              exact .extUB hreg' hargs hT' (.fixed hc) hg hd
           · exact absurd ((run_liftExcept _ _).1 h) (hne _)
+      · rename_i hc
+        rcases run_lift_bind.1 h with ⟨s, hs, h⟩ | ⟨r, hr, rfl⟩
+        · cases n with
+          | zero =>
+            dsimp only at h
+            cases (run_pure _ _).1 h
+            exact .pickExh hreg' hargs hT' hc hs rfl
+          | succ n =>
+            dsimp only at h
+            split at h
+            · rename_i g hg
+              obtain ⟨⟨body, genv⟩, hen, h⟩ := (run_liftExcept_bind hne).1 h
+              rcases (run_bind _ _ _).1 h with ⟨r, hr, h⟩ | ⟨st, hst, rfl⟩ | ⟨u, hu, rfl⟩
+              · match r, hr, h with
+                | .fuelExhausted, hr, h =>
+                  cases (run_pure _ _).1 h
+                  exact .callExh hreg' hargs hT' (.picked hc hs) hg hen hr
+                | .ret (vs, k), hr, h =>
+                  dsimp only at h
+                  split at h
+                  · obtain ⟨env₁, hb, h⟩ := (run_liftExcept_bind hne).1 h
+                    simp only [Env.bind] at hb
+                    split at hb
+                    · cases hb
+                      exact .callRet hreg' hargs hT' (.picked hc hs) hg hen hr (by assumption) (by assumption)
+                        h
+                    · cases hb
+                  · exact absurd ((run_liftExcept _ _).1 h) (hne _)
+              · exact absurd rfl (hne st)
+              · exact .callUB hreg' hargs hT' (.picked hc hs) hg hen hu
+            · rename_i hg
+              split at h
+              · rename_i hd
+                rcases run_lift_bind.1 h with ⟨_, hvs, _⟩ | ⟨r, hr, rfl⟩
+                · cases hvs
+                · cases hr
+                  exact .extUB hreg' hargs hT' (.picked hc hs) hg hd
+              · exact absurd ((run_liftExcept _ _).1 h) (hne _)
+        · exact .pickUB hreg' hargs hT' hc hr
   · intro h
     simp only [Func.runOps]
     cases h with
@@ -241,6 +264,13 @@ theorem Func.stepPath_iff {M : Module d} {n : Nat} {f : Func d} {env : Env d} {o
       rw [ite_eq_right (by simp [hT])]
       simp only [hc]
       exact run_lift_bind.2 (.inr ⟨_, hx, rfl⟩)
+    | pickExh hreg hargs hT hc hs hn =>
+      subst hn
+      rw [ite_eq_right (by simp [hreg])]
+      refine (run_liftExcept_bind hne).2 ⟨_, hargs, ?_⟩
+      rw [ite_eq_right (by simp [hT])]
+      simp only [hc]
+      exact run_lift_bind.2 (.inl ⟨_, hs, (run_pure _ _).2 rfl⟩)
     | denote hreg hargs hT hc hx hlen h =>
       rw [ite_eq_right (by simp [hreg])]
       refine (run_liftExcept_bind hne).2 ⟨_, hargs, ?_⟩
@@ -251,30 +281,67 @@ theorem Func.stepPath_iff {M : Module d} {n : Nat} {f : Func d} {env : Env d} {o
       rw [ite_eq_right (by simp [hreg])]
       refine (run_liftExcept_bind hne).2 ⟨_, hargs, ?_⟩
       rw [ite_eq_right (by simp [hT])]
-      simp only [hc, hg]
-      exact (run_liftExcept_bind hne).2 ⟨_, hen, (run_bind _ _ _).2 (.inr (.inr ⟨_, hx, rfl⟩))⟩
+      cases hc with
+      | fixed hc =>
+        simp only [hc, hg]
+        exact (run_liftExcept_bind hne).2 ⟨_, hen, (run_bind _ _ _).2 (.inr (.inr ⟨_, hx, rfl⟩))⟩
+      | picked hc hs =>
+        simp only [hc]
+        refine run_lift_bind.2 (.inl ⟨_, hs, ?_⟩)
+        simp only [hg]
+        exact (run_liftExcept_bind hne).2 ⟨_, hen, (run_bind _ _ _).2 (.inr (.inr ⟨_, hx, rfl⟩))⟩
     | callExh hreg hargs hT hc hg hen hx =>
       rw [ite_eq_right (by simp [hreg])]
       refine (run_liftExcept_bind hne).2 ⟨_, hargs, ?_⟩
       rw [ite_eq_right (by simp [hT])]
-      simp only [hc, hg]
-      exact (run_liftExcept_bind hne).2 ⟨_, hen, (run_bind _ _ _).2 (.inl ⟨_, hx, rfl⟩)⟩
+      cases hc with
+      | fixed hc =>
+        simp only [hc, hg]
+        exact (run_liftExcept_bind hne).2 ⟨_, hen, (run_bind _ _ _).2 (.inl ⟨_, hx, rfl⟩)⟩
+      | picked hc hs =>
+        simp only [hc]
+        refine run_lift_bind.2 (.inl ⟨_, hs, ?_⟩)
+        simp only [hg]
+        exact (run_liftExcept_bind hne).2 ⟨_, hen, (run_bind _ _ _).2 (.inl ⟨_, hx, rfl⟩)⟩
     | callRet hreg hargs hT hc hg hen hx hty hlen h =>
       rw [ite_eq_right (by simp [hreg])]
       refine (run_liftExcept_bind hne).2 ⟨_, hargs, ?_⟩
       rw [ite_eq_right (by simp [hT])]
-      simp only [hc, hg]
-      refine (run_liftExcept_bind hne).2 ⟨_, hen, (run_bind _ _ _).2 (.inl ⟨_, hx, ?_⟩)⟩
-      dsimp only
-      rw [ite_eq_left hty]
-      exact (run_liftExcept_bind hne).2 ⟨_, Env.bind_ok _ _ hlen, h⟩
+      cases hc with
+      | fixed hc =>
+        simp only [hc, hg]
+        refine (run_liftExcept_bind hne).2 ⟨_, hen, (run_bind _ _ _).2 (.inl ⟨_, hx, ?_⟩)⟩
+        dsimp only
+        rw [ite_eq_left hty]
+        exact (run_liftExcept_bind hne).2 ⟨_, Env.bind_ok _ _ hlen, h⟩
+      | picked hc hs =>
+        simp only [hc]
+        refine run_lift_bind.2 (.inl ⟨_, hs, ?_⟩)
+        simp only [hg]
+        refine (run_liftExcept_bind hne).2 ⟨_, hen, (run_bind _ _ _).2 (.inl ⟨_, hx, ?_⟩)⟩
+        dsimp only
+        rw [ite_eq_left hty]
+        exact (run_liftExcept_bind hne).2 ⟨_, Env.bind_ok _ _ hlen, h⟩
     | extUB hreg hargs hT hc hg hd =>
       rw [ite_eq_right (by simp [hreg])]
       refine (run_liftExcept_bind hne).2 ⟨_, hargs, ?_⟩
       rw [ite_eq_right (by simp [hT])]
-      simp only [hc, hg]
-      simp only [hd, ↓reduceIte]
-      exact run_lift_bind.2 (.inr ⟨_, rfl, rfl⟩)
+      cases hc with
+      | fixed hc =>
+        simp only [hc, hg]
+        simp only [hd, ↓reduceIte]
+        exact run_lift_bind.2 (.inr ⟨_, rfl, rfl⟩)
+      | picked hc hs =>
+        simp only [hc]
+        refine run_lift_bind.2 (.inl ⟨_, hs, ?_⟩)
+        simp only [hg, hd, ↓reduceIte]
+        exact run_lift_bind.2 (.inr ⟨_, rfl, rfl⟩)
+    | pickUB hreg hargs hT hc hx =>
+      rw [ite_eq_right (by simp [hreg])]
+      refine (run_liftExcept_bind hne).2 ⟨_, hargs, ?_⟩
+      rw [ite_eq_right (by simp [hT])]
+      simp only [hc]
+      exact run_lift_bind.2 (.inr ⟨_, hx, rfl⟩)
 
 /-- A run with no fuel runs out of fuel, and only so. -/
 theorem Func.run_runOps_zero {M : Module d} {f : Func d} {env : Env d} {os : List (Operation d)}
@@ -288,45 +355,5 @@ theorem Func.run_runOps_nil {M : Module d} {n : Nat} {f : Func d} {env : Env d}
     ¬ (Func.runOps (m := SetM) M (n + 1) f env []).run e := by
   simp only [Func.runOps]
   exact fun h => hne _ ((run_liftExcept _ _).1 h)
-
-/-- A run that runs out of fuel with `j` more steps runs out of fuel with
-fewer: it takes the same path, and runs out sooner. -/
-theorem Func.runOps_exhausted_down (M : Module d) (n : Nat) :
-    ∀ (j : Nat) (f : Func d) (env : Env d) (os : List (Operation d)),
-      (Func.runOps (m := SetM) M (n + j) f env os).run (.ok (.ok .fuelExhausted)) →
-      (Func.runOps (m := SetM) M n f env os).run (.ok (.ok .fuelExhausted)) := by
-  have hne : Ev.NotStuck
-      (.ok (.ok .fuelExhausted) : Ev (Except Stuck (Result (List (DVal d) × Nat)))) :=
-    fun _ h => nomatch h
-  induction n using Nat.strongRecOn with
-  | ind n ih =>
-    intro j f env os h
-    match n, os with
-    | 0, _ => exact Func.run_runOps_zero.2 rfl
-    | k + 1, [] => rw [Nat.add_right_comm] at h; exact absurd h (Func.run_runOps_nil hne)
-    | k + 1, o :: os =>
-      rw [Nat.add_right_comm] at h
-      refine (Func.stepPath_iff hne).2 ?_
-      cases (Func.stepPath_iff hne).1 h with
-      | goto hreg hargs hT hos hx hj h =>
-        exact .goto hreg hargs hT hos hx hj (ih k (Nat.lt_succ_self k) j _ _ _ h)
-      | denote hreg hargs hT hc hx hlen h =>
-        exact .denote hreg hargs hT hc hx hlen (ih k (Nat.lt_succ_self k) j _ _ _ h)
-      | callExh hreg hargs hT hc hg hen hx =>
-        exact .callExh hreg hargs hT hc hg hen (ih k (Nat.lt_succ_self k) j _ _ _ hx)
-      | callRet hreg hargs hT hc hg hen hx hty hlen h =>
-        rename_i vs kk
-        rcases (Func.runOps_ahead M k j _ _ _).down_ret _ kk hx with ⟨hj, hx'⟩ | hx'
-        · have hle : kk - j ≤ k := by
-            have := Func.runOps_left_le M (k + j) _ _ _ _ _ hx
-            omega
-          have hmin : min kk (k + j) = (kk - j) + j := by
-            have := Func.runOps_left_le M (k + j) _ _ _ _ _ hx
-            omega
-          rw [hmin] at h
-          have h' := ih (kk - j) (Nat.lt_succ_of_le hle) j _ _ _ h
-          refine .callRet hreg hargs hT hc hg hen hx' hty hlen ?_
-          rwa [Nat.min_eq_left hle]
-        · exact .callExh hreg hargs hT hc hg hen hx'
 
 end Fir

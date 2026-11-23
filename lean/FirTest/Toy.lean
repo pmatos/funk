@@ -134,6 +134,7 @@ not a terminator has none. -/
 instance : DialectDenote ToyDialect SetM where
   denote := Op.denote
   exit _ _ := fun _ => False
+  pick _ _ _ := fun _ => False
 
 /-- No toy op calls a function. -/
 instance : DialectCall ToyDialect := ⟨fun _ => none⟩
@@ -259,6 +260,8 @@ instance lawfulPoison : LawfulDialectPoison ToyDialect where
   total
     | .mask .., _, _ => fun | .cons _ .nil => ⟨fun _ => ⟨_, rfl⟩, fun h => nomatch h⟩
   monotone | .mask w k, _, _ => mask_monotone w k
+  pickTotal _ _ h := nomatch h
+  pickMonotone _ _ h := nomatch h
 
 /-- The toy dialect is lawful in its totality: it is lawful, and it lifts
 the set monad, so `toy.mask` has an outcome from any memories. -/
