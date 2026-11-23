@@ -84,6 +84,7 @@ import FirTest.WorldScript
 import FirTest.ObserveEnd
 import FirTest.CoreTrace
 import FirTest.CoreEvent
+import FirTest.CoreExtCallRule
 import FirTest.MemoryPoison
 import FirTest.MemoryObligations
 import FirTest.MemoryRefine

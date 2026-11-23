@@ -199,6 +199,9 @@ import Fir.Execution.Observe
 import Fir.Execution.ObserveEnd
 import Fir.Execution.ObserveEndLaws
 import Fir.Execution.TraceSeen
+import Fir.Execution.TraceEscape
+import Fir.Execution.TraceEscapeLaws
+import Fir.Execution.TraceWorldRefine
 import Fir.Execution.TraceDialect
 import Fir.Execution.TraceLift
 import Fir.Execution.TraceRefine
@@ -237,6 +240,7 @@ import Fir.Execution.TraceScript
 import Fir.Execution.MemoryEndModes
 import Fir.Core.Observe
 import Fir.Core.Event
+import Fir.Core.ExtCallRule
 import Fir.Core.Trace
 import Fir.Memory.Model
 import Fir.Memory.Ordering
