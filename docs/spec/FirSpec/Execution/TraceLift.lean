@@ -14,17 +14,17 @@ when the Lean changes under it.
 
 #doc (Manual) "Traced runs of a dialect with no event: readable blocks" =>
 
-:::moduleDocs (fingerprint := "4912308063582415284")
+:::moduleDocs (fingerprint := "13605459311657728234")
 :::
 
-:::readable Fir.DialectTrace.ofMem Fir.DialectTrace.ofMem_liftsMem (fingerprint := "10025041609519925043")
+:::readable Fir.DialectTrace.ofMem Fir.DialectTrace.ofMem_liftsMem (fingerprint := "1428588102997942781")
 *Definition: the traced semantics of a dialect with no event.* A dialect
 whose ops show no event has, as its
 {ref "The-fir-specification--Memory--A-dialect___s-traced-runs"}[traced semantics],
 no event, one answer, and each op's semantics with memory at $`\ell`,
 $`\rho` and $`L`, lifted onto the memories of the traced state: it shows
-nothing and keeps what escaped. Its external-call rule is its rule with
-memory, UB, lifted too.
+nothing and keeps what escaped; so does its rule to pick a callee. Its
+external-call rule is its rule with memory, UB, lifted too.
 
 *Theorem: it lifts the semantics with memory.* So the lift onto the
 memories of the traced state maps each op's semantics with memory to its

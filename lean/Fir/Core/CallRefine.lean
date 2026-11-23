@@ -110,7 +110,7 @@ theorem Op.monotone_all : (op : Op) →
 /-- Every terminator and every op with no callee of every core function is
 monotone, valid or not. -/
 theorem opsMonotone_all (f : Func CoreDialect) : f.OpsMonotone :=
-  fun _ _ o _ h => Op.monotone_all o.op h
+  fun _ _ o _ => ⟨Op.monotone_all o.op, fun h => absurd h (Op.callee_ne_picked o.op)⟩
 
 /-- A core type has finitely many values when it is an integer or a float
 type. A pointer type has infinitely many. -/

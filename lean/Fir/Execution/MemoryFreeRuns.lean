@@ -116,53 +116,78 @@ theorem Module.memOps_ignoresMemory
   have htail : ∀ o' ∈ os, ∃ b ∈ f.blocks, o' ∈ b.body :=
     fun o' h' => hos o' (List.mem_cons_of_mem _ h')
   have hneT := hne.mapRet (g := atMemSteps T)
-  have callee : ∀ {c : Name} {g : Func d} {genv body} {dvs : List (DVal d)} {e'},
-      callee? o.op = some c → isTerminator o.op = false → M.func? c = some g →
-      g.enter dvs = .ok (body, genv) →
-      Ev.NotStuck e' → (Func.memCall M n g genv body S).run e' →
-      e'.mapRet (atMemSteps S) = e' ∧ (Func.memCall M n g genv body T).run (e'.mapRet (atMemSteps T)) :=
-    fun {c g _ _ _ _} hc hT hg hen hne' hx => by
+  have calls : ∀ {c : Name} {ts : List d.Ty} {cargs : HVector toType ts} {args n' S₁},
+      Func.MemCallsAt M o args S n c ts cargs n' S₁ →
+        S₁ = S ∧ Func.MemCallsAt M o args T n c ts cargs n' T :=
+    fun hc => by
+      cases hc with
+      | fixed hc => exact ⟨rfl, .fixed hc⟩
+      | picked hc hs =>
+        obtain ⟨rfl, hs'⟩ := (hfree.2 o.op hc hown _ _).2 S _ _ hs
+        exact ⟨rfl, .picked hc (hs' T)⟩
+  have callee : ∀ {c : Name} {ts : List d.Ty} {cargs : HVector toType ts} {args n' S₁}
+      {g : Func d} {genv body} {e'}, Func.MemCallsAt M o args S n c ts cargs n' S₁ →
+      isTerminator o.op = false → M.func? c = some g → g.enter cargs.toDVals = .ok (body, genv) →
+      Ev.NotStuck e' → (Func.memCall M n' g genv body S₁).run e' →
+      e'.mapRet (atMemSteps S₁) = e' ∧
+        (Func.memCall M n' g genv body T).run (e'.mapRet (atMemSteps T)) :=
+    fun {c _ _ _ _ _ g _ _ _} hc hT hg hen hne' hx => by
       have hg' : M.table.func? c = some g := hg
-      have hcs : M.table.ReachesNoMemory c :=
-        hs.callee hf (Func.mem_allOps hb ho) (Operation.call?_of hT hc) (by simp [hg'])
-      exact Func.memCall_ignoresMemory (fun e'' hne'' h'' => ih n (Nat.lt_succ_self n) c g _ _ _ _
-        e'' hg hcs (Func.enter_ops hen).1 hne'' h'') hne' hx
+      have hcs : M.table.ReachesNoMemory c := by
+        cases hc with
+        | fixed hc =>
+          exact hs.callee hf (Func.mem_allOps hb ho) (Operation.call?_of hT hc) (by simp [hg'])
+        | picked hc _ =>
+          exact hs.picked hf (Func.mem_allOps hb ho) (by simp [Operation.picks, hT, hc]) c
+      exact Func.memCall_ignoresMemory (fun e'' hne'' h'' =>
+        ih _ (Nat.lt_succ_of_le hc.le.1) c g _ _ _ _ e'' hg hcs (Func.enter_ops hen).1 hne'' h'')
+        hne' hx
   cases (Func.memStepPath_iff hne).1 h with
   | exitUB hreg hargs hT hos' hx =>
     exact ⟨rfl, (Func.memStepPath_iff hneT).2
-      (.exitUB hreg hargs hT hos' (((hfree o.op (.inl hT) hown _).2 hT).1 S _ hx T))⟩
+      (.exitUB hreg hargs hT hos' (((hfree.1 o.op (.inl hT) hown _).2 hT).1 S _ hx T))⟩
   | ret hreg hargs hT hos' hx hres =>
-    obtain ⟨rfl, hx'⟩ := ((hfree o.op (.inl hT) hown _).2 hT).2 S _ _ hx
+    obtain ⟨rfl, hx'⟩ := ((hfree.1 o.op (.inl hT) hown _).2 hT).2 S _ _ hx
     exact ⟨rfl, (Func.memStepPath_iff hneT).2 (.ret hreg hargs hT hos' (hx' T) hres)⟩
   | goto hreg hargs hT hos' hx hj hrun =>
-    obtain ⟨rfl, hx'⟩ := ((hfree o.op (.inl hT) hown _).2 hT).2 S _ _ hx
+    obtain ⟨rfl, hx'⟩ := ((hfree.1 o.op (.inl hT) hown _).2 hT).2 S _ _ hx
     obtain ⟨_, _, _, hblk, -⟩ := Func.jump_eq_ok hj
     obtain ⟨h1, h2⟩ := ih n (Nat.lt_succ_self n) s f _ _ _ T e hf hs
       (fun o' h' => ⟨_, (Func.block?_some hblk).1, h'⟩) hne hrun
     exact ⟨h1, (Func.memStepPath_iff hneT).2 (.goto hreg hargs hT hos' (hx' T) hj h2)⟩
   | denoteUB hreg hargs hT hc hx =>
     exact ⟨rfl, (Func.memStepPath_iff hneT).2
-      (.denoteUB hreg hargs hT hc (((hfree o.op (.inr hc) hown _).1 hT).1 S _ hx T))⟩
+      (.denoteUB hreg hargs hT hc (((hfree.1 o.op (.inr hc) hown _).1 hT).1 S _ hx T))⟩
   | denote hreg hargs hT hc hx hlen hrun =>
-    obtain ⟨rfl, hx'⟩ := ((hfree o.op (.inr hc) hown _).1 hT).2 S _ _ hx
+    obtain ⟨rfl, hx'⟩ := ((hfree.1 o.op (.inr hc) hown _).1 hT).2 S _ _ hx
     obtain ⟨h1, h2⟩ := ih n (Nat.lt_succ_self n) s f _ os _ T e hf hs htail hne hrun
     exact ⟨h1, (Func.memStepPath_iff hneT).2 (.denote hreg hargs hT hc (hx' T) hlen h2)⟩
   | callUB hreg hargs hT hc hg hen hx =>
-    exact ⟨rfl, (Func.memStepPath_iff hneT).2
-      (.callUB hreg hargs hT hc hg hen (callee hc hT hg hen (Ev.notStuck_ub _) hx).2)⟩
+    have hx' := (callee hc hT hg hen (Ev.notStuck_ub _) hx).2
+    obtain ⟨rfl, hcT⟩ := calls hc
+    exact ⟨rfl, (Func.memStepPath_iff hneT).2 (.callUB hreg hargs hT hcT hg hen hx')⟩
   | callExh hreg hargs hT hc hg hen hx =>
-    exact ⟨rfl, (Func.memStepPath_iff hneT).2
-      (.callExh hreg hargs hT hc hg hen (callee hc hT hg hen (Ev.notStuck_ok _) hx).2)⟩
+    have hx' := (callee hc hT hg hen (Ev.notStuck_ok _) hx).2
+    obtain ⟨rfl, hcT⟩ := calls hc
+    exact ⟨rfl, (Func.memStepPath_iff hneT).2 (.callExh hreg hargs hT hcT hg hen hx')⟩
   | callRet hreg hargs hT hc hg hen hx hty hlen hrun =>
     obtain ⟨h1, hx'⟩ := callee hc hT hg hen (Ev.notStuck_ok _) hx
+    obtain ⟨rfl, hcT⟩ := calls hc
     simp only [Ev.mapRet, atMemSteps, Ev.ok.injEq, Except.ok.injEq, Result.ret.injEq,
       Prod.mk.injEq, true_and, and_true] at h1
     subst h1
-    obtain ⟨h1, h2⟩ := ih _ (Nat.lt_succ_of_le (Nat.min_le_right _ _)) s f _ os _ T e hf hs htail
-      hne hrun
-    exact ⟨h1, (Func.memStepPath_iff hneT).2 (.callRet hreg hargs hT hc hg hen hx' hty hlen h2)⟩
+    obtain ⟨h1, h2⟩ := ih _ (Nat.lt_succ_of_le (Nat.le_trans (Nat.min_le_right _ _) hc.le.1)) s f
+      _ os _ T e hf hs htail hne hrun
+    exact ⟨h1, (Func.memStepPath_iff hneT).2 (.callRet hreg hargs hT hcT hg hen hx' hty hlen h2)⟩
   | extUB hreg hargs hT hc hg hd =>
-    exact ⟨rfl, (Func.memStepPath_iff hneT).2 (.extUB hreg hargs hT hc hg hd)⟩
+    obtain ⟨rfl, hcT⟩ := calls hc
+    exact ⟨rfl, (Func.memStepPath_iff hneT).2 (.extUB hreg hargs hT hcT hg hd)⟩
+  | pickUB hreg hargs hT hc hx =>
+    exact ⟨rfl, (Func.memStepPath_iff hneT).2
+      (.pickUB hreg hargs hT hc ((hfree.2 o.op hc hown _ _).1 S _ hx T))⟩
+  | pickExh hreg hargs hT hc hs' hn =>
+    obtain ⟨rfl, hs''⟩ := (hfree.2 o.op hc hown _ _).2 S _ _ hs'
+    exact ⟨rfl, (Func.memStepPath_iff hneT).2 (.pickExh hreg hargs hT hc (hs'' T) hn)⟩
 
 /-- Every run from given memories of a function of `M` that reaches no
 memory ignores the memories: each way it ends from `S`, it ends from `T`

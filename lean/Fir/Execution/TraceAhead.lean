@@ -113,14 +113,16 @@ theorem Func.traceOps_up (j n : Nat) :
       have mk : ∀ {x}, TraceEnd.NotStuck x → Func.TStepPath M (n + j) f env o os s x →
           Func.traceOps B M (n + j + 1) f env (o :: os) s x :=
         fun hx h => (Func.tStepPath_iff hx).2 h
-      have call : ∀ {g : Func d} {genv : Env d} {body : List (Operation d)}
+      have call : ∀ {n' : Nat} {g : Func d} {genv : Env d} {body : List (Operation d)}
+          {s₁ : TraceState Mem unit}
           {e₁ : TraceEnd B (TraceState Mem unit) (Except Stuck (Result (List (DVal d) × Nat)))},
-          Func.traceCall B M n g genv body s e₁ → e₁.Done →
-          Func.traceCall B M (n + j) g genv body s (e₁.addLeft j) := by
-        intro g genv body e₁ h₁ hd₁
+          n' ≤ n → Func.traceCall B M n' g genv body s₁ e₁ → e₁.Done →
+          Func.traceCall B M (n' + j) g genv body s₁ (e₁.addLeft j) := by
+        intro n' g genv body s₁ e₁ hn' h₁ hd₁
         obtain ⟨e₂, h₂, rfl⟩ := (TraceM.run_inFrame _ _ _).1 h₁
         rw [TraceEnd.addLeft_exit]
-        exact (TraceM.run_inFrame _ _ _).2 ⟨_, ihn _ _ _ _ _ h₂ hd₁.of_exit, rfl⟩
+        exact (TraceM.run_inFrame _ _ _).2
+          ⟨_, ih _ (Nat.lt_succ_of_le hn') _ _ _ _ _ h₂ hd₁.of_exit, rfl⟩
       cases (Func.tStepPath_iff hne).1 he with
       | exitUB hreg hargs hT hos hx =>
         exact mk (TraceEnd.notStuck_error _ _) (.exitUB hreg hargs hT hos hx)
@@ -139,21 +141,26 @@ theorem Func.traceOps_up (j n : Nat) :
         exact mk ((hd.of_after.addLeft j).notStuck.after)
           (.denote hreg hargs hT hc hx hlen h₁)
       | callUB hreg hargs hT hc hg hen hx =>
-        exact mk (TraceEnd.notStuck_error _ _) (.callUB hreg hargs hT hc hg hen (call hx trivial))
+        exact mk (TraceEnd.notStuck_error _ _)
+          (.callUB hreg hargs hT (hc.up j) hg hen (call hc.le.1 hx trivial))
       | callExh _ _ _ _ _ _ _ => exact hd.elim
+      | pickExh _ _ _ _ _ _ => exact hd.elim
       | callRet hreg hargs hT hc hg hen hx hty hlen h =>
-        rw [TraceEnd.addLeft_after]
-        have h₁ := ih _ (Nat.lt_succ_of_le (Nat.min_le_right _ _)) _ _ _ _ _ h hd.of_after
+        rw [TraceEnd.addLeft_after, TraceEnd.addLeft_after]
+        have h₁ := ih _ (Nat.lt_succ_of_le (Nat.le_trans (Nat.min_le_right _ _) hc.le.1)) _ _ _ _ _
+          h hd.of_after.of_after
         rw [← Nat.add_min_add_right] at h₁
-        exact mk ((hd.of_after.addLeft j).notStuck.after)
-          (.callRet hreg hargs hT hc hg hen (call hx trivial) hty hlen h₁)
+        exact mk ((hd.of_after.of_after.addLeft j).notStuck.after.after)
+          (.callRet hreg hargs hT (hc.up j) hg hen (call hc.le.1 hx trivial) hty hlen h₁)
       | extUB hreg hargs hT hc hg hdc hx =>
-        exact mk (TraceEnd.notStuck_error _ _) (.extUB hreg hargs hT hc hg hdc hx)
+        exact mk (TraceEnd.notStuck_error _ _) (.extUB hreg hargs hT (hc.up j) hg hdc hx)
       | ext hreg hargs hT hc hg hdc hx hty hlen h =>
-        rw [TraceEnd.addLeft_after]
-        have h₁ := ihn _ _ _ _ _ h hd.of_after
-        exact mk ((hd.of_after.addLeft j).notStuck.after)
-          (.ext hreg hargs hT hc hg hdc hx hty hlen h₁)
+        rw [TraceEnd.addLeft_after, TraceEnd.addLeft_after]
+        have h₁ := ih _ (Nat.lt_succ_of_le hc.le.1) _ _ _ _ _ h hd.of_after.of_after
+        exact mk ((hd.of_after.of_after.addLeft j).notStuck.after.after)
+          (.ext hreg hargs hT (hc.up j) hg hdc hx hty hlen h₁)
+      | pickUB hreg hargs hT hc hx =>
+        exact mk (TraceEnd.notStuck_error _ _) (.pickUB hreg hargs hT hc hx)
 
 /-- Each return of a callee's ops in a call's frame is a return of its ops
 with `j` more steps of fuel, leaving `j` more; each UB is UB there too. -/

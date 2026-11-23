@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Core op semantics: readable blocks" =>
 
-:::moduleDocs (fingerprint := "3422133187310587073")
+:::moduleDocs (fingerprint := "17686271386363599762")
 :::
 
 :::readable Fir.Core.Op.denote? (fingerprint := "18428645373403082656")
@@ -106,19 +106,20 @@ Each takes the terminator's operand values and says where control goes.
 Every op that is not a terminator has none here.
 :::
 
-:::readable Fir.Core.denoteWith Fir.Core.denoteIn (fingerprint := "4638849842117945950")
+:::readable Fir.Core.denoteWith Fir.Core.denoteIn (fingerprint := "5521286048761039303")
 *Definition: the core dialect's semantics in a monad.* Given two tables
 of rules in a monad $`m`, one for the ops that are not terminators and one
 for the terminators, and a computation $`z(p)` for each op $`p`, the core's
 semantics in $`m` gives each op its rule from the tables, and $`z(p)` to an
-op that a table gives none. In a monad with choice and UB, the core's
+op that a table gives none. No core op picks its callee, so $`z(p)` is also
+every op's rule to pick one. In a monad with choice and UB, the core's
 semantics with $`z` takes the two blocks of rules above as its tables. The
 set monad's semantics below is the one with no outcome as $`z`, and the
 tree of choices and the state layer use the same tables, or tables with
 memory, with their own $`z`.
 :::
 
-:::readable Fir.Core.Op.hasRules Fir.Core.Op.touchesMemory Fir.Core.Op.readsItems (pin := Fir.instDialectDenoteCoreDialectSetM) (pin := Fir.instDialectCallCoreDialect) (pin := Fir.Core.Op.callTarget?) (pin := Fir.Core.Op.denote?) (pin := Fir.Core.Op.exit?) (fingerprint := "11248207992490347464")
+:::readable Fir.Core.Op.hasRules Fir.Core.Op.touchesMemory Fir.Core.Op.readsItems (pin := Fir.instDialectDenoteCoreDialectSetM) (pin := Fir.instDialectCallCoreDialect) (pin := Fir.Core.Op.callTarget?) (pin := Fir.Core.Op.denote?) (pin := Fir.Core.Op.exit?) (fingerprint := "3745055337415481637")
 *Definition: the core ops that touch memory.* $`\mathsf{alloca}`, which
 allocates, $`\mathsf{load}`, which reads, and $`\mathsf{store}`, which
 writes, an integer, a pointer or a float (`loadPtr`, `storePtr`,
@@ -169,8 +170,9 @@ $`\emptyset` is the computation with no outcome: it has no way to end.
 
 *Definition: the core ops that call a function.* $`\mathrm{callee}(o)` is
 the function that the
-{ref "The-fir-specification--Execution--Call-rules"}[call rules] give: $`f`
-for $`\mathsf{call}~f : t^* \to r^*`, and none for every other op.
+{ref "The-fir-specification--Execution--Call-rules"}[call rules] give:
+$`\mathsf{fixed}~f` for $`\mathsf{call}~f : t^* \to r^*`, and none for
+every other op. No core op picks its callee when it runs.
 
 An op with no rule has no outcome. That is not a stand-in meaning: the
 {ref "The-fir-specification--Execution--Poison-classes"}[totality obligation]
@@ -186,4 +188,12 @@ $`\mathsf{globaladdr}`, the copies and moves, the fills,
 $`\mathsf{ptr\_expose}` and $`\mathsf{ptr\_from\_int}` have no rule here
 either: their meaning in the set monad has no outcome, and their rules and their
 obligations are those with memory.
+:::
+
+:::readable Fir.Core.Op.callee_ne_picked (fingerprint := "170703424084157333")
+*Theorem: no core op picks its callee.* For every core op $`o`,
+$`\mathrm{callee}(o) \ne \mathsf{picked}`: $`\mathsf{call}` names its
+callee, and no other core op calls a function. So every obligation on a
+rule that picks a callee holds of the core with nothing to check, and the
+core's guarantees keep their statements (#235).
 :::

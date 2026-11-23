@@ -98,6 +98,7 @@ def Op.denote : (op : Op) → HVector toType (Fir.sig (d := ProbeDialect) op) �
 instance : DialectDenote ProbeDialect SetM where
   denote := Op.denote
   exit _ _ := fun _ => False
+  pick _ _ _ := fun _ => False
 
 /-- No probe op calls a function. -/
 instance : DialectCall ProbeDialect := ⟨fun _ => none⟩
@@ -137,6 +138,8 @@ instance lawful : LawfulDialectPoison ProbeDialect where
   propagates _ _ h := nomatch h
   returnsOnDefined _ _ h := nomatch h
   total | .id w, _, _ => id_total w
+  pickTotal _ _ h := nomatch h
+  pickMonotone _ _ h := nomatch h
   monotone
     | .id w, hv, _ => by
       have hw := pos_of_typesValid hv
@@ -263,18 +266,25 @@ once and keep them. -/
 theorem coreProbe_opsIgnoreMemory {N : Type} [DecidableEq N] (lay : N → MemLayout)
     (ρ : DialectEffects.Mem CoreProbe → N) (L : RunItems) :
     letI := DialectMemDenote.denoteAt (d := CoreProbe) lay ρ L
-    OpsIgnoreMemory CoreProbe N (unitsOf lay)
-  | .inl o, _, h => Dialect.sum.ownRuleHas_inl lay ρ L (fun f _ h => IgnoresMemory.map f h) (by
-      cases hi : o.readsItems with
-      | false =>
-        exact OwnRuleHas.ofLifts (Core.Op.liftsSetM o (core_touchesMemory_false h) hi) lay _
-          L IgnoresMemory.lift
-      | true =>
-        cases o <;> try cases hi
-        · exact Core.fieldAddr_ignoresMemory _ _ _ _ lay _ L
-        · exact Core.globalAddr_ignoresMemory _ _ lay _ L)
-  | .inr o, _, _ => Dialect.sum.ownRuleHas_inr lay ρ
-      L (OwnRuleHas.ofLifts (LiftsSetM.opLifts (d := ProbeDialect) o) lay ρ L IgnoresMemory.lift)
+    OpsIgnoreMemory CoreProbe N (unitsOf lay) := by
+  refine ⟨fun op hop h => ?_, fun op hc => ?_⟩
+  · match op, hop, h with
+      | .inl o, _, h =>
+        exact Dialect.sum.ownRuleHas_inl lay ρ L (fun f _ h => IgnoresMemory.map f h) (by
+          cases hi : o.readsItems with
+          | false =>
+            exact OwnRuleHas.ofLifts (Core.Op.liftsSetM o (core_touchesMemory_false h) hi) lay _
+              L IgnoresMemory.lift
+          | true =>
+            cases o <;> try cases hi
+            · exact Core.fieldAddr_ignoresMemory _ _ _ _ lay _ L
+            · exact Core.globalAddr_ignoresMemory _ _ lay _ L)
+      | .inr o, _, _ =>
+        exact Dialect.sum.ownRuleHas_inr lay ρ L
+          (OwnRuleHas.ofLifts (LiftsSetM.opLifts (d := ProbeDialect) o) lay ρ L IgnoresMemory.lift)
+  · cases op with
+    | inl o => exact absurd hc (Core.Op.callee_ne_picked o)
+    | inr o => exact nomatch hc
 
 /-- Congruence in the callee, with memory, for every valid module of
 `CoreProbe` and a callee with no pointer parameter that reaches no memory

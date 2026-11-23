@@ -91,7 +91,8 @@ theorem alloc_memMonotone : ∀ op : AllocOp, MemMonotone (d := AllocDialect) op
 
 /-- The alloc dialect is lawful in its monotonicity, with no semantics in
 the set monad. -/
-instance : LawfulDialectMonotone AllocDialect := ⟨fun op _ _ => alloc_memMonotone op⟩
+instance : LawfulDialectMonotone AllocDialect :=
+  ⟨fun op _ _ => alloc_memMonotone op, fun _ _ h => nomatch h⟩
 
 /-- The runs with memory of a valid module of the alloc dialect, whose op
 allocates, refine themselves on arguments that refine others. -/
@@ -190,14 +191,16 @@ returns. -/
 theorem alloc_opsFinite {N : Type} [DecidableEq N] (lay : N → MemLayout) (ρ : Unit → N)
     (L : RunItems) :
     letI := DialectMemDenote.denoteAt (d := AllocDialect) lay ρ L
-    OpsFinite AllocDialect N (unitsOf lay)
-  | .alloc, _, _ => ⟨fun _ S => ⟨[(.nil, (S.alloc (ρ ()) .stack 1 1).2)], fun x hx => by
+    OpsFinite AllocDialect N (unitsOf lay) := by
+  refine ⟨fun op hop args => ?_, fun _ h => nomatch h⟩
+  match op, hop, args with
+  | .alloc, _, _ => exact ⟨fun _ S => ⟨[(.nil, (S.alloc (ρ ()) .stack 1 1).2)], fun x hx => by
       rcases (SetM.stateMap_apply _ _ S _).1 hx with ⟨_, _, ha, he⟩ | ⟨_, _, he⟩
       · cases ha
         cases he
         exact List.mem_singleton_self _
       · cases he⟩, fun h => nomatch h⟩
-  | .ret, _, _ => ⟨fun h => (nomatch h), fun _ S => ⟨[(.ret, S)], fun x hx => by
+  | .ret, _, _ => exact ⟨fun h => (nomatch h), fun _ S => ⟨[(.ret, S)], fun x hx => by
       cases hx
       exact List.mem_singleton_self _⟩⟩
 

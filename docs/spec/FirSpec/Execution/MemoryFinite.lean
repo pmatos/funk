@@ -14,7 +14,7 @@ fails when the Lean changes under it.
 
 #doc (Manual) "Ops of finitely many outcomes: readable blocks" =>
 
-:::moduleDocs (fingerprint := "3592964032077437555")
+:::moduleDocs (fingerprint := "861266378304289914")
 :::
 
 :::readable Fir.SetM.FinitelyMany Fir.FinitelyMany Fir.FinitelyMany.lift (fingerprint := "18420379536908109690")
@@ -48,15 +48,26 @@ _returns finitely many things_ when some list holds every $`b` it may
 return. Mapping its returns keeps that.
 :::
 
-:::readable Fir.OpsFinite (fingerprint := "5574973558946288833")
+:::readable Fir.OpsFinite (fingerprint := "4125617196705344642")
 *Definition: ops of finitely many outcomes.* The ops of a dialect have
 finitely many outcomes, in a semantics in the state layer over the
 memories, when each op that runs by its own rule, a terminator or an op
 with no callee, on each operands, has finitely many outcomes: its results
 with the memories, as an op that is not a terminator, and where control
-goes with the memories, as a terminator. It is how the assumption of
+goes with the memories, as a terminator; and the rule of each op whose
+callee is picked has finitely many outcomes, on each operands and whatever
+the run says it can call. It is how the assumption of
 {ref "The-fir-specification--Execution--Outcomes-and-behaviours"}[observable behaviour],
 that every choice has finitely many options, reads with memory.
+:::
+
+:::readable Fir.Func.MemCallsAt.cover (pin := Fir.Func.MemCallsAt) (fingerprint := "4154119287269808279")
+*Theorem: finitely many calls.* When the ops of the dialect have finitely
+many outcomes, an op, on its operands, from given memories, calls finitely
+many symbols on finitely many arguments, with finitely many differences
+between the steps its op leaves and the steps its call leaves, from finitely
+many memories: one callee when it names it, and one for each outcome of its
+rule to pick one otherwise.
 :::
 
 :::readable Fir.Func.memCall_exhausted_iff Fir.Func.memCall_ub_of_memOps Fir.Func.memOps_notExhausted_up Fir.Func.memCall_notExhausted_up (pin := Fir.Func.memCall) (fingerprint := "3242435919357147413")
@@ -68,7 +79,7 @@ not at any budget $`m' \ge m`: a path that runs out of fuel at $`m'` runs
 out of fuel at $`m`.
 :::
 
-:::readable Fir.Func.memOps_finitelyManyRets Fir.Func.memCall_finitelyManyRets (pin := Fir.Func.memOps) (fingerprint := "8132443878603099270")
+:::readable Fir.Func.memOps_finitelyManyRets Fir.Func.CallRunsOut Fir.Func.CallRunsOut.down Fir.Func.memCall_finitelyManyRets (pin := Fir.Func.memOps) (fingerprint := "13910663726801216007")
 *Theorems: a run at one budget returns finitely many things.* When the ops
 of the dialect have finitely many outcomes, the run of ops
 $`\mathrm{ops}_M(n, f, E, o^*) \mathbin{@} S` returns finitely many things,
@@ -78,4 +89,7 @@ its frame. The proof is by strong induction on $`n`, following
 an op that runs by its own rule goes on in finitely many ways, each into a
 rest with fewer steps; a callee returns finitely many things at $`n`, each
 followed by a rest with at most $`n` steps.
+A path of a call that runs out of fuel does so in its callee, or in the
+rest of the caller's ops after the callee returns; with fewer steps it
+runs out of fuel too.
 :::

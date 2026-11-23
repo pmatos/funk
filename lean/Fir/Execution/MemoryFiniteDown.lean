@@ -1,4 +1,4 @@
-import Fir.Execution.MemoryFinite
+import Fir.Execution.MemoryFiniteExit
 import Fir.Execution.MemoryRefineDown
 
 /-!
@@ -89,7 +89,8 @@ theorem Func.memOps_notExhausted_of_finite {M M' : Module d}
           | goto hreg hargs => exact h hreg hargs
           | denote hreg hargs => exact h hreg hargs
           | callExh hreg hargs => exact h hreg hargs
-          | callRet hreg hargs => exact h hreg hargs⟩
+          | callRet hreg hargs => exact h hreg hargs
+          | pickExh hreg hargs => exact h hreg hargs⟩
       cases hreg : o.ownsCoreRegion with
       | true => exact stuck fun h _ => by simp_all
       | false =>
@@ -101,60 +102,13 @@ theorem Func.memOps_notExhausted_of_finite {M M' : Module d}
       obtain ⟨args, hargs, hr⟩ := henv.operands hargs'
       by_cases hT : isTerminator o.op = true
       · -- A terminator: finitely many exits.
-        by_cases hos : os = []
-        case neg =>
-          exact ⟨1, fun hx => by
-              cases (Func.memStepPath_iff hexh).1 hx with
-              | goto _ _ _ hos' => exact hos hos'
-              | denote _ _ hT' => simp_all
-              | callExh _ _ hT' => simp_all
-              | callRet _ _ hT' => simp_all⟩
-        obtain ⟨LE, hLE⟩ := (hfin o.op (.inl hT) args').2 hT S'
-        obtain ⟨m, hm⟩ := List.exists_budget (L := LE)
-          (Q := fun p m => DialectDenote.exit (m := StateT (Memories Mem unit) SetM) o.op args' S'
-            (.ok p) → ∀ i blk env₁', p.1 = .goto i → f.jump env' o.succs i = .ok (blk, env₁') →
-              ¬ (Func.memOps M' m f env₁' blk.body p.2).run (.ok (.ok .fuelExhausted)))
-          (fun _ _ _ hle h hp i blk env₁' hi hj => Func.memOps_notExhausted_up hle (h hp i blk env₁' hi hj))
-          fun ⟨x', S₁'⟩ _ => by
-            classical
-            by_cases hp : DialectDenote.exit (m := StateT (Memories Mem unit) SetM) o.op args' S'
-              (.ok (x', S₁'))
-            case neg => exact ⟨0, fun h => absurd h hp⟩
-            cases x' with
-            | ret => exact ⟨0, fun _ _ _ _ h => nomatch h⟩
-            | goto i =>
-              cases hj : f.jump env' o.succs i with
-              | error _ => exact ⟨0, fun _ _ _ _ hi h => by cases hi; simp_all⟩
-              | ok q =>
-                obtain ⟨e₀, he₀, hle⟩ := (hmo (.inl hT) args args' hr).2 hT S S' hS _ hp
-                match e₀, he₀, hle with
-                | .ub r, he₀, _ => exact absurd ⟨1, r, src (fun _ h => nomatch h)
-                    (.exitUB hreg hargs hT hos he₀)⟩ hnu
-                | .ok (_, S₁), he₀, ⟨rfl, hS₁⟩ =>
-                  obtain ⟨env₁, hj₁, henv₁⟩ := henv.jump hj
-                  obtain ⟨m, hm⟩ := ih N (Nat.lt_succ_self N) f env₁ q.2 q.1.body S₁ S₁' hf
-                    (hf.jump hj₁) henv₁ hS₁
-                    (fun ⟨N', r, h⟩ => hnu ⟨N' + 1, r, src (fun _ h => nomatch h)
-                      (.goto hreg hargs hT hos he₀ hj₁ h)⟩)
-                    (fun h => hnx (src hexh (.goto hreg hargs hT hos he₀ hj₁ h)))
-                  refine ⟨m, fun _ i' blk env₁' hi h => ?_⟩
-                  cases hi
-                  rw [hj] at h
-                  cases h
-                  exact hm
-        refine ⟨m + 1, fun hx => ?_⟩
-        cases (Func.memStepPath_iff hexh).1 hx with
-        | goto _ hargs'' _ _ hx hj h =>
-          cases same hargs''
-          exact hm _ (hLE _ hx) hx _ _ _ rfl hj h
-        | denote _ _ hT' => simp_all
-        | callExh _ _ hT' => simp_all
-        | callRet _ _ hT' => simp_all
+        exact Func.memOps_notExhausted_exit hfin hf hops henv hS hreg hargs hargs' hr hT hnu hnx
+          fun env₁ env₁' os₁ S₁ S₁' => ih N (Nat.lt_succ_self N) f env₁ env₁' os₁ S₁ S₁' hf
       have hT' : isTerminator o.op = false := by simpa using hT
       cases hcs : callee? o.op with
       | none =>
         -- An op with no callee: finitely many outcomes.
-        obtain ⟨LD, hLD⟩ := (hfin o.op (.inr hcs) args').1 hT' S'
+        obtain ⟨LD, hLD⟩ := (hfin.1 o.op (.inr hcs) args').1 hT' S'
         obtain ⟨m, hm⟩ := List.exists_budget (L := LD)
           (Q := fun p m => DialectDenote.denote (m := StateT (Memories Mem unit) SetM) o.op args' S'
             (.ok p) → (o.results.map (·.1)).length = p.1.toDVals.length →
@@ -166,7 +120,7 @@ theorem Func.memOps_notExhausted_of_finite {M M' : Module d}
             by_cases hp : DialectDenote.denote (m := StateT (Memories Mem unit) SetM) o.op args' S'
               (.ok (rs', S₁'))
             case neg => exact ⟨0, fun h => absurd h hp⟩
-            obtain ⟨e₀, he₀, hle⟩ := (hmo (.inr hcs) args args' hr).1 hT' S S' hS _ hp
+            obtain ⟨e₀, he₀, hle⟩ := (hmo.1 (.inr hcs) args args' hr).1 hT' S S' hS _ hp
             match e₀, he₀, hle with
             | .ub r, he₀, _ => exact absurd ⟨1, r, src (fun _ h => nomatch h)
                 (.denoteUB hreg hargs hT' hcs he₀)⟩ hnu
@@ -188,131 +142,165 @@ theorem Func.memOps_notExhausted_of_finite {M M' : Module d}
         | denote _ hargs'' _ _ hx hl h =>
           cases same hargs''
           exact hm _ (hLD _ hx) hx hl h
-        | callExh _ _ _ hc => simp_all
-        | callRet _ _ _ hc => simp_all
-      | some s =>
-        -- A call: a budget for the callee, then one for each of its finitely many returns.
-        cases hg' : M'.func? s with
-        | none => exact ⟨1, fun hx => by cases (Func.memStepPath_iff hexh).1 hx <;> simp_all⟩
-        | some g₀ =>
-        cases hen' : g₀.enter args'.toDVals with
-        | error _ => exact ⟨1, fun hx => by cases (Func.memStepPath_iff hexh).1 hx <;> simp_all⟩
-        | ok p' =>
-        have callUB : ∀ {g : Func d} {p : List (Operation d) × Env d} {N' : Nat} {r : String},
-            M.func? s = some g → g.enter args.toDVals = .ok p →
-            (Func.memCall M N' g p.2 p.1 S).run (.ub r) → False :=
-          fun {_ _ N' r} hg hen h =>
-            hnu ⟨N' + 1, r, src (fun _ h => nomatch h) (.callUB hreg hargs hT' hcs hg hen h)⟩
-        have callExh : ∀ {g : Func d} {p : List (Operation d) × Env d},
-            M.func? s = some g → g.enter args.toDVals = .ok p →
-            (Func.memCall M N g p.2 p.1 S).run (.ok (.ok .fuelExhausted)) → False :=
-          fun {_ _} hg hen h => hnx (src hexh (.callExh hreg hargs hT' hcs hg hen h))
-        obtain ⟨n₁, hn₁⟩ : ∃ n₁, ¬ (Func.memCall M' n₁ g₀ p'.2 p'.1 S').run
-            (.ok (.ok .fuelExhausted)) := by
-          by_cases hsame : M'.func? s = M.func? s
-          · have hg : M.func? s = some g₀ := hsame ▸ hg'
-            obtain ⟨genv, hen, hgenv⟩ :=
-              Func.enter_isRefinedBy (HVector.toDVals_isRefinedBy hr) hen'
-            have hgf := hmono g₀ (List.mem_of_find?_eq_some hg)
-            obtain ⟨n₁, h₁⟩ := ih N (Nat.lt_succ_self N) g₀ genv p'.2 p'.1 S.enter S'.enter hgf
-              (hgf.enter (p := (p'.1, genv)) hen) hgenv hS.enter
-              (fun ⟨_, _, h⟩ => callUB (p := (p'.1, genv)) hg hen (Func.memCall_ub_of_memOps h))
-              (fun h => callExh (p := (p'.1, genv)) hg hen (Func.memCall_exhausted_iff.2 h))
-            exact ⟨n₁, fun h => h₁ (Func.memCall_exhausted_iff.1 h)⟩
-          rcases hcalls.1 s with h | ⟨g, g', hg, hg'', bb⟩
-          · exact absurd h hsame
-          rw [hg''] at hg'
-          cases hg'
-          have hsig := bb.sig hen'
-          have inv := fun {N x} => Func.memRunsFrom_run_cast (M := M) (args := args) (S := S)
-            (N := N) (x := x) hsig
-          classical
-          by_cases hdiv : ∀ m, (g₀.memRunsFrom M' ((args'.cast hsig).cast bb.params.symm, S')
-            m).outcomes .fuelExhausted
-          case neg =>
-            obtain ⟨m, hm⟩ := Classical.not_forall.1 hdiv
-            exact ⟨m, fun h => hm (bb.target_run hen' hexh h)⟩
-          exfalso
-          obtain ⟨s₀, hs₀, hle⟩ := bb.refines _ _ S S' (HVector.forall₂_cast hsig hr) hS
-            .fuelExhausted hdiv
-          match s₀, hs₀, hle with
-          | .ub r, ⟨N', hN'⟩, _ =>
-            obtain ⟨p, hp, e, he, hx⟩ := inv (x := .ub r) (fun _ h => nomatch h) hN'
-            match e, he, hx with
-            | .ub _, he, rfl => exact callUB hg hp he
-          | .fuelExhausted, hs₀, _ =>
-            obtain ⟨p, hp, e, he, hx⟩ := inv (x := .ok (.ok .fuelExhausted)) (fun _ h => nomatch h)
-              (hs₀ N)
-            match e, he, hx with
-            | .ok (.ok .fuelExhausted), he, _ => exact callExh hg hp he
-          | .ret _, _, hle => exact hle.elim
-        obtain ⟨LC, hLC⟩ := Func.memCall_finitelyManyRets hfin M' n₁ g₀ p'.2 p'.1 S'
-        obtain ⟨m, hm⟩ := List.exists_budget (L := LC)
-          (Q := fun (r : (List (DVal d) × Memories Mem unit) × Nat) m =>
-            (Func.memCall M' n₁ g₀ p'.2 p'.1 S').run (.ok (.ok (.ret r))) →
-            r.1.1.map (·.1) = returnTypes o.op → (o.results.map (·.1)).length = r.1.1.length →
-              ¬ (Func.memOps M' m f ((o.results.map (·.1)).zip r.1.1 ++ env') os r.1.2).run
-                (.ok (.ok .fuelExhausted)))
-          (fun _ _ _ hle h hx hty hl => Func.memOps_notExhausted_up hle (h hx hty hl))
-          fun ⟨⟨vs', T'⟩, k'⟩ _ => by
+        | pickExh _ _ _ hc => simp_all
+        | callExh _ _ _ hc => cases hc <;> simp_all
+        | callRet _ _ _ hc => cases hc <;> simp_all
+      | some c =>
+        -- A call: finitely many callees, arguments and memories, each with a budget.
+        obtain ⟨T, hTc⟩ := Func.MemCallsAt.cover hfin M' o args' S'
+        obtain ⟨m, hm⟩ := List.exists_budget (L := T)
+          (Q := fun t m => (∃ (n₀ n₀' : Nat) (ts : List d.Ty) (cargs' : HVector toType ts),
+              Func.MemCallsAt M' o args' S' n₀ t.1 ts cargs' n₀' t.2.2.2 ∧
+                cargs'.toDVals = t.2.1 ∧ n₀ - n₀' = t.2.2.1) →
+            ¬ Func.CallRunsOut M' m f env' o os t.1 t.2.1 t.2.2.2)
+          (fun _ _ _ hle h hw hx => by
+            obtain ⟨j, rfl⟩ := Nat.exists_eq_add_of_le hle
+            exact h hw hx.down)
+          fun ⟨s, dvs', δ, S₁'⟩ _ => by
             classical
-            by_cases hall : (Func.memCall M' n₁ g₀ p'.2 p'.1 S').run (.ok (.ok (.ret ((vs', T'), k'))))
-              ∧ vs'.map (·.1) = returnTypes o.op ∧ (o.results.map (·.1)).length = vs'.length
-            case neg => exact ⟨0, fun hx hty hl => absurd ⟨hx, hty, hl⟩ hall⟩
-            obtain ⟨hx, hty', hlen'⟩ := hall
-            obtain ⟨g, p, hg, hen, hal⟩ := hcalls.callee_allowed hmono hg' hr hS hen'
-              (fun hgm hbm env env' h T T' hT e' he' =>
-                Func.memOps_allowed hmono hcalls _ g₀ env env' _ T T' hgm hbm h hT e' he')
-              hx (fun _ h => nomatch h) (fun h => nomatch h)
-            rcases hal with ⟨_, _, h⟩ | ⟨N₁, ⟨vs, T⟩, k, h₁, hvs, hT₁⟩
-            · exact (callUB hg hen h).elim
-            obtain ⟨k₀, hk₀⟩ : ∃ k₀, (Func.memCall M N g p.2 p.1 S).run
-                (.ok (.ok (.ret ((vs, T), k₀)))) := by
-              rcases Nat.le_total N₁ N with hle | hle
-              · have ha := Func.memCall_ahead M N₁ (N - N₁) g p.2 p.1 S
-                rw [Nat.add_sub_cancel' hle] at ha
-                exact ⟨_, ha.up_ret _ _ h₁⟩
-              · have ha := Func.memCall_ahead M N (N₁ - N) g p.2 p.1 S
-                rw [Nat.add_sub_cancel' hle] at ha
-                rcases ha.down_ret _ _ h₁ with ⟨_, h⟩ | h
-                · exact ⟨_, h⟩
-                · exact (callExh hg hen h).elim
-            have hk₀N := Func.memCall_left_le M N g p.2 p.1 S _ _ hk₀
-            have hty := (DVals.types_eq_of_isRefinedBy hvs).trans hty'
-            have hlen := hlen'.trans (DVals.length_eq_of_isRefinedBy hvs).symm
-            obtain ⟨m, hm⟩ := ih k₀ (Nat.lt_succ_of_le hk₀N) f _ _ os T T' hf hops'
-              (henv.zip_append _ hvs) hT₁
-              (fun ⟨N₂, r, h⟩ => hnu ⟨_, r, Func.memCall_cont hreg hargs hT' hcs hg hen hk₀ hty hlen
-                (x := .ub r) (fun _ h => nomatch h) (fun h => nomatch h) h⟩)
-              (fun h => hnx (src hexh (.callRet hreg hargs hT' hcs hg hen hk₀ hty hlen
-                (by rwa [Nat.min_eq_left hk₀N]))))
-            exact ⟨m, fun _ _ _ => hm⟩
-        refine ⟨n₁ + m + 1, fun hx => ?_⟩
+            by_cases hw : ∃ (n₀ n₀' : Nat) (ts : List d.Ty) (cargs' : HVector toType ts),
+              Func.MemCallsAt M' o args' S' n₀ s ts cargs' n₀' S₁' ∧ cargs'.toDVals = dvs' ∧
+                n₀ - n₀' = δ
+            case neg => exact ⟨0, fun h => absurd h hw⟩
+            obtain ⟨n₀, n₀', ts, cargs', hc', rfl, rfl⟩ := hw
+            obtain ⟨cargs, S₁, hc₀, hcr, hS₁⟩ | ⟨hpc, r, hpu⟩ := hc'.source hr hS hcalls.2.2 hmo.2
+            case inr =>
+              exact absurd ⟨1, r, src (fun _ h => nomatch h)
+                (.pickUB (n := 0) hreg hargs hT' hpc hpu)⟩ hnu
+            have hle₀ := hc₀.le
+            rcases Nat.lt_or_ge N (n₀ - n₀') with hlt | hfit
+            · obtain ⟨hpc, hs⟩ := hc₀.picked_of_lt (by omega)
+              exact absurd (src hexh (.pickExh hreg hargs hT' hpc hs (by omega))) hnx
+            have hc := hc₀.at (N - (n₀ - n₀'))
+            rw [Nat.sub_add_cancel hfit] at hc
+            suffices h : ∃ m, ¬ Func.CallRunsOut M' m f env' o os s cargs'.toDVals S₁' from
+              let ⟨m, hm⟩ := h
+              ⟨m, fun _ => hm⟩
+            cases hg' : M'.func? s with
+            | none => exact ⟨0, fun ⟨_, _, h, _⟩ => by simp_all⟩
+            | some g₀ =>
+            cases hen' : g₀.enter cargs'.toDVals with
+            | error _ => exact ⟨0, fun ⟨_, _, h, h', _⟩ => by simp_all⟩
+            | ok p' =>
+            have callUB : ∀ {g : Func d} {p : List (Operation d) × Env d} {N' : Nat} {r : String},
+                M.func? s = some g → g.enter cargs.toDVals = .ok p →
+                (Func.memCall M N' g p.2 p.1 S₁).run (.ub r) → False :=
+              fun {_ _ N' r} hg hen h => hnu ⟨_, r, src (fun _ h => nomatch h)
+                (.callUB hreg hargs hT' (hc₀.at N') hg hen h)⟩
+            have callExh : ∀ {g : Func d} {p : List (Operation d) × Env d},
+                M.func? s = some g → g.enter cargs.toDVals = .ok p →
+                (Func.memCall M (N - (n₀ - n₀')) g p.2 p.1 S₁).run (.ok (.ok .fuelExhausted)) →
+                  False :=
+              fun {_ _} hg hen h => hnx (src hexh (.callExh hreg hargs hT' hc hg hen h))
+            obtain ⟨n₁, hn₁⟩ : ∃ n₁, ¬ (Func.memCall M' n₁ g₀ p'.2 p'.1 S₁').run
+                (.ok (.ok .fuelExhausted)) := by
+              by_cases hsame : M'.func? s = M.func? s
+              · have hg : M.func? s = some g₀ := hsame ▸ hg'
+                obtain ⟨genv, hen, hgenv⟩ := Func.enter_isRefinedBy (HVector.toDVals_isRefinedBy hcr) hen'
+                have hgf := hmono g₀ (List.mem_of_find?_eq_some hg)
+                obtain ⟨n₁, h₁⟩ := ih (N - (n₀ - n₀')) (by omega) g₀ genv p'.2 p'.1 S₁.enter S₁'.enter
+                  hgf (hgf.enter (p := (p'.1, genv)) hen) hgenv hS₁.enter
+                  (fun ⟨_, _, h⟩ => callUB (p := (p'.1, genv)) hg hen (Func.memCall_ub_of_memOps h))
+                  (fun h => callExh (p := (p'.1, genv)) hg hen (Func.memCall_exhausted_iff.2 h))
+                exact ⟨n₁, fun h => h₁ (Func.memCall_exhausted_iff.1 h)⟩
+              rcases hcalls.1 s with h | ⟨g, g', hg, hg'', bb⟩
+              · exact absurd h hsame
+              rw [hg''] at hg'
+              cases hg'
+              have hsig := bb.sig hen'
+              have inv := fun {N x} => Func.memRunsFrom_run_cast (M := M) (args := cargs) (S := S₁)
+                (N := N) (x := x) hsig
+              classical
+              by_cases hdiv : ∀ m, (g₀.memRunsFrom M' ((cargs'.cast hsig).cast bb.params.symm, S₁')
+                m).outcomes .fuelExhausted
+              case neg =>
+                obtain ⟨m, hm⟩ := Classical.not_forall.1 hdiv
+                exact ⟨m, fun h => hm (bb.target_run hen' hexh h)⟩
+              exfalso
+              obtain ⟨s₀, hs₀, hle⟩ := bb.refines _ _ S₁ S₁' (HVector.forall₂_cast hsig hcr) hS₁
+                .fuelExhausted hdiv
+              match s₀, hs₀, hle with
+              | .ub r, ⟨N', hN'⟩, _ =>
+                obtain ⟨p, hp, e, he, hx⟩ := inv (x := .ub r) (fun _ h => nomatch h) hN'
+                match e, he, hx with
+                | .ub _, he, rfl => exact callUB hg hp he
+              | .fuelExhausted, hs₀, _ =>
+                obtain ⟨p, hp, e, he, hx⟩ := inv (x := .ok (.ok .fuelExhausted))
+                  (fun _ h => nomatch h) (hs₀ (N - (n₀ - n₀')))
+                match e, he, hx with
+                | .ok (.ok .fuelExhausted), he, _ => exact callExh hg hp he
+              | .ret _, _, hle => exact hle.elim
+            obtain ⟨LC, hLC⟩ := Func.memCall_finitelyManyRets hfin M' n₁ g₀ p'.2 p'.1 S₁'
+            obtain ⟨m, hm⟩ := List.exists_budget (L := LC)
+              (Q := fun (r : (List (DVal d) × Memories Mem unit) × Nat) m =>
+                (Func.memCall M' n₁ g₀ p'.2 p'.1 S₁').run (.ok (.ok (.ret r))) →
+                r.1.1.map (·.1) = returnTypes o.op → (o.results.map (·.1)).length = r.1.1.length →
+                  ¬ (Func.memOps M' m f ((o.results.map (·.1)).zip r.1.1 ++ env') os r.1.2).run
+                    (.ok (.ok .fuelExhausted)))
+              (fun _ _ _ hle h hx hty hl => Func.memOps_notExhausted_up hle (h hx hty hl))
+              fun ⟨⟨vs', T'⟩, k'⟩ _ => by
+                classical
+                by_cases hall : (Func.memCall M' n₁ g₀ p'.2 p'.1 S₁').run
+                    (.ok (.ok (.ret ((vs', T'), k')))) ∧
+                  vs'.map (·.1) = returnTypes o.op ∧ (o.results.map (·.1)).length = vs'.length
+                case neg => exact ⟨0, fun hx hty hl => absurd ⟨hx, hty, hl⟩ hall⟩
+                obtain ⟨hx, hty', hlen'⟩ := hall
+                obtain ⟨g, p, hg, hen, hal⟩ := hcalls.callee_allowed hmono hg' hcr hS₁ hen'
+                  (fun hgm hbm env env' h T T' hT e' he' =>
+                    Func.memOps_allowed hmono hcalls _ g₀ env env' _ T T' hgm hbm h hT e' he')
+                  hx (fun _ h => nomatch h) (fun h => nomatch h)
+                rcases hal with ⟨_, _, h⟩ | ⟨N₁, ⟨vs, T⟩, k, h₁, hvs, hT₁⟩
+                · exact (callUB hg hen h).elim
+                obtain ⟨k₀, hk₀⟩ : ∃ k₀, (Func.memCall M (N - (n₀ - n₀')) g p.2 p.1 S₁).run
+                    (.ok (.ok (.ret ((vs, T), k₀)))) := by
+                  rcases Nat.le_total N₁ (N - (n₀ - n₀')) with hle | hle
+                  · have ha := Func.memCall_ahead M N₁ (N - (n₀ - n₀') - N₁) g p.2 p.1 S₁
+                    rw [Nat.add_sub_cancel' hle] at ha
+                    exact ⟨_, ha.up_ret _ _ h₁⟩
+                  · have ha := Func.memCall_ahead M (N - (n₀ - n₀')) (N₁ - (N - (n₀ - n₀'))) g
+                      p.2 p.1 S₁
+                    rw [Nat.add_sub_cancel' hle] at ha
+                    rcases ha.down_ret _ _ h₁ with ⟨_, h⟩ | h
+                    · exact ⟨_, h⟩
+                    · exact (callExh hg hen h).elim
+                have hk₀N := Func.memCall_left_le M (N - (n₀ - n₀')) g p.2 p.1 S₁ _ _ hk₀
+                have hty := (DVals.types_eq_of_isRefinedBy hvs).trans hty'
+                have hlen := hlen'.trans (DVals.length_eq_of_isRefinedBy hvs).symm
+                obtain ⟨m, hm⟩ := ih k₀ (by omega) f _ _ os T T' hf hops'
+                  (henv.zip_append _ hvs) hT₁
+                  (fun ⟨N₂, r, h⟩ => hnu ⟨_, r, Func.memCall_cont hreg hargs hT' hc₀ hg hen hk₀ hty
+                    hlen (x := .ub r) (fun _ h => nomatch h) (fun h => nomatch h) h⟩)
+                  (fun h => hnx (src hexh (.callRet hreg hargs hT' hc hg hen hk₀ hty hlen
+                    (by rwa [Nat.min_eq_left hk₀N]))))
+                exact ⟨m, fun _ _ _ => hm⟩
+            refine ⟨n₁ + m, fun ⟨g, p, hg, hen, h⟩ => ?_⟩
+            rw [hg'] at hg
+            cases hg
+            rw [hen'] at hen
+            cases hen
+            rcases h with hx | ⟨vs', T', k', hx, hty', hlen', h⟩
+            · exact Func.memCall_notExhausted_up (Nat.le_add_right n₁ m) hn₁ hx
+            have hk' := Func.memCall_left_le M' (n₁ + m) _ _ _ _ _ _ hx
+            rw [Nat.min_eq_left hk'] at h
+            rcases (Func.memCall_ahead M' n₁ m _ _ _ _).down_ret _ _ hx with ⟨hmk, hx₁⟩ | hx₁
+            · exact Func.memOps_notExhausted_up hmk (hm _ (hLC _ hx₁) hx₁ hty' hlen') h
+            · exact hn₁ hx₁
+        have out : ∀ (n' : Nat) (s : Name) (ts : List d.Ty) (cargs : HVector toType ts)
+            (S₁ : Memories Mem unit), Func.MemCallsAt M' o args' S' (m + 1) s ts cargs n' S₁ →
+            Func.CallRunsOut M' n' f env' o os s cargs.toDVals S₁ → False := fun n' _ _ _ _ hc hx => by
+          obtain ⟨j, hj⟩ : ∃ j, n' = m + j := Nat.exists_eq_add_of_le (by have := hc.le; omega)
+          rw [hj] at hx
+          exact hm _ (hTc _ _ _ _ _ _ hc) ⟨_, _, _, _, hc, rfl, rfl⟩ hx.down
+        refine ⟨m + 2, fun hx => ?_⟩
         cases (Func.memStepPath_iff hexh).1 hx with
-        | goto _ _ hT'' => simp_all
-        | denote _ _ _ hc => simp_all
+        | goto _ _ hT'' => exact absurd hT'' hT
+        | denote _ _ _ hc => rw [hc] at hcs; cases hcs
         | callExh _ hargs'' _ hc hg'' hen'' hx =>
           cases same hargs''
-          rw [hc] at hcs
-          cases hcs
-          rw [hg''] at hg'
-          cases hg'
-          rw [hen''] at hen'
-          cases hen'
-          exact Func.memCall_notExhausted_up (Nat.le_add_right n₁ m) hn₁ hx
+          exact out _ _ _ _ _ hc ⟨_, _, hg'', hen'', .inl hx⟩
         | callRet _ hargs'' _ hc hg'' hen'' hx hty' hlen' h =>
           cases same hargs''
-          rw [hc] at hcs
-          cases hcs
-          rw [hg''] at hg'
-          cases hg'
-          rw [hen''] at hen'
-          cases hen'
-          rename_i vs' T' k'
-          have hk' := Func.memCall_left_le M' (n₁ + m) _ _ _ _ _ _ hx
-          rw [Nat.min_eq_left hk'] at h
-          rcases (Func.memCall_ahead M' n₁ m _ _ _ _).down_ret _ _ hx with ⟨hmk, hx₁⟩ | hx₁
-          · exact Func.memOps_notExhausted_up hmk (hm _ (hLC _ hx₁) hx₁ hty' hlen') h
-          · exact hn₁ hx₁
+          exact out _ _ _ _ _ hc ⟨_, _, hg'', hen'', .inr ⟨_, _, _, hx, hty', hlen', h⟩⟩
+        | pickExh _ _ _ _ _ hn => cases hn
 
 end Fir

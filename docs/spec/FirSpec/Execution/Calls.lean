@@ -14,10 +14,10 @@ when the Lean changes under it.
 
 #doc (Manual) "Progress with calls: readable blocks" =>
 
-:::moduleDocs (fingerprint := "5514938156146132457")
+:::moduleDocs (fingerprint := "17310946611801040318")
 :::
 
-:::readable Fir.Func.InModule (fingerprint := "12828239508909637856")
+:::readable Fir.Func.InModule (fingerprint := "13287016285892771373")
 *Definition: a function that runs within a module.* The ops of a function
 $`f` _run within the module $`M`_ when, for every op $`o` of every block
 of $`f`:
@@ -27,6 +27,11 @@ of $`f`:
   {ref "The-fir-specification--Validation--Scope-and-symbols"}[symbol table]
   of $`M` gives $`s` the type of the call:
   $`\mathrm{symtab}_M(s) = (\mathrm{sig}(o) \to \mathrm{ret}(o))`;
+* if $`o` is not a terminator and its callee is picked, every symbol $`s`
+  that $`\mathrm{pick}_o` may give, on any operands, is one the run can
+  call: the module has a function, or an external declaration, with the
+  symbol $`s` that takes the operands of $`o` but the first and gives its
+  results;
 * if $`o` is a terminator, whenever $`\mathrm{exit}_o` may end with
   $`\mathsf{goto}~i`, on any operands, $`i < \mathrm{nsucc}(o)`, and $`o`
   has no result types;
@@ -50,30 +55,24 @@ dialect is one that the interpreter can run in the set monad, as for
 {ref "The-fir-specification--Execution--The-runs-of-a-function___-and-fuel-monotonicity"}[the runs of a function].
 :::
 
-:::readable Fir.Func.Local.inModule (pin := Fir.Func.Local) (fingerprint := "1227078464402482988")
+:::readable Fir.Func.Local.inModule (pin := Fir.Func.Local) (fingerprint := "13658034343483084644")
 *Theorem: a function that runs within itself runs within every module.*
 For every module $`M`, a function that runs within itself runs within
-$`M`: it calls no function, so the rule for calls holds of none of its
+$`M`: it calls no function, so the rules for calls hold of none of its
 ops, and its terminators keep to the same two rules.
 :::
 
-:::readable Fir.Module.calls_noStuck Fir.Module.calls_hasPath (pin := Fir.NoStuck) (pin := Fir.HasPath) (fingerprint := "11209594721403263608")
+:::readable Fir.Module.calls_noStuck (pin := Fir.NoStuck) (fingerprint := "12364694741275216170")
 *Theorem: in a module whose functions are all valid and run within it,
-the run from any op of any of its functions has no stuck path, and has a
-path when every op that runs by its own rule is total.* Let every
+the run from any op of any of its functions has no stuck path.* Let every
 function of the module $`M` be valid in a module context $`C` and run
 within $`M`. Take any budget $`n`, function $`f` of $`M`, block $`b` of
 $`\mathrm{blocks}(f)`, index $`i` less than the number of ops of $`b`,
 and environment $`E` that
 {ref "The-fir-specification--Execution--Scope-along-a-run"}[holds every value in scope]
 at the op at index $`i` of $`b`. Let $`o^*` be the ops of $`b` from index
-$`i` on. Then:
-
-* $`\mathrm{run}_M(n, f, E, o^*)` has no stuck path: it may not end stuck;
-* if every op of every block of every function of $`M` that is a
-  terminator or calls no function is
-  {ref "The-fir-specification--Execution--Poison-classes"}[total], it has a
-  path: it may end in some way.
+$`i` on. Then $`\mathrm{run}_M(n, f, E, o^*)` has no stuck path: it may
+not end stuck.
 
 Here $`\mathrm{run}_M(n, f, E, o^*)` is the
 {ref "The-fir-specification--Execution--The-interpreter"}[interpreter]'s
@@ -89,33 +88,24 @@ gives its parts: the callee is found and starts, holding every value in
 scope; it runs with fewer steps than the caller had, so the induction
 covers it, however deep the calls go; it returns values of the call's
 result types, which bind; and the caller goes on with the steps the
-callee leaves, fewer again. An op with a callee needs no rule of its
-own: its way to go on is its callee's run (ADR-2026-10-29-2006). A callee
-that ends with UB or out of fuel ends its caller so, and that is a way
-to end.
+callee leaves, fewer again. An op whose callee is picked first runs its
+rule, which ends with UB or a symbol the run can call; with no step left,
+the path runs out of fuel there, and otherwise the call goes on as a call
+of that symbol. A callee that ends with UB or out of fuel ends its caller
+so, and that is not stuck.
 :::
 
-:::readable Fir.Func.neverStuck_of_inModule Fir.Func.progress_of_inModule (pin := Fir.NeverStuck) (pin := Fir.Progress) (fingerprint := "6046331798023887031")
+:::readable Fir.Func.neverStuck_of_inModule (pin := Fir.NeverStuck) (fingerprint := "9953210940248431412")
 *Theorem: every function of a module whose functions are all valid and
-run within it has no stuck path, and has progress when every op that runs
-by its own rule is total, calls and recursion included.* Let every
+run within it has no stuck path, calls and recursion included.* Let every
 function of the module $`M` be valid in a module context $`C` and run
 within $`M`. For every function $`f` of $`M` and every vector $`v^*` of
-values of its parameter types, let $`R = \mathrm{runs}_M(f)(v^*)`:
-
-* $`R` has
-  {ref "The-fir-specification--Execution--Fuel-and-progress"}[no stuck path]:
-  at every budget $`n`, no path of $`R_n` is stuck;
-* if every op of every block of every function of $`M` that is a
-  terminator or calls no function is total, $`R` has
-  {ref "The-fir-specification--Execution--Fuel-and-progress"}[progress]: at
-  every budget $`n`, $`R_n` has some outcome.
+values of its parameter types, $`\mathrm{runs}_M(f)(v^*)` has
+{ref "The-fir-specification--Execution--Fuel-and-progress"}[no stuck path]:
+at every budget $`n`, no path of $`\mathrm{runs}_M(f)(v^*)_n` is stuck.
 
 Here $`\mathrm{runs}_M(f)(v^*)_n` is the
 {ref "The-fir-specification--Execution--The-runs-of-a-function___-and-fuel-monotonicity"}[run of f]
 on $`v^*` with $`n` steps of fuel. A run may call any function of $`M`,
-itself included, as deep as its fuel allows. Every function of every
-valid core module meets the hypotheses, as the section on
-{ref "The-fir-specification--Execution--Core-functions-with-calls"}[core functions with calls]
-shows.
+itself included, as deep as its fuel allows.
 :::

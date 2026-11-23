@@ -39,7 +39,8 @@ monad exactly when every op is tied, so a dialect can tie each op on its
 own, and an op that touches memory can sit beside tied ones. Lifting keeps
 choice, and UB, which ends a path in the set monad whatever follows it, so
 it maps a rule written once for any monad with those effects to the same
-rule in the layer: the core dialect ties those ops so.
+rule in the layer: the core dialect ties those ops so. A dialect that lifts
+the set monad lifts the rule of each op whose callee is picked (#235) too.
 -/
 
 namespace Fir
@@ -123,6 +124,7 @@ it: each op runs by its rule and keeps the state. -/
     DialectDenote d (StateT σ m) where
   denote op args := StateT.lift (DialectDenote.denote op args)
   exit op args := StateT.lift (DialectDenote.exit op args)
+  pick op ok args := StateT.lift (DialectDenote.pick op ok args)
 
 attribute [local instance] DialectDenote.liftState
 
@@ -130,7 +132,7 @@ attribute [local instance] DialectDenote.liftState
 semantics. -/
 theorem DialectDenote.liftState_mapsDenote (σ : Type) [DialectDenote d m] :
     (MonadMorphism.liftState m σ).MapsDenote (d := d) (n := StateT σ m) :=
-  ⟨fun _ _ => rfl, fun _ _ => rfl⟩
+  ⟨fun _ _ => rfl, fun _ _ => rfl, fun _ _ _ => rfl⟩
 
 omit [DialectSignature d] in
 /-- Lifting into the layer maps the external-call rule to its lift. -/
@@ -140,10 +142,12 @@ theorem MonadMorphism.liftState_mapsExtCall (σ : Type) [DialectExtCall d m] :
 
 omit [Monad m] [LawfulMonad m] in
 /-- Two semantics of a dialect in one monad are the same when each op means
-the same in both, and each terminator goes to the same places. -/
+the same in both, each terminator goes to the same places, and each op
+picks its callee alike. -/
 theorem DialectDenote.ext {a b : DialectDenote d m}
     (hd : ∀ op args, a.denote op args = b.denote op args)
-    (he : ∀ op args, a.exit op args = b.exit op args) : a = b := by
+    (he : ∀ op args, a.exit op args = b.exit op args)
+    (hp : ∀ op ok args, a.pick op ok args = b.pick op ok args) : a = b := by
   cases a
   cases b
   congr
@@ -151,6 +155,8 @@ theorem DialectDenote.ext {a b : DialectDenote d m}
     exact hd op args
   · funext op args
     exact he op args
+  · funext op ok args
+    exact hp op ok args
 
 /-- A dialect's semantics with memory lifts its semantics in the set monad:
 wherever a run names its memories, each op runs by its rule in the set
@@ -169,9 +175,10 @@ variable [DialectEffects d] [DialectMemDenote d] [DialectDenote d SetM]
 
 /-- The op touches no memory: wherever a run names the dialect's memories,
 whatever their entries, it runs with memory by its rule in the set monad
-and keeps the memories, both as an op that is not a terminator and as a
-terminator. The tie of one op, so that each op of a dialect can be tied on
-its own, and an op that touches memory can sit beside tied ones. -/
+and keeps the memories, as an op that is not a terminator, as a
+terminator, and as an op that picks its callee. The tie of one op, so that
+each op of a dialect can be tied on its own, and an op that touches memory
+can sit beside tied ones. -/
 def OpLiftsSetM (op : d.Op) : Prop :=
   ∀ {N : Type} [DecidableEq N] (lay : N → MemLayout) (ρ : DialectEffects.Mem d → N) (L : RunItems),
     letI := DialectMemDenote.denoteAt (d := d) lay ρ L
@@ -179,18 +186,20 @@ def OpLiftsSetM (op : d.Op) : Prop :=
       DialectDenote.denote (m := StateT (Memories N (unitsOf lay)) SetM) op args =
           StateT.lift (DialectDenote.denote (m := SetM) op args) ∧
         DialectDenote.exit (m := StateT (Memories N (unitsOf lay)) SetM) op args =
-          StateT.lift (DialectDenote.exit (m := SetM) op args)
+          StateT.lift (DialectDenote.exit (m := SetM) op args) ∧
+        ∀ ok, DialectDenote.pick (m := StateT (Memories N (unitsOf lay)) SetM) op ok args =
+          StateT.lift (DialectDenote.pick (m := SetM) op ok args)
 
 /-- In a dialect that lifts the set monad, every op is tied. -/
 theorem LiftsSetM.opLifts [LiftsSetM d] (op : d.Op) : OpLiftsSetM op := by
   intro N _ lay ρ L args
   rw [LiftsSetM.lifts lay ρ L]
-  exact ⟨rfl, rfl⟩
+  exact ⟨rfl, rfl, fun _ => rfl⟩
 
 /-- A dialect whose every op is tied lifts the set monad. -/
 theorem LiftsSetM.ofOpLifts (h : ∀ op : d.Op, OpLiftsSetM op) : LiftsSetM d :=
   ⟨fun lay ρ L => DialectDenote.ext (fun op args => (h op lay ρ L args).1)
-    (fun op args => (h op lay ρ L args).2)⟩
+    (fun op args => (h op lay ρ L args).2.1) (fun op ok args => (h op lay ρ L args).2.2 ok)⟩
 
 end
 

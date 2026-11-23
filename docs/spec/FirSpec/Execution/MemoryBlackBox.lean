@@ -14,7 +14,7 @@ build fails when the Lean changes under it.
 
 #doc (Manual) "Calls as black boxes, with memory: readable blocks" =>
 
-:::moduleDocs (fingerprint := "10179189778517068381")
+:::moduleDocs (fingerprint := "1980979585115300379")
 :::
 
 :::readable Fir.MemAllowed Fir.MemAllowed.of_someUB Fir.MemAllowed.of_not Fir.MemAllowed.of_step (pin := Fir.SomeUB) (pin := Fir.Ev.addLeft) (fingerprint := "7657756953179574042")
@@ -41,15 +41,17 @@ $`T_0 \sqsubseteq T` leaves the frame with
 $`\mathrm{exit}(T_0) \sqsubseteq \mathrm{exit}(T)`.
 :::
 
-:::readable Fir.Func.memCall_cont (pin := Fir.Ev.addLeft) (fingerprint := "7558953290238700659")
+:::readable Fir.Func.memCall_cont (pin := Fir.Ev.addLeft) (fingerprint := "15266186239646942020")
 *Theorem: a caller's budget is its callee's plus its rest's.* A caller
-whose callee, in its frame, returns $`((\vec{w}, T), k)` at the budget
-$`N_1`, and whose rest of ops from $`T` ends at the budget $`N_2`, ends so
-at $`N_1 + N_2 + 1`, leaving $`k` more steps: with more fuel, the callee
+whose op, with $`n` steps after its own, calls its callee with $`n'`
+steps, whose callee, in its frame, returns $`((\vec{w}, T), k)` at the
+budget $`N_1`, and whose rest of ops from $`T` ends at the budget $`N_2`,
+ends so at $`N_1 + (n - n') + N_2 + 1`, leaving $`k` more steps; an op
+that picks its callee spends $`n - n' = 1` step for its call: with more fuel, the callee
 returns the same, with the same memories, and leaves more steps.
 :::
 
-:::readable Fir.FuncRuns.BoundedBy Fir.MemBlackBox Fir.MemCallsRefined Fir.MemCallsBounded (pin := Fir.Func.memRunsFrom) (fingerprint := "9803968526532395029")
+:::readable Fir.FuncRuns.BoundedBy Fir.MemBlackBox Fir.MemCallsRefined Fir.MemCallsBounded (pin := Fir.Func.memRunsFrom) (fingerprint := "17172801152522683771")
 *Definitions: bounded runs, black boxes with memory, and modules whose
 calls refine.* Runs $`f` are _bounded_ by the budget $`B` when, on each
 input, they diverge, or none of them with $`B` steps or more runs out of
@@ -62,8 +64,9 @@ included
 ({ref "The-fir-specification--Memory--Runs-from-given-memories"}[runs from given memories]).
 
 The target module _runs each call with memory as the source does_ when each
-symbol names the same function in both, or a black box with memory, and
-the source declares each symbol that the target declares, for the same
+symbol names the same function in both, or a black box with memory, the
+source declares each symbol that the target declares, for the same types,
+and the target can call each symbol that the source can, at the same
 types. A
 callee runs from the memories its caller reached, so a black box speaks of
 runs from every memories, not only from the empty ones. Its _calls are
@@ -74,11 +77,16 @@ followed back, ask for it, and those for ops of finitely many outcomes do
 not.
 :::
 
-:::readable Fir.MemCallsRefined.ext (pin := Fir.Module.func?_none_of_calls) (fingerprint := "14555203535619476315")
+:::readable Fir.MemCallsRefined.ext Fir.Func.MemCallsAt.source (pin := Fir.Module.func?_none_of_calls) (fingerprint := "3962832734460047012")
 *Theorem: a call to a declaration in the target is one in the source, with
 memory.* When $`M'` runs each call with memory as $`M` does, a symbol that
 names no function of $`M'` and that $`M'` declares for the types of a call
 names no function of $`M`, and $`M` declares it for those types too.
+A call of the target, on operands and from memories that refine the
+source's, is a call of the source to the same symbol on arguments and from
+memories that the target's refine, or the source's rule that picks the
+callee is UB: when that rule is monotone with memory and the target can
+call each symbol that the source can.
 :::
 
 :::readable Fir.MemBlackBox.sig Fir.MemBlackBox.target_run Fir.Func.memRunsFrom_run_cast Fir.MemBlackBox.allowed (fingerprint := "2890945913562123854")

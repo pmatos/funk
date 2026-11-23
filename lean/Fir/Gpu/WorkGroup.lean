@@ -184,7 +184,8 @@ instance lawfulDialectEffects : LawfulDialectEffects GpuDialect where
 allocation has an outcome from any memories. -/
 instance lawfulTotal : LawfulDialectTotal GpuDialect :=
   ⟨fun op _ _ => Op.memCases (P := fun op => MemTotal (d := GpuDialect) op) op
-    (fun q d w => MemTotal.ofLifts (query_liftsSetM q d w) (query_total q d w)) Op.alloc_memTotal⟩
+    (fun q d w => MemTotal.ofLifts (query_liftsSetM q d w) (query_total q d w)) Op.alloc_memTotal,
+   fun _ _ hc => nomatch hc⟩
 
 /-- Every op of `gpu` is monotone with memory, at every width, valid or
 not. -/
@@ -194,7 +195,8 @@ theorem Op.memMonotone (op : Op) : MemMonotone (d := GpuDialect) op :=
     Op.alloc_memMonotone
 
 /-- `gpu` is lawful in its monotonicity. -/
-instance lawfulMonotone : LawfulDialectMonotone GpuDialect := ⟨fun op _ _ => Op.memMonotone op⟩
+instance lawfulMonotone : LawfulDialectMonotone GpuDialect :=
+  ⟨fun op _ _ => Op.memMonotone op, fun _ _ hc => nomatch hc⟩
 
 /-- `gpu` is lawful in its poison with memory: a poison value of a core
 type is refined by every value of its type, and each op propagates poison

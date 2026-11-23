@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Monad morphisms: readable blocks" =>
 
-:::moduleDocs (fingerprint := "14753127545083485105")
+:::moduleDocs (fingerprint := "6481789672603345638")
 :::
 
 :::readable Fir.MonadMorphism (fingerprint := "12632748386210839733")
@@ -97,7 +97,7 @@ whose paths may also end with an error, run in a frame, translates to its
 translation, run in a frame.
 :::
 
-:::readable Fir.MonadMorphism.MapsDenote (pin := Fir.DialectDenote) (fingerprint := "2618859953134783425")
+:::readable Fir.MonadMorphism.MapsDenote (pin := Fir.DialectDenote) (fingerprint := "9772945649579859949")
 *Definition: a translation that keeps each op's semantics.* Let a dialect,
 with the values of its types and its signatures, give its ops a {ref "The-fir-specification--Execution--Effects-and-op-semantics"}[semantics]
 in both $`m` and $`n`. A monad morphism $`\varphi` from $`m` to $`n`
@@ -108,9 +108,12 @@ $$`\varphi(\mathrm{denote}^m_o(\vec{v})) = \mathrm{denote}^n_o(\vec{v})`
 
 $$`\varphi(\mathrm{exit}^m_o(\vec{v})) = \mathrm{exit}^n_o(\vec{v})`
 
-where the superscript names the monad in which the semantics is read.
-Both what an op that is not a terminator gives and where a terminator
-goes are kept.
+$$`\varphi(\mathrm{pick}^m_o(\mathit{ok}, \vec{v})) = \mathrm{pick}^n_o(\mathit{ok}, \vec{v})`
+
+for every test $`\mathit{ok}` of the symbols a run can call, where the
+superscript names the monad in which the semantics is read. What an op
+that is not a terminator gives, where a terminator goes, and which callee
+an op picks are kept.
 :::
 
 :::readable Fir.MonadMorphism.MapsExtCall (pin := Fir.DialectExtCall) (fingerprint := "2375694968800135454")

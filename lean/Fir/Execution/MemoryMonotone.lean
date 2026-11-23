@@ -184,10 +184,8 @@ theorem Func.runOps_memLeft_le (M : Module d) (n : Nat) :
         | split
         | (rw [runFrom_stuck]; exact LeavesAtMost.of_stuck)
         | (rw [runFrom_exhausted]; exact LeavesAtMost.exhausted)
-        | (rw [runFrom_ret]; exact LeavesAtMost.ret (Nat.le_succ _))
-        | exact (ih _ (Nat.lt_succ_self _) _ _ _ _).mono (Nat.le_succ _)
-        | exact (ih _ (Nat.lt_succ_of_le (Nat.min_le_right _ _)) _ _ _ _).mono
-            (Nat.le_trans (Nat.min_le_right _ _) (Nat.le_succ _)))
+        | (rw [runFrom_ret]; exact LeavesAtMost.ret (by omega))
+        | exact (ih _ (by omega) _ _ _ _).mono (by omega))
 
 /-- A run of ops with memory with `j` more steps of fuel is ahead of the
 run with fewer, from the same memories, calls included. -/
@@ -208,12 +206,14 @@ theorem Func.runOps_memAhead (M : Module d) (n : Nat) :
       rw [Nat.add_right_comm]
       simp only [Func.runOps]
       all_goals repeat' (first
-        | exact ih _ (Nat.lt_succ_self _) _ _ _ _ _
+        | exact ih _ (by omega) _ _ _ _ _
         | (rw [Nat.min_eq_left hk, Nat.min_eq_left (Nat.add_le_add_right hk _)]
-           exact ih _ (Nat.lt_succ_of_le hk) _ _ _ _ _)
+           exact ih _ (by omega) _ _ _ _ _)
         | (simp only [runFrom_stuck]; exact Ahead.of_stuck)
         | (simp only [runFrom_ret]; exact Ahead.ret)
-        | (refine Ahead.bindCall (fun S => ih _ (Nat.lt_succ_self _) _ _ _ _ S)
+        | (simp only [runFrom_exhausted]; exact Ahead.exhausted)
+        | simp only [Nat.add_right_comm _ 1 j]
+        | (refine Ahead.bindCall (fun S => ih _ (by omega) _ _ _ _ S)
             (fun S => Func.runOps_memLeft_le _ _ _ _ _ S) ?_ ?_ ?_ _
            · intro _; exact runFrom_exhausted _
            · intro _; exact runFrom_exhausted _

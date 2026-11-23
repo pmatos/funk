@@ -14,23 +14,17 @@ fails when the Lean changes under it.
 
 #doc (Manual) "Function summaries are sound: readable blocks" =>
 
-:::moduleDocs (fingerprint := "1102954085674822917")
+:::moduleDocs (fingerprint := "538602796975529338")
 :::
 
-:::readable Fir.Effects.Le.mayUB_false Fir.Effects.Le.mayPoison_false (pin := Fir.Effects.Le) (fingerprint := "3284232413199481622")
-*Theorems: a smaller set leaves out what a larger one leaves out.* If
-$`a \le b` and $`b` leaves out may-UB, so does $`a`; and likewise for may
-produce poison.
-:::
-
-:::readable Fir.Func.mem_allOps Fir.Func.enter_ops Fir.Operation.call?_of (fingerprint := "11322144752609607633")
+:::readable Fir.Func.mem_allOps Fir.Func.enter_ops Fir.Operation.call?_of (fingerprint := "7131270234093592549")
 *Theorems: the ops that a run runs.* An op of a block of a function is
 one of its ops at any depth. A function that starts its run starts with
 the ops of one of its blocks, with its parameters bound to its arguments.
-An op that is not a terminator and has the callee $`c` calls $`c`.
+An op that is not a terminator and names the callee $`c` calls $`c`.
 :::
 
-:::readable Fir.Func.memCall_ub Fir.Func.memCall_ret Fir.Module.memOps_notUB Fir.Module.memOps_clean (pin := Fir.NoUB) (pin := Fir.Func.memOps) (fingerprint := "15998636603615217963")
+:::readable Fir.Func.memCall_ub Fir.Func.memCall_ret Fir.Module.memOps_notUB Fir.Module.memOps_clean (pin := Fir.NoUB) (pin := Fir.Func.memOps) (fingerprint := "7650556547375407793")
 *Theorems: the ops of a function leave out what its summary leaves out,
 with memory.* A run in a call's frame hits UB only where its ops, run from
 the memories with a frame entered, hit UB, and returns what they return,
@@ -50,15 +44,16 @@ The proof is by induction on the budget, for every function of $`M` at
 once, from any memories, one
 {ref "The-fir-specification--Memory--The-ways-a-step-with-memory-goes-on"}[step with memory]
 at a time. An op that runs by its own rule leaves out each effect that the
-summary leaves out, so the hypothesis covers it. A call to a declaration
-counts as every effect, so a summary that leaves out may-UB rules it out. A call runs its callee,
+summary leaves out, so the hypothesis covers it. A call to a declaration,
+and an op that picks its callee, count as every effect, so a summary that
+leaves out may-UB rules them out. A call runs its callee,
 whose summary is below its caller's, with less fuel, from the memories its
 caller reached with a new frame entered, so the induction covers the
 callee's run, recursion included. For poison, the run keeps its
 environment clean.
 :::
 
-:::readable Fir.Module.summary_neverUB Fir.Module.summary_noPoison (pin := Fir.LawfulDialectEffects) (pin := Fir.Func.memRuns) (fingerprint := "566225970729679746")
+:::readable Fir.Module.summary_neverUB Fir.Module.summary_noPoison (pin := Fir.LawfulDialectEffects) (pin := Fir.Func.memRuns) (fingerprint := "15665142280731174182")
 *Theorems: function summaries are sound.* Let the dialect be lawful in
 its effects, every function of the module $`M` valid, and $`s` name the
 function $`f` of $`M`. Wherever a run names the dialect's memories, with

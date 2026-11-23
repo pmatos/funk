@@ -120,7 +120,8 @@ theorem pid_self_isRefinedBy :
     { pidFn with body := if pidFn.name = pidFn.name then pidFn.body else pidFn.body }
   rw [ite_self]
   have hm : ∀ g : Func CoreDialect, g.MemOpsMonotone N (unitsOf lay) :=
-    fun _ _ _ o _ hc => Op.memMonotone_all o.op hc lay ρ L
+    fun _ _ _ o _ => ⟨fun hc => Op.memMonotone_all o.op hc lay ρ L,
+      fun hc => absurd hc (Op.callee_ne_picked o.op)⟩
   exact fun p => Func.memRunsFrom_args_isRefinedBy ptrModule (fun g _ => hm g) pidFn (hm pidFn)
     (HVector.forall₂_refl (fun v => Ty.isRefinedBy_refl v) p.1) (Memory.Memories.isRefinedBy_refl _)
 

@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Effects and op semantics: readable blocks" =>
 
-:::moduleDocs (fingerprint := "8780724159278605477")
+:::moduleDocs (fingerprint := "12212311006221374468")
 :::
 
 :::readable Fir.MonadChoice (fingerprint := "17910636895159052972")
@@ -60,7 +60,7 @@ ret    \mathsf{ret}
 The list may grow, for example for unwinding.
 :::
 
-:::readable Fir.DialectDenote (fingerprint := "3730882492881147332")
+:::readable Fir.DialectDenote (fingerprint := "12192561499539734519")
 *Definition: the semantics of a dialect's ops.* Each dialect gives each of
 its ops a meaning, in terms of the effects the dialect needs. Let the op
 $`o` have operand types $`t_1, \dots, t_n` and result types
@@ -79,6 +79,13 @@ $`r_1, \dots, r_k`, as its
   argument of that block
   ({ref "The-fir-specification--Abstract-syntax--Modules___-functions___-blocks-and-ops"}[successors]);
   on $`\mathsf{ret}`, the function returns the terminator's operands.
+* $`\mathrm{pick}_o(\mathit{ok}, v_1, \dots, v_n)` is a computation that
+  ends with a symbol $`s`, the function that $`o` calls, or ends by an
+  effect, such as immediate UB. The interpreter runs it only for an op whose
+  callee is picked when it runs (#235), and gives it the test
+  $`\mathit{ok}`: $`\mathit{ok}(s)` holds when the module has a function,
+  or an external declaration, with the symbol $`s`, that takes the values
+  $`v_2, \dots, v_n` and gives the results $`r_1, \dots, r_k`.
 
 The interpreter gives an op only values of its operand types. It checks
 each operand's type before it runs the op, and the path is
@@ -87,12 +94,24 @@ when one does not match, which validation rules out. The shape follows
 LeanMLIR's (ADR-2026-10-29-2009).
 :::
 
-:::readable Fir.DialectCall (fingerprint := "3266187945828972356")
+:::readable Fir.Callee (fingerprint := "16059132851290025235")
+*Definition: the callee of an op.* An op that calls a function names its
+callee, $`\mathsf{fixed}~s` for the symbol $`s`, as $`\mathsf{call}~@g`
+names $`@g`; or its callee is $`\mathsf{picked}`: the op's rule picks the
+symbol when the op runs, from its operands, as a call through a pointer
+does (#235), and the op passes its operands but the first to the callee.
+:::
+
+:::readable Fir.DialectCall (fingerprint := "8339298151678921278")
 *Definition: the ops that call a function.* Each dialect says which of its
 ops call a function of the module: for an op $`o`, $`\mathrm{callee}(o)`
-is the symbol $`s` of the function that $`o` calls, or nothing when $`o`
-calls none. In the core dialect, $`\mathsf{call}~s` calls $`s`, and no
-other op calls a function.
+is $`\mathsf{fixed}~s` when $`o` names the symbol $`s` of the function it
+calls, $`\mathsf{picked}` when the rule $`\mathrm{pick}_o` picks the
+symbol when $`o` runs, from its operands (#235, the human's ruling of
+2026-11-19), or nothing when $`o` calls none. An op whose callee is picked
+passes its operands but the first to the callee. In the core dialect,
+$`\mathsf{call}~s` names $`s`, no other op calls a function, and no op
+picks its callee.
 
 The interpreter runs the callee with the fuel that the caller has left, as
 the call effect above explains. It asks for the callee only of an op that is

@@ -35,7 +35,7 @@ load declared without a read whose one allocation holds 0, gives $`S_1`,
 the same memories with that unit holding 1.
 :::
 
-:::readable Fir.Core.Unlawful.storeNoWrite_unlawful (pin := Fir.LawfulDialectEffects) (fingerprint := "2861601684913385254")
+:::readable Fir.Core.Unlawful.storeNoWrite_unlawful (pin := Fir.LawfulDialectEffects) (fingerprint := "15418399429546863802")
 *Theorem: the obligations reject the declaration.* Over the core's own
 {ref "The-fir-specification--Memory--The-core___s-rules-with-memory"}[semantics with memory],
 the declaration above is not lawful in its effects. The obligation on an

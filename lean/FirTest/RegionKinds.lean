@@ -89,6 +89,7 @@ instance : DialectCall RegionDialect := ⟨fun _ => none⟩
 instance : DialectDenote RegionDialect Mix where
   denote _ _ := pure .nil
   exit op _ := .noOutcome op.name
+  pick op _ _ := .noOutcome op.name
 
 /-! # Validation in the sum of the core and the dialect -/
 

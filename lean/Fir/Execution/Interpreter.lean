@@ -37,6 +37,12 @@ runs the entry block op by op:
   says, passes its operands to the callee, which the run looks up in the
   module by its symbol. The values that the callee returns are its
   results.
+* An op whose callee its dialect marks as picked when it runs (#235, the
+  human's ruling of 2026-11-19) first runs its rule that picks
+  (`DialectDenote.pick`), which takes the op's step and gives a symbol, or
+  UB; the run gives it the module's test of the symbols it can call
+  (`Module.callable`). Then, with one more step, the op calls that symbol
+  on its operands but the first, as a call of a fixed symbol does.
 * A call whose symbol names no function of the module, but an external
   declaration that accepts the call's types, runs by the external-call
   rule (`Fir.Execution.ExtCall`), the human's ruling of 2026-11-21 on #239:
@@ -50,7 +56,8 @@ runs the entry block op by op:
   (ADR-2026-11-09-1548, the section on the frame effect). In a monad with
   no memory, such as the set monad, a frame changes nothing.
 
-Every op takes one step of fuel, the terminator and the call included. A
+Every op takes one step of fuel, the terminator and the call included, and
+an op whose callee is picked takes two: its rule's and the call's. A
 run with no fuel left before an op runs out of fuel. A callee runs on the
 steps that its caller has left, and gives back the steps it leaves, so the
 caller and all its callees share one budget (ADR-2026-10-29-2009). A run
@@ -197,6 +204,16 @@ theorem Module.func?_none_of_calls {M M' : Module d} {P : Func d → Func d → 
   · exact h.symm.trans hg
   · exact absurd (h.symm.trans hg) (by simp)
 
+/-- The module `M` can call the symbol `s` on arguments of the types `ts`
+for results of the types `rs`: `s` names a function of `M` that takes
+`ts` and gives `rs`, or, when it names no function of `M`, an external
+declaration that accepts the call. The rule of an op whose callee is picked
+is given this test (#235). -/
+def Module.callable (M : Module d) (ts rs : List d.Ty) (s : Name) : Bool :=
+  match M.func? s with
+  | some g => g.params.map (·.2) == ts && g.results == rs
+  | none => M.declares s ts rs
+
 /-- Where a run of the function `f` on the arguments `args` starts: the ops
 of its entry block, in an environment that binds each parameter to its
 argument. -/
@@ -242,7 +259,7 @@ def Func.runOps (M : Module d) : Nat → Func d → Env d → List (Operation d)
         let env' ← liftExcept (env.bind (o.results.map (·.1)) rs.toDVals
           "an op names a number of results other than it gives")
         Func.runOps M n f env' os
-      | some s =>
+      | some (.fixed s) =>
         match M.func? s with
         | some g =>
           let (body, genv) ← liftExcept (g.enter args.toDVals)
@@ -263,11 +280,38 @@ def Func.runOps (M : Module d) : Nat → Func d → Env d → List (Operation d)
               Func.runOps M n f env' os
             else liftExcept (stuck s!"@{s} gives values of types other than its call's result types")
           else liftExcept (stuck s!"@{s} is not a function or a declaration of the call's types")
+      | some .picked => do
+        let s ← ExceptT.lift
+          (DialectDenote.pick o.op (M.callable (sig o.op).tail (returnTypes o.op)) args)
+        match n with
+        | 0 => pure .fuelExhausted
+        | n + 1 =>
+        match M.func? s with
+        | some g =>
+          let (body, genv) ← liftExcept (g.enter args.tail.toDVals)
+          match ← inFrame (Func.runOps M n g genv body) with
+          | .fuelExhausted => pure .fuelExhausted
+          | .ret (vs, k) =>
+            if vs.map (·.1) = returnTypes o.op then
+              let env' ← liftExcept (env.bind (o.results.map (·.1)) vs
+                "an op names a number of results other than it gives")
+              Func.runOps M (min k n) f env' os
+            else liftExcept (stuck s!"@{s} returns values of types other than its call's result types")
+        | none =>
+          if M.declares s (sig o.op).tail (returnTypes o.op) then
+            let vs ← ExceptT.lift (DialectExtCall.extCall s args.tail.toDVals (returnTypes o.op))
+            if vs.map (·.1) = returnTypes o.op then
+              let env' ← liftExcept (env.bind (o.results.map (·.1)) vs
+                "an op names a number of results other than it gives")
+              Func.runOps M n f env' os
+            else liftExcept (stuck s!"@{s} gives values of types other than its call's result types")
+          else liftExcept (stuck s!"@{s} is not a function or a declaration of the call's types")
 termination_by n _ _ _ => n
 decreasing_by
   all_goals first
     | exact Nat.lt_succ_self _
     | exact Nat.lt_succ_of_le (Nat.min_le_right _ _)
+    | omega
 
 /--
 The run of the function `f` of the module `M` on arguments of its parameter

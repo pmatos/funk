@@ -28,7 +28,10 @@ runs from memories with the same allocations, and say nothing of the frames
 or of memories with other allocations. So the theorems on runs ask the
 dialect for it, of each op that runs by its own rule, a terminator or an op
 with no callee, and declares no memory effect: its ops _ignore the memories
-where they touch none_. The core dialect meets it, since each of its ops
+where they touch none_, and so does the rule that picks the callee of an op
+whose callee is picked (#235), when the op declares no memory effect. Such
+an op may call any function of the table, so a function that reaches one
+reaches no memory only when no op of the table touches memory. The core dialect meets it, since each of its ops
 that declares no memory effect runs by its rule in the set monad and keeps
 the memories, and a sum meets it when both its sides do. A set of effects
 whose memories are renamed, as a base op's are in a sum, touches no memory
@@ -81,33 +84,55 @@ variable {d : Dialect} [DialectSignature d] [DialectCall d] [DialectEffects d]
 /-- The function of the table `t` that the symbol `s` names reaches no
 memory: each function that its run may reach, itself included, declares no
 memory effect for any of its ops. A call that names no function of `t` adds
-nothing: its run is stuck there. -/
+nothing: its run is stuck there. An op whose callee is picked may call any
+function of `t` (#235), so when one of those functions has such an op, no
+function of `t` declares a memory effect for any of its ops. -/
 def SymbolTable.ReachesNoMemory (t : SymbolTable d) (s : Name) : Prop :=
-  ∀ g ∈ t.reach [s] [], ∀ f, t.func? g = some f → ∀ o ∈ f.allOps, (effects o.op).TouchesNoMemory
+  (∀ g ∈ t.reach [s] [], ∀ f, t.func? g = some f → ∀ o ∈ f.allOps,
+    (effects o.op).TouchesNoMemory) ∧
+  ((∃ g ∈ t.reach [s] [], ∃ f, t.func? g = some f ∧ ∃ o ∈ f.allOps, o.picks = true) →
+    ∀ g f, t.func? g = some f → ∀ o ∈ f.allOps, (effects o.op).TouchesNoMemory)
 
 variable {t : SymbolTable d} {s : Name} {f : Func d} {o : Operation d}
 
-/-- A function whose summary touches no memory reaches no memory. -/
+/-- A function whose summary touches no memory reaches no memory. An op that
+picks its callee puts every memory in the summary, so where one is reached
+the dialect has no memory. -/
 theorem SymbolTable.ReachesNoMemory.of_summary (h : (t.summary s).TouchesNoMemory) :
-    t.ReachesNoMemory s := fun g hg f hf o ho => by
-  have hfs : t.funcOwn f ≤ t.summary s :=
-    Effects.le_joinAll (List.mem_filterMap.2 ⟨g, hg, by simp [hf]⟩)
-  exact Effects.TouchesNoMemory.of_le (a := (effects o.op).callerView)
-    (Effects.le_trans (t.effects_le_opOwn o)
-      (Effects.le_trans (Effects.le_joinAll (List.mem_map.2 ⟨o, ho, rfl⟩)) hfs)) h
+    t.ReachesNoMemory s := by
+  have hop : ∀ g ∈ t.reach [s] [], ∀ f, t.func? g = some f → ∀ o ∈ f.allOps,
+      t.opOwn o ≤ t.summary s := fun g hg f hf o ho =>
+    Effects.le_trans (Effects.le_joinAll (List.mem_map.2 ⟨o, ho, rfl⟩))
+      (Effects.le_joinAll (List.mem_filterMap.2 ⟨g, hg, by simp [hf, SymbolTable.funcOwn]⟩))
+  refine ⟨fun g hg f hf o ho => Effects.TouchesNoMemory.of_le (a := (effects o.op).callerView)
+    (Effects.le_trans (t.effects_le_opOwn o) (hop g hg f hf o ho)) h, ?_⟩
+  rintro ⟨g, hg, f, hf, o, ho, hp⟩ - - - - - x
+  have hall := Effects.TouchesNoMemory.of_le
+    (Effects.le_trans (t.all_le_opOwn hp) (hop g hg f hf o ho)) h
+  exact ((hall x).1 trivial).elim
 
 /-- Each op of a function that reaches no memory declares no memory
 effect. -/
 theorem SymbolTable.ReachesNoMemory.own (h : t.ReachesNoMemory s) (hf : t.func? s = some f)
     (ho : o ∈ f.allOps) : (effects o.op).TouchesNoMemory :=
-  h s (SymbolTable.mem_reach (.inr ⟨List.mem_singleton_self _, by simp [hf]⟩)) f hf o ho
+  h.1 s (SymbolTable.mem_reach (.inr ⟨List.mem_singleton_self _, by simp [hf]⟩)) f hf o ho
 
 /-- Each function that a function that reaches no memory calls reaches no
 memory: it reaches nothing that its caller does not. -/
 theorem SymbolTable.ReachesNoMemory.callee (h : t.ReachesNoMemory s) (hf : t.func? s = some f)
     (ho : o ∈ f.allOps) {c : Name} (hc : o.call? = some c) (hcs : (t.func? c).isSome) :
-    t.ReachesNoMemory c := fun g hg =>
-  h g (t.reach_of_callee hf (SymbolTable.mem_callees.2 ⟨hcs, o, ho, hc⟩) g hg)
+    t.ReachesNoMemory c :=
+  have hr := t.reach_of_callee hf (SymbolTable.mem_callees.2 ⟨hcs, o, ho, hc⟩)
+  ⟨fun g hg => h.1 g (hr g hg), fun ⟨g, hg, hp⟩ => h.2 ⟨g, hr g hg, hp⟩⟩
+
+/-- Each function that an op of a function that reaches no memory may pick
+reaches no memory: the op is reached, so no function of the table declares
+a memory effect. -/
+theorem SymbolTable.ReachesNoMemory.picked (h : t.ReachesNoMemory s) (hf : t.func? s = some f)
+    (ho : o ∈ f.allOps) (hp : o.picks = true) (c : Name) : t.ReachesNoMemory c :=
+  have hall := h.2 ⟨s, SymbolTable.mem_reach (.inr ⟨List.mem_singleton_self _, by simp [hf]⟩),
+    f, hf, o, ho, hp⟩
+  ⟨fun g _ => hall g, fun _ => hall⟩
 
 /-! # Computations that ignore the memories -/
 
@@ -155,16 +180,21 @@ end
 /-- The ops of `d` ignore the memories where they touch none, in a semantics
 with the memories named by `Mem`: each op that runs by its own rule, a
 terminator or an op with no callee, and declares no memory effect, ignores
-the memories, as an op that is not a terminator and as a terminator. -/
+the memories, as an op that is not a terminator and as a terminator; and so
+does the rule of each op whose callee is picked and that declares no memory
+effect, whatever the run says it can call. -/
 def OpsIgnoreMemory (d : Dialect) [TyDenote d.Ty] [DialectSignature d] [DialectCall d]
     [DialectEffects d] (Mem : Type) (unit : Mem → Nat)
     [DialectDenote d (StateT (Memory.Memories Mem unit) SetM)] : Prop :=
-  ∀ op : d.Op, isTerminator op = true ∨ callee? op = none → (effects op).TouchesNoMemory →
+  (∀ op : d.Op, isTerminator op = true ∨ callee? op = none → (effects op).TouchesNoMemory →
     ∀ args : HVector toType (sig op),
       (isTerminator op = false →
         IgnoresMemory (DialectDenote.denote (m := StateT (Memory.Memories Mem unit) SetM) op args)) ∧
       (isTerminator op = true →
-        IgnoresMemory (DialectDenote.exit (m := StateT (Memory.Memories Mem unit) SetM) op args))
+        IgnoresMemory (DialectDenote.exit (m := StateT (Memory.Memories Mem unit) SetM) op args))) ∧
+  ∀ op : d.Op, callee? op = some .picked → (effects op).TouchesNoMemory →
+    ∀ (ok : Name → Bool) (args : HVector toType (sig op)),
+      IgnoresMemory (DialectDenote.pick (m := StateT (Memory.Memories Mem unit) SetM) op ok args)
 
 /-- A path of a run with its returned memories replaced by `g` of them. -/
 def Ev.mapRet {β : Type} (g : β → β) : Ev (Except Stuck (Result β)) → Ev (Except Stuck (Result β))

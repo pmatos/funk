@@ -90,6 +90,15 @@ theorem bind {x : ExceptT Stuck SetM α} {g : α → ExceptT Stuck SetM β} (hx 
   · exact hx st' hst
   · cases he
 
+/-- A lifted computation, then `g`, is never stuck when `g` is not on any
+of its results. -/
+theorem bind_lift {s : SetM α} {g : α → ExceptT Stuck SetM β}
+    (hg : ∀ a, s (.ok a) → NoStuck (g a)) : NoStuck (ExceptT.lift s >>= g) :=
+  bind lift fun a ha => hg a (by
+    rcases (run_lift _ _).1 ha with ⟨_, h, he⟩ | ⟨_, _, he⟩
+    · cases he; exact h
+    · cases he)
+
 end NoStuck
 
 namespace HasPath
@@ -114,5 +123,51 @@ theorem bind_lift {s : SetM α} {g : α → ExceptT Stuck SetM β} (hs : ∃ e, 
     exact ⟨.ub r, (run_bind _ g _).2 (.inr (.inr ⟨r, (run_lift _ _).2 (.inr ⟨r, he, rfl⟩), rfl⟩))⟩
 
 end HasPath
+
+/-! # Paths that are not stuck -/
+
+section
+
+open SetM
+
+variable {α β : Type}
+
+/-- A way to end that is not stuck. -/
+def Ev.NotStuck (e : Ev (Except Stuck α)) : Prop := ∀ st, e ≠ .ok (.error st)
+
+/-- A path of `liftExcept x >>= g` that is not stuck goes on from the
+value that `x` holds. -/
+theorem run_liftExcept_bind {x : Except Stuck α} {g : α → ExceptT Stuck SetM β}
+    {e : Ev (Except Stuck β)} (hne : Ev.NotStuck e) :
+    (liftExcept x >>= g).run e ↔ ∃ a, x = .ok a ∧ (g a).run e := by
+  rw [run_bind]
+  constructor
+  · rintro (⟨a, ha, h⟩ | ⟨st, hst, rfl⟩ | ⟨r, hr, _⟩)
+    · exact ⟨a, by cases x <;> cases (run_liftExcept _ _).1 ha; rfl, h⟩
+    · exact absurd rfl (hne st)
+    · exact nomatch (run_liftExcept _ _).1 hr
+  · rintro ⟨a, rfl, h⟩
+    exact .inl ⟨a, (run_liftExcept _ _).2 rfl, h⟩
+
+/-- A path of a lifted computation of the set monad, then `g`, goes on
+from one of its results, or ends where it hits UB. -/
+theorem run_lift_bind {s : SetM α} {g : α → ExceptT Stuck SetM β} {e : Ev (Except Stuck β)} :
+    (ExceptT.lift s >>= g).run e ↔
+      (∃ a, s (.ok a) ∧ (g a).run e) ∨ (∃ r, s (.ub r) ∧ e = .ub r) := by
+  rw [run_bind]
+  constructor
+  · rintro (⟨a, ha, h⟩ | ⟨st, hst, rfl⟩ | ⟨r, hr, rfl⟩)
+    · rcases (run_lift _ _).1 ha with ⟨a', h', he⟩ | ⟨_, _, he⟩
+      · cases he; exact .inl ⟨a, h', h⟩
+      · cases he
+    · rcases (run_lift _ _).1 hst with ⟨_, _, he⟩ | ⟨_, _, he⟩ <;> cases he
+    · rcases (run_lift _ _).1 hr with ⟨_, _, he⟩ | ⟨r', h', he⟩
+      · cases he
+      · cases he; exact .inr ⟨r, h', rfl⟩
+  · rintro (⟨a, ha, h⟩ | ⟨r, hr, rfl⟩)
+    · exact .inl ⟨a, (run_lift _ _).2 (.inl ⟨a, ha, rfl⟩), h⟩
+    · exact .inr (.inr ⟨r, (run_lift _ _).2 (.inr ⟨r, hr, rfl⟩), rfl⟩)
+
+end
 
 end Fir

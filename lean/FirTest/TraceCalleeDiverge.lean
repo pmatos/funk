@@ -99,7 +99,7 @@ theorem quiet_moves (s : St) (i : Nat) :
   · have h' : (i + 1) % 2 = 1 := by omega
     rw [show qs s i = q₀ s by simp [qs, h], show qs s (i + 1) = q₁ s by simp [qs, h'],
       show (if i % 2 = 0 then 2 else 1) = 2 by simp [h]]
-    exact .ret (args := .nil) (U := 1) rfl rfl rfl rfl new_g g'_enter (g'_ret s) rfl rfl
+    exact .ret (args := .nil) (U := 1) rfl rfl rfl (.fixed rfl) new_g g'_enter (g'_ret s) rfl rfl
   · have h' : (i + 1) % 2 = 0 := by omega
     rw [show qs s i = q₁ s by simp [qs, h], show qs s (i + 1) = q₀ s by simp [qs, h'],
       show (if i % 2 = 0 then 2 else 1) = 1 by simp [h]]
@@ -152,7 +152,7 @@ theorem loud_moves (s : St) (i : Nat) :
   · have h' : (i + 1) % 3 = 1 := by omega
     rw [show ls s i = l₀ s by simp [ls, h], show ls s (i + 1) = l₁ s by simp [ls, h'],
       show lt i = [.tick] by simp [lt, h], show (if i % 3 = 0 then 2 else 1) = 2 by simp [h]]
-    exact .ret (args := .nil) (U := 1) rfl rfl rfl rfl new_g g'_enter (g'_ret s) rfl rfl
+    exact .ret (args := .nil) (U := 1) rfl rfl rfl (.fixed rfl) new_g g'_enter (g'_ret s) rfl rfl
   · have h' : (i + 1) % 3 = 2 := by omega
     rw [show ls s i = l₁ s by simp [ls, h], show ls s (i + 1) = l₂ s by simp [ls, h'],
       show lt i = [.tick, .act act₀] by simp [lt, h], show (if i % 3 = 0 then 2 else 1) = 1 by simp [h]]

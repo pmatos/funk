@@ -65,26 +65,11 @@ theorem Func.enter_ops [TyDenote d.Ty] [DecidableEq d.Ty] {g : Func d} {dvs : Li
   cases hp
   exact ⟨fun o ho => ⟨e, List.mem_of_mem_head? he, ho⟩, rfl⟩
 
-/-- An effect set below one that leaves out may-UB leaves it out. -/
-theorem Effects.Le.mayUB_false {Mem : Type} {a b : Effects Mem} (h : a ≤ b)
-    (hb : b.mayUB = false) : a.mayUB = false := by
-  cases ha : a.mayUB
-  · rfl
-  · exact absurd (h.mayUB ha) (by simp [hb])
-
-/-- An effect set below one that leaves out may produce poison leaves it
-out. -/
-theorem Effects.Le.mayPoison_false {Mem : Type} {a b : Effects Mem} (h : a ≤ b)
-    (hb : b.mayPoison = false) : a.mayPoison = false := by
-  cases ha : a.mayPoison
-  · rfl
-  · exact absurd (h.mayPoison ha) (by simp [hb])
-
 variable [DialectSignature d] [DialectCall d]
 
-/-- An op that is not a terminator calls its callee. -/
+/-- An op that is not a terminator calls the callee it names. -/
 theorem Operation.call?_of {o : Operation d} {c : Name} (hT : isTerminator o.op = false)
-    (hc : callee? o.op = some c) : o.call? = some c := by
+    (hc : callee? o.op = some (.fixed c)) : o.call? = some c := by
   simp [Operation.call?, hT, hc]
 
 /-! # Runs of ops with memory, from any memories -/
@@ -170,21 +155,30 @@ theorem Module.memOps_notUB (hv : ∀ g ∈ M.funcs, g.Valid ctx)
       (fun o' h' => ⟨_, (Func.block?_some hblk).1, h'⟩) hrun
   | denoteUB _ _ hT hc hx => exact (hub o.op htv (.inr hc) hown _).1 hT S r hx
   | denote _ _ _ _ _ _ hrun => exact ih n (Nat.lt_succ_self n) s f _ os _ r hf hs htail hrun
-  | @callUB _ c g _ _ _ _ _ hT hc hg hen hx =>
+  | @callUB _ c _ _ _ _ g _ _ _ _ _ hT hc hg hen hx =>
+    cases hc with
+    | picked hpc _ => exact (M.table.not_picked_of_mayUB hf hs (Func.mem_allOps hb ho) hT hpc).elim
+    | fixed hc =>
     have hg' : M.table.func? c = some g := hg
     have hcs : (M.table.summary c).mayUB = false :=
       (M.table.summary_closed.calls s f hf o (Func.mem_allOps hb ho) c
         (Operation.call?_of hT hc) (by simp [hg'])).mayUB_false hs
     exact ih n (Nat.lt_succ_self n) c g _ _ _ _ hg hcs (Func.enter_ops hen).1 (Func.memCall_ub hx)
-  | callRet _ _ _ _ _ _ _ _ _ hrun =>
-    exact ih _ (Nat.lt_succ_of_le (Nat.min_le_right _ _)) s f _ os _ r hf hs htail hrun
+  | callRet _ _ _ hc _ _ _ _ _ hrun =>
+    exact ih _ (Nat.lt_succ_of_le (Nat.le_trans (Nat.min_le_right _ _) hc.le.1)) s f _ os _ r hf hs
+      htail hrun
   | extUB _ _ hT hc hg _ =>
+    cases hc with
+    | picked hpc _ => exact (M.table.not_picked_of_mayUB hf hs (Func.mem_allOps hb ho) hT hpc).elim
+    | fixed hc =>
     have hg' : M.table.func? _ = none := hg
     have hall : (M.table.opOwn o).mayUB = true := by
       simp [SymbolTable.opOwn, Operation.call?_of hT hc, hg', Effects.callerView, Effects.join,
         Effects.all]
     have hle := M.table.summary_closed.own s f hf o (Func.mem_allOps hb ho)
     exact absurd (hle.mayUB_false hs) (by simp [hall])
+  | pickUB _ _ hT hpc _ =>
+    exact (M.table.not_picked_of_mayUB hf hs (Func.mem_allOps hb ho) hT hpc).elim
 
 /-- A run with memory of ops of a function of `M` returns no poison when the
 function's summary leaves out may produce poison and its environment has
@@ -233,7 +227,11 @@ theorem Module.memOps_clean (hv : ∀ g ∈ M.funcs, g.Valid ctx)
     have hrs := hnp o.op htv hT hc hown args (henv.operands hargs) _ rs _ hx
     exact ih n (Nat.lt_succ_self n) s f _ os _ vs S' k hf hs
       (henv.bind _ ((HVector.clean_toDVals rs).2 hrs)) htail hrun
-  | @callRet args c g _ _ vs' _ k' _ _ hargs hT hc hg hen hcallee _ _ hrun =>
+  | @callRet args c _ _ _ _ g _ _ vs' _ k' _ _ hargs hT hc hg hen hcallee _ _ hrun =>
+    cases hc with
+    | picked hpc _ =>
+      exact (M.table.not_picked_of_mayPoison hf hs (Func.mem_allOps hb ho) hT hpc).elim
+    | fixed hc =>
     have hg' : M.table.func? c = some g := hg
     have hcs : (M.table.summary c).mayPoison = false :=
       (M.table.summary_closed.calls s f hf o (Func.mem_allOps hb ho) c

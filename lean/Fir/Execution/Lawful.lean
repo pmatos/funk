@@ -1,4 +1,4 @@
-import Fir.Execution.Calls
+import Fir.Execution.CallsProgress
 import Fir.Execution.Replace
 
 /-!
@@ -22,7 +22,9 @@ valid module holds no other instance:
   the function that runs and of the source module's functions
   (`docs/decisions/semantics-refinement.md#the-ops-a-run-reaches`);
 * the class gives the totality that progress with calls asks of every
-  terminator and every op with no callee of the module. A function of a
+  terminator and every op with no callee of the module, and of the rule of
+  every op whose callee is picked (#235), and the monotonicity of that rule
+  that refinement asks. A function of a
   module whose functions are all valid and run within the module has an
   outcome at every budget, on every argument vector, calls and recursion
   included. No path of such a function's run is stuck either, whatever
@@ -68,12 +70,14 @@ section
 variable [TyDenote d.Ty] [TyRefinement d.Ty] [DialectCall d] [DialectDenote d SetM]
 
 /-- Every terminator and every op with no callee of a valid function is
-monotone, when every such op is at every valid op instance. -/
+monotone, and so is the rule of each of its ops whose callee is picked,
+when every such op is at every valid op instance. -/
 theorem Func.Valid.opsMonotone
     (hmono : ∀ op : d.Op, TypesValid op → isTerminator op = true ∨ callee? op = none →
       OpMonotone op)
+    (hpick : ∀ op : d.Op, TypesValid op → callee? op = some .picked → PickMonotone op)
     {ctx : ModuleContext d} {f : Func d} (hv : f.Valid ctx) : f.OpsMonotone :=
-  fun _ hb o ho => hmono o.op (hv.typesValid hb ho)
+  fun _ hb o ho => ⟨hmono o.op (hv.typesValid hb ho), hpick o.op (hv.typesValid hb ho)⟩
 
 end
 
@@ -89,6 +93,7 @@ theorem Func.progress_of_lawful (hv : ∀ g ∈ M.funcs, g.Valid ctx)
     (args : HVector toType (f.params.map (·.2))) : Progress (f.runs M args) :=
   Func.progress_of_inModule hv hm
     (fun g hg _ hb o ho hc => LawfulDialectPoison.total o.op ((hv g hg).typesValid hb ho) hc)
+    (fun g hg _ hb o ho hc => LawfulDialectPoison.pickTotal o.op ((hv g hg).typesValid hb ho) hc)
     hf args
 
 open SetM in
@@ -100,8 +105,10 @@ theorem Func.runs_args_isRefinedBy_of_lawful (hv : ∀ g ∈ M.funcs, g.Valid ct
     (hf : f ∈ M.funcs) {a a' : HVector toType (f.params.map (·.2))}
     (ha : a.Forall₂ TyRefinement.IsRefinedBy a') :
     observable (f.runs M a) ⊑ observable (f.runs M a') :=
-  Func.runs_args_isRefinedBy M (fun g hg => (hv g hg).opsMonotone LawfulDialectPoison.monotone) f
-    ((hv f hf).opsMonotone LawfulDialectPoison.monotone) ha
+  Func.runs_args_isRefinedBy M (fun g hg => (hv g hg).opsMonotone LawfulDialectPoison.monotone
+      LawfulDialectPoison.pickMonotone) f
+    ((hv f hf).opsMonotone LawfulDialectPoison.monotone
+      LawfulDialectPoison.pickMonotone) ha
 
 /-- Congruence in the callee, by the lawful class alone: in a valid
 module, replacing the body of its function `@g` with one under which
@@ -119,7 +126,8 @@ theorem Func.runs_replaceBody_isRefinedBy_of_lawful
     {f : Func d} (hf : f ∈ M.funcs) :
     f.runs M ⊑ (f.replaceBody g.name b).runs (M.replaceBody g.name b) :=
   Func.runs_replaceBody_isRefinedBy
-    (fun g hg => (hM.funcs g hg).opsMonotone LawfulDialectPoison.monotone) hrefl htrans
+    (fun g hg => (hM.funcs g hg).opsMonotone LawfulDialectPoison.monotone
+      LawfulDialectPoison.pickMonotone) hrefl htrans
     hM.symbolsUnique hg b hfin h hf
 
 end Fir

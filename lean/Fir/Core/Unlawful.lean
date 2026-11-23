@@ -51,6 +51,7 @@ theorem sdiv_typesValid : TypesValid (d := CoreDialect) (.sdiv 8 false) := by
 @[instance_reducible] def noOutcome : DialectDenote CoreDialect SetM where
   denote _ _ := fun _ => False
   exit _ _ := fun _ => False
+  pick _ _ _ := fun _ => False
 
 /-- Totality rejects a semantics in which an op has no outcome. -/
 theorem noOutcome_unlawful : ¬ @LawfulDialectPoison CoreDialect _ _ _ _ _ noOutcome _ _ := by
@@ -66,6 +67,7 @@ result otherwise. -/
     (args.Any TyPoison.IsPoison ∧ ∃ r, e = .ub r) ∨
       (¬ args.Any TyPoison.IsPoison ∧ ∃ rs, e = .ok rs)
   exit _ _ := fun e => ∃ r, e = .ub r
+  pick _ _ _ := fun e => ∃ r, e = .ub r
 
 /-- An `add` that is UB on a poison operand is not UB by its own rules: on
 operands with no poison, it is never UB. -/
@@ -100,6 +102,7 @@ def sdivOld (w : Nat) : PoisonOr (BitVec w) → PoisonOr (BitVec w) → SetM (Po
       | .ub r => sdivOld w a b (.ub r)
     | _, _ => fun e => ∃ r, e = .ub r
   exit _ _ := fun e => ∃ r, e = .ub r
+  pick _ _ _ := fun e => ∃ r, e = .ub r
 
 /-- Monotonicity rejects the rule that a poison dividend by `-1` gives
 poison: the signed minimum refines that poison, and by `-1` it is UB. -/
@@ -163,6 +166,7 @@ theorem fillZero_fills :
 @[instance_reducible] def alwaysUB : DialectDenote CoreDialect SetM where
   denote _ _ := fun e => ∃ r, e = .ub r
   exit _ _ := fun e => ∃ r, e = .ub r
+  pick _ _ _ := fun e => ∃ r, e = .ub r
 
 /-- The poison clauses accept a semantics in which every op is always UB. -/
 theorem alwaysUB_propagatesPoison (op : Op) :

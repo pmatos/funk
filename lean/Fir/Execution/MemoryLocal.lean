@@ -77,7 +77,8 @@ theorem Func.local_memNoStuck (hv : f.Valid ctx)
           omega
         rw [Env.bind_ok _ _ hlen, liftExcept_ok_bind]
         exact ih b hb (i + 1) _ (hnext hTf) (Func.scoped_next hv hb hi hold rs hrty) S'
-      · rename_i heq
+      all_goals
+        rename_i heq
         rw [hn b hb _ ho] at heq
         cases heq
 
@@ -131,7 +132,8 @@ theorem Func.local_memHasPath (hv : f.Valid ctx)
           omega
         rw [Env.bind_ok _ _ hlen, liftExcept_ok_bind]
         exact ih b hb (i + 1) _ (hnext hTf) (Func.scoped_next hv hb hi hold rs hrty) S'
-      · rename_i heq
+      all_goals
+        rename_i heq
         rw [hn b hb _ ho] at heq
         cases heq
 

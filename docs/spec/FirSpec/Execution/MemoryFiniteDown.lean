@@ -17,7 +17,7 @@ pins their fingerprint; the build fails when the Lean changes under it.
 :::moduleDocs (fingerprint := "8732878515543511956")
 :::
 
-:::readable Fir.Func.memOps_notExhausted_of_finite (pin := Fir.OpsFinite) (pin := Fir.MemCallsRefined) (pin := Fir.SomeUB) (pin := Fir.MemMonotoneOps) (pin := Fir.Func.MemOpsMonotone) (fingerprint := "18405521642960181165")
+:::readable Fir.Func.memOps_notExhausted_of_finite (pin := Fir.OpsFinite) (pin := Fir.MemCallsRefined) (pin := Fir.SomeUB) (pin := Fir.MemMonotoneOps) (pin := Fir.Func.MemOpsMonotone) (fingerprint := "12557195787940272502")
 *Theorem: a source that does not run out of fuel bounds its target.* Let
 the target module $`M'` run each call with memory as the source $`M` does,
 the ops of the dialect have finitely many outcomes, and every op of
@@ -33,7 +33,9 @@ $$`\neg\,\mathrm{UB}(\mathrm{ops}_M) \wedge \mathrm{exh} \notin \mathrm{ops}_M(N
 The proof is by strong induction on $`N`. An op that runs by its own rule
 goes on in finitely many ways in the target, each allowed by a way it goes
 on in the source, whose rest at $`N - 1` does not run out of fuel; the
-largest of their budgets, plus one, serves. A call's callee has a budget at
+largest of their budgets, plus one, serves. An op that picks its callee
+picks among finitely many symbols, from finitely many memories, so it
+makes finitely many calls, each followed as below. A call's callee has a budget at
 which it does not run out of fuel: by the induction for the same function,
 and for a black box because its target cannot diverge where its source does
 not. At that budget the callee returns finitely many things, each allowed

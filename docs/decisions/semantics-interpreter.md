@@ -160,8 +160,39 @@ have rules, an op with a callee has them. A statement proved op by op must leave
 out the ops with a callee. M2's rewrite rules need the same exclusion, tracked
 by #96 (ADR-2026-10-29-2006).
 
+A dialect may instead mark an op's callee as picked when the op runs
+(`Callee.picked`, #235). Its rule (`DialectDenote.pick`) maps the op's
+operands, with the run's state, to the symbol to call, or is UB; the run gives
+it a test of which symbols name a function or an external declaration that
+takes the operands but the first and gives the op's results
+(`Module.callable`). The run then calls that symbol on the operands but the
+first, as it runs a direct call: the same frame, fuel rule and results, and
+an external declaration goes to the external-call rule. The human ruled this
+on 2026-11-19, on #235 (Q2). Rejected: the interpreter resolving pointers
+itself, which needs UB of its own, and a chain of fixed calls, which makes an
+op's meaning depend on the whole table. The run's laws gain obligations for
+the rule: total, monotone, finitely many outcomes, one step in the traced
+layer of marked traces (`PickTotal`, `PickMonotone`, `MemPickTotal`,
+`MemPickMonotone`, `OpTracePickMonotone`, and a part of `OpsFinite`,
+`OpsTraceFinite`, `OpsStepFinite` and `OpsOneStep`). What a caller sees of
+such an op is every effect but control, since its callee is unknown
+(ADR-2026-11-09-1541).
+No core op picks its callee yet, so the core's and `CoreGpu`'s guarantees keep
+their statements. A test dialect whose op picks its callee runs the case in
+the spec's interpreter (`FirTest.PickDialect`) and in `fir-ref`'s machine
+(`FirTest.PickMachine`), and proves the dialect lawful, its refined
+arguments and progress in the set monad, and that its test module runs
+within itself; the layers with memory and traces are covered by their
+generic theorems, which no test dialect instantiates for a picked callee
+yet.
+
 Fuel stays the interpreter's argument, not state in the monad. Every op takes
-one step, a call included. `Func.runOps` returns the steps it leaves with the
+one step, a call included, and an op whose rule picks its callee takes two:
+its rule's and the call's, so that a call with no step left after its rule
+runs out of fuel there. Rejected: the rule and the call in one step, which
+would let a picked external call show two steps of the traced layer for one
+step of fuel, against the bound of a traced run's fuel by its steps
+(`Func.traceOps_retPaced`). `Func.runOps` returns the steps it leaves with the
 values it returns. A callee gets the steps its caller has left after the call's
 step. The caller goes on with the steps that the callee gives back. A callee
 that runs out of fuel ends the run so. Its UB and stuck paths are its caller's

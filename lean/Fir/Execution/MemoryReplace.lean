@@ -78,7 +78,8 @@ theorem Module.replaceBody_memCallsRefined {M : Module d}
     { params := rfl
       refines := fun a a' S S' ha hS => Behaviour.isRefinedBy_trans hobs
         (Func.memRunsFrom_args_isRefinedBy M hmono g (hmono g hg) ha hS) (h (a', S')) }
-  refine ⟨fun x => ?_, fun _ _ _ h => by rwa [Module.declares_replaceBody] at h⟩
+  refine ⟨fun x => ?_, fun _ _ _ h => by rwa [Module.declares_replaceBody] at h,
+    fun ts rs x h => by rwa [Module.callable_replaceBody]⟩
   by_cases hx : x = g.name
   · subst hx
     exact .inr ⟨g, _, Module.func?_of_mem hnd hg, Module.func?_replaceBody_self hnd hg b, bb⟩
@@ -127,12 +128,15 @@ variable [DialectValidation d]
 
 omit [DecidableEq d.Ty] in
 /-- Every terminator and every op with no callee of a valid function is
-monotone with memory, when every such op is at every valid op instance. -/
+monotone with memory, and so is the rule of each of its ops whose callee is
+picked, when every such op is at every valid op instance. -/
 theorem Func.Valid.memOpsMonotone
     (hmono : ∀ op : d.Op, TypesValid op → isTerminator op = true ∨ callee? op = none →
       OpMemMonotone (σ := Memories Mem unit) op)
+    (hpick : ∀ op : d.Op, TypesValid op → callee? op = some .picked →
+      OpMemPickMonotone (σ := Memories Mem unit) op)
     {ctx : ModuleContext d} {f : Func d} (hv : f.Valid ctx) : f.MemOpsMonotone Mem unit :=
-  fun _ hb o ho => hmono o.op (hv.typesValid hb ho)
+  fun _ hb o ho => ⟨hmono o.op (hv.typesValid hb ho), hpick o.op (hv.typesValid hb ho)⟩
 
 end
 
@@ -156,6 +160,7 @@ theorem Func.memRunsFrom_args_isRefinedBy_of_lawful (hv : ∀ g ∈ M.funcs, g.V
   letI := DialectMemDenote.denoteAt (d := d) lay ρ L
   have hmono := fun g (hg : g ∈ M.funcs) => (hv g hg).memOpsMonotone
     (fun op hvo hc => LawfulDialectMonotone.monotone op hvo hc lay ρ L)
+    (fun op hvo hc => LawfulDialectMonotone.pickMonotone op hvo hc lay ρ L)
   Func.memRunsFrom_args_isRefinedBy M hmono f (hmono f hf) ha hS
 
 /-- Refined arguments, with memory, by the class alone: in a module whose
@@ -198,6 +203,7 @@ theorem Func.memRuns_replaceBody_isRefinedBy_of_bound
   letI := DialectMemDenote.denoteAt (d := d) lay ρ L
   have hmono := fun g (hg : g ∈ M.funcs) => (hM.funcs g hg).memOpsMonotone
     (fun op hvo hc => LawfulDialectMonotone.monotone op hvo hc lay ρ L)
+    (fun op hvo hc => LawfulDialectMonotone.pickMonotone op hvo hc lay ρ L)
   have hr := Func.memRunsFrom_replaceBody_isRefinedBy hmono hrefl htrans hM.symbolsUnique hg b
     hbound h hf
   exact ⟨hr, fun a => Func.memRuns_isRefinedBy_of_from lay ρ L (hr (a, RunItems.start d lay ρ L))⟩

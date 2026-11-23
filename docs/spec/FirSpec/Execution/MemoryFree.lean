@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Touching no memory: readable blocks" =>
 
-:::moduleDocs (fingerprint := "3285069421690955854")
+:::moduleDocs (fingerprint := "2721248224941408076")
 :::
 
 :::readable Fir.Effects.TouchesNoMemory Fir.Effects.TouchesNoMemory.of_le (pin := Fir.Effects) (pin := Fir.Effects.Le) (fingerprint := "10653422458642567564")
@@ -30,22 +30,27 @@ $`f`: it holds $`f(x)` for each memory $`x` it held. So a set of effects
 that touches no memory once its memories are renamed touched none before.
 :::
 
-:::readable Fir.SymbolTable.ReachesNoMemory Fir.SymbolTable.ReachesNoMemory.of_summary Fir.SymbolTable.ReachesNoMemory.own Fir.SymbolTable.ReachesNoMemory.callee (pin := Fir.SymbolTable.reach) (pin := Fir.SymbolTable.summary) (fingerprint := "10075804422516957477")
+:::readable Fir.SymbolTable.ReachesNoMemory Fir.SymbolTable.ReachesNoMemory.of_summary Fir.SymbolTable.ReachesNoMemory.own Fir.SymbolTable.ReachesNoMemory.callee Fir.SymbolTable.ReachesNoMemory.picked (pin := Fir.SymbolTable.reach) (pin := Fir.SymbolTable.summary) (fingerprint := "9323625167530189115")
 *Definition and theorems: a function that reaches no memory.* The function
 of a symbol table named by $`s` reaches no memory when every function that
 the walk from $`s` reaches, $`s`'s own included, declares no memory effect
-for any of its ops. The walk follows only calls that name functions of the
-table: a call to any other symbol is stuck, so it reaches nothing.
+for any of its ops; and, when one of the functions it reaches has an op
+that picks its callee, which may call any function of the table (#235), no
+function of the table declares a memory effect for any of its ops. The
+walk follows only calls that name functions of the table: a call to any
+other symbol is stuck, so it reaches nothing.
 
 * A function whose
   {ref "The-fir-specification--Execution--Function-summaries"}[summary]
   touches no memory reaches no memory: the summary holds what a caller sees
-  of every op of every function it reaches. The converse fails for a call
-  that names no function of the table, which adds every effect to the
-  summary.
+  of every op of every function it reaches, and an op that picks its
+  callee puts every effect in it. The converse fails for a call that names
+  no function of the table, which adds every effect to the summary.
 * Each op of a function that reaches no memory declares no memory effect,
   and each function that it calls reaches no memory, since that function
-  reaches nothing that its caller does not.
+  reaches nothing that its caller does not. Each function that one of its
+  ops may pick reaches no memory, since then no function of the table
+  declares a memory effect.
 :::
 
 :::readable Fir.IgnoresMemory Fir.IgnoresMemory.lift Fir.IgnoresMemory.map (fingerprint := "15015104479317298164")
@@ -63,12 +68,14 @@ since it keeps them, and mapping the results of a computation that ignores
 them keeps it so.
 :::
 
-:::readable Fir.OpsIgnoreMemory (pin := Fir.OwnRuleHas) (fingerprint := "4468460918663472336")
+:::readable Fir.OpsIgnoreMemory (pin := Fir.OwnRuleHas) (fingerprint := "13998501687228089008")
 *Definition: ops that ignore the memories where they touch none.* The ops
 of a dialect ignore the memories where they touch none, in a semantics with
 memory, when each op that is a terminator or has no callee, and that
 declares no memory effect, ignores the memories on every operand vector: by
-its meaning when it is not a terminator, and by its exit when it is. The
+its meaning when it is not a terminator, and by its exit when it is; and
+the rule of each op whose callee is picked, and that declares no memory
+effect, ignores the memories, whatever the run says it can call. The
 {ref "The-fir-specification--Memory--Memory-obligations"}[memory obligations]
 do not give it: they compare runs from memories with the same allocations
 only, and say nothing of the frames.

@@ -14,21 +14,22 @@ the build fails when the Lean changes under it.
 
 #doc (Manual) "Returns and UB with memory, followed back: readable blocks" =>
 
-:::moduleDocs (fingerprint := "10832409791610803295")
+:::moduleDocs (fingerprint := "14307850649962558897")
 :::
 
-:::readable Fir.MemMonotoneOps Fir.Func.MemOpsMonotone Fir.Func.MemOpsMonotone.enter Fir.Func.MemOpsMonotone.jump (pin := Fir.OpMemMonotone) (fingerprint := "17780227716261539167")
+:::readable Fir.MemMonotoneOps Fir.Func.MemOpsMonotone Fir.Func.MemOpsMonotone.enter Fir.Func.MemOpsMonotone.jump (pin := Fir.OpMemMonotone) (fingerprint := "4053324920195260289")
 *Definitions and theorems: ops monotone with memory.* A list of ops is
 monotone with memory when each of its ops that is a terminator or calls no
 function is
 {ref "The-fir-specification--Memory--Monotonicity-with-memory"}[monotone]
-in the semantics in the state layer; a function is when the ops of each of
+in the semantics in the state layer, and each whose callee is picked has a
+monotone rule to pick it there; a function is when the ops of each of
 its blocks are. A run of such a function starts at the ops of one of its
 blocks, and a jump goes to the ops of one of its blocks, so they are
 monotone with memory too.
 :::
 
-:::readable Fir.MemCallsRefined.callee_allowed (pin := Fir.MemCallsRefined) (fingerprint := "15938931866431133684")
+:::readable Fir.MemCallsRefined.callee_allowed (pin := Fir.MemCallsRefined) (fingerprint := "4737952128187967306")
 *Theorem: a callee's return or UB, allowed.* In modules whose calls
 refine, a return or UB of a call's callee in the target, in its frame,
 entered on arguments and from memories that refine the source's, is
@@ -37,7 +38,7 @@ induction, which covers its ops from $`\mathrm{enter}(S) \sqsubseteq \mathrm{ent
 or a black box.
 :::
 
-:::readable Fir.Func.memOps_allowed (pin := Fir.MemAllowed) (pin := Fir.MemCallsRefined) (pin := Fir.MemMonotoneOps) (pin := Fir.Func.MemOpsMonotone) (fingerprint := "2290115914629987260")
+:::readable Fir.Func.memOps_allowed (pin := Fir.MemAllowed) (pin := Fir.MemCallsRefined) (pin := Fir.MemMonotoneOps) (pin := Fir.Func.MemOpsMonotone) (fingerprint := "6749159266427719932")
 *Theorem: every return and UB of the target with memory, allowed.* Let
 the target module $`M'` run each call with memory as the source $`M`
 does, and every op of $`M`'s functions, of $`f` and of $`o^*` that runs by
@@ -51,6 +52,10 @@ The proof is the one for runs in the set monad, by strong induction on
 $`n`, for every function and from every memories. Each op runs alike in
 both, on operands and from memories of which the target's refine the
 source's, so what it does in the target is allowed by what it does in the
-source, with memories that refine the source's after it. No black box
-needs a budget here: a path that runs out of fuel asks nothing.
+source, with memories that refine the source's after it. An op that picks
+its callee picks in the source the symbol it picks in the target, from
+memories that the target's refine, or its rule is UB in the source, since
+the rule is monotone and the target can call each symbol that the source
+can. No black box needs a budget here: a path that runs out of fuel asks
+nothing.
 :::

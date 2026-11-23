@@ -86,12 +86,14 @@ instance : DialectDenote CoreDialect Mix where
   exit op args := match op.exit? (m := Mix) with
     | some rule => rule args
     | none => .noOutcome op.name
+  pick op _ _ := .noOutcome op.name
 
 /-- The toy dialect's rule, in `Mix`. A toy op is not a terminator, so it
 has no exit. -/
 instance : DialectDenote ToyDialect Mix where
   denote := Toy.Op.denote
   exit op _ := .noOutcome op.name
+  pick op _ _ := .noOutcome op.name
 
 /-- Parses with the sum of the core and the toy dialect. -/
 def parseMixed (t : String) : Except ParseError (Module CoreToy) := Fir.parse t

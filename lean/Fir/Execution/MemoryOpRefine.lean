@@ -36,7 +36,12 @@ section on the monotonicity of a sum and a lift).
 
 A dialect meets the obligation by being _lawful in its monotonicity_, the
 class below. The class asks for no semantics in the set monad, so a dialect
-whose ops touch memory can meet it.
+whose ops touch memory can meet it. It also asks the rule of each op whose
+callee is picked (#235) to be monotone with memory (`OpMemPickMonotone`):
+on operands and from memories that refine others, and when the run can
+call each symbol that it could, the rule picks a symbol that the rule on
+those others may pick, from memories that refine theirs, or those others
+may hit UB.
 -/
 
 namespace Fir
@@ -121,6 +126,17 @@ def OpMemMonotone [DialectDenote d (StateT σ SetM)] (op : d.Op) : Prop :=
       (isTerminator op = true → StateRefinedBy Eq (DialectDenote.exit (m := StateT σ SetM) op args)
         (DialectDenote.exit (m := StateT σ SetM) op args'))
 
+/-- In a semantics in the state layer, the rule that picks the op's callee
+is monotone (#235): on operands that refine others, from memories that
+refine others, and where the run can call each symbol that `ok` accepts,
+every way it may end is allowed by a way it may end on those others with
+`ok`: UB, or the same symbol with memories that the first's refine. -/
+def OpMemPickMonotone [DialectDenote d (StateT σ SetM)] (op : d.Op) : Prop :=
+  ∀ (ok ok' : Name → Bool), (∀ s, ok s = true → ok' s = true) →
+    ∀ args args' : HVector toType (sig op), args.Forall₂ TyRefinement.IsRefinedBy args' →
+      StateRefinedBy Eq (DialectDenote.pick (m := StateT σ SetM) op ok args)
+        (DialectDenote.pick (m := StateT σ SetM) op ok' args')
+
 variable [DialectEffects d] [DialectMemDenote d]
 
 /-- Monotone with memory: wherever a run names the dialect's memories, the
@@ -130,13 +146,23 @@ def MemMonotone (op : d.Op) : Prop :=
     letI := DialectMemDenote.denoteAt (d := d) lay ρ L
     OpMemMonotone (σ := Memories N (unitsOf lay)) op
 
+/-- The rule that picks the op's callee is monotone with memory: wherever a
+run names the dialect's memories, it is monotone in its semantics with
+memory at that naming. -/
+def MemPickMonotone (op : d.Op) : Prop :=
+  ∀ {N : Type} [DecidableEq N] (lay : N → MemLayout) (ρ : DialectEffects.Mem d → N) (L : RunItems),
+    letI := DialectMemDenote.denoteAt (d := d) lay ρ L
+    OpMemPickMonotone (σ := Memories N (unitsOf lay)) op
+
 /-- A dialect lawful in its monotonicity: every valid instance that runs by
 its own rule, a terminator or an op with no callee, is monotone with
-memory. -/
+memory, and so is the rule of every valid instance whose callee is
+picked. -/
 class LawfulDialectMonotone (d : Dialect) [TyDenote d.Ty] [DialectSignature d] [TyRefinement d.Ty]
     [DialectEffects d] [DialectCall d] [DialectValidation d] [DialectMemDenote d] : Prop where
   monotone : ∀ op : d.Op, TypesValid op → isTerminator op = true ∨ callee? op = none →
     MemMonotone op
+  pickMonotone : ∀ op : d.Op, TypesValid op → callee? op = some .picked → MemPickMonotone op
 
 end
 
@@ -150,9 +176,18 @@ monotone with memory. -/
 theorem MemMonotone.ofLifts {op : d.Op} (hl : OpLiftsSetM op) (h : OpMonotone op) :
     MemMonotone op :=
   fun lay ρ L args args' hr => by
-    rw [(hl lay ρ L args).1, (hl lay ρ L args).2, (hl lay ρ L args').1, (hl lay ρ L args').2]
+    rw [(hl lay ρ L args).1, (hl lay ρ L args).2.1, (hl lay ρ L args').1,
+      (hl lay ρ L args').2.1]
     exact ⟨fun ht => StateRefinedBy.lift ((h args args' hr).1 ht),
       fun ht => StateRefinedBy.lift ((h args args' hr).2 ht)⟩
+
+/-- An op that touches no memory and picks its callee monotonically in the
+set monad picks it monotonically with memory. -/
+theorem MemPickMonotone.ofLifts {op : d.Op} (hl : OpLiftsSetM op) (h : PickMonotone op) :
+    MemPickMonotone op :=
+  fun lay ρ L ok ok' hok args args' hr => by
+    rw [(hl lay ρ L args).2.2 ok, (hl lay ρ L args').2.2 ok']
+    exact StateRefinedBy.lift (h ok ok' hok args args' hr)
 
 variable [LiftsSetM d]
 
@@ -168,11 +203,24 @@ theorem MemMonotone.setM {op : d.Op} (h : MemMonotone op) : OpMonotone op := by
   exact ⟨fun ht => ((hu args args' hr).1 ht).of_lift hS,
     fun ht => ((hu args args' hr).2 ht).of_lift hS⟩
 
+/-- In a dialect that lifts the set monad, a rule that picks a callee
+monotonically with memory does so in the set monad. -/
+theorem MemPickMonotone.setM {op : d.Op} (h : MemPickMonotone op) : PickMonotone op := by
+  intro ok ok' hok args args' hr
+  have hu := h (N := Unit) (fun _ => MemLayout.default) (fun _ => ()) RunItems.empty
+  unfold OpMemPickMonotone at hu
+  rw [LiftsSetM.lifts] at hu
+  have hS := Memories.isRefinedBy_refl
+    (Memories.empty : Memories Unit (unitsOf fun _ => MemLayout.default))
+  exact (hu ok ok' hok args args' hr).of_lift hS
+
 /-- A lawful dialect that lifts the set monad is lawful in its
 monotonicity: its monotonicity in the set monad holds with memory. -/
 theorem LawfulDialectMonotone.ofLawful [DialectCall d] [DialectValidation d] [TyPoison d.Ty]
     [LawfulDialectPoison d] : LawfulDialectMonotone d where
   monotone op hv hc :=
     MemMonotone.ofLifts (LiftsSetM.opLifts op) (LawfulDialectPoison.monotone op hv hc)
+  pickMonotone op hv hc :=
+    MemPickMonotone.ofLifts (LiftsSetM.opLifts op) (LawfulDialectPoison.pickMonotone op hv hc)
 
 end Fir

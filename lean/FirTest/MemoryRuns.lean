@@ -38,6 +38,7 @@ memories. -/
       StateT.lift (DialectDenote.denote (m := Tree) (d := CoreDialect) (Core.Op.const w v) args)
     | op, args => StateT.lift (DialectDenote.denote (m := Tree) op args)
   exit op args := StateT.lift (DialectDenote.exit (m := Tree) op args)
+  pick op ok args := StateT.lift (DialectDenote.pick (m := Tree) op ok args)
 
 /-- A semantics, not fir's, in which `const 3` loads a unit from the
 allocation with id 1 and every other `const` allocates a unit on the stack,
@@ -50,6 +51,7 @@ before each gives its constant. -/
       StateT.lift (DialectDenote.denote (m := Tree) (d := CoreDialect) (Core.Op.const w v) args)
     | op, args => StateT.lift (DialectDenote.denote (m := Tree) op args)
   exit op args := StateT.lift (DialectDenote.exit (m := Tree) op args)
+  pick op ok args := StateT.lift (DialectDenote.pick (m := Tree) op ok args)
 
 /-- What a path of a run shows of its memories: the liveness of each
 allocation of the one memory, in order, and the number of frames left. -/
@@ -115,6 +117,7 @@ memory, and the theorem on runs with memory covers its runs. -/
       StateT.lift (DialectDenote.denote (m := SetM) (d := CoreDialect) (Core.Op.const w v) args)
     | op, args => StateT.lift (DialectDenote.denote (m := SetM) op args)
   exit op args := StateT.lift (DialectDenote.exit (m := SetM) op args)
+  pick op ok args := StateT.lift (DialectDenote.pick (m := SetM) op ok args)
 
 example (k : AllocKind) (M : Module CoreDialect) (f : Func CoreDialect) (env : Env CoreDialect)
     (os : List (Operation CoreDialect)) (n j : Nat) (S : Mems) :
@@ -162,7 +165,8 @@ instance : DialectMemDenote AllocDialect where
         | .ret, _ => MonadUB.ub "ret is a terminator"
       exit := fun
         | .alloc, _ => MonadUB.ub "alloc is not a terminator"
-        | .ret, _ => pure .ret }
+        | .ret, _ => pure .ret
+      pick := fun _ _ _ => MonadUB.ub "no alloc op picks its callee" }
 
 /-- A run with memory of the alloc dialect runs its semantics with memory at
 the naming it is given, from the memories its items start, which for a
@@ -209,7 +213,7 @@ theorem alloc_memTotal : ∀ op : AllocOp, MemTotal (d := AllocDialect) op
 
 /-- The alloc dialect is lawful in its totality, with no semantics in the
 set monad. -/
-instance : LawfulDialectTotal AllocDialect := ⟨fun op _ _ => alloc_memTotal op⟩
+instance : LawfulDialectTotal AllocDialect := ⟨fun op _ _ => alloc_memTotal op, fun _ _ h => nomatch h⟩
 
 /-- Every valid function of the alloc dialect runs within its module with
 memory, at every naming: no op calls a function, `alloc` never exits, and
@@ -220,7 +224,8 @@ theorem alloc_inModuleAt {N : Type} [DecidableEq N] (lay : N → MemLayout) (ρ 
     (hv : f.Valid ctx) : f.InModuleAt lay ρ L M := by
   letI := DialectMemDenote.denoteAt (d := AllocDialect) lay ρ L
   show f.MemInModule (unitsOf lay) M
-  refine ⟨fun _ _ _ _ _ _ h => (nomatch h), fun _ _ o _ _ _ _ _ _ h => ?_,
+  refine ⟨fun _ _ _ _ _ _ h => (nomatch h), fun _ _ _ _ _ h => (nomatch h),
+    fun _ _ o _ _ _ _ _ _ h => ?_,
     fun b hb o ho _ _ _ _ h => ?_⟩
   · cases o with | mk _ op _ _ _ _ => cases op <;> cases h
   · obtain ⟨i, hi, rfl⟩ := List.getElem_of_mem ho

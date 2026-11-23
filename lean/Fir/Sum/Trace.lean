@@ -95,6 +95,11 @@ instance instDialectTrace : DialectTrace (base ⊞ e) where
             (DialectDenote.exit o (HVector.ofSum args))
         | .inr o, args => TraceM.mapActs (fun a => [Act.inr a])
             (DialectDenote.exit (d := base.over e) o args)
+      pick
+        | .inl o, ok, args => TraceM.mapActs (fun a => [Act.inl a])
+            (DialectDenote.pick o ok (HVector.ofSum args))
+        | .inr o, ok, args => TraceM.mapActs (fun a => [Act.inr a])
+            (DialectDenote.pick (d := base.over e) o ok args)
       extCall g args rs := match args.mapM DVal.ofSum?, rs.mapM Sum.getLeft? with
         | some args₀, some rs₀ => TraceM.mapActs (fun a => [Act.inl a])
             (List.map (DVal.toSum (e := e)) <$> DialectExtCall.extCall (d := base) g args₀ rs₀)
@@ -127,7 +132,7 @@ theorem opLiftsMem_inl {o : base.Op} (h : OpLiftsMem lay (ρ ∘ DialectMemOver.
   letI := DialectMemDenote.denoteAt (d := base) lay (ρ ∘ DialectMemOver.ofBase) L
   letI := DialectTrace.traceAt (d := base) lay (ρ ∘ DialectMemOver.ofBase) L
   intro args
-  refine ⟨?_, ?_⟩
+  refine ⟨?_, ?_, fun ok => ?_⟩
   · show TraceM.liftMem (HVector.toSum <$> _) =
       TraceM.mapActs _ (HVector.toSum <$> DialectDenote.denote o (HVector.ofSum args))
     refine (((congrArg (fun x => TraceM.mapActs (fun a => [Act.inl a]) (HVector.toSum <$> x))
@@ -135,7 +140,10 @@ theorem opLiftsMem_inl {o : base.Op} (h : OpLiftsMem lay (ρ ∘ DialectMemOver.
         ((MonadMorphism.traceMem N (unitsOf lay) (DialectTrace.Acts base)).map_map _ _).symm)).trans
       (TraceM.mapActs_liftMem _ _)).symm
   · show _ = TraceM.mapActs _ (DialectDenote.exit o (HVector.ofSum args))
-    rw [← (h (HVector.ofSum args)).2, TraceM.mapActs_liftMem]
+    rw [← (h (HVector.ofSum args)).2.1, TraceM.mapActs_liftMem]
+    rfl
+  · show _ = TraceM.mapActs _ (DialectDenote.pick o ok (HVector.ofSum args))
+    rw [← (h (HVector.ofSum args)).2.2 ok, TraceM.mapActs_liftMem]
     rfl
 
 /-- An op of `e` that lifts its rule with memory in `e`'s traced semantics
@@ -145,12 +153,15 @@ theorem opLiftsMem_inr {o : e.Op} (h : OpLiftsMem (d := base.over e) lay ρ L o)
   letI := DialectMemDenote.denoteAt (d := base.over e) lay ρ L
   letI := DialectTrace.traceAt (d := base.over e) lay ρ L
   intro args
-  refine ⟨?_, ?_⟩
+  refine ⟨?_, ?_, fun ok => ?_⟩
   · show _ = TraceM.mapActs _ (DialectDenote.denote (d := base.over e) o args)
     rw [← (h args).1, TraceM.mapActs_liftMem]
     rfl
   · show _ = TraceM.mapActs _ (DialectDenote.exit (d := base.over e) o args)
-    rw [← (h args).2, TraceM.mapActs_liftMem]
+    rw [← (h args).2.1, TraceM.mapActs_liftMem]
+    rfl
+  · show _ = TraceM.mapActs _ (DialectDenote.pick (d := base.over e) o ok args)
+    rw [← (h args).2.2 ok, TraceM.mapActs_liftMem]
     rfl
 
 /-- Each op of the sum lifts its rule with memory when each op of each side
@@ -171,7 +182,8 @@ theorem liftsMem [DecidableEq base.Ty] [DecidableEq e.Ty] [DialectCall base]
     letI := DialectTrace.traceAt (d := base ⊞ e) lay ρ L
     have h := opLiftsMem lay ρ L (LiftsMem.opLiftsMem lay (ρ ∘ DialectMemOver.ofBase) L)
       (LiftsMem.opLiftsMem (d := base.over e) lay ρ L)
-    exact ⟨fun op args => (h op args).1, fun op args => (h op args).2⟩,
+    exact ⟨fun op args => (h op args).1, fun op args => (h op args).2.1,
+      fun op ok args => (h op args).2.2 ok⟩,
    fun lay ρ L g args rs => by
     letI := DialectTrace.traceAt (d := base) lay (ρ ∘ DialectMemOver.ofBase) L
     letI := DialectTrace.traceAt (d := base.over e) lay ρ L

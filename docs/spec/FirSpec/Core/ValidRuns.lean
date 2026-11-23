@@ -14,19 +14,19 @@ when the Lean changes under it.
 
 #doc (Manual) "Core functions with calls: readable blocks" =>
 
-:::moduleDocs (fingerprint := "1070277723925419006")
+:::moduleDocs (fingerprint := "6392434937513212440")
 :::
 
-:::readable Fir.Core.Op.eq_call_of_callee (pin := Fir.Core.Op.callTarget?) (fingerprint := "1088421860826993631")
+:::readable Fir.Core.Op.eq_call_of_callee (pin := Fir.Core.Op.callTarget?) (fingerprint := "15872756656267079313")
 *Theorem: a core op that calls a function is $`\mathsf{call}` of that
 function.* For every core op $`o` and symbol $`g`: if
-$`\mathrm{callee}(o) = g`, then $`o` is $`\mathsf{call}~g : t^* \to r^*`
+$`\mathrm{callee}(o) = \mathsf{fixed}~g`, then $`o` is $`\mathsf{call}~g : t^* \to r^*`
 for some types $`t^*` and $`r^*`. So the rule that validation makes of
 $`\mathsf{call}` applies to every op of the core dialect that calls a
 function.
 :::
 
-:::readable Fir.Core.Op.total_all (pin := Fir.OpTotal) (fingerprint := "12951336847760232201")
+:::readable Fir.Core.Op.total_all (pin := Fir.OpTotal) (fingerprint := "2045784206087274832")
 *Theorem: every core terminator and every core op with no callee that
 touches no memory and reads no item is total in the set monad.* For every
 core op $`o` that touches no memory, reads no item of the run, and is a
@@ -55,7 +55,7 @@ they are the ops that the progress theorem for modules asks to be total,
 the ops that the interpreter runs by their own rule.
 :::
 
-:::readable Fir.Core.inModule_of_valid (pin := Fir.Func.InModule) (pin := Fir.Core.Op.Valid) (pin := Fir.Core.Op.sig) (pin := Fir.Core.Op.returnTypes) (pin := Fir.Module.context) (fingerprint := "2901157852282530985")
+:::readable Fir.Core.inModule_of_valid (pin := Fir.Func.InModule) (pin := Fir.Core.Op.Valid) (pin := Fir.Core.Op.sig) (pin := Fir.Core.Op.returnTypes) (pin := Fir.Module.context) (fingerprint := "1986446084803581005")
 *Theorem: every core function valid in the context of a module runs
 within that module.* Let $`M` be a core module, and $`f` a core function
 {ref "The-fir-specification--Validation--The-general-rules"}[valid] in the
@@ -75,5 +75,7 @@ $`M`:
   the types $`t^*`, which the core rule of $`\mathsf{ret}` asks to be the
   result types of $`f`;
 * $`\mathsf{unreachable}` neither jumps nor returns: its exit is UB, which
-  ends the run.
+  ends the run;
+* no core op picks its callee, so the rule for picked callees holds of
+  none.
 :::

@@ -41,7 +41,7 @@ instance : DialectSignature CallDialect where
     | .br => 1
     | _ => 0
 
-instance : DialectCall CallDialect := ⟨fun | .call s => some s | _ => none⟩
+instance : DialectCall CallDialect := ⟨fun | .call s => some (.fixed s) | _ => none⟩
 
 /-- The call dialect has no memory. -/
 instance : DialectEffects CallDialect :=
@@ -67,6 +67,7 @@ instance : DialectTrace CallDialect where
         | .br, _ => pure (.goto 0)
         | .ret, _ => pure .ret
         | _, _ => MonadUB.ub "not a terminator"
+      pick := fun _ _ _ => MonadUB.ub "no op picks its callee"
       extCall := fun _ _ _ => MonadUB.ub extCallUB }
 
 /-- The traced state of a run of the call dialect, with no memory of its own. -/
@@ -144,7 +145,8 @@ theorem traceOpsMonotone (g : Func CallDialect) :
     g.TraceOpsMonotone (DialectTrace.Acts CallDialect) St :=
   letI := sem
   fun _ _ o _ => ⟨fun _ => call_monotone o.op,
-    fun _ _ _ => ExtTraceMonotone.of_ub (fun _ _ _ => rfl) _ _ _⟩
+    fun _ _ _ => ExtTraceMonotone.of_ub (fun _ _ _ => rfl) _ _ _,
+    fun _ h => by revert h; cases o.op <;> intro h <;> cases h⟩
 
 /-- The call dialect's ops have finitely many outcomes, given the world's
 answers: the stream fixes the answer to `emit`. -/
@@ -152,7 +154,8 @@ theorem call_traceFinite :
     letI := sem
     OpsTraceFinite CallDialect Nat Nat St := by
   letI := sem
-  refine ⟨fun op _ args => ?_, fun _ _ _ => TraceFinitelyMany.ub _⟩
+  refine ⟨fun op _ args => ?_, fun _ _ _ => TraceFinitelyMany.ub _,
+    fun op h => by revert h; cases op <;> intro h <;> cases h⟩
   have one : ∀ {α : Type} (a : α), TraceFinitelyMany (E := Nat) (Ans := Nat)
       (pure a : TraceM (DialectTrace.Acts CallDialect) St α) := fun a s _ =>
     ⟨[(a, [], s)], fun a' t s' h _ => by

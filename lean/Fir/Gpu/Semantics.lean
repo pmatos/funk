@@ -85,12 +85,15 @@ def queryResults (q : Query) (d : Dim) (n : Nat) :
 /-- The rules of `gpu` in the set monad: a question gives its results, and
 `gpu.work_group_alloca`, which needs memory, has no outcome there, as
 `alloca` has none. No op of `gpu` is a terminator, so the interpreter never
-asks for an exit; it is written as a return. -/
+asks for an exit; it is written as a return. No op of `gpu` picks a
+callee, so the interpreter never asks for one; it is written as the empty
+symbol. -/
 instance instDialectDenote : DialectDenote GpuDialect SetM where
   denote
     | .query q d n, _ => pure (queryResults q d n)
     | .alloc .., _ => fun _ => False
   exit _ _ := pure .ret
+  pick _ _ _ := pure ""
 
 variable {N : Type} {m : Type → Type} [Monad m]
 
@@ -115,6 +118,7 @@ and an allocation allocates. -/
     | .query q d n, _ => pure (queryResults q d n)
     | .alloc t c a n, _ => allocRule lay ρ t c a n
   exit _ _ := pure .ret
+  pick _ _ _ := pure ""
 
 /-- The semantics of `gpu` with memory, at each layout and naming of its
 memories: its rules in the state layer over the set monad. -/
@@ -150,7 +154,8 @@ memory by its rule in the set monad and keeps the memories. -/
 theorem query_liftsSetM (q : Query) (d : Dim) (n : Nat) :
     OpLiftsSetM (d := GpuDialect) (Op.query q d n) := fun _ _ _ _ =>
   ⟨funext fun S => (pure_bind (f := fun a => (pure (a, S) : SetM _)) _).symm,
-    funext fun S => (pure_bind (f := fun a => (pure (a, S) : SetM _)) Exit.ret).symm⟩
+    funext fun S => (pure_bind (f := fun a => (pure (a, S) : SetM _)) Exit.ret).symm,
+    fun _ => funext fun S => (pure_bind (f := fun a => (pure (a, S) : SetM _)) "").symm⟩
 
 /-- A question propagates poison: it takes no operand, and never ends in
 UB. -/

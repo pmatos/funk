@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Monotonicity in the traced layer: readable blocks" =>
 
-:::moduleDocs (fingerprint := "18370044396405246494")
+:::moduleDocs (fingerprint := "14269994992287765121")
 :::
 
 :::readable Fir.Step.IsRefinedBy (pin := Fir.instHRefinementStep) (fingerprint := "12649089963462645072")
@@ -94,7 +94,7 @@ $`\mathrm{ext}(g, \vec{v}, \vec{r})` runs, by refinement of its results.
 symbol, is monotone: UB that shows no act allows every way of ending.
 :::
 
-:::readable Fir.OpTraceMonotone Fir.TraceMonotoneOps Fir.Func.TraceOpsMonotone Fir.Func.TraceOpsMonotone.enter Fir.Func.TraceOpsMonotone.jump (fingerprint := "2856987854840736224")
+:::readable Fir.OpTraceMonotone Fir.OpTracePickMonotone Fir.TraceMonotoneOps Fir.Func.TraceOpsMonotone Fir.Func.TraceOpsMonotone.enter Fir.Func.TraceOpsMonotone.jump (fingerprint := "4846228915632173443")
 *Definition: an op monotone in the traced layer.* In a semantics in the
 traced layer, an op is monotone when, on operands
 $`\vec{v} \sqsubseteq \vec{v}'`, what it runs by its own rule on
@@ -105,11 +105,17 @@ types $`\vec{t}` of the operands and $`\vec{r}` of the results of a call
 when, on arguments $`\vec{v} \sqsubseteq \vec{v}'` of the types
 $`\vec{t}`, what it runs on $`\vec{v}'` refines what it runs on
 $`\vec{v}`, by refinement of its results. A rule that is UB is monotone,
-since UB that shows no act allows every way of ending. The ops of a list,
-or of a function's blocks, are monotone when each that runs by its own
-rule, a terminator or an op with no callee, is, and the external-call rule
-is monotone at the symbol and types of each other op that calls a
-symbol, which goes to that rule when no function has the symbol.
+since UB that shows no act allows every way of ending. The rule of an op
+that picks its callee is monotone when, on operands that refine others,
+from traced states that refine others, and where the run can call at least
+the same symbols, what it picks refines what it picks on those others: UB,
+or the same symbol. The ops of a list, or of a function's blocks, are
+monotone when each that runs by its own rule, a terminator or an op with
+no callee, is; the external-call rule is monotone at the symbol and types
+of each other op that names a symbol, which goes to that rule when no
+function has the symbol; and each op whose callee is picked has a monotone
+rule to pick it, and the external-call rule is monotone at every symbol for
+its operands but the first and its results.
 
 *Theorems.* A run of such a function starts, and jumps, to the ops of one
 of its blocks, all monotone.

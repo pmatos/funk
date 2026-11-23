@@ -81,6 +81,9 @@ def ofSumFast {ts : List base.Ty} (xs : HVector (toType (Ty := (base ⊞ e).Ty))
   exit
     | .inl o, args => DialectDenote.exit o (HVector.ofSum args)
     | .inr o, args => DialectDenote.exit (d := base.over e) o args
+  pick
+    | .inl o, ok, args => DialectDenote.pick o ok (HVector.ofSum args)
+    | .inr o, ok, args => DialectDenote.pick (d := base.over e) o ok args
 
 theorem sumDenote_eq [DialectSignature base] [DialectSignature (base.over e)]
     {m : Type → Type} [Functor m] [DialectDenote base m] [DialectDenote (base.over e) m] :

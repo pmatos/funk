@@ -120,8 +120,7 @@ theorem Func.runOps_returns (M : Module d) (n : Nat) :
         | exact ReturnsTypes.of_stuck
         | exact ReturnsTypes.exhausted
         | exact ReturnsTypes.ret (by rw [HVector.toDVals_types]; assumption)
-        | exact ih _ (Nat.lt_succ_self _) _ _ _
-        | exact ih _ (Nat.lt_succ_of_le (Nat.min_le_right _ _)) _ _ _)
+        | exact ih _ (by omega) _ _ _)
 
 omit [DialectSignature d] [DialectCall d] [DialectDenote d SetM] in
 /-- A run of `f` starts at its entry block, with its parameters bound to

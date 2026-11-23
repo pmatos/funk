@@ -14,17 +14,18 @@ build fails when the Lean changes under it.
 
 #doc (Manual) "Replacing a callee, with memory: readable blocks" =>
 
-:::moduleDocs (fingerprint := "11013168914683781670")
+:::moduleDocs (fingerprint := "1579665320421075509")
 :::
 
-:::readable Fir.Module.replaceBody_memCallsRefined (pin := Fir.MemBlackBox) (pin := Fir.MemCallsRefined) (fingerprint := "14816769190315853579")
+:::readable Fir.Module.replaceBody_memCallsRefined (pin := Fir.MemBlackBox) (pin := Fir.MemCallsRefined) (fingerprint := "10615959004253122573")
 *Theorem: the module with a new body runs each call as the module does.*
 In a module $`M` whose symbols are unique, let every op of its functions
 that runs by its own rule be monotone with memory, and the refinement of
 values be transitive. Let $`g'` and $`M'` be $`g` and $`M` with the body of
 $`g` replaced. If $`g'` in $`M'` refines $`g` in $`M` from given memories,
 then $`M'` runs each call with memory as $`M` does: every symbol other than
-$`g`'s names the same function in both, and $`g` and $`g'` are a black box,
+$`g`'s names the same function in both, the two modules can call the same
+symbols, and $`g` and $`g'` are a black box,
 whose refinement is refined arguments and memories for $`g` in $`M`, then
 the hypothesis.
 :::
@@ -55,14 +56,15 @@ as for the core. This theorem asks no finitely many outcomes, so it stays
 for a dialect whose ops may have infinitely many.
 :::
 
-:::readable Fir.Func.Valid.memOpsMonotone (fingerprint := "7140365292879792528")
+:::readable Fir.Func.Valid.memOpsMonotone (fingerprint := "17800556943781259755")
 *Theorem: a valid function's ops are monotone with memory.* When every
 valid op instance that is a terminator or calls no function is monotone
-in a semantics in the state layer, so is every such op of a valid function,
-since each of its ops is a valid op instance.
+in a semantics in the state layer, and every valid op instance whose callee
+is picked has a monotone rule to pick it there, so does every such op of a
+valid function, since each of its ops is a valid op instance.
 :::
 
-:::readable Fir.Func.memRunsFrom_args_isRefinedBy_of_lawful Fir.Func.memRuns_args_isRefinedBy_of_lawful (pin := Fir.LawfulDialectMonotone) (fingerprint := "17486461000119879374")
+:::readable Fir.Func.memRunsFrom_args_isRefinedBy_of_lawful Fir.Func.memRuns_args_isRefinedBy_of_lawful (pin := Fir.LawfulDialectMonotone) (fingerprint := "11668409221503167718")
 *Theorems: refined arguments, with memory, by the class alone.* For a
 dialect lawful in its monotonicity, in a module whose functions are all
 valid, at every naming of the dialect's memories: the behaviour of a

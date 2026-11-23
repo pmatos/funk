@@ -84,7 +84,8 @@ instance : DialectMemDenote PeekDialect where
   denoteAt lay ρ _ :=
     { denote := fun
         | .peek, .cons p .nil => peekAt lay (ρ ()) p
-      exit := fun _ _ => MonadUB.ub "peek is not a terminator" }
+      exit := fun _ _ => MonadUB.ub "peek is not a terminator"
+      pick := fun _ _ _ => MonadUB.ub "peek picks no callee" }
 
 /-- A load through the pointer with no provenance is UB, from any
 memories. -/
@@ -192,7 +193,8 @@ theorem peekLax_value_noUB (p : Pointer) (S : Memories N (unitsOf lay)) (r : Str
   denoteAt lay ρ _ :=
     { denote := fun
         | .peek, .cons p .nil => peekLax lay (ρ ()) p
-      exit := fun _ _ => MonadUB.ub "peek is not a terminator" }
+      exit := fun _ _ => MonadUB.ub "peek is not a terminator"
+      pick := fun _ _ _ => MonadUB.ub "peek picks no callee" }
 
 /-- The clause "UB only by the op's own rules" rejects `peekLax`: it is UB
 on a poison pointer from the empty memories, but on no defined pointer. -/

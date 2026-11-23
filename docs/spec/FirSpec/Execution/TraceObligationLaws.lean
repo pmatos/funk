@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Ops monotone in the traced layer: readable blocks" =>
 
-:::moduleDocs (fingerprint := "12943195314156845822")
+:::moduleDocs (fingerprint := "2795909418977133827")
 :::
 
 :::readable Fir.TraceEnd.trace_mapActs Fir.TraceEnd.Allows.mapActs Fir.TraceRefinedBy.step (fingerprint := "6627922759765765824")
@@ -25,11 +25,12 @@ refines another still does after a step $`\mathsf{tick}`, its acts mapped
 so: UB after the acts $`t` becomes UB after $`\mathsf{tick}` and $`t`.
 :::
 
-:::readable Fir.OpTraceMonotone.stepAt Fir.Func.TraceOpsMonotone.stepAt (fingerprint := "1440033910842160570")
+:::readable Fir.OpTraceMonotone.stepAt Fir.OpTracePickMonotone.stepAt Fir.Func.TraceOpsMonotone.stepAt (fingerprint := "16363967305923345560")
 *Theorems: monotone in the traced layer of marked traces.* An op monotone
 by its dialect's rule in the traced layer, at $`\ell`, $`\rho` and $`L`, is
 monotone in the traced layer of marked traces, where it runs after a step.
 So is the external-call rule, and each op of a function whose ops are.
+So does a rule to pick a callee, which runs after its step.
 :::
 
 :::readable Fir.ExtTraceMonotone.stepAt Fir.ExtTraceMonotone.ofLift (fingerprint := "2461249291503010545")
@@ -47,12 +48,13 @@ each other in the traced layer: the lift shows nothing and keeps what
 escaped, so results, memories and UB keep their refinement.
 :::
 
-:::readable Fir.OpLiftsMem Fir.OpLiftsMem.ofMem Fir.LiftsMem.opLiftsMem (fingerprint := "11064347472045697818")
+:::readable Fir.OpLiftsMem Fir.OpLiftsMem.ofMem Fir.LiftsMem.opLiftsMem (fingerprint := "17184973681218294442")
 *Definition: an op that lifts its rule with memory.* At $`\ell`, $`\rho`
 and $`L`, the op $`op` lifts its rule with memory in a dialect's traced
 semantics when, on every operands $`\vec{v}`, its traced rule is its rule
 with memory, lifted onto the memories of the traced state, as an op that is
-not a terminator and as a terminator:
+not a terminator and as a terminator, and its rule to pick a callee, for
+every test of the symbols a run can call:
 
 $$`\mathrm{trace}(op)(\vec{v}) = \mathrm{lift}(\mathrm{mem}(op)(\vec{v}))`
 
@@ -63,7 +65,7 @@ by other rules, as the core does by its external calls, while each of its
 ops lifts its rule.
 :::
 
-:::readable Fir.OpTraceMonotone.ofLift Fir.OpTraceMonotone.ofMem Fir.Func.TraceOpsMonotone.ofLift Fir.Func.TraceOpsMonotone.ofMem (fingerprint := "8981668888693572426")
+:::readable Fir.OpTraceMonotone.ofLift Fir.OpTracePickMonotone.ofLift Fir.OpTraceMonotone.ofMem Fir.Func.TraceOpsMonotone.ofLift Fir.Func.TraceOpsMonotone.ofMem (fingerprint := "8373069733619326865")
 *Theorems: ops that lift their rule are monotone.* An op that lifts its rule
 with memory, and is monotone with memory, is monotone in the traced layer.
 An external-call rule that is the lift of the rule with memory, UB, is
@@ -71,4 +73,6 @@ monotone too. So each op of a function whose ops are monotone with memory
 is monotone in the traced layer, in a dialect whose ops each lift their
 rule and whose external-call rule is that lift. In particular, in the traced
 semantics of a dialect whose ops show no event.
+A rule to pick a callee that lifts its rule with memory, and is monotone
+with memory, is monotone in the traced layer.
 :::

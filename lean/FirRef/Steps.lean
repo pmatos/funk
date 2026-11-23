@@ -8,10 +8,12 @@ that `FirRef.Machine` builds on
 state layer over the tree of choices.
 
 * One equation for each case of `Func.runOps`'s definition. Each says what
-  the run does after the step through `afterExit`, `afterDenote` or
-  `afterCall`, the spec's computation of the rest of the run after a
-  terminator exits, after an op gives its results, and after a callee
-  returns.
+  the run does after the step through `afterExit`, `afterDenote`, `callAt`
+  or `afterPick`, the spec's computation of the rest of the run after a
+  terminator exits, after an op gives its results, at a call of a symbol on
+  some arguments, and after an op's rule picks its callee (#235); and
+  `callAt` through `afterExt` and `afterCall`, after an external call gives
+  its values and after a callee returns.
 * A run depends on its environment only through what the environment
   gives each name: `runOps_congr` proves that two environments with the
   same `List.lookup` (`Same`) give the same run. So `fir-ref` may keep an
@@ -140,6 +142,35 @@ def afterCall (M : Module d) (n : Nat) (f : Func d) (env : Env d) (o : Operation
       Func.runOps M (min k n) f env' os
     else liftExcept (stuck s!"@{s} returns values of types other than its call's result types")
 
+/-- The spec's computation of a call `o` of `f` to `@s` on the arguments
+`cargs`, of the types `ts`, with the ops `os` after it and `n` steps left
+for the callee: it enters the function `@s` names, or runs the external-call
+rule of the declaration it names, or is stuck. -/
+def callAt (M : Module d) (n : Nat) (f : Func d) (env : Env d) (o : Operation d)
+    (os : List (Operation d)) (s : Name) {ts : List d.Ty} (cargs : HVector toType ts) :
+    ExceptT Stuck m (Result (List (DVal d) × Nat)) :=
+  match M.func? s with
+  | some g => do
+    let (body, genv) ← liftExcept (g.enter cargs.toDVals)
+    inFrame (Func.runOps M n g genv body) >>= afterCall M n f env o os s
+  | none =>
+    if M.declares s ts (returnTypes o.op) then
+      ExceptT.lift (DialectExtCall.extCall s cargs.toDVals (returnTypes o.op)) >>=
+        afterExt M n f env o os s
+    else liftExcept (stuck s!"@{s} is not a function or a declaration of the call's types")
+
+/-- The spec's computation of the rest of a run of `f` after the rule of its
+op `o`, on the operands `args`, picks the symbol `@s`, with the ops `os`
+after it and `n` steps left after the op's own: with no step left for the
+call, the run runs out of fuel; otherwise it calls `@s` on the operands but
+the first. -/
+def afterPick (M : Module d) (n : Nat) (f : Func d) (env : Env d) (o : Operation d)
+    (os : List (Operation d)) (args : HVector toType (sig o.op)) (s : Name) :
+    ExceptT Stuck m (Result (List (DVal d) × Nat)) :=
+  match n with
+  | 0 => pure .fuelExhausted
+  | n + 1 => callAt M n f env o os s args.tail
+
 omit [MonadFrame m] in
 /-- A check of the interpreter that fails ends the path stuck, whatever
 follows it. -/
@@ -204,44 +235,47 @@ theorem runOps_denote [LawfulMonad m] (h : o.ownsCoreRegion = false)
   simp only [h, ha, hT, hc, Bool.false_eq_true, ↓reduceIte, liftExcept_ok_bind]
   rfl
 
-theorem runOps_noFunc [LawfulMonad m] (h : o.ownsCoreRegion = false)
+theorem runOps_fixed [LawfulMonad m] (h : o.ownsCoreRegion = false)
     (ha : env.operands (sig o.op) o.operands = .ok args) (hT : isTerminator o.op = false)
-    {s : Name} (hc : callee? o.op = some s) (hg : M.func? s = none)
-    (hd : M.declares s (sig o.op) (returnTypes o.op) = false) :
+    {s : Name} (hc : callee? o.op = some (.fixed s)) :
+    Func.runOps (m := m) M (n + 1) f env (o :: os) = callAt M n f env o os s args := by
+  rw [Func.runOps]
+  simp only [h, ha, hT, hc, Bool.false_eq_true, ↓reduceIte, liftExcept_ok_bind]
+  rfl
+
+theorem runOps_pick [LawfulMonad m] (h : o.ownsCoreRegion = false)
+    (ha : env.operands (sig o.op) o.operands = .ok args) (hT : isTerminator o.op = false)
+    (hc : callee? o.op = some .picked) :
     Func.runOps (m := m) M (n + 1) f env (o :: os) =
+      ExceptT.lift (DialectDenote.pick o.op (M.callable (sig o.op).tail (returnTypes o.op)) args) >>=
+        afterPick M n f env o os args := by
+  rw [Func.runOps]
+  simp only [h, ha, hT, hc, Bool.false_eq_true, ↓reduceIte, liftExcept_ok_bind]
+  rfl
+
+variable {s : Name} {ts : List d.Ty} {cargs : HVector toType ts}
+
+theorem callAt_noFunc (hg : M.func? s = none) (hd : M.declares s ts (returnTypes o.op) = false) :
+    callAt (m := m) M n f env o os s cargs =
       liftExcept (stuck s!"@{s} is not a function or a declaration of the call's types") := by
-  rw [Func.runOps]
-  simp only [h, ha, hT, hc, hg, hd, Bool.false_eq_true, ↓reduceIte, liftExcept_ok_bind, stuck]
+  simp only [callAt, hg, hd, Bool.false_eq_true, ↓reduceIte]
 
-theorem runOps_ext [LawfulMonad m] (h : o.ownsCoreRegion = false)
-    (ha : env.operands (sig o.op) o.operands = .ok args) (hT : isTerminator o.op = false)
-    {s : Name} (hc : callee? o.op = some s) (hg : M.func? s = none)
-    (hd : M.declares s (sig o.op) (returnTypes o.op) = true) :
-    Func.runOps (m := m) M (n + 1) f env (o :: os) =
-      ExceptT.lift (DialectExtCall.extCall s args.toDVals (returnTypes o.op)) >>=
+theorem callAt_ext (hg : M.func? s = none) (hd : M.declares s ts (returnTypes o.op) = true) :
+    callAt (m := m) M n f env o os s cargs =
+      ExceptT.lift (DialectExtCall.extCall s cargs.toDVals (returnTypes o.op)) >>=
         afterExt M n f env o os s := by
-  rw [Func.runOps]
-  simp only [h, ha, hT, hc, hg, hd, Bool.false_eq_true, ↓reduceIte, liftExcept_ok_bind]
-  rfl
+  simp only [callAt, hg, hd, ↓reduceIte]
 
-theorem runOps_enter [LawfulMonad m] (h : o.ownsCoreRegion = false)
-    (ha : env.operands (sig o.op) o.operands = .ok args) (hT : isTerminator o.op = false)
-    {s : Name} (hc : callee? o.op = some s) {g : Func d} (hg : M.func? s = some g) {e : Stuck}
-    (he : g.enter args.toDVals = .error e) :
-    Func.runOps (m := m) M (n + 1) f env (o :: os) = liftExcept (.error e) := by
-  rw [Func.runOps]
-  simp only [h, ha, hT, hc, hg, Bool.false_eq_true, ↓reduceIte, liftExcept_ok_bind, he,
-    liftExcept_error_bind]
+theorem callAt_enter [LawfulMonad m] {g : Func d} (hg : M.func? s = some g) {e : Stuck}
+    (he : g.enter cargs.toDVals = .error e) :
+    callAt (m := m) M n f env o os s cargs = liftExcept (.error e) := by
+  simp only [callAt, hg, he, liftExcept_error_bind]
 
-theorem runOps_call [LawfulMonad m] (h : o.ownsCoreRegion = false)
-    (ha : env.operands (sig o.op) o.operands = .ok args) (hT : isTerminator o.op = false)
-    {s : Name} (hc : callee? o.op = some s) {g : Func d} (hg : M.func? s = some g)
-    {body : List (Operation d)} {genv : Env d} (he : g.enter args.toDVals = .ok (body, genv)) :
-    Func.runOps (m := m) M (n + 1) f env (o :: os) =
+theorem callAt_call [LawfulMonad m] {g : Func d} (hg : M.func? s = some g)
+    {body : List (Operation d)} {genv : Env d} (he : g.enter cargs.toDVals = .ok (body, genv)) :
+    callAt (m := m) M n f env o os s cargs =
       inFrame (Func.runOps M n g genv body) >>= afterCall M n f env o os s := by
-  rw [Func.runOps]
-  simp only [h, ha, hT, hc, hg, Bool.false_eq_true, ↓reduceIte, liftExcept_ok_bind, he]
-  rfl
+  simp only [callAt, hg, he, liftExcept_ok_bind]
 
 end Equations
 
@@ -318,6 +352,34 @@ theorem afterCall_congr {n : Nat} (hrun : ∀ j ≤ n, RunsSame (m := m) M j) (f
       · rfl
     · rfl
 
+theorem callAt_congr {n : Nat} (hrun : ∀ j ≤ n, RunsSame (m := m) M j) (f : Func d)
+    {e₁ e₂ : Env d} (h : Same e₁ e₂) (o : Operation d) (os : List (Operation d)) (s : Name)
+    {ts : List d.Ty} (cargs : HVector toType ts) :
+    callAt (m := m) M n f e₁ o os s cargs = callAt M n f e₂ o os s cargs := by
+  unfold callAt
+  split
+  · congr 1
+    funext p
+    obtain ⟨body, genv⟩ := p
+    show _ >>= _ = _ >>= _
+    congr 1
+    funext r
+    exact afterCall_congr hrun f h o os s r
+  · split
+    · congr 1
+      funext vs
+      exact afterExt_congr (hrun n (Nat.le_refl n)) f h o os s vs
+    · rfl
+
+theorem afterPick_congr {n : Nat} (hrun : ∀ j ≤ n, RunsSame (m := m) M j) (f : Func d)
+    {e₁ e₂ : Env d} (h : Same e₁ e₂) (o : Operation d) (os : List (Operation d))
+    (args : HVector toType (sig o.op)) (s : Name) :
+    afterPick (m := m) M n f e₁ o os args s = afterPick M n f e₂ o os args s := by
+  match n with
+  | 0 => rfl
+  | n + 1 =>
+    exact callAt_congr (fun j hj => hrun j (Nat.le_succ_of_le hj)) f h o os s args.tail
+
 /-- Two environments that give every name the same value give the same
 run. -/
 theorem runOps_congr (n : Nat) : RunsSame (m := m) M n := by
@@ -354,24 +416,16 @@ theorem runOps_congr (n : Nat) : RunsSame (m := m) M n := by
             congr 1
             funext rs
             exact afterDenote_congr (ihn n (Nat.le_refl n)) f h o os rs
-          | some s =>
-            cases hg : M.func? s with
-            | none =>
-              cases hd : M.declares s (sig o.op) (returnTypes o.op) with
-              | false => rw [runOps_noFunc hr' ha₁ hT hc hg hd, runOps_noFunc hr' ha hT hc hg hd]
-              | true =>
-                rw [runOps_ext hr' ha₁ hT hc hg hd, runOps_ext hr' ha hT hc hg hd]
-                congr 1
-                funext vs
-                exact afterExt_congr (ihn n (Nat.le_refl n)) f h o os s vs
-            | some g =>
-              cases he : g.enter args.toDVals with
-              | error e => rw [runOps_enter hr' ha₁ hT hc hg he, runOps_enter hr' ha hT hc hg he]
-              | ok p =>
-                rw [runOps_call hr' ha₁ hT hc hg he, runOps_call hr' ha hT hc hg he]
-                congr 1
-                funext r
-                exact afterCall_congr ihn f h o os s r
+          | some c =>
+            cases c with
+            | fixed s =>
+              rw [runOps_fixed hr' ha₁ hT hc, runOps_fixed hr' ha hT hc]
+              exact callAt_congr ihn f h o os s args
+            | picked =>
+              rw [runOps_pick hr' ha₁ hT hc, runOps_pick hr' ha hT hc]
+              congr 1
+              funext s
+              exact afterPick_congr ihn f h o os args s
 
 end Congr
 

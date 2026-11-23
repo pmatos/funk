@@ -14,7 +14,7 @@ build fails when the Lean changes under it.
 
 #doc (Manual) "Progress and no stuck path: readable blocks" =>
 
-:::moduleDocs (fingerprint := "2052023715064698404")
+:::moduleDocs (fingerprint := "9075808347918794872")
 :::
 
 :::readable Fir.eq_cons_of_head? (fingerprint := "10406841056930139947")
@@ -102,7 +102,7 @@ $`\mathrm{ret}(o)` is the result types of the op instance of $`o`, as its
 {ref "The-fir-specification--Abstract-syntax--Dialects"}[signature] says.
 :::
 
-:::readable Fir.Func.op_ready (pin := Fir.Func.runOps) (fingerprint := "1349983743462886745")
+:::readable Fir.Func.op_ready (pin := Fir.Func.runOps) (fingerprint := "4816922805662756824")
 *Theorem: what a run needs of an op of the entry block.* Let $`f` be valid
 in a module context, $`e` its entry block, which declares no arguments,
 and $`o` the op at index $`i` of $`e`, for $`i` less than the number of
@@ -126,7 +126,7 @@ without one, each makes the path stuck. Here $`\mathrm{sig}(o)` is the
 operand types of the op instance of $`o`.
 :::
 
-:::readable Fir.Func.Straight (fingerprint := "17264026091780647438")
+:::readable Fir.Func.Straight (fingerprint := "7385412553595547674")
 *Definition: a function that runs straight.* The ops of a function $`f`
 _run straight_ to a return when, for every op $`o` of every block of
 $`f`:

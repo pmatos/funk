@@ -25,6 +25,7 @@ abbrev Tree := ChoiceTree Core.Op
     | .add .., _ => MonadUB.ub "add is \"UB\"\nhere"
     | op, args => DialectDenote.denote (m := Tree) op args
   exit := DialectDenote.exit (m := Tree)
+  pick := DialectDenote.pick (m := Tree)
 
 /-- What `fir-ref run` would report on the function `f` of the module `M`,
 by default the module of `f` alone, with the semantics `s`, on arguments

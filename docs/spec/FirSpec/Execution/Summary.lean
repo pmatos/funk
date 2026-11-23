@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Function summaries: readable blocks" =>
 
-:::moduleDocs (fingerprint := "14065839561482108815")
+:::moduleDocs (fingerprint := "467877716175025647")
 :::
 
 :::readable Fir.MemSet.Sub Fir.Effects.Le (pin := Fir.MemSet.Has) (pin := Fir.instLEEffects) (fingerprint := "17087869919382587889")
@@ -41,11 +41,13 @@ The join of a list, $`\bigsqcup_i e_i`, joins its sets from the left,
 from the empty set $`\emptyset`.
 :::
 
-:::readable Fir.Operation.call? Fir.SymbolTable.func? (fingerprint := "12311835251930273476")
+:::readable Fir.Operation.call? Fir.Operation.picks Fir.SymbolTable.func? (fingerprint := "3148066930909805735")
 *Definition: the call of an op, and the function of a symbol.* An op in
 place $`o` _calls_ $`s`, $`\mathrm{call}(o) = s`, when it is not a
-terminator and its dialect gives it the callee $`s`: the interpreter runs
-a terminator by its exit, whatever its callee. The function of a symbol
+terminator and its dialect gives it the callee $`\mathsf{fixed}~s`: the
+interpreter runs a terminator by its exit, whatever its callee. It _picks_
+its callee when it is not a terminator and its callee is
+$`\mathsf{picked}`: its rule names the callee only when it runs (#235). The function of a symbol
 table $`t` that $`s` names, $`t(s)`, is its first function with that
 symbol, as the interpreter finds a callee.
 :::
@@ -82,13 +84,13 @@ functions that a call of $`s` may run: $`s`, and every function that a
 function it reaches calls.
 :::
 
-:::readable Fir.SymbolTable.opOwn Fir.SymbolTable.funcOwn (fingerprint := "5283954071056753366")
+:::readable Fir.SymbolTable.opOwn Fir.SymbolTable.funcOwn (fingerprint := "6193406539551265315")
 *Definition: what a caller sees of an op and of a function's ops.* For an
 op $`o` of a function of $`t`, $`\mathrm{own}_t(o)` is
 $`\mathrm{caller}(\mathrm{eff}(o))`, or
 $`\mathrm{caller}(\mathrm{eff}(o) \sqcup \top_{\mathit{eff}})` when $`o`
-calls a symbol that names no function of $`t`: nothing narrower is known
-of such a call. For a function $`f`,
+calls a symbol that names no function of $`t`, or picks its callee:
+nothing narrower is known of such a call. For a function $`f`,
 $`\mathrm{own}_t(f) = \bigsqcup_{o} \mathrm{own}_t(o)` over the ops of
 $`f` at any depth.
 :::
@@ -104,12 +106,13 @@ A symbol that names no function has the empty summary. Recursion adds
 nothing: a function that a walk has seen is not seen again.
 :::
 
-:::readable Fir.SymbolTable.opEffects (fingerprint := "9660258712883829241")
+:::readable Fir.SymbolTable.opEffects (fingerprint := "13846612551151809699")
 *Definition: the effects of an op in place.* An op $`o` of a function of
 $`t` has $`\mathrm{eff}_t(o) = \mathrm{eff}(o)` when it calls nothing,
 $`\mathrm{eff}(o) \sqcup \mathrm{sum}_t(s)` when it calls a function
 $`s` of $`t`, and
 $`\mathrm{eff}(o) \sqcup \mathrm{caller}(\top_{\mathit{eff}})` when it
-calls a symbol that names no function of $`t`. So a call carries its
-callee's effects (ADR-2026-11-09-1541).
+calls a symbol that names no function of $`t`, or picks its callee, which
+may be any function. So a call carries its callee's effects
+(ADR-2026-11-09-1541).
 :::

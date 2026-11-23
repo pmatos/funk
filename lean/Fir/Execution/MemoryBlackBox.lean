@@ -1,4 +1,5 @@
 import Fir.Execution.MemoryCalls
+import Fir.Execution.MemoryOpRefine
 
 /-!
 # Two modules with memory, compared call by call
@@ -18,7 +19,10 @@ does on them is allowed by what it does on the source's, since every op that
 runs by its own rule is monotone with memory. A call runs its callee in a
 frame, from the memories that its caller reached; a call to an external
 declaration is UB in both, since the source declares each symbol that the
-target does. Each symbol
+target does. An op whose callee is picked (#235) calls the same symbol in
+both, or the source's rule is UB, when that rule is monotone with memory
+and the target can call each symbol that the source can
+(`Func.MemCallsAt.source`). Each symbol
 names, in both, the same function, whose run the engine follows in turn, or a _black
 box_: a function of the source and a function of the target, of the same
 parameter types, such that
@@ -137,24 +141,26 @@ omit [TyRefinement d.Ty] in
 at the budget `N₂`, ends so at `N₁ + N₂ + 1`, leaving the callee's steps
 too. -/
 theorem Func.memCall_cont {M : Module d} {f g : Func d} {env genv : Env d} {o : Operation d}
-    {os body : List (Operation d)} {args : HVector toType (sig o.op)} {s : Name}
-    {vs : List (DVal d)} {S T : Memories Mem unit} {k N₁ N₂ : Nat}
+    {os body : List (Operation d)} {args : HVector toType (sig o.op)} {s : Name} {ts : List d.Ty}
+    {cargs : HVector toType ts} {n n' : Nat}
+    {vs : List (DVal d)} {S S₁ T : Memories Mem unit} {k N₁ N₂ : Nat}
     {x : Ev (Except Stuck (Result ((List (DVal d) × Memories Mem unit) × Nat)))}
     (hreg : o.ownsCoreRegion = false) (hargs : env.operands (sig o.op) o.operands = .ok args)
-    (hT : isTerminator o.op = false) (hc : callee? o.op = some s) (hg : M.func? s = some g)
-    (hen : g.enter args.toDVals = .ok (body, genv))
-    (hx : (Func.memCall M N₁ g genv body S).run (.ok (.ok (.ret ((vs, T), k)))))
+    (hT : isTerminator o.op = false) (hc : Func.MemCallsAt M o args S n s ts cargs n' S₁)
+    (hg : M.func? s = some g) (hen : g.enter cargs.toDVals = .ok (body, genv))
+    (hx : (Func.memCall M N₁ g genv body S₁).run (.ok (.ok (.ret ((vs, T), k)))))
     (hty : vs.map (·.1) = returnTypes o.op) (hlen : (o.results.map (·.1)).length = vs.length)
     (hne : Ev.NotStuck x) (hxe : x ≠ .ok (.ok .fuelExhausted))
     (hcont : (Func.memOps M N₂ f ((o.results.map (·.1)).zip vs ++ env) os T).run x) :
-    (Func.memOps M (N₁ + N₂ + 1) f env (o :: os) S).run (x.addLeft k) := by
-  have hk := Func.memCall_left_le M N₁ g genv body S _ _ hx
+    (Func.memOps M (N₁ + (n - n') + N₂ + 1) f env (o :: os) S).run (x.addLeft k) := by
+  rw [show N₁ + (n - n') + N₂ = N₁ + N₂ + (n - n') by omega]
+  have hk := Func.memCall_left_le M N₁ g genv body S₁ _ _ hx
   have hne' : Ev.NotStuck (x.addLeft k) := by
     intro st h
     match x, h with
     | .ok (.error _), _ => exact hne _ rfl
-  refine (Func.memStepPath_iff hne').2 (.callRet hreg hargs hT hc hg hen
-    ((Func.memCall_ahead M N₁ N₂ g genv body S).up_ret _ _ hx) hty hlen ?_)
+  refine (Func.memStepPath_iff hne').2 (.callRet hreg hargs hT (hc.at (N₁ + N₂)) hg hen
+    ((Func.memCall_ahead M N₁ N₂ g genv body S₁).up_ret _ _ hx) hty hlen ?_)
   rw [Nat.min_eq_left (Nat.add_le_add_right hk _), Nat.add_comm k]
   have ha := Func.runOps_memAhead M N₂ k f ((o.results.map (·.1)).zip vs ++ env) os T
   match x, hcont with
@@ -184,20 +190,48 @@ structure MemBlackBox (M M' : Module d) (g g' : Func d) : Prop where
 variable (Mem unit) in
 /-- The target module `M'` runs each call with memory as the source `M`
 does: each symbol names the same function in both, or a black box with
-memory, and the source declares each symbol that the target declares, for
-the same types. -/
+memory; the source declares each symbol that the target declares, for the
+same types; and the target can call each symbol that the source can, at
+the same types (#235). -/
 def MemCallsRefined (M M' : Module d) : Prop :=
   (∀ s, M'.func? s = M.func? s ∨
     ∃ g g', M.func? s = some g ∧ M'.func? s = some g' ∧ MemBlackBox (Mem := Mem) (unit := unit)
       M M' g g') ∧
-  ∀ s ts rs, M'.declares s ts rs = true → M.declares s ts rs = true
+  (∀ s ts rs, M'.declares s ts rs = true → M.declares s ts rs = true) ∧
+  ∀ ts rs s, M.callable ts rs s = true → M'.callable ts rs s = true
 
 /-- A symbol that the target module calls as an external declaration, the
 source calls as one too. -/
 theorem MemCallsRefined.ext {M M' : Module d} (hc : MemCallsRefined Mem unit M M')
     {s : Name} {ts rs : List d.Ty} (hg : M'.func? s = none) (hd : M'.declares s ts rs = true) :
     M.func? s = none ∧ M.declares s ts rs = true :=
-  ⟨Module.func?_none_of_calls hc.1 hg, hc.2 s ts rs hd⟩
+  ⟨Module.func?_none_of_calls hc.1 hg, hc.2.1 s ts rs hd⟩
+
+/-- A call of the target, on operands that refine the source's, from
+memories that refine the source's, is a call of the source to the same
+symbol on arguments that the target's refine, from memories that the
+target's refine; or the source's rule that picks the callee hits UB. It asks
+that the rule be monotone with memory, and that the target can call each
+symbol that the source can. -/
+theorem Func.MemCallsAt.source {M M' : Module d} {o : Operation d}
+    {args args' : HVector toType (sig o.op)} (hr : args.Forall₂ TyRefinement.IsRefinedBy args')
+    {S S' : Memories Mem unit} (hS : S ⊑ S')
+    (hok : ∀ ts rs s, M.callable ts rs s = true → M'.callable ts rs s = true)
+    (hpm : callee? o.op = some .picked → OpMemPickMonotone (σ := Memories Mem unit) o.op)
+    {n n' : Nat} {s : Name} {ts : List d.Ty} {cargs' : HVector toType ts}
+    {S₁' : Memories Mem unit} (h : Func.MemCallsAt M' o args' S' n s ts cargs' n' S₁') :
+    (∃ (cargs : HVector toType ts) (S₁ : Memories Mem unit),
+      Func.MemCallsAt M o args S n s ts cargs n' S₁ ∧
+        cargs.Forall₂ TyRefinement.IsRefinedBy cargs' ∧ S₁ ⊑ S₁') ∨
+    (callee? o.op = some .picked ∧ ∃ r, DialectDenote.pick (m := StateT (Memories Mem unit) SetM)
+      o.op (M.callable (sig o.op).tail (returnTypes o.op)) args S (.ub r)) := by
+  cases h with
+  | fixed hc => exact .inl ⟨args, S, .fixed hc, hr, hS⟩
+  | picked hc hs =>
+    obtain ⟨e, he, hle⟩ := hpm hc _ _ (hok _ _) args args' hr S S' hS _ hs
+    match e, he, hle with
+    | .ok (_, S₁), he, ⟨rfl, hS₁⟩ => exact .inl ⟨args.tail, S₁, .picked hc he, hr.tail, hS₁⟩
+    | .ub r, he, _ => exact .inr ⟨hc, r, he⟩
 
 variable (Mem unit) in
 /-- The runs from given memories of each function that the target module

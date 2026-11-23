@@ -63,7 +63,8 @@ types, poison included, wherever a run names the core's memories:
 
 On arguments that refine others, the runs with memory of every function of
 every core module refine its runs with memory on those others, calls and
-recursion included. Congruence in the callee needs no bound for the new
+recursion included (`Core.args_isRefinedBy`, in
+`Fir.Core.MemoryCallRefine`). Congruence in the callee needs no bound for the new
 callee: every core op has finitely many outcomes (the section on congruence
 in a core callee).
 
@@ -98,7 +99,7 @@ its own rule has an outcome from any memories, at every layout and naming:
 each op that touches no memory and reads no item of the run from its own
 tie and its totality in the set monad, and `alloca`, the loads and stores,
 `fieldAddr`, `globalAddr`, `memCopy`, `memSet`, `ptrExpose` and
-`ptrFromInt` each by its own rule. -/
+`ptrFromInt` each by its own rule. No core op picks its callee. -/
 instance Core.lawfulDialectTotal : LawfulDialectTotal CoreDialect :=
   ⟨fun op _ hc => Core.Op.memCases (P := fun op =>
       (isTerminator (d := CoreDialect) op = true ∨ callee? (d := CoreDialect) op = none) →
@@ -116,14 +117,15 @@ instance Core.lawfulDialectTotal : LawfulDialectTotal CoreDialect :=
     (fun s n _ => Core.globalAddr_memTotal s n)
     (fun k o w n _ => Core.memCopy_memTotal k o w n)
     (fun o v w n _ => Core.memSet_memTotal o v w n)
-    (fun n w _ => Core.ptrExpose_memTotal n w) (fun n w _ => Core.ptrFromInt_memTotal n w) hc⟩
+    (fun n w _ => Core.ptrExpose_memTotal n w) (fun n w _ => Core.ptrFromInt_memTotal n w) hc,
+   fun op _ hc => absurd hc (Core.Op.callee_ne_picked op)⟩
 
 /-- The core dialect is lawful in its monotonicity: each core op that runs
 by its own rule is monotone with memory, at every layout and naming: each op
 that touches no memory and reads no item of the run from its own tie and
 its monotonicity in the set monad, and `alloca`, the loads and stores,
 `fieldAddr`, `globalAddr`, `memCopy`, `memSet`, `ptrExpose` and
-`ptrFromInt` each by its own rule. -/
+`ptrFromInt` each by its own rule. No core op picks its callee. -/
 instance Core.lawfulDialectMonotone : LawfulDialectMonotone CoreDialect :=
   ⟨fun op _ hc => Core.Op.memCases (P := fun op =>
       (isTerminator (d := CoreDialect) op = true ∨ callee? (d := CoreDialect) op = none) →
@@ -141,7 +143,8 @@ instance Core.lawfulDialectMonotone : LawfulDialectMonotone CoreDialect :=
     (fun s n _ => Core.globalAddr_memMonotone s n)
     (fun k o w n _ => Core.memCopy_memMonotone k o w n)
     (fun o v w n _ => Core.memSet_memMonotone o v w n)
-    (fun n w _ => Core.ptrExpose_memMonotone n w) (fun n w _ => Core.ptrFromInt_memMonotone n w) hc⟩
+    (fun n w _ => Core.ptrExpose_memMonotone n w) (fun n w _ => Core.ptrFromInt_memMonotone n w) hc,
+   fun op _ hc => absurd hc (Core.Op.callee_ne_picked op)⟩
 
 /-- The core dialect is lawful in its poison with memory: each valid core op
 instance that propagates poison propagates it with memory, and returns a
@@ -229,9 +232,11 @@ theorem Op.memMonotone_all (op : Op)
     (fun n w _ => ptrExpose_memMonotone n w) (fun n w _ => ptrFromInt_memMonotone n w) h
 
 /-- A core function that runs within a module runs within it with memory,
-wherever a run names the core's memories: each of its terminators is tied. -/
+wherever a run names the core's memories: each of its terminators is tied,
+and none of its ops picks its callee. -/
 theorem inModuleAt_of_inModule (h : f.InModule M) : f.InModuleAt lay ρ L M :=
-  h.inModuleAt_of_tied lay ρ L fun _ _ _ _ hT => Op.liftsSetM_of_terminator hT
+  h.inModuleAt_of_tied lay ρ L (fun _ _ _ _ hT => Op.liftsSetM_of_terminator hT)
+    fun _ _ o _ _ hc => absurd hc (Op.callee_ne_picked o.op)
 
 /-- A core function valid in the context of a module runs within that
 module with memory, wherever a run names the core's memories. -/
@@ -328,21 +333,6 @@ is stuck. -/
 theorem tracer_neverStuck (hM : M.Valid) (hf : f ∈ M.funcs) (ht : InTracer f)
     (args : HVector toType (f.params.map (·.2))) : NeverStuck (f.memRuns lay ρ L M args) :=
   (tracer_runsWell lay ρ L hM hf ht args).neverStuck
-
-/-! # Refinement -/
-
-/-- Refined arguments, with memory: on arguments that refine others, a
-poison by any value, the runs with memory of every function of every core
-module refine its runs with memory on those others, calls and recursion
-included, wherever a run names the core's memories. -/
-theorem args_isRefinedBy (M : Module CoreDialect) (f : Func CoreDialect)
-    {a a' : HVector toType (f.params.map (·.2))} (h : a.Forall₂ TyRefinement.IsRefinedBy a') :
-    observable (f.memRuns lay ρ L M a) ⊑ observable (f.memRuns lay ρ L M a') :=
-  letI := DialectMemDenote.denoteAt (d := CoreDialect) lay ρ L
-  have hm : ∀ g : Func CoreDialect, g.MemOpsMonotone N (unitsOf lay) :=
-    fun _ _ _ o _ hc => Op.memMonotone_all o.op hc lay ρ L
-  Func.memRuns_isRefinedBy_of_from lay ρ L (Func.memRunsFrom_args_isRefinedBy M (fun g _ => hm g) f
-    (hm f) h (Memory.Memories.isRefinedBy_refl _))
 
 end Core
 

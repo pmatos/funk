@@ -23,7 +23,8 @@ With the paths that run out of fuel allowed at each budget
 (`Fir.Execution.TraceArgs`), König's lemma (`Fir.Execution.TraceKonig`)
 gives divergence. So, for a dialect whose ops show events, in a module whose
 terminators and ops with no callee are monotone in the traced layer, and
-its external-call rule at each other call, and whose ops and external calls
+so are the rules of its ops whose callee is picked (#235), and its
+external-call rule at each other call, and whose ops and external calls
 each have finitely many outcomes given the world's answers (the
 hypothesis that the human ruled on 2026-11-20, on #233, in the form by
 position of `Fir.Execution.TraceFinite`), the traced runs of a function on
@@ -102,7 +103,7 @@ theorem Func.traceRuns_exhausted_iff_from {a : HVector toType (f.params.map (·.
 between two steps of a path, for any `W` that exceeds the length of every
 chain of calls of the module by at least one: its traced runs from the
 memories the run starts with do. -/
-theorem Func.traceRuns_truncates {W : Nat} (hW : ∀ os c, M.CallChain os c → c + 1 ≤ W)
+theorem Func.traceRuns_truncates {W : Nat} (hW : ∀ os c, M.CallChain os c → c + 2 ≤ W)
     (hpos : 0 < W) (a : HVector toType (f.params.map (·.2))) :
     TRun.Truncates W (f.traceRuns lay ρ L μ ar M a) := by
   refine ⟨hpos, fun hle hx => ?_⟩

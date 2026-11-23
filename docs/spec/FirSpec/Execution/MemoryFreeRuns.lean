@@ -24,7 +24,7 @@ the run in the call's frame from $`S`: each return of the ops ends with
 $`\mathrm{enter}(S)`, and leaving the frame gives back $`S`.
 :::
 
-:::readable Fir.Module.memOps_ignoresMemory (pin := Fir.Func.memOps) (pin := Fir.OpsIgnoreMemory) (fingerprint := "1065220523501721480")
+:::readable Fir.Module.memOps_ignoresMemory (pin := Fir.Func.memOps) (pin := Fir.OpsIgnoreMemory) (fingerprint := "3553452535488092648")
 *Theorem: runs of a function that touches no memory ignore the memories.*
 Let the ops of the dialect ignore the memories where they touch none. Let
 $`f` be the function of $`M` with the symbol $`s`, which reaches no
@@ -38,7 +38,10 @@ The proof is by induction on the fuel, op by op. An op that runs by its own
 rule declares no memory effect, since $`f` reaches no memory, so it ignores
 the memories. A call runs its callee, which reaches nothing that $`f` does
 not, in a frame, from the memories $`f` reached; the callee's run has
-less fuel, so the induction covers it.
+less fuel, so the induction covers it. An op that picks its callee may
+call any function of the table, but then no function of the table touches
+memory, so its rule ignores the memories and its callee reaches no
+memory.
 :::
 
 :::readable Fir.Func.memRunsFrom_ignoresMemory Fir.Func.memRunsFrom_exhausted_iff (pin := Fir.Func.memRunsFrom) (fingerprint := "6204408882978189296")

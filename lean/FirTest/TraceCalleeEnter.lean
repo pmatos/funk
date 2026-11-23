@@ -117,7 +117,7 @@ theorem caller_moves (s : St) (i : Nat) :
   letI := stepSem
   cases i with
   | zero =>
-    exact .enter (args := .nil) (o := mkOp (.call "h")) rfl rfl rfl rfl new_h rfl
+    exact .enter (args := .nil) (o := mkOp (.call "h")) rfl rfl rfl (.fixed rfl) new_h rfl
   | succ i =>
     exact .goto (args := .nil) (i := 0) (env₁ := []) (b := ⟨"loop", [], [brLoop]⟩) rfl rfl rfl rfl
       ((step_pure _ _ _).2 rfl) rfl

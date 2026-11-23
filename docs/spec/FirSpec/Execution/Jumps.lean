@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Progress with jumps and loops: readable blocks" =>
 
-:::moduleDocs (fingerprint := "15817450649882277567")
+:::moduleDocs (fingerprint := "5068510354838377416")
 :::
 
 :::readable Fir.Env.mapM_value_ok (pin := Fir.Env.value) (pin := Fir.Env.Holds) (fingerprint := "10280855962566332597")
@@ -32,7 +32,7 @@ there is none. A jump looks up the values that its successor passes this
 way.
 :::
 
-:::readable Fir.Func.op_ready_of_scoped (pin := Fir.Func.runOps) (fingerprint := "9992182308860581260")
+:::readable Fir.Func.op_ready_of_scoped (pin := Fir.Func.runOps) (fingerprint := "3601829628427527781")
 *Theorem: what a run needs of an op, from the values in scope.* Let $`f`
 be {ref "The-fir-specification--Validation--The-general-rules"}[valid] in
 a module context, $`b` a block of $`\mathrm{blocks}(f)`, and $`o` the op
@@ -100,7 +100,7 @@ values in scope at the first op of $`b'` are its arguments, just bound,
 or were in scope at $`o`.
 :::
 
-:::readable Fir.Func.Local (fingerprint := "9965686972155161032")
+:::readable Fir.Func.Local (fingerprint := "3573835737855817663")
 *Definition: a function that runs within itself.* The ops of a function
 $`f` _run within $`f`_ when, for every op $`o` of every block of $`f`:
 
@@ -125,7 +125,7 @@ interpreter can run in the set monad, as for
 {ref "The-fir-specification--Execution--The-runs-of-a-function___-and-fuel-monotonicity"}[the runs of a function].
 :::
 
-:::readable Fir.Func.Straight.local (pin := Fir.Func.Straight) (fingerprint := "16264839822882521456")
+:::readable Fir.Func.Straight.local (pin := Fir.Func.Straight) (fingerprint := "11838674515904620388")
 *Theorem: a function that runs straight runs within itself.* A function
 whose ops
 {ref "The-fir-specification--Execution--Progress-and-no-stuck-path"}[run straight]

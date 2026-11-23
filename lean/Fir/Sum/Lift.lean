@@ -232,6 +232,7 @@ instance instDialectDenote [DialectSignature (dep.over e)] {m : Type → Type} [
   denote o args := HVector.up (incl e ι μ) <$>
     DialectDenote.denote (d := dep.over e) o (HVector.down (incl e ι μ) args)
   exit o args := DialectDenote.exit (d := dep.over e) o (HVector.down (incl e ι μ) args)
+  pick o ok args := DialectDenote.pick (d := dep.over e) o ok (HVector.down (incl e ι μ) args)
 
 /-! # Text -/
 

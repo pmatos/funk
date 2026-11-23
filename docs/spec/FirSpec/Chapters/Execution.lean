@@ -149,13 +149,19 @@ Each section renders one module of `lean/Fir`.
 
 {includeReadable "." Fir.Execution.Calls "Progress with calls" FirSpec.Execution.Calls (level := 1)}
 
+{includeReadable "." Fir.Execution.CallsProgress "A path at every budget, with calls" FirSpec.Execution.CallsProgress (level := 1)}
+
 {includeReadable "." Fir.Core.Runs "The tracer subset" FirSpec.Core.Runs (level := 1)}
 
 {includeReadable "." Fir.Core.CallFree "Core functions without calls" FirSpec.Core.CallFree (level := 1)}
 
 {includeReadable "." Fir.Core.ValidRuns "Core functions with calls" FirSpec.Core.ValidRuns (level := 1)}
 
+{includeReadable "." Fir.Execution.CallsAt "The callee of a call" FirSpec.Execution.CallsAt (level := 1)}
+
 {includeReadable "." Fir.Execution.RunPaths "The ways a step goes on" FirSpec.Execution.RunPaths (level := 1)}
+
+{includeReadable "." Fir.Execution.FuelDown "A run that runs out of fuel, with less fuel" FirSpec.Execution.FuelDown (level := 1)}
 
 {includeReadable "." Fir.Execution.EnvRefine "Refined environments" FirSpec.Execution.EnvRefine (level := 1)}
 

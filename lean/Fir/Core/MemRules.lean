@@ -147,7 +147,8 @@ theorem denoteIn_mapsDenote (zm : {α : Type} → Op → μ α) (zn : {α : Type
       | .ptradd .., _ | .alloca .., _ | .load .., _ | .store .., _ | .loadPtr .., _
       | .storePtr .., _ | .loadFloat .., _ | .storeFloat .., _ | .fptosi .., _
       | .fptoui .., _ | .memCopy .., _ | .memSet .., _ | .fieldAddr .., _
-      | .ptrExpose .., _ | .ptrFromInt .., _ | .globalAddr .., _ => hz _ }
+      | .ptrExpose .., _ | .ptrFromInt .., _ | .globalAddr .., _ => hz _
+    pick := fun op _ _ => hz op }
 
 end
 
@@ -327,6 +328,7 @@ theorem memDenoteIn_mapsDenote {μ ν : Type → Type} [Monad μ] [Monad ν] [Mo
         exact @MonadMorphism.MapsDenote.denote μ ν _ _ φ CoreDialect _ _ (denoteIn @zm)
           (denoteIn @zn) h _ args)
     (@MonadMorphism.MapsDenote.exit μ ν _ _ φ CoreDialect _ _ (denoteIn @zm) (denoteIn @zn) h)
+    (fun op _ _ => hz op)
 
 /-- The core's semantics with memory: in the state layer over the set monad,
 each op runs by its rule with memory, and an op with no rule has no
@@ -362,12 +364,12 @@ theorem Op.liftsSetM (op : Op) (hm : op.touchesMemory = false) (hi : op.readsIte
     (fun _ _ _ => False) fun _ => by
       funext S e
       exact propext ⟨fun h => by rcases h with ⟨_, h, _⟩ | ⟨_, h, _⟩ <;> exact h, False.elim⟩
-  obtain ⟨hd, he⟩ := h
+  obtain ⟨hd, he, hp⟩ := h
   cases op with
   | alloca | load | store | loadPtr | storePtr | loadFloat | storeFloat | memCopy | memSet
   | ptrExpose | ptrFromInt => cases hm
   | fieldAddr | globalAddr => cases hi
-  | _ => exact ⟨(hd _ args).symm, (he _ args).symm⟩
+  | _ => exact ⟨(hd _ args).symm, (he _ args).symm, fun ok => (hp _ ok args).symm⟩
 
 end Core
 

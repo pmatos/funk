@@ -14,7 +14,7 @@ fails when the Lean changes under it.
 
 #doc (Manual) "Monotonicity with memory: readable blocks" =>
 
-:::moduleDocs (fingerprint := "16953589169170558765")
+:::moduleDocs (fingerprint := "2333728459844100276")
 :::
 
 :::readable Fir.StateRefinedBy (pin := Fir.SetM.IsRefinedBy) (pin := Fir.Ev.IsRefinedBy) (fingerprint := "17486471239574396974")
@@ -40,7 +40,7 @@ results of two computations by a map $`f` that takes results related by
 $`r` to results related by $`r'` keeps refinement.
 :::
 
-:::readable Fir.OpMemMonotone Fir.MemMonotone Fir.LawfulDialectMonotone (pin := Fir.OpMonotone) (fingerprint := "8161179232835285475")
+:::readable Fir.OpMemMonotone Fir.MemMonotone Fir.OpMemPickMonotone Fir.MemPickMonotone Fir.LawfulDialectMonotone (pin := Fir.OpMonotone) (fingerprint := "14781363580256470371")
 *Definitions: monotone with memory, and a dialect lawful in its
 monotonicity.* In a semantics of a dialect in the state layer, the op $`o`
 is monotone when, on operand vectors $`\vec{v} \sqsubseteq \vec{v}'`
@@ -52,21 +52,27 @@ memories that refine others, as the relation above says.
 
 An op is _monotone with memory_ when it is monotone in the dialect's
 semantics with memory at every naming $`\rho` of its memories, with any
-layout entries. A dialect is _lawful in its monotonicity_ when every valid op
-instance that is a terminator or calls no function is monotone with
-memory. The class asks for no semantics in the set monad, so a dialect
+layout entries. The rule of an op that picks its callee is monotone, in a
+semantics in the state layer, when, on operands and from memories that
+refine others, and where the run can call at least the same symbols, every
+way it may end is UB or the same symbol, from memories that refine those
+it ends with on the others. A dialect is _lawful in its monotonicity_ when
+every valid op instance that is a terminator or calls no function is
+monotone with memory, and every valid op instance whose callee is picked
+has a rule to pick it that is monotone with memory. The class asks for no semantics in the set monad, so a dialect
 whose ops touch memory can meet it. It is what refinement with memory asks
 of a dialect, as
 {ref "The-fir-specification--Execution--Poison-classes"}[monotonicity] in
 the set monad is what refinement asks of runs in the set monad.
 :::
 
-:::readable Fir.MemMonotone.ofLifts Fir.MemMonotone.setM Fir.LawfulDialectMonotone.ofLawful (pin := Fir.OpLiftsSetM) (fingerprint := "11525976418448488651")
+:::readable Fir.MemMonotone.ofLifts Fir.MemMonotone.setM Fir.MemPickMonotone.ofLifts Fir.MemPickMonotone.setM Fir.LawfulDialectMonotone.ofLawful (pin := Fir.OpLiftsSetM) (fingerprint := "7975209083264686450")
 *Theorems: monotonicity with memory, for an op that touches no memory.* An
 op that is
 {ref "The-fir-specification--Memory--Runs-with-memory"}[tied] and
 monotone in the set monad is monotone with memory: its rule keeps the
-memories it starts from, and so their refinement. In a dialect that lifts
+memories it starts from, and so their refinement. So is its rule to pick a
+callee, when that rule is monotone in the set monad. In a dialect that lifts
 the set monad, every op is tied, and an op monotone with memory is monotone
 in the set monad too. So a lawful dialect that lifts the set monad is
 lawful in its monotonicity: so are the dialects of the tests that lift the

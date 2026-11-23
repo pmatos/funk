@@ -94,7 +94,7 @@ declares
 $`\mathsf{control}`.
 :::
 
-:::readable Fir.Core.lawfulDialectEffects (pin := Fir.LawfulDialectEffects) (fingerprint := "172079627767923088")
+:::readable Fir.Core.lawfulDialectEffects (pin := Fir.LawfulDialectEffects) (fingerprint := "13564917784484287484")
 *Theorem: the core dialect is lawful in its effects.* Every effect that a
 core op leaves out, it does not have. Every core op but
 $`\mathsf{alloca}`, the loads and stores, $`\mathsf{fieldaddr}`,

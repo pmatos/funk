@@ -133,6 +133,7 @@ has an exit. -/
 instance : DialectDenote DataflowDialect Mix where
   denote := Op.denote
   exit op _ := .noOutcome op.name
+  pick op _ _ := .noOutcome op.name
 
 /-! # The dialect's text is lawful -/
 

@@ -14,18 +14,10 @@ when the Lean changes under it.
 
 #doc (Manual) "A traced run of ops, one step at a time: readable blocks" =>
 
-:::moduleDocs (fingerprint := "7428248053489233337")
+:::moduleDocs (fingerprint := "988850153275118531")
 :::
 
-:::readable Fir.TraceM.run_inFrame Fir.Func.traceOps Fir.Func.traceCall (fingerprint := "89150425833785351")
-*Definition: traced runs of ops.* The traced run of the ops $`os` of $`f`
-in the environment $`\varepsilon`, with $`n` steps of fuel, from the traced
-state $`s`, is the interpreter's run in the traced layer, read from
-$`s`. A callee runs in a frame: from $`s` with a new frame entered, and
-each path that does not hit UB leaves the frame.
-:::
-
-:::readable Fir.Func.TStepPath Fir.Func.tStepPath_iff (fingerprint := "633500456865255100")
+:::readable Fir.Func.tStepPath_iff (pin := Fir.Func.TStepPath) (fingerprint := "15361096986935972223")
 *Definition and theorem: the ways a step goes on.* A path of the traced run
 of $`o :: os` with $`n + 1` steps, from $`s`, that is not stuck goes on in
 one of ten ways, each from $`s`:
@@ -44,9 +36,4 @@ one of ten ways, each from $`s`:
   it for the call's types: the external-call rule hits UB after $`t`, or
   gives results of the call's result types after $`t`, in $`s'`, from
   which the rest of the block runs with $`n` steps, after $`t`.
-:::
-
-:::readable Fir.Func.traceOps_zero Fir.Func.traceOps_nil (fingerprint := "18066484428726939998")
-*Theorems.* A traced run with no fuel runs out of fuel, showing nothing,
-and only so. A block with no op left is stuck.
 :::

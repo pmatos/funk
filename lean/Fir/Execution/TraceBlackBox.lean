@@ -22,7 +22,10 @@ counterpart, in a traced layer of marked traces.
   refines that of the source's. Each symbol names the same function in
   both modules, or a traced black box, and the source declares each symbol
   that the target declares, so that a call to a declaration in the target
-  is one in the source (`TraceCallsRefined`).
+  is one in the source, and the target can call each symbol that the
+  source can, so that a monotone rule that picks a callee (#235) picks in
+  the source the symbol it picks in the target, or is UB
+  (`TraceCallsRefined`).
 * _Allowed at some budget._ The two runs do not go in step: a black box's
   two functions may take different numbers of steps. So a path of the
   target is allowed by a path of the source at some budget, comparing acts,
@@ -262,19 +265,22 @@ variable (A Mem unit) in
 /-- The target module `M'` runs each call in the traced layer as the source
 `M` does: each symbol names the same function in both, or a traced black
 box, and the source declares each symbol that the target declares, for the
-same types. -/
+same types; and the target can call, for given types, each symbol that the
+source can, so that a rule that picks a callee (#235) may pick in the
+target what it picks in the source. -/
 def TraceCallsRefined (M M' : Module d) : Prop :=
   (∀ s, M'.func? s = M.func? s ∨
     ∃ g g', M.func? s = some g ∧ M'.func? s = some g' ∧
       TraceBlackBox (A := A) (Mem := Mem) (unit := unit) M M' g g') ∧
-  ∀ s ts rs, M'.declares s ts rs = true → M.declares s ts rs = true
+  (∀ s ts rs, M'.declares s ts rs = true → M.declares s ts rs = true) ∧
+  ∀ ts rs s, M.callable ts rs s = true → M'.callable ts rs s = true
 
 /-- A symbol that the target module calls as an external declaration, the
 source calls as one too. -/
 theorem TraceCallsRefined.ext {M M' : Module d} (hc : TraceCallsRefined A Mem unit M M')
     {s : Name} {ts rs : List d.Ty} (hg : M'.func? s = none) (hd : M'.declares s ts rs = true) :
     M.func? s = none ∧ M.declares s ts rs = true :=
-  ⟨Module.func?_none_of_calls hc.1 hg, hc.2 s ts rs hd⟩
+  ⟨Module.func?_none_of_calls hc.1 hg, hc.2.1 s ts rs hd⟩
 
 /-- A call that enters a black box's target passes arguments of the
 parameter types of the black box's source. -/

@@ -38,6 +38,11 @@ A dialect whose ops show no event runs its semantics with memory, lifted onto
 the memories of the traced state (`DialectTrace.ofMem`). The lift keeps
 what escaped and shows nothing, so an op monotone with memory is monotone
 in the traced layer.
+
+The rule of an op whose callee is picked (#235) has its counterpart
+(`OpTracePickMonotone`): it picks the same symbol in the source after acts
+that the target's refine, or the source hits UB after acts that the
+target first shows, refined.
 -/
 
 namespace Fir
@@ -215,6 +220,17 @@ def OpTraceMonotone [DialectDenote d (TraceM B σ)] (op : d.Op) : Prop :=
       (isTerminator op = true → TraceRefinedBy Eq (DialectDenote.exit (m := TraceM B σ) op args)
         (DialectDenote.exit (m := TraceM B σ) op args'))
 
+/-- In a semantics in the traced layer, the rule that picks the op's callee
+is monotone (#235): on operands that refine others, where the run can call
+each symbol that `ok` accepts, what it picks refines what it picks on those
+others with `ok`, from traced states that refine others: UB, or the same
+symbol. -/
+def OpTracePickMonotone [DialectDenote d (TraceM B σ)] (op : d.Op) : Prop :=
+  ∀ (ok ok' : Name → Bool), (∀ s, ok s = true → ok' s = true) →
+    ∀ args args' : HVector toType (sig op), args.Forall₂ TyRefinement.IsRefinedBy args' →
+      TraceRefinedBy Eq (DialectDenote.pick (m := TraceM B σ) op ok args)
+        (DialectDenote.pick (m := TraceM B σ) op ok' args')
+
 /-- In a semantics in the traced layer, the external-call rule is monotone
 for a call of the declaration `g` on operands of the types `ts` for results
 of the types `rs`: on arguments of those types that refine others, what it
@@ -242,12 +258,17 @@ variable [DialectCall d] [DialectDenote d (TraceM B σ)] [DialectExtCall d (Trac
 variable (B σ) in
 /-- Every op of `os` that runs by its own rule, a terminator or an op with no
 callee, is monotone in the traced layer, and so is the external-call rule
-for each op of `os` that calls. -/
+for each op of `os` that calls a callee it names; and for each op of `os`
+whose callee is picked, the rule that picks it and the external-call rule
+for each symbol, on its operands but the first. -/
 def TraceMonotoneOps (os : List (Operation d)) : Prop :=
   ∀ o ∈ os, (isTerminator o.op = true ∨ callee? o.op = none →
       OpTraceMonotone (B := B) (σ := σ) o.op) ∧
-    (isTerminator o.op = false → ∀ g, callee? o.op = some g →
-      ExtTraceMonotone (B := B) (σ := σ) g (sig o.op) (returnTypes o.op))
+    (isTerminator o.op = false → ∀ g, callee? o.op = some (.fixed g) →
+      ExtTraceMonotone (B := B) (σ := σ) g (sig o.op) (returnTypes o.op)) ∧
+    (isTerminator o.op = false → callee? o.op = some .picked →
+      OpTracePickMonotone (B := B) (σ := σ) o.op ∧
+        ∀ g, ExtTraceMonotone (B := B) (σ := σ) g (sig o.op).tail (returnTypes o.op))
 
 variable (B σ) in
 /-- Every op of the function `f` that runs by its own rule is monotone in the

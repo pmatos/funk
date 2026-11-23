@@ -17,7 +17,10 @@ is left after each value of the choice as a state of the machine, so that the
 walkers of `FirRef.RunModes` can follow one path or every path without stack
 per step.
 
-Each step of the machine is one case of `Func.runOps`'s definition. It calls
+Each step of the machine is one case of `Func.runOps`'s definition. A call
+goes through a state of its own (`Cur.call`), on the arguments it passes;
+an op whose rule picks its callee (#235) first runs the rule (`Cur.pk`),
+then calls the symbol it picks with a step fewer, as the spec does. It calls
 the dialect's rules as the spec does, and keeps the values that the run has
 defined in `FirRef.Bindings`, in place of the spec's list `Env`, so that the
 lookups of a run take time near linear in the values it binds and the lookups
@@ -79,6 +82,15 @@ inductive Cur (d : Dialect) [TyDenote d.Ty] [DialectSignature d] (ε σ : Type) 
   says, with the state after it. -/
   | ex (n : Nat) (f : Func d) (env : Bindings d) (o : Operation d)
       (args : HVector toType (sig o.op)) (t : ChoiceTree ε (Exit × σ))
+  /-- The rule of the op `o`, on the operands `args`, picks its callee by the
+  tree `t`, with the state after it (#235); then the op calls it on the
+  operands but the first. -/
+  | pk (n : Nat) (f : Func d) (env : Bindings d) (o : Operation d) (os : List (Operation d))
+      (args : HVector toType (sig o.op)) (t : ChoiceTree ε (Name × σ))
+  /-- The op `o` calls `@s` on the arguments `cargs`, with `n` steps left for
+  the callee, from the state `S`; then the ops `os` run. -/
+  | call (n : Nat) (f : Func d) (env : Bindings d) (o : Operation d) (os : List (Operation d))
+      (s : Name) {ts : List d.Ty} (cargs : HVector toType ts) (S : σ)
   /-- The function returns `vs` and leaves `k` steps, in the state `S`. -/
   | ret (vs : List (DVal d)) (k : Nat) (S : σ)
 
@@ -96,7 +108,8 @@ inductive Stop (d : Dialect) [TyDenote d.Ty] [DialectSignature d] (ε σ R : Typ
 /-- A measure of a state that each step of `advance` lowers. -/
 def Cur.rank : Cur d ε σ → Nat
   | .ops n .. => 4 * n + 1
-  | .den n .. | .ex n .. => 4 * n + 4
+  | .den n .. | .ex n .. | .pk n .. => 4 * n + 4
+  | .call n .. => 4 * n + 3
   | .ret _ k _ => 4 * k + 2
 
 variable {N : Type} [DecidableEq N] {unit : N → Nat}
@@ -127,14 +140,25 @@ def advance (M : Module d) (fin : List (DVal d) → Memories N unit → R) :
       else match callee? o.op with
         | none =>
           advance M fin (.den n f env o os ((DialectDenote.denote (m := SM) o.op args).run S)) st
-        | some s => match M.func? s with
-          | none =>
-            if M.declares s (sig o.op) (returnTypes o.op) then .leaf (.ub extCallUB)
-            else .leaf (.ok (stuck s!"@{s} is not a function or a declaration of the call's types"))
-          | some g => match Bindings.enter g args with
-            | .error e => .leaf (.ok (.error e))
-            | .ok (body, genv) =>
-              advance M fin (.ops n g genv body S.enter) (⟨n, f, env, o, os, s⟩ :: st)
+        | some (.fixed s) => advance M fin (.call n f env o os s args S) st
+        | some .picked =>
+          advance M fin (.pk n f env o os args ((DialectDenote.pick (m := SM) o.op
+            (M.callable (sig o.op).tail (returnTypes o.op)) args).run S)) st
+  | .call n f env o os s (ts := ts) cargs S, st => match M.func? s with
+    | none =>
+      if M.declares s ts (returnTypes o.op) then .leaf (.ub extCallUB)
+      else .leaf (.ok (stuck s!"@{s} is not a function or a declaration of the call's types"))
+    | some g => match Bindings.enter g cargs with
+      | .error e => .leaf (.ok (.error e))
+      | .ok (body, genv) =>
+        advance M fin (.ops n g genv body S.enter) (⟨n, f, env, o, os, s⟩ :: st)
+  | .pk n f env o os args t, st => match t with
+    | .pure (s, S) => match n with
+      | 0 => .leaf (.ok (.ok .fuelExhausted))
+      | n + 1 => advance M fin (.call n f env o os s args.tail S) st
+    | .ub r => .leaf (.ub r)
+    | .noOutcome e => .leaf (.noOutcome e)
+    | .choose w c k => .choose w c fun b => (.pk n f env o os args (k b), st)
   | .den n f env o os t, st => match t with
     | .pure (rs, S) =>
       match env.bindResults o.results rs
@@ -180,6 +204,8 @@ def Cur.denote (M : Module d) : Cur d ε (Memories N unit) → Paths d ε (Memor
   | .ops n f env os S => runAt (Func.runOps M n f env.toEnv os) S
   | .den n f env o os t => t.bind fun p => runAt (afterDenote M n f env.toEnv o os p.1) p.2
   | .ex n f env o args t => t.bind fun p => runAt (afterExit M n f env.toEnv o args p.1) p.2
+  | .pk n f env o os args t => t.bind fun p => runAt (afterPick M n f env.toEnv o os args p.1) p.2
+  | .call n f env o os s cargs S => runAt (callAt M n f env.toEnv o os s cargs) S
   | .ret vs k S => .pure (.ok (.ret (vs, k)), S)
 
 /-- What the caller of a frame does after its callee's path ends with `p`,

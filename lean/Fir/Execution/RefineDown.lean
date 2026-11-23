@@ -249,9 +249,13 @@ theorem Func.runOps_allowedBelow {M M' : Module d} (hmono : ∀ g ∈ M.funcs, g
       | denoteUB _ _ _ _ _ => exact absurd rfl (hnub _)
       | callUB _ _ _ _ _ _ _ => exact absurd rfl (hnub _)
       | extUB _ _ _ _ _ _ => exact absurd rfl (hnub _)
+      | pickUB _ _ _ _ _ => exact absurd rfl (hnub _)
+      | pickExh _ _ _ _ _ hn =>
+        have : 0 < (bound + 1) * (N₀ + 1) := Nat.mul_pos (by omega) (by omega)
+        omega
       | ret hreg hargs' hT hos hx hs =>
         obtain ⟨args, hargs, hr⟩ := henv.operands hargs'
-        obtain ⟨e₀, he₀, hle⟩ := (hmo (.inl hT) args _ hr).2 hT _ hx
+        obtain ⟨e₀, he₀, hle⟩ := (hmo.1 (.inl hT) args _ hr).2 hT _ hx
         match e₀, he₀, hle with
         | .ub r, he₀, _ =>
           exact AllowedBelow.of_someUB ⟨1, r, hub (.exitUB hreg hargs hT hos he₀)⟩ _
@@ -261,7 +265,7 @@ theorem Func.runOps_allowedBelow {M M' : Module d} (hmono : ∀ g ∈ M.funcs, g
             HVector.toDVals_isRefinedBy hr, hb'⟩)
       | goto hreg hargs' hT hos hx hj he =>
         obtain ⟨args, hargs, hr⟩ := henv.operands hargs'
-        obtain ⟨e₀, he₀, hle⟩ := (hmo (.inl hT) args _ hr).2 hT _ hx
+        obtain ⟨e₀, he₀, hle⟩ := (hmo.1 (.inl hT) args _ hr).2 hT _ hx
         match e₀, he₀, hle with
         | .ub r, he₀, _ =>
           exact AllowedBelow.of_someUB ⟨1, r, hub (.exitUB hreg hargs hT hos he₀)⟩ _
@@ -271,7 +275,7 @@ theorem Func.runOps_allowedBelow {M M' : Module d} (hmono : ∀ g ∈ M.funcs, g
             (ihn _ _ _ _ _ hf (hf.jump hj) henv₁ hb' _ he)
       | denote hreg hargs' hT hc hx hlen' he =>
         obtain ⟨args, hargs, hr⟩ := henv.operands hargs'
-        obtain ⟨e₀, he₀, hle⟩ := (hmo (.inr hc) args _ hr).1 hT _ hx
+        obtain ⟨e₀, he₀, hle⟩ := (hmo.1 (.inr hc) args _ hr).1 hT _ hx
         match e₀, he₀, hle with
         | .ub r, he₀, _ =>
           exact AllowedBelow.of_someUB ⟨1, r, hub (.denoteUB hreg hargs hT hc he₀)⟩ _
@@ -280,38 +284,61 @@ theorem Func.runOps_allowedBelow {M M' : Module d} (hmono : ∀ g ∈ M.funcs, g
           have hlen := hlen'.trans (DVals.length_eq_of_isRefinedBy hvs).symm
           exact step (fun N x _ h => .denote hreg hargs hT hc he₀ hlen h)
             (ihn _ _ _ _ _ hf hops' (henv.zip_append _ hvs) hb' _ he)
-      | callExh hreg hargs' hT hc hg' hen' hx =>
+      | @callExh _ _ _ _ n' _ _ _ hreg hargs' hT hc hg' hen' hx =>
         obtain ⟨args, hargs, hr⟩ := henv.operands hargs'
-        obtain ⟨g, p, hg, hen, hm⟩ := hcalls.callee_allowedBelow hmono hg' hr (p' := (_, _)) hen' hb
-          (fun hgm hbm env env' h e' he' => ihn _ env env' _ N₀ hgm hbm h hb' e' he') hx
+        obtain ⟨cargs, hc₀, hcr⟩ | ⟨hpc, r, hpu⟩ := hc.source hr hcalls.2.2 hmo.2
+        case inr =>
+          exact AllowedBelow.of_someUB ⟨_, r, hub (.pickUB (n := 0) hreg hargs hT hpc hpu)⟩ _
+        rcases Nat.lt_or_ge N₀ (n - n') with hlt | hle
+        · obtain ⟨hpc, hs⟩ := hc₀.picked_of_lt (by omega)
+          have := hc.le
+          exact AllowedBelow.of_exhausted ((Func.stepPath_iff (e := .ok (.ok .fuelExhausted))
+            (fun _ h => nomatch h)).2 (.pickExh hreg hargs hT hpc hs (by omega))) _
+        have hcs := hc₀.at (N₀ - (n - n'))
+        rw [Nat.sub_add_cancel hle] at hcs
+        have hbc := callee_budget hc.le hle hb
+        obtain ⟨g, p, hg, hen, hm⟩ := hcalls.callee_allowedBelow hmono hg' hcr (p' := (_, _)) hen'
+          hbc (fun hgm hbm env env' h e' he' =>
+            ih _ (Nat.lt_succ_of_le hc.le.1) _ env env' _ _ hgm hbm h (by omega) e' he') hx
           (fun _ h => nomatch h)
           (fun _ h => nomatch h)
         rcases hm with h | ⟨N, r, h⟩
         · exact AllowedBelow.of_exhausted ((Func.stepPath_iff (e := .ok (.ok .fuelExhausted))
-            (fun _ h => nomatch h)).2 (.callExh hreg hargs hT hc hg hen h)) _
-        · exact AllowedBelow.of_someUB ⟨N + 1, r, hub (.callUB hreg hargs hT hc hg hen h)⟩ _
-      | callRet hreg hargs' hT hc hg' hen' hx hty' hlen' he =>
-        rename_i vs' k'
+            (fun _ h => nomatch h)).2 (.callExh hreg hargs hT hcs hg hen h)) _
+        · exact AllowedBelow.of_someUB ⟨_, r, hub (.callUB hreg hargs hT (hc₀.at N) hg hen h)⟩ _
+      | @callRet _ _ _ _ n' _ _ _ vs' k' _ hreg hargs' hT hc hg' hen' hx hty' hlen' he =>
         obtain ⟨args, hargs, hr⟩ := henv.operands hargs'
-        obtain ⟨g, p, hg, hen, hm⟩ := hcalls.callee_allowedBelow hmono hg' hr (p' := (_, _)) hen' hb
-          (fun hgm hbm env env' h e' he' => ihn _ env env' _ N₀ hgm hbm h hb' e' he') hx
+        obtain ⟨cargs, hc₀, hcr⟩ | ⟨hpc, r, hpu⟩ := hc.source hr hcalls.2.2 hmo.2
+        case inr =>
+          exact AllowedBelow.of_someUB ⟨_, r, hub (.pickUB (n := 0) hreg hargs hT hpc hpu)⟩ _
+        rcases Nat.lt_or_ge N₀ (n - n') with hlt | hle
+        · obtain ⟨hpc, hs⟩ := hc₀.picked_of_lt (by omega)
+          have := hc.le
+          exact AllowedBelow.of_exhausted ((Func.stepPath_iff (e := .ok (.ok .fuelExhausted))
+            (fun _ h => nomatch h)).2 (.pickExh hreg hargs hT hpc hs (by omega))) _
+        have hcs := hc₀.at (N₀ - (n - n'))
+        rw [Nat.sub_add_cancel hle] at hcs
+        have hbc := callee_budget hc.le hle hb
+        obtain ⟨g, p, hg, hen, hm⟩ := hcalls.callee_allowedBelow hmono hg' hcr (p' := (_, _)) hen'
+          hbc (fun hgm hbm env env' h e' he' =>
+            ih _ (Nat.lt_succ_of_le hc.le.1) _ env env' _ _ hgm hbm h (by omega) e' he') hx
           (fun _ h => nomatch h)
           (fun _ h => nomatch h)
         rcases hm with h | ⟨N, r, h⟩ | ⟨vs, k, hx₁, hvs, hk⟩
         · exact AllowedBelow.of_exhausted ((Func.stepPath_iff (e := .ok (.ok .fuelExhausted))
-            (fun _ h => nomatch h)).2 (.callExh hreg hargs hT hc hg hen h)) _
-        · exact AllowedBelow.of_someUB ⟨N + 1, r, hub (.callUB hreg hargs hT hc hg hen h)⟩ _
+            (fun _ h => nomatch h)).2 (.callExh hreg hargs hT hcs hg hen h)) _
+        · exact AllowedBelow.of_someUB ⟨_, r, hub (.callUB hreg hargs hT (hc₀.at N) hg hen h)⟩ _
         have hty := (DVals.types_eq_of_isRefinedBy hvs).trans hty'
         have hlen := hlen'.trans (DVals.length_eq_of_isRefinedBy hvs).symm
-        have hk'n := Func.runOps_left_le M' n _ _ _ _ _ hx
-        have hkN := Func.runOps_left_le M N₀ _ _ _ _ _ hx₁
+        have hk'n := Func.runOps_left_le M' _ _ _ _ _ _ hx
+        have hkN := Func.runOps_left_le M _ _ _ _ _ _ hx₁
         rw [Nat.min_eq_left hk'n] at he
-        have hm := ih k' (Nat.lt_succ_of_le hk'n) _ _ _ _ k hf hops' (henv.zip_append _ hvs) hk _
-          he
+        have hm := ih k' (Nat.lt_succ_of_le (Nat.le_trans hk'n hc.le.1)) _ _ _ _ k hf hops'
+          (henv.zip_append _ hvs) hk _ he
         refine AllowedBelow.of_step (fun x hx h => (Func.stepPath_iff hx).2
-          (.callRet hreg hargs hT hc hg hen hx₁ hty hlen (by rwa [Nat.min_eq_left hkN]))) ?_ hm
+          (.callRet hreg hargs hT hcs hg hen hx₁ hty hlen (by rwa [Nat.min_eq_left hkN]))) ?_ hm
         rintro ⟨N₂, r, h⟩
-        exact ⟨_, r, Func.call_cont hreg hargs hT hc hg hen hx₁ hty hlen
+        exact ⟨_, r, Func.call_cont hreg hargs hT hc₀ hg hen hx₁ hty hlen
           (x := .ub r) (fun _ h => nomatch h) (fun h => nomatch h) h⟩
 
 end Fir

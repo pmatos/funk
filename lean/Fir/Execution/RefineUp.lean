@@ -5,8 +5,10 @@ import Fir.Execution.BlackBox
 
 Let every call name the same function in both modules or a black box.
 Let every op that runs by its own rule, a terminator or an op with no
-callee, be monotone, among the ops of the source module's functions and
-of the function that runs. Then every return and every UB of the
+callee, be monotone, and so the rule of every op whose callee is picked
+(#235), among the ops of the source module's functions and of the
+function that runs, and let the target call each symbol that the source
+can. Then every return and every UB of the
 target's run of ops, from an environment that refines the source's, is
 allowed by the source's run of the same ops at some budget. Calls and
 recursion are included.
@@ -51,9 +53,11 @@ variable {d : Dialect} [TyDenote d.Ty] [DecidableEq d.Ty] [DialectSignature d] [
 
 omit [DecidableEq d.Ty] in
 /-- Every op of `os` that runs by its own rule, a terminator or an op
-with no callee, is monotone. -/
+with no callee, is monotone, and so is the rule of every op of `os` whose
+callee is picked. -/
 def MonotoneOps (os : List (Operation d)) : Prop :=
-  ∀ o ∈ os, isTerminator o.op = true ∨ callee? o.op = none → OpMonotone o.op
+  ∀ o ∈ os, (isTerminator o.op = true ∨ callee? o.op = none → OpMonotone o.op) ∧
+    (callee? o.op = some .picked → PickMonotone o.op)
 
 omit [DecidableEq d.Ty] in
 /-- Every op of the function `f` that runs by its own rule is monotone. -/
@@ -181,12 +185,12 @@ theorem Func.runOps_allowed {M M' : Module d} (hmono : ∀ g ∈ M.funcs, g.OpsM
       cases (Func.stepPath_iff hne).1 he' with
       | exitUB hreg hargs' hT hos hx =>
         obtain ⟨args, hargs, hr⟩ := henv.operands hargs'
-        obtain ⟨e₀, he₀, hle⟩ := (hmo (.inl hT) args _ hr).2 hT _ hx
+        obtain ⟨e₀, he₀, hle⟩ := (hmo.1 (.inl hT) args _ hr).2 hT _ hx
         match e₀, he₀, hle with
         | .ub r, he₀, _ => exact Allowed.of_someUB ⟨1, r, hub (.exitUB hreg hargs hT hos he₀)⟩ _
       | ret hreg hargs' hT hos hx hs =>
         obtain ⟨args, hargs, hr⟩ := henv.operands hargs'
-        obtain ⟨e₀, he₀, hle⟩ := (hmo (.inl hT) args _ hr).2 hT _ hx
+        obtain ⟨e₀, he₀, hle⟩ := (hmo.1 (.inl hT) args _ hr).2 hT _ hx
         match e₀, he₀, hle with
         | .ub r, he₀, _ => exact Allowed.of_someUB ⟨1, r, hub (.exitUB hreg hargs hT hos he₀)⟩ _
         | .ok .ret, he₀, _ =>
@@ -195,7 +199,7 @@ theorem Func.runOps_allowed {M M' : Module d} (hmono : ∀ g ∈ M.funcs, g.OpsM
             HVector.toDVals_isRefinedBy hr⟩
       | goto hreg hargs' hT hos hx hj he =>
         obtain ⟨args, hargs, hr⟩ := henv.operands hargs'
-        obtain ⟨e₀, he₀, hle⟩ := (hmo (.inl hT) args _ hr).2 hT _ hx
+        obtain ⟨e₀, he₀, hle⟩ := (hmo.1 (.inl hT) args _ hr).2 hT _ hx
         match e₀, he₀, hle with
         | .ub r, he₀, _ => exact Allowed.of_someUB ⟨1, r, hub (.exitUB hreg hargs hT hos he₀)⟩ _
         | .ok (.goto _), he₀, rfl =>
@@ -204,12 +208,12 @@ theorem Func.runOps_allowed {M M' : Module d} (hmono : ∀ g ∈ M.funcs, g.OpsM
             (ihn _ _ _ _ hf (hf.jump hj) henv₁ _ he)
       | denoteUB hreg hargs' hT hc hx =>
         obtain ⟨args, hargs, hr⟩ := henv.operands hargs'
-        obtain ⟨e₀, he₀, hle⟩ := (hmo (.inr hc) args _ hr).1 hT _ hx
+        obtain ⟨e₀, he₀, hle⟩ := (hmo.1 (.inr hc) args _ hr).1 hT _ hx
         match e₀, he₀, hle with
         | .ub r, he₀, _ => exact Allowed.of_someUB ⟨1, r, hub (.denoteUB hreg hargs hT hc he₀)⟩ _
       | denote hreg hargs' hT hc hx hlen' he =>
         obtain ⟨args, hargs, hr⟩ := henv.operands hargs'
-        obtain ⟨e₀, he₀, hle⟩ := (hmo (.inr hc) args _ hr).1 hT _ hx
+        obtain ⟨e₀, he₀, hle⟩ := (hmo.1 (.inr hc) args _ hr).1 hT _ hx
         match e₀, he₀, hle with
         | .ub r, he₀, _ => exact Allowed.of_someUB ⟨1, r, hub (.denoteUB hreg hargs hT hc he₀)⟩ _
         | .ok rs, he₀, hrs =>
@@ -219,28 +223,44 @@ theorem Func.runOps_allowed {M M' : Module d} (hmono : ∀ g ∈ M.funcs, g.OpsM
             (ihn _ _ _ _ hf hops' (henv.zip_append _ hvs) _ he)
       | callUB hreg hargs' hT hc hg' hen' hx =>
         obtain ⟨args, hargs, hr⟩ := henv.operands hargs'
-        obtain ⟨g, p, hg, hen, hm⟩ := hcalls.callee_allowed hmono hg' hr (p' := (_, _)) hen'
-          (fun hgm hbm env env' h e' he' => ihn _ env env' _ hgm hbm h e' he') hx
-          (fun _ h => nomatch h) (fun h => nomatch h)
-        obtain ⟨N, r, hN⟩ := hm
-        exact Allowed.of_someUB ⟨N + 1, r, hub (.callUB hreg hargs hT hc hg hen hN)⟩ _
+        rcases hc.source hr hcalls.2.2 hmo.2 with ⟨cargs, hc₀, hcr⟩ | ⟨hpc, r, hpu⟩
+        · obtain ⟨g, p, hg, hen, hm⟩ := hcalls.callee_allowed hmono hg' hcr (p' := (_, _)) hen'
+            (fun hgm hbm env env' h e' he' =>
+              ih _ (Nat.lt_succ_of_le hc.le.1) _ env env' _ hgm hbm h e' he') hx
+            (fun _ h => nomatch h) (fun h => nomatch h)
+          obtain ⟨N, r, hN⟩ := hm
+          exact Allowed.of_someUB ⟨_, r, hub (.callUB hreg hargs hT (hc₀.at N) hg hen hN)⟩ _
+        · exact Allowed.of_someUB ⟨1, r, hub (.pickUB (n := 0) hreg hargs hT hpc hpu)⟩ _
       | callExh _ _ _ _ _ _ _ => exact absurd rfl hexh
+      | pickExh _ _ _ _ _ _ => exact absurd rfl hexh
       | extUB hreg hargs' hT hc hg' hd' =>
-        obtain ⟨args, hargs, -⟩ := henv.operands hargs'
+        obtain ⟨args, hargs, hr⟩ := henv.operands hargs'
         obtain ⟨hg, hd⟩ := hcalls.ext hg' hd'
-        exact Allowed.of_someUB ⟨1, _, hub (.extUB hreg hargs hT hc hg hd)⟩ _
+        rcases hc.source hr hcalls.2.2 hmo.2 with ⟨cargs, hc₀, -⟩ | ⟨hpc, r, hpu⟩
+        · exact Allowed.of_someUB ⟨_, _, hub (.extUB hreg hargs hT (hc₀.at 0) hg hd)⟩ _
+        · exact Allowed.of_someUB ⟨1, r, hub (.pickUB (n := 0) hreg hargs hT hpc hpu)⟩ _
+      | pickUB hreg hargs' hT hpc hx =>
+        obtain ⟨args, hargs, hr⟩ := henv.operands hargs'
+        have hok : ∀ s, M.callable (sig o.op).tail (returnTypes o.op) s = true →
+            M'.callable (sig o.op).tail (returnTypes o.op) s = true := hcalls.2.2 _ _
+        obtain ⟨e₀, he₀, hle⟩ := hmo.2 hpc _ _ hok args _ hr _ hx
+        match e₀, he₀, hle with
+        | .ub r, he₀, _ => exact Allowed.of_someUB ⟨1, r, hub (.pickUB hreg hargs hT hpc he₀)⟩ _
       | callRet hreg hargs' hT hc hg' hen' hx hty' hlen' he =>
         obtain ⟨args, hargs, hr⟩ := henv.operands hargs'
-        obtain ⟨g, p, hg, hen, hm⟩ := hcalls.callee_allowed hmono hg' hr (p' := (_, _)) hen'
-          (fun hgm hbm env env' h e' he' => ihn _ env env' _ hgm hbm h e' he') hx
+        obtain ⟨cargs, hc₀, hcr⟩ | ⟨hpc, r, hpu⟩ := hc.source hr hcalls.2.2 hmo.2
+        case inr => exact Allowed.of_someUB ⟨1, r, hub (.pickUB (n := 0) hreg hargs hT hpc hpu)⟩ _
+        obtain ⟨g, p, hg, hen, hm⟩ := hcalls.callee_allowed hmono hg' hcr (p' := (_, _)) hen'
+          (fun hgm hbm env env' h e' he' =>
+            ih _ (Nat.lt_succ_of_le hc.le.1) _ env env' _ hgm hbm h e' he') hx
           (fun _ h => nomatch h) (fun h => nomatch h)
         rcases hm with ⟨N, r, hN⟩ | ⟨N₁, vs, k, hx₁, hvs⟩
-        · exact Allowed.of_someUB ⟨N + 1, r, hub (.callUB hreg hargs hT hc hg hen hN)⟩ _
+        · exact Allowed.of_someUB ⟨_, r, hub (.callUB hreg hargs hT (hc₀.at N) hg hen hN)⟩ _
         have hty := (DVals.types_eq_of_isRefinedBy hvs).trans hty'
         have hlen := hlen'.trans (DVals.length_eq_of_isRefinedBy hvs).symm
-        have hm := ih _ (Nat.lt_succ_of_le (Nat.min_le_right _ _)) _ _ _ _ hf hops'
-          (henv.zip_append _ hvs) _ he
-        exact Allowed.of_step N₁ (fun N₂ x hx hxe h =>
-          Func.call_cont hreg hargs hT hc hg hen hx₁ hty hlen hx hxe h) hm
+        have hm := ih _ (Nat.lt_succ_of_le (Nat.le_trans (Nat.min_le_right _ _) hc.le.1)) _ _ _ _
+          hf hops' (henv.zip_append _ hvs) _ he
+        exact Allowed.of_step (N₁ + (_ - _)) (fun N₂ x hx hxe h =>
+          Func.call_cont hreg hargs hT hc₀ hg hen hx₁ hty hlen hx hxe h) hm
 
 end Fir

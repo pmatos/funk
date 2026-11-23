@@ -14,10 +14,10 @@ when the Lean changes under it.
 
 #doc (Manual) "Refinement through core calls: readable blocks" =>
 
-:::moduleDocs (fingerprint := "15705090768088126145")
+:::moduleDocs (fingerprint := "5752479613607499155")
 :::
 
-:::readable Fir.Core.Op.monotone_all Fir.Core.opsMonotone_all (fingerprint := "17589815968064864618")
+:::readable Fir.Core.Op.monotone_all Fir.Core.opsMonotone_all (fingerprint := "15738446947570506584")
 *Theorems: every core op that runs by its own rule is monotone, and so
 every core function has monotone ops.* For every
 {ref "The-fir-specification--Abstract-syntax--Core-ops"}[core op] $`o`,

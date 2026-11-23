@@ -98,12 +98,24 @@ theorem SymbolTable.summary_closed : t.Closed t.summary where
   calls _ _ hf o ho _ hoc hcs :=
     t.summary_le_of_callee hf (SymbolTable.mem_callees.2 ⟨hcs, o, ho, hoc⟩)
 
+/-- What a caller sees of an op that picks its callee is every effect but
+control: its callee is unknown. -/
+theorem SymbolTable.all_le_opOwn {o : Operation d} (hp : o.picks = true) :
+    (Effects.all : Effects (DialectEffects.Mem d)).callerView ≤ t.opOwn o := by
+  simp only [Operation.picks, Bool.and_eq_true, Bool.not_eq_true', beq_iff_eq] at hp
+  have hcall : o.call? = none := by simp [Operation.call?, hp.1, hp.2]
+  have hp' : o.picks = true := by simp [Operation.picks, hp.1, hp.2]
+  unfold SymbolTable.opOwn
+  rw [hcall]
+  simp only [hp', ite_true]
+  exact Effects.callerView_mono (Effects.le_join_right _ _)
+
 /-- What a caller sees of an op is below every effect but control. -/
 theorem SymbolTable.opOwn_le (o : Operation d) : t.opOwn o ≤ Effects.all.callerView := by
   unfold SymbolTable.opOwn
   split
   · split <;> exact Effects.callerView_mono (Effects.le_all _)
-  · exact Effects.callerView_mono (Effects.le_all _)
+  · split <;> exact Effects.callerView_mono (Effects.le_all _)
 
 /-- The summary has no control: what a caller sees of each op has none. -/
 theorem SymbolTable.summary_control (s : Name) : (t.summary s).control = false := by
@@ -121,7 +133,9 @@ theorem SymbolTable.effects_le_opOwn (o : Operation d) : (effects o.op).callerVi
   · split
     · exact Effects.le_refl _
     · exact Effects.callerView_mono (Effects.le_join_left _ _)
-  · exact Effects.le_refl _
+  · split
+    · exact Effects.callerView_mono (Effects.le_join_left _ _)
+    · exact Effects.le_refl _
 
 /-- What a caller sees of the own effects of each op of a function is below
 the function's summary. -/
@@ -155,6 +169,60 @@ theorem SymbolTable.opEffects_le_summary {s : Name} {f : Func d} (hf : t.func? s
           (Effects.le_join_right _ _))) hown)
   · rename_i hc
     rw [hc] at hown
-    exact hown
+    dsimp only at hown
+    split
+    · rename_i hp
+      simp only [hp, ↓reduceIte] at hown
+      exact Effects.callerView_join_le
+        (Effects.le_trans (Effects.callerView_mono (Effects.le_join_left _ _)) hown)
+        (Effects.le_trans (Effects.callerView_mono (Effects.le_trans (Effects.callerView_le _)
+          (Effects.le_join_right _ _))) hown)
+    · rename_i hp
+      simp only [hp, Bool.false_eq_true, ↓reduceIte] at hown
+      exact hown
+
+/-- An effect set below one that leaves out may-UB leaves it out. -/
+theorem Effects.Le.mayUB_false {Mem : Type} {a b : Effects Mem} (h : a ≤ b)
+    (hb : b.mayUB = false) : a.mayUB = false := by
+  cases ha : a.mayUB
+  · rfl
+  · exact absurd (h.mayUB ha) (by simp [hb])
+
+/-- An effect set below one that leaves out may produce poison leaves it
+out. -/
+theorem Effects.Le.mayPoison_false {Mem : Type} {a b : Effects Mem} (h : a ≤ b)
+    (hb : b.mayPoison = false) : a.mayPoison = false := by
+  cases ha : a.mayPoison
+  · rfl
+  · exact absurd (h.mayPoison ha) (by simp [hb])
+
+/-- What a caller sees of an op that picks its callee may be UB and may
+give poison: its callee is unknown (ADR-2026-11-09-1541). -/
+theorem SymbolTable.opOwn_picked (t : SymbolTable d) {o : Operation d}
+    (hT : isTerminator o.op = false) (hc : callee? o.op = some .picked) :
+    (t.opOwn o).mayUB = true ∧ (t.opOwn o).mayPoison = true := by
+  have hcall : o.call? = none := by simp [Operation.call?, hT, hc]
+  have hp : o.picks = true := by simp [Operation.picks, hT, hc]
+  simp [SymbolTable.opOwn, hcall, hp, Effects.callerView, Effects.join, Effects.all]
+
+/-- A function whose summary leaves out may-UB has no op that picks its
+callee. -/
+theorem SymbolTable.not_picked_of_mayUB {t : SymbolTable d} {s : Name}
+    {f : Func d} (hf : t.func? s = some f) (hs : (t.summary s).mayUB = false) {o : Operation d}
+    (ho : o ∈ f.allOps) (hT : isTerminator o.op = false) (hc : callee? o.op = some .picked) :
+    False := by
+  have := ((t.summary_closed.own s f hf o ho).mayUB_false hs)
+  rw [(t.opOwn_picked hT hc).1] at this
+  cases this
+
+/-- A function whose summary leaves out may produce poison has no op that
+picks its callee. -/
+theorem SymbolTable.not_picked_of_mayPoison {t : SymbolTable d} {s : Name}
+    {f : Func d} (hf : t.func? s = some f) (hs : (t.summary s).mayPoison = false)
+    {o : Operation d} (ho : o ∈ f.allOps) (hT : isTerminator o.op = false)
+    (hc : callee? o.op = some .picked) : False := by
+  have := ((t.summary_closed.own s f hf o ho).mayPoison_false hs)
+  rw [(t.opOwn_picked hT hc).2] at this
+  cases this
 
 end Fir

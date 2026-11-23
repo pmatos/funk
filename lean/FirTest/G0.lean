@@ -169,7 +169,7 @@ theorem memProgress (d : Dialect) [TyDenote d.Ty] [DecidableEq d.Ty] [DialectSig
 /-- Every function of every dialect that lifts the set monad and runs within
 its module runs within it with memory, wherever a run names its
 memories. -/
-theorem inModuleAt (d : Dialect) [TyDenote d.Ty] [DialectSignature d] [DialectCall d]
+theorem inModuleAt (d : Dialect) [TyDenote d.Ty] [DecidableEq d.Ty] [DialectSignature d] [DialectCall d]
     [DialectEffects d] [DialectMemDenote d] [DialectDenote d SetM] [LiftsSetM d] {N : Type}
     [DecidableEq N] (lay : N → MemLayout) (ρ : DialectEffects.Mem d → N) (L : RunItems) {M : Module
         d} {f : Func d}

@@ -96,7 +96,7 @@ instance : DialectSignature XDialect where
     | _ => false
   succCount _ := 0
 
-instance : DialectCall XDialect := ⟨fun | .call s => some s | _ => none⟩
+instance : DialectCall XDialect := ⟨fun | .call s => some (.fixed s) | _ => none⟩
 
 /-- The toy dialect has no memory. -/
 instance : DialectEffects XDialect :=
@@ -115,6 +115,7 @@ instance : DialectTrace XDialect where
       exit := fun
         | .ret, _ => pure .ret
         | _, _ => MonadUB.ub "not a terminator"
+      pick := fun _ _ _ => MonadUB.ub "no op picks its callee"
       extCall := fun _ _ _ => (fun (_ : Nat) => []) <$> MonadEvent.emit (7 : Nat) }
 
 /-- The traced semantics of the toy dialect. -/
@@ -170,7 +171,7 @@ theorem xMain_ops (a : Nat) (s : TraceState Unit (unitsOf lay)) :
     (Func.tStepPath_iff (TraceEnd.notStuck_ok _ _ _)).2 hp
   have h := (Func.tStepPath_iff (TraceEnd.notStuck_ok _ _ _)).2
     (Func.TStepPath.ext (o := callPuts) (os := [retOp]) (args := .nil) (vs := [])
-      rfl rfl rfl rfl (by decide) (by decide) (extCall_run a s) rfl rfl hret)
+      rfl rfl rfl (.fixed rfl) (by decide) (by decide) (extCall_run a s) rfl rfl hret)
   simpa [TraceEnd.after] using h
 
 /-! # A rule that gives values of other types -/
@@ -187,7 +188,7 @@ instance : DialectSignature YDialect where
     | _ => false
   succCount _ := 0
 
-instance : DialectCall YDialect := ⟨fun | .call s => some s | _ => none⟩
+instance : DialectCall YDialect := ⟨fun | .call s => some (.fixed s) | _ => none⟩
 
 /-- The second toy dialect has no memory. -/
 instance : DialectEffects YDialect :=
@@ -205,6 +206,7 @@ instance : DialectTrace YDialect where
       exit := fun
         | .ret, _ => pure .ret
         | _, _ => MonadUB.ub "not a terminator"
+      pick := fun _ _ _ => MonadUB.ub "no op picks its callee"
       extCall := fun _ _ _ => pure [⟨.int 8, (.poison : PoisonOr (BitVec 8))⟩] }
 
 /-- The traced semantics of the second toy dialect. -/

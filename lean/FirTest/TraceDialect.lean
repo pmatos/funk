@@ -52,6 +52,7 @@ instance : DialectTrace EmitDialect where
       exit := fun
         | .emit, _ => MonadUB.ub "emit is not a terminator"
         | .ret, _ => pure .ret
+      pick := fun _ _ _ => MonadUB.ub "no emit op picks a callee"
       extCall := fun _ _ _ => MonadUB.ub extCallUB }
 
 /-- The ops of a block that emits, then returns. -/

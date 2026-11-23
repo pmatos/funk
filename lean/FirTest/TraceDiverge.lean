@@ -28,7 +28,8 @@ theorem emit_traceFinite :
     letI := DialectTrace.traceAt (d := EmitDialect) lay Empty.elim RunItems.empty
     OpsTraceFinite EmitDialect Nat Nat (TraceState Unit (unitsOf lay)) := by
   letI := DialectTrace.traceAt (d := EmitDialect) lay Empty.elim RunItems.empty
-  refine ⟨fun op _ args => ?_, fun _ _ _ => TraceFinitelyMany.ub _⟩
+  refine ⟨fun op _ args => ?_, fun _ _ _ => TraceFinitelyMany.ub _,
+    fun op h => by revert h; cases op <;> intro h <;> cases h⟩
   cases op with
   | emit =>
     refine ⟨fun _ s ans => ⟨(ans 0).toList.map fun n => (.nil, [⟨(0 : Nat), n⟩], s),
@@ -126,6 +127,7 @@ instance : DialectTrace OutDialect where
       exit := fun
         | .out, _ => MonadUB.ub "out is not a terminator"
         | .ret, _ => pure .ret
+      pick := fun _ _ _ => MonadUB.ub "no out op picks its callee"
       extCall := fun _ _ _ => MonadUB.ub extCallUB }
 
 /-- In its traced semantics, `out` shows its operand with any answer, and
@@ -183,7 +185,8 @@ theorem out_traceFinite :
     letI := DialectTrace.traceAt (d := OutDialect) lay Empty.elim RunItems.empty
     OpsTraceFinite OutDialect I8 Nat (TraceState Unit (unitsOf lay)) := by
   letI := DialectTrace.traceAt (d := OutDialect) lay Empty.elim RunItems.empty
-  refine ⟨fun op _ args => ?_, fun _ _ _ => TraceFinitelyMany.ub _⟩
+  refine ⟨fun op _ args => ?_, fun _ _ _ => TraceFinitelyMany.ub _,
+    fun op h => by revert h; cases op <;> intro h <;> cases h⟩
   cases op with
   | out =>
     refine ⟨fun _ s ans => ⟨(ans 0).toList.map fun n => (.nil, [⟨outArg args, n⟩], s),
@@ -223,7 +226,8 @@ theorem out_traceOpsMonotone (g : Func OutDialect) :
     g.TraceOpsMonotone (DialectTrace.Acts OutDialect) (TraceState Unit (unitsOf lay)) :=
   letI := DialectTrace.traceAt (d := OutDialect) lay Empty.elim RunItems.empty
   fun _ _ o _ => ⟨fun _ => out_monotone o.op,
-    fun _ _ _ => ExtTraceMonotone.of_ub (fun _ _ _ => rfl) _ _ _⟩
+    fun _ _ _ => ExtTraceMonotone.of_ub (fun _ _ _ => rfl) _ _ _,
+    fun _ h => by revert h; cases o.op <;> intro h <;> cases h⟩
 
 /-- Refined operands: `outMain` run on poison is refined by `outMain` run on
 the value `5`, at every outcome, divergence included. The source shows the

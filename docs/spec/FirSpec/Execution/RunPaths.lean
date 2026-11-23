@@ -14,36 +14,11 @@ when the Lean changes under it.
 
 #doc (Manual) "The ways a step goes on: readable blocks" =>
 
-:::moduleDocs (fingerprint := "7408469410437256861")
+:::moduleDocs (fingerprint := "7618379882577441334")
 :::
 
-:::readable Fir.Ev.NotStuck (fingerprint := "8592670422160197782")
-*Definition: an end that is not stuck.* A path of a run ends with a
-result, with UB, or
-{ref "The-fir-specification--Execution--Outcomes-and-behaviours"}[stuck].
-An end $`e` is _not stuck_ when $`e \neq \mathsf{stuck}~s` for every
-reason $`s`. The refinement proofs of the next sections follow only such
-paths: a stuck path is not an outcome, and refinement compares outcomes.
-:::
-
-:::readable Fir.run_liftExcept_bind Fir.run_lift_bind (fingerprint := "1201202150306426404")
-*Theorems: two kinds of step, read path by path.* Proof plumbing, so that
-the proofs below can read a run one step at a time without unfolding the
-{ref "The-fir-specification--Execution--Outcomes-and-behaviours"}[set monad].
-Let $`g` give a computation for each value, and let $`e` be an end.
-
-* Let $`x` be a check of the interpreter, which gives a value or is
-  stuck, such as looking up an op's operands. If $`e` is not stuck, then
-  $`e` is an end of $`x`, then $`g`, exactly when $`x` gives a value $`a`
-  and $`e` is an end of $`g(a)`.
-* Let $`s` be a computation of the set monad, which is never stuck, such
-  as an op's semantics. Then $`e` is an end of $`s`, then $`g`, exactly
-  when $`s` may end with a value $`a` and $`e` is an end of $`g(a)`, or
-  $`s` may end with $`\mathsf{ub}~r` and $`e = \mathsf{ub}~r`.
-:::
-
-:::readable Fir.Func.StepPath Fir.Func.stepPath_iff (pin := Fir.Func.runOps) (pin := Fir.Ev.NotStuck) (fingerprint := "1878137471061425531")
-*Definition and theorem: the nine ways a step goes on.* Write
+:::readable Fir.Func.StepPath Fir.Func.stepPath_iff (pin := Fir.Func.runOps) (pin := Fir.Ev.NotStuck) (fingerprint := "9492912948227496896")
+*Definition and theorem: the eleven ways a step goes on.* Write
 $`\mathrm{run}_M(n, f, E, o^*)` for the
 {ref "The-fir-specification--Execution--The-interpreter"}[run of the ops]
 $`o^*` of the function $`f` of the module $`M`, in the environment $`E`,
@@ -52,7 +27,7 @@ one of its paths ends with $`e`. A run of ops that returns gives typed
 values $`u^*` and the steps $`k` it leaves: $`\mathsf{ret}~(u^*, k)`.
 
 Take a run $`\mathrm{run}_M(n + 1, f, E, o\,o'^*)` whose first op is $`o`.
-In each of the nine ways, $`o` owns no region of the core's kind, and
+In each of the eleven ways, $`o` owns no region of the core's kind, and
 the values $`v^*` of
 its operands are found in $`E`, of its operand types. When $`o` is a terminator and $`o'^*`
 is empty, its exit $`\mathrm{exit}_o(v^*)` may end:
@@ -72,45 +47,55 @@ $`\mathrm{denote}_o(v^*)` may end:
    $`o`, and the path ends with an end $`e` of
    $`\mathrm{run}_M(n, f, [x^* \mapsto w^*] \cdot E, o'^*)`.
 
-When $`o` is not a terminator and calls the symbol $`s`, the module has
-the function $`g = \mathrm{lookup}_M(s)`, entering it,
-$`\mathrm{enter}_g(v^*)`, starts at the ops $`p^*` in the environment
-$`G`, and its run
-$`\mathrm{run}_M(n, g, G, p^*)` may end:
+When $`o` is not a terminator, it calls a symbol $`s` on arguments
+$`a^*`, with $`n'` steps for the call: $`s` is the symbol that $`o` names,
+$`a^* = v^*` and $`n' = n`; or $`o`'s callee is picked, its rule
+$`\mathrm{pick}_o(\mathrm{callable}_M(\ldots), v^*)` may end with $`s`,
+$`a^*` is $`v^*` but its first value, and $`n = n' + 1`, one step for the
+call (#235). When the module has the function
+$`g = \mathrm{lookup}_M(s)`, entering it, $`\mathrm{enter}_g(a^*)`,
+starts at the ops $`p^*` in the environment $`G`, and its run
+$`\mathrm{run}_M(n', g, G, p^*)` may end:
 
 6. with $`\mathsf{ub}~r`, and the path ends with $`\mathsf{ub}~r`;
 7. with $`\mathsf{fuel\_exhausted}`, and the path ends so;
 8. with $`\mathsf{ret}~(u^*, k)`, the types of $`u^*` are the result types
    of $`o`, the values $`u^*` are as many as the names $`x^*` of the
    results of $`o`, and the path ends with an end $`e` of
-   $`\mathrm{run}_M(\min(k, n), f, [x^* \mapsto u^*] \cdot E, o'^*)`.
+   $`\mathrm{run}_M(\min(k, n'), f, [x^* \mapsto u^*] \cdot E, o'^*)`.
 
-When $`o` is not a terminator and calls the symbol $`s`, no function of
-the module has the symbol $`s`, and the module
+When no function of the module has the symbol $`s`, and the module
 {ref "The-fir-specification--Execution--The-external-call-rule"}[declares]
-$`s` for the operand types and the result types of $`o`:
+$`s` for the types of $`a^*` and the result types of $`o`:
 
 9. the external-call rule, UB in the set monad, ends the path with
    $`\mathsf{ub}`, for the reason that an external call has no meaning
    without a world.
 
+When $`o` is not a terminator and its callee is picked, its rule may also
+end:
+
+10. with $`\mathsf{ub}~r`, and the path ends with $`\mathsf{ub}~r`;
+11. with a symbol, when $`n = 0`: no step is left for the call, and the
+    path ends with $`\mathsf{fuel\_exhausted}`.
+
 Here $`[x^* \mapsto w^*] \cdot E` binds each name to its value in front
 of $`E`, and $`\mathrm{lookup}_M`, $`\mathrm{exit}_o`,
 $`\mathrm{denote}_o` and $`\mathrm{enter}_g` are as in the
 {ref "The-fir-specification--Execution--The-interpreter"}[interpreter],
-which also says why a caller goes on with $`\min(k, n)` steps: a run
+which also says why a caller goes on with $`\min(k, n')` steps: a run
 leaves at most the steps it was given, so this is $`k`.
 
 *Theorem:* for every end $`e` that is not stuck,
 
-$$`\begin{aligned} & e \in \mathrm{run}_M(n + 1, f, E, o\,o'^*) \\ \iff\ & \text{one of the nine ways} \\ & \text{ends with } e \end{aligned}`
+$$`\begin{aligned} & e \in \mathrm{run}_M(n + 1, f, E, o\,o'^*) \\ \iff\ & \text{one of the eleven ways} \\ & \text{ends with } e \end{aligned}`
 
 The refinement proofs of the next sections compare two runs path by path,
 one step at a time. This says once every case of a step, so that they need
 not unfold the interpreter.
 :::
 
-:::readable Fir.Func.run_runOps_zero Fir.Func.run_runOps_nil (pin := Fir.Func.runOps) (pin := Fir.Ev.NotStuck) (fingerprint := "4288955171861612700")
+:::readable Fir.Func.run_runOps_zero Fir.Func.run_runOps_nil (pin := Fir.Func.runOps) (pin := Fir.Ev.NotStuck) (fingerprint := "8840420426461190377")
 *Theorems: a run with no fuel, and a block with no op left.* For every
 module $`M`, function $`f`, environment $`E`, ops $`o^*` and budget $`n`:
 
@@ -120,23 +105,5 @@ module $`M`, function $`f`, environment $`E`, ops $`o^*` and budget $`n`:
   $`\mathrm{run}_M(n + 1, f, E, \epsilon)`: a block with no op left, and
   so no terminator, is stuck.
 
-With the nine ways above, these cover every run of ops.
-:::
-
-:::readable Fir.Func.runOps_exhausted_down (pin := Fir.Ahead) (fingerprint := "5164694788063173760")
-*Theorem: a run that runs out of fuel runs out of fuel with fewer steps.*
-For every module $`M`, budget $`n`, number of steps $`j`, function $`f`,
-environment $`E` and ops $`o^*`, with
-$`R_m = \mathrm{run}_M(m, f, E, o^*)` for every budget $`m`:
-
-$$`\begin{aligned} & \mathsf{fuel\_exhausted} \in R_{n + j} \\ \implies\ & \mathsf{fuel\_exhausted} \in R_n \end{aligned}`
-
-The smaller run takes the same path and runs out sooner. On a call, the
-callee with $`j` fewer steps runs out of fuel too, or returns what it
-returned, leaving $`j` fewer steps, as the section on
-{ref "The-fir-specification--Execution--The-runs-of-a-function___-and-fuel-monotonicity"}[the runs of a function]
-proves; the caller then goes on with $`j` fewer steps. The section on
-{ref "The-fir-specification--Execution--Replacing-a-callee"}[replacing a callee]
-uses this to find, for each argument vector, a budget from which a run
-never runs out of fuel, unless it runs out at every budget.
+With the eleven ways above, these cover every run of ops.
 :::

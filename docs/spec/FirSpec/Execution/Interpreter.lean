@@ -15,7 +15,7 @@ when the Lean changes under it.
 
 #doc (Manual) "The interpreter: readable blocks" =>
 
-:::moduleDocs (fingerprint := "17638791261776399733")
+:::moduleDocs (fingerprint := "13501466706860962814")
 :::
 
 :::readable Fir.HVector.toDVals (pin := Fir.DVal) (fingerprint := "18434733173013260905")
@@ -134,7 +134,21 @@ $`[p_1 \mapsto w_1, \dots, p_m \mapsto w_m]`, which holds the parameters
 and nothing else.
 :::
 
-:::readable Fir.Func.runOps (pin := Fir.Result) (pin := Fir.Exit) (pin := Fir.Stuck) (pin := Fir.Env.operands) (pin := Fir.Env.bind) (pin := Fir.Func.jump) (pin := Fir.Module.func?) (pin := Fir.Func.enter) (pin := Fir.Module.declares) (pin := Fir.DialectExtCall) (fingerprint := "1840235996494125322")
+:::readable Fir.Module.callable (pin := Fir.Module.func?) (pin := Fir.Module.declares) (fingerprint := "8372489265379199028")
+*Definition: the symbols a run can call.* For types $`t^*` and $`r^*`,
+the module $`M` can call the symbol $`s` on arguments of the types $`t^*`
+for results of the types $`r^*`, $`\mathrm{callable}_M(t^*, r^*)(s)`,
+when $`s` names a function of $`M` whose parameter types are $`t^*` and
+whose result types are $`r^*`, or, when $`s` names no function of $`M`,
+when $`M`
+{ref "The-fir-specification--Execution--The-external-call-rule"}[declares]
+$`s` for those types. The run gives this test to the rule of an op whose
+callee is picked when it runs (#235), so that the rule can be UB on a
+symbol that names no function, or one of another signature, as the
+human's ruling of 2026-11-19 on #235 asks.
+:::
+
+:::readable Fir.Func.runOps (pin := Fir.Module.callable) (pin := Fir.Result) (pin := Fir.Exit) (pin := Fir.Stuck) (pin := Fir.Env.operands) (pin := Fir.Env.bind) (pin := Fir.Func.jump) (pin := Fir.Module.func?) (pin := Fir.Func.enter) (pin := Fir.Module.declares) (pin := Fir.DialectExtCall) (fingerprint := "5525764636706261381")
 *Definition: running the ops of a block.* For every dialect, for every way
 of computing in which the dialect's ops have their
 {ref "The-fir-specification--Execution--Effects-and-op-semantics"}[semantics],
@@ -168,16 +182,18 @@ check that fails makes the path stuck:
    $`\mathrm{denote}_o(v^*)`, bind the names of the results of $`o` to the
    values it gives (their counts must agree), and run $`o'^*` with $`n`
    steps.
-5. When $`o` is not a terminator, $`\mathrm{callee}(o)` is the symbol
-   $`s` and $`g = \mathrm{lookup}_M(s)` is a function, enter $`g` with
-   $`v^*`, and run its entry block with $`n` steps, in a frame of its own:
+5. When $`o` is not a terminator, $`\mathrm{callee}(o)` is
+   $`\mathsf{fixed}~s` and $`g = \mathrm{lookup}_M(s)` is a function, enter
+   $`g` with $`v^*`, and run its entry block with $`n` steps, in a frame of
+   its own:
    * when the callee runs out of fuel, so does the caller;
    * when it returns typed values with $`k` steps left, check that their
      types are the result types of $`o`, bind the names of the results of
      $`o` to them (their counts must agree), and run $`o'^*` with
      $`\min(k, n)` steps.
-6. When $`o` is not a terminator, $`\mathrm{callee}(o)` is the symbol
-   $`s` and no function of $`M` has the symbol $`s`, check that $`M`
+6. When $`o` is not a terminator, $`\mathrm{callee}(o)` is
+   $`\mathsf{fixed}~s` and no function of $`M` has the symbol $`s`, check
+   that $`M`
    {ref "The-fir-specification--Execution--The-external-call-rule"}[declares]
    $`s` for the operand types and the result types of $`o`, then run the
    external-call rule,
@@ -186,26 +202,37 @@ check that fails makes the path stuck:
    $`o`, bind the names of the results of $`o` to them (their counts must
    agree), and run $`o'^*` with $`n` steps. A call to a declaration takes
    one step, as an op that runs by its own rule does.
+7. When $`o` is not a terminator and $`\mathrm{callee}(o)` is
+   $`\mathsf{picked}`, run its rule
+   $`\mathrm{pick}_o(\mathrm{callable}_M(t^*, \mathrm{ret}(o)), v^*)`, where
+   $`t^*` is the operand types of $`o` but the first. On a symbol $`s`,
+   with no step left, $`n = 0`, run out of fuel; with $`n = n' + 1`, call
+   $`s` on $`v^*` but its first value, as steps 5 and 6 call a fixed
+   symbol, with $`n'` steps, for the types $`t^*` (#235, the human's ruling
+   of 2026-11-19). The rule takes the op's step, as an op that runs by its
+   own rule does, and the call one more.
 
-Here $`\mathrm{exit}_o`, $`\mathrm{denote}_o`, $`\mathrm{callee}(o)` and
-$`\mathrm{ext}` are what the dialect says of $`o` and of external calls;
+Here $`\mathrm{exit}_o`, $`\mathrm{denote}_o`, $`\mathrm{pick}_o`,
+$`\mathrm{callee}(o)` and $`\mathrm{ext}` are what the dialect says of $`o` and of external calls;
 looking operands up, jumping, looking a
 symbol up and entering a function are the blocks above. Running in a frame
 is the way of computing's
 {ref "The-fir-specification--Execution--The-frame-effect"}[frame effect]:
 with memory, it frees the callee's stack allocations when the callee
 returns (ADR-2026-11-09-1548); with no memory, it changes nothing. Each op takes one
-step, the terminator and the call included, and a callee runs on the steps
+step, the terminator and the call included, an op whose callee is picked
+two, its rule's and its call's, and a callee runs on the steps
 its caller has left, so a caller and all its callees share one budget
 (ADR-2026-10-29-2009). A run gives back at most the steps it was given, as
 {ref "The-fir-specification--Execution--The-runs-of-a-function___-and-fuel-monotonicity"}[the runs of a function]
 shows, so $`\min(k, n)` is $`k`; the minimum makes it plain that the
 budget shrinks at every step, so that every run ends, however deep its
 calls go. When the callee is stuck or ends with UB, so does the caller;
-when the external-call rule ends with UB, so does the caller.
+when the external-call rule ends with UB, so does the caller; when the
+rule that picks a callee ends with UB, so does the run.
 :::
 
-:::readable Fir.Func.run (pin := Fir.Run) (pin := Fir.Func.enter) (pin := Fir.Func.runOps) (fingerprint := "11400075815864987633")
+:::readable Fir.Func.run (pin := Fir.Run) (pin := Fir.Func.enter) (pin := Fir.Func.runOps) (fingerprint := "5408618864847367840")
 *Definition: the run of a function.* For a function $`f` of the module
 $`M`, values $`v^*` of its parameter types and $`\mathit{fuel}` steps of
 fuel, the run enters $`f` with $`v^*`, and runs its entry block with

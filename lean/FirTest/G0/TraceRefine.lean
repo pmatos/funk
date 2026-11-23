@@ -257,7 +257,8 @@ theorem opsTraceFinite_ofLift (d : Dialect) [TyDenote d.Ty] [DialectSignature d]
 exceeds the length of each by at least one. -/
 theorem exists_callBound (d : Dialect) [TyDenote d.Ty] [DecidableEq d.Ty] [DialectSignature d]
     [DialectCall d] (M : Module d) : ∃ W, 0 < W ∧ ∀ os c, M.CallChain os c → c + 1 ≤ W :=
-  M.exists_callBound
+  let ⟨W, hp, h⟩ := M.exists_callBound
+  ⟨W, hp, fun os c hc => Nat.le_of_succ_le (h os c hc)⟩
 
 /-- Refined arguments over traced runs, divergence included, for every
 function of a module of every dialect, events included, whose terminators

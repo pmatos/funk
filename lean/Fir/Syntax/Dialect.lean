@@ -31,6 +31,11 @@ inductive HVector {α : Type} (f : α → Type) : List α → Type where
   | nil : HVector f []
   | cons {a : α} {as : List α} : f a → HVector f as → HVector f (a :: as)
 
+/-- A vector without its first value. -/
+def HVector.tail {α : Type} {f : α → Type} : {as : List α} → HVector f as → HVector f as.tail
+  | [], .nil => .nil
+  | _ :: _, .cons _ vs => vs
+
 /--
 A dialect: its ops and its types.
 

@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "What the lawful class gives: readable blocks" =>
 
-:::moduleDocs (fingerprint := "12360667126087243427")
+:::moduleDocs (fingerprint := "6716170165332288543")
 :::
 
 :::readable Fir.Func.Valid.typesValid (pin := Fir.TypesValid) (pin := Fir.Func.Valid) (pin := Fir.Func.OpValid) (fingerprint := "12496478562471923820")
@@ -34,12 +34,14 @@ obligations speak only of such op instances (ADR-2026-10-29-2006), so
 this is what lets them speak for every op of a valid module.
 :::
 
-:::readable Fir.Func.Valid.opsMonotone (pin := Fir.Func.OpsMonotone) (pin := Fir.TypesValid) (fingerprint := "3009843287580231830")
+:::readable Fir.Func.Valid.opsMonotone (pin := Fir.Func.OpsMonotone) (pin := Fir.TypesValid) (fingerprint := "5799136301322466970")
 *Theorem: in a dialect monotone at valid op instances, a valid function
 has monotone ops.* In every dialect with its validation rules and a
 refinement of its values, suppose that every op instance whose types
 validation accepts, and that is a terminator or has no callee, is
-{ref "The-fir-specification--Execution--Poison-classes"}[monotone]. Then
+{ref "The-fir-specification--Execution--Poison-classes"}[monotone], and
+that every such instance whose callee is picked has a monotone rule to
+pick it. Then
 every function that is valid in some context has
 {ref "The-fir-specification--Execution--Returns-and-UB___-followed-back"}[monotone ops].
 
@@ -48,12 +50,13 @@ run can reach (`docs/decisions/semantics-refinement.md#the-ops-a-run-reaches`), 
 a valid module, by the previous theorem.
 :::
 
-:::readable Fir.Func.progress_of_lawful (pin := Fir.LawfulDialectPoison) (pin := Fir.Progress) (fingerprint := "14203432439168694315")
+:::readable Fir.Func.progress_of_lawful (pin := Fir.LawfulDialectPoison) (pin := Fir.Progress) (fingerprint := "14112795727154047942")
 *Theorem: in a lawful dialect, a function of a module whose functions are
 valid and run within it has progress.* Let the dialect be
 {ref "The-fir-specification--Execution--Poison-classes"}[lawful]: its
 valid op instances meet the poison obligations, among them that each one
-that is a terminator or has no callee is total. Let every function of the
+that is a terminator or has no callee is total, and that each rule that
+picks a callee is total. Let every function of the
 module $`M` be valid in a context $`C`, and run within $`M`, as the
 section on
 {ref "The-fir-specification--Execution--Progress-with-calls"}[progress with calls]
@@ -63,7 +66,8 @@ of its parameter types, the runs of $`f` on $`a` have
 an outcome at every budget. Calls and recursion are included.
 
 Progress with calls asks totality of every terminator and every op with
-no callee of the module, and the class gives it, since each is a valid op
+no callee of the module, and of every rule that picks a callee, and the
+class gives it, since each is a valid op
 instance. No path of such a run is stuck either, whatever its ops do, as
 that section proves.
 
@@ -77,7 +81,7 @@ memory, in the section on
 {ref "The-fir-specification--Memory--Core-functions-with-memory"}[core functions with memory].
 :::
 
-:::readable Fir.Func.runs_args_isRefinedBy_of_lawful (pin := Fir.LawfulDialectPoison) (fingerprint := "14711092829804244707")
+:::readable Fir.Func.runs_args_isRefinedBy_of_lawful (pin := Fir.LawfulDialectPoison) (fingerprint := "5431899758933033506")
 *Theorem: refined arguments, by the lawful class alone.* In every
 {ref "The-fir-specification--Execution--Poison-classes"}[lawful] dialect, let every function of the module $`M` be valid in a context
 $`C`. Then for every function $`f` of $`M` and all argument vectors $`a`
@@ -88,7 +92,8 @@ $$`\mathrm{obs}(F_M(a)) \sqsubseteq \mathrm{obs}(F_M(a'))`
 
 where $`F_M(a)` is the runs of $`f` in $`M` on $`a`. Calls and recursion
 are included. The class makes every terminator and every op with no
-callee monotone at valid op instances, so every function of $`M` has
+callee monotone at valid op instances, and every rule that picks a
+callee, so every function of $`M` has
 {ref "The-fir-specification--Execution--Returns-and-UB___-followed-back"}[monotone ops], and the theorem of
 {ref "The-fir-specification--Execution--Refined-arguments"}[refined arguments]
 applies.
@@ -99,7 +104,7 @@ in the section on
 {ref "The-fir-specification--Memory--Core-functions-with-memory"}[core functions with memory].
 :::
 
-:::readable Fir.Func.runs_replaceBody_isRefinedBy_of_lawful (pin := Fir.LawfulDialectPoison) (pin := Fir.FuncRuns.IsRefinedBy) (fingerprint := "2375913733936981657")
+:::readable Fir.Func.runs_replaceBody_isRefinedBy_of_lawful (pin := Fir.LawfulDialectPoison) (pin := Fir.FuncRuns.IsRefinedBy) (fingerprint := "6002651713180586676")
 *Theorem: congruence in the callee, by the lawful class alone.* In every
 {ref "The-fir-specification--Execution--Poison-classes"}[lawful] dialect whose refinement of values is reflexive and transitive,
 let $`M` be a

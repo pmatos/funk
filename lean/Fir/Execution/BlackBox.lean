@@ -46,6 +46,13 @@ both. A black-box call that the target runs is allowed by the source's call:
 the target's callee starts on arguments of its parameter types, so the
 source's are of the source callee's, and the source's callee ends in a
 way that the black box allows.
+
+An op whose callee is picked (#235) runs its rule in both modules, on
+operands of which the target's refine the source's. When that rule is
+monotone and the target can call each symbol that the source can, the
+source's rule picks the symbol that the target's does, or is UB, so the
+call of the target is one of the source, or allowed by the source's UB
+(`Func.CallsAt.source`).
 -/
 
 namespace Fir
@@ -99,20 +106,23 @@ structure BlackBox (M M' : Module d) (bound : Nat) (g g' : Func d) : Prop where
       ∀ m, bound ≤ m → ¬ (g'.runs M' a' m).outcomes .fuelExhausted
 
 /-- The target module `M'` runs each call as the source `M` does: each
-symbol names the same function in both, or a black box, and the two
-source declares each symbol that the target declares, for the same
-types. -/
+symbol names the same function in both, or a black box; the source
+declares each symbol that the target declares, for the same types; and the
+target can call each symbol that the source can, at the same types, so
+that an op whose rule picks its callee picks no less in the target
+(#235). -/
 def CallsRefined (M M' : Module d) (bound : Nat) : Prop :=
   (∀ s, M'.func? s = M.func? s ∨
     ∃ g g', M.func? s = some g ∧ M'.func? s = some g' ∧ BlackBox M M' bound g g') ∧
-  ∀ s ts rs, M'.declares s ts rs = true → M.declares s ts rs = true
+  (∀ s ts rs, M'.declares s ts rs = true → M.declares s ts rs = true) ∧
+  ∀ ts rs s, M.callable ts rs s = true → M'.callable ts rs s = true
 
 /-- A symbol that the target module calls as an external declaration, the
 source calls as one too. -/
 theorem CallsRefined.ext {M M' : Module d} {bound : Nat} (hc : CallsRefined M M' bound)
     {s : Name} {ts rs : List d.Ty} (hg : M'.func? s = none) (hd : M'.declares s ts rs = true) :
     M.func? s = none ∧ M.declares s ts rs = true :=
-  ⟨Module.func?_none_of_calls hc.1 hg, hc.2 s ts rs hd⟩
+  ⟨Module.func?_none_of_calls hc.1 hg, hc.2.1 s ts rs hd⟩
 
 /-- The way a path ends, with `k` more steps left if it returns. -/
 def Ev.addLeft (k : Nat) :
@@ -125,22 +135,24 @@ omit [TyRefinement d.Ty] in
 so at the budget `N₂`, ends so at `N₁ + N₂ + 1`, leaving the callee's
 steps too. -/
 theorem Func.call_cont {M : Module d} {f g : Func d} {env genv : Env d} {o : Operation d}
-    {os body : List (Operation d)} {args : HVector toType (sig o.op)} {s : Name}
+    {os body : List (Operation d)} {args : HVector toType (sig o.op)} {s : Name} {ts : List d.Ty}
+    {cargs : HVector toType ts} {n n' : Nat}
     {vs : List (DVal d)} {k N₁ N₂ : Nat} {x : Ev (Except Stuck (Result (List (DVal d) × Nat)))}
     (hreg : o.ownsCoreRegion = false) (hargs : env.operands (sig o.op) o.operands = .ok args)
-    (hT : isTerminator o.op = false) (hc : callee? o.op = some s) (hg : M.func? s = some g)
-    (hen : g.enter args.toDVals = .ok (body, genv))
+    (hT : isTerminator o.op = false) (hc : Func.CallsAt M o args n s ts cargs n')
+    (hg : M.func? s = some g) (hen : g.enter cargs.toDVals = .ok (body, genv))
     (hx : (Func.runOps (m := SetM) M N₁ g genv body).run (.ok (.ok (.ret (vs, k)))))
     (hty : vs.map (·.1) = returnTypes o.op) (hlen : (o.results.map (·.1)).length = vs.length)
     (hne : Ev.NotStuck x) (hxe : x ≠ .ok (.ok .fuelExhausted))
     (hcont : (Func.runOps (m := SetM) M N₂ f ((o.results.map (·.1)).zip vs ++ env) os).run x) :
-    (Func.runOps (m := SetM) M (N₁ + N₂ + 1) f env (o :: os)).run (x.addLeft k) := by
+    (Func.runOps (m := SetM) M (N₁ + (n - n') + N₂ + 1) f env (o :: os)).run (x.addLeft k) := by
+  rw [show N₁ + (n - n') + N₂ = N₁ + N₂ + (n - n') by omega]
   have hk := Func.runOps_left_le M N₁ g genv body vs k hx
   have hne' : Ev.NotStuck (x.addLeft k) := by
     intro st h
     match x, h with
     | .ok (.error _), _ => exact hne _ rfl
-  refine (Func.stepPath_iff hne').2 (.callRet hreg hargs hT hc hg hen
+  refine (Func.stepPath_iff hne').2 (.callRet hreg hargs hT (hc.at (N₁ + N₂)) hg hen
     ((Func.runOps_ahead M N₁ N₂ g genv body).up_ret _ _ hx) hty hlen ?_)
   rw [Nat.min_eq_left (Nat.add_le_add_right hk _), Nat.add_comm k]
   have ha := Func.runOps_ahead M N₂ k f ((o.results.map (·.1)).zip vs ++ env) os
