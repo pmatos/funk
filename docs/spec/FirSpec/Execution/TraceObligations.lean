@@ -92,9 +92,10 @@ on arguments $`\vec{v} \sqsubseteq \vec{v}'` of the types $`\vec{t}`, from
 traced states $`s \sqsubseteq s'` on which the two calls agree, each way
 that $`\mathrm{ext}(g, \vec{v}', \vec{r})` may end from $`s'` is allowed by
 a way that $`\mathrm{ext}(g, \vec{v}, \vec{r})` may end from $`s`, by
-refinement of its results. The core's external calls agree when both let
-escape the same allocations, in the same order. The obligation is asked at
-every symbol, since one guarded by its agreement can hold at every symbol.
+refinement of its results. Once #239's stage 3b-2b-3 installs the core's
+rule, the core's external calls will agree when both let escape the same
+allocations, in the same order. The obligation is not narrowed to declared
+symbols, since one guarded by its agreement can hold at every symbol.
 
 *Theorem.* An external-call rule that is UB, with the same reason at every
 symbol, is monotone under every agreement: UB that shows no act allows every

@@ -25,12 +25,15 @@ configurations, the source's and the target's, closed in three ways.
   paired with the target's in the set.
 * _External calls._ When the target calls an external declaration, and the
   source has a call to it on arguments that the target's refine, the
-  source has one where the two calls agree.
+  source has one where the two calls agree. That call shows, by the
+  external-call rule's guarded obligation, that the source has a step
+  matching the target's; the step the proof then takes is the guard's.
 
 Each clause only says which of the source's steps to take; none says that
 one exists, so a guard restates no conclusion of the proofs that use it.
 Where the two calls always agree, as in a dialect whose external calls show
-no event, every set of pairs is a guard (`TCfg.Guard.always`).
+no event, the set of all pairs is a guard (`TCfg.Guard.always`); in one
+module, so are the pairs of equal configurations (`TCfg.Guard.eq`).
 
 A step of a frame that the source takes goes on as the source's run of the
 ops after it, so a path of the step's next configuration that the target's

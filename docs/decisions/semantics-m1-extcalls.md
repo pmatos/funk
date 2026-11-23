@@ -71,18 +71,23 @@ handed to the world below; stage 3b-2c lets validation accept the call.
   engine's obligation for the external-call rule takes an agreement of the
   two calls (`ExtTraceMonotone`, `lean/Fir/Execution/TraceObligations.lean`),
   by default the one that always holds; the core's will be "both let
-  escape the same allocations, in the same order". A guarded obligation
-  holds at every symbol, so it is asked at every symbol, not narrowed to
-  the declared ones. The run-level condition is a _guard_ (`TCfg.Guard`,
+  escape the same allocations, in the same order" (stage 3b-2b-3). A
+  guarded obligation can hold at every symbol, so a call whose callee is
+  picked is asked it at every symbol, and a call that names its callee at
+  that symbol, with no narrowing to the declared symbols. The run-level
+  condition is a _guard_ (`TCfg.Guard`,
   `lean/Fir/Execution/TraceGuard.lean`): a set of pairs of configurations,
   the source's and the target's, holding the pair the run starts from and
   closed under the source's choices. Where the source has a step that
   matches the target's, the guard has one; where the target enters a
   callee both modules run, the guard pairs the two entries; and where the
   target calls a declaration, the guard has a source call where the two
-  agree. No clause says the source has a step, so the guard restates no
-  conclusion, and the pairs of equal configurations form one. The engine
-  of returns and UB (`Func.traceOps_tAllowed`) takes the source's step
+  agree, which shows that the source has a matching step. No clause says
+  the source has a step, so the guard restates no conclusion. In one
+  module, under an agreement that every call has with itself, and when
+  refinement of values and acts is reflexive, the pairs of equal
+  configurations form a guard, so equal arguments meet the condition. The
+  engine of returns and UB (`Func.traceOps_tAllowed`) takes the source's step
   from the guard. This form is an agent's choice, made in #239's stage
   3b-2b-1, not a ruling. Rejected: every source path that goes in step
   agrees at each external call, which fails for equal arguments when the

@@ -17,8 +17,8 @@ of the same ops at some budget, comparing acts. Calls, black boxes and
 recursion are included. An external-call rule may be monotone only where
 two calls agree, so the two runs start from a pair of a guard
 (`Fir.Execution.TraceGuard`), and the source takes, at each step, the step
-that the guard picks: at each external call, one where the two calls
-agree.
+that the guard picks; at an external call, the guard's call where the two
+calls agree shows that the source has a matching step.
 
 The proof is the one with memory (`Fir.Execution.MemoryRefineUp`), read in
 the traced layer, by strong induction on the target's budget, for every
@@ -39,10 +39,12 @@ function at once and from every traced state:
   black box's behaviours, which speak of the traced states the call starts
   and ends in. A call to an external declaration in the target is one in
   the source, which runs the same rule, monotone where the two calls agree,
-  as they do at the call that the guard picks.
+  as they do at the call that the guard gives, so the source has a matching
+  step.
 * When the source's callee returns at one budget, and the rest of the
   source's run is allowed at another, the source's run is allowed at their
-  sum plus one: with more fuel the callee returns with more steps left
+  sum plus the steps the call takes before its callee's, plus one: with
+  more fuel the callee returns with more steps left
   (`Fir.Execution.TraceAhead`), and the rest ends as it did.
 -/
 

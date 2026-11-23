@@ -27,11 +27,12 @@ A call to an external declaration runs by the dialect's external-call rule
 types of each call that goes to it, on arguments that refine others and
 from traced states that refine others, where the two calls _agree_, each
 way it may end is allowed by a way it may end on those others. The
-agreement is the obligation's own condition: the core's external calls are
-monotone only where both let escape the same allocations, in the same
-order (the human's rulings of 2026-11-21 and 2026-11-22 on #239, Q4 and
-Q6). By default the calls always agree. A rule that is UB, as in a dialect
-whose ops show no event, meets it under every agreement. A guarded
+agreement is the obligation's own condition: once #239's stage 3b-2b-3
+installs the core's rule, the core's external calls are monotone only
+where both let escape the same allocations, in the same order (the
+human's rulings of 2026-11-21 and 2026-11-22 on #239, Q4 and Q6). By
+default the calls always agree. A rule that is UB, as in a dialect whose
+ops show no event, meets it under every agreement. A guarded
 obligation can hold at every symbol, so it is asked at every symbol, not
 only at those the module declares.
 
@@ -249,11 +250,11 @@ those types that refine others, from traced states that refine others, when
 the two calls agree, what it gives refines what it gives on those others.
 It is an obligation of its own, beside each op's, so that a dialect whose
 external calls show events can state the condition under which they are
-monotone (#239): the core's agree when both let escape the same
-allocations, in the same order. By default the calls always agree. The
-obligation is asked at every symbol: one guarded by its agreement can hold
-at symbols the module does not declare too, so it is not narrowed to the
-declared ones. -/
+monotone (#239): once its rule is installed, the core's will agree when
+both let escape the same allocations, in the same order. By default the
+calls always agree. The obligation is asked at every symbol: one guarded by
+its agreement can hold at symbols the module does not declare too, so it is
+not narrowed to the declared ones. -/
 def ExtTraceMonotone [DialectExtCall d (TraceM B σ)] (g : Name) (ts rs : List d.Ty)
     (agree : List (DVal d) → σ → List (DVal d) → σ → Prop := ExtAgree.always) : Prop :=
   ∀ args args' : HVector toType ts, args.Forall₂ TyRefinement.IsRefinedBy args' →

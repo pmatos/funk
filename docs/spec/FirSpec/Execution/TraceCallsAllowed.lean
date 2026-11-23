@@ -30,7 +30,9 @@ configurations are paired in a guard under that agreement,
 each path of the target's run of
 $`os` at any budget is allowed at some budget by the source's run of the
 same ops, comparing acts. The source takes, at each step, the step that
-the guard picks, at each external call one where the two calls agree. A
-callee's return at the budget $`N_1` and the rest's at $`N_2` give the
-whole's at $`N_1 + N_2 + 1`.
+the guard picks; at an external call, the guard's call where the two calls
+agree shows that the source has a matching step. A callee's return at the
+budget $`N_1` and the rest's at $`N_2` give the whole's at
+$`N_1 + N_2 + \delta + 1`, where $`\delta` is the steps the call takes
+before its callee's.
 :::
