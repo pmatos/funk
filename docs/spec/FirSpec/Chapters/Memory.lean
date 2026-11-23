@@ -35,9 +35,10 @@ an integer, a float or a pointer type becomes units of a memory, and units
 a value again, at every byte order. It ends with traces: the events that a
 run shows to the world outside it, the layer in which a run shows them, and
 refinement of the traced runs of functions for every world
-(ADR-2026-11-09-1540), what the world sees, the core's events, and the
-core's traced runs, on which refined arguments and congruence in the
-callee hold.
+(ADR-2026-11-09-1540), what the world sees, the core's events, what an
+external call lets escape and the core's rule for one, and the core's
+traced runs, on which refined arguments and congruence in the callee
+hold.
 
 {includeReadable "." Fir.Memory.Model "The memory model" FirSpec.Memory.Model (level := 1)}
 
@@ -320,6 +321,14 @@ callee hold.
 {includeReadable "." Fir.Execution.TraceSeen "What the world sees" FirSpec.Execution.TraceSeen (level := 1)}
 
 {includeReadable "." Fir.Core.Event "The core's events" FirSpec.Core.Event (level := 1)}
+
+{includeReadable "." Fir.Execution.TraceEscape "What an external call lets escape" FirSpec.Execution.TraceEscape (level := 1)}
+
+{includeReadable "." Fir.Execution.TraceEscapeLaws "What an external call lets escape is the closure" FirSpec.Execution.TraceEscapeLaws (level := 1)}
+
+{includeReadable "." Fir.Execution.TraceWorldRefine "What the world gives, on refined traced states" FirSpec.Execution.TraceWorldRefine (level := 1)}
+
+{includeReadable "." Fir.Core.ExtCallRule "The core's traced external-call rule" FirSpec.Core.ExtCallRule (level := 1)}
 
 {includeReadable "." Fir.Core.Trace "The core's traced runs" FirSpec.Core.Trace (level := 1)}
 

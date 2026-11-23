@@ -204,6 +204,22 @@ def runMain (t : BitVec 8) (fuel : Nat) : String :=
 -- With one step after the constant, the rule picks and no step is left for the call.
 #guard runMain 1 2 == "fuel"
 
+/-- `@sel` calls the entry of `[@f, @g]` that its parameter `%t` picks, on
+`%x`. -/
+def sel : Func PickDialect :=
+  { fn "sel" [mk [("r", int 8)] (.pcall 8 ["f", "g"]) ["t", "x"], mk [] (.ret 8) ["r"]] with
+    params := [("t", int 8), ("x", int 8)] }
+
+/-- The run of `@sel` on the selector `t` and `%x = 5`, with ten steps. -/
+def runSel (t : PoisonOr (BitVec 8)) : String :=
+  outcome (Func.run (m := ChoiceTree Empty)
+    { items := [.func f, .func g, .func sel], locs := [(0, .unknown)] } sel
+    (.cons t (.cons (.value 5) .nil)) 10)
+
+-- A selector passed in picks as a constant one does; a poison selector is UB.
+#guard runSel (.value 1) == "ret 5"
+#guard runSel .poison == "ub"
+
 /-! # The picking dialect is lawful -/
 
 /-- The rule that picks has an outcome on every operand vector. -/

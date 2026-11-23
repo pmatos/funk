@@ -24,16 +24,14 @@ Tier: direction; area: semantics
   `DialectCall`, fixed by its symbol or picked by the op's rule when it runs,
   and the interpreter runs the callee in the run's module. The call effect is
   the run's, not a class on the monad. Fuel is the interpreter's argument:
-  every op takes one step (an op that picks its callee, two: below), a
-  callee gets the steps its caller has left and
+  every op takes a step, a callee gets the steps its caller has left and
   gives back the rest, and the recursion is well-founded on the budget. Fuel
   must not change what a program means, nor any result of `fir-ref`.
 - **A callee picked when the op runs** (#235). The op's rule maps its
   operands to a symbol, or is UB, given the module's test of which symbols
   take the call's types; the call then runs like a direct call on the
-  operands but the first (ruled 2026-11-19, #235 Q2). The step count is
-  not part of that ruling: the rule takes the op's step and the call one
-  more, so that every step a traced run shows costs a step of fuel.
+  operands but the first (ruled 2026-11-19, #235 Q2). Its step count is
+  on the area page.
 - **A call to a declaration** goes to the external-call rule, a part of the
   semantics of its own (ruled 2026-11-21, #239 Q1).
 
@@ -66,6 +64,3 @@ it. Lean is both. A Lean function must terminate, and fir programs may loop.
 - **The interpreter resolving pointers itself, or a chain of fixed calls,**
   for an indirect call (#235 Q2): the first needs UB of the interpreter's
   own, the second makes an op's meaning depend on the whole table.
-- **The rule and the call in one step:** a picked external call would show
-  two steps for one step of fuel, and the bound of a traced run's fuel by
-  its steps would fail.

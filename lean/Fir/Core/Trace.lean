@@ -15,9 +15,10 @@ semantics runs each op by its rule with memory, lifted onto the memories of
 the traced state: no op shows an event. An external call is not an op's
 rule: the run hands a call to a declaration to the core's external-call
 rule (`Fir.Execution.ExtCall`), which is to show the event (the human's
-ruling of 2026-11-21 on #239, Q1). Until #239's next stage gives it that
-event and the world's answer, the core's external-call rule is its rule
-with memory, UB, lifted, so the core's traced semantics lifts its semantics
+ruling of 2026-11-21 on #239, Q1). That rule is defined
+(`Fir.Core.ExtCallRule`) but not yet installed: until #239's next stage
+makes it the core's, the core's external-call rule is its rule with
+memory, UB, lifted, so the core's traced semantics lifts its semantics
 with memory, and its traced runs show no act, let nothing escape, and end
 as its runs with memory, each return seen at its end
 (`Fir.Execution.TraceLift`).

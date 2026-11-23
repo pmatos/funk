@@ -108,6 +108,18 @@ semantics-m1-trace.md.
   (`Core.traceOpsMonotone`, `Gpu.traceOpsMonotone`). Rejected: escaped
   lists related only by the renaming of allocations, which refined
   arguments do not need: both runs allocate the same ids, in step.
+- **The core's external-call rule, on its own.** The core's traced
+  external-call rule (`Core.traceExtCall`, defined but not yet the core's
+  rule) meets the obligation only under a condition: on arguments and
+  traced states that refine others, it is monotone when the two calls
+  leave equal escaped lists, the same allocations in the same order
+  (`Core.traceExtCall_isRefinedBy`), and not otherwise (Q4, Q6). It has an
+  outcome from every traced state, gives values of the call's result
+  types, and has finitely many outcomes given the world's answers
+  (`Core.traceExtCall_finite`), so it meets the hypothesis of divergence
+  as it is. How the engine carries the condition to whole runs, and the
+  conditions of Q4 to Q6 on refined arguments and congruence in the
+  callee, are #239's stage 3b-2b.
 - **Refined arguments run in step.** On arguments that refine others, a
   function's traced runs and its runs on those others run the same ops at
   the same budget, with the same steps left after each return. So each

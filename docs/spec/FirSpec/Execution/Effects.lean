@@ -98,8 +98,8 @@ LeanMLIR's (ADR-2026-10-29-2009).
 *Definition: the callee of an op.* An op that calls a function names its
 callee, $`\mathsf{fixed}~s` for the symbol $`s`, as $`\mathsf{call}~@g`
 names $`@g`; or its callee is $`\mathsf{picked}`: the op's rule picks the
-symbol when the op runs, from its first operand, as a call through a
-pointer does (#235), and the op passes its other operands to the callee.
+symbol when the op runs, from its operands, as a call through a pointer
+does (#235), and the op passes its operands but the first to the callee.
 :::
 
 :::readable Fir.DialectCall (fingerprint := "8339298151678921278")

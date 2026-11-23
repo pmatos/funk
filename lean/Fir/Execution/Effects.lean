@@ -107,10 +107,11 @@ naming the callee of `call` is what gives `call` its meaning.
 
 An op may instead call a function that its rule picks when it runs, as a
 call through a pointer does (#235, the human's ruling of 2026-11-19, Q2).
-Its rule, `pick`, maps its first operand to a symbol, and is UB when that
-operand names no function, or one whose signature is not the call's. The
-call then runs as a call of that symbol does, with the op's other operands
-as the callee's arguments. The rule is the dialect's, so UB stays in the
+Its rule, `pick`, sees all of its operands and maps them to a symbol; by
+convention its first operand is the one that names the callee, and the rule
+is UB when that operand names no function, or one whose signature is not
+the call's. The call then runs as a call of that symbol does, with the op's
+other operands as the callee's arguments. The rule is the dialect's, so UB stays in the
 dialect's semantics, where every other UB is; the run only says where the
 call starts and where it returns. Such an op takes two steps of fuel: one
 for its rule, which picks the callee, as an op that runs by its own rule
@@ -121,8 +122,8 @@ op names does.
 /--
 The callee of an op that calls a function: a symbol that the op names, as
 `call @g` names `@g`, or one that the op's rule picks when it runs, from
-the op's first operand, as a call through a pointer does (#235). An op
-whose callee is picked passes its other operands to the callee.
+the op's operands, as a call through a pointer does (#235). An op whose
+callee is picked passes its operands but the first to the callee.
 -/
 inductive Callee where
   | fixed (s : Name)

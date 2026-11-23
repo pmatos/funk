@@ -175,7 +175,8 @@ the rule: total, monotone, finitely many outcomes, one step in the traced
 layer of marked traces (`PickTotal`, `PickMonotone`, `MemPickTotal`,
 `MemPickMonotone`, `OpTracePickMonotone`, and a part of `OpsFinite`,
 `OpsTraceFinite`, `OpsStepFinite` and `OpsOneStep`). What a caller sees of
-such an op is every effect, since its callee is unknown (ADR-2026-11-09-1541).
+such an op is every effect but control, since its callee is unknown
+(ADR-2026-11-09-1541).
 No core op picks its callee yet, so the core's and `CoreGpu`'s guarantees keep
 their statements. A test dialect whose op picks its callee runs the case in
 the spec's interpreter (`FirTest.PickDialect`) and in `fir-ref`'s machine
