@@ -59,8 +59,8 @@ before `choices`:
   every escaped allocation, each allocation that a returned pointer points
   into, and each that a unit of a live allocation reached points into. A
   pointer into a freed allocation is dangling and reaches nothing. Each entry
-  gives the memory, the allocation id, the kind (`stack`, `global` or
-  `heap`; `gpu.work_group_alloca` allocates a `global`), the alignment in
+  gives the memory, the allocation id, the kind (`stack`, `global`, `heap`
+  or `function`; `gpu.work_group_alloca` allocates a `global`), the alignment in
   units, the size in units and whether it is live. A live allocation also
   gives its `units`; a freed one does not, since only live allocations are
   compared. An id that the memory never made has `"kind":null` and nothing

@@ -17,7 +17,7 @@ pins their fingerprint; the build fails when the Lean changes under it.
 :::moduleDocs (fingerprint := "17639485498606785954")
 :::
 
-:::readable Fir.Core.Op.effects_touchesNoMemory Fir.Core.Op.touchesMemory_false Fir.Core.reachesNoMemory Fir.Core.reachesNoMemory_of_all (pin := Fir.Core.Op.effects) (fingerprint := "7607465697785066442")
+:::readable Fir.Core.Op.effects_touchesNoMemory Fir.Core.Op.touchesMemory_false Fir.Core.reachesNoMemory Fir.Core.reachesNoMemory_of_all (pin := Fir.Core.Op.effects) (fingerprint := "1671589362666217513")
 *Theorems: a core op declares a memory effect exactly when it touches
 memory, and a core function with no allocation, load, store, copy, move,
 fill or turn of a pointer into an integer or back in reach reaches no
@@ -45,7 +45,7 @@ core's memories, each core op that declares no memory effect ignores the
 memories: such an op touches no memory, so either it reads no item and is
 {ref "The-fir-specification--Memory--The-core___s-rules-with-memory"}[tied],
 running by its rule in the set monad and keeping the memories, or it is
-$`\mathsf{fieldaddr}` or $`\mathsf{globaladdr}`, which read an item, not
+$`\mathsf{fieldaddr}`, $`\mathsf{globaladdr}` or $`\mathsf{funcaddr}`, which read an item, not
 memory, and give their results at once and keep them
 ({ref "The-fir-specification--Memory--Field-address-obligations"}[field address obligations],
 {ref "The-fir-specification--Memory--Global-address-obligations"}[global address obligations]).
@@ -71,7 +71,7 @@ by its own rule; the loads and stores of an integer, a pointer or a
 float have no tie either, and have at most one that ends
 ({ref "The-fir-specification--Memory--Load-obligations"}[load obligations],
 {ref "The-fir-specification--Memory--Store-obligations"}[store obligations]).
-$`\mathsf{fieldaddr}` and $`\mathsf{globaladdr}` have no tie, and have
+$`\mathsf{fieldaddr}`, $`\mathsf{globaladdr}` and $`\mathsf{funcaddr}` have no tie, and have
 one outcome by their own rules
 ({ref "The-fir-specification--Memory--Field-address-obligations"}[field address obligations],
 {ref "The-fir-specification--Memory--Global-address-obligations"}[global address obligations]).

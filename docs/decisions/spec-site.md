@@ -163,8 +163,9 @@ module's pin. A change to a proof needs neither. An edit to module docs alone
 needs no new pin. A module that declares nothing has no pin.
 
 Every module under `lean/Fir` is in the spec. `firspec` fails when
-`docs/spec/FirSpec.lean` has no `{includeReadable}` or `{includeLiterate}` line
-for a module. These checks run in the `fir-spec` hook.
+`docs/spec/FirSpec.lean`, and the chapters it includes, at any depth, have no
+`{includeReadable}` or `{includeLiterate}` line for a module. These checks run
+in the `fir-spec` hook.
 
 The gaps that got no check:
 

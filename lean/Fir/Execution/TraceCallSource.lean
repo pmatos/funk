@@ -63,9 +63,10 @@ for each symbol on its operands but the first when its callee is picked. -/
 theorem Func.TCallsAt.extMonotone {M : Module d} {o : Operation d}
     {args : HVector toType (sig o.op)} {s : TraceState Mem unit} {n n' : Nat} {sym : Name}
     {ts : List d.Ty} {cargs : HVector toType ts} {t₀ : List B} {s₁ : TraceState Mem unit}
+    {agree : List (DVal d) → TraceState Mem unit → List (DVal d) → TraceState Mem unit → Prop}
     (h : Func.TCallsAt M o args s n sym ts cargs n' t₀ s₁) (hT : isTerminator o.op = false)
-    (hops : TraceMonotoneOps B (TraceState Mem unit) [o]) :
-    ExtTraceMonotone (B := B) (σ := TraceState Mem unit) sym ts (returnTypes o.op) := by
+    (hops : TraceMonotoneOps B (TraceState Mem unit) [o] agree) :
+    ExtTraceMonotone (B := B) (σ := TraceState Mem unit) sym ts (returnTypes o.op) agree := by
   cases h with
   | fixed hc => exact (hops o List.mem_cons_self).2.1 hT _ hc
   | picked hc => exact ((hops o List.mem_cons_self).2.2 hT hc).2 sym

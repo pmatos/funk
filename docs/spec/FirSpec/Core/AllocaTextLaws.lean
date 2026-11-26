@@ -27,7 +27,7 @@ every other type that validation rejects still reads back from how it is
 written.
 :::
 
-:::readable Fir.Core.word_of_decodeKind Fir.Core.decodeAlign_toList Fir.Core.toList_of_decodeAlign (pin := Fir.Core.decodeKind) (pin := Fir.Core.decodeAlign) (fingerprint := "9492308974726069381")
+:::readable Fir.Core.word_of_decodeKind Fir.Core.decodeAlign_toList Fir.Core.toList_of_decodeAlign (pin := Fir.Core.decodeKind) (pin := Fir.Core.decodeAlign) (fingerprint := "18020428960593163238")
 *Theorems: a kind and an alignment read back only from their spelling.*
 The word that names a kind is that kind's word. An alignment, none or
 $`a`, reads back from how it is written, nothing or $`\mathtt{align}(a)`,

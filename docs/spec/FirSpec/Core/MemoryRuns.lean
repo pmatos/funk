@@ -24,7 +24,7 @@ terminator and each core op with no callee is
 at every layout and naming: it is total in the set monad, and it is
 {ref "The-fir-specification--Memory--The-core___s-rules-with-memory"}[tied],
 or it is $`\mathsf{alloca}`, a load, a store, $`\mathsf{fieldaddr}`,
-$`\mathsf{globaladdr}`, a copy, a move, a fill, $`\mathsf{ptr\_expose}`
+$`\mathsf{globaladdr}`, $`\mathsf{funcaddr}`, a copy, a move, a fill, $`\mathsf{ptr\_expose}`
 or $`\mathsf{ptr\_from\_int}`, total with memory by its own rule
 ({ref "The-fir-specification--Memory--Stack-allocation-obligations"}[stack allocation obligations],
 {ref "The-fir-specification--Memory--Load-obligations"}[load obligations],
@@ -42,7 +42,7 @@ terminator and each core op with no callee is
 {ref "The-fir-specification--Memory--Monotonicity-with-memory"}[monotone with memory],
 at every layout and naming: it is monotone in the set monad, and it is
 tied, or it is $`\mathsf{alloca}`, a load, a store, $`\mathsf{fieldaddr}`,
-$`\mathsf{globaladdr}`, a copy, a move, a fill, $`\mathsf{ptr\_expose}`
+$`\mathsf{globaladdr}`, $`\mathsf{funcaddr}`, a copy, a move, a fill, $`\mathsf{ptr\_expose}`
 or $`\mathsf{ptr\_from\_int}`, monotone by its own rule.
 :::
 
@@ -53,7 +53,7 @@ core op instance that propagates poison
 and returns a result on some defined operands with memory, at every layout
 and naming of the core's memories: it meets both in the set monad, and it
 is tied, or it is $`\mathsf{alloca}`, a load, a store, $`\mathsf{fieldaddr}`,
-$`\mathsf{globaladdr}`, a copy, a move, a fill or
+$`\mathsf{globaladdr}`, $`\mathsf{funcaddr}`, a copy, a move, a fill or
 $`\mathsf{ptr\_from\_int}`, which meets both by its own rule. A
 poison value of each valid core type is refined by every value of the
 type.
@@ -88,7 +88,7 @@ or not, is
 {ref "The-fir-specification--Memory--Monotonicity-with-memory"}[monotone with memory],
 at every layout and naming: it is monotone in the set monad and tied, or
 it is $`\mathsf{alloca}`, a load, a store, $`\mathsf{fieldaddr}`,
-$`\mathsf{globaladdr}`, a copy, a move, a fill, $`\mathsf{ptr\_expose}`
+$`\mathsf{globaladdr}`, $`\mathsf{funcaddr}`, a copy, a move, a fill, $`\mathsf{ptr\_expose}`
 or $`\mathsf{ptr\_from\_int}`, monotone by its own rule. These are what the
 theorems below ask of the core's ops.
 :::

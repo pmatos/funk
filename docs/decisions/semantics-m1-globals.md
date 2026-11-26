@@ -99,7 +99,8 @@ memory `n` is memory `n`, and a sum's are its base's; a dialect that numbers
 none starts from empty memories. So the guarantees over runs with memory,
 the #384 ones and their `CoreGpu` counterparts included, keep their
 statements: they hold for every record of the items. A function's address
-will be another starting allocation, of the kind `function` (#235). This
+is another starting allocation, of the kind `function`, after the globals
+of memory 0 ([semantics-m1-functions.md](semantics-m1-functions.md)). This
 is the agent's design for #237, not a ruling. Rejected: a start given to
 each run as an argument, which would change the statements of the
 guarantees.

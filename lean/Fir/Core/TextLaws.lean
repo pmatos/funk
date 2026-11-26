@@ -12,7 +12,7 @@ import Fir.Core.FloatOpTextLaws
 
 /-!
 The core dialect's text is lawful: it meets the seven laws of a lawful
-text, for all 53 of its ops and every type. The laws are proved for every
+text, for all 54 of its ops and every type. The laws are proved for every
 op instance, valid or not: every width, `0` included, every predicate, every
 combination of flags, `true` and `false` at `i1`, every float constant at
 every format, and `ret` and `call` with any number of operands and results. A type reads back from how it is
@@ -196,6 +196,8 @@ theorem Op.decode_encode (o : Op) : Op.decode o.name o.attrs o.sig o.returnTypes
     simpa [Op.name, Op.attrs, Op.returnTypes, Op.decode] using decodeFieldAddr_attrs s j n w
   | globalAddr s n =>
     simpa [Op.name, Op.attrs, Op.returnTypes, Op.decode] using decodeGlobalAddr_attrs s n
+  | funcAddr s n =>
+    simpa [Op.name, Op.attrs, Op.returnTypes, Op.decode] using decodeFuncAddr_attrs s n
   | alloca k t c a n =>
     simpa [Op.name, Op.attrs, Op.sig, Op.returnTypes, Op.decode] using
       decodeAlloca_allocaAttrs k t c a n
@@ -356,6 +358,8 @@ theorem Op.encode_decode {n : String} {as : List Attr} {ts rs : List Ty} {o : Op
     exact ⟨rfl, ha, hs, hr⟩
   · obtain ⟨_, _, rfl, ha, hs, hr⟩ := decodeGlobalAddr_eq h -- globaladdr
     exact ⟨rfl, ha, hs, hr⟩
+  · obtain ⟨_, _, rfl, ha, hs, hr⟩ := decodeFuncAddr_eq h -- funcaddr
+    exact ⟨rfl, ha, hs, hr⟩
   · exact decodeAlloca_eq h -- alloca
   · exact decodeLoad_eq h -- load
   · exact decodeStore_eq h -- store
@@ -440,6 +444,7 @@ theorem Op.attrs_writable (o : Op) : Attr.AllWritable o.attrs := by
   | call => exact ⟨trivial, trivial⟩
   | fieldAddr => exact ⟨trivial, trivial, trivial⟩
   | globalAddr => exact ⟨trivial, trivial⟩
+  | funcAddr => exact ⟨trivial, trivial⟩
   | alloca k t c a => exact allocaAttrs_writable k t c a
   | load o _ a | store o _ a | loadPtr o _ a | storePtr o _ a | loadFloat o _ _ a
   | storeFloat o _ _ a => exact loadAttrs_writable o a
@@ -452,7 +457,7 @@ namespace Fir
 
 /-! # The laws -/
 
-/-- The core dialect's text meets the eight laws, for all 53 core ops and
+/-- The core dialect's text meets the eight laws, for all 54 core ops and
 every core type. -/
 theorem Core.lawfulDialectText : LawfulDialectText CoreDialect where
   decodeOp_encode := Core.Op.decode_encode

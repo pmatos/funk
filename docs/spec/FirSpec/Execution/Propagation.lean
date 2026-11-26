@@ -193,7 +193,7 @@ since no valid program runs it. Each core op that touches no memory and
 reads no item of the run meets the obligations, as the section on
 {ref "The-fir-specification--Execution--The-core-dialect___s-poison-obligations"}[the core dialect's poison obligations]
 proves. $`\mathsf{alloca}`, the loads and stores, $`\mathsf{fieldaddr}`,
-$`\mathsf{globaladdr}`, the copies and moves, the fills,
+$`\mathsf{globaladdr}`, $`\mathsf{funcaddr}`, the copies and moves, the fills,
 $`\mathsf{ptr\_expose}` and $`\mathsf{ptr\_from\_int}` have no rule in the
 set monad, so the core
 dialect as a whole is not lawful here: it meets the lawful classes with

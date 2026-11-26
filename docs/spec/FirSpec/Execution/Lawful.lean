@@ -73,7 +73,7 @@ that section proves.
 
 The core dialect is not lawful in the set monad, since
 $`\mathsf{alloca}`, the loads and stores, $`\mathsf{fieldaddr}`,
-$`\mathsf{globaladdr}`, the copies and moves, the fills,
+$`\mathsf{globaladdr}`, $`\mathsf{funcaddr}`, the copies and moves, the fills,
 $`\mathsf{ptr\_expose}` and $`\mathsf{ptr\_from\_int}` have no rule there, so this
 theorem does not apply to
 it. Progress for every function of a valid core module is stated with

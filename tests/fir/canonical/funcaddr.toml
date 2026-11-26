@@ -1,0 +1,34 @@
+# Tests of funcaddr.fir: the address of a function (#235 stage 2). A
+# function's address is an allocation of the kind function, in memory 0,
+# with no units, made when the run starts and live for the whole run (the
+# human's ruling of 2026-11-19 on #235, Q1). A run starts memory 0 with
+# the table's globals, @msg and @tbl at ids 0 and 1, then one allocation
+# for each function of the table in its order, so @inc is 2 and @dec 3.
+# @load_through, @store_through and @moved access a function's allocation,
+# which has no unit, so each access is out of bounds: UB. @distance
+# exposes both addresses: each function takes an address of its own, and
+# the canonical layout puts @dec two after @inc. @round_trip turns @dec's
+# exposed address back into its pointer. @stack_table and @global_table
+# store both addresses in a table of function pointers, on the stack and
+# in a global, and load the one at %i back; @same compares a loaded one
+# with @dec's by their exposed addresses. A run of @dev's function holds
+# its own table's function only, so @k is its memory 0's allocation 0.
+# The backend does not lower funcaddr yet (#235 stage 4), and funk build
+# builds a module all or nothing, so every test is interpreter-only.
+tests = [
+  { func = "@addresses", expect = ["ptr(2, 0)", "ptr(3, 0)"] },
+  { func = "@load_through", expect = "ub" },
+  { func = "@store_through", args = ["1"], expect = "ub" },
+  { func = "@moved", args = ["0"], expect = "ub" },
+  { func = "@moved", args = ["-1"], expect = "ub" },
+  { func = "@distance", expect = ["2"] },
+  { func = "@round_trip", expect = ["ptr(3, 0)"] },
+  { func = "@stack_table", args = ["0"], expect = ["ptr(2, 0)"] },
+  { func = "@stack_table", args = ["1"], expect = ["ptr(3, 0)"] },
+  { func = "@global_table", args = ["0"], expect = ["ptr(2, 0)"] },
+  { func = "@global_table", args = ["1"], expect = ["ptr(3, 0)"] },
+  { func = "@same", args = ["0"], expect = ["false"] },
+  { func = "@same", args = ["1"], expect = ["true"] },
+  { func = "@msg_byte", expect = ["104"] },
+  { func = "@dev::@k", expect = ["ptr(0, 0)"] },
+]

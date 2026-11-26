@@ -1,6 +1,6 @@
 # Tests of pointer-offset.fir: ptradd moves a pointer by an integer of any
-# width, read as signed, in units of its memory (#231). A run starts with no
-# allocation, so the only pointer argument is poison, and ptradd of poison is
+# width, read as signed, in units of its memory (#231). No argument names
+# an allocation, so the only pointer argument is poison, and ptradd of poison is
 # poison whatever the integer; the rule on pointers that allocations give is
 # checked in Lean (lean/Fir/Core/Pointer.lean). Native code takes no
 # poison pointer, so each test is interpreter-only; memory-native.toml runs

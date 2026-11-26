@@ -20,7 +20,7 @@ second for a callee that reaches no memory:
   and keeps the memories, and its rule in the set monad is the set of its
   rule in the tree of choices, whose choices of _w_ bits have 2 to the
   power _w_ options. The ops with no tie count by their own rules:
-  `alloca`, `fieldAddr` and `globalAddr` have one outcome, the loads
+  `alloca`, `fieldAddr`, `globalAddr` and `funcAddr` have one outcome, the loads
   `load`, `loadPtr`
   and `loadFloat` and the stores `store`, `storePtr` and `storeFloat` at
   most one that ends, and `memCopy` and `memSet` at most one that ends for
@@ -46,7 +46,7 @@ The core dialect meets what the general theorems ask:
   memory when no function that its run may reach has one of them. The form
   with memory asks it of `@g`;
 * each core op that declares no memory effect ignores the memories, since
-  it touches none: it is tied, or it is `fieldAddr` or `globalAddr`, which
+  it touches none: it is tied, or it is `fieldAddr`, `globalAddr` or `funcAddr`, which
   read an item of the run, not memory, and give their results at once. The ops that touch
   memory declare that they allocate, read or write it, so none is asked;
 * the core dialect is lawful in its monotonicity, the refinement of core
@@ -111,7 +111,7 @@ variable {N : Type} [DecidableEq N] (lay : N → MemLayout)
 
 /-- Each core op ignores the memories where it declares no memory effect,
 at every layout and naming: it runs by its rule in the set monad and keeps
-the memories, or, for `fieldAddr` and `globalAddr`, gives its result at
+the memories, or, for `fieldAddr`, `globalAddr` and `funcAddr`, gives its result at
 once and keeps them. -/
 theorem opsIgnoreMemory :
     letI := DialectMemDenote.denoteAt (d := CoreDialect) lay ρ L
@@ -125,6 +125,7 @@ theorem opsIgnoreMemory :
     cases op <;> try cases hi
     · exact fieldAddr_ignoresMemory _ _ _ _ lay ρ L
     · exact globalAddr_ignoresMemory _ _ lay ρ L
+    · exact funcAddr_ignoresMemory _ _ lay ρ L
 
 variable {M : Module CoreDialect} {f : Func CoreDialect}
 
@@ -133,7 +134,7 @@ memory, at every layout and naming. An op that touches no memory and reads
 no item of the run runs by its rule in the set monad and keeps the
 memories, and its rule in the set monad is the set of its rule in the tree
 of choices, whose choices of bits have finitely many options. `alloca`, the
-loads and stores, `fieldAddr`, `globalAddr`, `memCopy`, `memSet`,
+loads and stores, `fieldAddr`, `globalAddr`, `funcAddr`, `memCopy`, `memSet`,
 `ptrExpose` and `ptrFromInt` have finitely many by their own rules. -/
 theorem opsFinite :
     letI := DialectMemDenote.denoteAt (d := CoreDialect) lay ρ L
@@ -159,6 +160,7 @@ theorem opsFinite :
     cases op <;> try cases hi
     · exact ⟨fun _ => fieldAddr_finitelyMany _ _ _ _ lay ρ L args, fun h => nomatch h⟩
     · exact ⟨fun _ => globalAddr_finitelyMany _ _ lay ρ L args, fun h => nomatch h⟩
+    · exact ⟨fun _ => funcAddr_finitelyMany _ _ lay ρ L args, fun h => nomatch h⟩
   | false => ?_
   have hm := denoteIn_mapsDenote (ChoiceTree.toSetMorphism (ε := Op)) ChoiceTree.toSet_keeps
     (fun op => .noOutcome op) (fun _ _ => False) fun _ => rfl

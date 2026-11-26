@@ -14,10 +14,10 @@ build fails when the Lean changes under it.
 
 #doc (Manual) "The core dialect's text, checked: readable blocks" =>
 
-:::moduleDocs (fingerprint := "1221933980183446650")
+:::moduleDocs (fingerprint := "591660039486255839")
 :::
 
-:::readable Fir.Core.samples (pin := Fir.instDialectTextCoreDialect) (fingerprint := "15014363738350414335")
+:::readable Fir.Core.samples (pin := Fir.instDialectTextCoreDialect) (fingerprint := "430043894705164766")
 *Definition: the core dialect's text, and one instance of every core op.*
 The functions of the
 {ref "The-fir-specification--Text-format--The-core-dialect-in-text"}[previous section],
@@ -26,7 +26,7 @@ $`\mathrm{tyattr}` and $`\mathrm{decodety}`, are the core dialect's
 {ref "The-fir-specification--Text-format--Grammar"}[text], so the parser
 and the printer of every dialect read and write core modules. The samples
 are a list of op instances that
-holds each of the 53 core ops at least once, both bit casts, both conversions from integers, both conversions between formats, both conversions to integers, the pointer offset in three memories, the field address with and without an index, in three memories and of a symbol that is not a word, the address of a global in three memories and of a symbol that is not a word, and $`\mathsf{alloca}` of each kind, with and without a count and an alignment, of an integer, a pointer and a float type, and $`\mathsf{load}` and $`\mathsf{store}` of an integer with
+holds each of the 54 core ops at least once, both bit casts, both conversions from integers, both conversions between formats, both conversions to integers, the pointer offset in three memories, the field address with and without an index, in three memories and of a symbol that is not a word, the address of a global in three memories and of a symbol that is not a word, the address of a function in three memories and of a symbol that is not a word, and $`\mathsf{alloca}` of each kind, with and without a count and an alignment, of an integer, a pointer and a float type, and $`\mathsf{load}` and $`\mathsf{store}` of an integer with
 four of their orderings each, and of a pointer and of a float with three, with and without an alignment, $`\mathsf{memcpy}` and $`\mathsf{memmove}` with two orderings each, $`\mathsf{memset}` with two orderings and values of three widths, and $`\mathsf{ptr\_expose}` and $`\mathsf{ptr\_from\_int}` in three memories at three widths each, among them, with each of the ten
 predicates and each of the fourteen float predicates, at widths from 1 to
 128, float constants at `f32`, `f64`, `f16` and

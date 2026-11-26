@@ -3,12 +3,13 @@
 # would without them. @table is a table of pointers to @msg, @counter has no
 # initializer, and @self points into itself. A run on fir-ref starts with
 # each global's allocation (#237 stage 2a), so the four globals of memory 0
-# take its ids 0 to 3 and @after_globals's alloca gets id 4. The address op
+# take its ids 0 to 3, then its two functions' allocations take 4 and 5
+# (#235 Q1), and @after_globals's alloca gets id 6. The address op
 # globaladdr has tests of its own, in globaladdr.fir, and since stage 3
 # native code holds the globals in .data, .rodata and .bss.
 # @after_globals returns a pointer, which native code returns as an
 # address, so its test is interpreter-only.
 tests = [
   { func = "@msg_size" },
-  { func = "@after_globals", expect = ["ptr(4, 0)"] },
+  { func = "@after_globals", expect = ["ptr(6, 0)"] },
 ]

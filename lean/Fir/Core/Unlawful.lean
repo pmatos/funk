@@ -29,7 +29,7 @@ on poison obligations with memory).
 
 The core's own semantics in the set monad does not meet the poison
 obligations either: `alloca`, the loads and stores, of an integer, a
-pointer or a float, `fieldAddr`, `globalAddr`, `memCopy`, `memSet`,
+pointer or a float, `fieldAddr`, `globalAddr`, `funcAddr`, `memCopy`, `memSet`,
 `ptrExpose` and `ptrFromInt` have no rule there, so
 totality rejects it. Its semantics with memory, where they have their rules, meets the
 obligations with memory (the section on core functions with memory), so

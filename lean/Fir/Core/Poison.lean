@@ -6,9 +6,9 @@ import Fir.Core.OpEffects
 /-!
 # The poison classes of the core ops
 
-Every one of the 53 core ops has a class (ADR-2026-10-29-2006).
+Every one of the 54 core ops has a class (ADR-2026-10-29-2006).
 
-Forty-five ops propagate poison: `const`, the float constant `fconst`,
+Forty-six ops propagate poison: `const`, the float constant `fconst`,
 `poison`, `add`, `sub`, `mul`, `sdiv`, `udiv`, `srem`, `urem`, `and`, `or`,
 `xor`, `shl`, `lshr`, `ashr`, `icmp`, `fcmp`, `zext`, `sext`, `trunc`, the
 three ops of float arithmetic: `fbin` (`fadd`, `fsub`, `fmul`, `fdiv`,
@@ -16,7 +16,8 @@ three ops of float arithmetic: `fbin` (`fadd`, `fsub`, `fmul`, `fdiv`,
 casts `toBits` and `ofBits`, the two conversions from integers,
 `sitofp` and `uitofp`, the two conversions between formats, `fpext`
 and `fptrunc`, the pointer offset `ptradd`, the field address
-`fieldAddr`, the address of a global `globalAddr`, the two conversions to
+`fieldAddr`, the address of a global `globalAddr`, the address of a
+function `funcAddr`, the two conversions to
 integers, `fptosi` and `fptoui`, the stack allocation `alloca`, the
 load `load`, which is immediate UB on a poison pointer, as a defined
 pointer in its place may fault, and the store `store`, which is too, and
@@ -32,7 +33,8 @@ its length, and writes the poison units of a poison value, as `store`
 does. `ptrFromInt` gives a poison pointer for a poison integer, and
 counts the call as a defined integer does, so memories that refine others
 keep counting as many calls.
-`const`, `fconst`, `poison`, `globalAddr` and `alloca` have no operands,
+`const`, `fconst`, `poison`, `globalAddr`, `funcAddr` and `alloca` have
+no operands,
 so they propagate poison whatever their semantics. `poison` meets the
 obligation of a result on defined operands too: its one operand vector,
 the empty one, holds no poison, and on it `poison` returns a result, the
@@ -103,7 +105,7 @@ def Op.poisonClass : Op → PoisonClass
   | .urem _ | .and _ | .or _ | .xor _ | .shl _ | .lshr _ | .ashr _ | .icmp .. | .fcmp ..
   | .fbin .. | .funary .. | .fma .. | .zext .. | .sext .. | .trunc .. | .poison _
   | .toBits .. | .ofBits .. | .sitofp .. | .uitofp .. | .fpext .. | .fptrunc .. | .ptradd ..
-  | .fieldAddr .. | .globalAddr .. | .fptosi .. | .fptoui .. | .alloca .. | .load .. | .store ..
+  | .fieldAddr .. | .globalAddr .. | .funcAddr .. | .fptosi .. | .fptoui .. | .alloca .. | .load .. | .store ..
   | .loadPtr .. | .storePtr .. | .loadFloat .. | .storeFloat .. | .memCopy .. | .memSet ..
   | .ptrFromInt .. => .propagates
   | .ptrExpose .. | .select _ | .freeze _ | .br | .condBr | .ret _ | .unreachable | .call .. => .exception

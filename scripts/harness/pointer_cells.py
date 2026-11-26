@@ -30,6 +30,10 @@ backend lowers an index of each width it lowers (stage 4 of #236).
 The address of a global `globaladdr` (#237) is one cell, whatever its
 global and its memory, as a call's callee is not part of its cell. Both
 sides have it: the backend lowers it as `leaq g(%rip)` (stage 3 of #237).
+
+The address of a function `funcaddr` (#235) is one cell too, whatever its
+function and its memory. Only the interpreter-only side has it until the
+backend lowers it (stage 4 of #235).
 """
 
 from cell_types import Cell, CellError, Row, Table, is_pointer
@@ -43,6 +47,9 @@ FIELDS = "fields"
 # The address of a global, and its table of one cell (#237).
 GLOBAL_ADDR = "globaladdr"
 GLOBALS = "globals"
+# The address of a function, and its table of one cell (#235).
+FUNC_ADDR = "funcaddr"
+FUNCTIONS = "functions"
 # The column of the pointer cells of `alloca`, `load` and `store`.
 POINTER = "ptr"
 # The float formats of `alloca`, `load` and `store` on each side (#264).
@@ -151,10 +158,10 @@ def field_table(widths: tuple[str, ...]) -> Table:
     return Table(FIELDS, columns, (row,))
 
 
-def global_address(op: Op) -> Cell:
-    """The cell of a `globaladdr`: one, whatever its global's symbol and
-    the memory of its result. Any other text of it does not decode, so it
-    is not a cell."""
+def item_address(op: Op) -> Cell:
+    """The cell of a `globaladdr` or a `funcaddr`: one, whatever its item's
+    symbol and the memory of its result. Any other text of it does not
+    decode, so it is not a cell."""
     attrs_decode = len(op.attrs) == 1 and op.attrs[0].startswith("@")
     if (
         attrs_decode
@@ -162,11 +169,10 @@ def global_address(op: Op) -> Cell:
         and len(op.results) == 1
         and is_pointer(op.results[0])
     ):
-        return Cell(GLOBALS, op.name, "", "")
+        return Cell(GLOBALS if op.name == GLOBAL_ADDR else FUNCTIONS, op.name, "", "")
     raise CellError(f"{op.name} of {op.operands} to {op.results} is not a cell")
 
 
-def global_table() -> Table:
-    """The table of `globaladdr`'s one cell."""
-    row = Row(GLOBAL_ADDR, "", (Cell(GLOBALS, GLOBAL_ADDR, "", ""),))
-    return Table(GLOBALS, ("",), (row,))
+def item_table(table: str, op: str) -> Table:
+    """The table of one cell of `globaladdr` or of `funcaddr`."""
+    return Table(table, ("",), (Row(op, "", (Cell(table, op, "", ""),)),))

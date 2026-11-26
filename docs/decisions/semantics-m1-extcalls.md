@@ -67,6 +67,33 @@ handed to the world below; stage 3b-2c lets validation accept the call.
   this on 2026-11-22, on #239 (Q5). Rejected: keep the theorem
   unconditional, and ask that the new callee hold no pointer wherever the
   old one returned or left poison.
+- **The condition binds the source path the proof picks.** The traced
+  engine's obligation for the external-call rule takes an agreement of the
+  two calls (`ExtTraceMonotone`, `lean/Fir/Execution/TraceObligations.lean`),
+  by default the one that always holds; the core's will be "both let
+  escape the same allocations, in the same order" (stage 3b-2b-3). A
+  guarded obligation can hold at every symbol, so a call whose callee is
+  picked is asked it at every symbol, and a call that names its callee at
+  that symbol, with no narrowing to the declared symbols. The run-level
+  condition is a _guard_ (`TCfg.Guard`,
+  `lean/Fir/Execution/TraceGuard.lean`): a set of pairs of configurations,
+  the source's and the target's, holding the pair the run starts from and
+  closed under the source's choices. Where the source has a step that
+  matches the target's, the guard has one; where the target enters a
+  callee both modules run, the guard pairs the two entries; and where the
+  target calls a declaration, the guard has a source call where the two
+  agree, which shows that the source has a matching step. No clause says
+  the source has a step, so the guard restates no conclusion. In one
+  module, under an agreement that every call has with itself, and when
+  refinement of values and acts is reflexive, the pairs of equal
+  configurations form a guard, so equal arguments meet the condition. The
+  engine of returns and UB (`Func.traceOps_tAllowed`) takes the source's step
+  from the guard. This form is an agent's choice, made in #239's stage
+  3b-2b-1, not a ruling. Rejected: every source path that goes in step
+  agrees at each external call, which fails for equal arguments when the
+  source chooses, as `memcpy` with a poison length does. Stages 3b-2b-2
+  and 3b-2b-3 thread the guard through divergence and congruence, then
+  install the core's rule.
 - **What "the same" escapes means.** The no-new-escape condition of Q4
   and Q5 compares the escaped lists as ordered lists: the same
   allocations, in the same order, since the world names each by its

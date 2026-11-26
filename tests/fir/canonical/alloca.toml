@@ -4,7 +4,9 @@
 # fir-ref writes a pointer as ptr(A, O): its allocation's id in its memory
 # and its offset. Ids count the allocations of a memory in the order a run
 # makes them, freed ones included, so a second allocation, after a call's
-# stack allocations were freed or not, has the next id. Until loads and
+# stack allocations were freed or not, has the next id. A run starts memory
+# 0 with one allocation for each of the file's nine functions (#235 Q1),
+# ids 0 to 8, so its first alloca there gets id 9. Until loads and
 # stores (stage 4e of #231) and the run's observations (#233), a test sees
 # only the pointers that a run returns; that the frame frees each stack
 # allocation is checked in Lean (FirTest/Alloca.lean). Each function
@@ -12,15 +14,15 @@
 # pointer of the spec, so each test is interpreter-only;
 # memory-native.toml runs alloca natively.
 tests = [
-  { func = "@one", expect = ["ptr(0, 0)"] },
-  { func = "@four", expect = ["ptr(0, 0)"] },
-  { func = "@bytes", expect = ["ptr(0, 0)"] },
-  { func = "@widest_align", expect = ["ptr(0, 0)"] },
-  { func = "@two", expect = ["ptr(1, 0)"] },
-  { func = "@moved", args = ["5"], expect = ["ptr(0, 5)"] },
-  { func = "@moved", args = ["-3"], expect = ["ptr(0, -3)"] },
+  { func = "@one", expect = ["ptr(9, 0)"] },
+  { func = "@four", expect = ["ptr(9, 0)"] },
+  { func = "@bytes", expect = ["ptr(9, 0)"] },
+  { func = "@widest_align", expect = ["ptr(9, 0)"] },
+  { func = "@two", expect = ["ptr(10, 0)"] },
+  { func = "@moved", args = ["5"], expect = ["ptr(9, 5)"] },
+  { func = "@moved", args = ["-3"], expect = ["ptr(9, -3)"] },
   { func = "@moved", args = ["poison"], expect = ["poison"] },
-  { func = "@after_call", expect = ["ptr(1, 0)"] },
-  { func = "@loop", args = ["0"], expect = ["ptr(0, 0)"] },
-  { func = "@loop", args = ["3"], expect = ["ptr(3, 0)"] },
+  { func = "@after_call", expect = ["ptr(10, 0)"] },
+  { func = "@loop", args = ["0"], expect = ["ptr(9, 0)"] },
+  { func = "@loop", args = ["3"], expect = ["ptr(12, 0)"] },
 ]

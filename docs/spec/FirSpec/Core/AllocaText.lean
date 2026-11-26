@@ -14,13 +14,14 @@ when the Lean changes under it.
 
 #doc (Manual) "Stack allocation in text: readable blocks" =>
 
-:::moduleDocs (fingerprint := "3304312749807501853")
+:::moduleDocs (fingerprint := "8872931360444942873")
 :::
 
-:::readable Fir.Memory.AllocKind.word Fir.Core.decodeKind Fir.Core.decodeKind_word (pin := Fir.Memory.AllocKind) (fingerprint := "3216539511333506316")
+:::readable Fir.Memory.AllocKind.word Fir.Core.decodeKind Fir.Core.decodeKind_word (pin := Fir.Memory.AllocKind) (fingerprint := "2018839294045944405")
 *Definition: the words of the kinds of an allocation.* The
 {ref "The-fir-specification--Memory--The-memory-model"}[kinds] of an
-allocation are written as the words `stack`, `global` and `heap`, and each
+allocation are written as the words `stack`, `global`, `heap` and
+`function`, and each
 word reads back as the kind it writes. No other word names a kind.
 :::
 

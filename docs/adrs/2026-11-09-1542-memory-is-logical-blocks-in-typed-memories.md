@@ -34,7 +34,10 @@ Tier: direction; area: semantics
   finite. A test whose observations depend on an exposed address is
   interpreter-only.
 - **Hooks.** Memory ops carry an `ordering` attribute, and M1 accepts only
-  `nonatomic`. Allocations carry a kind: stack, global or heap.
+  `nonatomic`. Allocations carry a kind: stack, global, heap or function.
+  A function's address is an allocation of the kind function, with no
+  units, which takes an address of its own when exposed (the human's
+  ruling of 2026-11-19 on #235, Q1; ADR-2026-11-23-0906).
 
 [semantics-m1-design.md](../decisions/semantics-m1-design.md) states each
 rule. The human ruled this on 2026-11-09, on #206.

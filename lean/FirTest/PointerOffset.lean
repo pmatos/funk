@@ -5,7 +5,7 @@ import FirTest.ValidateOps
 Tests of #231's pointer offset `ptradd`. Its rule is checked on concrete
 pointers in `Fir/Core/Pointer.lean`, and its laws are proved; these check
 it through `FirRef.runBytes`, which computes what `fir-ref run` writes, and
-through validation. A run starts with no allocation, so its only pointer
+through validation. No argument names an allocation, so its only pointer
 argument is poison, and `ptradd` of poison is poison, at every width of the
 integer and in every memory. They also check that `ptradd` takes no choice,
 in exhaustive mode, that a pointer it gives is one of its operand's memory,

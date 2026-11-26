@@ -160,6 +160,11 @@ interpreter-only side's is filled by `globaladdr.fir` and
 `globals-programs.fir`, whose tests return what a global's address
 reaches, never the address.
 
+The address of a function `funcaddr` has a table of one cell too
+(`pointer_cells.FUNCTIONS`, #235), on the interpreter-only side only
+(`coverage.Side.func_addrs`) until the backend lowers it (stage 4 of
+#235): `funcaddr.fir` fills it.
+
 A test exercises each op of the function it runs and of every function it calls,
 directly or through others. A function of a nested module, such as a kernel
 `@dev::@k`, counts too, and its calls go to its own module's functions (#406).

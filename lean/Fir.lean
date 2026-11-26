@@ -70,6 +70,8 @@ import Fir.Core.FieldAddr
 import Fir.Core.FieldAddrText
 import Fir.Core.GlobalAddr
 import Fir.Core.GlobalAddrText
+import Fir.Core.FuncAddr
+import Fir.Core.FuncAddrText
 import Fir.Core.FloatToInt
 import Fir.Core.Control
 import Fir.Core.Branch
@@ -181,6 +183,7 @@ import Fir.Core.PtrInt
 import Fir.Core.PtrIntLaws
 import Fir.Core.FieldAddrLaws
 import Fir.Core.GlobalAddrLaws
+import Fir.Core.FuncAddrLaws
 import Fir.Core.EffectLaws
 import Fir.Core.EffectUnlawful
 import Fir.Core.AddressLaws
@@ -236,6 +239,7 @@ import Fir.Execution.TraceReplace
 import Fir.Execution.TraceBranch
 import Fir.Execution.TraceCallPace
 import Fir.Execution.TraceMoves
+import Fir.Execution.TraceGuard
 import Fir.Execution.TraceMoveCases
 import Fir.Execution.TraceMoveFinite
 import Fir.Execution.TraceGood

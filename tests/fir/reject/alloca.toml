@@ -190,8 +190,23 @@ locs {
 '''
 
 [[reject]]
+verdict = "validation-error"
+rule = "alloca allocates on the stack in M1: the kind function decodes and is rejected"
+text = '''
+func @f() -> ptr {
+^e:
+  %p: ptr = alloca function i32 @0
+  ret %p @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
 verdict = "parse-error"
-rule = "alloca's kind is stack, global or heap: frame does not decode"
+rule = "alloca's kind is stack, global, heap or function: frame does not decode"
 text = '''
 func @f() -> ptr {
 ^e:

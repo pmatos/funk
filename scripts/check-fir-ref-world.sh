@@ -103,6 +103,8 @@ fi
 # The memory an observer reaches is walked with no stack per allocation: a
 # chain of 10,000 work-group allocations, each holding a pointer into the
 # one before it, on a 256 KiB stack. The walk reaches them from the last.
+# Memory 0 starts with @chain's own allocation (#235), so the work-group
+# allocations take the ids from 1.
 n=10000
 {
     printf 'module @dev() {\n  dialects gpu\n\n  func @chain() -> ptr {\n  ^e:\n'
@@ -114,27 +116,27 @@ n=10000
     printf '    ret %%p%d @0\n  }\n}\n\nlocs {\n  @0 = unknown\n}\n' "$n"
 } >"$tmp/chain.fir"
 {
-    printf '{"kind":"return","values":["ptr(%d, 0)"],"trace":[],"escaped":[],"memory":[' "$n"
-    for i in $(seq "$n" -1 1); do
+    printf '{"kind":"return","values":["ptr(%d, 0)"],"trace":[],"escaped":[],"memory":[' "$((n + 1))"
+    for i in $(seq "$((n + 1))" -1 2); do
         printf '{"memory":0,"alloc":%d,"kind":"global","align":8,"size":8,"live":true,"units":[' "$i"
         for k in 0 1 2 3 4 5 6; do printf '"frag(0, ptr(%d, 0), %d)",' "$((i - 1))" "$k"; done
         printf '"frag(0, ptr(%d, 0), 7)"]},' "$((i - 1))"
     done
-    printf '{"memory":0,"alloc":0,"kind":"global","align":8,"size":8,"live":true,"units":['
+    printf '{"memory":0,"alloc":1,"kind":"global","align":8,"size":8,"live":true,"units":['
     printf '"poison","poison","poison","poison","poison","poison","poison","poison"]}],"choices":0}'
 } >"$tmp/chain.want"
 # shellcheck disable=SC2086
 (ulimit -c 0 && LEAN_STACK_SIZE_KB=256 runs 0 "$(<"$tmp/chain.want")" $w "$tmp/chain.fir" @dev::@chain) ||
     status=1
 # A work-group allocation of 100,000 units is reported with no stack per
-# unit, on a 256 KiB stack.
+# unit, on a 256 KiB stack. It follows @wide's own allocation.
 {
     printf 'module @dev() {\n  dialects gpu\n\n  func @wide() -> ptr {\n  ^e:\n'
     printf '    %%p: ptr = gpu.work_group_alloca i8 100000 @0\n    ret %%p @0\n  }\n}\n'
     printf '\nlocs {\n  @0 = unknown\n}\n'
 } >"$tmp/wide.fir"
 units=$(printf '"poison",%.0s' $(seq 100000))
-wide='{"kind":"return","values":["ptr(0, 0)"],"trace":[],"escaped":[],"memory":[{"memory":0,"alloc":0,"kind":"global","align":1,"size":100000,"live":true,"units":['"${units%,}"']}],"choices":0}'
+wide='{"kind":"return","values":["ptr(1, 0)"],"trace":[],"escaped":[],"memory":[{"memory":0,"alloc":1,"kind":"global","align":1,"size":100000,"live":true,"units":['"${units%,}"']}],"choices":0}'
 # shellcheck disable=SC2086
 (ulimit -c 0 && LEAN_STACK_SIZE_KB=256 runs 0 "$wide" $w "$tmp/wide.fir" @dev::@wide) || status=1
 exit "$status"

@@ -17,7 +17,7 @@ fingerprint; the build fails when the Lean changes under it.
 :::moduleDocs (fingerprint := "15187118450536989398")
 :::
 
-:::readable Fir.Core.Op.neverUB_all (pin := Fir.Core.Op.effects) (pin := Fir.NeverUBSetM) (fingerprint := "9919072384800343234")
+:::readable Fir.Core.Op.neverUB_all (pin := Fir.Core.Op.effects) (pin := Fir.NeverUBSetM) (fingerprint := "13673521206187614997")
 *Theorem: each core op that does not declare may-UB never ends in UB in
 the set monad.*
 Every core op but $`\mathsf{sdiv}`, $`\mathsf{udiv}`, $`\mathsf{srem}`,
@@ -31,8 +31,8 @@ $`\mathsf{freeze}`, the float arithmetic and the conversions from
 integers and between formats after choosing bits, and $`\mathsf{br}` and
 $`\mathsf{ret}` go to their successor or return. $`\mathsf{call}` has no
 rule of its own, and
-$`\mathsf{alloca}`, $`\mathsf{fieldaddr}`, $`\mathsf{globaladdr}` and
-$`\mathsf{ptr\_from\_int}` none in the set monad, so none of them has an
+$`\mathsf{alloca}`, $`\mathsf{fieldaddr}`, $`\mathsf{globaladdr}`,
+$`\mathsf{funcaddr}` and $`\mathsf{ptr\_from\_int}` none in the set monad, so none of them has an
 outcome by one.
 :::
 
@@ -66,7 +66,7 @@ $`\mathsf{mul}` that does not declare $`\mathsf{mayPoison}` has no flags.*
 Its flags $`f` are neither $`\mathsf{nuw}` nor $`\mathsf{nsw}`.
 :::
 
-:::readable Fir.Core.Op.makesNoPoison_all (pin := Fir.Core.Op.effects) (pin := Fir.MakesNoPoisonSetM) (fingerprint := "16168902469067889196")
+:::readable Fir.Core.Op.makesNoPoison_all (pin := Fir.Core.Op.effects) (pin := Fir.MakesNoPoisonSetM) (fingerprint := "8895265842701505755")
 *Theorem: each core op that does not declare $`\mathsf{mayPoison}` makes no
 poison in the set monad.* On operands with no poison, $`\mathsf{const}`, $`\mathsf{add}`,
 $`\mathsf{sub}` and $`\mathsf{mul}` without flags, $`\mathsf{sdiv}` and
@@ -79,14 +79,14 @@ $`\mathsf{freeze}` gives bits, and a float op's NaN, and a zero of either
 sign under $`\mathsf{nsz}`, are defined bits too: without those two
 flags no operand breaks a flag. $`\mathsf{call}` gives no result by a rule
 of its own, $`\mathsf{alloca}`, the stores of an integer, a pointer or
-a float, $`\mathsf{fieldaddr}`, $`\mathsf{globaladdr}`, the copies and
+a float, $`\mathsf{fieldaddr}`, $`\mathsf{globaladdr}`, $`\mathsf{funcaddr}`, the copies and
 moves, the fills, $`\mathsf{ptr\_expose}` and $`\mathsf{ptr\_from\_int}`
 none in the set monad, and the terminators give none. The loads of
 an integer, a pointer or a float declare $`\mathsf{mayPoison}`, so the
 obligation asks nothing of them.
 :::
 
-:::readable Fir.Core.Op.notControl_all (pin := Fir.Core.Op.effects) (fingerprint := "9393491820976536758")
+:::readable Fir.Core.Op.notControl_all (pin := Fir.Core.Op.effects) (fingerprint := "4708970209860708141")
 *Theorem: each core op that does not declare $`\mathsf{control}` is not a
 terminator.* The core terminators are $`\mathsf{br}`,
 $`\mathsf{cond\_br}`, $`\mathsf{ret}` and $`\mathsf{unreachable}`, and each
@@ -98,7 +98,7 @@ $`\mathsf{control}`.
 *Theorem: the core dialect is lawful in its effects.* Every effect that a
 core op leaves out, it does not have. Every core op but
 $`\mathsf{alloca}`, the loads and stores, $`\mathsf{fieldaddr}`,
-$`\mathsf{globaladdr}`, the copies and moves, the fills,
+$`\mathsf{globaladdr}`, $`\mathsf{funcaddr}`, the copies and moves, the fills,
 $`\mathsf{ptr\_expose}` and $`\mathsf{ptr\_from\_int}` touches no memory
 and reads no item: each is
 {ref "The-fir-specification--Memory--The-core___s-rules-with-memory"}[tied],
@@ -126,7 +126,9 @@ writes, reads and allocates in no memory, as its empty effect set
 declares. $`\mathsf{globaladdr}` meets each by
 {ref "The-fir-specification--Memory--Global-address-obligations"}[its own rule with memory]:
 it is never UB, its result is never poison, and it writes, reads and
-allocates in no memory, as its empty effect set declares.
+allocates in no memory, as its empty effect set declares, and so does
+$`\mathsf{funcaddr}` by
+{ref "The-fir-specification--Memory--Function-address-obligations"}[its own rule with memory].
 $`\mathsf{memcpy}` and $`\mathsf{memmove}` meet each by
 {ref "The-fir-specification--Memory--Copy-and-move-obligations"}[their own rule with memory]:
 they write and read only the memory of their pointers, allocate in none,

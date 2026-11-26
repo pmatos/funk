@@ -67,7 +67,7 @@ monad, every op is tied, and an op total with memory is total in the set
 monad too. So a lawful dialect that lifts the set monad is lawful in its
 totality. The dialects of the tests are; the core dialect is lawful in its
 totality op by op, from each op's own tie, and $`\mathsf{alloca}`, the
-loads and stores, $`\mathsf{fieldaddr}`, $`\mathsf{globaladdr}`, the
+loads and stores, $`\mathsf{fieldaddr}`, $`\mathsf{globaladdr}`, $`\mathsf{funcaddr}`, the
 copies and moves, the fills, $`\mathsf{ptr\_expose}` and
 $`\mathsf{ptr\_from\_int}`, which have none, by their own rules.
 :::

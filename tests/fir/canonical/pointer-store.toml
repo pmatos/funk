@@ -13,15 +13,17 @@
 # writes align(4), and a store into an allocation of bytes, aligned to 1, is
 # UB too. A poison pointer to load or store through is UB; a stored poison
 # pointer loads as poison. A load through the slot of a call that returned
-# is UB. fir-ref writes a pointer as ptr(A, O). A test that returns an
+# is UB. fir-ref writes a pointer as ptr(A, O). A run starts memory 0 with
+# one allocation for each of the file's 18 functions (#235 Q1), so its
+# first alloca there gets id 18. A test that returns an
 # integer value runs as native code too (stage 5 of #231). A test that
 # returns a pointer stays interpreter-only, since native code returns an
 # address, not a pointer of the spec, and so does a test of poison or UB.
 tests = [
   { func = "@round_trip", args = ["67305985"], results = [{ values = ["67305985"], witness = [] }] },
   { func = "@round_trip", args = ["poison"], expect = ["poison"] },
-  { func = "@same_pointer", args = ["3"], expect = ["ptr(0, 3)"] },
-  { func = "@same_pointer", args = ["-9"], expect = ["ptr(0, -9)"] },
+  { func = "@same_pointer", args = ["3"], expect = ["ptr(18, 3)"] },
+  { func = "@same_pointer", args = ["-9"], expect = ["ptr(18, -9)"] },
   { func = "@same_pointer", args = ["poison"], expect = ["poison"] },
   { func = "@chain", args = ["-2"], results = [{ values = ["-2"], witness = [] }] },
   { func = "@fresh", expect = ["poison"] },
@@ -36,12 +38,12 @@ tests = [
   { func = "@stored_poison", args = ["poison"], expect = ["poison"] },
   { func = "@through_poison", args = ["poison"], expect = "ub" },
   { func = "@store_through_poison", args = ["poison"], expect = "ub" },
-  { func = "@at", args = ["0"], expect = ["ptr(0, 0)"] },
-  { func = "@at", args = ["8"], expect = ["ptr(0, 0)"] },
+  { func = "@at", args = ["0"], expect = ["ptr(18, 0)"] },
+  { func = "@at", args = ["8"], expect = ["ptr(18, 0)"] },
   { func = "@at", args = ["4"], expect = "ub" },
   { func = "@at", args = ["16"], expect = "ub" },
   { func = "@at", args = ["-8"], expect = "ub" },
-  { func = "@at_four", args = ["4"], expect = ["ptr(0, 0)"] },
+  { func = "@at_four", args = ["4"], expect = ["ptr(18, 0)"] },
   { func = "@at_four", args = ["2"], expect = "ub" },
   { func = "@in_bytes", expect = "ub" },
   { func = "@freed", expect = "ub" },

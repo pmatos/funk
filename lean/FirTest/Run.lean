@@ -181,8 +181,8 @@ info: 'FirRef.argAttr_eq_argAttrP' depends on axioms: [propext, Classical.choice
 
 `poison` is an argument of any `iN`, spelled as the output spells a poison
 value (#123), and a run on it is the spec's run on a poison argument. It is
-an argument of a pointer type too, the only one, since a run starts with no
-allocation. It is no choice: `freeze` chooses a value. -/
+an argument of a pointer type too, the only one, since no argument names
+an allocation. It is no choice: `freeze` chooses a value. -/
 
 #guard addI8 "poison" == returns ["poison"]
 #guard runText (addAt "i1") "@f" ["true", "poison"] == returns ["poison"]

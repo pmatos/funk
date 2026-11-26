@@ -284,7 +284,7 @@ for arg in "$long" "1 $long"; do
         @double "$arg" || status=1
 done
 # poison is an argument of any iN (#123), of any float type and of any
-# ptr<N>, where it is the only one since a run starts with no allocation.
+# ptr<N>, where it is the only one since no argument names an allocation.
 # It is not a choice.
 runs $c/add.fir 0 "${ret}[\"poison\"]$none" @double poison || status=1
 runs $c/add.fir 0 "${ret}[\"poison\"]$none" @add3 1 poison 3 || status=1

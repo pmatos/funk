@@ -91,8 +91,10 @@ pub(super) fn nested(rng: &mut Rng, depth: u32) -> NestedModule {
 }
 
 /// Adds `fieldaddr` ops to two in three of the functions of `items`, a
-/// nested module's, which may name the layouts of `items`, and `globaladdr`
-/// ops to one in three, which may name the globals of `items`.
+/// nested module's, which may name the layouts of `items`, `globaladdr`
+/// ops to one in three, which may name the globals of `items`, and
+/// `funcaddr` ops to one in three, which may name the functions of
+/// `items`.
 fn add_addresses(rng: &mut Rng, items: &mut [Item]) {
     let symbols: Vec<String> = items
         .iter()
@@ -120,6 +122,9 @@ fn add_addresses(rng: &mut Rng, items: &mut [Item]) {
         }
         if rng.one_in(3) {
             shaper.add_global_addrs(rng, f, &globals);
+        }
+        if rng.one_in(3) {
+            shaper.add_func_addrs(rng, f);
         }
     }
 }

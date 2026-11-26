@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Core rules: readable blocks" =>
 
-:::moduleDocs (fingerprint := "10548369879162268612")
+:::moduleDocs (fingerprint := "15494235347970769729")
 :::
 
 :::readable Fir.Core.Ty.Valid Fir.Core.Ty.memory (pin := Fir.Core.maxWidth) (pin := Fir.Core.floatWidth) (fingerprint := "1308968798942516744")
@@ -50,21 +50,22 @@ in every module, and $`\mathsf{ptr}\langle N \rangle` with $`N \ge 1` is in
 a module whose layout declares memory $`N` (ADR-2026-11-12-1821).
 :::
 
-:::readable Fir.Core.Op.symbolRefs (fingerprint := "7692249599903560492")
+:::readable Fir.Core.Op.symbolRefs (fingerprint := "14488231482749483230")
 *Definition: the symbols a core op refers to.* $`\mathsf{call}~f : t^* \to r^*`
-refers to the symbol $`f` of its callee: its list of symbols is the
-one-element sequence $`(f)`. No other core op refers to a function:
-$`\mathsf{fieldaddr}` names a layout and $`\mathsf{globaladdr}` a global,
-which their own rules check.
+refers to the symbol $`f` of its callee, and $`\mathsf{funcaddr}_N~f` to
+the symbol $`f` of the function whose address it gives: the list of
+symbols of each is the one-element sequence $`(f)`. No other core op
+refers to a function: $`\mathsf{fieldaddr}` names a layout and
+$`\mathsf{globaladdr}` a global, which their own rules check.
 
-$$`\mathrm{refs}(\mathsf{call}~f : t^* \to r^*) = (f)`
+$$`\mathrm{refs}(\mathsf{call}~f : t^* \to r^*) = (f) \qquad \mathrm{refs}(\mathsf{funcaddr}_N~f) = (f)`
 
 $$`\mathrm{refs}(\mathit{op}) = \epsilon \ \text{ for every other op}`
 
 The general rules check that $`f` names a function of the module.
 :::
 
-:::readable Fir.Core.Op.attrTypes (fingerprint := "11309927691034080155")
+:::readable Fir.Core.Op.attrTypes (fingerprint := "15256592151359097283")
 *Definition: the types a core op carries.* $`\mathsf{alloca}_N~k~t~c~a`
 carries the type $`t` that it allocates values of in its attributes, when
 $`t` is valid:
@@ -80,7 +81,7 @@ core op carries a type of its own: $`\mathsf{call}`'s are its callee's, and
 $`\mathsf{ret}`'s the function's results.
 :::
 
-:::readable Fir.Core.Op.addrWidths (fingerprint := "12346836845600142848")
+:::readable Fir.Core.Op.addrWidths (fingerprint := "4268517130365654740")
 *Definition: the pointer widths a core op asks.*
 $`\mathsf{ptr\_expose}_N~W` and $`\mathsf{ptr\_from\_int}_N~W` turn
 pointers of memory $`N` into integers of $`\mathsf{i}W`, or back, so each
@@ -95,7 +96,7 @@ $`\mathsf{ptr}` into an $`\mathsf{i32}` is not valid where memory 0 has
 64-bit pointers, and neither is one of a non-integral memory.
 :::
 
-:::readable Fir.Core.Op.unitWidths (fingerprint := "15532834157907353974")
+:::readable Fir.Core.Op.unitWidths (fingerprint := "15710495165821569281")
 *Definition: the unit widths a core op asks.* $`\mathsf{memset}_N~o~V~W`
 writes values of $`\mathsf{i}V` in the units of memory $`N`, so it asks
 that they be $`V` bits wide (the human's ruling on #251: a fill writes
@@ -134,7 +135,7 @@ So every core type may be a field (#236). These are the units and the
 alignment that $`\mathsf{alloca}` gives one value of a field's type.
 :::
 
-:::readable Fir.Core.FBin.mode Fir.Core.FUnary.mode Fir.LayoutRef.admits Fir.Core.Op.Valid (pin := Fir.isPowerOfTwo) (pin := Fir.MemLayout.limit) (pin := Fir.MemLayout.ValidAlign) (fingerprint := "14791142846085783327")
+:::readable Fir.Core.FBin.mode Fir.Core.FUnary.mode Fir.LayoutRef.admits Fir.Core.Op.Valid (pin := Fir.isPowerOfTwo) (pin := Fir.MemLayout.limit) (pin := Fir.MemLayout.ValidAlign) (fingerprint := "14824245068173711223")
 *Definition: the core rules of an op.* Beyond its signature, which the
 {ref "The-fir-specification--Validation--The-general-rules"}[general rules]
 check, a core op obeys these rules in its op context $`C`:
@@ -190,6 +191,8 @@ $$`\frac{o = \mathsf{nonatomic}}{C \vdash \mathsf{memcpy}_{N}~o~W~\text{valid}} 
 $$`\frac{\mathrm{layouts}_C(s) = l \qquad \mathrm{mem}(l) = N \qquad j < |\mathrm{fields}(l)| \qquad \text{the field } j \text{ of } l \text{ is repeated, when } W \text{ is given}}{C \vdash \mathsf{fieldaddr}_{N(,W)}~s~j~\text{valid}}`
 
 $$`\frac{\mathrm{globals}_C(s) = N}{C \vdash \mathsf{globaladdr}_{N}~s~\text{valid}}`
+
+$$`\frac{N = 0}{C \vdash \mathsf{funcaddr}_{N}~f~\text{valid}}`
 
 $$`\frac{\mathit{op} \text{ is another core op}}{C \vdash \mathit{op}~\text{valid}}`
 
@@ -283,6 +286,10 @@ $`\mathrm{globals}_C` the memory of each global of the op's table.
   its symbol, whose memory is that of its result (#237). An op names only
   the items of its own table, as $`\mathsf{call}` does, so a function of a
   nested module names its own module's globals and not its parent's.
+* $`\mathsf{funcaddr}` gives a pointer of memory 0, where every
+  function's allocation is (the human's ruling of 2026-11-19 on #235). It
+  refers to its function's symbol, so the general rules check that it
+  names a function of its own table, as they check $`\mathsf{call}`'s.
 * $`\mathsf{memcpy}`, $`\mathsf{memmove}` and $`\mathsf{memset}` have the
   ordering $`\mathsf{nonatomic}`. Their operand types are checked as every
   type is, and the data layout checks that a $`\mathsf{memset}`'s value
@@ -291,6 +298,16 @@ $`\mathrm{globals}_C` the memory of each global of the op's table.
 Every other op has no rule beyond its signature. These definitions
 are what the core dialect
 {ref "The-fir-specification--Validation--Scope-and-symbols"}[adds to validation].
+In short, beyond the types of each op's operands and results, which every
+dialect checks: a width change strictly widens or narrows, $`\mathsf{ret}`
+returns its function's result types, $`\mathsf{call}` names a function of
+its type, a conversion between formats goes the way its name says, the
+ops that round carry the mode $`\mathsf{rne}`, the float ops carry no
+reserved word of their fast-math flags, $`\mathsf{fieldaddr}` names a
+layout of its memory with the field it asks, $`\mathsf{globaladdr}` names
+a global of its own table in its memory, and $`\mathsf{funcaddr}` gives a
+pointer of memory 0. $`\mathsf{alloca}`, the loads and the stores have the
+rules given above, and the other ops have no core rule of their own.
 :::
 
 :::readable Fir.Core.Ty.sigAttrsAllowed (fingerprint := "1995343573980004862")
