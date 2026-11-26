@@ -14,29 +14,34 @@ when the Lean changes under it.
 
 #doc (Manual) "Ops monotone in the traced layer: readable blocks" =>
 
-:::moduleDocs (fingerprint := "2795909418977133827")
+:::moduleDocs (fingerprint := "9900824227032008857")
 :::
 
-:::readable Fir.TraceEnd.trace_mapActs Fir.TraceEnd.Allows.mapActs Fir.TraceRefinedBy.step (fingerprint := "6627922759765765824")
+:::readable Fir.TraceEnd.trace_mapActs Fir.TraceEnd.Allows.mapActs Fir.TraceRefinedBy.step_from Fir.TraceRefinedBy.step (fingerprint := "4573347489077896734")
 *Theorems: the step before an op.* Mapping the acts of a way of ending maps
 its trace. Mapping each act $`a` to the act $`\mathsf{act}~a` of a marked
-trace keeps one way of ending allowing another. So a computation that
-refines another still does after a step $`\mathsf{tick}`, its acts mapped
-so: UB after the acts $`t` becomes UB after $`\mathsf{tick}` and $`t`.
+trace keeps one way of ending allowing another. So each way that a
+computation may end from $`s'`, allowed by a way that another may end from
+$`s`, still is after a step $`\mathsf{tick}`, which keeps the traced state,
+its acts mapped so: UB after the acts $`t` becomes UB after
+$`\mathsf{tick}` and $`t`. A computation that refines another still does
+after the step.
 :::
 
-:::readable Fir.OpTraceMonotone.stepAt Fir.OpTracePickMonotone.stepAt Fir.Func.TraceOpsMonotone.stepAt (fingerprint := "16363967305923345560")
+:::readable Fir.OpTraceMonotone.stepAt Fir.OpTracePickMonotone.stepAt Fir.Func.TraceOpsMonotone.stepAt (fingerprint := "655755742286960633")
 *Theorems: monotone in the traced layer of marked traces.* An op monotone
 by its dialect's rule in the traced layer, at $`\ell`, $`\rho` and $`L`, is
 monotone in the traced layer of marked traces, where it runs after a step.
-So is the external-call rule, and each op of a function whose ops are.
+So is the external-call rule, under the same agreement, and each op of a
+function whose ops are.
 So does a rule to pick a callee, which runs after its step.
 :::
 
-:::readable Fir.ExtTraceMonotone.stepAt Fir.ExtTraceMonotone.ofLift (fingerprint := "2461249291503010545")
+:::readable Fir.ExtTraceMonotone.stepAt Fir.ExtTraceMonotone.ofLift (fingerprint := "2863218889231386546")
 *Theorems: the external-call rule, monotone.* An external-call rule
-monotone in the traced layer, at $`\ell`, $`\rho` and $`L`, is monotone in
-the traced layer of marked traces, where it runs after a step. An
+monotone in the traced layer, at $`\ell`, $`\rho` and $`L`, under an
+agreement, is monotone under the same agreement in the traced layer of
+marked traces, where it runs after a step, which keeps the traced state. An
 external-call rule that lifts the rule with memory, UB, is monotone in the
 traced layer: it ends only in UB that shows no act.
 :::
@@ -65,7 +70,7 @@ by other rules, as the core does by its external calls, while each of its
 ops lifts its rule.
 :::
 
-:::readable Fir.OpTraceMonotone.ofLift Fir.OpTracePickMonotone.ofLift Fir.OpTraceMonotone.ofMem Fir.Func.TraceOpsMonotone.ofLift Fir.Func.TraceOpsMonotone.ofMem (fingerprint := "8373069733619326865")
+:::readable Fir.OpTraceMonotone.ofLift Fir.OpTracePickMonotone.ofLift Fir.OpTraceMonotone.ofMem Fir.Func.TraceOpsMonotone.ofLift Fir.Func.TraceOpsMonotone.ofMem (fingerprint := "12261463831780189383")
 *Theorems: ops that lift their rule are monotone.* An op that lifts its rule
 with memory, and is monotone with memory, is monotone in the traced layer.
 An external-call rule that is the lift of the rule with memory, UB, is

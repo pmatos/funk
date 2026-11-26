@@ -14,7 +14,7 @@ pins their fingerprint; the build fails when the Lean changes under it.
 
 #doc (Manual) "Refined arguments over traced runs from a given traced state: readable blocks" =>
 
-:::moduleDocs (fingerprint := "16429314609073414273")
+:::moduleDocs (fingerprint := "7079564547442309146")
 :::
 
 :::readable Fir.Func.traceRunsFrom Fir.Func.traceRunsFrom_truncates Fir.Func.traceRunsFrom_finitelyMany (fingerprint := "14861942271792698399")
@@ -32,7 +32,7 @@ has finitely many outcomes given the world's answers, they
 have finitely many traces at each budget.
 :::
 
-:::readable Fir.Func.traceRunsFrom_path_allowed Fir.Func.traceRunsFrom_isRefinedBy_of_args (fingerprint := "17212012496302029509")
+:::readable Fir.Func.traceRunsFrom_path_allowed Fir.Func.traceRunsFrom_isRefinedBy_of_args (fingerprint := "10676232841159578254")
 *Theorem: refined arguments from a traced state.* For a dialect whose ops
 show events, let every terminator and every op with no callee of $`f` and of
 the module's functions be monotone in the traced layer,

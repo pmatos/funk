@@ -236,6 +236,7 @@ import Fir.Execution.TraceReplace
 import Fir.Execution.TraceBranch
 import Fir.Execution.TraceCallPace
 import Fir.Execution.TraceMoves
+import Fir.Execution.TraceGuard
 import Fir.Execution.TraceMoveCases
 import Fir.Execution.TraceMoveFinite
 import Fir.Execution.TraceGood

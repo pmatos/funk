@@ -4,6 +4,7 @@ import FirSpecSite.ReadableElab
 import FirSpec.ReadableDocs
 import FirSpec.Chapters.Execution
 import FirSpec.Chapters.Memory
+import FirSpec.Chapters.Traces
 import FirSpec.Chapters.Gpu
 
 open Verso.Genre Manual
@@ -170,6 +171,8 @@ functions, blocks and ops.
 {include 1 FirSpec.Chapters.Execution}
 
 {include 1 FirSpec.Chapters.Memory}
+
+{include 1 FirSpec.Chapters.Traces}
 
 # Text format
 

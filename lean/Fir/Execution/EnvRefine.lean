@@ -56,6 +56,12 @@ def Env.IsRefinedBy : Env d → Env d → Prop
   | (x, v) :: env, (x', v') :: env' => x = x' ∧ v ⊑ v' ∧ Env.IsRefinedBy env env'
   | _, _ => False
 
+/-- An environment refines itself when every value does. -/
+theorem Env.isRefinedBy_refl (hrefl : ∀ {t : d.Ty} (v : ⟦t⟧), TyRefinement.IsRefinedBy v v) :
+    ∀ env : Env d, env.IsRefinedBy env
+  | [] => trivial
+  | _ :: env => ⟨rfl, ⟨rfl, hrefl _⟩, Env.isRefinedBy_refl hrefl env⟩
+
 /-- Binding names to values that refine others refines the environment. -/
 theorem Env.IsRefinedBy.zip_append {env env' : Env d} (h : env.IsRefinedBy env') :
     ∀ (xs : List Name) {vs vs' : List (DVal d)}, vs ⊑ vs' →

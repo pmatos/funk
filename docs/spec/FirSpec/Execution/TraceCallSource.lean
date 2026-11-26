@@ -14,10 +14,10 @@ when the Lean changes under it.
 
 #doc (Manual) "A traced call of the target, followed back: readable blocks" =>
 
-:::moduleDocs (fingerprint := "5211086765132861869")
+:::moduleDocs (fingerprint := "10544110352092091851")
 :::
 
-:::readable Fir.Func.TCallsAt.source Fir.Func.TCallsAt.extMonotone (pin := Fir.Func.TCallsAt) (pin := Fir.OpTracePickMonotone) (fingerprint := "1537675644598892946")
+:::readable Fir.Func.TCallsAt.source Fir.Func.TCallsAt.extMonotone (pin := Fir.Func.TCallsAt) (pin := Fir.OpTracePickMonotone) (fingerprint := "5912014399737052012")
 *Theorems: a traced call of the target is one of the source.* Let the
 operands $`\vec{v}` refine $`\vec{v}'`, the traced state $`s` refine
 $`s'`, the module $`M'` call each symbol that $`M` can call, and the rule
@@ -28,7 +28,8 @@ with the same steps, on arguments that the target's refine, after acts
 that the target's refine one by one, from a traced state that the
 target's refines; or the source's rule is UB after acts that the target's
 first show, refined. When the
-external-call rule is monotone at the symbol and types of each op that
-names its callee, and at every symbol for the types of each op that picks
-it, it is monotone at the symbol and types of every call of the op.
+external-call rule is monotone, under an agreement of external calls, at
+the symbol and types of each op that names its callee, and at every symbol
+for the types of each op that picks it, it is monotone under that
+agreement at the symbol and types of every call of the op.
 :::
