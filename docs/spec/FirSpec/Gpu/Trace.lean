@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "The traced runs of the core and gpu: readable blocks" =>
 
-:::moduleDocs (fingerprint := "17740985229926213929")
+:::moduleDocs (fingerprint := "8401219160907161776")
 :::
 
 :::readable Fir.Gpu.gpu_instDialectTrace Fir.Gpu.gpu_liftsMem Fir.Gpu.coreGpu_instDialectTrace Fir.Gpu.coreGpu_liftsMem Fir.Gpu.coreGpu_instInhabitedAnswer Fir.Gpu.event_isRefinedBy_refl Fir.Gpu.event_isRefinedBy_trans (fingerprint := "4284088936033759670")
@@ -49,7 +49,7 @@ that shows events proves it, the hypothesis from given memories taken to
 the traced one by the lift. So it is at every world.
 :::
 
-:::readable Fir.Gpu.opLiftsMem Fir.Gpu.traceOpsMonotone Fir.Gpu.opsTraceFinite (fingerprint := "8311720800967718951")
+:::readable Fir.Gpu.opLiftsMem Fir.Gpu.traceOpsMonotone Fir.Gpu.opsTraceFinite (fingerprint := "13107893173397027482")
 *Theorem: each op of the sum lifts its rule.* Each core op lifts its rule
 with memory in the core, and each op of `gpu` in `gpu`, so each op of the
 sum does in the sum.

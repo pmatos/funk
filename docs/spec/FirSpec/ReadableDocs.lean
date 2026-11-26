@@ -319,6 +319,7 @@ import FirSpec.Execution.TraceReplace
 import FirSpec.Execution.TraceBranch
 import FirSpec.Execution.TraceCallPace
 import FirSpec.Execution.TraceMoves
+import FirSpec.Execution.TraceGuard
 import FirSpec.Execution.TraceMoveCases
 import FirSpec.Execution.TraceMoveFinite
 import FirSpec.Execution.TraceGood

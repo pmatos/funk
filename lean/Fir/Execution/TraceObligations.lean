@@ -25,9 +25,16 @@ traced state it starts from may refine another:
 A call to an external declaration runs by the dialect's external-call rule
 (`Fir.Execution.ExtCall`), so the obligation asks it too: at the symbol and
 types of each call that goes to it, on arguments that refine others and
-from traced states that refine others, each way it may end is allowed by a
-way it may end on those others. A rule that is UB, as in a dialect whose
-ops show no event, meets it.
+from traced states that refine others, where the two calls _agree_, each
+way it may end is allowed by a way it may end on those others. The
+agreement is the obligation's own condition: once #239's stage 3b-2b-3
+installs the core's rule, the core's external calls are monotone only
+where both let escape the same allocations, in the same order (the
+human's rulings of 2026-11-21 and 2026-11-22 on #239, Q4 and Q6). By
+default the calls always agree. A rule that is UB, as in a dialect whose
+ops show no event, meets it under every agreement. A guarded
+obligation can hold at every symbol, so it is asked at every symbol, not
+only at those the module declares.
 
 The traced layer of marked traces runs an op by its dialect's rule after a
 step. The step and mapping each act to the act of a marked trace keep the
@@ -61,6 +68,11 @@ def Step.IsRefinedBy [HRefinement A A] : Step A → Step A → Prop
   | _, _ => False
 
 instance [HRefinement A A] : HRefinement (Step A) (Step A) := ⟨Step.IsRefinedBy⟩
+
+/-- A marked trace refines itself when every act does. -/
+theorem Step.list_isRefinedBy_refl [HRefinement A A] (hA : ∀ a : A, a ⊑ a) (l : List (Step A)) :
+    l ⊑ l :=
+  List.isRefinedBy_refl (fun | .tick => trivial | .act a => hA a) l
 
 /-- `l` is refined by a prefix of `l'`: the list `l'` first shows a list that
 refines `l`, element by element. -/
@@ -231,64 +243,82 @@ def OpTracePickMonotone [DialectDenote d (TraceM B σ)] (op : d.Op) : Prop :=
       TraceRefinedBy Eq (DialectDenote.pick (m := TraceM B σ) op ok args)
         (DialectDenote.pick (m := TraceM B σ) op ok' args')
 
+/-- The agreement of two external calls that always holds: an external-call
+rule monotone under it is monotone wherever the two calls' arguments and
+traced states refine each other. -/
+def ExtAgree.always : List (DVal d) → σ → List (DVal d) → σ → Prop := fun _ _ _ _ => True
+
 /-- In a semantics in the traced layer, the external-call rule is monotone
 for a call of the declaration `g` on operands of the types `ts` for results
-of the types `rs`: on arguments of those types that refine others, what it
-gives refines what it gives on those others, from traced states that
-refine others. It is an obligation of its own, beside each op's, so that a
-dialect whose external calls show events can state the condition under
-which they are monotone (#239). -/
-def ExtTraceMonotone [DialectExtCall d (TraceM B σ)] (g : Name) (ts rs : List d.Ty) : Prop :=
+of the types `rs`, where the two calls agree by `agree`: on arguments of
+those types that refine others, from traced states that refine others, when
+the two calls agree, what it gives refines what it gives on those others.
+It is an obligation of its own, beside each op's, so that a dialect whose
+external calls show events can state the condition under which they are
+monotone (#239): once its rule is installed, the core's will agree when
+both let escape the same allocations, in the same order. By default the
+calls always agree. The obligation is asked at every symbol: one guarded by
+its agreement can hold at symbols the module does not declare too, so it is
+not narrowed to the declared ones. -/
+def ExtTraceMonotone [DialectExtCall d (TraceM B σ)] (g : Name) (ts rs : List d.Ty)
+    (agree : List (DVal d) → σ → List (DVal d) → σ → Prop := ExtAgree.always) : Prop :=
   ∀ args args' : HVector toType ts, args.Forall₂ TyRefinement.IsRefinedBy args' →
-    TraceRefinedBy (fun vs vs' : List (DVal d) => vs ⊑ vs')
-      (DialectExtCall.extCall (m := TraceM B σ) g args.toDVals rs)
-      (DialectExtCall.extCall (m := TraceM B σ) g args'.toDVals rs)
+    ∀ s s', s ⊑ s' → agree args.toDVals s args'.toDVals s' →
+      ∀ e', DialectExtCall.extCall (m := TraceM B σ) g args'.toDVals rs s' e' →
+        ∃ e, DialectExtCall.extCall (m := TraceM B σ) g args.toDVals rs s e ∧
+          TraceEnd.Allows (fun vs vs' : List (DVal d) => vs ⊑ vs') e e'
 
 omit [DialectSignature d] in
-/-- An external-call rule that is UB is monotone: UB that shows no act
-allows every way of ending. -/
+/-- An external-call rule that is UB is monotone, under any agreement: UB that
+shows no act allows every way of ending. -/
 theorem ExtTraceMonotone.of_ub [DialectExtCall d (TraceM B σ)] {r : String}
+    {agree : List (DVal d) → σ → List (DVal d) → σ → Prop}
     (h : ∀ g args rs, DialectExtCall.extCall (m := TraceM B σ) g args rs =
       (MonadUB.ub r : TraceM B σ (List (DVal d))))
-    (g : Name) (ts rs : List d.Ty) : ExtTraceMonotone (B := B) (σ := σ) g ts rs :=
-  fun args _ _ s _ _ e' _ => ⟨.error (r, []), by rw [h]; rfl, TraceEnd.Allows.of_ub _ e'⟩
+    (g : Name) (ts rs : List d.Ty) : ExtTraceMonotone (B := B) (σ := σ) g ts rs agree :=
+  fun args _ _ s _ _ _ e' _ => ⟨.error (r, []), by rw [h]; rfl, TraceEnd.Allows.of_ub _ e'⟩
 
 variable [DialectCall d] [DialectDenote d (TraceM B σ)] [DialectExtCall d (TraceM B σ)]
 
 variable (B σ) in
 /-- Every op of `os` that runs by its own rule, a terminator or an op with no
-callee, is monotone in the traced layer, and so is the external-call rule
-for each op of `os` that calls a callee it names; and for each op of `os`
-whose callee is picked, the rule that picks it and the external-call rule
-for each symbol, on its operands but the first. -/
-def TraceMonotoneOps (os : List (Operation d)) : Prop :=
+callee, is monotone in the traced layer, and so is the external-call rule,
+where the calls agree by `agree`, for each op of `os` that calls a callee
+it names; and for each op of `os` whose callee is picked, the rule that
+picks it and the external-call rule for each symbol, on its operands but
+the first. -/
+def TraceMonotoneOps (os : List (Operation d))
+    (agree : List (DVal d) → σ → List (DVal d) → σ → Prop := ExtAgree.always) : Prop :=
   ∀ o ∈ os, (isTerminator o.op = true ∨ callee? o.op = none →
       OpTraceMonotone (B := B) (σ := σ) o.op) ∧
     (isTerminator o.op = false → ∀ g, callee? o.op = some (.fixed g) →
-      ExtTraceMonotone (B := B) (σ := σ) g (sig o.op) (returnTypes o.op)) ∧
+      ExtTraceMonotone (B := B) (σ := σ) g (sig o.op) (returnTypes o.op) agree) ∧
     (isTerminator o.op = false → callee? o.op = some .picked →
       OpTracePickMonotone (B := B) (σ := σ) o.op ∧
-        ∀ g, ExtTraceMonotone (B := B) (σ := σ) g (sig o.op).tail (returnTypes o.op))
+        ∀ g, ExtTraceMonotone (B := B) (σ := σ) g (sig o.op).tail (returnTypes o.op) agree)
 
 variable (B σ) in
 /-- Every op of the function `f` that runs by its own rule is monotone in the
-traced layer. -/
-def Func.TraceOpsMonotone (f : Func d) : Prop :=
-  ∀ b ∈ f.blocks, TraceMonotoneOps B σ b.body
+traced layer, the external-call rule where the calls agree by `agree`. -/
+def Func.TraceOpsMonotone (f : Func d)
+    (agree : List (DVal d) → σ → List (DVal d) → σ → Prop := ExtAgree.always) : Prop :=
+  ∀ b ∈ f.blocks, TraceMonotoneOps B σ b.body agree
 
 variable [DecidableEq d.Ty]
 
+variable {agree : List (DVal d) → σ → List (DVal d) → σ → Prop}
+
 /-- A run of `f` starts at the ops of one of its blocks. -/
-theorem Func.TraceOpsMonotone.enter {f : Func d} (hf : f.TraceOpsMonotone B σ)
+theorem Func.TraceOpsMonotone.enter {f : Func d} (hf : f.TraceOpsMonotone B σ agree)
     {dvs : List (DVal d)} {p : List (Operation d) × Env d} (hen : f.enter dvs = .ok p) :
-    TraceMonotoneOps B σ p.1 := by
+    TraceMonotoneOps B σ p.1 agree := by
   obtain ⟨e, he, -, -, rfl⟩ := Func.enter_eq_ok hen
   exact hf e (List.mem_of_mem_head? he)
 
 /-- A jump of `f` goes to the ops of one of its blocks. -/
-theorem Func.TraceOpsMonotone.jump {f : Func d} (hf : f.TraceOpsMonotone B σ) {env : Env d}
+theorem Func.TraceOpsMonotone.jump {f : Func d} (hf : f.TraceOpsMonotone B σ agree) {env : Env d}
     {succs : List Succ} {i : Nat} {b : Block d} {env₁ : Env d}
-    (hj : f.jump env succs i = .ok (b, env₁)) : TraceMonotoneOps B σ b.body := by
+    (hj : f.jump env succs i = .ok (b, env₁)) : TraceMonotoneOps B σ b.body agree := by
   obtain ⟨s, vs, -, hb, -⟩ := Func.jump_eq_ok hj
   exact hf b (Func.block?_some hb).1
 

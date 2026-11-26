@@ -4,6 +4,8 @@ import FirSpecSite.ReadableElab
 import FirSpec.ReadableDocs
 import FirSpec.Chapters.Execution
 import FirSpec.Chapters.Memory
+import FirSpec.Chapters.Traces
+import FirSpec.Chapters.Text
 import FirSpec.Chapters.Gpu
 
 open Verso.Genre Manual
@@ -171,151 +173,9 @@ functions, blocks and ops.
 
 {include 1 FirSpec.Chapters.Memory}
 
-# Text format
+{include 1 FirSpec.Chapters.Traces}
 
-{includeReadable "." Fir.Text.Lexical "Tokens" FirSpec.Text.Lexical (level := 2)}
-
-{includeReadable "." Fir.Text.Grammar "Grammar" FirSpec.Text.Grammar (level := 2)}
-
-{includeReadable "." Fir.Text.LayoutLaws "The data layout's text, proved" FirSpec.Text.LayoutLaws (level := 2)}
-
-{includeReadable "." Fir.Text.GlobalText "Globals in text" FirSpec.Text.GlobalText (level := 2)}
-
-{includeReadable "." Fir.Text.GlobalLaws "Globals in text, proved" FirSpec.Text.GlobalLaws (level := 2)}
-
-{includeReadable "." Fir.Core.TypeText "The core types in text" FirSpec.Core.TypeText (level := 2)}
-
-{includeReadable "." Fir.Core.Text "The core dialect in text" FirSpec.Core.Text (level := 2)}
-
-{includeReadable "." Fir.Core.AllocaText "Stack allocation in text" FirSpec.Core.AllocaText (level := 2)}
-
-{includeReadable "." Fir.Core.LoadText "Loads in text" FirSpec.Core.LoadText (level := 2)}
-
-{includeReadable "." Fir.Core.StoreText "Stores in text" FirSpec.Core.StoreText (level := 2)}
-
-{includeReadable "." Fir.Core.MemCopyText "Copies and moves in text" FirSpec.Core.MemCopyText (level := 2)}
-
-{includeReadable "." Fir.Core.MemSetText "Fills in text" FirSpec.Core.MemSetText (level := 2)}
-
-{includeReadable "." Fir.Core.PtrIntText "Pointers as integers in text" FirSpec.Core.PtrIntText (level := 2)}
-
-{includeReadable "." Fir.Core.FieldAddrText "Field addresses in text" FirSpec.Core.FieldAddrText (level := 2)}
-
-{includeReadable "." Fir.Core.GlobalAddrText "Addresses of globals in text" FirSpec.Core.GlobalAddrText (level := 2)}
-
-{includeReadable "." Fir.Core.FuncAddrText "Addresses of functions in text" FirSpec.Core.FuncAddrText (level := 2)}
-
-{includeReadable "." Fir.Core.TextSamples "The core dialect's text, checked" FirSpec.Core.TextSamples (level := 2)}
-
-{includeReadable "." Fir.Core.FloatText "Float constants in text" FirSpec.Core.FloatText (level := 2)}
-
-{includeReadable "." Fir.Core.RoundingText "The rounding mode in text" FirSpec.Core.RoundingText (level := 2)}
-
-{includeReadable "." Fir.Core.FloatOpText "Float arithmetic in text" FirSpec.Core.FloatOpText (level := 2)}
-
-{includeReadable "." Fir.Text.Print "The canonical printer" FirSpec.Text.Print (level := 2)}
-
-{includeReadable "." Fir.Text.SigAttrs "The attributes of a signature" FirSpec.Text.SigAttrs (level := 2)}
-
-{includeReadable "." Fir.Text.RoundTrip "Round trips" FirSpec.Text.RoundTrip (level := 2)}
-
-{includeReadable "." Fir.Core.TypeTextLaws "The core types in text are lawful" FirSpec.Core.TypeTextLaws (level := 2)}
-
-{includeReadable "." Fir.Core.AllocaTextLaws "Stack allocation reads back" FirSpec.Core.AllocaTextLaws (level := 2)}
-
-{includeReadable "." Fir.Core.LoadTextLaws "Loads read back" FirSpec.Core.LoadTextLaws (level := 2)}
-
-{includeReadable "." Fir.Core.StoreTextLaws "Stores read back" FirSpec.Core.StoreTextLaws (level := 2)}
-
-{includeReadable "." Fir.Core.MemCopyTextLaws "Copies and moves read back" FirSpec.Core.MemCopyTextLaws (level := 2)}
-
-{includeReadable "." Fir.Core.MemSetTextLaws "Fills read back" FirSpec.Core.MemSetTextLaws (level := 2)}
-
-{includeReadable "." Fir.Core.FloatOpTextLaws "The float ops read back" FirSpec.Core.FloatOpTextLaws (level := 2)}
-
-{includeReadable "." Fir.Core.TextLaws "The core dialect's text is lawful" FirSpec.Core.TextLaws (level := 2)}
-
-{includeReadable "." Fir.Core.FloatTextLaws "Float constants read back" FirSpec.Core.FloatTextLaws (level := 2)}
-
-{includeReadable "." Fir.Text.Lex "The parser" FirSpec.Text.Lex (level := 2)}
-
-{includeReadable "." Fir.Text.Read "Reading the grammar" FirSpec.Text.Read (level := 2)}
-
-{includeReadable "." Fir.Text.ReadLocs "Reading the location table and the module" FirSpec.Text.ReadLocs (level := 2)}
-
-{includeReadable "." Fir.Text.Decode "Decoding" FirSpec.Text.Decode (level := 2)}
-
-{includeReadable "." Fir.Text.Example "Example" FirSpec.Text.Example (level := 2)}
-
-{includeReadable "." Fir.Text.Tokens "Lexing printed text" FirSpec.Text.Tokens (level := 2)}
-
-{includeReadable "." Fir.Text.LexNumbers "Digits and their values" FirSpec.Text.LexNumbers (level := 2)}
-
-{includeReadable "." Fir.Text.LexTokens "Maximal munch" FirSpec.Text.LexTokens (level := 2)}
-
-{includeReadable "." Fir.Text.LexStrings "Escapes and quoted symbols" FirSpec.Text.LexStrings (level := 2)}
-
-{includeReadable "." Fir.Text.LexFloats "Reading printed float literals" FirSpec.Text.LexFloats (level := 2)}
-
-{includeReadable "." Fir.Text.LexLayout "Spaces, line feeds and lists" FirSpec.Text.LexLayout (level := 2)}
-
-{includeReadable "." Fir.Text.LexPrint "Attributes, locations and names" FirSpec.Text.LexPrint (level := 2)}
-
-{includeReadable "." Fir.Text.LexWritable "Tokens that can be written" FirSpec.Text.LexWritable (level := 2)}
-
-{includeReadable "." Fir.Text.LexFunc "A function's signature lexed" FirSpec.Text.LexFunc (level := 2)}
-
-{includeReadable "." Fir.Text.LexModule "Ops, functions and the module" FirSpec.Text.LexModule (level := 2)}
-
-{includeReadable "." Fir.Text.LexWellFormed "Writable tokens" FirSpec.Text.LexWellFormed (level := 2)}
-
-{includeReadable "." Fir.Text.Tree "The tree that the grammar reads" FirSpec.Text.Tree (level := 2)}
-
-{includeReadable "." Fir.Text.ReadAttrs "The grammar step" FirSpec.Text.ReadAttrs (level := 2)}
-
-{includeReadable "." Fir.Text.ReadDefs "Definitions and successors read back" FirSpec.Text.ReadDefs (level := 2)}
-
-{includeReadable "." Fir.Text.ReadParams "Parameters and results read back" FirSpec.Text.ReadParams (level := 2)}
-
-{includeReadable "." Fir.Text.ReadOps "Ops read back" FirSpec.Text.ReadOps (level := 2)}
-
-{includeReadable "." Fir.Text.ReadBlocks "Blocks and regions read back" FirSpec.Text.ReadBlocks (level := 2)}
-
-{includeReadable "." Fir.Text.ReadFunc "A function read back" FirSpec.Text.ReadFunc (level := 2)}
-
-{includeReadable "." Fir.Text.ReadTable "The location table read back" FirSpec.Text.ReadTable (level := 2)}
-
-{includeReadable "." Fir.Text.ReadModule "The module read back" FirSpec.Text.ReadModule (level := 2)}
-
-{includeReadable "." Fir.Text.DecodeScope "The decoding step" FirSpec.Text.DecodeScope (level := 2)}
-
-{includeReadable "." Fir.Text.DecodeBlocks "Blocks and ops decoded back" FirSpec.Text.DecodeBlocks (level := 2)}
-
-{includeReadable "." Fir.Text.DecodeFuncItem "A function's item and an external declaration decoded back" FirSpec.Text.DecodeFuncItem (level := 2)}
-
-{includeReadable "." Fir.Text.DecodeModule "The module decoded back" FirSpec.Text.DecodeModule (level := 2)}
-
-{includeReadable "." Fir.Text.PrintParse "The round trip, proved" FirSpec.Text.PrintParse (level := 2)}
-
-{includeReadable "." Fir.Text.LexAccepted "What the lexer accepts" FirSpec.Text.LexAccepted (level := 2)}
-
-{includeReadable "." Fir.Text.ReadAccepted "What the grammar accepts" FirSpec.Text.ReadAccepted (level := 2)}
-
-{includeReadable "." Fir.Text.ReadAcceptedBlocks "Accepted ops, blocks and regions" FirSpec.Text.ReadAcceptedBlocks (level := 2)}
-
-{includeReadable "." Fir.Text.ReadAcceptedItems "Accepted items" FirSpec.Text.ReadAcceptedItems (level := 2)}
-
-{includeReadable "." Fir.Text.ReadAcceptedModule "An accepted location table" FirSpec.Text.ReadAcceptedModule (level := 2)}
-
-{includeReadable "." Fir.Text.DecodeAcceptedScope "What the first pass accepts" FirSpec.Text.DecodeAcceptedScope (level := 2)}
-
-{includeReadable "." Fir.Text.DecodeAccepted "What the second pass accepts" FirSpec.Text.DecodeAccepted (level := 2)}
-
-{includeReadable "." Fir.Text.DecodeAcceptedFunc "A function and an external declaration as decoded" FirSpec.Text.DecodeAcceptedFunc (level := 2)}
-
-{includeReadable "." Fir.Text.DecodeAcceptedModule "What decoding accepts" FirSpec.Text.DecodeAcceptedModule (level := 2)}
-
-{includeReadable "." Fir.Text.ParseWellFormed "Parsed modules are well formed" FirSpec.Text.ParseWellFormed (level := 2)}
+{include 1 FirSpec.Chapters.Text}
 
 # Sums of dialects
 

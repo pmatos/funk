@@ -14,10 +14,10 @@ changes under it.
 
 #doc (Manual) "One move of the source: readable blocks" =>
 
-:::moduleDocs (fingerprint := "15097248164369186375")
+:::moduleDocs (fingerprint := "15728244863169221116")
 :::
 
-:::readable Fir.TCfg.Follows.step (fingerprint := "15097248164369186375")
+:::readable Fir.TCfg.Follows.step (fingerprint := "15728244863169221116")
 *Theorem: the source follows a move.* Let every path of every op and
 of every external call show exactly
 one step, the target $`M'` run each call as the source $`M` does, by the same

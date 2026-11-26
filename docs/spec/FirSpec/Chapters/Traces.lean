@@ -9,9 +9,9 @@ open FirSpecSite
 set_option pp.rawOnError true
 
 /-!
-The part on traces of the chapter on memory of the fir specification,
-which `FirSpec/Chapters/Memory.lean` includes as its last part. It is a
-document of its own so that the chapter keeps within the file-size budget
+The chapter on traces of the fir specification, which `FirSpec.lean`
+includes after the chapter on memory. It is a document of its own so that
+the chapter on memory keeps within the file-size budget
 (ADR-2026-10-28-0724). Each section renders one module of `lean/Fir`.
 -/
 
@@ -85,17 +85,19 @@ traced runs, on which refined arguments and congruence in the callee hold.
 
 {includeReadable "." Fir.Execution.TraceBlackBox "Two modules in the traced layer, compared call by call" FirSpec.Execution.TraceBlackBox (level := 1)}
 
-{includeReadable "." Fir.Execution.TraceCallsAllowed "Every return and UB of the target, allowed, call by call" FirSpec.Execution.TraceCallsAllowed (level := 1)}
-
-{includeReadable "." Fir.Execution.TraceArgsFrom "Refined arguments over traced runs from a given traced state" FirSpec.Execution.TraceArgsFrom (level := 1)}
-
-{includeReadable "." Fir.Execution.TraceReplace "Congruence in the callee over traced runs: returns and UB" FirSpec.Execution.TraceReplace (level := 1)}
-
 {includeReadable "." Fir.Execution.TraceBranch "Streams of acts and branches of moves" FirSpec.Execution.TraceBranch (level := 1)}
 
 {includeReadable "." Fir.Execution.TraceCallPace "A callee's return, paced" FirSpec.Execution.TraceCallPace (level := 1)}
 
 {includeReadable "." Fir.Execution.TraceMoves "Configurations and their moves" FirSpec.Execution.TraceMoves (level := 1)}
+
+{includeReadable "." Fir.Execution.TraceGuard "Guards: the source path that a proof of refinement picks" FirSpec.Execution.TraceGuard (level := 1)}
+
+{includeReadable "." Fir.Execution.TraceCallsAllowed "Every return and UB of the target, allowed, call by call" FirSpec.Execution.TraceCallsAllowed (level := 1)}
+
+{includeReadable "." Fir.Execution.TraceArgsFrom "Refined arguments over traced runs from a given traced state" FirSpec.Execution.TraceArgsFrom (level := 1)}
+
+{includeReadable "." Fir.Execution.TraceReplace "Congruence in the callee over traced runs: returns and UB" FirSpec.Execution.TraceReplace (level := 1)}
 
 {includeReadable "." Fir.Execution.TraceMoveCases "How a run goes on by moves" FirSpec.Execution.TraceMoveCases (level := 1)}
 

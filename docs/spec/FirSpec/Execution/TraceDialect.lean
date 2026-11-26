@@ -21,7 +21,7 @@ when the Lean changes under it.
 *Definition: a dialect's events.* A dialect says what its events and the
 world's answers are, how one event refines another, and gives each op a
 semantics in the traced layer, on the
-{ref "The-fir-specification--Memory--Traces--The-world-and-escaped-memory"}[traced state],
+{ref "The-fir-specification--Traces--The-world-and-escaped-memory"}[traced state],
 wherever a run names its memories and whatever items it gives each op, as
 its semantics with memory does in the state layer. It gives there its
 {ref "The-fir-specification--Execution--The-external-call-rule"}[external-call rule]
@@ -49,7 +49,7 @@ layer at $`\ell`, $`\rho` and $`L`, from the traced state
 $`(\mathrm{start}(L), [])`: the memories that hold $`L`'s starting
 allocations, with nothing escaped. An observer sees the acts of the trace and, at a return of the
 values $`\vec{v}'` in the traced state $`(S, E)`, the
-{ref "The-fir-specification--Memory--Traces--The-end-of-a-return"}[end of the return]
+{ref "The-fir-specification--Traces--The-end-of-a-return"}[end of the return]
 $`\langle \vec{v}', S, E\rangle`, which names the memory numbered $`n` as
 $`\mu(n)` and compares addresses by the rule $`r`. The caller gives
 $`\mu`, which should name the memory numbered $`n` as $`\rho` names the
@@ -87,7 +87,7 @@ its runs with memory, each return seen at its end: erasing their steps
 gives the lift of those runs. So its traced observable behaviour is its
 observable behaviour with memory, each return seen at its end, each outcome
 with an empty trace. When it returns no pointer and nothing escaped, the
-{ref "The-fir-specification--Memory--Traces--Laws-of-the-end-of-a-return"}[end of its return]
+{ref "The-fir-specification--Traces--Laws-of-the-end-of-a-return"}[end of its return]
 is refined exactly when its returned values are and nothing escaped in the
 other, so a dialect whose traced semantics lifts its semantics with memory,
 and whose functions return no pointer, keeps the results of its tests.

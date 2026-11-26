@@ -14,14 +14,14 @@ changes under it.
 
 #doc (Manual) "Congruence in the callee over traced runs, divergence included: readable blocks" =>
 
-:::moduleDocs (fingerprint := "17610753270981007049")
+:::moduleDocs (fingerprint := "11922741242326715433")
 :::
 
 :::readable Fir.Stream.IsRefinedBy.closed (fingerprint := "5280672388205635261")
 *Theorem.* A stream refined by a closed stream is closed.
 :::
 
-:::readable Fir.Func.traceRunsFrom_isRefinedBy_of_calls (fingerprint := "3291851347794863516")
+:::readable Fir.Func.traceRunsFrom_isRefinedBy_of_calls (fingerprint := "7368547024424054705")
 *Theorem: refinement when calls are refined.* For a dialect whose ops show
 events, let $`M'` run each call in the traced layer as $`M` does, every
 terminator and every op with no callee of $`f` and of $`M`'s functions be
@@ -46,7 +46,7 @@ refine others give traced runs, each return seen at its end,
 that refine theirs.
 :::
 
-:::readable Fir.Func.traceRunsFrom_replaceBody_isRefinedBy Fir.Func.traceRuns_replaceBody_isRefinedBy (fingerprint := "3136690538283535608")
+:::readable Fir.Func.traceRunsFrom_replaceBody_isRefinedBy Fir.Func.traceRuns_replaceBody_isRefinedBy (fingerprint := "17441511497353680573")
 *Theorems: congruence in the callee, divergence included.* For a dialect
 whose ops show events, let the symbols of $`M` be unique, every terminator
 and every op with no callee of its functions be monotone in the traced

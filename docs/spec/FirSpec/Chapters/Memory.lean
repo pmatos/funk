@@ -2,7 +2,6 @@ import VersoManual
 import Fir
 import FirSpecSite.ReadableElab
 import FirSpec.ReadableDocs
-import FirSpec.Chapters.Traces
 
 open Verso.Genre Manual
 open FirSpecSite
@@ -33,8 +32,8 @@ allocation may be given and which one `fir-ref` gives, how a run's address
 policy picks one, how a run's resolver picks the allocation that an integer
 turned back into a pointer points into, and how a value of
 an integer, a float or a pointer type becomes units of a memory, and units
-a value again, at every byte order. It ends with traces, a part of its own
-(the section on traces).
+a value again, at every byte order. The next chapter, on traces, adds the
+world outside a run.
 
 {includeReadable "." Fir.Memory.Model "The memory model" FirSpec.Memory.Model (level := 1)}
 
@@ -221,5 +220,3 @@ a value again, at every byte order. It ends with traces, a part of its own
 {includeReadable "." Fir.Core.MemoryRuns "Core functions with memory" FirSpec.Core.MemoryRuns (level := 1)}
 
 {includeReadable "." Fir.Core.MemoryCallRefine "Congruence in a core callee" FirSpec.Core.MemoryCallRefine (level := 1)}
-
-{include 1 FirSpec.Chapters.Traces}

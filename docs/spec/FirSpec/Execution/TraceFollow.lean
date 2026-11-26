@@ -14,10 +14,10 @@ changes under it.
 
 #doc (Manual) "The source follows the target: readable blocks" =>
 
-:::moduleDocs (fingerprint := "9512925811631929278")
+:::moduleDocs (fingerprint := "5597803322701457641")
 :::
 
-:::readable Fir.TCfg.Allows Fir.TCfg.Follows (fingerprint := "16299104901507399098")
+:::readable Fir.TCfg.Allows Fir.TCfg.Follows (fingerprint := "13599307091340374301")
 *Definition: the source allows a stream.* A source configuration $`c` in
 $`M` allows the stream $`T` when it hits UB at some budget after acts refined
 by the first acts of $`T`, or shows at every budget some stream $`S` refined

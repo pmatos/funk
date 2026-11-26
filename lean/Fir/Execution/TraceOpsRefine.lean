@@ -249,7 +249,7 @@ theorem Func.traceOps_allowed {M : Module d}
         obtain ⟨args, hargs, hr⟩ := henv.operands hargs'
         obtain ⟨cargs, t₀, s₁, hc₀, hcr, ht₀, hs₁⟩ | ⟨hpc, r, t, hpu, htp⟩ := pick hT hr hc
         case inr => exact ⟨_, ub (.pickUB hreg hargs hT hpc hpu), TraceEnd.Allows.ub_prefix htp _⟩
-        obtain ⟨e₀, he₀, hle⟩ := hc₀.extMonotone hT hext cargs _ hcr s₁ _ hs₁ _ hx
+        obtain ⟨e₀, he₀, hle⟩ := hc₀.extMonotone hT hext cargs _ hcr s₁ _ hs₁ trivial _ hx
         rcases e₀ with ⟨r₀, t'⟩ | ⟨_, _, _⟩
         · exact ⟨_, ub (.extUB hreg hargs hT hc₀ hg hd he₀), hle.after ht₀⟩
         · exact hle.elim
@@ -257,7 +257,7 @@ theorem Func.traceOps_allowed {M : Module d}
         obtain ⟨args, hargs, hr⟩ := henv.operands hargs'
         obtain ⟨cargs, t₀, s₁, hc₀, hcr, ht₀, hs₁⟩ | ⟨hpc, r, t, hpu, htp⟩ := pick hT hr hc
         case inr => exact ⟨_, ub (.pickUB hreg hargs hT hpc hpu), TraceEnd.Allows.ub_prefix htp _⟩
-        obtain ⟨e₀, he₀, hle⟩ := hc₀.extMonotone hT hext cargs _ hcr s₁ _ hs₁ _ hx
+        obtain ⟨e₀, he₀, hle⟩ := hc₀.extMonotone hT hext cargs _ hcr s₁ _ hs₁ trivial _ hx
         rcases e₀ with ⟨r₀, t'⟩ | ⟨vs, t', s₀⟩
         · exact ⟨_, ub (.extUB hreg hargs hT hc₀ hg hd he₀),
             (TraceEnd.Allows.ub_prefix hle _).after ht₀⟩

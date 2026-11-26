@@ -37,20 +37,24 @@ theorem traceOps_up {B : Type} (d : Dialect) [TyDenote d.Ty] [DecidableEq d.Ty]
 
 /-- For every dialect, every return and UB of the target's traced run of ops
 is allowed by the source's at some budget, comparing acts, when every call
-names the same function in both modules or a traced black box. -/
+names the same function in both modules or a traced black box, from a pair
+of configurations of a guard. -/
 theorem traceOps_tAllowed {A : Type} [HRefinement A A] (d : Dialect) [TyDenote d.Ty]
     [DecidableEq d.Ty] [DialectSignature d] [DialectCall d] [TyRefinement d.Ty] {Mem : Type}
     {unit : Mem → Nat} [DecidableEq Mem] [DialectDenote d (TraceM (Step A) (TraceState Mem unit))]
     [DialectExtCall d (TraceM (Step A) (TraceState Mem unit))]
-    {M M' : Module d} (hmono : ∀ g ∈ M.funcs, g.TraceOpsMonotone (Step A) (TraceState Mem unit))
-    (hcalls : TraceCallsRefined A Mem unit M M') (n : Nat) (f : Func d) (env env' : Env d)
-    (os : List (Operation d)) (s s' : TraceState Mem unit)
-    (hf : f.TraceOpsMonotone (Step A) (TraceState Mem unit))
-    (hops : TraceMonotoneOps (Step A) (TraceState Mem unit) os) (henv : env.IsRefinedBy env')
-    (hs : s ⊑ s') (e' : TraceEnd (Step A) (TraceState Mem unit) (Except Stuck (Result (List (DVal d) × Nat))))
+    {agree : List (DVal d) → TraceState Mem unit → List (DVal d) → TraceState Mem unit → Prop}
+    {G : TCfg d Mem unit → TCfg d Mem unit → Prop}
+    {M M' : Module d} (hmono : ∀ g ∈ M.funcs, g.TraceOpsMonotone (Step A) (TraceState Mem unit) agree)
+    (hcalls : TraceCallsRefined A Mem unit M M') (hG : TCfg.Guard A agree M M' G) (n : Nat)
+    (f : Func d) (env env' : Env d) (os : List (Operation d)) (s s' : TraceState Mem unit)
+    (hf : f.TraceOpsMonotone (Step A) (TraceState Mem unit) agree)
+    (hops : TraceMonotoneOps (Step A) (TraceState Mem unit) os agree) (henv : env.IsRefinedBy env')
+    (hs : s ⊑ s') (hGc : G ⟨f, env, os, s⟩ ⟨f, env', os, s'⟩)
+    (e' : TraceEnd (Step A) (TraceState Mem unit) (Except Stuck (Result (List (DVal d) × Nat))))
     (he' : Func.traceOps (Step A) M' n f env' os s' e') :
     TAllowed (fun N => Func.traceOps (Step A) M N f env os s) e' :=
-  Func.traceOps_tAllowed hmono hcalls n f env env' os s s' hf hops henv hs e' he'
+  Func.traceOps_tAllowed hmono hcalls hG n f env env' os s s' hf hops henv hs hGc e' he'
 
 /-- For every function of every dialect whose ops show events, are monotone
 in the traced layer and have finitely many outcomes given the world's

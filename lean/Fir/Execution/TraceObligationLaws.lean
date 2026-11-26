@@ -52,20 +52,30 @@ theorem TraceEnd.Allows.mapActs {r : α → β → Prop} :
     exact Step.flatMap_act_isRefinedPrefix h
   | .ok _, .error _, h => h.elim
 
+/-- Each way a computation may end from `s'` that is allowed by a way another
+may end from `s` still is after a step, each act of its traces an act of
+the marked trace: the step keeps the traced state. -/
+theorem TraceRefinedBy.step_from {r : α → β → Prop} {c : TraceM A σ α} {c' : TraceM A σ β}
+    {s s' : σ} (h : ∀ e', c' s' e' → ∃ e, c s e ∧ TraceEnd.Allows r e e') :
+    ∀ e', (TraceM.tick >>= fun _ => TraceM.mapActs (fun a => [Step.act a]) c') s' e' →
+      ∃ e, (TraceM.tick >>= fun _ => TraceM.mapActs (fun a => [Step.act a]) c) s e ∧
+        TraceEnd.Allows r e e' := by
+  intro e' he'
+  rcases (TraceM.bind_apply _ _ _ _).1 he' with ⟨_, t, s₁, e₁, ht, ⟨e₀', hc, rfl⟩, rfl⟩ | ⟨_, _, ht, _⟩
+  · have ht : (Except.ok ((), t, s₁) : TraceEnd (Step A) σ Unit) = .ok ((), [.tick], s') := ht
+    cases ht
+    obtain ⟨e₀, hc₀, hle⟩ := h e₀' hc
+    exact ⟨_, (TraceM.bind_apply _ _ _ _).2 (.inl ⟨(), [.tick], s, _, rfl, ⟨e₀, hc₀, rfl⟩, rfl⟩),
+      hle.mapActs.after (show ([Step.tick] : List (Step A)) ⊑ [Step.tick] from ⟨trivial, trivial⟩)⟩
+  · cases ht
+
 /-- A computation that refines another still does after a step, each act of
 its traces an act of the marked trace. -/
 theorem TraceRefinedBy.step {r : α → β → Prop} {c : TraceM A σ α} {c' : TraceM A σ β}
     (h : TraceRefinedBy r c c') :
     TraceRefinedBy r (TraceM.tick >>= fun _ => TraceM.mapActs (fun a => [Step.act a]) c)
-      (TraceM.tick >>= fun _ => TraceM.mapActs (fun a => [Step.act a]) c') := by
-  intro s s' hs e' he'
-  rcases (TraceM.bind_apply _ _ _ _).1 he' with ⟨_, t, s₁, e₁, ht, ⟨e₀', hc, rfl⟩, rfl⟩ | ⟨_, _, ht, _⟩
-  · have ht : (Except.ok ((), t, s₁) : TraceEnd (Step A) σ Unit) = .ok ((), [.tick], s') := ht
-    cases ht
-    obtain ⟨e₀, hc₀, hle⟩ := h s s' hs e₀' hc
-    exact ⟨_, (TraceM.bind_apply _ _ _ _).2 (.inl ⟨(), [.tick], s, _, rfl, ⟨e₀, hc₀, rfl⟩, rfl⟩),
-      hle.mapActs.after (show ([Step.tick] : List (Step A)) ⊑ [Step.tick] from ⟨trivial, trivial⟩)⟩
-  · cases ht
+      (TraceM.tick >>= fun _ => TraceM.mapActs (fun a => [Step.act a]) c') :=
+  fun s s' hs => TraceRefinedBy.step_from (h s s' hs)
 
 end
 
@@ -96,14 +106,19 @@ theorem OpTracePickMonotone.stepAt {op : d.Op}
     OpTracePickMonotone (B := Step (DialectTrace.Acts d)) (σ := TraceState N (unitsOf lay)) op :=
   fun ok ok' hok args args' hr => (h ok ok' hok args args' hr).step
 
+variable {agree : List (DVal d) → TraceState N (unitsOf lay) → List (DVal d) →
+  TraceState N (unitsOf lay) → Prop}
+
 /-- An external-call rule monotone in the traced layer is monotone in the
-traced layer of marked traces, where it runs after a step. -/
+traced layer of marked traces, where it runs after a step, under the same
+agreement: the step keeps the traced state. -/
 theorem ExtTraceMonotone.stepAt {g : Name} {ts rs : List d.Ty}
     (h : letI := DialectTrace.traceAt (d := d) lay ρ L
-      ExtTraceMonotone (B := DialectTrace.Acts d) (σ := TraceState N (unitsOf lay)) g ts rs) :
+      ExtTraceMonotone (B := DialectTrace.Acts d) (σ := TraceState N (unitsOf lay)) g ts rs agree) :
     letI := DialectTrace.stepAt (d := d) lay ρ L
-    ExtTraceMonotone (B := Step (DialectTrace.Acts d)) (σ := TraceState N (unitsOf lay)) g ts rs :=
-  fun args args' hr => (h args args' hr).step
+    ExtTraceMonotone (B := Step (DialectTrace.Acts d)) (σ := TraceState N (unitsOf lay)) g ts rs
+      agree :=
+  fun args args' hr s s' hs ha => TraceRefinedBy.step_from (h args args' hr s s' hs ha)
 
 variable [DialectCall d]
 
@@ -111,9 +126,9 @@ variable [DialectCall d]
 layer has ops monotone in the traced layer of marked traces. -/
 theorem Func.TraceOpsMonotone.stepAt {f : Func d}
     (h : letI := DialectTrace.traceAt (d := d) lay ρ L
-      f.TraceOpsMonotone (DialectTrace.Acts d) (TraceState N (unitsOf lay))) :
+      f.TraceOpsMonotone (DialectTrace.Acts d) (TraceState N (unitsOf lay)) agree) :
     letI := DialectTrace.stepAt (d := d) lay ρ L
-    f.TraceOpsMonotone (Step (DialectTrace.Acts d)) (TraceState N (unitsOf lay)) :=
+    f.TraceOpsMonotone (Step (DialectTrace.Acts d)) (TraceState N (unitsOf lay)) agree :=
   fun b hb o ho => ⟨fun hc => OpTraceMonotone.stepAt lay ρ L ((h b hb o ho).1 hc),
     fun hT g hc => ExtTraceMonotone.stepAt lay ρ L ((h b hb o ho).2.1 hT g hc),
     fun hT hc => ⟨OpTracePickMonotone.stepAt lay ρ L ((h b hb o ho).2.2 hT hc).1,
