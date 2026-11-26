@@ -32,7 +32,7 @@ and $`\mathrm{globals}_C(s)` is the memory of the first global with the
 symbol $`s`, or is undefined.
 :::
 
-:::readable Fir.Func.SuccValid (pin := Fir.Func.entryLabel?) (pin := Fir.Func.block?) (pin := Fir.Func.typeOf) (fingerprint := "15074293607687035826")
+:::readable Fir.Func.SuccValid (pin := Fir.Func.entryLabel?) (pin := Fir.Func.block?) (pin := Fir.Func.typeOf) (fingerprint := "2891982137525606211")
 *Definition: a valid successor.* A successor $`l(x_1, \dots, x_n)`,
 written `^l(%x1, …, %xn)` in the text, names the label $`l` of the block
 that a branch goes to and the values $`x_1, \dots, x_n` that it passes to

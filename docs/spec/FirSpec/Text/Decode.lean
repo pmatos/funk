@@ -14,10 +14,10 @@ changes under it.
 
 #doc (Manual) "Decoding: readable blocks" =>
 
-:::moduleDocs (fingerprint := "5702380221208244942")
+:::moduleDocs (fingerprint := "15433008105740831764")
 :::
 
-:::readable Fir.Text.Scope Fir.Text.decodeType Fir.Text.decodeDef Fir.Text.define (pin := Fir.DialectText) (fingerprint := "12760793514210106894")
+:::readable Fir.Text.Scope Fir.Text.decodeType Fir.Text.decodeDef Fir.Text.define (pin := Fir.DialectText) (fingerprint := "4883058656714821383")
 *Definition: the scope, and adding definitions to it.* The _scope_ of a
 function is a table that gives each value the function defines its type.
 A type written at the position $`p` is decoded with the dialect's
@@ -36,7 +36,7 @@ block, its arguments, then, for each of its ops, the op's results and then
 the definitions of the blocks of its regions.
 :::
 
-:::readable Fir.Text.operandTypes (fingerprint := "7595020504766675867")
+:::readable Fir.Text.operandTypes (fingerprint := "718088693553894948")
 *Definition: the types of an op's operands.* The type of each operand is
 the type that the scope gives its value. An operand whose value the
 function $`f` does not define is an error at the operand, "value `%x` is
@@ -61,7 +61,7 @@ The op keeps its results, its operands by name, its successors as written
 and its location reference.
 :::
 
-:::readable Fir.Text.decodeFunc (fingerprint := "12026041559659901207")
+:::readable Fir.Text.decodeFunc (fingerprint := "4139156361639580219")
 *Definition: decoding a function.* A function is decoded from its symbol,
 its parameters, its result types and its blocks: first its result types,
 then the scope, built by the first pass from its parameters and then its

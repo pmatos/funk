@@ -14,10 +14,10 @@ when the Lean changes under it.
 
 #doc (Manual) "Comparison and selection rules: readable blocks" =>
 
-:::moduleDocs (fingerprint := "3832601918343440319")
+:::moduleDocs (fingerprint := "9858736010609772831")
 :::
 
-:::readable Fir.Core.Pred.holds (pin := Fir.Core.Pred) (pin := BitVec.slt) (pin := BitVec.sle) (pin := BitVec.ult) (pin := BitVec.ule) (fingerprint := "7461743572155578652")
+:::readable Fir.Core.Pred.holds (pin := Fir.Core.Pred) (pin := BitVec.slt) (pin := BitVec.sle) (pin := BitVec.ult) (pin := BitVec.ule) (fingerprint := "5098822620269924732")
 *Definition: when a predicate holds.* For every width $`N`, each of the ten
 {ref "The-fir-specification--Abstract-syntax--Core-ops"}[predicates] holds
 of two vectors $`a, b \in \mathbb{B}^N`, the set of vectors of $`N` bits,

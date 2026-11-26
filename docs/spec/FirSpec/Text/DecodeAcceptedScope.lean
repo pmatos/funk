@@ -14,10 +14,10 @@ fails when the Lean changes under it.
 
 #doc (Manual) "What the first pass accepts: readable blocks" =>
 
-:::moduleDocs (fingerprint := "12357358463602932005")
+:::moduleDocs (fingerprint := "8778673778377331474")
 :::
 
-:::readable Fir.Text.Scope.Holds.not_mem (pin := Fir.Text.Scope.Holds) (fingerprint := "3433405947972505279")
+:::readable Fir.Text.Scope.Holds.not_mem (pin := Fir.Text.Scope.Holds) (fingerprint := "16753589306968137771")
 *Lemma: a value that a scope does not contain is not in its list.* For
 every dialect, every
 {ref "The-fir-specification--Text-format--Decoding"}[scope] $`\mathit{sc}`
@@ -30,7 +30,7 @@ theorem add a value that the scope does not contain without naming a value
 twice.
 :::
 
-:::readable Fir.Text.define_holds (pin := Fir.Text.define) (pin := Fir.Text.decodeDef) (pin := Fir.Text.Scope.Holds) (fingerprint := "8506458844816013768")
+:::readable Fir.Text.define_holds (pin := Fir.Text.define) (pin := Fir.Text.decodeDef) (pin := Fir.Text.Scope.Holds) (fingerprint := "4025089072498826896")
 *Theorem: adding definitions names each value once.* Let $`d` be a
 dialect with a {ref "The-fir-specification--Text-format--Grammar"}[text].
 For every list $`\mathit{xs}` of definitions as read, scopes
@@ -53,7 +53,7 @@ $`L` have the same name. Adding a definition decodes it just as decoding
 it on its own does, so the values added are exactly $`\mathit{ys}`.
 :::
 
-:::readable Fir.Text.Adds (pin := Fir.Text.Scope.Holds) (fingerprint := "1346949199127177303")
+:::readable Fir.Text.Adds (pin := Fir.Text.Scope.Holds) (fingerprint := "16757775666229237496")
 *Definition: what the first pass adds.* Let $`d` be a dialect, $`a` a part
 of the tree, such as a list of blocks, ops or regions as read,
 $`\mathrm{define}` a first pass that adds $`a` to a scope,

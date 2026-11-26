@@ -14,7 +14,7 @@ fails when the Lean changes under it.
 
 #doc (Manual) "Float arithmetic in text: readable blocks" =>
 
-:::moduleDocs (fingerprint := "15480533653474075516")
+:::moduleDocs (fingerprint := "753286354611956413")
 :::
 
 :::readable Fir.Core.FBin.name Fir.Core.FUnary.name (fingerprint := "8863009115999354928")
@@ -24,7 +24,7 @@ $`\mathtt{fdiv}`, $`\mathtt{frem}` and $`\mathtt{fmod}`, and those of
 one $`\mathtt{fneg}`, $`\mathtt{fabs}` and $`\mathtt{sqrt}`. $`\mathsf{fma}` is written $`\mathtt{fma}`.
 :::
 
-:::readable Fir.Core.FastMath.attrs Fir.Core.takeWord Fir.Core.splitFlags Fir.Core.flagFree (fingerprint := "5441382323938434904")
+:::readable Fir.Core.FastMath.attrs Fir.Core.takeWord Fir.Core.splitFlags Fir.Core.flagFree (fingerprint := "16072839612953084681")
 *Definition: the flags in text.* The fast-math flags $`\phi` are written
 as words, one for each flag set, in the fixed order $`\mathtt{nnan}`,
 $`\mathtt{ninf}`, $`\mathtt{nsz}`, $`\mathtt{contract}`,

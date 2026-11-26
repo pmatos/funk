@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Scope along a run: readable blocks" =>
 
-:::moduleDocs (fingerprint := "5522836030231372541")
+:::moduleDocs (fingerprint := "6381068735648850974")
 :::
 
 :::readable Fir.eq_of_nodup_map (fingerprint := "17771416556615606785")
@@ -40,7 +40,7 @@ With them, the type that $`f` gives a value bound by a jump or by an op
 is the type the value is declared with.
 :::
 
-:::readable Fir.Func.block?_some (pin := Fir.Func.block?) (fingerprint := "18231392564545971550")
+:::readable Fir.Func.block?_some (pin := Fir.Func.block?) (fingerprint := "5524152963533099034")
 *Theorem: the block that a function finds by a label is one of its
 blocks, with that label.* If $`\mathrm{block}_f(l) = b`, then $`b` is in
 $`\mathrm{blocks}(f)` and its label is $`l`. Here $`\mathrm{block}_f(l)`
@@ -120,7 +120,7 @@ jump, unless it is a result of the jump itself, which the interpreter
 never binds; hence the condition that $`o` has none.
 :::
 
-:::readable Fir.Env.Scoped (fingerprint := "7193735154363532024")
+:::readable Fir.Env.Scoped (fingerprint := "4303037330014749199")
 *Definition: an environment holds every value in scope at an op.* For a
 function $`f`, a label $`l` and an index $`i`, the environment $`E`
 _holds every value in scope_ at the op at index $`i` of the block
@@ -136,7 +136,7 @@ it passes to a successor, is in scope, so the run finds each of them,
 with its type.
 :::
 
-:::readable Fir.Env.scoped_bind (pin := Fir.Env.Scoped) (fingerprint := "4915632581719082868")
+:::readable Fir.Env.scoped_bind (pin := Fir.Env.Scoped) (fingerprint := "16732486117264784299")
 *Theorem: binding names to values of their types gives an environment
 that holds every value in scope, when the old one held the others.* Let
 $`p^* = (x_1 : t_1) \dots (x_n : t_n)` be names with types, and
@@ -153,7 +153,7 @@ lookup of any other name finds what it found before, so the proof needs
 no fact that the new names are new.
 :::
 
-:::readable Fir.Env.Scoped.holds (pin := Fir.Env.Holds) (fingerprint := "6921116275317150023")
+:::readable Fir.Env.Scoped.holds (pin := Fir.Env.Holds) (fingerprint := "5652513084715566489")
 *Theorem: an environment that holds every value in scope holds any names
 in scope.* If $`\mathrm{scoped}_f(E, l, i)` and every name of $`X` is in
 scope at the op at index $`i` of the block labelled $`l`, then

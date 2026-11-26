@@ -1,3 +1,5 @@
+import Fir.Prelude
+
 /-!
 # The rounding mode of an op
 

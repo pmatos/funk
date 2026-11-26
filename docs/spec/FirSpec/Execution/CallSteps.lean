@@ -41,7 +41,7 @@ $`x` that ends stuck or with UB is already a path of the whole. For a call,
 $`x` is the callee's run and $`g` what the caller does after it returns.
 :::
 
-:::readable Fir.Module.func?_of_symbols (pin := Fir.Module.symbols) (pin := Fir.Module.func?) (fingerprint := "17384737556842784812")
+:::readable Fir.Module.func?_of_symbols (pin := Fir.Module.symbols) (pin := Fir.Module.func?) (fingerprint := "8992270901283415629")
 *Theorem: the callee is found.* Suppose the
 {ref "The-fir-specification--Validation--Scope-and-symbols"}[symbol table]
 of a module $`M` gives the symbol $`s` the function type $`t^* \to r^*`.
@@ -97,7 +97,7 @@ to its value.
 $$`\mathrm{enter}_f(v_1, \dots, v_n) = \mathsf{ok}\bigl(\mathrm{body}(e),\ [p_1 \mapsto v_1, \dots, p_n \mapsto v_n]\bigr)`
 :::
 
-:::readable Fir.Env.scoped_entry (pin := Fir.Env.Scoped) (fingerprint := "12924488738984897184")
+:::readable Fir.Env.scoped_entry (pin := Fir.Env.Scoped) (fingerprint := "12991865943368338695")
 *Theorem: at the start of a function, binding its parameters holds every
 value in scope.* An environment
 {ref "The-fir-specification--Execution--Scope-along-a-run"}[holds every value in scope]
@@ -110,7 +110,7 @@ $`f` to values of their types gives an environment that holds every value
 in scope at the first op of $`e`.
 :::
 
-:::readable Fir.Func.scoped_results (pin := Fir.Env.Scoped) (fingerprint := "10844354965287207548")
+:::readable Fir.Func.scoped_results (pin := Fir.Env.Scoped) (fingerprint := "15022633733543010707")
 *Theorem: an op's results join the scope.* Let $`f` be a
 {ref "The-fir-specification--Validation--The-general-rules"}[valid function],
 $`b` one of its blocks, and $`i` the index of an op of $`b`. Take an

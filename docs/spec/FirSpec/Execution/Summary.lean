@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Function summaries: readable blocks" =>
 
-:::moduleDocs (fingerprint := "467877716175025647")
+:::moduleDocs (fingerprint := "6086105531566803218")
 :::
 
 :::readable Fir.MemSet.Sub Fir.Effects.Le (pin := Fir.MemSet.Has) (pin := Fir.instLEEffects) (fingerprint := "17087869919382587889")
@@ -41,7 +41,7 @@ The join of a list, $`\bigsqcup_i e_i`, joins its sets from the left,
 from the empty set $`\emptyset`.
 :::
 
-:::readable Fir.Operation.call? Fir.Operation.picks Fir.SymbolTable.func? (fingerprint := "3148066930909805735")
+:::readable Fir.Operation.call? Fir.Operation.picks Fir.SymbolTable.func? (fingerprint := "994782109931757321")
 *Definition: the call of an op, and the function of a symbol.* An op in
 place $`o` _calls_ $`s`, $`\mathrm{call}(o) = s`, when it is not a
 terminator and its dialect gives it the callee $`\mathsf{fixed}~s`: the
@@ -58,7 +58,7 @@ in a table $`t` are the symbols that the ops of $`f`, at any depth, call
 and that name a function of $`t`, in order.
 :::
 
-:::readable Fir.SymbolTable.unseen Fir.countP_lt_of_mem Fir.SymbolTable.unseen_lt (fingerprint := "11354094714899778214")
+:::readable Fir.SymbolTable.unseen Fir.countP_lt_of_mem Fir.SymbolTable.unseen_lt (fingerprint := "13186390879684862959")
 *Definition and theorems: the functions left to see.* For a list of
 symbols $`S`, $`\mathrm{unseen}_t(S)` counts the functions of $`t` whose
 symbol is not in $`S`. A test that holds of no more elements than another,
@@ -67,7 +67,7 @@ elements of the list. So adding to $`S` a symbol not in it that names a
 function of $`t` leaves fewer unseen.
 :::
 
-:::readable Fir.SymbolTable.reach (fingerprint := "574001623422670966")
+:::readable Fir.SymbolTable.reach (fingerprint := "16670892662761527488")
 *Definition: the functions that a call may reach.* From a list of work
 $`W` and a list of seen symbols $`S`, the walk $`\mathrm{reach}_t(W, S)`
 takes the first symbol $`s` of $`W`:

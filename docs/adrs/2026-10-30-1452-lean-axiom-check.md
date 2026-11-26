@@ -24,6 +24,12 @@ Tier: direction; area: spec-site
   has the exact test). So `native_decide`, `decide +native` and native
   `bv_decide` are allowed. The human ruled to trust Lean's compiler on
   2026-10-30, in #52.
+- Lean's own `T.ctorIdx` and `T.ctorIdx._impl`, which Lean v4.36.0 makes
+  for each inductive type with more than one constructor, are exempt from
+  the bans on `unsafe` and `implemented_by`, in exactly the shape that Lean
+  makes them
+  ([the page](../decisions/spec-site-lean-build.md#what-lean-code-in-lean-may-not-do)
+  has the test). The human ruled this on 2026-11-26, in #511.
 - A `@[csimp]` swap rests on `propext`, `Classical.choice` and `Quot.sound`
   alone. The human accepted this narrowing on 2026-11-02, in #52.
 - `scripts/build-spec.sh` builds `lean/` with `lake build --wfail`, so any
@@ -44,7 +50,10 @@ one; only `--wfail` catches a `sorry` in it. Native evaluation adds Lean's
 compiler and runtime to the trusted base, and the bans on `unsafe`,
 `partial`, `implemented_by` and `extern` keep compiled code equal to the
 proved definitions. A swap proved from a native axiom could make that
-axiom's false claim run as `true` when the check runs it again.
+axiom's false claim run as `true` when the check runs it again. Lean needs
+`T.ctorIdx` to build `noConfusion`, so no inductive type with more than one
+constructor can avoid the generated pair; its `_impl` only reads the tag
+that the runtime keeps as the constructor's index.
 
 ## Rejected alternatives
 
@@ -56,4 +65,6 @@ axiom's false claim run as `true` when the check runs it again.
   second Lake entry point to guard.
 - **A text check that bans `native_decide`.** Proposed, then dropped when the
   human chose to trust the compiler.
+- **Staying on Lean v4.35.0** until Lean can drop only the `implemented_by`
+  of `T.ctorIdx`.
 - **Keeping warnings as warnings.** A `sorry` inside an `example` would pass.

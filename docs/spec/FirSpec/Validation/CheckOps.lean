@@ -14,10 +14,10 @@ when the Lean changes under it.
 
 #doc (Manual) "Checking ops: readable blocks" =>
 
-:::moduleDocs (fingerprint := "5789074718386447926")
+:::moduleDocs (fingerprint := "11602654820537834149")
 :::
 
-:::readable Fir.FuncTables Fir.Func.defSites Fir.Func.tables (fingerprint := "3089582122989733551")
+:::readable Fir.FuncTables Fir.Func.defSites Fir.Func.tables (fingerprint := "8652408967080091753")
 *Definition: the tables of a function.* Before it checks the ops of a
 function $`f`, the check builds five tables, once, from $`f` and a list
 $`\mathit{all}` of its blocks at any depth:
@@ -41,7 +41,7 @@ $`\mathit{all}`, which is $`\mathrm{allblocks}(f)` unless a tool lists the
 blocks its own way.
 :::
 
-:::readable Fir.Func.scope_eq Fir.Func.scope_fun Fir.Func.blocks_eq Fir.Func.start_head? Fir.Func.mem_sites (fingerprint := "7023703154083806816")
+:::readable Fir.Func.scope_eq Fir.Func.scope_fun Fir.Func.blocks_eq Fir.Func.start_head? Fir.Func.mem_sites (fingerprint := "4670142951878677873")
 *Theorems: each table holds what the rules define.* For every function
 $`f`, with the tables built from $`\mathit{all}`:
 
@@ -59,7 +59,7 @@ So each later check can look a fact up in a table and still be read as the
 rule that speaks of it.
 :::
 
-:::readable Fir.siteDominates Fir.siteDominates_iff (pin := Fir.Func.DominatesUse) (fingerprint := "15346624507046952332")
+:::readable Fir.siteDominates Fir.siteDominates_iff (pin := Fir.Func.DominatesUse) (fingerprint := "6992620961166705104")
 *Definition and theorem: whether a definition dominates a use, by search.*
 $`\mathrm{sitedom}(g, S, s, l, i)` is
 {ref "The-fir-specification--Validation--Dominance"}[dominance of a use]
@@ -76,7 +76,7 @@ of a block of $`\mathrm{blocks}(f)`:
 $$`\begin{aligned} & \mathrm{sitedom}(\mathrm{graph}(f), \mathrm{start}(f), s, l, i) \\ \iff\ & s \mathrel{\mathrm{dom}_f} (l, i) \end{aligned}`
 :::
 
-:::readable Fir.DefSite.why (fingerprint := "1430329553231606592")
+:::readable Fir.DefSite.why (fingerprint := "8993468248805798306")
 *Definition: why a definition does not dominate a use.* When the
 definition of $`x` at a site does not dominate its use in the block
 labelled $`l`, the problem says why, writing values and labels as the text
@@ -93,7 +93,7 @@ A parameter dominates every use, so its message, "`%x` is a parameter", is
 never given.
 :::
 
-:::readable Fir.useProblems Fir.useProblems_eq_nil (fingerprint := "6574640230401353349")
+:::readable Fir.useProblems Fir.useProblems_eq_nil (fingerprint := "14276426956261356415")
 *Definition and theorem: the check of a use.* The check of a use of $`x` by
 the op at index $`i` of the block labelled $`l` looks $`x` up in the sites
 table:
@@ -117,7 +117,7 @@ the check of the use gives no problem exactly when the use is
 $$`\begin{aligned} & \mathrm{useproblems}(x, l, i) = \epsilon \\ \iff\ & \mathrm{inscope}_f(x, l, i) \end{aligned}`
 :::
 
-:::readable Fir.succProblems Fir.succProblems_eq_nil (fingerprint := "337900791815518371")
+:::readable Fir.succProblems Fir.succProblems_eq_nil (fingerprint := "7681125571069692245")
 *Definition and theorem: the check of a successor.* The check of a
 successor $`l(x_1, \dots, x_n)` gives, in this order:
 
@@ -154,7 +154,7 @@ proofs of this chapter use them to read each
 line of a check as the premise it tests.
 :::
 
-:::readable Fir.kindRef Fir.regionProblems Fir.regionProblems_eq_nil (pin := Fir.Func.RegionsValid) (fingerprint := "7257454547532280542")
+:::readable Fir.kindRef Fir.regionProblems Fir.regionProblems_eq_nil (pin := Fir.Func.RegionsValid) (fingerprint := "4774335886644932620")
 *Definition and theorem: the check of an op's regions.* The check of the
 regions of an op $`o` of $`f` gives "the op's regions are not of the kinds
 that its op instance states" unless the kinds of its regions are those of
@@ -171,7 +171,7 @@ check gives no problem exactly when the regions of $`o` are valid:
 $$`\begin{aligned} & \mathrm{regionproblems}(o) = \epsilon \\ \iff\ & C, f \vdash \mathrm{regions}(o)~\text{valid} \end{aligned}`
 :::
 
-:::readable Fir.generalProblems Fir.succCountProblems (fingerprint := "4979607711645901955")
+:::readable Fir.generalProblems Fir.succCountProblems (fingerprint := "17256420768604328044")
 *Definition: the checks of an op that hold in every region.* Two parts of
 the check of an op hold for every op, whatever the kind of its region. The
 first gives the problems of its operand and result types, and then those
@@ -205,7 +205,7 @@ is valid:
 $$`\begin{aligned} & \mathrm{opproblems}(o) = \epsilon \\ \iff\ & C, f, b, i \vdash o~\text{valid} \end{aligned}`
 :::
 
-:::readable Fir.innerOpProblems Fir.Operation.innerProblems Fir.Func.scope_contains Fir.innerOpProblems_eq_nil Fir.Operation.innerProblems_eq_nil (pin := Fir.Func.InnerOpValid) (fingerprint := "12112470262232976485")
+:::readable Fir.innerOpProblems Fir.Operation.innerProblems Fir.Func.scope_contains Fir.innerOpProblems_eq_nil Fir.Operation.innerProblems_eq_nil (pin := Fir.Func.InnerOpValid) (fingerprint := "10432406872719376282")
 *Definitions and theorems: the check of the ops inside a region.* The check
 of an op inside a region tests the premises of the rule of a
 {ref "The-fir-specification--Validation--The-general-rules"}[valid op inside a region]

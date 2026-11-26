@@ -1,5 +1,6 @@
 import Std.Data.HashMap
 import Std.Data.HashSet
+import Fir.Prelude
 
 /-!
 The check looks names up in hash tables, so that it takes time close to

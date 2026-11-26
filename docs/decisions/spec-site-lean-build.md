@@ -8,7 +8,7 @@ deleted (ADR-2026-11-09-1610).
 ## Toolchain and packages
 
 `lean/lean-toolchain` is the one pin (ADR-2026-10-29-2135). It names a stable
-Lean release, now `leanprover/lean4:v4.35.0`. `docs/spec/lean-toolchain` is a
+Lean release, now `leanprover/lean4:v4.36.0`. `docs/spec/lean-toolchain` is a
 symlink to it. Verso's `{includeLiterate}` runs `elan run <toolchain> lake
 query` in the document's directory, so `docs/spec/` needs that file.
 Nightlies and release candidates are not used.
@@ -139,6 +139,25 @@ So `sorry`, every other axiom, `unsafe`, `partial`, `implemented_by` and
 `partial`, `unsafe` or `extern` stays out of `lean/` until ADR-2026-10-30-1452
 and this page are edited to allow it.
 
+One pair that Lean generates is exempt from the bans on `unsafe` and
+`implemented_by`. Since v4.36.0, Lean makes a `T.ctorIdx` for each inductive
+type `T` with more than one constructor. It gives the index of a value's
+constructor by `T.casesOn`. Lean marks it `implemented_by T.ctorIdx._impl`, an
+`unsafe` definition that reads the tag the runtime keeps in the value
+(`getObjTagNat`). Lean needs `T.ctorIdx` to build `noConfusion`, so turning it
+off with `genCtorIdx false` breaks every such type. The check accepts the pair
+only in the shape that Lean makes: `T` is an inductive type with more than one
+constructor, `T.ctorIdx` is the `casesOn` that gives each constructor its
+index, and `T.ctorIdx._impl` has its type and only calls `getObjTagNat` on its
+last argument. Every other check still applies to both. So the trusted base
+also includes the compiler and runtime keeping a constructor's index as its
+tag. The human ruled this on 2026-11-26, in #511: every large Lean project and
+Mathlib must accept the pair on v4.36.0. `FirTest/AxiomsCtorIdx.lean` tests
+that a hand-written `implemented_by` and a forged pair are still rejected.
+
+Rejected: staying on v4.35.0 until Lean offers an option that drops only the
+`implemented_by`.
+
 Rejected: a text search for `sorry`, `partial` and the rest. It cannot see the
 axioms a declaration uses through other declarations, nor code that a macro
 writes, and prose may use the words. Rejected too: `#print axioms` for each
@@ -212,16 +231,18 @@ pass.
 A `by_cases` under `lean/` on a proposition with no `Decidable` instance needs
 `classical` before it, in the same tactic block (ADR-2026-11-06-0224).
 `by_cases` turns on `Classical.propDecidable` through `open Classical`, which
-uses a process-wide list of scoped extensions. In Lean v4.35.0, Verso's
+uses a process-wide list of scoped extensions. Up to Lean v4.35.0, Verso's
 elaboration of module docs swaps that list for an empty one on the main thread
 while proofs elaborate on other threads ([leanprover/lean4#15817](https://github.com/leanprover/lean4/issues/15817)).
 A missing `classical` then fails at random, not on every build; it failed one
 Pages build of `main` (#184). `classical` adds the instance as a local one,
 without the list.
 
-The `classical` lines look redundant. Do not remove them while the toolchain
-lacks commit `541dbdcd`, the fix in
-[leanprover/lean4#15839](https://github.com/leanprover/lean4/pull/15839). A
+The fix is [leanprover/lean4#15839](https://github.com/leanprover/lean4/pull/15839),
+commit `541dbdcd` on Lean's `master`. v4.36.0 has it, under another commit:
+its `Lean/Elab/DocString.lean` no longer swaps the list, and v4.36.0-rc1 still
+did. The `classical` lines stay until a PR removes them and edits
+ADR-2026-11-06-0224. A
 `by_cases` whose proposition has an instance, such as `x = y` on `Name`, stays
 as it is.
 

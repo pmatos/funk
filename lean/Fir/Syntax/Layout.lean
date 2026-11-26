@@ -1,3 +1,5 @@
+import Fir.Prelude
+
 /-!
 A module's data layout describes its memories (ADR-2026-11-09-1542). Each
 memory has a number, `N` in the pointer type `ptr<N>`. For each memory it

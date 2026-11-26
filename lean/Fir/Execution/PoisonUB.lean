@@ -1,3 +1,5 @@
+import Fir.Prelude
+
 /-!
 This section explains, in plain words, why fir has two kinds of undefined
 behaviour, how they differ, and what `freeze` does. It defines nothing: the

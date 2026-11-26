@@ -2,6 +2,7 @@ import Fir
 import FirRef
 import FirRef.Main
 import FirTest.Axioms
+import FirTest.AxiomsCtorIdx
 import FirTest.Parse
 import FirTest.Print
 import FirTest.PrintInt

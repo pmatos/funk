@@ -14,10 +14,10 @@ fails when the Lean changes under it.
 
 #doc (Manual) "Exhaustive runs that try a few NaNs: readable blocks" =>
 
-:::moduleDocs (fingerprint := "12466895454639907215")
+:::moduleDocs (fingerprint := "15547754711853716503")
 :::
 
-:::readable Fir.ChoiceTree.isNaNBits Fir.ChoiceTree.nanTries Fir.ChoiceTree.bitsFor Fir.ChoiceTree.tryAt (fingerprint := "15738451443851095608")
+:::readable Fir.ChoiceTree.isNaNBits Fir.ChoiceTree.nanTries Fir.ChoiceTree.bitsFor Fir.ChoiceTree.tryAt (fingerprint := "4686584274262999328")
 *Definition: the values that the walk tries at a choice.* A number $`n` is
 the bits of a NaN of $`\mathsf{float}\langle e,m\rangle` when it has
 $`1 + e + m` bits at most, every exponent bit set and a mantissa that is

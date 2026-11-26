@@ -37,7 +37,6 @@ open Lean Elab Term
 open Verso ArgParse Doc Elab
 open Verso.Doc.Concrete Verso.Parser
 open Verso.Genre Manual
-open Lean.Doc.Syntax
 open PartElabM
 
 namespace FirSpecSite
@@ -206,7 +205,7 @@ def grammar : CodeBlockExpanderOf GrammarConfig
   | config, str => do
     let some boxes := grammarExt.getState (← getEnv)
       | throwError "a grammar box belongs inside the readable block that explains {config.type.val}"
-    let g ← match parseGrammar str.getString with
+    let g ← match parseGrammar str.getVersoCodeBlock with
       | .ok g => pure g
       | .error e => throwErrorAt str e
     modifyEnv (grammarExt.setState · (some (boxes.push (config.type.val, g.lines.flatMap (·.tags)))))
@@ -278,8 +277,12 @@ def readableModule (path : StrLit) (mod : Ident) (title : StrLit) (doc : Ident) 
   let titleString := inlinesToString (← getEnv) titleParts
   let titleSyntax := .node .none nullKind titleParts
   let initState : PartElabM.State := .init titleSyntax titleSyntax
-  let g ← elabTerm (mkIdent ``Manual) (some (.const ``Genre []))
-  let (titleTerm, _) ← DocElabM.run ⟨mkIdent ``Manual, g, .always, .none⟩ {} initState <| do
+  let ctx := {
+    (← DocElabContext.fromGenreTerm ⟨mkIdent ``Manual⟩ (← currentDocName)) with
+    docReconstructionPlaceholder := none
+  }
+  let g := ctx.genre
+  let (titleTerm, _) ← DocElabM.run ctx {} initState <| do
     titleParts.mapM (elabInline ⟨·⟩)
   let modJson ← VersoLiterate.loadModuleJson path.getString mod.getId.toString
   let lit ← match VersoLiterate.loadJsonString modJson s!"JSON for {mod.getId}" with
@@ -332,10 +335,11 @@ end
 section at level `n`, each declaration shown by its readable block from the
 document module `D` with its Lean hidden under it.
 -/
-@[part_command Lean.Doc.Syntax.command]
+@[part_command Lean.Doc.Parser.Block.command]
 def includeReadable : PartCommand
-  | `(block|command{includeReadable $args* }) => do
-    let {path, level, modName, title, doc} ← parseThe IncludeReadableConfig (← parseArgs args)
+  | .command v => do
+    unless v.name.getId == `includeReadable do throwUnsupportedSyntax
+    let {path, level, modName, title, doc} ← parseThe IncludeReadableConfig (← parseArgs v.args)
     let name ← readableModule path modName title doc
     closePartsUntil level.getNat (← getRef).getHeadInfo.getPos!
     addPart <| .included (mkIdentFrom modName name)

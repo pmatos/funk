@@ -57,7 +57,7 @@ A well-formed function names each value with a name and states each type
 as a type that can be written.
 :::
 
-:::readable Fir.Func.WellFormed.isName_of_typeOf (pin := Fir.Func.typeOf) (fingerprint := "16634295206368681076")
+:::readable Fir.Func.WellFormed.isName_of_typeOf (pin := Fir.Func.typeOf) (fingerprint := "1301161772342389729")
 *Theorem: a value of a well-formed function is a name.* For every dialect
 with signatures and a text format, every well-formed function $`f`, and
 every name $`x` to which $`f` gives a type, $`x` is a name: $`f` gives a

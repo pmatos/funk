@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "A module's dialect set: readable blocks" =>
 
-:::moduleDocs (fingerprint := "17413818953444209482")
+:::moduleDocs (fingerprint := "6738944975040617583")
 :::
 
 :::readable Fir.opDialects Fir.Operation.wordDialects Fir.Func.wordDialects Fir.DialectItem.wordDialects Fir.Aggregate.wordDialects Fir.Extern.wordDialects (fingerprint := "14463441744293897376")
@@ -64,7 +64,7 @@ dialect writes only the core's words, whatever its parent names, and a
 parent's set does not name the dialects of a nested module's set.
 :::
 
-:::readable Fir.Func.setProblems Fir.DialectItem.setProblems Fir.Aggregate.setProblems Fir.Extern.setProblems Fir.SymbolTable.setProblems Fir.Module.setProblems (fingerprint := "9197802846713725721")
+:::readable Fir.Func.setProblems Fir.DialectItem.setProblems Fir.Aggregate.setProblems Fir.Extern.setProblems Fir.SymbolTable.setProblems Fir.Module.setProblems (fingerprint := "3643736129620275950")
 *Definition: the check of a module's dialect sets.* The check of a table
 gives, in order: "the dialect set names $`x`, which is not a known dialect"
 for each dialect $`x` of its set that $`d` does not hold; then, for each of
@@ -81,7 +81,7 @@ dialect $`x`, which the module's dialect set does not name". The check of a
 module gives the problems of each of its tables, in order.
 :::
 
-:::readable Fir.find?_not_mem_eq_none Fir.SymbolTable.setProblems_eq_nil_iff Fir.Module.setProblems_eq_nil_iff (fingerprint := "7731780434844951569")
+:::readable Fir.find?_not_mem_eq_none Fir.SymbolTable.setProblems_eq_nil_iff Fir.Module.setProblems_eq_nil_iff (fingerprint := "3332504627311705671")
 *Theorem: the check decides the rule.* For every table $`T`, the check of
 its dialect set gives no problem exactly when $`T` keeps to its set, and so,
 for every module $`m`:

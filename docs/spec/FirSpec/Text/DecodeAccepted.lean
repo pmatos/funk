@@ -14,7 +14,7 @@ fails when the Lean changes under it.
 
 #doc (Manual) "What the second pass accepts: readable blocks" =>
 
-:::moduleDocs (fingerprint := "13834909300499829018")
+:::moduleDocs (fingerprint := "17839154070741558286")
 :::
 
 :::readable Fir.Text.WritableDef (pin := Fir.DialectText) (pin := Fir.Func.WellFormed) (fingerprint := "15597899823721650846")
@@ -30,7 +30,7 @@ $`a`, when there is one. These are the conditions that a
 function asks of each value it defines.
 :::
 
-:::readable Fir.Text.operandTypes_ok (pin := Fir.Text.operandTypes) (fingerprint := "6844801560988947208")
+:::readable Fir.Text.operandTypes_ok (pin := Fir.Text.operandTypes) (fingerprint := "8524910996229736624")
 *Lemma: the operands' types come from the scope.* For every dialect,
 scope $`\mathit{sc}`, function symbol, list of operands
 $`x_1, \dots, x_n`, each with its position, and list of types
@@ -43,7 +43,7 @@ the scope, in order, and fails at the first one that the scope does not
 give a type.
 :::
 
-:::readable Fir.Operation.AcceptedIn (pin := Fir.Func.OpWellFormed) (pin := Fir.Succ.Writable) (pin := Fir.Location.limit) (pin := Fir.DialectSignature) (pin := Fir.DialectText) (fingerprint := "1882579601107023393")
+:::readable Fir.Operation.AcceptedIn (pin := Fir.Func.OpWellFormed) (pin := Fir.Succ.Writable) (pin := Fir.Location.limit) (pin := Fir.DialectSignature) (pin := Fir.DialectText) (fingerprint := "6205986651907458266")
 *Definition: an op that a scope accepts.* Let $`d` be a dialect with a
 {ref "The-fir-specification--Abstract-syntax--Dialects"}[signature] and a
 text, $`\mathit{sc}` a scope, and $`o` an op with the op instance $`p`.

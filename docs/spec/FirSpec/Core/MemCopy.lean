@@ -14,10 +14,10 @@ when the Lean changes under it.
 
 #doc (Manual) "Copy and move rules: readable blocks" =>
 
-:::moduleDocs (fingerprint := "17304903872887629984")
+:::moduleDocs (fingerprint := "4586418691670822638")
 :::
 
-:::readable Fir.Core.partlyOverlap (fingerprint := "9681611242270941796")
+:::readable Fir.Core.partlyOverlap (fingerprint := "3796905921569385346")
 *Definition: ranges that partly overlap.* The ranges of $`n` units
 through the pointers $`p` and $`q` partly overlap when $`p` and $`q` have
 the provenance of one allocation, not the absence of one, written

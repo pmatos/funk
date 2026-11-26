@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Frame laws: readable blocks" =>
 
-:::moduleDocs (fingerprint := "7537885618894403617")
+:::moduleDocs (fingerprint := "12736547653558600970")
 :::
 
 :::readable Fir.Memory.Memories.enter_mem Fir.Memory.Memories.exit_enter (fingerprint := "3818146357299077169")
@@ -52,14 +52,14 @@ $`(y, b) = (x, a)`, and as it was otherwise. No memory gains or loses an
 allocation.
 :::
 
-:::readable Fir.Memory.Memories.freeAll_get Fir.Memory.Memories.freeAll_length Fir.Memory.Memories.freeAll_frames (fingerprint := "3495719199588688274")
+:::readable Fir.Memory.Memories.freeAll_get Fir.Memory.Memories.freeAll_length Fir.Memory.Memories.freeAll_frames (fingerprint := "10870870552781355811")
 *Theorem: freeing a list kills exactly what it lists.* After freeing the
 list $`l`, the allocation $`a` of $`x` is killed when $`(x, a) \in l`, and
 as it was otherwise. No memory gains or loses an allocation, and the
 frames stay as they were.
 :::
 
-:::readable Fir.Memory.Memories.exit_frames Fir.Memory.Memories.exit_get Fir.Memory.Memories.exit_length (fingerprint := "3204741733852376809")
+:::readable Fir.Memory.Memories.exit_frames Fir.Memory.Memories.exit_get Fir.Memory.Memories.exit_length (fingerprint := "9773670071548489271")
 *Theorem: leaving a call frees exactly its frame.* When the frames of
 $`S` are $`\mathit{fr}~\mathit{fr}^*`, leaving the call pops
 $`\mathit{fr}`, so the frames are $`\mathit{fr}^*`; it kills the

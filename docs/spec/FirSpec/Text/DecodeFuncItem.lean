@@ -34,7 +34,7 @@ decoding each $`(a_i, q_i)` with the
 order, gives $`t_1, \dots, t_n`.
 :::
 
-:::readable Fir.Func.WellFormed.decodeFunc_eq (pin := Fir.Text.decodeFunc) (pin := Fir.Func.WellFormed) (fingerprint := "2828869244362646918")
+:::readable Fir.Func.WellFormed.decodeFunc_eq (pin := Fir.Text.decodeFunc) (pin := Fir.Func.WellFormed) (fingerprint := "3006571769169104882")
 *Theorem: a well-formed function decodes back.* For every dialect with
 signatures, validation rules and a text format whose text is lawful, every
 {ref "The-fir-specification--Text-format--Round-trips"}[well-formed]

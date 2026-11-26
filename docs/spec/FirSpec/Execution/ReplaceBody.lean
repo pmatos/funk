@@ -36,7 +36,7 @@ every caller at once: it is what an optimizer does when it rewrites one
 function of a module.
 :::
 
-:::readable Fir.Module.funcs_replaceBody Fir.Func.replaceBody_of_ne Fir.Func.replaceBody_of_eq Fir.Module.func?_replaceBody (pin := Fir.Module.func?) (fingerprint := "17590050467722768872")
+:::readable Fir.Module.funcs_replaceBody Fir.Func.replaceBody_of_ne Fir.Func.replaceBody_of_eq Fir.Module.func?_replaceBody (pin := Fir.Module.func?) (fingerprint := "4874706653414586257")
 *Theorems: what a replacement changes.* For every module $`M`, symbol
 $`s`, region $`b` and function $`f`:
 
@@ -55,7 +55,7 @@ of $`x` runs. So a call of any other symbol runs the same function in the
 new module as in the old.
 :::
 
-:::readable Fir.Module.func?_of_mem Fir.Module.func?_replaceBody_self Fir.Module.func?_replaceBody_of_ne (pin := Fir.Module.func?) (fingerprint := "16512296075026080550")
+:::readable Fir.Module.func?_of_mem Fir.Module.func?_replaceBody_self Fir.Module.func?_replaceBody_of_ne (pin := Fir.Module.func?) (fingerprint := "17541982880925199527")
 *Theorems: in a module whose symbols are unique, a call of a function's
 symbol runs it.* If no two functions of $`M` have the same symbol, then
 for every function $`g` of $`M` with the symbol $`s`,
@@ -66,7 +66,7 @@ with $`g`'s body replaced by $`b`, $`s` finds $`g` with the body $`b`, and
 every other symbol finds what it finds in $`M`.
 :::
 
-:::readable Fir.Module.declares_replaceBody (pin := Fir.Module.declares) (fingerprint := "15837225825212608166")
+:::readable Fir.Module.declares_replaceBody (pin := Fir.Module.declares) (fingerprint := "15349400318050950852")
 *Theorem: replacing a body keeps the declarations.* A module with the body
 of a function replaced declares each symbol for the same types as the
 module does: replacing a body changes no external declaration.
@@ -80,7 +80,7 @@ every function keeps its parameter and result types, and every external
 declaration stays.
 :::
 
-:::readable Fir.Module.symbols_replaceBody Fir.Module.context_replaceBody Fir.Module.dialectItems_replaceBody Fir.Module.aggregates_replaceBody Fir.Module.layouts_replaceBody Fir.Module.globals_replaceBody Fir.Module.externs_replaceBody (pin := Fir.Module.symbols) (pin := Fir.Module.context) (fingerprint := "2786223183160312306")
+:::readable Fir.Module.symbols_replaceBody Fir.Module.context_replaceBody Fir.Module.dialectItems_replaceBody Fir.Module.aggregates_replaceBody Fir.Module.layouts_replaceBody Fir.Module.globals_replaceBody Fir.Module.externs_replaceBody (pin := Fir.Module.symbols) (pin := Fir.Module.context) (fingerprint := "4504637312167593682")
 *Theorems: a replacement keeps the symbol table and the context of
 validation.* For every module $`M`, symbol $`s` and region $`b`, the
 {ref "The-fir-specification--Validation--Scope-and-symbols"}[symbol table]

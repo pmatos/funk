@@ -82,7 +82,7 @@ So when the run binds the results of $`o`, they have the types that
 $`f` gives them, and they hide no name that the run bound before.
 :::
 
-:::readable Fir.Func.holds_next (pin := Fir.Env.Holds) (fingerprint := "472778959504751451")
+:::readable Fir.Func.holds_next (pin := Fir.Env.Holds) (fingerprint := "1478088879460836101")
 *Theorem: after an op of the entry block binds its results, the
 environment holds what was defined before the next op.* Let $`f` be valid
 in a module context, $`e` its entry block, which declares no arguments,
@@ -193,7 +193,7 @@ there is none, when it declares arguments or when the values do not have
 the parameter types, and otherwise starts there.
 :::
 
-:::readable Fir.Func.holds_params (pin := Fir.Env.Holds) (fingerprint := "10281406635602267665")
+:::readable Fir.Func.holds_params (pin := Fir.Env.Holds) (fingerprint := "10176944671807009551")
 *Theorem: before the first op, a run holds the parameters.* Let $`f` be
 valid in a module context, and $`v_1, \dots, v_n` values of the types
 $`t_1, \dots, t_n` of its parameters $`p_1, \dots, p_n`. For every block

@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Float comparison rules: readable blocks" =>
 
-:::moduleDocs (fingerprint := "958165968004724873")
+:::moduleDocs (fingerprint := "12061466592591344373")
 :::
 
 :::readable Fir.Core.floatCompare (fingerprint := "16383978172134608434")
@@ -35,7 +35,7 @@ sign play no part. Every pair of a format the model does not have, which
 validation rejects, is unordered, so that the rule is total.
 :::
 
-:::readable Fir.Core.FPred.holds (pin := Fir.Core.FPred) (fingerprint := "12762462375925802415")
+:::readable Fir.Core.FPred.holds (pin := Fir.Core.FPred) (fingerprint := "17498018701504406291")
 *Definition: when a float predicate holds.* Each of the fourteen
 {ref "The-fir-specification--Abstract-syntax--Core-ops"}[float predicates]
 holds of a pair that compares as $`c`, or not, as follows, where $`\bot`

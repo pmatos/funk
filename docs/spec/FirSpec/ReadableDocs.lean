@@ -1,3 +1,4 @@
+import FirSpec.Prelude
 import FirSpec.Syntax.Dialect
 import FirSpec.Syntax.Location
 import FirSpec.Syntax.Module

@@ -14,7 +14,7 @@ fails when the Lean changes under it.
 
 #doc (Manual) "Reading the location table and the module: readable blocks" =>
 
-:::moduleDocs (fingerprint := "796527326463112526")
+:::moduleDocs (fingerprint := "18079790725684647221")
 :::
 
 :::readable Fir.Text.readNat Fir.Text.readLocRef (pin := Fir.Location.limit) (fingerprint := "9316775306958055664")
@@ -26,7 +26,7 @@ line" or "expected a column". A location reference inside a location is a
 location reference token, whose bound the lexer has checked.
 :::
 
-:::readable Fir.Text.readRange Fir.Text.readLocArgs Fir.Text.readLocation (pin := Fir.Location) (fingerprint := "709511176629601186")
+:::readable Fir.Text.readRange Fir.Text.readLocArgs Fir.Text.readLocation (pin := Fir.Location) (fingerprint := "8526505796728848469")
 *Definition: reading a location.* A
 {ref "The-fir-specification--Abstract-syntax--Locations"}[location] is
 read by its first token:

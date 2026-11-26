@@ -17,7 +17,7 @@ when the Lean changes under it.
 :::moduleDocs (fingerprint := "17788756930403564417")
 :::
 
-:::readable Fir.Func.OpWellFormed (pin := Fir.Func.typeOf) (pin := Fir.DialectSignature) (pin := Fir.Location.limit) (fingerprint := "12115051900375411089")
+:::readable Fir.Func.OpWellFormed (pin := Fir.Func.typeOf) (pin := Fir.DialectSignature) (pin := Fir.Location.limit) (fingerprint := "2671275465339211556")
 *Definition: an op that can be written and read back.* Let $`f` be a
 function and $`o` an op with the op instance $`p`. The op $`o` is _well
 formed_ in $`f` when:

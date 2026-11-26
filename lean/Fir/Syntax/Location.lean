@@ -1,3 +1,5 @@
+import Fir.Prelude
+
 /-!
 Every op has a location: where it came from (ADR-2026-10-29-2013). The
 field is required, and the unknown location is a valid value. Locations are

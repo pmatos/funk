@@ -12,7 +12,7 @@ gives a poison result.
 
 # What comes from Lean's model, and what is fir's own
 
-Lean's float model (`Float.Model` in Lean v4.35.0) does the arithmetic.
+Lean's float model (`Float.Model` in Lean v4.36.0) does the arithmetic.
 From the model come:
 
 * reading a bit pattern as a number: `UnpackedFloat.unpack` reads it as a

@@ -2,7 +2,7 @@
 The check that Lean's float model works at formats other than binary32 and
 binary64, before fir's spec builds on it (ADR-2026-11-09-1549; the human's
 ruling of 2026-11-10 on #229). The model is `Float.Model.UnpackedFloat` in
-Lean v4.35.0 (`src/Init/Data/Float/Model/`): each operation takes a
+Lean v4.36.0 (`src/Init/Data/Float/Model/`): each operation takes a
 `Format`, an exponent width and a mantissa width, unpacks bit patterns,
 computes and rounds to nearest even, and packs the result.
 

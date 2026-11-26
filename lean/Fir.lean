@@ -1,3 +1,4 @@
+import Fir.Prelude
 import Fir.Syntax.Dialect
 import Fir.Syntax.Location
 import Fir.Syntax.Layout

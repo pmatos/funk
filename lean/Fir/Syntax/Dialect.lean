@@ -1,3 +1,5 @@
+import Fir.Prelude
+
 /-!
 fir is built from dialects, so that it can reach any kind of hardware
 (ADR-2026-10-29-2016). A dialect supplies its types and its ops: the core
