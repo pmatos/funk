@@ -226,6 +226,24 @@ allowed in an `example` too. The build in `docs/spec/` stays a plain
 Rejected: keeping warnings as warnings. A `sorry` inside an `example` would
 pass.
 
+### Equality on strings, numbers and bit vectors
+
+`lean/Fir/Prelude.lean` gives `==` on `String` and `BitVec w`, and the
+lawfulness of `==` on `String`, `Nat` and `BitVec w`, from decidable
+equality, at a high priority. Lean v4.36.0 gives these types linear order
+packages, and their `BEq` and `LawfulBEq` then come from the packages, whose
+proofs use `Classical.choice` and whose `==` the kernel cannot reduce. Without
+the module, 12 axiom pins of `FirTest` gained `Classical.choice`, proofs by
+`decide` in `FirTest/ValidSum` failed, and definitions such as `icmpValues` and
+the NaN choices gained `Classical.choice` too. Every root module of `lean/Fir`,
+one that imports no other module of fir, imports `Fir.Prelude`, so all of fir
+sees the same instances. The move to v4.36.0 found these instances by
+comparing the axioms of every declaration of `lean/` on both toolchains, and
+a later bump can check the same way.
+
+Rejected: updating the axiom pins to the new axioms. That would weaken what
+the proofs rest on, with no change to fir.
+
 ### A `by_cases` without an instance runs under `classical`
 
 A `by_cases` under `lean/` on a proposition with no `Decidable` instance needs
@@ -241,7 +259,8 @@ without the list.
 The fix is [leanprover/lean4#15839](https://github.com/leanprover/lean4/pull/15839),
 commit `541dbdcd` on Lean's `master`. v4.36.0 has it, under another commit:
 its `Lean/Elab/DocString.lean` no longer swaps the list, and v4.36.0-rc1 still
-did. The `classical` lines stay until a PR removes them and edits
+did. The PR's test, `tests/elab/versoDocModuleScoped.lean`, fails on v4.35.0
+and passes on v4.36.0. The `classical` lines stay until a PR removes them and edits
 ADR-2026-11-06-0224. A
 `by_cases` whose proposition has an instance, such as `x = y` on `Name`, stays
 as it is.

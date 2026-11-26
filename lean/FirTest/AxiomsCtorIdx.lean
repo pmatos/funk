@@ -71,8 +71,8 @@ CtorIdxTest.other: is unsafe -/
 ) CtorIdxTest.T.ctorIdx CtorIdxTest.T.ctorIdx._impl CtorIdxTest.other
 
 -- The pair is banned for a type with one constructor, for which Lean makes
--- no `_impl`: a structure with one field is that field at run time, so the
--- tag would be the field's.
+-- no `_impl`. Lean's `mkCtorIdx` says why: reading the tag is wrong for a type
+-- whose value Lean may unwrap to its field.
 /-- info: CtorIdxTest.W.ctorIdx: is implemented by CtorIdxTest.W.ctorIdx._impl
 CtorIdxTest.W.ctorIdx._impl: is unsafe -/
 #guard_msgs in
