@@ -168,6 +168,8 @@ struct Shapes {
     global_addrs: usize,
     global_addrs_of_globals: usize,
     nested_global_addrs: usize,
+    func_addrs_of_funcs: usize,
+    nested_func_addrs: usize,
     externs: usize,
     nested_externs: usize,
     rejected: usize,
@@ -351,6 +353,26 @@ fn shapes(dialects: Dialects) -> Shapes {
             }),
         );
         has(
+            &mut n.func_addrs_of_funcs,
+            all.iter().any(|op| {
+                op.name == "funcaddr"
+                    && matches!(op.attrs.first(), Some(Attr::Sym(s)) if symbols.contains(s.as_str()))
+            }),
+        );
+        has(
+            &mut n.nested_func_addrs,
+            m.items.iter().any(|i| match i {
+                Item::Module(nm) => nm
+                    .items
+                    .iter()
+                    .filter_map(Item::as_func)
+                    .flat_map(blocks)
+                    .flat_map(|b| &b.ops)
+                    .any(|op| op.name == "funcaddr"),
+                _ => false,
+            }),
+        );
+        has(
             &mut n.externs,
             m.items.iter().any(|i| matches!(i, Item::Extern(_))),
         );
@@ -398,6 +420,8 @@ fn the_generator_covers_what_validation_rejects() {
             n.global_addrs,
             n.global_addrs_of_globals,
             n.nested_global_addrs,
+            n.func_addrs_of_funcs,
+            n.nested_func_addrs,
             n.externs,
         ];
         assert!(n.modules_in_modules > 0, "{dialects:?}: {n:?}");

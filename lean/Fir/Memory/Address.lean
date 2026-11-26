@@ -41,6 +41,12 @@ allocation keeps the address it was given for as long as the run lasts,
 freed or not. An allocation of no units takes no address, so it may share
 its address with another allocation, as zero-sized objects may in LLVM and
 Rust; no op of M1 makes one, since `alloca` allocates at least one unit.
+A function's allocation is the exception: it has no units, yet takes one
+address, so that two functions exposed get different addresses, as C asks
+of two functions (the human's ruling of 2026-11-19 on #235, Q1). So where
+this section says the addresses an allocation takes, they are its
+_extent_: its units, and one address for a function's allocation of no
+units.
 
 The _canonical layout_ is the assignment that `fir-ref` makes, one of those
 the spec allows. It lays the allocations of a memory out in the order they
@@ -68,13 +74,20 @@ def alignUp (c al : Nat) : Nat := if al = 0 then c else (c + al - 1) / al * al
 #guard alignUp 5 4 == 8
 #guard alignUp 7 1 == 7
 
+/-- The addresses that the block `b` takes once it has an address: one for
+each of its units, and one for a function's allocation of no units, so that
+each function has an address of its own (the human's ruling of 2026-11-19
+on #235, Q1). -/
+def Block.extent (b : Block u) : Nat :=
+  if b.kind = .function then max b.units.length 1 else b.units.length
+
 /-- Whether the block `c` leaves room for `n` units from the address `x`: it
 is freed, or has no address, or the addresses it takes and those from `x`
 to `x + n` do not overlap. -/
 def Block.leavesRoom (c : Block u) (x n : Nat) : Bool :=
   match c.addr with
   | none => true
-  | some y => !c.live || decide (x + n ≤ y) || decide (y + c.units.length ≤ x)
+  | some y => !c.live || decide (x + n ≤ y) || decide (y + c.extent ≤ x)
 
 /-- Whether every block of `bs` but the allocation `a` leaves room for `n`
 units from the address `x`, where the first block of `bs` is the allocation
@@ -101,8 +114,8 @@ have. -/
 def fits (M : Memory u) (lo hi a x : Nat) : Bool :=
   match M.blocks[a]? with
   | none => false
-  | some b => decide (lo ≤ x) && decide (b.align ∣ x) && decide (x + b.units.length ≤ hi) &&
-      roomFrom x b.units.length a 0 M.blocks
+  | some b => decide (lo ≤ x) && decide (b.align ∣ x) && decide (x + b.extent ≤ hi) &&
+      roomFrom x b.extent a 0 M.blocks
 
 /-- Gives the allocation `a` the address `x`, unless it has one already: an
 allocation keeps the first address it is given. Nothing else changes. -/
@@ -118,7 +131,7 @@ blocks in a loop. -/
 def bumpFrom (c : Nat) : List (Block u) → AllocId → Nat
   | [], _ => c
   | b :: _, 0 => alignUp c b.align
-  | b :: bs, a + 1 => bumpFrom (alignUp c b.align + b.units.length + 1) bs a
+  | b :: bs, a + 1 => bumpFrom (alignUp c b.align + b.extent + 1) bs a
 
 /-- The lowest address that fits the allocation `a`, of alignment `al`,
 among `best` and the first multiples of `al` from where each live block of
@@ -130,8 +143,8 @@ def lowestFrom (M : Memory u) (lo hi a al : Nat) : Option Nat → List (Block u)
     lowestFrom M lo hi a al
       (match c.addr with
         | some y =>
-          if c.live && M.fits lo hi a (alignUp (y + c.units.length) al) then
-            Option.merge min best (some (alignUp (y + c.units.length) al))
+          if c.live && M.fits lo hi a (alignUp (y + c.extent) al) then
+            Option.merge min best (some (alignUp (y + c.extent) al))
           else best
         | none => best) cs
 
@@ -165,6 +178,11 @@ end Memory
 -- the gap.
 #guard ((Memory.empty.alloc .stack 4 4).2.alloc .stack 2 8 : Pointer × Memory 8).2.bump 1 1 == 16
 #guard ((Memory.empty.alloc .stack 4 4).2 : Memory 8).canonical 1 (2 ^ 64 - 1) 0 == some 4
+-- Two functions' allocations, of no units, are laid out at 1 and 3: each
+-- takes one address. Two stack allocations of no units are laid out at 1
+-- and 2, and take none.
+#guard ((Memory.empty.alloc .function 0 1).2.alloc .function 0 1 : Pointer × Memory 8).2.bump 1 1 == 3
+#guard ((Memory.empty.alloc .stack 0 1).2.alloc .stack 0 1 : Pointer × Memory 8).2.bump 1 1 == 2
 -- An allocation of 300 bytes does not fit a memory of 8-bit pointers.
 #guard ((Memory.empty.alloc .stack 300 1).2 : Memory 8).canonical 1 (2 ^ 8 - 1) 0 == none
 

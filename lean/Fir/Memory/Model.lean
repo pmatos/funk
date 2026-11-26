@@ -31,7 +31,9 @@ _fault_ below, when its pointer has no provenance for an allocation of the
 memory, when its allocation is freed, or when the units it touches are not
 all inside the allocation (ADR-2026-11-09-1542). A block may also be
 _constant_: a run starts with a constant global's block so
-(ADR-2026-11-09-1546), and a store to a constant block faults, so writing
+(ADR-2026-11-09-1546), and with each function's block, of the kind
+`function` and with no units (the human's ruling of 2026-11-19 on #235),
+and a store to a constant block faults, so writing
 a constant global is UB when the write runs (the human's ruling of
 2026-11-20 on #237, Q2). An allocation that an op makes is never
 constant, and a load reaches a constant block as it reaches any other.
@@ -94,13 +96,16 @@ inductive MemUnit (u : Nat) where
 
 /-- The kind of an allocation (ADR-2026-11-09-1542): a stack allocation
 lives until the call that made it returns (ADR-2026-11-09-1548), a global
-for the whole run (ADR-2026-11-09-1546), and a heap allocation comes from
-an external call, such as one to `malloc`. Managed memory can be added as
-another kind. -/
+for the whole run (ADR-2026-11-09-1546), a heap allocation comes from
+an external call, such as one to `malloc`, and a function's allocation,
+which has no units, is the address of a function, made when the run starts
+and live for the whole run (the human's ruling of 2026-11-19 on #235, Q1).
+Managed memory can be added as another kind. -/
 inductive AllocKind where
   | stack
   | global
   | heap
+  | function
   deriving Repr, DecidableEq
 
 /-- An allocation: its kind, its alignment, its units, whether it is still

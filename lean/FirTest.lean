@@ -105,6 +105,7 @@ import FirTest.PointerAccess
 import FirTest.FloatAccess
 import FirTest.FieldAddr
 import FirTest.GlobalAddr
+import FirTest.FuncAddr
 import FirTest.PrintParse
 import FirTest.ParseWellFormed
 import FirTest.G0

@@ -32,6 +32,9 @@
 //! - addresses of globals, `globaladdr`, of the module's global or of a
 //!   symbol that names none, with a pointer of any memory
 //!   (`global_addr.rs`, #237);
+//! - addresses of functions, `funcaddr`, of the module's function or of a
+//!   symbol that names none, with a pointer of any memory (`func_addr.rs`,
+//!   #235);
 //! - globals of any numbers, flags and initializers (ADR-2026-11-09-1546),
 //!   spelled as ADR-2026-11-19-0124 says.
 //!
@@ -61,6 +64,7 @@ use items::{add_dialects, dialect_item, extern_decl, nested};
 mod aggregate;
 mod attr;
 mod field_addr;
+mod func_addr;
 mod global;
 mod global_addr;
 mod items;
@@ -144,6 +148,9 @@ pub fn module(rng: &mut Rng, dialects: Dialects) -> Module {
             if rng.one_in(3) {
                 shaper.add_global_addrs(rng, f, &globals);
             }
+            if rng.one_in(3) {
+                shaper.add_func_addrs(rng, f);
+            }
         }
     }
     if rng.one_in(2) {
@@ -185,10 +192,10 @@ struct Shaper<'m> {
     /// Whether [`TOY_OP`] may be used.
     toy: bool,
     /// Every value the function defines, at any depth, with its type, but
-    /// the pointers of `field_addr.rs` and `global_addr.rs`.
+    /// the pointers of `field_addr.rs`, `global_addr.rs` and `func_addr.rs`.
     values: Vec<(String, Type)>,
-    /// The pointers that `field_addr.rs` and `global_addr.rs` define, with
-    /// their memories.
+    /// The pointers that `field_addr.rs`, `global_addr.rs` and
+    /// `func_addr.rs` define, with their memories.
     pointers: Vec<(String, u32)>,
     /// Every value name taken: defined, or named as undefined.
     taken: Vec<String>,

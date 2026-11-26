@@ -13,9 +13,9 @@ memory is the memory of its result:
 * `%p: ptr(1) = alloca stack i8 12 align(4) @1` allocates twelve `i8` of
   memory 1, aligned to 4 units.
 
-Each kind of the memory model is a word, `stack`, `global` or `heap`, and
-decodes; M1's validation accepts only `stack`, so the kind is a hook in the
-format (ADR-2026-11-09-1542). The type is written as a type is, and decodes
+Each kind of the memory model is a word, `stack`, `global`, `heap` or
+`function`, and decodes; M1's validation accepts only `stack`, so the kind
+is a hook in the format (ADR-2026-11-09-1542). The type is written as a type is, and decodes
 with no bound on its width or memory; a count and an alignment decode when
 they are not negative. Validation says which of them are allowed. A count
 of 1 is not written, so `alloca stack i32 1` does not decode: each
@@ -32,12 +32,14 @@ def _root_.Fir.Memory.AllocKind.word : AllocKind → String
   | .stack => "stack"
   | .global => "global"
   | .heap => "heap"
+  | .function => "function"
 
 /-- The kind that a word names. -/
 def decodeKind : String → Option AllocKind
   | "stack" => some .stack
   | "global" => some .global
   | "heap" => some .heap
+  | "function" => some .function
   | _ => none
 
 /-- Each kind reads back from its word. -/

@@ -6,7 +6,9 @@
 # either direction; a memcpy whose ranges partly overlap is UB, and one onto
 # its own range or a disjoint one is not (Q2 B). A length of 0 does nothing,
 # through poison and dangling pointers alike (Q1 B); another length through
-# them is UB, and so is a length past the allocation, however long. A
+# them is UB, and so is a length past the allocation, however long. A run
+# starts memory 0 with one allocation for each of the file's 17 functions
+# (#235 Q1), so its first alloca there gets id 17. A
 # poison length chooses its value: an i1 over one unit is never UB, and an
 # i8 is UB where its value is. A length may be an integer of any width.
 # Tests that return pointers, pass poison ones or reach UB are
@@ -19,7 +21,7 @@ tests = [
   { func = "@copy_int", args = ["-5"], expect = ["-5"] },
   { func = "@copy_ptr", args = ["42"], expect = ["42"] },
   { func = "@move_ptr", args = ["42"], expect = ["42"] },
-  { func = "@copy_part_ptr", args = ["8"], expect = ["ptr(0, 0)"] },
+  { func = "@copy_part_ptr", args = ["8"], expect = ["ptr(17, 0)"] },
   { func = "@copy_part_ptr", args = ["4"], expect = ["poison"] },
   { func = "@copy_poison", expect = ["poison"] },
   { func = "@copy_fresh", expect = ["poison"] },

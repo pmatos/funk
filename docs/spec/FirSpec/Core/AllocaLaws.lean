@@ -14,10 +14,10 @@ fails when the Lean changes under it.
 
 #doc (Manual) "Stack allocation obligations: readable blocks" =>
 
-:::moduleDocs (fingerprint := "16287353584237378537")
+:::moduleDocs (fingerprint := "5907086080258054268")
 :::
 
-:::readable Fir.Core.Op.memCases Fir.Core.Op.touchesMemory_false_of_denote Fir.Core.Op.readsItems_false_of_denote (pin := Fir.Core.Op.touchesMemory) (pin := Fir.Core.Op.readsItems) (fingerprint := "1701358370413933891")
+:::readable Fir.Core.Op.memCases Fir.Core.Op.touchesMemory_false_of_denote Fir.Core.Op.readsItems_false_of_denote (pin := Fir.Core.Op.touchesMemory) (pin := Fir.Core.Op.readsItems) (fingerprint := "2468971807788045604")
 *Theorems: the core ops, split by memory.* A property holds of every core
 op when it holds of each op that touches no memory and reads no item of
 the run, of every $`\mathsf{alloca}`, of every $`\mathsf{load}` and every
@@ -26,17 +26,17 @@ $`\mathsf{memcpy}` and $`\mathsf{memmove}` (`memCopy` in the Lean), and
 of every $`\mathsf{memset}` (`memSet`), and of every
 $`\mathsf{ptr\_expose}` and $`\mathsf{ptr\_from\_int}` (`ptrExpose` and
 `ptrFromInt`), the core ops that touch memory, and of every
-$`\mathsf{fieldaddr}` and every $`\mathsf{globaladdr}`, the core ops that
-read an item.
+$`\mathsf{fieldaddr}`, every $`\mathsf{globaladdr}` and every
+$`\mathsf{funcaddr}`, the core ops that read an item.
 So the core dialect meets an obligation with memory op by op: an op that
 touches no memory and reads no item by its
 {ref "The-fir-specification--Memory--The-core___s-rules-with-memory"}[tie]
 to the set monad, and $`\mathsf{alloca}`, each load and store,
-$`\mathsf{fieldaddr}`, $`\mathsf{globaladdr}`, each copy and move, each
+$`\mathsf{fieldaddr}`, $`\mathsf{globaladdr}`, $`\mathsf{funcaddr}`, each copy and move, each
 fill and each turn of a pointer into an integer or back by its own rule.
 A core op with an outcome in the set monad touches no memory and reads no
 item, since $`\mathsf{alloca}`, the loads and stores,
-$`\mathsf{fieldaddr}`, $`\mathsf{globaladdr}`, the copies and moves, the
+$`\mathsf{fieldaddr}`, $`\mathsf{globaladdr}`, $`\mathsf{funcaddr}`, the copies and moves, the
 fills, $`\mathsf{ptr\_expose}` and $`\mathsf{ptr\_from\_int}` have none
 there.
 :::

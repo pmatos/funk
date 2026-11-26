@@ -6,7 +6,9 @@ module cannot be left out of the spec
 (`docs/decisions/spec-site.md#module-docs-and-every-module`). The check
 compares the files under `lean/Fir` with the sections that
 `docs/spec/FirSpec.lean` includes, and those of each chapter that it
-includes as a document of its own, such as `FirSpec.Chapters.Execution`.
+includes as a document of its own, such as `FirSpec.Chapters.Execution`,
+and of each document that such a chapter includes in turn, such as
+`FirSpec.Chapters.Traces`.
 -/
 
 namespace FirSpecSite
@@ -45,8 +47,18 @@ def checkModules (root : System.FilePath) : IO (Array String) := do
   let files ← filesUnder root "lean/Fir" (fun _ => false) (·.endsWith ".lean")
   let main ← IO.FS.readFile (root / "docs/spec/FirSpec.lean")
   let mut text := main
-  for doc in includedDocs main do
-    text := text ++ "\n" ++ (← IO.FS.readFile (root / "docs/spec" / docPath doc))
+  let mut todo := (includedDocs main).toList
+  let mut seen : List String := []
+  repeat
+    match todo with
+    | [] => break
+    | doc :: rest =>
+      todo := rest
+      unless seen.contains doc do
+        seen := doc :: seen
+        let body ← IO.FS.readFile (root / "docs/spec" / docPath doc)
+        text := text ++ "\n" ++ body
+        todo := rest ++ (includedDocs body).toList
   return (notIncluded (files.qsort (· < ·)) text).map fun m =>
     s!"{m} is under lean/Fir, but docs/spec/FirSpec.lean does not include it: add a section for it, in FirSpec.lean or a chapter it includes, with includeReadable, or with includeLiterate if it declares nothing"
 

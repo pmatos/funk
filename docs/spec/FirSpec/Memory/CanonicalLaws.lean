@@ -14,16 +14,16 @@ when the Lean changes under it.
 
 #doc (Manual) "Canonical layout laws: readable blocks" =>
 
-:::moduleDocs (fingerprint := "8055350114286254482")
+:::moduleDocs (fingerprint := "2849197329512895114")
 :::
 
-:::readable Fir.Memory.le_bumpFrom Fir.Memory.dvd_bumpFrom (pin := Fir.Memory.bumpFrom) (fingerprint := "17665360885883659909")
+:::readable Fir.Memory.le_bumpFrom Fir.Memory.dvd_bumpFrom (pin := Fir.Memory.bumpFrom) (fingerprint := "3992892635318293491")
 *Theorems: where a canonical address is.* A layout from $`c` puts every
 block at $`c` or above, and a block of alignment $`\alpha > 0` at a
 multiple of $`\alpha`.
 :::
 
-:::readable Fir.Memory.bumpFrom_lt Fir.Memory.Memory.bump_lt (pin := Fir.Memory.Memory.bump) (fingerprint := "4712497797334815345")
+:::readable Fir.Memory.bumpFrom_lt Fir.Memory.Memory.bump_lt (pin := Fir.Memory.Memory.bump) (fingerprint := "10831927815038020936")
 *Theorems: canonical addresses do not overlap.* For $`i < j` and a block
 $`M[i]` of size $`n`, $`\mathrm{bump}_M(i) + n < \mathrm{bump}_M(j)`: the
 earlier block ends, with the address after it, before the later starts.
@@ -36,7 +36,7 @@ $`\mathrm{bump}_{M'}(a) = \mathrm{bump}_M(a)` for every $`a < |M|`, where
 $`M'` is $`M` after an allocation.
 :::
 
-:::readable Fir.Memory.Memory.fits_bump Fir.Memory.Memory.canonical_bump (pin := Fir.Memory.Memory.canonical) (fingerprint := "16381179846115768055")
+:::readable Fir.Memory.Memory.fits_bump Fir.Memory.Memory.canonical_bump (pin := Fir.Memory.Memory.canonical) (fingerprint := "13948255760766433886")
 *Theorems: the canonical address fits.* Let $`M[a]` have alignment
 $`\alpha > 0` and size $`n`, and let every allocation $`j` of $`M` with
 an address have $`\mathrm{bump}_M(j)` as its address. If

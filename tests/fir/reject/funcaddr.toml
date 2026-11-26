@@ -1,0 +1,298 @@
+# Must-reject texts of the address of a function funcaddr (#235 stage 2;
+# the human's ruling of 2026-11-19 on #235, Q1). funcaddr writes one
+# attribute, a function's symbol, takes no operands and defines one
+# pointer; any other shape does not decode. Validation accepts it when its
+# symbol names a function of its own module, not of a module nested in it
+# or holding it, nor a global, a layout or an external declaration, and its
+# result is a pointer of memory 0, where every function's allocation is.
+# A load or a store through it is valid and UB when it runs, so the corpus
+# tests it as a run, in canonical/funcaddr.toml. alloca of the kind
+# function is in alloca.toml.
+
+[[reject]]
+verdict = "parse-error"
+rule = "funcaddr names its function by a symbol: the word f does not decode"
+text = '''
+global @msg() size(1) align(1) {
+}
+
+aggregate @pair() memory(0) size(16) align(8) field(0, i64) field(8, ptr) {
+}
+
+extern @ext() {
+}
+
+func @f() -> ptr {
+^e:
+  %q: ptr = funcaddr f @0
+  ret %q @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "funcaddr has one attribute: none does not decode"
+text = '''
+global @msg() size(1) align(1) {
+}
+
+aggregate @pair() memory(0) size(16) align(8) field(0, i64) field(8, ptr) {
+}
+
+extern @ext() {
+}
+
+func @f() -> ptr {
+^e:
+  %q: ptr = funcaddr @0
+  ret %q @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "funcaddr has one attribute: a second symbol does not decode"
+text = '''
+global @msg() size(1) align(1) {
+}
+
+aggregate @pair() memory(0) size(16) align(8) field(0, i64) field(8, ptr) {
+}
+
+extern @ext() {
+}
+
+func @f() -> ptr {
+^e:
+  %q: ptr = funcaddr @f @f @0
+  ret %q @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "funcaddr defines a pointer: an i64 result does not decode"
+text = '''
+global @msg() size(1) align(1) {
+}
+
+aggregate @pair() memory(0) size(16) align(8) field(0, i64) field(8, ptr) {
+}
+
+extern @ext() {
+}
+
+func @f() -> i64 {
+^e:
+  %q: i64 = funcaddr @f @0
+  ret %q @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "parse-error"
+rule = "funcaddr takes no operands: a pointer operand does not decode"
+text = '''
+global @msg() size(1) align(1) {
+}
+
+aggregate @pair() memory(0) size(16) align(8) field(0, i64) field(8, ptr) {
+}
+
+extern @ext() {
+}
+
+func @f(%p: ptr) -> ptr {
+^e:
+  %q: ptr = funcaddr @f %p @0
+  ret %q @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "funcaddr names a function: @none names no item"
+text = '''
+global @msg() size(1) align(1) {
+}
+
+aggregate @pair() memory(0) size(16) align(8) field(0, i64) field(8, ptr) {
+}
+
+extern @ext() {
+}
+
+func @f() -> ptr {
+^e:
+  %q: ptr = funcaddr @none @0
+  ret %q @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "funcaddr names a function: @msg is a global"
+text = '''
+global @msg() size(1) align(1) {
+}
+
+aggregate @pair() memory(0) size(16) align(8) field(0, i64) field(8, ptr) {
+}
+
+extern @ext() {
+}
+
+func @f() -> ptr {
+^e:
+  %q: ptr = funcaddr @msg @0
+  ret %q @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "funcaddr names a function: @pair is an aggregate's layout"
+text = '''
+global @msg() size(1) align(1) {
+}
+
+aggregate @pair() memory(0) size(16) align(8) field(0, i64) field(8, ptr) {
+}
+
+extern @ext() {
+}
+
+func @f() -> ptr {
+^e:
+  %q: ptr = funcaddr @pair @0
+  ret %q @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "funcaddr names a function: @ext is an external declaration"
+text = '''
+global @msg() size(1) align(1) {
+}
+
+aggregate @pair() memory(0) size(16) align(8) field(0, i64) field(8, ptr) {
+}
+
+extern @ext() {
+}
+
+func @f() -> ptr {
+^e:
+  %q: ptr = funcaddr @ext @0
+  ret %q @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "funcaddr's result is a pointer of memory 0: a result of memory 1"
+text = '''
+layout memory(1, unit(8), pointer(64), little)
+
+global @msg() size(1) align(1) {
+}
+
+aggregate @pair() memory(0) size(16) align(8) field(0, i64) field(8, ptr) {
+}
+
+extern @ext() {
+}
+
+func @f() -> ptr(1) {
+^e:
+  %q: ptr(1) = funcaddr @f @0
+  ret %q @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "funcaddr names a function of its own module: @in is a nested module's"
+text = '''
+module @dev() {
+  func @in() {
+  ^e:
+    ret @0
+  }
+
+}
+
+func @f() -> ptr {
+^e:
+  %q: ptr = funcaddr @in @0
+  ret %q @0
+}
+
+locs {
+  @0 = unknown
+}
+'''
+
+[[reject]]
+verdict = "validation-error"
+rule = "funcaddr in a nested module names a function of that module: @out is the outer module's"
+text = '''
+func @out() {
+^e:
+  ret @0
+}
+
+module @dev() {
+  func @g() -> ptr {
+  ^e:
+    %q: ptr = funcaddr @out @0
+    ret %q @0
+  }
+
+}
+
+locs {
+  @0 = unknown
+}
+'''

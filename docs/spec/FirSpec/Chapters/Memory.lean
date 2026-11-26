@@ -175,6 +175,8 @@ world outside a run.
 
 {includeReadable "." Fir.Core.GlobalAddr "Global address rules" FirSpec.Core.GlobalAddr (level := 1)}
 
+{includeReadable "." Fir.Core.FuncAddr "Function address rules" FirSpec.Core.FuncAddr (level := 1)}
+
 {includeReadable "." Fir.Core.MemRules "The core's rules with memory" FirSpec.Core.MemRules (level := 1)}
 
 {includeReadable "." Fir.Core.AllocaLaws "Stack allocation obligations" FirSpec.Core.AllocaLaws (level := 1)}
@@ -208,6 +210,8 @@ world outside a run.
 {includeReadable "." Fir.Core.FieldAddrLaws "Field address obligations" FirSpec.Core.FieldAddrLaws (level := 1)}
 
 {includeReadable "." Fir.Core.GlobalAddrLaws "Global address obligations" FirSpec.Core.GlobalAddrLaws (level := 1)}
+
+{includeReadable "." Fir.Core.FuncAddrLaws "Function address obligations" FirSpec.Core.FuncAddrLaws (level := 1)}
 
 {includeReadable "." Fir.Core.TreeRules "The core dialect in the tree of choices" FirSpec.Core.TreeRules (level := 1)}
 

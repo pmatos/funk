@@ -136,7 +136,8 @@ A float of `float<e,m>` is spelled as its constants are, as `1.0` or
 `poison`, spelled exactly so, is an argument of any `iN`, of any float type and
 of any `ptr<N>` (`FirRef.readArg`). It is the only argument of `ptr<N>`: a run
 starts with no allocation but its table's globals
-([semantics-m1-globals.md](semantics-m1-globals.md#globals-in-runs)), and an
+([semantics-m1-globals.md](semantics-m1-globals.md#globals-in-runs)) and
+functions ([semantics-m1-functions.md](semantics-m1-functions.md)), and an
 argument cannot name one. `poison` is not a choice, since `freeze` chooses a
 value. The human ruled on 2026-11-03 that `fir-ref run` takes `poison` (#123);
 the harness's use of it is in

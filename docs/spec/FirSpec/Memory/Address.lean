@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Addresses: readable blocks" =>
 
-:::moduleDocs (fingerprint := "8870463966010300475")
+:::moduleDocs (fingerprint := "17307708729829869688")
 :::
 
 :::readable Fir.Memory.alignUp (fingerprint := "5903328988636615743")
@@ -28,19 +28,29 @@ $`\lceil 7 \rceil_1 = 7`. For $`\alpha = 0` it is $`c`: no address but 0 is
 a multiple of 0, so an allocation aligned to 0 fits only at 0.
 :::
 
-:::readable Fir.Memory.Block.leavesRoom Fir.Memory.roomFrom (fingerprint := "6977827549227237265")
-*Definition: leaving room.* A block $`(k, \alpha, \vec{x}, \ell, y^?)`
+:::readable Fir.Memory.Block.extent (fingerprint := "17267013121009111583")
+*Definition: the extent of a block.* Once a block
+$`(k, \alpha, \vec{x}, \ell, y^?)` has an address, it takes
+$`\mathrm{ext}(b)` addresses from it: one for each of its units, and one
+for a function's allocation of no units, so that each function has an
+address of its own (the human's ruling of 2026-11-19 on #235, Q1):
+
+$$`\mathrm{ext}(b) = \begin{cases} \max(|\vec{x}|, 1) & \text{if } k = \mathsf{function} \\ |\vec{x}| & \text{otherwise} \end{cases}`
+:::
+
+:::readable Fir.Memory.Block.leavesRoom Fir.Memory.roomFrom (fingerprint := "15182353826599746003")
+*Definition: leaving room.* A block $`b = (k, \alpha, \vec{x}, \ell, y^?)`
 leaves room for $`n` units from the address $`z` when it is freed, or has
 no address, or its addresses and those from $`z` to $`z + n` do not
 overlap:
 
-$$`\ell = \mathsf{false} \;\lor\; y^? = \bot \;\lor\; z + n \le y \;\lor\; y + |\vec{x}| \le z`
+$$`\ell = \mathsf{false} \;\lor\; y^? = \bot \;\lor\; z + n \le y \;\lor\; y + \mathrm{ext}(b) \le z`
 
 The blocks of a memory but the allocation $`a` leave room when each of
 them does. A freed block always leaves room, so its addresses may be given
-again. An allocation of no units takes no address, so it may share its
-address with another, as zero-sized objects may in LLVM and Rust; no op
-of M1 makes one.
+again. An allocation of no units takes no address, unless it is a
+function's, so it may share its address with another, as zero-sized
+objects may in LLVM and Rust; no op of M1 makes one.
 :::
 
 :::readable Fir.Memory.Block.giveAddr (fingerprint := "7905469697570646947")
@@ -57,15 +67,15 @@ address of the block $`M[a]`, when $`M` has that block and it was given
 one, and $`\bot` otherwise.
 :::
 
-:::readable Fir.Memory.Memory.fits (fingerprint := "15420125501033846395")
+:::readable Fir.Memory.Memory.fits (fingerprint := "4313251980853474361")
 *Definition: an address that fits.* Between the bounds $`lo` and $`hi`,
 the address $`z` fits the allocation $`a` of $`M`, with
-$`M[a] = (k, \alpha, \vec{x}, \ell, y^?)`, when
+$`M[a] = b = (k, \alpha, \vec{x}, \ell, y^?)`, when
 
-$$`lo \le z \;\land\; \alpha \mid z \;\land\; z + |\vec{x}| \le hi`
+$$`lo \le z \;\land\; \alpha \mid z \;\land\; z + \mathrm{ext}(b) \le hi`
 
-and every other block of $`M` leaves room for $`|\vec{x}|` units from
-$`z`. No address fits an allocation that $`M` does not have. The spec
+and every other block of $`M` leaves room for $`\mathrm{ext}(b)` units
+from $`z`. No address fits an allocation that $`M` does not have. The spec
 allows any address that fits, and a freed allocation also any aligned
 address between the bounds (the section on address policies). Every law
 holds at every bound, and a run exposes in a memory of $`P`-bit pointers
@@ -82,25 +92,25 @@ $`M[a] := \mathrm{give}_z(M[a])`. Nothing else changes, and an id the
 memory does not have changes nothing.
 :::
 
-:::readable Fir.Memory.bumpFrom Fir.Memory.Memory.bump (fingerprint := "4710689305863777439")
+:::readable Fir.Memory.bumpFrom Fir.Memory.Memory.bump (fingerprint := "5716735874722951337")
 *Definition: the canonical addresses.* The canonical layout lays the blocks
 $`b_0, b_1, \ldots` of $`M` out in the order they were made, from $`lo`.
-With $`c_0 = lo`, the block $`b_i`, of alignment $`\alpha_i` and size
-$`n_i`, is at
+With $`c_0 = lo`, the block $`b_i`, of alignment $`\alpha_i`, is at
 
-$$`\mathrm{bump}_M(i) = \lceil c_i \rceil_{\alpha_i} \qquad c_{i+1} = \mathrm{bump}_M(i) + n_i + 1`
+$$`\mathrm{bump}_M(i) = \lceil c_i \rceil_{\alpha_i} \qquad c_{i+1} = \mathrm{bump}_M(i) + \mathrm{ext}(b_i) + 1`
 
 So one address is left unused after each block. From 1, two blocks of 4
 and 2 units, aligned to 4 and 8, are at 4 and 16. The address of $`b_i`
-depends only on the blocks made before it.
+depends only on the blocks made before it. From 1, two functions'
+blocks are at 1 and 3.
 :::
 
-:::readable Fir.Memory.lowestFrom (fingerprint := "3098750353783868438")
+:::readable Fir.Memory.lowestFrom (fingerprint := "8511883513231776155")
 *Definition: the lowest candidate.* For the allocation $`a`, aligned to
 $`\alpha`, $`\mathrm{lowest}_M(a, z^?, \vec{c})` walks the blocks
 $`\vec{c}` in order, starting from the address $`z^?` found so far, if
-any. For each live block of $`\vec{c}` at $`y`, of size $`n`, for which
-$`\lceil y + n \rceil_\alpha` fits $`a`, it keeps the lower of that
+any. For each live block $`c` of $`\vec{c}` at $`y` for which
+$`\lceil y + \mathrm{ext}(c) \rceil_\alpha` fits $`a`, it keeps the lower of that
 address and the one found so far. It gives the one found at the end.
 :::
 

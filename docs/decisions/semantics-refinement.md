@@ -156,7 +156,7 @@ needs no infinite path. Every core op has finitely many outcomes
 run is the set of its rule in the tree of choices, whose choices of _w_
 bits have 2 to the power _w_ options. The ops that have their own rules with memory, the ones
 `Core.Op.memCases` names (semantics-effects.md#soundness), count by them:
-`alloca`, `fieldAddr` and `globalAddr` have one outcome, the loads `load`, `loadPtr` and
+`alloca`, `fieldAddr`, `globalAddr` and `funcAddr` have one outcome, the loads `load`, `loadPtr` and
 `loadFloat` and the stores `store`, `storePtr` and `storeFloat` at most one
 that ends, `memCopy` and `memSet` at most one that ends for each
 length, of which a poison length chooses one of finitely many, and

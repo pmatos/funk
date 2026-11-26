@@ -25,7 +25,8 @@ below holds of them as of the core's.
 
 `Core.scripted`, `Core.exhaustive` and `Core.sampled` walk `Core.modeTree`:
 the run in the state layer over the tree of choices, from the memories that
-hold the globals of the module's own table (semantics-m1-globals.md), with
+hold the globals and the functions' allocations of the module's own table
+(semantics-m1-globals.md, semantics-m1-functions.md), with
 the memories dropped at the end of each path. A mode runs a module with
 its own layout: each memory `n` of the run has `M.layout.entry n`, its entry
 in the module's data layout, which gives its unit, byte order and pointer

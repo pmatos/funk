@@ -33,7 +33,7 @@ use crate::{Attr, Int, Type};
 
 /// The kinds of an allocation, as words (`AllocKind.word`): each one
 /// decodes, and validation accepts only `stack`.
-pub const ALLOC_KINDS: [&str; 3] = ["stack", "global", "heap"];
+pub const ALLOC_KINDS: [&str; 4] = ["stack", "global", "heap", "function"];
 
 /// The parts of a decoded `alloca`: its kind, and the shape that follows.
 struct Parts<'a> {

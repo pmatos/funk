@@ -85,7 +85,8 @@ def decoded_attrs(text: str, floats: str) -> dict[str, tuple[str, ...]]:
     `decodeLoad` and `decodeStore` read: a load's cell is the width of its
     result, and a store's the width of its value. Nor are the layout and
     field that `decodeFieldAddr` reads for `fieldaddr`: its cell is the
-    width of its index. Nor is the ordering that `decodeMemCopy` and
+    width of its index. Nor is the symbol that `decodeGlobalAddr` and
+    `decodeFuncAddr` read: each address is one cell. Nor is the ordering that `decodeMemCopy` and
     `decodeMemSet` read: a copy's, a move's and a fill's cell is the width
     of its length. `decodePtrExpose` and `decodePtrFromInt` read no
     attributes. Any other arm is not known."""
@@ -117,6 +118,7 @@ def decoded_attrs(text: str, floats: str) -> dict[str, tuple[str, ...]]:
         "decodePtrExpose": ("",),
         "decodePtrFromInt": ("",),
         "decodeGlobalAddr": ("",),
+        "decodeFuncAddr": ("",),
     }
     by_ctor = {
         "decodeFBin": op_attrs(floats, "FBin"),
@@ -211,6 +213,7 @@ class Tests(unittest.TestCase):
                 "loadAttrs o none",
                 "fieldAddrAttrs s i",
                 "globalAddrAttrs s",
+                "funcAddrAttrs s",
                 "[]",
             },
         )

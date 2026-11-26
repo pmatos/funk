@@ -14,10 +14,10 @@ build fails when the Lean changes under it.
 
 #doc (Manual) "The core dialect's poison obligations: readable blocks" =>
 
-:::moduleDocs (fingerprint := "9054316187877151667")
+:::moduleDocs (fingerprint := "16567423669111401705")
 :::
 
-:::readable Fir.Core.Op.propagates_all Fir.Core.load_propagatesPoison Fir.Core.store_propagatesPoison Fir.Core.loadPtr_propagatesPoison Fir.Core.storePtr_propagatesPoison Fir.Core.loadFloat_propagatesPoison Fir.Core.storeFloat_propagatesPoison Fir.Core.memCopy_propagatesPoison Fir.Core.memSet_propagatesPoison Fir.Core.ptrFromInt_propagatesPoison Fir.Core.fieldAddr_propagatesPoison Fir.Core.globalAddr_propagatesPoison (pin := Fir.Core.Op.poisonClass) (pin := Fir.PropagatesPoison) (pin := Fir.PoisonOut) (pin := Fir.UBByOwnRules) (pin := Fir.HVector.IsFilledBy) (fingerprint := "16622049131766559252")
+:::readable Fir.Core.Op.propagates_all Fir.Core.load_propagatesPoison Fir.Core.store_propagatesPoison Fir.Core.loadPtr_propagatesPoison Fir.Core.storePtr_propagatesPoison Fir.Core.loadFloat_propagatesPoison Fir.Core.storeFloat_propagatesPoison Fir.Core.memCopy_propagatesPoison Fir.Core.memSet_propagatesPoison Fir.Core.ptrFromInt_propagatesPoison Fir.Core.fieldAddr_propagatesPoison Fir.Core.globalAddr_propagatesPoison Fir.Core.funcAddr_propagatesPoison (pin := Fir.Core.Op.poisonClass) (pin := Fir.PropagatesPoison) (pin := Fir.PoisonOut) (pin := Fir.UBByOwnRules) (pin := Fir.HVector.IsFilledBy) (fingerprint := "66108183750480902")
 *Theorem: each core op that propagates poison does.* For every
 {ref "The-fir-specification--Abstract-syntax--Core-ops"}[core op] $`o`
 whose
@@ -28,7 +28,7 @@ on operands of which one is poison, every result it returns is poison,
 and it may hit UB only if it may hit UB on some operands that put a
 defined value in place of each poison.
 
-These are 45 ops: $`\mathsf{const}` at an integer type and at a float
+These are 46 ops: $`\mathsf{const}` at an integer type and at a float
 type, $`\mathsf{poison}`, $`\mathsf{alloca}`, $`\mathsf{load}` and
 $`\mathsf{store}` of an integer, of a pointer and of a float,
 $`\mathsf{memcpy}` and $`\mathsf{memmove}` (`memCopy` in the Lean),
@@ -45,10 +45,15 @@ conversions from integers $`\mathsf{sitofp}` and $`\mathsf{uitofp}`, the
 two conversions between formats $`\mathsf{fpext}` and
 $`\mathsf{fptrunc}`, the pointer offset $`\mathsf{ptradd}`, the two
 conversions to integers $`\mathsf{fptosi}` and $`\mathsf{fptoui}`, the
-field address $`\mathsf{fieldaddr}`, and the address of a global
-$`\mathsf{globaladdr}`. Each proves it in the section of its family; $`\mathsf{alloca}` and $`\mathsf{globaladdr}`, like $`\mathsf{const}` and $`\mathsf{poison}`, have no operands, so they propagate poison whatever their rules, and
-the loads and stores, $`\mathsf{fieldaddr}`, $`\mathsf{globaladdr}`, the
-copies and moves and the fills have no outcome in the set monad, so they give no result and hit no UB there. The other
+field address $`\mathsf{fieldaddr}`, the address of a global
+$`\mathsf{globaladdr}` and the address of a function
+$`\mathsf{funcaddr}`. Each proves it in the section of its family;
+$`\mathsf{alloca}`, $`\mathsf{globaladdr}` and $`\mathsf{funcaddr}`, like
+$`\mathsf{const}` and $`\mathsf{poison}`, have no operands, so they
+propagate poison whatever their rules, and the loads and stores,
+$`\mathsf{fieldaddr}`, $`\mathsf{globaladdr}`, $`\mathsf{funcaddr}`, the
+copies and moves and the fills have no outcome in the set monad, so they
+give no result and hit no UB there. The other
 ops, $`\mathsf{select}`, $`\mathsf{freeze}`, $`\mathsf{br}`,
 $`\mathsf{cond\_br}`, $`\mathsf{ret}`, $`\mathsf{unreachable}` and
 $`\mathsf{call}`, are poison
@@ -76,7 +81,7 @@ above zero, where a divisor that is not zero exists, and the first theorem
 gives that width. This is the one obligation that needs the op instance
 to be valid (ADR-2026-10-29-2006). $`\mathsf{alloca}`, the loads and
 stores, the copies and moves and the fills touch memory, and
-$`\mathsf{fieldaddr}` and $`\mathsf{globaladdr}` read an item: none has a rule in the set monad, so none gives a result
+$`\mathsf{fieldaddr}`, $`\mathsf{globaladdr}` and $`\mathsf{funcaddr}` read an item: none has a rule in the set monad, so none gives a result
 there. Each returns one with memory, by its own rule
 (the
 {ref "The-fir-specification--Memory--Stack-allocation-obligations"}[stack allocation obligations],

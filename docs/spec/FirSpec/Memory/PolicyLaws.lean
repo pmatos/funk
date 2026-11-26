@@ -22,7 +22,7 @@ when the Lean changes under it.
 at least $`\lceil c \rceil_\alpha`.
 :::
 
-:::readable Fir.Memory.Memory.admits_of_fits Fir.Memory.Memory.lt_of_admits Fir.Memory.Memory.fallback_admits Fir.Memory.Memory.admits_alignUp Fir.Memory.Memory.fallback_eq_none (pin := Fir.Memory.Memory.admits) (pin := Fir.Memory.Memory.fallback) (fingerprint := "17052591926842556763")
+:::readable Fir.Memory.Memory.admits_of_fits Fir.Memory.Memory.lt_of_admits Fir.Memory.Memory.fallback_admits Fir.Memory.Memory.admits_alignUp Fir.Memory.Memory.fallback_eq_none (pin := Fir.Memory.Memory.admits) (pin := Fir.Memory.Memory.fallback) (fingerprint := "12447918478421506626")
 *Theorems: the fallback.* An address that fits may be given, and only to
 an allocation of the memory. The fallback may be given. When no address
 fits a freed allocation but some may be given, $`\lceil lo \rceil_\alpha`

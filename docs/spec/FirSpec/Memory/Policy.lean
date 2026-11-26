@@ -14,7 +14,7 @@ changes under it.
 
 #doc (Manual) "Address policies: readable blocks" =>
 
-:::moduleDocs (fingerprint := "12527643559053584220")
+:::moduleDocs (fingerprint := "9845587327529625809")
 :::
 
 :::readable Fir.Memory.Place Fir.Memory.Memory.places (pin := Fir.Memory.Block.shape) (fingerprint := "13640327301364052681")
@@ -31,13 +31,13 @@ the places of its blocks and an allocation $`a` to the address it
 proposes for $`a`, or to none. The canonical policy proposes none.
 :::
 
-:::readable Fir.Memory.Memory.admits Fir.Memory.Memory.fallback Fir.Memory.Memory.choose (pin := Fir.Memory.Memory.fits) (pin := Fir.Memory.Memory.canonical) (pin := Fir.Memory.alignUp) (fingerprint := "14642826520430930220")
+:::readable Fir.Memory.Memory.admits Fir.Memory.Memory.fallback Fir.Memory.Memory.choose (pin := Fir.Memory.Memory.fits) (pin := Fir.Memory.Memory.canonical) (pin := Fir.Memory.alignUp) (fingerprint := "16042713134753329999")
 *Definitions: the addresses that may be given, and the one given.* Between
 the bounds $`lo` and $`hi`, the address $`z` may be given to the
-allocation $`a` of $`M`, with $`M[a] = (k, \alpha, \vec{x}, \ell, y^?)`,
+allocation $`a` of $`M`, with $`M[a] = b = (k, \alpha, \vec{x}, \ell, y^?)`,
 when $`z` fits $`a`, or when $`a` is freed and
 
-$$`lo \le z \;\land\; \alpha \mid z \;\land\; z + |\vec{x}| \le hi`
+$$`lo \le z \;\land\; \alpha \mid z \;\land\; z + \mathrm{ext}(b) \le hi`
 
 No access reaches a freed allocation, and a live one may take its
 addresses, so a freed one takes room from none: a dangling pointer may be

@@ -36,7 +36,7 @@ theorem le_bumpFrom : ∀ (c : Nat) (bs : List (Block u)) (j : Nat), c ≤ bumpF
   | c, b :: _, 0 => le_alignUp c b.align
   | c, b :: bs, j + 1 => by
     have h₁ := le_alignUp c b.align
-    have h₂ := le_bumpFrom (alignUp c b.align + b.units.length + 1) bs j
+    have h₂ := le_bumpFrom (alignUp c b.align + b.extent + 1) bs j
     simp only [bumpFrom]
     omega
 
@@ -55,11 +55,11 @@ theorem dvd_bumpFrom : ∀ {c : Nat} {bs : List (Block u)} {a : Nat} {b : Block 
 /-- A block ends, with the address after it, before the canonical address
 of every block after it. -/
 theorem bumpFrom_lt : ∀ {c : Nat} {bs : List (Block u)} {i j : Nat} {b : Block u},
-    bs[i]? = some b → i < j → bumpFrom c bs i + b.units.length < bumpFrom c bs j
+    bs[i]? = some b → i < j → bumpFrom c bs i + b.extent < bumpFrom c bs j
   | c, b' :: bs, 0, j + 1, b, h, _ => by
     simp only [List.getElem?_cons_zero, Option.some.injEq] at h
     subst h
-    have := le_bumpFrom (alignUp c b'.align + b'.units.length + 1) bs j
+    have := le_bumpFrom (alignUp c b'.align + b'.extent + 1) bs j
     simp only [bumpFrom]
     omega
   | _, _ :: bs, i + 1, j + 1, _, h, hij => by
@@ -84,7 +84,7 @@ theorem bump_alloc (M : Memory u) (k : AllocKind) (n al lo : Nat) {a : AllocId}
 /-- The canonical addresses of two allocations do not overlap: the earlier
 ends before the later starts. -/
 theorem bump_lt {M : Memory u} {lo : Nat} {i j : AllocId} {b : Block u}
-    (h : M.blocks[i]? = some b) (hij : i < j) : M.bump lo i + b.units.length < M.bump lo j :=
+    (h : M.blocks[i]? = some b) (hij : i < j) : M.bump lo i + b.extent < M.bump lo j :=
   bumpFrom_lt h hij
 
 /-- While every allocation with an address has its canonical one, the
@@ -92,7 +92,7 @@ canonical address of an allocation aligned to more than 0 fits when it
 ends by `hi`. -/
 theorem fits_bump {M : Memory u} {lo hi a : Nat} {b : Block u} (hb : M.blocks[a]? = some b)
     (hal : 0 < b.align) (hcanon : ∀ j z, M.addrOf j = some z → z = M.bump lo j)
-    (hhi : M.bump lo a + b.units.length ≤ hi) : M.fits lo hi a (M.bump lo a) = true := by
+    (hhi : M.bump lo a + b.extent ≤ hi) : M.fits lo hi a (M.bump lo a) = true := by
   refine fits_eq_true.mpr ⟨b, hb, le_bumpFrom lo M.blocks a, dvd_bumpFrom hb hal, hhi, ?_⟩
   · intro j c hc hne
     unfold Block.leavesRoom

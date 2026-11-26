@@ -68,7 +68,7 @@ native stack slot is reused. -/
 def admits (M : Memory u) (lo hi a x : Nat) : Bool :=
   M.fits lo hi a x || match M.blocks[a]? with
     | some b => !b.live && decide (lo ≤ x) && decide (b.align ∣ x) &&
-        decide (x + b.units.length ≤ hi)
+        decide (x + b.extent ≤ hi)
     | none => false
 
 /-- The address given to the allocation `a` when the policy proposes none

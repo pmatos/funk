@@ -74,7 +74,7 @@ fn effects_of(reg: &Registry, c: &Case) -> Effects {
 fn each_op_has_the_effects_of_its_lean_declaration() {
     let reg = in_tree();
     let cs = cases();
-    assert_eq!(cs.len(), 119);
+    assert_eq!(cs.len(), 120);
     for c in &cs {
         assert_eq!(effects_of(&reg, c).to_string(), c.effects, "{}", c.name);
     }

@@ -17,8 +17,9 @@ below say so, and say what the memory's other operations do to addresses:
 * A new allocation has no address, and allocating, freeing and storing keep
   every address.
 * Refinement compares addresses: exposing the same allocation at the same
-  address in memories that refine each other keeps refinement, and in such
-  memories the same addresses fit, the canonical layout gives the same, and
+  address in memories that refine each other keeps refinement, blocks
+  that refine each other take the same extent, and in such memories the
+  same addresses fit, the canonical layout gives the same, and
   every allocation has the same address.
 -/
 
@@ -240,11 +241,17 @@ theorem Memory.IsRefinedBy.expose {M M' : Memory u} (h : M ⊑ M') (a x : Nat) :
     M.expose a x ⊑ M'.expose a x :=
   List.IsRefinedBy.modify (fun hb => Block.IsRefinedBy.giveAddr hb x) h a
 
+/-- Blocks that refine each other take as many addresses. -/
+theorem Block.IsRefinedBy.extent {b b' : Block u} (h : b ⊑ b') : b.extent = b'.extent := by
+  obtain ⟨hk, -, -, hn, -⟩ := h
+  simp [Block.extent, hk, hn]
+
 /-- Blocks that refine each other leave room for the same addresses. -/
 theorem Block.IsRefinedBy.leavesRoom {b b' : Block u} (h : b ⊑ b') (x n : Nat) :
     b.leavesRoom x n = b'.leavesRoom x n := by
-  obtain ⟨-, -, hl, hn, ha, -⟩ := h
-  simp [Block.leavesRoom, hl, hn, ha]
+  have he := h.extent
+  obtain ⟨-, -, hl, -, ha, -⟩ := h
+  simp [Block.leavesRoom, hl, he, ha]
 
 /-- Lists of blocks that refine each other leave room for the same
 addresses. -/
@@ -271,7 +278,7 @@ theorem IsRefinedBy.fits {M M' : Memory u} (h : M ⊑ M') (lo hi a x : Nat) :
   unfold Memory.fits
   rcases List.IsRefinedBy.getElem? h a with ⟨h₁, h₂⟩ | ⟨b, b', h₁, h₂, hb⟩
   · rw [h₁, h₂]
-  · simp only [h₁, h₂, hb.2.1, hb.2.2.2.1, roomFrom_isRefinedBy h]
+  · simp only [h₁, h₂, hb.2.1, hb.extent, roomFrom_isRefinedBy h]
 
 /-- The canonical addresses are the same in lists of blocks that refine
 each other. -/
@@ -280,7 +287,7 @@ theorem bumpFrom_isRefinedBy :
   | _, [], [], _, _ => rfl
   | _, _ :: _, _ :: _, h, 0 => by simp only [bumpFrom, h.1.2.1]
   | _, _ :: _, _ :: _, h, a + 1 => by
-    simp only [bumpFrom, h.1.2.1, h.1.2.2.2.1]
+    simp only [bumpFrom, h.1.2.1, h.1.extent]
     exact bumpFrom_isRefinedBy h.2 a
   | _, [], _ :: _, h, _ | _, _ :: _, [], h, _ => (h : False).elim
 
@@ -291,8 +298,9 @@ theorem lowestFrom_isRefinedBy {M M' : Memory u} (hM : M ⊑ M') (lo hi a al : N
       lowestFrom M lo hi a al best cs = lowestFrom M' lo hi a al best cs'
   | _, [], [], _ => rfl
   | best, c :: cs, c' :: cs', h => by
-    obtain ⟨-, -, hl, hn, ha, -⟩ := h.1
-    simp only [lowestFrom, ha, hl, hn, hM.fits]
+    have he := h.1.extent
+    obtain ⟨-, -, hl, -, ha, -⟩ := h.1
+    simp only [lowestFrom, ha, hl, he, hM.fits]
     exact lowestFrom_isRefinedBy hM lo hi a al h.2
   | _, [], _ :: _, h | _, _ :: _, [], h => (h : False).elim
 
