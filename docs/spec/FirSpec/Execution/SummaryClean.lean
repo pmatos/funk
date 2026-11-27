@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Values with no poison: readable blocks" =>
 
-:::moduleDocs (fingerprint := "6760647252257904763")
+:::moduleDocs (fingerprint := "16692049942570002262")
 :::
 
 :::readable Fir.DVals.Clean Fir.Env.Clean (fingerprint := "8528918267713506938")
@@ -23,7 +23,7 @@ value of it is poison, and an environment is clean when no value it binds
 is.
 :::
 
-:::readable Fir.HVector.clean_toDVals Fir.mem_of_lookup Fir.Env.Clean.value Fir.Env.Clean.bind Fir.Env.Clean.params Fir.Env.Clean.mapM_value Fir.Env.Clean.operands (pin := Fir.HVector.Any) (fingerprint := "5920988429909161886")
+:::readable Fir.HVector.clean_toDVals Fir.mem_of_lookup Fir.Env.Clean.value Fir.Env.Clean.bind Fir.Env.Clean.params Fir.Env.Clean.mapM_value Fir.Env.Clean.operands (pin := Fir.HVector.Any) (fingerprint := "7631169146181786315")
 *Theorems: a clean environment gives clean values.* The values of an
 operand vector are clean exactly when no element of it is poison. A name
 that a list looks up is bound in it, so a value that a clean environment

@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Float constants in text: readable blocks" =>
 
-:::moduleDocs (fingerprint := "8855411194627553379")
+:::moduleDocs (fingerprint := "4059434597525025085")
 :::
 
 :::readable Fir.Core.hasDecimals Fir.Core.modelFormat Fir.Core.modelFormat_cond (fingerprint := "10244866007434555026")
@@ -89,7 +89,7 @@ that read back, $`\mathrm{nearest}` takes the only one, or of two the one
 nearer to $`x / 10^j`, and of two equally near the even one.
 :::
 
-:::readable Fir.Core.shortestFrom (fingerprint := "10621541598721012761")
+:::readable Fir.Core.shortestFrom (fingerprint := "11025366026815780063")
 *Definition: the shortest decimal that reads back.* For bits $`b` of the
 format $`f` whose value is $`(-1)^s \cdot \mathit{num} / \mathit{den}`,
 with decimal exponent $`E`, $`\mathrm{shortest}` tries $`n = 1, 2,

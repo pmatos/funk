@@ -1,7 +1,9 @@
 import Lean.Compiler.CSimpAttr
 import Lean.Compiler.ExternAttr
 import Lean.Compiler.ImplementedByAttr
+import Lean.Compiler.LCNF.Util
 import Lean.Elab.Command
+import Lean.Meta.Constructions.CtorIdx
 import Lean.Meta.Native
 import Lean.Util.CollectAxioms
 
@@ -19,6 +21,17 @@ module that runs it:
 * is `unsafe` or `partial`;
 * is `implemented_by` other code, or `extern`, so that a program would not
   run the definition that the proofs are about.
+
+One pair is exempt from the bans on `unsafe` and `implemented_by`: the
+`T.ctorIdx` that Lean makes for an inductive type `T` with more than one
+constructor, and its `T.ctorIdx._impl`. `T.ctorIdx` gives the index of a
+value's constructor by `T.casesOn`, and Lean runs `T.ctorIdx._impl` in its
+place, which reads the tag that the runtime keeps in the value. Lean makes the
+pair for every such type, and `noConfusion` needs `T.ctorIdx`, so no inductive
+type could be declared without it. The check accepts the pair only in exactly
+the shape that Lean makes it, so the exemption trusts Lean's compiler and
+runtime to keep a constructor's index as its tag. The human ruled this on
+2026-11-26, in #511.
 
 It also fails when a source file in `lean/` is not imported, or belongs to a
 library that is not checked, so that every module of `lean/` is checked; when
@@ -68,11 +81,57 @@ def isNativeAxiom (env : Environment) (n : Name) : CommandElabM Bool := do
     try return (← Meta.nativeEqTrue `check_axioms e) matches .success _
     catch _ => return false
 
+/-- The body of `e` under its first `k` lambdas, if it has that many. -/
+def underLambdas : Nat → Expr → Option Expr
+  | 0, e => some e
+  | k + 1, .lam _ _ b _ => underLambdas k b
+  | _, _ => none
+
+/-- The inductive type `T` when `n` is a safe `T.ctorIdx` as Lean makes it
+for a type with more than one constructor (`Lean.mkCtorIdx`): after its
+lambdas, `T.casesOn` on its last argument, whose case for each constructor is
+the constructor's index. -/
+def ctorIdxOf? (env : Environment) (n : Name) : Option InductiveVal := do
+  let ind ← isCtorIdxCore? env n
+  guard (ind.numCtors > 1 && !Compiler.LCNF.isRuntimeBuiltinType ind.name)
+  let some (.defnInfo d) := env.find? n | none
+  guard (d.safety == .safe)
+  let body ← underLambdas (ind.numParams + ind.numIndices + 1) d.value
+  let (casesOn, args) := body.getAppFnArgs
+  guard (casesOn == mkCasesOnName ind.name)
+  guard (args.size == ind.numParams + ind.numIndices + 2 + ind.numCtors)
+  guard (args[ind.numParams + ind.numIndices + 1]! == .bvar 0)
+  for c in ind.ctors, alt in args.extract (args.size - ind.numCtors) do
+    let some (.ctorInfo ci) := env.find? c | none
+    guard (underLambdas ci.numFields alt == some (mkRawNatLit ci.cidx))
+  return ind
+
+/-- Whether `n` is `T.ctorIdx` of `ctorIdxOf?` or its `T.ctorIdx._impl`, as
+Lean makes them: `T.ctorIdx` is implemented by `T.ctorIdx._impl`, which has
+its type, is neither implemented by other code nor `extern`, and after its
+lambdas only reads the tag of its last argument with `getObjTagNat`. -/
+def isGeneratedCtorIdx (env : Environment) (n : Name) : Bool := Id.run do
+  let idx := match n with
+    | .str p "_impl" => p
+    | _ => n
+  let some ind := ctorIdxOf? env idx | return false
+  let impl := idx.str "_impl"
+  unless Compiler.getImplementedBy? env idx == some impl do return false
+  let some (.defnInfo d) := env.find? idx | return false
+  let some (.defnInfo i) := env.find? impl | return false
+  unless i.type == d.type && i.levelParams == d.levelParams do return false
+  if (Compiler.getImplementedBy? env impl).isSome || isExtern env impl then return false
+  let some body := underLambdas (ind.numParams + ind.numIndices + 1) i.value | return false
+  return body.getAppFnArgs matches (``getObjTagNat, #[_, .bvar 0])
+
 /-- Why the declaration `n` is not trusted, if it is not. `natives` holds the
 axioms of native evaluation already found to hold. -/
 def untrusted (env : Environment) (natives : IO.Ref NameSet) (n : Name)
     (info : ConstantInfo) : CommandElabM (Option String) := do
-  if info.isUnsafe then return some "is unsafe"
+  -- Lean's own `T.ctorIdx` and its `_impl`, exempt by the ruling of
+  -- 2026-11-26 (#511). Every other check still applies to them.
+  let ctorIdx := isGeneratedCtorIdx env n
+  if info.isUnsafe && !ctorIdx then return some "is unsafe"
   -- A `partial` definition is an opaque constant whose code is its
   -- `_unsafe_rec`. Well-founded recursion makes an `_unsafe_rec` too, for
   -- the compiler, beside a definition with a value, so the copy alone is not
@@ -80,7 +139,7 @@ def untrusted (env : Environment) (natives : IO.Ref NameSet) (n : Name)
   if info matches .opaqueInfo _ && env.contains (n.str "_unsafe_rec") then
     return some "is partial"
   if let some impl := Compiler.getImplementedBy? env n then
-    return some s!"is implemented by {impl}"
+    unless ctorIdx do return some s!"is implemented by {impl}"
   if isExtern env n then return some "is extern"
   -- A `@[csimp]` swap changes the code that the check runs to confirm a native
   -- claim, so a swap that rests on a native axiom could confirm itself.

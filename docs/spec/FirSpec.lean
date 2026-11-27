@@ -101,6 +101,8 @@ The abstract syntax is parameterized over the dialect. A dialect supplies its
 op instances and its types; a module of any dialect is made of the same
 functions, blocks and ops.
 
+{includeReadable "." Fir.Prelude "Equality of names and numbers" FirSpec.Prelude (level := 2)}
+
 {includeReadable "." Fir.Syntax.Dialect "Dialects" FirSpec.Syntax.Dialect (level := 2)}
 
 {includeReadable "." Fir.Syntax.Location "Locations" FirSpec.Syntax.Location (level := 2)}

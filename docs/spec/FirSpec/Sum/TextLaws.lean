@@ -80,7 +80,7 @@ in the sum, has lawful text at every step. The second is an instance, so a
 nested sum finds the law for each level by itself.
 :::
 
-:::readable Fir.Dialect.sum.validRegion_ext (pin := Fir.Dialect.sum.ValidRegion) (fingerprint := "5882056062111048233")
+:::readable Fir.Dialect.sum.validRegion_ext (pin := Fir.Dialect.sum.ValidRegion) (fingerprint := "8851998300331728861")
 *Theorem: a kind of the extension goes to the extension's rule.* Let the
 base's words stay in its set, $`e` write its words under its name, and
 $`n_e \notin \mathrm{names}(b)`. Then the base registers no kind that $`e`
@@ -88,7 +88,7 @@ registers, so for every such kind $`k`, a region obeys the rule of $`k` in
 the sum exactly when it obeys $`e`'s rule for $`k`, through $`e`'s view.
 :::
 
-:::readable Fir.Dialect.sum.validItem_ext (pin := Fir.Dialect.sum.ValidItem) (fingerprint := "3503632152703493896")
+:::readable Fir.Dialect.sum.validItem_ext (pin := Fir.Dialect.sum.ValidItem) (fingerprint := "12328192671887814563")
 *Theorem: a kind of item of the extension goes to the extension's rule.*
 Under the same assumptions, the base registers no kind of item that $`e`
 registers, so for every item $`i` of such a kind, $`i` obeys the rule for

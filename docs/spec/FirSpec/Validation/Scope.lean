@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Scope and symbols: readable blocks" =>
 
-:::moduleDocs (fingerprint := "5863053249874640543")
+:::moduleDocs (fingerprint := "14763426175557229468")
 :::
 
 :::readable Fir.Func.blocks Fir.Region.allBlocks Fir.Block.allBlocks Fir.Operation.regionBlocks Fir.Func.allBlocks (fingerprint := "7213574439458321908")
@@ -44,7 +44,7 @@ function $`f` at any depth, in order. Well-formedness asks something of
 each of them, and a function's effects are those of each of them.
 :::
 
-:::readable Fir.Block.defs Fir.Func.defs Fir.Func.typeOf Fir.Func.types (fingerprint := "16013911283360544923")
+:::readable Fir.Block.defs Fir.Func.defs Fir.Func.typeOf Fir.Func.types (fingerprint := "3577869661331087098")
 *Definition: the values a function defines, and their types.* A block
 defines its arguments, then the results of its ops, in order. Each
 definition is a pair $`x : t` of a value name and a type.
@@ -63,7 +63,7 @@ types, then the type of each definition in $`\mathrm{defs}(f)`. Validation
 asks each of them to be a valid type of the dialect.
 :::
 
-:::readable Fir.Func.block? (fingerprint := "8147301483788728811")
+:::readable Fir.Func.block? (fingerprint := "3231646793439102983")
 *Definition: the block with a label.* $`\mathrm{block}_f(l)` is the first
 block of $`\mathrm{blocks}(f)` whose label is $`l`, and is undefined when
 no block has that label. Only the top-level blocks count, since a branch
@@ -93,7 +93,7 @@ $`t^*` are the types of its parameters, in order, and $`r^*` its result
 types. A call is checked against it.
 :::
 
-:::readable Fir.Module.symbols (fingerprint := "7243029118963471953")
+:::readable Fir.Module.symbols (fingerprint := "438174117311406257")
 *Definition: the symbol table.* An op never holds a function: it names one
 by its symbol, such as `@f` in the text, and the module's symbol table says what the
 symbol stands for. $`\mathrm{symtab}_M(s)` is the type of the first function
@@ -108,7 +108,7 @@ A valid module has one function for each symbol. A call is valid only when
 the symbol table gives its symbol the type the call states.
 :::
 
-:::readable Fir.SymbolTable Fir.SymbolTable.funcs Fir.SymbolTable.dialectItems Fir.SymbolTable.aggregates Fir.SymbolTable.globals Fir.SymbolTable.externs Fir.SymbolTable.symbols (fingerprint := "10350083835743072937")
+:::readable Fir.SymbolTable Fir.SymbolTable.funcs Fir.SymbolTable.dialectItems Fir.SymbolTable.aggregates Fir.SymbolTable.globals Fir.SymbolTable.externs Fir.SymbolTable.symbols (fingerprint := "9572787864177838857")
 *Definition: a symbol table of a module.* A module nested in another is a
 symbol table of its own, with its own dialect set (ADR-2026-11-10-1510). A
 _symbol table_ $`T` is a dialect set $`\mathrm{dialects}(T)` and a list of
@@ -164,7 +164,7 @@ symbol table: $`\mathrm{funcs}(\mathrm{table}(M)) = \mathrm{funcs}(M)` and
 $`\mathrm{symtab}_{\mathrm{table}(M)} = \mathrm{symtab}_M`.
 :::
 
-:::readable Fir.LayoutRef Fir.Aggregate.ref Fir.SymbolTable.layouts Fir.SymbolTable.globalMems Fir.OpContext (fingerprint := "9999499089856945988")
+:::readable Fir.LayoutRef Fir.Aggregate.ref Fir.SymbolTable.layouts Fir.SymbolTable.globalMems Fir.OpContext (fingerprint := "8624622981418332754")
 *Definition: the context of an op.* A dialect's rule for an op may look at
 four things beyond the op itself, and at nothing else: the module's symbol
 table, the result types of the function that holds the op, the

@@ -1,3 +1,5 @@
+import Fir.Prelude
+
 /-!
 # The ordering of an access
 

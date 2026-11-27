@@ -1,3 +1,5 @@
+import Fir.Prelude
+
 /-!
 A global is an item that names a block of units of one memory, live for
 the whole run, with its first contents (ADR-2026-11-09-1546). It holds no

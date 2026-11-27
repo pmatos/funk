@@ -17,7 +17,7 @@ when the Lean changes under it.
 :::moduleDocs (fingerprint := "5068510354838377416")
 :::
 
-:::readable Fir.Env.mapM_value_ok (pin := Fir.Env.value) (pin := Fir.Env.Holds) (fingerprint := "10280855962566332597")
+:::readable Fir.Env.mapM_value_ok (pin := Fir.Env.value) (pin := Fir.Env.Holds) (fingerprint := "13495011182064038630")
 *Theorem: the values of names that an environment holds are found, with
 their types.* If the environment $`E` holds the names
 $`x_1, \dots, x_k` for the function $`f`, then looking each of them up in

@@ -14,10 +14,10 @@ build fails when the Lean changes under it.
 
 #doc (Manual) "The environment of a run: readable blocks" =>
 
-:::moduleDocs (fingerprint := "11316202068607451051")
+:::moduleDocs (fingerprint := "3123091979958591607")
 :::
 
-:::readable Fir.find?_of_nodup Fir.Func.typeOf_of_mem (pin := Fir.Func.typeOf) (fingerprint := "12310842176801363216")
+:::readable Fir.find?_of_nodup Fir.Func.typeOf_of_mem (pin := Fir.Func.typeOf) (fingerprint := "15697393949314963852")
 *Theorem: in a list with distinct first parts, the first pair for $`x`
 is the pair $`(x, t)` that the list holds; so a name of a function with
 distinct value names has the type of its definition.* If the first parts
@@ -36,7 +36,7 @@ has distinct names, so the type it gives a name is the type of the name's
 only definition.
 :::
 
-:::readable Fir.lookup_of_mem Fir.lookup_append_of_not_mem (fingerprint := "14449396384479537477")
+:::readable Fir.lookup_of_mem Fir.lookup_append_of_not_mem (fingerprint := "18215620083004993826")
 *Lemmas: looking a name up in a list of pairs.* If $`x` is the first part
 of some pair of a list, looking $`x` up in the list gives a value $`v`, and
 $`(x, v)` is a pair of the list. If no pair of $`l` has the first part
@@ -55,7 +55,7 @@ this way before it binds them, and this says that their types are the
 op's result types.
 :::
 
-:::readable Fir.Env.Holds (pin := Fir.Env) (fingerprint := "13649076270396545226")
+:::readable Fir.Env.Holds (pin := Fir.Env) (fingerprint := "15831622366004653524")
 *Definition: an environment holds a list of names.* An
 {ref "The-fir-specification--Execution--The-interpreter"}[environment]
 $`E` binds names to typed values, the latest first, and $`E(x)` is the

@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Core rules: readable blocks" =>
 
-:::moduleDocs (fingerprint := "15494235347970769729")
+:::moduleDocs (fingerprint := "7638068235450208143")
 :::
 
 :::readable Fir.Core.Ty.Valid Fir.Core.Ty.memory (pin := Fir.Core.maxWidth) (pin := Fir.Core.floatWidth) (fingerprint := "1308968798942516744")
@@ -310,7 +310,7 @@ pointer of memory 0. $`\mathsf{alloca}`, the loads and the stores have the
 rules given above, and the other ops have no core rule of their own.
 :::
 
-:::readable Fir.Core.Ty.sigAttrsAllowed (fingerprint := "1995343573980004862")
+:::readable Fir.Core.Ty.sigAttrsAllowed (fingerprint := "9355509299591854688")
 *Definition: the attributes a core type allows in a signature.* A
 parameter or a result of a core type $`t` may carry the attributes $`a^*`
 after its type when $`a^*` is empty, or when $`t` is

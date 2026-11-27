@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "The items a run gives each op: readable blocks" =>
 
-:::moduleDocs (fingerprint := "10635434293952381327")
+:::moduleDocs (fingerprint := "6344713252701432534")
 :::
 
 :::readable Fir.FieldPlace Fir.LayoutPlace Fir.StartAlloc Fir.RunItems Fir.RunItems.empty Fir.RunItems.withAddrs Fir.RunItems.withResolvers (pin := Fir.Memory.Policy.canonical) (pin := Fir.Memory.Resolver.canonical) (fingerprint := "2411160191474670788")
@@ -72,7 +72,7 @@ field of this record, and the statements of those obligations and
 guarantees stay as they are.
 :::
 
-:::readable Fir.Field.place Fir.Aggregate.place Fir.Global.startId? Fir.InitPiece.startUnits Fir.Global.start Fir.funcStart Fir.Func.startId? Fir.RunItems.ofTable Fir.Module.runItems (pin := Fir.Field.shape) (pin := Fir.roundUp) (pin := Fir.InitPiece.unitCount) (pin := Fir.Memory.encodePtr) (fingerprint := "11621212648444877052")
+:::readable Fir.Field.place Fir.Aggregate.place Fir.Global.startId? Fir.InitPiece.startUnits Fir.Global.start Fir.funcStart Fir.Func.startId? Fir.RunItems.ofTable Fir.Module.runItems (pin := Fir.Field.shape) (pin := Fir.roundUp) (pin := Fir.InitPiece.unitCount) (pin := Fir.Memory.encodePtr) (fingerprint := "1416953201794327785")
 *Definition: the items of a table.* In the memory $`n` of a module whose
 data layout is $`l`, a field of the type $`t` is placed at its offset,
 with its count, and with the step $`\mathrm{roundUp}(u, a)`, where one
@@ -116,7 +116,7 @@ $`\mathrm{items}(M)`, are those of its own table, in its data layout:
 the items that the runs the modes report give each op.
 :::
 
-:::readable Fir.LayoutPlace.ref Fir.RunItems.ofTable_ref (pin := Fir.SymbolTable.layouts) (pin := Fir.LayoutRef) (fingerprint := "10020164216687375419")
+:::readable Fir.LayoutPlace.ref Fir.RunItems.ofTable_ref (pin := Fir.SymbolTable.layouts) (pin := Fir.LayoutRef) (fingerprint := "2870024278288114846")
 *Definition and theorem: a run gives an op the layout that validation
 checks it against.* What the rule of an op sees of a placed layout is its
 memory and the count of each of its fields. For every data layout $`l`,
@@ -129,7 +129,7 @@ every run, a layout of $`s` of the memory and with the fields it was
 checked against.
 :::
 
-:::readable Fir.RunItems.ofTable_globalMem (pin := Fir.SymbolTable.globalMems) (pin := Fir.Global.startId?) (fingerprint := "11026496696803375363")
+:::readable Fir.RunItems.ofTable_globalMem (pin := Fir.SymbolTable.globalMems) (pin := Fir.Global.startId?) (fingerprint := "5994983646569678989")
 *Theorem: a run gives an op the global that validation checks it
 against.* For every data layout $`l`, table $`T` and symbol $`s`, the
 memory in which a run of a function of $`T` places the global $`s` is the
@@ -141,7 +141,7 @@ accepts in $`T` finds, in every run, a global of $`s` in the memory it
 was checked against.
 :::
 
-:::readable Fir.RunItems.ofTable_func Fir.RunItems.ofTable_func_ne (pin := Fir.SymbolTable.symbols) (fingerprint := "968542608414382160")
+:::readable Fir.RunItems.ofTable_func Fir.RunItems.ofTable_func_ne (pin := Fir.SymbolTable.symbols) (fingerprint := "7310570643088980784")
 *Theorems: a run gives each function of the table an allocation of its
 own.* For every data layout $`l`, table $`T` and symbol $`f`, a run of a
 function of $`T` places $`f` exactly when

@@ -16,7 +16,7 @@ namespace FirSpecSite
 
 /--
 The style of a section title's permalink icon on a narrow screen, up to the
-700px at which Verso's own style changes. Verso, at `v4.35.0`, positions the
+700px at which Verso's own style changes. Verso, at `v4.36.0`, positions the
 icon's link absolutely and shows it only on hover. So the icon takes no room in
 the line, sticks out past the end of a title that fills its line, and the page
 scrolls sideways. Here the icon is in the flow of the line and always shown, as

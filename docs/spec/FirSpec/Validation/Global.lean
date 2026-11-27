@@ -14,10 +14,10 @@ when the Lean changes under it.
 
 #doc (Manual) "A global's rules: readable blocks" =>
 
-:::moduleDocs (fingerprint := "6916921189686994937")
+:::moduleDocs (fingerprint := "5798642741250167808")
 :::
 
-:::readable Fir.Global.named? Fir.InitPiece.unitCount Fir.Global.initUnits (fingerprint := "15130458197272923178")
+:::readable Fir.Global.named? Fir.InitPiece.unitCount Fir.Global.initUnits (fingerprint := "8084669697603482103")
 *Definition: the units of an initializer.* Among the globals $`gs` of a
 table, $`\mathrm{named?}(gs, s)` is the first with the symbol $`s`. In the
 memory $`n` of a module whose data layout is $`\ell`, a piece

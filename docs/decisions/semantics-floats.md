@@ -75,7 +75,7 @@ too: strict `f32` and `f64` with no flags and no rounding attribute, which drops
 the hook for other rounding modes and fails G0's point on formats.
 
 The spec defines fir's float ops on Lean's model, with a layer that adds the NaN
-choice. Lean v4.35.0 models its floats in its logic
+choice. Lean v4.36.0 models its floats in its logic
 (`src/Init/Data/Float/Model/` of the Lean sources): the operations take a
 format of any exponent and mantissa width, round to nearest even, and have one
 canonical NaN with no payload or sign. The spec defines the conversions between

@@ -14,7 +14,7 @@ changes under it.
 
 #doc (Manual) "The sum of dialects: readable blocks" =>
 
-:::moduleDocs (fingerprint := "14222411211038838788")
+:::moduleDocs (fingerprint := "7668704445543483624")
 :::
 
 :::readable Fir.Dialect.over Fir.Dialect.sum (fingerprint := "6781788953757055949")
@@ -102,7 +102,7 @@ the extension's (ADR-2026-11-09-2353). This can be decided when the base's
 rule can.
 :::
 
-:::readable Fir.Dialect.sum.ValidRegion (fingerprint := "7317452533583571498")
+:::readable Fir.Dialect.sum.ValidRegion (fingerprint := "15489652968281090822")
 *Definition: the rule of a region kind in a sum.* A region of the kind
 $`k` obeys, in the sum, the base's rule for $`k`, through the base's view,
 when the base registers $`k`; and otherwise $`e`'s rule for $`k`, through
@@ -115,7 +115,7 @@ the base only words of its own set, which does not hold $`e`'s name, so
 each kind goes to the dialect that registers it.
 :::
 
-:::readable Fir.Dialect.sum.ValidItem (fingerprint := "10283173853771968966")
+:::readable Fir.Dialect.sum.ValidItem (fingerprint := "17771520437600388197")
 *Definition: the rule for items in a sum.* An item $`i` of a dialect's
 kind $`k` obeys, in the sum, the base's rule, through the base's view, when
 the base registers $`k`; and otherwise $`e`'s rule, through $`e`'s view:
@@ -126,7 +126,7 @@ As for region kinds, the laws of names send each kind of item to the
 dialect that registers it.
 :::
 
-:::readable Fir.Dialect.sum.instDialectSignature Fir.Dialect.sum.instDialectValidation Fir.Dialect.sum.instDecidableDialectValidation (fingerprint := "17372027105841838897")
+:::readable Fir.Dialect.sum.instDialectSignature Fir.Dialect.sum.instDialectValidation Fir.Dialect.sum.instDecidableDialectValidation (fingerprint := "12711130919491785918")
 *Definition: the signature and the rules of a sum.* An op of the sum has
 the signature of its side. A base op's types are the base's, tagged
 $`\mathsf{inl}`:

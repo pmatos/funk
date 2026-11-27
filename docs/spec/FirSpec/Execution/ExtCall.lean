@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "The external-call rule: readable blocks" =>
 
-:::moduleDocs (fingerprint := "981855685700279059")
+:::moduleDocs (fingerprint := "15718470431052242049")
 :::
 
 :::readable Fir.DialectExtCall (fingerprint := "8593152062043629551")
@@ -58,7 +58,7 @@ $`[r'_1, \dots, r'_l] = [r_1, \dots, r_k]` and
   `...`: the operands after the first $`m` are its variadic arguments.
 :::
 
-:::readable Fir.Module.declares (pin := Fir.Extern.accepts) (fingerprint := "1406666686694708645")
+:::readable Fir.Module.declares (pin := Fir.Extern.accepts) (fingerprint := "12082012309751508799")
 *Definition: a module declares a symbol for a call.* A module $`M`
 declares the symbol $`g` for operands of the types $`t_1, \dots, t_n` and
 results of the types $`r_1, \dots, r_k` when one of its items is an

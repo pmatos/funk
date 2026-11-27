@@ -15,7 +15,7 @@ when the Lean changes under it.
 
 #doc (Manual) "The interpreter: readable blocks" =>
 
-:::moduleDocs (fingerprint := "13501466706860962814")
+:::moduleDocs (fingerprint := "2950988114111730858")
 :::
 
 :::readable Fir.HVector.toDVals (pin := Fir.DVal) (fingerprint := "18434733173013260905")
@@ -28,7 +28,7 @@ while an environment and a return hold typed values; this turns the one
 into the other.
 :::
 
-:::readable Fir.Env Fir.stuck Fir.Env.value Fir.Env.bind (pin := Fir.Stuck) (pin := Fir.DVal) (pin := Fir.Func.Valid) (fingerprint := "16504742745768224405")
+:::readable Fir.Env Fir.stuck Fir.Env.value Fir.Env.bind (pin := Fir.Stuck) (pin := Fir.DVal) (pin := Fir.Func.Valid) (fingerprint := "18267142136897170132")
 *Definition: environments, being stuck, looking a name up and binding
 names.* An _environment_ $`E` is a list of the values a run has defined,
 each a name with a typed value, $`x \mapsto (t, v)`, the latest first.
@@ -54,7 +54,7 @@ the old ones. Being
 is how the interpreter ends a path that validation rules out.
 :::
 
-:::readable Fir.Env.operands (pin := Fir.Env.value) (fingerprint := "8964916545763133462")
+:::readable Fir.Env.operands (pin := Fir.Env.value) (fingerprint := "12279183579996834799")
 *Definition: the operands of an op.* For the operand types
 $`t_1, \dots, t_n` of an op and the names $`x_1, \dots, x_k` of its
 operands, the values of the operands in an environment $`E` are
@@ -71,7 +71,7 @@ So an op's semantics only ever sees values of the types that its signature
 promises.
 :::
 
-:::readable Fir.Func.jump (pin := Fir.Func.block?) (pin := Fir.Succ) (pin := Fir.Env.value) (pin := Fir.Env.bind) (fingerprint := "12308205813729634351")
+:::readable Fir.Func.jump (pin := Fir.Func.block?) (pin := Fir.Succ) (pin := Fir.Env.value) (pin := Fir.Env.bind) (fingerprint := "5732074204947737374")
 *Definition: jumping to a successor.* Let a terminator of the function
 $`f` have the
 {ref "The-fir-specification--Abstract-syntax--Modules___-functions___-blocks-and-ops"}[successors]
@@ -99,7 +99,7 @@ This is how block arguments take the values that a branch passes
 (ADR-2026-10-29-2010), and a poison value arrives as poison.
 :::
 
-:::readable Fir.Module.func? Fir.Module.func?_none_of_calls (pin := Fir.Module.funcs) (pin := Fir.Module.Valid) (fingerprint := "9837413664934243518")
+:::readable Fir.Module.func? Fir.Module.func?_none_of_calls (pin := Fir.Module.funcs) (pin := Fir.Module.Valid) (fingerprint := "4088954557751820219")
 *Definition: the function with a symbol.* $`\mathrm{lookup}_M(s)` is the
 first function of the module $`M`, in the order of its items, whose symbol
 is $`s`, or none when there is no such function. A call of $`s` runs it.
@@ -134,7 +134,7 @@ $`[p_1 \mapsto w_1, \dots, p_m \mapsto w_m]`, which holds the parameters
 and nothing else.
 :::
 
-:::readable Fir.Module.callable (pin := Fir.Module.func?) (pin := Fir.Module.declares) (fingerprint := "8372489265379199028")
+:::readable Fir.Module.callable (pin := Fir.Module.func?) (pin := Fir.Module.declares) (fingerprint := "14474183513664982731")
 *Definition: the symbols a run can call.* For types $`t^*` and $`r^*`,
 the module $`M` can call the symbol $`s` on arguments of the types $`t^*`
 for results of the types $`r^*`, $`\mathrm{callable}_M(t^*, r^*)(s)`,
@@ -148,7 +148,7 @@ symbol that names no function, or one of another signature, as the
 human's ruling of 2026-11-19 on #235 asks.
 :::
 
-:::readable Fir.Func.runOps (pin := Fir.Module.callable) (pin := Fir.Result) (pin := Fir.Exit) (pin := Fir.Stuck) (pin := Fir.Env.operands) (pin := Fir.Env.bind) (pin := Fir.Func.jump) (pin := Fir.Module.func?) (pin := Fir.Func.enter) (pin := Fir.Module.declares) (pin := Fir.DialectExtCall) (fingerprint := "5525764636706261381")
+:::readable Fir.Func.runOps (pin := Fir.Module.callable) (pin := Fir.Result) (pin := Fir.Exit) (pin := Fir.Stuck) (pin := Fir.Env.operands) (pin := Fir.Env.bind) (pin := Fir.Func.jump) (pin := Fir.Module.func?) (pin := Fir.Func.enter) (pin := Fir.Module.declares) (pin := Fir.DialectExtCall) (fingerprint := "17093649786383864194")
 *Definition: running the ops of a block.* For every dialect, for every way
 of computing in which the dialect's ops have their
 {ref "The-fir-specification--Execution--Effects-and-op-semantics"}[semantics],

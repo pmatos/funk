@@ -14,10 +14,10 @@ build fails when the Lean changes under it.
 
 #doc (Manual) "Checking external declarations: readable blocks" =>
 
-:::moduleDocs (fingerprint := "9864818854606624488")
+:::moduleDocs (fingerprint := "12345023999283154808")
 :::
 
-:::readable Fir.Extern.problem Fir.Extern.problems (pin := Fir.valueRef) (fingerprint := "13919385574555526242")
+:::readable Fir.Extern.problem Fir.Extern.problems (pin := Fir.valueRef) (fingerprint := "6682331978146177362")
 *Definition: the check of an external declaration.* A problem about the
 declaration $`e` names its symbol. The check of $`e` gives, in order:
 

@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "The decoding step: readable blocks" =>
 
-:::moduleDocs (fingerprint := "10836961045478208003")
+:::moduleDocs (fingerprint := "8694900934262048925")
 :::
 
 :::readable Fir.Block.scopeDefs Fir.Operation.scopeDefs Fir.Region.scopeDefs (fingerprint := "524900349912385689")
@@ -54,7 +54,7 @@ differ only in order. Validation and well-formedness speak of
 $`\mathrm{defs}(f)`, so the order must be set aside.
 :::
 
-:::readable Fir.find?_fst_eq_some (fingerprint := "4294853859230067027")
+:::readable Fir.find?_fst_eq_some (fingerprint := "356575026895743189")
 *Theorem: with distinct names, a value has the type of its one
 definition.* For every dialect and every list $`L` of values with their
 types whose names are distinct, the first entry of $`L` for the name $`x`
@@ -65,7 +65,7 @@ found by its first definition, by membership in the function's
 definitions.
 :::
 
-:::readable Fir.Text.Scope.Holds (pin := Fir.Text.Scope) (fingerprint := "12507313161501620523")
+:::readable Fir.Text.Scope.Holds (pin := Fir.Text.Scope) (fingerprint := "171493105360966746")
 *Definition: a scope that holds a list.* A
 {ref "The-fir-specification--Text-format--Decoding"}[scope] $`\mathit{sc}`,
 a table from names to types, _holds_ a list $`L` of values with their types
@@ -76,7 +76,7 @@ $$`\begin{aligned} & \mathrm{holds}(\mathit{sc}, L) \iff \\ & \quad \forall\, x,
 So it gives each value of $`L` its type, and no other value a type.
 :::
 
-:::readable Fir.Text.Scope.holds_empty Fir.Text.Scope.Holds.contains_eq_false Fir.Text.Scope.Holds.insert (fingerprint := "2774064879980165188")
+:::readable Fir.Text.Scope.holds_empty Fir.Text.Scope.Holds.contains_eq_false Fir.Text.Scope.Holds.insert (fingerprint := "12891020878304804591")
 *Theorems: the empty scope, and adding a value.* For every dialect:
 
 * the empty scope holds the empty list;
@@ -108,7 +108,7 @@ Here $`\mathrm{decodety}` is the dialect's reader of types. The position of
 a definition matters only to an error, and there is none.
 :::
 
-:::readable Fir.Text.Defines (pin := Fir.Text.Scope) (fingerprint := "10896383341858368157")
+:::readable Fir.Text.Defines (pin := Fir.Text.Scope) (fingerprint := "3200739813907372799")
 *Definition: a pass adds definitions.* Let $`\mathit{define}` be a pass,
 which adds to a scope what it reads from some part of a tree, or fails,
 and let $`\tau` be a part without positions and $`y^*` a list of
@@ -122,7 +122,7 @@ The condition on names is what keeps the pass from finding a value twice;
 a well-formed function meets it.
 :::
 
-:::readable Fir.Text.define_defines (pin := Fir.Text.define) (fingerprint := "9354246333426272170")
+:::readable Fir.Text.define_defines (pin := Fir.Text.define) (fingerprint := "17033582722808936893")
 *Theorem: adding definitions as written adds them.* For every dialect with a text
 format and every list of definitions $`y_1 : T_1, \dots, y_n : T_n` such
 that $`\mathrm{decodety}(\mathrm{tyattr}(T_i)) = T_i` for each $`i`, the
@@ -169,7 +169,7 @@ every value that $`f` defines at any depth with its type:
 $`\mathrm{decodety}(\mathrm{tyattr}(T)) = T`.
 :::
 
-:::readable Fir.Func.WellFormed.scope (pin := Fir.Func.typeOf) (pin := Fir.Func.WellFormed) (pin := Fir.Text.define) (pin := Fir.Text.defineBlocks) (fingerprint := "4021449216686652794")
+:::readable Fir.Func.WellFormed.scope (pin := Fir.Func.typeOf) (pin := Fir.Func.WellFormed) (pin := Fir.Text.define) (pin := Fir.Text.defineBlocks) (fingerprint := "15338928033211476104")
 *Theorem: the first pass on a well-formed function gives each value its
 type.* For every dialect with
 signatures and a text format, every well-formed function $`f`, parameters

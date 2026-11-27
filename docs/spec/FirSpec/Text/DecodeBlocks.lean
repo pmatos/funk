@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Blocks and ops decoded back: readable blocks" =>
 
-:::moduleDocs (fingerprint := "1746414198031631212")
+:::moduleDocs (fingerprint := "11591541702921755317")
 :::
 
 :::readable Fir.Text.Decodes (fingerprint := "4160001921508362595")
@@ -26,7 +26,7 @@ $`\tau`_ when it succeeds with $`x` on every part that
 to $`\tau`, whatever its positions.
 :::
 
-:::readable Fir.Text.operandTypes_eq (pin := Fir.Text.operandTypes) (fingerprint := "13899781324166393999")
+:::readable Fir.Text.operandTypes_eq (pin := Fir.Text.operandTypes) (fingerprint := "11522698445074809402")
 *Theorem: the operands' types are found in the scope.* For every dialect,
 scope $`\mathit{sc}`, every function symbol (it names the function only
 in error messages), operands $`x_1, \dots, x_n` at any positions and
@@ -59,7 +59,7 @@ $`\mathrm{decodety}(\mathrm{tyattr}(T)) = T`. The case of an op follows,
 once its condition is defined.
 :::
 
-:::readable Fir.Operation.DecodesIn Fir.Block.DecodesIn (pin := Fir.DialectSignature) (fingerprint := "8355073201370729281")
+:::readable Fir.Operation.DecodesIn Fir.Block.DecodesIn (pin := Fir.DialectSignature) (fingerprint := "14554909978524505926")
 *Definitions: an op, and a block, that decode in a scope.* For every
 dialect with signatures and a text format, an op $`o` with the op instance
 $`\iota` _decodes in_ the scope $`\mathit{sc}` when:
@@ -78,7 +78,7 @@ These are what the second pass needs to give an op back: with them, the
 dialect's decoder of ops is given exactly what the op instance encodes.
 :::
 
-:::readable Fir.Func.WellFormed.decodesIn (pin := Fir.Func.WellFormed) (pin := Fir.Func.OpWellFormed) (pin := Fir.Func.typeOf) (pin := Fir.Func.allBlocks) (fingerprint := "16096781994589858869")
+:::readable Fir.Func.WellFormed.decodesIn (pin := Fir.Func.WellFormed) (pin := Fir.Func.OpWellFormed) (pin := Fir.Func.typeOf) (pin := Fir.Func.allBlocks) (fingerprint := "18410680534066922228")
 *Theorem: the blocks of a well-formed function decode in a scope that
 gives each value its type.* For every dialect
 with signatures and a text format, every

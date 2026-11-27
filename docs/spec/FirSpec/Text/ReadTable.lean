@@ -37,7 +37,7 @@ $`\mathsf{locref}~r` as $`r` before any token but `(`, the form that the
 reader of the rest of a list needs.
 :::
 
-:::readable Fir.Text.Location.reads (pin := Fir.Text.readLocation) (pin := Fir.Text.readRange) (pin := Fir.Text.readLocArgs) (pin := Fir.Location.tokens) (pin := Fir.Location.numbers) (pin := Fir.Location.limit) (pin := Fir.Location.refs) (pin := Fir.Text.readNat) (fingerprint := "1923572627390941219")
+:::readable Fir.Text.Location.reads (pin := Fir.Text.readLocation) (pin := Fir.Text.readRange) (pin := Fir.Text.readLocArgs) (pin := Fir.Location.tokens) (pin := Fir.Location.numbers) (pin := Fir.Location.limit) (pin := Fir.Location.refs) (pin := Fir.Text.readNat) (fingerprint := "5423036779967278484")
 *Theorem: a location reads back.* For every
 {ref "The-fir-specification--Abstract-syntax--Locations"}[location]
 $`\mathit{loc}` each of whose numbers is below $`2^{32}`, the reader of a

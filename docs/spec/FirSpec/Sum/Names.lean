@@ -14,10 +14,10 @@ changes under it.
 
 #doc (Manual) "Words and dialect sets: readable blocks" =>
 
-:::moduleDocs (fingerprint := "426493583140685421")
+:::moduleDocs (fingerprint := "3664810440700562984")
 :::
 
-:::readable Fir.wordDialect Fir.wordDialect_dot (fingerprint := "1656636787730505960")
+:::readable Fir.wordDialect Fir.wordDialect_dot (fingerprint := "10990282500213328989")
 *Definition: the dialect that a word names.* $`\mathrm{dialect}(w)` is the
 part of the word $`w` before its first $`.`, and is undefined, written
 $`\bot`, when $`w` holds no $`.`: a bare word, which is the core's.

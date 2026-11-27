@@ -33,7 +33,7 @@ which is the same decoder written another way, so that the decoder of a
 function can pass its own.
 :::
 
-:::readable Fir.decodeFunc_wellFormed (pin := Fir.Text.decodeFunc) (pin := Fir.Func.WellFormed) (pin := Fir.Func.typeOf) (pin := Fir.Func.defs) (pin := Fir.Func.types) (fingerprint := "199890216779133682")
+:::readable Fir.decodeFunc_wellFormed (pin := Fir.Text.decodeFunc) (pin := Fir.Func.WellFormed) (pin := Fir.Func.typeOf) (pin := Fir.Func.defs) (pin := Fir.Func.types) (fingerprint := "15788471975675917779")
 *Theorem: a function decoded from a tree that can be written is well
 formed.* Let $`d` be a dialect with a signature, validation rules and a
 text, whose text is lawful. For every symbol, list of parameters as read,

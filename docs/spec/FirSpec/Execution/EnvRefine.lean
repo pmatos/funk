@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Refined environments: readable blocks" =>
 
-:::moduleDocs (fingerprint := "14839862161756447477")
+:::moduleDocs (fingerprint := "6824376582209956360")
 :::
 
 :::readable Fir.DVal.type_eq_of_isRefinedBy Fir.DVals.types_eq_of_isRefinedBy Fir.DVals.length_eq_of_isRefinedBy (pin := Fir.instHRefinementDVal) (pin := Fir.List.IsRefinedBy) (fingerprint := "12482423081917173134")
@@ -79,7 +79,7 @@ place, up to the end of the shorter list, in front of $`E`. An op's
 results, a block's arguments and a callee's parameters are all bound so.
 :::
 
-:::readable Fir.Env.IsRefinedBy.lookup Fir.Env.IsRefinedBy.value Fir.Env.IsRefinedBy.mapM_value (pin := Fir.Env.value) (fingerprint := "13378503529094221237")
+:::readable Fir.Env.IsRefinedBy.lookup Fir.Env.IsRefinedBy.value Fir.Env.IsRefinedBy.mapM_value (pin := Fir.Env.value) (fingerprint := "6136775052393566077")
 *Theorems: what the refining environment finds, the refined one finds.*
 Let $`E \sqsubseteq E'`.
 
@@ -116,7 +116,7 @@ exactly when $`E(x)` is a value $`v` of the type $`t`, and the operands
 of the types $`t^*` named $`x^*` are found as $`v^*`.
 :::
 
-:::readable Fir.Func.jump_eq_ok Fir.Func.jump_of Fir.Env.IsRefinedBy.jump (pin := Fir.Func.jump) (pin := Fir.Func.block?) (fingerprint := "14236531001631060974")
+:::readable Fir.Func.jump_eq_ok Fir.Func.jump_of Fir.Env.IsRefinedBy.jump (pin := Fir.Func.jump) (pin := Fir.Func.block?) (fingerprint := "4544448454099973770")
 *Theorems: a jump from the refining environment goes where the jump from
 the refined one goes.* Let $`E \sqsubseteq E'`, in a dialect whose types
 can be compared for equality. If, for a function $`f`

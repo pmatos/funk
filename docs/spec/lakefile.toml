@@ -8,7 +8,7 @@ path = "../../lean"
 [[require]]
 name = "verso"
 git = "https://github.com/leanprover/verso"
-rev = "v4.35.0"
+rev = "v4.36.0"
 
 # FirSpec renders the sources of `fir` with includeLiterate, so it is rebuilt
 # whenever one of them changes, not only when their compiled form does.

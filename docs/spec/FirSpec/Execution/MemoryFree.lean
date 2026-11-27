@@ -30,7 +30,7 @@ $`f`: it holds $`f(x)` for each memory $`x` it held. So a set of effects
 that touches no memory once its memories are renamed touched none before.
 :::
 
-:::readable Fir.SymbolTable.ReachesNoMemory Fir.SymbolTable.ReachesNoMemory.of_summary Fir.SymbolTable.ReachesNoMemory.own Fir.SymbolTable.ReachesNoMemory.callee Fir.SymbolTable.ReachesNoMemory.picked (pin := Fir.SymbolTable.reach) (pin := Fir.SymbolTable.summary) (fingerprint := "9323625167530189115")
+:::readable Fir.SymbolTable.ReachesNoMemory Fir.SymbolTable.ReachesNoMemory.of_summary Fir.SymbolTable.ReachesNoMemory.own Fir.SymbolTable.ReachesNoMemory.callee Fir.SymbolTable.ReachesNoMemory.picked (pin := Fir.SymbolTable.reach) (pin := Fir.SymbolTable.summary) (fingerprint := "13847539296268233181")
 *Definition and theorems: a function that reaches no memory.* The function
 of a symbol table named by $`s` reaches no memory when every function that
 the walk from $`s` reaches, $`s`'s own included, declares no memory effect

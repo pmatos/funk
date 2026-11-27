@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Checking modules: readable blocks" =>
 
-:::moduleDocs (fingerprint := "9549763638811291248")
+:::moduleDocs (fingerprint := "9558436704365588676")
 :::
 
 :::readable Fir.Location.malformed (pin := Fir.Location.WellFormed) (fingerprint := "2430325542484681324")
@@ -78,7 +78,7 @@ and the test of a list exactly when each of its attributes can be. So
 whether a list of attributes can be written is decidable.
 :::
 
-:::readable Fir.DialectItem.problem Fir.DialectItem.kindProblems Fir.DialectItem.kindProblems_eq_nil_iff (fingerprint := "14805807463325893393")
+:::readable Fir.DialectItem.problem Fir.DialectItem.kindProblems Fir.DialectItem.kindProblems_eq_nil_iff (fingerprint := "4611560767450459586")
 *Definition and theorem: the problems of an item's kind.* A problem about
 an item $`i` of a dialect's kind is placed at the symbol of $`i`. When no
 dialect registers the kind $`k` of $`i`, the check gives "no dialect
@@ -94,7 +94,7 @@ problem exactly when $`k \in \mathrm{itemkinds}_d` and
 $`C, \mathrm{id} \vdash_d i~\text{valid}`.
 :::
 
-:::readable Fir.DialectItem.problems Fir.DialectItem.problems_eq_nil_iff Fir.instDecidableDialectItemValid (pin := Fir.Text.quote) (fingerprint := "17337299590514458338")
+:::readable Fir.DialectItem.problems Fir.DialectItem.problems_eq_nil_iff Fir.instDecidableDialectItemValid (pin := Fir.Text.quote) (fingerprint := "18053936253195779665")
 *Definition and theorem: the check of an item of a dialect's kind.* The
 check of the item $`i` of a dialect's kind, in the function context $`C`,
 gives, in this order:
@@ -116,7 +116,7 @@ kind, the check gives no problem exactly when $`i` is
 $`C`. So whether it is valid is decidable.
 :::
 
-:::readable Fir.SymbolTable.lookup Fir.SymbolTable.lookup_agrees (fingerprint := "11041271575791911836")
+:::readable Fir.SymbolTable.lookup Fir.SymbolTable.lookup_agrees (fingerprint := "2441045301428115682")
 *Definition and theorem: the lookup of a symbol table.* The
 {ref "The-fir-specification--Validation--The-validation-check"}[lookup] of
 the table $`T`, given a hash set of the references of the module's location
@@ -133,7 +133,7 @@ check of a function apply to every function of $`T`, checked with the
 lookup of $`T`.
 :::
 
-:::readable Fir.SymbolTable.problems (pin := Fir.Text.printSymbol) (pin := Fir.isWord) (fingerprint := "10318181870892874910")
+:::readable Fir.SymbolTable.problems (pin := Fir.Text.printSymbol) (pin := Fir.isWord) (fingerprint := "15165335513878296304")
 *Definition: the check of a symbol table.* The check of the table $`T`,
 given a hash set of the references of the module's location table, builds
 the lookup of $`T` once, and gives, in this order:

@@ -14,7 +14,7 @@ fails when the Lean changes under it.
 
 #doc (Manual) "The core dialect's text is lawful: readable blocks" =>
 
-:::moduleDocs (fingerprint := "4921898316165009198")
+:::moduleDocs (fingerprint := "15088306879448848376")
 :::
 
 :::readable Fir.Core.decodeWrap_attrs Fir.Core.attrs_of_decodeWrap Fir.Core.attrs_of_decodeExact (pin := Fir.Core.WrapFlags.attrs) (pin := Fir.Core.decodeWrap) (pin := Fir.Core.decodeExact) (fingerprint := "18127931667275396182")
@@ -34,7 +34,7 @@ the {ref "The-fir-specification--Text-format--The-core-dialect-in-text"}[previou
 The proofs of the laws for $`\mathsf{add}` to $`\mathsf{udiv}` use them.
 :::
 
-:::readable Fir.Core.find_pred_name Fir.Core.name_of_find_pred (pin := Fir.Core.Pred.name) (pin := Fir.Core.Pred.all) (fingerprint := "18060769847502388923")
+:::readable Fir.Core.find_pred_name Fir.Core.name_of_find_pred (pin := Fir.Core.Pred.name) (pin := Fir.Core.Pred.all) (fingerprint := "5983242215680934630")
 *Theorems: a predicate is found by its name, and only by it.* For every
 predicate $`p`, looking $`\mathrm{name}(p)` up in the list of the ten
 predicates finds $`p`; and for every string $`s`, a predicate found by
@@ -49,7 +49,7 @@ read as signed; and every 1-bit value is 1 or 0. They split the proofs for
 $`\mathsf{const}` into its two spellings.
 :::
 
-:::readable Fir.Core.binWidth_eq Fir.Core.binOp_eq Fir.Core.bare_eq Fir.Core.decodeCast_eq Fir.Core.plainBinOps_lookup (pin := Fir.Core.binWidth) (pin := Fir.Core.bare) (pin := Fir.Core.decodeCast) (pin := Fir.Core.plainBinOps) (fingerprint := "17439193355917670174")
+:::readable Fir.Core.binWidth_eq Fir.Core.binOp_eq Fir.Core.bare_eq Fir.Core.decodeCast_eq Fir.Core.plainBinOps_lookup (pin := Fir.Core.binWidth) (pin := Fir.Core.bare) (pin := Fir.Core.decodeCast) (pin := Fir.Core.plainBinOps) (fingerprint := "11175541022192469701")
 *Theorems: what each step of reading an op back accepts.* Each says that a
 helper of $`\mathrm{decodeop}` succeeds only on the shape it reads:
 

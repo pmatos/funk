@@ -14,10 +14,10 @@ pins their fingerprint; the build fails when the Lean changes under it.
 
 #doc (Manual) "The float ops read back: readable blocks" =>
 
-:::moduleDocs (fingerprint := "7467467483758013189")
+:::moduleDocs (fingerprint := "77958536920015777")
 :::
 
-:::readable Fir.Core.find_fpred_name Fir.Core.name_of_find_fpred (pin := Fir.Core.FPred.name) (pin := Fir.Core.FPred.all) (fingerprint := "13867665473772905769")
+:::readable Fir.Core.find_fpred_name Fir.Core.name_of_find_fpred (pin := Fir.Core.FPred.name) (pin := Fir.Core.FPred.all) (fingerprint := "12210138113616732541")
 *Theorems: a float predicate is found by its name, and only by it.* For
 every float predicate $`p`, looking $`\mathrm{name}(p)` up in the list of
 the fourteen float predicates finds $`p`; and for every string $`s`, a

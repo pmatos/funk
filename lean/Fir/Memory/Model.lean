@@ -1,3 +1,5 @@
+import Fir.Prelude
+
 /-!
 Memory is made of _logical blocks_ (ADR-2026-11-09-1542). Each allocation is
 a block of its own: an array of abstract units, with no address until it

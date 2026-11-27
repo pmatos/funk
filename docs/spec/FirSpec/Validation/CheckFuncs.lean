@@ -14,7 +14,7 @@ when the Lean changes under it.
 
 #doc (Manual) "Checking functions: readable blocks" =>
 
-:::moduleDocs (fingerprint := "1908175635621064778")
+:::moduleDocs (fingerprint := "5692046947011079628")
 :::
 
 :::readable Fir.Func.problem Fir.Func.blockProblem (fingerprint := "495569798519738376")
@@ -69,7 +69,7 @@ It gives no problem exactly when the
 is valid.
 :::
 
-:::readable Fir.Func.problemsIn Fir.Func.problems (fingerprint := "4706065624343365171")
+:::readable Fir.Func.problemsIn Fir.Func.problems (fingerprint := "15363809741384465963")
 *Definition: the check of a function.* Given a
 {ref "The-fir-specification--Validation--The-validation-check"}[lookup] and
 a list of the function's blocks at any depth, the check of the function
@@ -105,7 +105,7 @@ The check of $`f` in its module, $`\mathrm{problems}(f)`, runs this with
 the list $`\mathrm{allblocks}(f)`.
 :::
 
-:::readable Fir.Func.valid_iff Fir.Func.reached_all Fir.Func.ops_all Fir.Func.inner_all Fir.Func.types_all (fingerprint := "7644569623900340503")
+:::readable Fir.Func.valid_iff Fir.Func.reached_all Fir.Func.ops_all Fir.Func.inner_all Fir.Func.types_all (fingerprint := "6163451352188916121")
 *Theorems: the rule of a valid function, taken apart.* For every function
 $`f`, module context $`C` and lookup:
 

@@ -43,7 +43,7 @@ its type is
 word, or a word applied to attributes, that can be written.
 :::
 
-:::readable Fir.Text.SOp.Writable Fir.Text.SRegion.WritableList Fir.Text.SBlock.WritableList Fir.Text.SOp.WritableList (pin := Fir.Succ.Writable) (pin := Fir.Location.limit) (pin := Fir.Text.operandTypes) (fingerprint := "12292764382055653943")
+:::readable Fir.Text.SOp.Writable Fir.Text.SRegion.WritableList Fir.Text.SBlock.WritableList Fir.Text.SOp.WritableList (pin := Fir.Succ.Writable) (pin := Fir.Location.limit) (pin := Fir.Text.operandTypes) (fingerprint := "16577347457229055200")
 *Definition: ops, regions and blocks as read that can be written.* These
 conditions are on the
 {ref "The-fir-specification--Text-format--Reading-the-grammar"}[tree]
@@ -183,7 +183,7 @@ from a float literal token, which can be written.
   each of them can be written.
 :::
 
-:::readable Fir.Text.readSuccArgs_writable Fir.Text.readSucc_writable Fir.Text.readMoreOperands_writable Fir.Text.readOperands_writable Fir.Text.readOpLoc_writable Fir.Text.readKind_writable (pin := Fir.Text.readSuccArgs) (pin := Fir.Text.readSucc) (pin := Fir.Text.readMoreOperands) (pin := Fir.Text.readOperands) (pin := Fir.Text.readOpLoc) (pin := Fir.Succ.Writable) (pin := Fir.Location.limit) (pin := Fir.Text.operandTypes) (fingerprint := "9334791427686379345")
+:::readable Fir.Text.readSuccArgs_writable Fir.Text.readSucc_writable Fir.Text.readMoreOperands_writable Fir.Text.readOperands_writable Fir.Text.readOpLoc_writable Fir.Text.readKind_writable (pin := Fir.Text.readSuccArgs) (pin := Fir.Text.readSucc) (pin := Fir.Text.readMoreOperands) (pin := Fir.Text.readOperands) (pin := Fir.Text.readOpLoc) (pin := Fir.Succ.Writable) (pin := Fir.Location.limit) (pin := Fir.Text.operandTypes) (fingerprint := "18095798003782049902")
 *Theorems: successors, an op's location reference and a region's kind as
 read can be written.* For every list of tokens:
 
