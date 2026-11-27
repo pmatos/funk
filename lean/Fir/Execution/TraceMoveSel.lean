@@ -58,7 +58,6 @@ theorem TGood.move (hone : OpsOneStep d (Act E Ans) (TraceState Mem unit))
       Stream.Cons T (Step.actsOf t) ∧
       ∀ x, Stream.Avail T (x + (Step.actsOf t).length) →
         K (x + (Step.actsOf t).length) < Step.ticks t → x = 0 := by
-  classical
   let ans : Nat → Option Ans := fun i => (T i).map Act.answer
   -- For each `m`, a path above `m` that sees the stream for `m` acts.
   let Wm : Nat → Nat → List (Step (Act E Ans)) → Prop := fun m n mt =>

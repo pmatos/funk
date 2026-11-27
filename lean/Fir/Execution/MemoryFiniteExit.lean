@@ -66,7 +66,6 @@ theorem Func.memOps_notExhausted_exit {M M' : Module d} (hfin : OpsFinite d Mem 
         ¬ (Func.memOps M' m f env₁' blk.body p.2).run (.ok (.ok .fuelExhausted)))
     (fun _ _ _ hle h hp i blk env₁' hi hj => Func.memOps_notExhausted_up hle (h hp i blk env₁' hi hj))
     fun ⟨x', S₁'⟩ _ => by
-      classical
       by_cases hp : DialectDenote.exit (m := StateT (Memories Mem unit) SetM) o.op args' S'
         (.ok (x', S₁'))
       case neg => exact ⟨0, fun h => absurd h hp⟩

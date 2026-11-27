@@ -121,7 +121,6 @@ theorem Func.memOps_allowed {M M' : Module d} (hmono : ∀ g ∈ M.funcs, g.MemO
   induction n using Nat.strongRecOn with
   | ind n ih =>
     intro f env env' os S S' hf hops henv hS e' he'
-    classical
     by_cases hgood : Ev.NotStuck e' ∧ e' ≠ .ok (.ok .fuelExhausted)
     case neg => exact MemAllowed.of_not hgood
     obtain ⟨hne, hexh⟩ := hgood

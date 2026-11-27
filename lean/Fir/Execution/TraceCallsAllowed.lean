@@ -81,7 +81,6 @@ theorem Func.traceOps_tAllowed {M M' : Module d}
   induction n using Nat.strongRecOn with
   | ind n ih =>
     intro f env env' os s s' hf hops henv hS hGc e' he'
-    classical
     by_cases hd : e'.Done
     case neg =>
       rcases e' with _ | ⟨_ | (_ | _), _, _⟩

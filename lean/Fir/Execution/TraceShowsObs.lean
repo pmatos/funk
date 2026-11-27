@@ -127,7 +127,6 @@ theorem TShows.ofObservable : ∀ {t : TOutcome A O}, traceObservable R t → t.
 
 /-- A property of some number holds of a least one. -/
 theorem Nat.exists_least {P : Nat → Prop} (h : ∃ n, P n) : ∃ n, P n ∧ ∀ m < n, ¬ P m := by
-  classical
   obtain ⟨n, hn⟩ := h
   induction n using Nat.strongRecOn with
   | ind n ih =>

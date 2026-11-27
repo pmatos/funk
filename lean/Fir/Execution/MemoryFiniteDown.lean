@@ -116,7 +116,6 @@ theorem Func.memOps_notExhausted_of_finite {M M' : Module d}
                 p.2).run (.ok (.ok .fuelExhausted)))
           (fun _ _ _ hle h hp hl => Func.memOps_notExhausted_up hle (h hp hl))
           fun ⟨rs', S₁'⟩ _ => by
-            classical
             by_cases hp : DialectDenote.denote (m := StateT (Memories Mem unit) SetM) o.op args' S'
               (.ok (rs', S₁'))
             case neg => exact ⟨0, fun h => absurd h hp⟩
@@ -157,7 +156,6 @@ theorem Func.memOps_notExhausted_of_finite {M M' : Module d}
             obtain ⟨j, rfl⟩ := Nat.exists_eq_add_of_le hle
             exact h hw hx.down)
           fun ⟨s, dvs', δ, S₁'⟩ _ => by
-            classical
             by_cases hw : ∃ (n₀ n₀' : Nat) (ts : List d.Ty) (cargs' : HVector toType ts),
               Func.MemCallsAt M' o args' S' n₀ s ts cargs' n₀' S₁' ∧ cargs'.toDVals = dvs' ∧
                 n₀ - n₀' = δ
@@ -210,7 +208,6 @@ theorem Func.memOps_notExhausted_of_finite {M M' : Module d}
               have hsig := bb.sig hen'
               have inv := fun {N x} => Func.memRunsFrom_run_cast (M := M) (args := cargs) (S := S₁)
                 (N := N) (x := x) hsig
-              classical
               by_cases hdiv : ∀ m, (g₀.memRunsFrom M' ((cargs'.cast hsig).cast bb.params.symm, S₁')
                 m).outcomes .fuelExhausted
               case neg =>
@@ -239,7 +236,6 @@ theorem Func.memOps_notExhausted_of_finite {M M' : Module d}
                     (.ok (.ok .fuelExhausted)))
               (fun _ _ _ hle h hx hty hl => Func.memOps_notExhausted_up hle (h hx hty hl))
               fun ⟨⟨vs', T'⟩, k'⟩ _ => by
-                classical
                 by_cases hall : (Func.memCall M' n₁ g₀ p'.2 p'.1 S₁').run
                     (.ok (.ok (.ret ((vs', T'), k')))) ∧
                   vs'.map (·.1) = returnTypes o.op ∧ (o.results.map (·.1)).length = vs'.length
