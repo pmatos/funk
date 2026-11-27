@@ -58,7 +58,7 @@ block_extension Block.readable (names : Array Name) where
   traverse _ _ _ := pure none
   extraCss := [readableCss]
   toHtml := some fun _goI goB _id _data contents => do
-    pure {{<div class="fir-readable">{{← contents.mapM goB}}</div>}}
+    pure html%{<div class="fir-readable">{← contents.mapM goB}</div>}
   toTeX := some fun _goI goB _id _data contents => contents.mapM goB
 
 /- The Lean of the declarations `names`, hidden until the reader opens it. -/
@@ -68,15 +68,15 @@ block_extension Block.leanDetails (names : Array Name) where
   extraCss := [readableCss]
   toHtml := some fun _goI goB _id data contents => do
     let names : Array Html := match fromJson? (α := Array Name) data with
-      | .ok ns => ns.map fun n => {{<code>{{shownName n}}</code>}}
+      | .ok ns => ns.map fun n => html%{<code>{shownName n}</code>}
       | .error _ => #[]
-    let names := names.toList.intersperse (Html.text true ", ") |>.toArray
-    pure {{
+    let names := names.toList.intersperse (Html.ofString true ", ") |>.toArray
+    pure html%{
       <details class="fir-lean">
-        <summary>{{if names.isEmpty then "Lean" else "Lean: "}} {{names}}</summary>
-        {{← contents.mapM goB}}
+        <summary>{if names.isEmpty then "Lean" else "Lean: "}{names}</summary>
+        {← contents.mapM goB}
       </details>
-    }}
+    }
   toTeX := some fun _goI goB _id _data contents => contents.mapM goB
 
 /- A grammar box, whose one block is its notation as display math. -/
@@ -84,7 +84,7 @@ block_extension Block.grammar where
   traverse _ _ _ := pure none
   extraCss := [readableCss]
   toHtml := some fun _goI goB _id _data contents => do
-    pure {{<div class="fir-grammar">{{← contents.mapM goB}}</div>}}
+    pure html%{<div class="fir-grammar">{← contents.mapM goB}</div>}
   toTeX := some fun _goI goB _id _data contents => contents.mapM goB
 
 /-
