@@ -55,8 +55,12 @@ the same PR (ADR-2026-10-30-1452).
 
 `scripts/build-spec.sh [--update] [OUTPUT_DIR]` is the one build command
 (ADR-2026-10-29-2135). It runs `lake build --wfail` in `lean/`
-(ADR-2026-10-30-1452). Then it runs `lake build` and
-`lake exe firspec --output OUTPUT_DIR` in `docs/spec/`. The output defaults to
+(ADR-2026-10-30-1452). Then it runs `lake build verso-literate`, `lake build`
+and `lake exe firspec --output OUTPUT_DIR` in `docs/spec/`. Each
+`{includeLiterate}` and `{includeReadable}` runs `lake query`, which builds
+Verso's `verso-literate` executable when it is missing; on a cold cache the
+chapters elaborate in parallel, and their builds of that one file race, so the
+script builds it first. The output defaults to
 `docs/spec/_out`, which git ignores. `--update` runs `lake update` in
 `docs/spec/` under the guards below, then builds as usual.
 

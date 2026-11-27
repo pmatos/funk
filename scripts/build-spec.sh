@@ -82,6 +82,11 @@ if [[ "$lean_only" == true ]]; then
 fi
 
 cd "$repo_root/docs/spec"
+# Each includeLiterate and includeReadable runs `lake query`, which builds
+# Verso's verso-literate executable when it is missing. On a cold cache the
+# chapters elaborate in parallel, each starts that build, and the links race
+# on the one file. Build it once first.
+lake build verso-literate
 lake build
 lake exe firspec --output "$out"
 echo "Rendered the spec to $out/html-multi/index.html"
