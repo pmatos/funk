@@ -187,7 +187,6 @@ theorem MemBlackBox.allowedBelow {M M' : Module d} {bound : Nat} {g g' : Func d}
     | .ub r, ⟨N, hN⟩, _ => exact ofUB hN
     | .fuelExhausted, _, hle => exact hle.elim
     | .ret vs, ⟨N₁, hN₁⟩, hvs =>
-      classical
       by_cases hex : (g.memRunsFrom M (args.cast hsig, S) N₀).outcomes .fuelExhausted
       · exact ofExh hex
       have hfm := Func.memRunsFrom_fuelMonotone M g (args.cast hsig) S

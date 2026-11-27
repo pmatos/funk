@@ -98,7 +98,6 @@ theorem TCfg.moves_finite (hfin : OpsStepFinite d E Ans (TraceState Mem unit))
     (c : TCfg d Mem unit) (ans : Nat → Option Ans) :
     ∃ L : List (TCfg d Mem unit × List (Step (Act E Ans))), ∀ c₁ t F,
       TCfg.Move (Act E Ans) M c c₁ t F → F ≤ 2 → Act.Agrees ans (Step.actsOf t) → (c₁, t) ∈ L := by
-  classical
   rcases c with ⟨f, env, os, s⟩
   cases os with
   | nil => exact ⟨[], fun c₁ t F h => by cases h⟩

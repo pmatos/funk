@@ -248,27 +248,25 @@ a later bump can check the same way.
 Rejected: updating the axiom pins to the new axioms. That would weaken what
 the proofs rest on, with no change to fir.
 
-### A `by_cases` without an instance runs under `classical`
+### A `by_cases` needs no `classical`
 
-A `by_cases` under `lean/` on a proposition with no `Decidable` instance needs
-`classical` before it, in the same tactic block (ADR-2026-11-06-0224).
-`by_cases` turns on `Classical.propDecidable` through `open Classical`, which
-uses a process-wide list of scoped extensions. Up to Lean v4.35.0, Verso's
-elaboration of module docs swaps that list for an empty one on the main thread
-while proofs elaborate on other threads ([leanprover/lean4#15817](https://github.com/leanprover/lean4/issues/15817)).
-A missing `classical` then fails at random, not on every build; it failed one
-Pages build of `main` (#184). `classical` adds the instance as a local one,
-without the list.
+A `by_cases` under `lean/` on a proposition with no `Decidable` instance
+needs no `classical` before it. `by_cases` turns on `Classical.propDecidable`
+through `open Classical`, which uses a process-wide list of scoped extensions.
+Up to Lean v4.35.0, Verso's elaboration of module docs swapped that list for an
+empty one on the main thread while proofs elaborated on other threads
+([leanprover/lean4#15817](https://github.com/leanprover/lean4/issues/15817)).
+A `by_cases` then failed at random, not on every build, and it failed one
+Pages build of `main` (#184). So each such `by_cases` had `classical` before
+it, which adds the instance as a local one, without the list.
 
-The fix is [leanprover/lean4#15839](https://github.com/leanprover/lean4/pull/15839),
-commit `541dbdcd` on Lean's `master`. v4.36.0 has it, under another commit:
-its `Lean/Elab/DocString.lean` no longer swaps the list, and v4.36.0-rc1 still
-did. The PR's test, `tests/elab/versoDocModuleScoped.lean`, fails on v4.35.0
-and passes on v4.36.0. The `classical` lines stay until a PR removes them and edits
-ADR-2026-11-06-0224. A
-`by_cases` whose proposition has an instance, such as `x = y` on `Name`, stays
-as it is.
+v4.36.0 has the fix,
+[leanprover/lean4#15839](https://github.com/leanprover/lean4/pull/15839): its
+`Lean/Elab/DocString.lean` no longer swaps the list. The PR's test,
+`tests/elab/versoDocModuleScoped.lean`, fails on v4.35.0 and passes on
+v4.36.0. #513 removed the `classical` lines that guarded only a `by_cases`.
+A `classical` that is left in `lean/` is there for something else, such as an
+`if` on a proposition.
 
-Rejected: `rcases Classical.em p with h | h`. It is safe too, but it names the
-goals `inl` and `inr`, and two proofs select the goal `neg`. Rejected too:
-turning `doc.verso` off, since the spec renders our docstrings as Verso.
+Rejected: keeping the lines. They do no harm, but a reader cannot tell a proof
+that needs `classical` from one that kept it for a fixed bug.

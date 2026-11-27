@@ -63,7 +63,6 @@ theorem Func.memOps_allowedBelow {M M' : Module d}
   induction n using Nat.strongRecOn with
   | ind n ih =>
     intro f env env' os S S' N hf hops henv hS hN e' he'
-    classical
     by_cases hgood : Ev.NotStuck e' ∧ ∀ r, e' ≠ .ub r
     case neg => exact MemAllowedBelow.of_not hgood
     obtain ⟨hne, hnub⟩ := hgood
@@ -263,7 +262,6 @@ theorem Func.memRunsFrom_isRefinedBy_of_calls {M M' : Module d}
   | .ret _, ht | .ub _, ht =>
     exact Func.memRunsFrom_retUB_allowed hmono hcalls f hf ha hS _ (fun h => nomatch h) ht
   | .fuelExhausted, ht =>
-    classical
     by_cases hU : ∃ N r, (f.memRunsFrom M (a, S) N).outcomes (.ub r)
     · obtain ⟨N, r, h⟩ := hU
       exact ⟨.ub r, ⟨N, h⟩, trivial⟩
